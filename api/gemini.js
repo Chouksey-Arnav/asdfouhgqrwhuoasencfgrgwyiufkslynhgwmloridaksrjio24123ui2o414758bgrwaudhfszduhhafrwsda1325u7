@@ -141,30 +141,32 @@ export default async function handler(req, res) {
       ? String(system).slice(0, 2000)
       : 'You are MetaBrain, an expert MCAT tutor and medical school admissions coach. Be concise, accurate, and encouraging.';
 
+    // Build request body with proper Gemini API format
+    const requestBody = {
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents: geminiMessages,
+      generationConfig: {
+        maxOutputTokens: clampedTokens,
+        temperature: 0.7,
+        topP: 0.95,
+        topK: 40,
+      },
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ],
+    };
+
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        system: {
-          role: 'user',
-          parts: [{ text: systemPrompt }],
-        },
-        contents: geminiMessages,
-        generationConfig: {
-          maxOutputTokens: clampedTokens,
-          temperature: 0.7,
-          topP: 0.95,
-          topK: 40,
-        },
-        safetySettings: [
-          { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
-          { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
-        ],
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const data = await response.json();
