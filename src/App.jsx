@@ -385,7 +385,7 @@ export default function App() {
   const [aQuiz,setAQ]=useState(null);const [qSrch,setQSrch]=useState('');const [qCat,setQC]=useState('All');const [qDiff,setQD]=useState('All');
 
   // ── AI Coach ────────────────────────────────────────────────────────────────
-  const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
+  const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const [geminiTokensRemaining,setGeminiTokensRemaining]=useState(1000);const [geminiTokensUsedToday,setGeminiTokensUsedToday]=useState(0);const chatEnd=useRef(null);
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
@@ -532,8 +532,13 @@ export default function App() {
   },[user?.xp]);
 
   // ── AI ────────────────────────────────────────────────────────────────────────
-  async function callAI(sys, msg, toks = 900, hist = null) {
-    const r = await fetch('/api/openrouter', {
+  async function callGeminiAI(sys, msg, toks = 700, hist = null) {
+    // Check if daily limit already reached on client-side
+    if (geminiTokensRemaining <= 0) {
+      throw new Error('Daily Gemini quota reached. Your free limit has been used for today. Try again tomorrow.');
+    }
+
+    const r = await fetch('/api/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks }),
@@ -541,10 +546,25 @@ export default function App() {
     const d = await r.json();
     if (!r.ok) {
       const m = d?.error || '';
-      if (r.status === 429) throw new Error('Rate limit reached. Please wait a moment.');
-      if (r.status === 500 && m.includes('not configured')) throw new Error('Add OPENROUTER_KEY to Vercel environment variables.');
+      if (r.status === 429) {
+        if (m.includes('Daily')) {
+          setGeminiTokensRemaining(0);
+          throw new Error('Daily AI quota reached. Try again tomorrow.');
+        }
+        throw new Error('Rate limit reached. Please wait a moment.');
+      }
+      if (r.status === 500 && m.includes('not configured')) throw new Error('Set GEMINI_KEY in Vercel environment variables.');
       throw new Error(m || `Error ${r.status}`);
     }
+    
+    // Update token usage from response
+    if (d.tokensRemaining !== undefined) {
+      setGeminiTokensRemaining(d.tokensRemaining);
+    }
+    if (d.tokensUsedToday !== undefined) {
+      setGeminiTokensUsedToday(d.tokensUsedToday);
+    }
+    
     return d.content || '';
   }
 
@@ -554,7 +574,7 @@ export default function App() {
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
-      const r=await callAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const r=await callGeminiAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -956,15 +976,22 @@ async function getMMIFb() {
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
   function tCoach(){
+    const isQuotaExhausted = geminiTokensRemaining <= 0;
     return(
       <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 64px)'}}>
         <div style={R({justifyContent:'space-between',paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0})}>
           <div><div style={lbl()}>AI Coach</div><h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain ✦</h2></div>
           <div style={R({gap:8})}>
             {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
+            <span style={pill(isQuotaExhausted?C.roseDim:C.greenDim,isQuotaExhausted?C.rose:C.green,{fontSize:10,fontFamily:C.FM})}>{geminiTokensRemaining}/{1000} tokens</span>
             <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
           </div>
         </div>
+        {isQuotaExhausted&&(
+          <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} style={{marginBottom:14,padding:14,background:C.roseDim,border:`1px solid ${C.rose}30`,borderRadius:10,fontSize:12,color:C.roseL}}>
+            Your daily Gemini quota ({1000} tokens) has been reached. Try again tomorrow! 🚀
+          </motion.div>
+        )}
         {msgs.length===0&&(
           <div style={{flexShrink:0,marginBottom:20}}>
             <div style={lbl({marginBottom:12})}>Try asking</div>
@@ -995,8 +1022,8 @@ async function getMMIFb() {
           <div ref={chatEnd}/>
         </div>
         <div style={R({marginTop:14,flexShrink:0,gap:10})}>
-          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1}} placeholder="Ask MetaBrain about MCAT content, admissions, or study strategies…" value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}}/>
-          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad}>↑</motion.button>
+          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1,opacity:isQuotaExhausted?0.5:1,pointerEvents:isQuotaExhausted?'none':'auto'}} placeholder={isQuotaExhausted?"Daily quota exhausted — try again tomorrow":"Ask MetaBrain about MCAT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}}/>
+          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad||isQuotaExhausted}>↑</motion.button>
         </div>
         {msgs.length>0&&<button style={btnG({marginTop:8,fontSize:11,padding:'5px 14px',alignSelf:'flex-start',borderRadius:20})} onClick={()=>setMsgs([])}>Clear conversation</button>}
       </div>
