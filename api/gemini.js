@@ -191,7 +191,8 @@ export default async function handler(req, res) {
     }
 
     // ── Calculate tokens used (rough estimate: 4 chars ≈ 1 token) ─────────────
-    const estimatedTokens = Math.ceil((content.length + message.length) / 4);
+    const inputLength = message ? message.length : geminiMessages.reduce((sum, m) => sum + (m.parts?.[0]?.text?.length || 0), 0);
+    const estimatedTokens = Math.ceil((content.length + inputLength) / 4);
     addTokensToday(ip, estimatedTokens);
     const newTokensUsedToday = getTokensUsedToday(ip);
     const newRemaining = Math.max(0, DAILY_LIMIT - newTokensUsedToday);
