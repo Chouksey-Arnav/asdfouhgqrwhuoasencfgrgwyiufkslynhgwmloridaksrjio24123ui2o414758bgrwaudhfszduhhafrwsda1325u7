@@ -11,7 +11,7 @@ import { Radar, Line, Doughnut } from 'react-chartjs-2';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
-import { ALL_QUIZZES } from './data/quizzes';
+import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, MMI_QS, COMPETITIONS, DIAG_QS } from './data/constants';
 
@@ -56,6 +56,11 @@ const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x })
 const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
 const G      = (cols=2,gap=14,x={}) => ({ display:'grid', gridTemplateColumns:`repeat(${cols},1fr)`, gap, ...x });
 const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'3px 11px', borderRadius:20, fontSize:11, fontWeight:600, letterSpacing:'.04em', background:bg, color, ...x });
+
+// ── Quiz scrambling ───────────────────────────────────────────────────────────
+function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const TOTAL_QUESTIONS = ALL_QUIZZES.reduce((n,q)=>n+q.qs.length,0);
+function scrambleQuiz(qs){return shuffleArr(qs).map(q=>{const idx=shuffleArr([0,1,2,3]);return{...q,ch:idx.map(i=>q.ch[i]),ans:idx.indexOf(q.ans)};});}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtT   = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
@@ -214,11 +219,12 @@ function VideoModal({ytId,title,onClose}){
   );
 }
 // ── Quiz Engine ───────────────────────────────────────────────────────────────
-function QuizEngine({quiz,onFinish,onClose,accent=C.blue}){
+function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false}){
   const scoreRef=useRef(0);
   const [qi,setQi]=useState(0);const [sel,setSel]=useState(null);const [conf,setConf]=useState(false);
   const [answers,setAnswers]=useState([]);const [phase,setPhase]=useState('quiz');const [ri,setRi]=useState(0);
-  const tot=quiz.qs.length,q=quiz.qs[qi],prog=Math.round(((qi+(conf?1:0))/tot)*100);
+  const [scrambledQs]=useState(()=>readonly?quiz.qs:scrambleQuiz(quiz.qs));
+  const tot=scrambledQs.length,q=scrambledQs[qi],prog=Math.round(((qi+(conf?1:0))/tot)*100);
 
   function confirm(){
     if(sel===null||conf)return;
@@ -385,7 +391,7 @@ export default function App() {
   const [aQuiz,setAQ]=useState(null);const [qSrch,setQSrch]=useState('');const [qCat,setQC]=useState('All');const [qDiff,setQD]=useState('All');
 
   // ── AI Coach ────────────────────────────────────────────────────────────────
-  const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const [geminiTokensRemaining,setGeminiTokensRemaining]=useState(1000);const [geminiTokensUsedToday,setGeminiTokensUsedToday]=useState(0);const chatEnd=useRef(null);
+  const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
@@ -532,13 +538,8 @@ export default function App() {
   },[user?.xp]);
 
   // ── AI ────────────────────────────────────────────────────────────────────────
-  async function callGeminiAI(sys, msg, toks = 700, hist = null) {
-    // Check if daily limit already reached on client-side
-    if (geminiTokensRemaining <= 0) {
-      throw new Error('Daily Gemini quota reached. Your free limit has been used for today. Try again tomorrow.');
-    }
-
-    const r = await fetch('/api/gemini', {
+  async function callAI(sys, msg, toks = 900, hist = null) {
+    const r = await fetch('/api/openrouter', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks }),
@@ -546,25 +547,10 @@ export default function App() {
     const d = await r.json();
     if (!r.ok) {
       const m = d?.error || '';
-      if (r.status === 429) {
-        if (m.includes('Daily')) {
-          setGeminiTokensRemaining(0);
-          throw new Error('Daily AI quota reached. Try again tomorrow.');
-        }
-        throw new Error('Rate limit reached. Please wait a moment.');
-      }
-      if (r.status === 500 && m.includes('not configured')) throw new Error('Set GEMINI_KEY in Vercel environment variables.');
+      if (r.status === 429) throw new Error('Rate limit reached. Please wait a moment.');
+      if (r.status === 500 && m.includes('not configured')) throw new Error('Add OPENROUTER_KEY to Vercel environment variables.');
       throw new Error(m || `Error ${r.status}`);
     }
-    
-    // Update token usage from response
-    if (d.tokensRemaining !== undefined) {
-      setGeminiTokensRemaining(d.tokensRemaining);
-    }
-    if (d.tokensUsedToday !== undefined) {
-      setGeminiTokensUsedToday(d.tokensUsedToday);
-    }
-    
     return d.content || '';
   }
 
@@ -574,7 +560,7 @@ export default function App() {
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
-      const r=await callGeminiAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const r=await callAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -625,6 +611,7 @@ async function getMMIFb() {
 
   // ── Quiz finish ───────────────────────────────────────────────────────────────
   async function finishQuiz(score,total){
+    if(qScores[aQuiz.id]!==undefined){setAQ(null);return;}
     const pct=total>0?Math.round((score/total)*100):0;
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
@@ -917,12 +904,29 @@ async function getMMIFb() {
 
   // ── QUIZ LIBRARY ──────────────────────────────────────────────────────────────
   function tQuizzes(){
-    const dColors={Medium:C.cyan,Hard:C.amber,Expert:C.rose};
+    const dColors={Easy:C.green,Medium:C.cyan,Hard:C.amber,Expert:C.rose};
+    const diffLevels=['Easy','Medium','Hard','Expert'];
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
-          <div><div style={lbl()}>Quiz Library</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{ALL_QUIZZES.length} Quizzes · {ALL_QUIZZES.length*15} Questions</h2></div>
-          <div style={{marginLeft:'auto',...R({gap:8})}}>{qTaken>0&&<span style={pill(C.greenDim,C.greenL)}>{qTaken}/{ALL_QUIZZES.length} done</span>}{avgSc>0&&<span style={pill(`${scCol(avgSc)}18`,scCol(avgSc),{fontFamily:C.FM})}>{avgSc}% avg</span>}</div>
+        <div style={R({flexWrap:'wrap',gap:12,justifyContent:'space-between'})}>
+          <div>
+            <div style={lbl()}>Quiz Library</div>
+            <div style={R({gap:10,flexWrap:'wrap',alignItems:'center',marginTop:4})}>
+              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{ALL_QUIZZES.length} Quizzes</h2>
+              <span style={pill(`${C.violet}20`,C.violet,{fontSize:9,fontWeight:800,letterSpacing:'.14em',border:`1px solid ${C.violet}40`,textTransform:'uppercase',padding:'3px 9px'})}>BETA</span>
+            </div>
+            <div style={{fontSize:12,color:C.t3,marginTop:3,fontFamily:C.FM}}>{TOTAL_QUESTIONS} Questions · Questions & answer order scrambled each attempt</div>
+          </div>
+          <div style={R({gap:8,alignSelf:'flex-start'})}>{qTaken>0&&<span style={pill(C.greenDim,C.greenL)}>{qTaken}/{ALL_QUIZZES.length} done</span>}{avgSc>0&&<span style={pill(`${scCol(avgSc)}18`,scCol(avgSc),{fontFamily:C.FM})}>{avgSc}% avg</span>}</div>
+        </div>
+        <div style={R({gap:8,flexWrap:'wrap'})}>
+          {diffLevels.map(d=>{const cnt=ALL_QUIZZES.filter(q=>q.diff===d).length;const dc=dColors[d];return cnt>0&&(
+            <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{...glass({padding:'7px 14px',background:qDiff===d?`${dc}15`:`${dc}07`,border:`1px solid ${qDiff===d?dc+'50':dc+'20'}`}),display:'flex',gap:7,alignItems:'center',cursor:'pointer',borderRadius:10,transition:'all .15s'}}>
+              <span style={{width:7,height:7,borderRadius:'50%',background:dc,flexShrink:0}}/>
+              <span style={{fontSize:11,color:dc,fontWeight:700}}>{d}</span>
+              <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{cnt}</span>
+            </div>
+          );})}
         </div>
         <div style={R({flexWrap:'wrap',gap:10})}>
           <div style={{flex:1,minWidth:180,position:'relative'}}>
@@ -930,7 +934,7 @@ async function getMMIFb() {
             <input style={inp({paddingLeft:36})} placeholder="Fuzzy search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
           </div>
           <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Bio/Biochem','Chem/Phys','Psych/Soc'].map(c=><option key={c}>{c}</option>)}</select>
-          <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
+          <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
         </div>
         {/* Weakness spotlight */}
         {secAvgs.some(v=>v!==null&&v<60)&&<div style={{...glass({padding:16,background:C.amberDim,border:`1px solid ${C.amber}25`})}}>
@@ -959,10 +963,18 @@ async function getMMIFb() {
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
                   <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM}}>{q.qs.length} questions</div>
                   <div style={R()}>
-                    <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(C.blueGrad,{flex:1,fontSize:12})} onClick={()=>{setAQ(q);play('click');}}>
-                      {taken?'Retake Quiz':'Start Quiz'}
-                    </motion.button>
-                    {taken&&<div style={{fontSize:18,fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>}
+                    {taken?(
+                      <>
+                        <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(C.s3,{flex:1,fontSize:12,border:`1px solid ${C.b2}`,color:C.t2})} onClick={()=>{setAQ({...q,readonly:true});play('click');}}>
+                          Review
+                        </motion.button>
+                        <div style={{fontSize:18,fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>
+                      </>
+                    ):(
+                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(C.blueGrad,{flex:1,fontSize:12})} onClick={()=>{setAQ(q);play('click');}}>
+                        Start Quiz
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -976,22 +988,15 @@ async function getMMIFb() {
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
   function tCoach(){
-    const isQuotaExhausted = geminiTokensRemaining <= 0;
     return(
       <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 64px)'}}>
         <div style={R({justifyContent:'space-between',paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0})}>
           <div><div style={lbl()}>AI Coach</div><h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain ✦</h2></div>
           <div style={R({gap:8})}>
             {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
-            <span style={pill(isQuotaExhausted?C.roseDim:C.greenDim,isQuotaExhausted?C.rose:C.green,{fontSize:10,fontFamily:C.FM})}>{geminiTokensRemaining}/{1000} tokens</span>
             <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
           </div>
         </div>
-        {isQuotaExhausted&&(
-          <motion.div initial={{opacity:0,y:-8}} animate={{opacity:1,y:0}} style={{marginBottom:14,padding:14,background:C.roseDim,border:`1px solid ${C.rose}30`,borderRadius:10,fontSize:12,color:C.roseL}}>
-            Your daily Gemini quota ({1000} tokens) has been reached. Try again tomorrow! 🚀
-          </motion.div>
-        )}
         {msgs.length===0&&(
           <div style={{flexShrink:0,marginBottom:20}}>
             <div style={lbl({marginBottom:12})}>Try asking</div>
@@ -1022,8 +1027,8 @@ async function getMMIFb() {
           <div ref={chatEnd}/>
         </div>
         <div style={R({marginTop:14,flexShrink:0,gap:10})}>
-          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1,opacity:isQuotaExhausted?0.5:1,pointerEvents:isQuotaExhausted?'none':'auto'}} placeholder={isQuotaExhausted?"Daily quota exhausted — try again tomorrow":"Ask MetaBrain about MCAT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}}/>
-          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad||isQuotaExhausted}>↑</motion.button>
+          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1}} placeholder="Ask MetaBrain about MCAT content, admissions, or study strategies…" value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}}/>
+          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad}>↑</motion.button>
         </div>
         {msgs.length>0&&<button style={btnG({marginTop:8,fontSize:11,padding:'5px 14px',alignSelf:'flex-start',borderRadius:20})} onClick={()=>setMsgs([])}>Clear conversation</button>}
       </div>
@@ -1724,7 +1729,7 @@ async function getMMIFb() {
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
-            MedSchoolPrep v2.0 &nbsp;·&nbsp; {ALL_QUIZZES.length*15} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks &nbsp;·&nbsp; {MMI_QS.length} MMI stations<br/>
+            MedSchoolPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks &nbsp;·&nbsp; {MMI_QS.length} MMI stations<br/>
             Powered by: ts-fsrs · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
             All data stored locally in your browser via IndexedDB · No account required
           </div>
@@ -1784,7 +1789,7 @@ async function getMMIFb() {
               <span style={{marginLeft:'auto',...pill(C.s3,C.t3,{fontSize:10})}}>{aQuiz.diff}</span>
             </div>
             <div style={glass()}>
-              <QuizEngine quiz={aQuiz} onFinish={finishQuiz} onClose={()=>setAQ(null)} accent={accent}/>
+              <QuizEngine quiz={aQuiz} onFinish={finishQuiz} onClose={()=>setAQ(null)} accent={accent} readonly={!!aQuiz.readonly}/>
             </div>
           </div>
         </div>
