@@ -61,7 +61,7 @@ export default defineConfig({
           'ai-tools':      ['marked','dompurify','katex'],
           'db-search':     ['dexie','fuse.js','ts-fsrs'],
           'utils':         ['canvas-confetti','react-hot-toast','jspdf'],
-          'quiz-data':     ['./src/data/quizzes.js'],
+          'quiz-data':     ['./src/data/quizzes/index.js'],
           'app-data':      ['./src/data/elib.js','./src/data/constants.js'],
         }
       }
