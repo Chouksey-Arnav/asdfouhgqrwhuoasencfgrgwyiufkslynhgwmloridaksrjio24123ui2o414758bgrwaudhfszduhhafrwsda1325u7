@@ -378,6 +378,8 @@ export default function App() {
   const [totalReviews, setTotalReviews] = useState(0);
   const [mmiCount, setMmiCount] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
+  const [geminiTokensRemaining, setGeminiTokensRemaining] = useState(1000);
+  const [geminiTokensUsedToday, setGeminiTokensUsedToday] = useState(0);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [tab,   setTab]   = useState('home');
@@ -554,13 +556,32 @@ export default function App() {
     return d.content || '';
   }
 
+  async function callGeminiAI(sys, msg, toks = 700, hist = null) {
+    const r = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks }),
+    });
+    const d = await r.json();
+    if (typeof d.tokensRemaining === 'number') setGeminiTokensRemaining(d.tokensRemaining);
+    if (typeof d.tokensUsedToday === 'number') setGeminiTokensUsedToday(d.tokensUsedToday);
+    if (!r.ok) {
+      const m = d?.error || '';
+      if (r.status === 429) throw new Error(m || 'Rate limit reached. Please wait a moment.');
+      if (r.status === 500 && m.includes('not configured')) throw new Error('Add GEMINI_KEY to Vercel environment variables.');
+      throw new Error(m || `Error ${r.status}`);
+    }
+    return d.content || '';
+  }
+
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
+    if(geminiTokensRemaining<=0){toast.error(`Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow! 🚀`);return;}
     const um={role:'user',content:message};const next=[...msgs,um];
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
-      const r=await callAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const r=await callGeminiAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -994,9 +1015,15 @@ async function getMMIFb() {
           <div><div style={lbl()}>AI Coach</div><h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain ✦</h2></div>
           <div style={R({gap:8})}>
             {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
+            <span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{geminiTokensRemaining}/1000 tokens</span>
             <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
           </div>
         </div>
+        {geminiTokensRemaining<=0&&(
+          <div style={{flexShrink:0,marginBottom:14,padding:'10px 16px',borderRadius:12,background:C.roseDim,border:`1px solid ${C.rose}30`,fontSize:13,color:C.t1}}>
+            Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow! 🚀
+          </div>
+        )}
         {msgs.length===0&&(
           <div style={{flexShrink:0,marginBottom:20}}>
             <div style={lbl({marginBottom:12})}>Try asking</div>
@@ -1027,8 +1054,8 @@ async function getMMIFb() {
           <div ref={chatEnd}/>
         </div>
         <div style={R({marginTop:14,flexShrink:0,gap:10})}>
-          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1}} placeholder="Ask MetaBrain about MCAT content, admissions, or study strategies…" value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}}/>
-          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad}>↑</motion.button>
+          <textarea style={{...inp({resize:'none',minHeight:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14}),flex:1,opacity:geminiTokensRemaining<=0?.5:1}} placeholder="Ask MetaBrain about MCAT content, admissions, or study strategies…" value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={geminiTokensRemaining<=0}/>
+          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={btn(C.blueGrad,{padding:'0 22px',alignSelf:'flex-end',height:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,fontSize:18})} onClick={()=>sendChat(ci)} disabled={cLoad||geminiTokensRemaining<=0}>↑</motion.button>
         </div>
         {msgs.length>0&&<button style={btnG({marginTop:8,fontSize:11,padding:'5px 14px',alignSelf:'flex-start',borderRadius:20})} onClick={()=>setMsgs([])}>Clear conversation</button>}
       </div>
