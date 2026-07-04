@@ -2,7 +2,7 @@
   "name": "medschool-prep",
   "version": "2.0.0",
   "type": "module",
-  "description": "AI-powered MCAT preparation and medical school admissions coaching — full ecosystem",
+  "description": "MCAT preparation and medical school admissions coaching",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -17,6 +17,7 @@
     "fuse.js": "^7.0.0",
     "jspdf": "^2.5.2",
     "katex": "^0.16.11",
+    "lucide-react": "^1.23.0",
     "marked": "^14.1.2",
     "react": "^18.2.0",
     "react-chartjs-2": "^5.2.0",

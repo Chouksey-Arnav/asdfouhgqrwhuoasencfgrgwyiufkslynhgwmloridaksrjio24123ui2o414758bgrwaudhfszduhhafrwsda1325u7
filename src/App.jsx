@@ -10,6 +10,15 @@ import {
 import { Radar, Line, Doughnut } from 'react-chartjs-2';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import {
+  Home as HomeIcon, Compass, Route, Layers, MessageCircle, Layers3, BookOpen,
+  Trophy, Building2, LineChart, Settings as SettingsIcon, Mic, Flame, Zap, CheckCircle2, TrendingUp,
+  Lock, Check, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
+  Stethoscope, Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight,
+  RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock,
+} from 'lucide-react';
+
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Mic, Milestone, MessageCircle };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
@@ -82,12 +91,12 @@ function scoreSchool(s,gpa,mcat,res,clin,vol,st){
 }
 
 const NAV = [
-  {id:'home',ic:'⌂',label:'Home'},{id:'diagnostic',ic:'◎',label:'Diagnostic'},
-  {id:'pathway',ic:'▸',label:'Pathway'},{id:'quizzes',ic:'◈',label:'Quiz Library'},
-  {id:'coach',ic:'✦',label:'AI Coach'},{id:'flashcards',ic:'◧',label:'Flashcards'},
-  {id:'library',ic:'≡',label:'E-Library'},{id:'portfolio',ic:'◉',label:'Portfolio'},
-  {id:'interview',ic:'◑',label:'Interview Sim'},{id:'calc',ic:'⊞',label:'Admissions'},
-  {id:'analytics',ic:'↗',label:'Analytics'},{id:'settings',ic:'⊙',label:'Settings'},
+  {id:'home',ic:HomeIcon,label:'Home'},{id:'diagnostic',ic:Compass,label:'Diagnostic'},
+  {id:'pathway',ic:Route,label:'Pathway'},{id:'quizzes',ic:Layers,label:'Quiz Library'},
+  {id:'coach',ic:MessageCircle,label:'AI Coach'},{id:'flashcards',ic:Layers3,label:'Flashcards'},
+  {id:'library',ic:BookOpen,label:'E-Library'},{id:'portfolio',ic:Building2,label:'Portfolio'},
+  {id:'interview',ic:Mic,label:'Interview Sim'},{id:'calc',ic:Calculator,label:'Admissions'},
+  {id:'analytics',ic:LineChart,label:'Analytics'},{id:'settings',ic:SettingsIcon,label:'Settings'},
 ];
 const QUICK_P = [
   'Explain Michaelis-Menten kinetics simply','What is the TCA cycle and why does it matter?',
@@ -127,7 +136,7 @@ class ErrorBoundary extends React.Component {
   render(){
     if(this.state.err) return(
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
-        <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>⚠</div>
+        <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
         <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Something went wrong</h2>
         <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>{this.state.msg}</p>
         <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
@@ -141,7 +150,7 @@ class ErrorBoundary extends React.Component {
 function LoadingScreen() {
   return (
     <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
-      <div style={{width:56,height:56,borderRadius:16,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,animation:'spin 2s linear infinite'}}>🧬</div>
+      <div style={{width:56,height:56,borderRadius:16,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',animation:'spin 1.1s linear infinite'}}><RefreshCw size={26} color={C.blue}/></div>
       <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
@@ -176,9 +185,9 @@ function Bar({pct=0,color=C.blue,h=4,glow=false}){
 
 // ── Dot (mastery status) ──────────────────────────────────────────────────────
 function Dot({state='locked'}){
-  const cfg={done:{bg:C.green,ic:'✓',c:'#fff'},available:{bg:'transparent',ic:'○',c:C.blueL,brd:C.blueL},locked:{bg:'transparent',ic:'·',c:C.t4,brd:C.t4}};
+  const cfg={done:{bg:C.green,Ic:Check,c:'#fff',sz:12},available:{bg:'transparent',Ic:Circle,c:C.blueL,brd:C.blueL,sz:8},locked:{bg:'transparent',Ic:Lock,c:C.t4,brd:C.t4,sz:10}};
   const d=cfg[state]||cfg.locked;
-  return<span style={{width:22,height:22,borderRadius:'50%',background:d.bg,border:`1.5px solid ${d.brd||C.green}`,display:'inline-flex',alignItems:'center',justifyContent:'center',fontSize:state==='done'?10:14,color:d.c,flexShrink:0,fontWeight:700,boxShadow:state==='done'?`0 0 8px ${C.green}60`:undefined}}>{d.ic}</span>;
+  return<span style={{width:22,height:22,borderRadius:'50%',background:d.bg,border:`1.5px solid ${d.brd||C.green}`,display:'inline-flex',alignItems:'center',justifyContent:'center',color:d.c,flexShrink:0,boxShadow:state==='done'?`0 0 8px ${C.green}60`:undefined}}><d.Ic size={d.sz} strokeWidth={state==='available'?0:2.5} fill={state==='available'?d.c:'none'}/></span>;
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
@@ -187,7 +196,7 @@ function Stat({label,value,icon,color=C.blue,sub,onClick}){
     <div onClick={onClick} style={{...glass({padding:20}),position:'relative',overflow:'hidden',cursor:onClick?'pointer':undefined,transition:'all .2s'}}>
       <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${color},transparent)`}}/>
       <div style={R({gap:12,alignItems:'flex-start'})}>
-        <div style={{width:36,height:36,borderRadius:10,background:`${color}18`,border:`1px solid ${color}25`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0,boxShadow:`0 4px 12px ${color}20`}}>{icon}</div>
+        <div style={{width:36,height:36,borderRadius:10,background:`${color}18`,border:`1px solid ${color}25`,display:'flex',alignItems:'center',justifyContent:'center',color,flexShrink:0,boxShadow:`0 4px 12px ${color}20`}}>{icon}</div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontSize:26,fontWeight:800,fontFamily:C.FM,lineHeight:1,marginBottom:4,background:`linear-gradient(135deg,${color},${color}aa)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>{value}</div>
           <div style={{fontSize:12,color:C.t2,fontWeight:600}}>{label}</div>
@@ -247,7 +256,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false}){
           <div style={{fontSize:13,color:C.t2}}>{quiz.title}</div>
           <div style={R({justifyContent:'center',gap:10,marginTop:20})}>
             <button style={btn(`linear-gradient(135deg,${sc},${sc}cc)`)} onClick={()=>onFinish(scoreRef.current,tot)}>Save & Exit →</button>
-            <button style={btnG()} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}>📄 Export PDF</button>
+            <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
           </div>
         </div>
         <div style={R({justifyContent:'space-between',marginBottom:16})}>
@@ -387,7 +396,7 @@ export default function App() {
   const [vidM,  setVM]    = useState(null);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
-  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);
+  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
   const [aQuiz,setAQ]=useState(null);const [qSrch,setQSrch]=useState('');const [qCat,setQC]=useState('All');const [qDiff,setQD]=useState('All');
@@ -411,7 +420,7 @@ export default function App() {
   const [cGPA,setCGPA]=useState('');const [cMCAT,setCMCAT]=useState('');const [cRes,setCR]=useState('0');const [cClin,setCC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);
+  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
 
   // ── Pomodoro ────────────────────────────────────────────────────────────────
   const [pomT,setPT]=useState(25*60);const [pomR,setPR]=useState(false);const [pomM,setPomM]=useState('focus');const [pomSessions,setPomSessions]=useState(0);
@@ -458,7 +467,7 @@ export default function App() {
 
   // ── Timers ───────────────────────────────────────────────────────────────────
   useEffect(()=>{if(!pomR)return;const id=setInterval(()=>setPT(t=>t>0?t-1:0),1000);return()=>clearInterval(id);},[pomR]);
-  useEffect(()=>{if(pomT===0&&pomR){setPR(false);play('bell');const n=pomM==='focus'?'break':'focus';setPomM(n);setPT(n==='focus'?25*60:5*60);if(pomM==='focus')setPomSessions(s=>s+1);toast.success(pomM==='focus'?'Focus session complete! Take a break ☕':'Break over. Back to studying! 📚');}},[ pomT,pomR,pomM]);
+  useEffect(()=>{if(pomT===0&&pomR){setPR(false);play('bell');const n=pomM==='focus'?'break':'focus';setPomM(n);setPT(n==='focus'?25*60:5*60);if(pomM==='focus')setPomSessions(s=>s+1);toast.success(pomM==='focus'?'Focus session complete — take a short break.':"Break's over — back to studying.");}},[ pomT,pomR,pomM]);
   useEffect(()=>{if(!mRun)return;const id=setInterval(()=>setMT(t=>t+1),1000);return()=>clearInterval(id);},[mRun]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
 
@@ -474,6 +483,7 @@ export default function App() {
   const qTaken  = Object.keys(qScores).length;
   const avgSc   = qTaken>0?Math.round(Object.values(qScores).reduce((a,b)=>a+b,0)/qTaken):0;
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
+  const daysToExam = user?.examDate ? Math.ceil((new Date(user.examDate+'T00:00:00') - new Date(new Date().toDateString())) / 86400000) : null;
 
   // Predicted MCAT
   const cats3   = ['Bio/Biochem','Chem/Phys','Psych/Soc'];
@@ -483,6 +493,21 @@ export default function App() {
   // FSRS due count
   const allCards = useMemo(()=>Object.values(cDecks).flat(),[cDecks]);
   const dueCards = useMemo(()=>getDueCards(allCards).length,[allCards]);
+
+  // Next lesson to resume (first not-done lesson in current pathway, in order)
+  const nextLesson = useMemo(()=>{
+    for(const u of (curPath?.units||[])){ for(const l of (u.lessons||[])){ if(!pathway[l.id]) return {...l,unitTitle:u.title}; } }
+    return null;
+  },[curPath,pathway]);
+
+  // Recommended next quiz — weakest attempted category first, else any untaken quiz
+  const recommendedQuiz = useMemo(()=>{
+    const attempted = secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v);
+    const weak = attempted.length && attempted[0].v<75 ? {cat:cats3[attempted[0].i],score:attempted[0].v} : null;
+    const pool = weak ? ALL_QUIZZES.filter(q=>q.cat===weak.cat&&qScores[q.id]===undefined) : ALL_QUIZZES.filter(q=>qScores[q.id]===undefined);
+    if(!pool.length) return null;
+    return {quiz:pool[0],reason:weak?`Your ${weak.cat} average is ${weak.score}% — this closes the gap fastest.`:'Next unattempted quiz in your library.'};
+  },[qScores]);
 
   // ── Pathway helpers ──────────────────────────────────────────────────────────
   const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>pathway[l.id]).length/unit.lessons.length*100):0;
@@ -496,18 +521,18 @@ export default function App() {
     saveUser(newUser);
     play('xp');
     celebrateXP();
-    toast.success(`+${xpGain} XP — ${lesson.title}`, { icon:'📚', duration:2500 });
+    toast.success(`+${xpGain} XP — ${lesson.title}`, { icon:<BookOpen size={16}/>, duration:2500 });
     // Check unit mastery
     const units=curPath?.units||[];
     const unit=units.find(u=>u.lessons.some(l=>l.id===lesson.id));
     if(unit){
       const allDone=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]);
-      if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}! 🎓`,{duration:4000});}
+      if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}`,{duration:4000});}
     }
     checkAndUnlockAchievements({...user,xp:(user?.xp||0)+xpGain},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,aiChatCount);
   }
 
-  function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:'🔄'});}
+  function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
   function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPort_([]);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
 
@@ -534,7 +559,7 @@ export default function App() {
     if(curLvl>prevLvlRef.current){
       celebrateLevelUp();
       play('levelUp');
-      toast.success(`Level ${curLvl} reached! 🏆 You're on fire!`,{duration:4000,icon:'⭐'});
+      toast.success(`Level ${curLvl} reached — ${mastery}% mastery in ${curPath?.label}.`,{duration:4000,icon:<Trophy size={16}/>});
     }
     prevLvlRef.current=curLvl;
   },[user?.xp]);
@@ -576,7 +601,7 @@ export default function App() {
 
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
-    if(geminiTokensRemaining<=0){toast.error(`Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow! 🚀`);return;}
+    if(geminiTokensRemaining<=0){toast.error(`Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow.`);return;}
     const um={role:'user',content:message};const next=[...msgs,um];
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
@@ -639,7 +664,7 @@ async function getMMIFb() {
     const xpGain=Math.round(pct*0.5);
     const newUser={...user,xp:(user?.xp||0)+xpGain};
     saveUser(newUser);
-    toast.success(`${pct}% · +${xpGain} XP`,{icon:pct>=80?'🌟':pct>=60?'📊':'💪',duration:3000});
+    toast.success(`${pct}% · +${xpGain} XP`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:3000});
     const newQCount=qTaken+1;
     checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mmiCount,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
@@ -647,11 +672,15 @@ async function getMMIFb() {
   }
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
+  const DIAG_CAT_LABELS = {biochem:'Biochemistry & Molecular Biology',chemphys:'Chemistry & Physics',psychsoc:'Psychology & Sociology',research:'Research Methods & Statistics'};
   function finalizeDiag(answers){
     const counts={surgeon:0,internist:0,psychiatrist:0,researcher:0,pediatrician:0,emergency_doc:0};
+    const catCounts={biochem:0,chemphys:0,psychsoc:0,research:0};
     const pm={biochem:['surgeon','pediatrician'],chemphys:['internist','emergency_doc'],psychsoc:['psychiatrist','pediatrician'],research:['researcher','internist']};
-    answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k&&pm[k])pm[k].forEach(sp=>{if(counts[sp]!==undefined)counts[sp]++;});});
-    setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'internist');setDD(true);
+    answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k){if(catCounts[k]!==undefined)catCounts[k]++;if(pm[k])pm[k].forEach(sp=>{if(counts[sp]!==undefined)counts[sp]++;});}});
+    setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'internist');
+    setDCats(Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([k])=>k));
+    setDD(true);
   }
 
   // ── Search indexes (memoized) ─────────────────────────────────────────────────
@@ -694,26 +723,54 @@ async function getMMIFb() {
         {/* Hero */}
         <div style={{...glass({padding:28}),background:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid rgba(45,127,255,0.15)`,position:'relative',overflow:'hidden'}}>
           <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${accent}10,transparent 70%)`,pointerEvents:'none'}}/>
-          <div style={{position:'absolute',right:20,top:20,opacity:.08,fontSize:80,lineHeight:1,pointerEvents:'none'}}>🧬</div>
           <div style={{position:'relative'}}>
             <div style={{fontSize:11,fontWeight:700,color:C.blueL,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
             <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
             <div style={R({gap:8,flexWrap:'wrap'})}>
               <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
               <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
-              {streak>0&&<span style={pill(C.amberDim,C.amberL)}>🔥 {streak} day streak</span>}
-              {dueCards>0&&<span style={pill(C.violetDim,C.violetL)}>📚 {dueCards} cards due</span>}
+              {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+              {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
+              {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
               {predMCAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predMCAT} predicted</span>}
             </div>
           </div>
         </div>
 
+        {/* Continue where you left off */}
+        {(nextLesson||recommendedQuiz)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
+          <div style={{flex:1,minWidth:220}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Continue</div>
+            {nextLesson?(
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Route size={16} color={accent}/></div>
+                <div style={{minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{nextLesson.title}</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:1}}>{nextLesson.unitTitle}</div>
+                </div>
+              </div>
+            ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
+            {nextLesson&&<button onClick={()=>setTab('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
+          </div>
+          {recommendedQuiz&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Recommended Quiz</div>
+            <div style={{display:'flex',alignItems:'center',gap:12}}>
+              <div style={{width:36,height:36,borderRadius:10,background:`${C.green}15`,border:`1px solid ${C.green}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.green}/></div>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{recommendedQuiz.quiz.title}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:1}}>{recommendedQuiz.reason}</div>
+              </div>
+            </div>
+            <button onClick={()=>setTab('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>Go to Quiz Library</button>
+          </div>}
+        </div>}
+
         {/* Stats */}
         <div style={G(4,14)}>
-          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon="⭐" color={C.amber} sub={`${250-xpIn} to Level ${lvl+1}`}/>
-          <Stat label="Level" value={lvl} icon="🏆" color={C.violet} sub={`${Math.floor((xpIn/250)*100)}% to next`}/>
-          <Stat label="Quizzes Done" value={qTaken} icon="✅" color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`}/>
-          <Stat label="Mastery" value={`${mastery}%`} icon="📈" color={accent} sub={`${doneL}/${allL.length} lessons`}/>
+          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${250-xpIn} to Level ${lvl+1}`}/>
+          <Stat label="Level" value={lvl} icon={<Trophy size={16}/>} color={C.violet} sub={`${Math.floor((xpIn/250)*100)}% to next`}/>
+          <Stat label="Quizzes Done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`}/>
+          <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`}/>
         </div>
 
         {/* XP Progress */}
@@ -730,12 +787,12 @@ async function getMMIFb() {
           <SL>Quick Actions</SL>
           <div style={G(3,14)}>
             {[
-              {ic:'🧭',lbl:'Diagnostic',sub:'Find your specialty',tab:'diagnostic',col:C.violet},
-              {ic:'📚',lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,tab:'pathway',col:accent},
-              {ic:'❓',lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,tab:'quizzes',col:C.green},
-              {ic:'🤖',lbl:'AI Coach',sub:'MetaBrain tutor',tab:'coach',col:C.cyan},
-              {ic:'🃏',lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,tab:'flashcards',col:dueCards>0?C.violet:C.orange},
-              {ic:'🏥',lbl:'Admissions',sub:'School list builder',tab:'calc',col:C.rose},
+              {Ic:Compass,lbl:'Diagnostic',sub:'Find your specialty',tab:'diagnostic',col:C.violet},
+              {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,tab:'pathway',col:accent},
+              {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,tab:'quizzes',col:C.green},
+              {Ic:MessageCircle,lbl:'AI Coach',sub:'MetaBrain tutor',tab:'coach',col:C.cyan},
+              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,tab:'flashcards',col:dueCards>0?C.violet:C.orange},
+              {Ic:Building2,lbl:'Admissions',sub:'School list builder',tab:'calc',col:C.rose},
             ].map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
                 onClick={()=>{setTab(a.tab);play('click');}}
@@ -743,7 +800,7 @@ async function getMMIFb() {
                 onMouseEnter={e=>e.currentTarget.style.borderColor=`${a.col}35`}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
                 <div style={{position:'absolute',top:-20,right:-20,width:60,height:60,borderRadius:'50%',background:`${a.col}08`,pointerEvents:'none'}}/>
-                <div style={{width:40,height:40,borderRadius:10,background:`${a.col}15`,border:`1px solid ${a.col}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:19,marginBottom:12,boxShadow:`0 4px 12px ${a.col}20`}}>{a.ic}</div>
+                <div style={{width:40,height:40,borderRadius:10,background:`${a.col}15`,border:`1px solid ${a.col}20`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12,boxShadow:`0 4px 12px ${a.col}20`}}><a.Ic size={19} color={a.col}/></div>
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>{a.lbl}</div>
                 <div style={{fontSize:11,color:C.t3}}>{a.sub}</div>
               </motion.div>
@@ -757,8 +814,9 @@ async function getMMIFb() {
           <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
             {Object.values(ACHIEVEMENTS).map(a=>{
               const has=achiev.has(a.key);
-              return<div key={a.key} title={`${a.name}: ${a.desc}`} style={{width:40,height:40,borderRadius:10,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,opacity:has?1:.3,cursor:'default',transition:'all .2s'}}>
-                {a.icon}
+              const AIc=ACH_ICONS[a.icon]||Award;
+              return<div key={a.key} title={`${a.name}: ${a.desc}`} style={{width:40,height:40,borderRadius:10,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',opacity:has?1:.3,cursor:'default',transition:'all .2s'}}>
+                <AIc size={18} color={has?C.amberL:C.t3}/>
               </div>;
             })}
           </div>
@@ -809,18 +867,30 @@ async function getMMIFb() {
 
   // ── DIAGNOSTIC ────────────────────────────────────────────────────────────────
   function tDiag(){
-    if(dDone&&dRes){const path=PATHS[dRes];return(
+    if(dDone&&dRes){const path=PATHS[dRes];
+      const topCats=(dCats||[]).slice(0,2).map(k=>DIAG_CAT_LABELS[k]).filter(Boolean);
+      const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
+      return(
       <div style={CC({gap:22})}>
         <div><div style={lbl()}>Specialty Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`})}}>
-          <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:36,margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}>🩺</div>
+          <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}><Stethoscope size={34} color={accent}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
-          <p style={{color:C.t2,maxWidth:460,margin:'0 auto 28px',lineHeight:1.75,fontSize:14}}>Your interests and academic strengths align with the <strong style={{color:C.t1}}>{path?.label}</strong> path. Your curriculum will prioritize the most relevant MCAT content.</p>
+          <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>
+            {topCats.length>0
+              ? <>Your answers leaned most toward <strong style={{color:C.t1}}>{topCats.join(' and ')}</strong> — a pattern consistent with <strong style={{color:C.t1}}>{path?.label}</strong>.</>
+              : <>Based on your answers, <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</>}
+          </p>
+          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced to build the MCAT content most relevant to {path?.label.toLowerCase()}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
-            <button style={btn(C.blueGrad,{padding:'12px 32px',fontSize:14})} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('pathway');toast.success(`${path?.label} pathway activated!`);}}>Accept & Start Pathway →</button>
-            <button style={btnG({padding:'12px 24px'})} onClick={()=>{setDD(false);setDS(0);setDA([]);}}>Retake</button>
+            <button style={{...btn(C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
+            <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
+        <div style={{...glass({padding:14}),display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.02)'}}>
+          <Milestone size={14} color={C.t3}/>
+          <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
+        </div>
         <div style={glass({padding:18})}>
           <SL>Explore Other Paths</SL>
           <div style={G(3,10)}>
@@ -900,7 +970,7 @@ async function getMMIFb() {
                       {avail&&<a href={lesson.url} target="_blank" rel="noreferrer" style={{...btnSm(C.s4,{color:C.t2,textDecoration:'none',fontSize:11})}}>Study ↗</a>}
                       {avail&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`})} onClick={()=>doneLesson(lesson)}>✓ Done</motion.button>}
                       {isDone&&<span style={{fontSize:12,color:C.green,fontWeight:700}}>✓</span>}
-                      {state==='locked'&&<span style={{fontSize:11,color:C.t4}}>🔒</span>}
+                      {state==='locked'&&<Lock size={12} color={C.t4}/>}
                     </div>
                   );
                 })}
@@ -934,9 +1004,8 @@ async function getMMIFb() {
             <div style={lbl()}>Quiz Library</div>
             <div style={R({gap:10,flexWrap:'wrap',alignItems:'center',marginTop:4})}>
               <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{ALL_QUIZZES.length} Quizzes</h2>
-              <span style={pill(`${C.violet}20`,C.violet,{fontSize:9,fontWeight:800,letterSpacing:'.14em',border:`1px solid ${C.violet}40`,textTransform:'uppercase',padding:'3px 9px'})}>BETA</span>
             </div>
-            <div style={{fontSize:12,color:C.t3,marginTop:3,fontFamily:C.FM}}>{TOTAL_QUESTIONS} Questions · Questions & answer order scrambled each attempt</div>
+            <div style={{fontSize:12,color:C.t3,marginTop:3,fontFamily:C.FM}}>{TOTAL_QUESTIONS} questions · order scrambled each attempt</div>
           </div>
           <div style={R({gap:8,alignSelf:'flex-start'})}>{qTaken>0&&<span style={pill(C.greenDim,C.greenL)}>{qTaken}/{ALL_QUIZZES.length} done</span>}{avgSc>0&&<span style={pill(`${scCol(avgSc)}18`,scCol(avgSc),{fontFamily:C.FM})}>{avgSc}% avg</span>}</div>
         </div>
@@ -951,24 +1020,20 @@ async function getMMIFb() {
         </div>
         <div style={R({flexWrap:'wrap',gap:10})}>
           <div style={{flex:1,minWidth:180,position:'relative'}}>
-            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,fontSize:14,pointerEvents:'none'}}>⌕</span>
-            <input style={inp({paddingLeft:36})} placeholder="Fuzzy search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
+            <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
           </div>
           <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Bio/Biochem','Chem/Phys','Psych/Soc'].map(c=><option key={c}>{c}</option>)}</select>
           <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
         </div>
-        {/* Weakness spotlight */}
-        {secAvgs.some(v=>v!==null&&v<60)&&<div style={{...glass({padding:16,background:C.amberDim,border:`1px solid ${C.amber}25`})}}>
-          <div style={R({gap:10})}>
-            <span style={{fontSize:20}}>⚡</span>
-            <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.amberL,fontFamily:C.FD}}>Focus Area Detected</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:2}}>
-                Your scores suggest focusing on: {cats3.filter((_,i)=>secAvgs[i]!==null&&secAvgs[i]<60).join(', ')}.
-                Try the quizzes in that category next.
-              </div>
-            </div>
+        {/* Recommended next quiz — persistent, driven by weakest attempted category */}
+        {recommendedQuiz&&<div style={{...glass({padding:16,background:C.amberDim,border:`1px solid ${C.amber}25`}),display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+          <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}18`,border:`1px solid ${C.amber}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Target size={17} color={C.amberL}/></div>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.amberL,fontFamily:C.FD}}>Recommended: {recommendedQuiz.quiz.title}</div>
+            <div style={{fontSize:12,color:C.t2,marginTop:2}}>{recommendedQuiz.reason}</div>
           </div>
+          <button style={btn(`linear-gradient(135deg,${C.amber},${C.amberL})`,{fontSize:12,padding:'8px 18px'})} onClick={()=>{setAQ(recommendedQuiz.quiz);play('click');}}>Start Now</button>
         </div>}
         <div style={G(2,14)}>
           {fQuiz.map((q,qi)=>{
@@ -1012,7 +1077,7 @@ async function getMMIFb() {
     return(
       <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 64px)'}}>
         <div style={R({justifyContent:'space-between',paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0})}>
-          <div><div style={lbl()}>AI Coach</div><h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain ✦</h2></div>
+          <div><div style={lbl()}>AI Coach</div><h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain</h2></div>
           <div style={R({gap:8})}>
             {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
             <span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{geminiTokensRemaining}/1000 tokens</span>
@@ -1021,7 +1086,7 @@ async function getMMIFb() {
         </div>
         {geminiTokensRemaining<=0&&(
           <div style={{flexShrink:0,marginBottom:14,padding:'10px 16px',borderRadius:12,background:C.roseDim,border:`1px solid ${C.rose}30`,fontSize:13,color:C.t1}}>
-            Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow! 🚀
+            Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow.
           </div>
         )}
         {msgs.length===0&&(
@@ -1040,7 +1105,7 @@ async function getMMIFb() {
           <AnimatePresence>
             {msgs.map((m,i)=>(
               <motion.div key={i} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:10}}>
-                {m.role==='assistant'&&<div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${accent}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,flexShrink:0}}>✦</div>}
+                {m.role==='assistant'&&<div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${accent}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><MessageCircle size={14} color={accent}/></div>}
                 <div style={{maxWidth:'78%',padding:'13px 18px',borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.role==='user'?`linear-gradient(135deg,${accent},${C.blueD})`:m.role==='error'?C.roseDim:C.s2,border:m.role==='user'?'none':m.role==='error'?`1px solid ${C.rose}30`:`1px solid ${C.b1}`,fontSize:14,lineHeight:1.75,color:C.t1,fontFamily:C.FB,boxShadow:m.role==='user'?`0 4px 16px ${accent}30`:'0 2px 8px rgba(0,0,0,0.3)'}}>
                   {m.role==='assistant'?<div dangerouslySetInnerHTML={{__html:renderMarkdown(m.content)}}/>:m.content}
                 </div>
@@ -1048,7 +1113,7 @@ async function getMMIFb() {
             ))}
           </AnimatePresence>
           {cLoad&&<motion.div initial={{opacity:0}} animate={{opacity:1}} style={{display:'flex',alignItems:'flex-end',gap:10}}>
-            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${accent}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12}}>✦</div>
+            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${accent}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><MessageCircle size={14} color={accent}/></div>
             <div style={{padding:'13px 18px',background:C.s2,border:`1px solid ${C.b1}`,borderRadius:'18px 18px 18px 4px',fontSize:14,color:C.t3}}>Thinking…</div>
           </motion.div>}
           <div ref={chatEnd}/>
@@ -1068,7 +1133,7 @@ async function getMMIFb() {
         <div style={CC({gap:16})}>
           <button style={btnG({alignSelf:'flex-start'})} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>← All Decks</button>
           <div style={{...glass({padding:40,textAlign:'center'})}}>
-            <div style={{fontSize:48,marginBottom:16}}>🎉</div>
+            <div style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></div>
             <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
             <div style={{fontSize:14,color:C.t2,marginBottom:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
@@ -1119,7 +1184,7 @@ async function getMMIFb() {
             <motion.button whileHover={{scale:1.04}} style={btnG({padding:'9px 20px'})} onClick={()=>{setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);}} disabled={cIdx===deckCards.length-1}>Next →</motion.button>
           </div>
           {/* Export deck */}
-          <button style={btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'})} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}>📄 Export Deck PDF</button>
+          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
         </div>
       );
     }
@@ -1140,12 +1205,12 @@ async function getMMIFb() {
         {/* AI Generator */}
         <div style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`})}}>
           <div style={R({marginBottom:14})}>
-            <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,boxShadow:`0 4px 12px ${C.violet}20`}}>✨</div>
+            <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Sparkles size={17} color={C.violetL}/></div>
             <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — AI creates 10–14 high-yield cards</div></div>
           </div>
           <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your MCAT study notes, lecture slides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
           <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`})} onClick={genDeck} disabled={gLoad||!notes.trim()}>
-            {gLoad?'Generating…':'✨ Generate Flashcards'}
+            {gLoad?'Generating…':'Generate Flashcards'}
           </motion.button>
         </div>
         <div style={G(3,12)}>
@@ -1245,10 +1310,10 @@ async function getMMIFb() {
 
         {/* Summary stats */}
         <div style={G(4,14)}>
-          <Stat label="Total Hours" value={totH} icon="⏱" color={accent}/>
-          <Stat label="Clinical" value={clinH} icon="🏥" color={C.green} sub="Rec: 200+"/>
-          <Stat label="Research" value={resH} icon="🔬" color={C.amber} sub="Rec: 1+ yr"/>
-          <Stat label="Volunteer" value={volH} icon="🤝" color={C.violet} sub="Rec: 150+"/>
+          <Stat label="Total Hours" value={totH} icon={<Clock size={16}/>} color={accent}/>
+          <Stat label="Clinical" value={clinH} icon={<Building2 size={16}/>} color={C.green} sub="Rec: 200+"/>
+          <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 1+ yr"/>
+          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+"/>
         </div>
 
         {/* Progress bars toward recommended hours */}
@@ -1301,7 +1366,7 @@ async function getMMIFb() {
               </motion.div>
             );})}
           </AnimatePresence>
-          <button style={btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'})} onClick={()=>exportSchoolList([],{note:'Portfolio export'})}>📄 Export Portfolio PDF</button>
+          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList([],{note:'Portfolio export'})}><FileDown size={13}/>Export Portfolio PDF</button>
         </div>}
 
         {/* Opportunities */}
@@ -1383,7 +1448,7 @@ async function getMMIFb() {
 
           <div style={R({gap:10})}>
             <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(C.blueGrad,{fontSize:13,boxShadow:`0 4px 16px ${accent}30`})} onClick={getMMIFb} disabled={mLoad||!mAns.trim()}>
-              {mLoad?'Analyzing response…':'✦ Get AI Feedback'}
+              {mLoad?'Analyzing response…':'Get AI Feedback'}
             </motion.button>
             {mAns.trim()&&<button style={btnG({fontSize:12,padding:'10px 18px'})} onClick={()=>{setMA('');setMF('');setMT(0);setMR(false);}}>Reset</button>}
           </div>
@@ -1457,7 +1522,7 @@ async function getMMIFb() {
 
         {/* Export button */}
         {calcR.length>0&&<div style={R({gap:10})}>
-          <button style={btnG({fontSize:12,padding:'9px 18px'})} onClick={()=>exportSchoolList(calcR,{gpa:cGPA,mcat:cMCAT})}>📄 Export School List PDF</button>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList(calcR,{gpa:cGPA,mcat:cMCAT})}><FileDown size={14}/>Export School List PDF</button>
         </div>}
 
         {/* School tiers */}
@@ -1553,10 +1618,10 @@ async function getMMIFb() {
 
         {/* Top stats */}
         <div style={G(4,14)}>
-          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon="⭐" color={C.amber}/>
-          <Stat label="Level" value={lvl} icon="🏆" color={C.violet}/>
-          <Stat label="Avg Score" value={`${avgSc}%`} icon="📊" color={scCol(avgSc)}/>
-          <Stat label="Study Streak" value={`${streak}d`} icon="🔥" color={C.orange}/>
+          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber}/>
+          <Stat label="Level" value={lvl} icon={<Trophy size={16}/>} color={C.violet}/>
+          <Stat label="Avg Score" value={`${avgSc}%`} icon={<LineChart size={16}/>} color={scCol(avgSc)}/>
+          <Stat label="Study Streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange}/>
         </div>
 
         {/* Predicted MCAT */}
@@ -1658,9 +1723,9 @@ async function getMMIFb() {
 
         {/* Card review stats */}
         <div style={G(3,14)}>
-          <Stat label="Cards Reviewed" value={totalReviews} icon="🃏" color={C.violet} sub="Total all-time"/>
-          <Stat label="Due Now" value={dueCards} icon="📅" color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'}/>
-          <Stat label="MMI Practice" value={mmiCount} icon="🎙️" color={C.cyan} sub="Stations answered"/>
+          <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time"/>
+          <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'}/>
+          <Stat label="MMI Practice" value={mmiCount} icon={<Mic size={16}/>} color={C.cyan} sub="Stations answered"/>
         </div>
 
         {/* Achievements */}
@@ -1697,13 +1762,24 @@ async function getMMIFb() {
               <div style={{fontSize:16,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{user.name}</div>
               <div style={{fontSize:12,color:C.t3,marginTop:2}}>Level {lvl} · {curPath?.label} · {(user.xp||0).toLocaleString()} XP total</div>
               <div style={R({gap:8,marginTop:6})}>
-                {streak>0&&<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>🔥 {streak} day streak</span>}
+                {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={10}/>{streak} day streak</span>}
                 <span style={pill(C.greenDim,C.greenL,{fontSize:10})}>{achiev.size} achievements</span>
               </div>
             </div>
           </div>
           <div style={CC({gap:4,marginBottom:14})}><span style={lbl()}>Display Name</span><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn()} onClick={()=>{if(!sName.trim())return;saveUser({...user,name:sName.trim()});setSN('');toast.success('Name updated!');}}>Save Name</button>
+          <button style={btn()} onClick={()=>{if(!sName.trim())return;saveUser({...user,name:sName.trim()});setSN('');toast.success('Name updated');}}>Save Name</button>
+        </div>
+
+        {/* Exam date */}
+        <div style={glass({padding:18})}>
+          <SL>Test Day</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your MCAT date to see a countdown and pacing guidance on your Home page.</p>
+          <div style={R({gap:10,flexWrap:'wrap'})}>
+            <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
+            <button style={btn()} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
+            {user?.examDate&&<button style={btnG()} onClick={()=>{saveUser({...user,examDate:null});setSExamDate('');toast('Test date cleared');}}>Clear</button>}
+          </div>
         </div>
 
         {/* Sound toggle */}
@@ -1740,7 +1816,7 @@ async function getMMIFb() {
         <div style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
-          <button style={btnG({fontSize:12,padding:'9px 18px'})} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}>📦 Export All Data</button>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
         {/* Danger zone */}
@@ -1777,7 +1853,7 @@ async function getMMIFb() {
           <div style={{position:'absolute',bottom:'-10%',left:'-5%',width:'35vw',height:'35vw',borderRadius:'50%',background:`radial-gradient(circle,rgba(6,182,212,0.07),transparent 65%)`,pointerEvents:'none'}}/>
           <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
             <div style={{textAlign:'center',marginBottom:36}}>
-              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,rgba(45,127,255,0.25),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.3)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32,margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}>🧬</motion.div>
+              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,rgba(45,127,255,0.25),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.3)`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><Dna size={34} color={C.blueL}/></motion.div>
               <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
               <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>The complete AI-powered ecosystem for MCAT preparation and medical school admissions.</p>
             </div>
@@ -1843,7 +1919,7 @@ async function getMMIFb() {
           {/* Logo */}
           <div style={{padding:'20px 18px 16px',borderBottom:`1px solid ${C.b1}`}}>
             <div style={R({gap:11})}>
-              <div style={{width:34,height:34,borderRadius:9,background:`linear-gradient(135deg,rgba(45,127,255,0.3),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.25)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:17,boxShadow:`0 4px 12px rgba(45,127,255,0.2)`}}>🧬</div>
+              <div style={{width:34,height:34,borderRadius:9,background:`linear-gradient(135deg,rgba(45,127,255,0.3),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.25)`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px rgba(45,127,255,0.2)`}}><Dna size={17} color={C.blueL}/></div>
               <div>
                 <div style={{fontSize:14,fontWeight:800,color:C.t1,letterSpacing:'-.02em',fontFamily:C.FD}}>MedSchoolPrep</div>
                 <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginTop:1}}>MCAT + ADMISSIONS</div>
@@ -1867,13 +1943,13 @@ async function getMMIFb() {
               <span style={{fontSize:10,color:accent,fontFamily:C.FM,fontWeight:600}}>{Math.round((xpIn/250)*100)}%</span>
             </div>
             <Bar pct={(xpIn/250)*100} color={accent} h={3} glow/>
-            {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}>🔥 {streak}d streak</span>{dueCards>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{dueCards} due</span>}</div>}
+            {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={10}/>{streak}d streak</span>{dueCards>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{dueCards} due</span>}</div>}
           </div>
 
           {/* Pomodoro */}
           <div style={{padding:'13px 18px',borderBottom:`1px solid ${C.b1}`}}>
             <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:10}}>
-              {pomM==='focus'?'🎯 Focus Session':'☕ Break Time'}{pomSessions>0&&<span style={{marginLeft:6,fontFamily:C.FM,color:C.amber}}>×{pomSessions}</span>}
+              <span style={{display:'inline-flex',alignItems:'center',gap:5}}>{pomM==='focus'?<Target size={11}/>:<Coffee size={11}/>}{pomM==='focus'?'Focus Session':'Break Time'}</span>{pomSessions>0&&<span style={{marginLeft:6,fontFamily:C.FM,color:C.amber}}>×{pomSessions}</span>}
             </div>
             <div style={R({gap:10})}>
               <Arc pct={pomPct} size={50} stroke={4} color={pomM==='focus'?accent:C.green} label={fmtT(pomT)}/>
@@ -1895,7 +1971,7 @@ async function getMMIFb() {
                     background:active?`linear-gradient(90deg,${accent}18,${accent}05)`:undefined,
                     color:active?'#fff':C.t2,fontWeight:active?700:400,fontSize:13,fontFamily:C.FB,
                     borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'color .12s,background .12s'}}>
-                  <span style={{fontSize:15,width:20,textAlign:'center',flexShrink:0,filter:active?`drop-shadow(0 0 4px ${accent})`:'none'}}>{n.ic}</span>
+                  <span style={{width:20,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,filter:active?`drop-shadow(0 0 4px ${accent})`:'none'}}><n.ic size={15} strokeWidth={2.25}/></span>
                   <span style={{flex:1}}>{n.label}</span>
                   {n.id==='flashcards'&&dueCards>0&&<span style={{fontSize:10,fontFamily:C.FM,background:C.violet,color:'#fff',borderRadius:10,padding:'1px 7px',fontWeight:700}}>{dueCards}</span>}
                   {n.id==='quizzes'&&qTaken>0&&<span style={{fontSize:10,fontFamily:C.FM,background:C.blueGrad,color:'#fff',borderRadius:10,padding:'1px 7px',fontWeight:700}}>{qTaken}</span>}
