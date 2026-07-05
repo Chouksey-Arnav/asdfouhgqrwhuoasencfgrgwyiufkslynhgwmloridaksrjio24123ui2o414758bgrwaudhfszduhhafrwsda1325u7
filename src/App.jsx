@@ -16,7 +16,7 @@ import {
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
   Stethoscope, Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
-  ListFilter, Timer, Trash2, GraduationCap, ScrollText,
+  ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, Pause, ExternalLink, Plus,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Mic, Milestone, MessageCircle };
@@ -223,10 +223,10 @@ function VideoModal({ytId,title,onClose}){
       <motion.div initial={{scale:.95,y:10}} animate={{scale:1,y:0}} exit={{scale:.95,y:10}} style={{width:'100%',maxWidth:920,...glass({padding:0,overflow:'hidden',borderRadius:20,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
         <div style={{...R({justifyContent:'space-between'}),padding:'14px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1}}>
           <div style={R({gap:10})}>
-            <span style={pill('rgba(239,68,68,0.2)','#f87171',{fontSize:10})}>▶ YouTube</span>
+            <span style={{...pill('rgba(239,68,68,0.2)','#f87171',{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Play size={9} fill="currentColor"/>YouTube</span>
             <span style={{fontSize:14,fontWeight:600,color:C.t1,fontFamily:C.FB}}>{title}</span>
           </div>
-          <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,fontSize:20,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}>✕</button>
+          <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
         </div>
         <div style={{position:'relative',paddingBottom:'56.25%',height:0}}>
           <iframe style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none'}} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
@@ -804,7 +804,7 @@ async function getMMIFb() {
         {/* XP Progress */}
         <div style={glass({padding:18})}>
           <div style={R({justifyContent:'space-between',marginBottom:10})}>
-            <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl}</span><span style={{fontSize:12,color:C.t3,marginLeft:8}}>→ Level {lvl+1}</span></div>
+            <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
             <span style={{fontSize:12,fontFamily:C.FM,color:C.blueL,fontWeight:600}}>{xpIn} / 250 XP</span>
           </div>
           <Bar pct={(xpIn/250)*100} color={accent} h={8} glow/>
@@ -887,7 +887,7 @@ async function getMMIFb() {
               </div>
             );})}
           </div>
-          <button onClick={()=>setTab('pathway')} style={btnG({marginTop:18,width:'100%',justifyContent:'center'})}>View Full Pathway →</button>
+          <button onClick={()=>setTab('pathway')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
         </div>
       </div>
     );
@@ -953,7 +953,7 @@ async function getMMIFb() {
             ))}
           </div>
         </motion.div>
-        {dStep>0&&<button style={btnG({alignSelf:'flex-start'})} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}>← Back</button>}
+        {dStep>0&&<button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}><ChevronLeft size={14}/>Back</button>}
       </div>
     );
   }
@@ -979,7 +979,7 @@ async function getMMIFb() {
                 <div style={{flex:1}}>
                   <div style={R({gap:8,marginBottom:3})}>
                     <span style={{fontSize:10,fontWeight:700,color:C.t3,fontFamily:C.FM,letterSpacing:'.08em'}}>UNIT {ui+1}</span>
-                    {done&&<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>✓ Mastered</span>}
+                    {done&&<span style={{...pill(C.greenDim,C.greenL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Mastered</span>}
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
                   <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.length} lessons · {unit.quizCat}</div>
@@ -995,9 +995,9 @@ async function getMMIFb() {
                         <div style={{fontSize:13,fontWeight:isDone?700:400,color:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
                         <div style={{fontSize:11,color:C.t3,marginTop:1}}>{lesson.src}</div>
                       </div>
-                      {avail&&<a href={lesson.url} target="_blank" rel="noreferrer" style={{...btnSm(C.s4,{color:C.t2,textDecoration:'none',fontSize:11})}}>Study ↗</a>}
-                      {avail&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`})} onClick={()=>doneLesson(lesson)}>✓ Done</motion.button>}
-                      {isDone&&<span style={{fontSize:12,color:C.green,fontWeight:700}}>✓</span>}
+                      {avail&&<a href={lesson.url} target="_blank" rel="noreferrer" style={{...btnSm(C.s4,{color:C.t2,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Study<ExternalLink size={11}/></a>}
+                      {avail&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>doneLesson(lesson)}><Check size={12}/>Done</motion.button>}
+                      {isDone&&<Check size={14} color={C.green} strokeWidth={3}/>}
                       {state==='locked'&&<Lock size={12} color={C.t4}/>}
                     </div>
                   );
@@ -1299,8 +1299,8 @@ async function getMMIFb() {
         </div>
         <div style={R({flexWrap:'wrap',gap:10})}>
           <div style={{flex:1,minWidth:200,position:'relative'}}>
-            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,fontSize:14,pointerEvents:'none'}}>⌕</span>
-            <input style={inp({paddingLeft:36})} placeholder="Fuzzy search videos, books, courses…" value={lSrch} onChange={e=>setLS(e.target.value)}/>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
+            <input style={inp({paddingLeft:36})} placeholder="Search videos, books, courses…" value={lSrch} onChange={e=>setLS(e.target.value)}/>
           </div>
           <select style={inp({width:'auto'})} value={lCat} onChange={e=>setLC(e.target.value)}>{LIB_CATS.map(c=><option key={c}>{c}</option>)}</select>
         </div>
@@ -1313,7 +1313,7 @@ async function getMMIFb() {
                   <img src={`https://img.youtube.com/vi/${r.ytId}/mqdefault.jpg`} alt={r.title} loading="lazy" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',transition:'transform .4s'}} onError={e=>{e.target.style.display='none';}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
                   <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(4,6,11,0.85) 0%,transparent 55%)'}}/>
                   <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <motion.div whileHover={{scale:1.12,background:'rgba(255,255,255,0.22)'}} style={{width:52,height:52,borderRadius:'50%',background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,border:'1.5px solid rgba(255,255,255,0.25)'}}>▶</motion.div>
+                    <motion.div whileHover={{scale:1.12,background:'rgba(255,255,255,0.22)'}} style={{width:52,height:52,borderRadius:'50%',background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',border:'1.5px solid rgba(255,255,255,0.25)'}}><Play size={20} color="white" fill="white"/></motion.div>
                   </div>
                   <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:5})}>YouTube</span>
                 </div>
@@ -1322,7 +1322,7 @@ async function getMMIFb() {
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between'})}>
                     <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
-                    <button style={btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11})} onClick={()=>setVM({ytId:r.ytId,title:r.title})}>▶ Watch</button>
+                    <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title})}><Play size={11} fill="currentColor"/>Watch</button>
                   </div>
                 </div>
               </motion.div>
@@ -1343,7 +1343,7 @@ async function getMMIFb() {
                 </div>
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
                 <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
-                <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11})}}> Open ↗</a>
+                <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
               </motion.div>
             );})}
           </div>
@@ -1378,7 +1378,7 @@ async function getMMIFb() {
             <div key={l} style={{marginBottom:14}}>
               <div style={R({justifyContent:'space-between',marginBottom:6})}>
                 <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
-                <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3}}>{val} / {target}{val>=target?' ✓':''}</span>
+                <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
               </div>
               <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
             </div>
@@ -1396,14 +1396,14 @@ async function getMMIFb() {
               </div>
             ))}
           </div>
-          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16}} onClick={async()=>{
+          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16,display:'inline-flex',alignItems:'center',gap:8}} onClick={async()=>{
             if(!aN.trim())return;
             const item={name:aN,type:aT,hours:aH,date:aDate,addedAt:Date.now()};
             const id=await DB.addPortfolioItem(item);
             setPort_(p=>[...p,{...item,id}]);
             setAN('');setAH('');setADate('');
             toast.success(`Added: ${aN.slice(0,40)}`);
-          }}>+ Add to Portfolio</motion.button>
+          }}><Plus size={15}/>Add to Portfolio</motion.button>
         </div>
 
         {/* Activity list */}
@@ -1441,7 +1441,7 @@ async function getMMIFb() {
                 </div>
                 <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:5}}>{c.name}</div>
                 <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>{c.desc}</div>
-                <button style={btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11})} onClick={async()=>{const item={name:c.name,type:c.type,hours:'0',date:'',addedAt:Date.now()};const id=await DB.addPortfolioItem(item);setPort_(p=>[...p,{...item,id}]);toast.success(`Added: ${c.name.slice(0,30)}`);}} >+ Add to Portfolio</button>
+                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{const item={name:c.name,type:c.type,hours:'0',date:'',addedAt:Date.now()};const id=await DB.addPortfolioItem(item);setPort_(p=>[...p,{...item,id}]);toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
               </motion.div>
             );})}
           </div>
@@ -1468,8 +1468,8 @@ async function getMMIFb() {
           </select>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             <span style={{fontSize:12,color:C.t3,fontFamily:C.FM}}>Station {mIdx+1} / {fMmi.length}</span>
-            <button style={btnG({padding:'7px 14px',fontSize:12})} onClick={()=>{setMI(i=>Math.max(0,i-1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===0}>←</button>
-            <button style={btnG({padding:'7px 14px',fontSize:12})} onClick={()=>{setMI(i=>Math.min(fMmi.length-1,i+1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===fMmi.length-1}>→</button>
+            <button style={{...btnG({padding:'7px 14px',fontSize:12}),display:'inline-flex',alignItems:'center'}} onClick={()=>{setMI(i=>Math.max(0,i-1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===0}><ChevronLeft size={14}/></button>
+            <button style={{...btnG({padding:'7px 14px',fontSize:12}),display:'inline-flex',alignItems:'center'}} onClick={()=>{setMI(i=>Math.min(fMmi.length-1,i+1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===fMmi.length-1}><ChevronRight size={14}/></button>
           </div>
         </div>
 
@@ -1480,8 +1480,8 @@ async function getMMIFb() {
             <div style={{marginLeft:'auto',...R({gap:12})}}>
               <span style={{fontSize:20,fontWeight:700,fontFamily:C.FM,color:mRun?C.green:mTimer>0?C.amber:C.t3,transition:'color .3s'}}>{fmtT(mTimer)}</span>
               {!mRun
-                ?<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={btn(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:12,padding:'8px 18px',boxShadow:`0 4px 12px ${C.green}30`})} onClick={()=>{setMT(0);setMR(true);}}>▶ Start Timer</motion.button>
-                :<motion.button whileHover={{scale:1.04}} style={btn(`linear-gradient(135deg,${C.rose},#dc2626)`,{fontSize:12,padding:'8px 18px'})} onClick={()=>setMR(false)}>⏸ Pause</motion.button>}
+                ?<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:12,padding:'8px 18px',boxShadow:`0 4px 12px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:7}} onClick={()=>{setMT(0);setMR(true);}}><Play size={13} fill="currentColor"/>Start Timer</motion.button>
+                :<motion.button whileHover={{scale:1.04}} style={{...btn(`linear-gradient(135deg,${C.rose},#dc2626)`,{fontSize:12,padding:'8px 18px'}),display:'inline-flex',alignItems:'center',gap:7}} onClick={()=>setMR(false)}><Pause size={13} fill="currentColor"/>Pause</motion.button>}
             </div>
           </div>
 
@@ -1787,9 +1787,9 @@ async function getMMIFb() {
         {achiev.size>0&&<div style={glass({padding:18})}>
           <SL>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
           <div style={G(4,10)}>
-            {Object.values(ACHIEVEMENTS).map(a=>{const has=achiev.has(a.key);return(
+            {Object.values(ACHIEVEMENTS).map(a=>{const has=achiev.has(a.key);const AIc=ACH_ICONS[a.icon]||Award;return(
               <div key={a.key} title={`${a.name}: ${a.desc}${has?` (+${a.xp} XP)`:''}`} style={{...glass2({padding:12,textAlign:'center',opacity:has?1:.35,border:has?`1px solid ${C.amber}30`:undefined,transition:'opacity .2s'})}}>
-                <div style={{fontSize:24,marginBottom:4}}>{a.icon}</div>
+                <div style={{display:'flex',justifyContent:'center',marginBottom:6}}><AIc size={20} color={has?C.amberL:C.t3}/></div>
                 <div style={{fontSize:10,fontWeight:600,color:has?C.amberL:C.t3,lineHeight:1.3,fontFamily:C.FD}}>{a.name}</div>
                 {has&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:9,marginTop:6,fontFamily:C.FM})}}>+{a.xp}xp</div>}
               </div>
@@ -1860,7 +1860,7 @@ async function getMMIFb() {
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:sSpec===key?p.accent:eSpec===key?p.accent:C.t2,fontFamily:C.FD}}>{p.label}</div>
                 <div style={{fontSize:11,color:C.t3,marginTop:3}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
-                {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:4,fontWeight:700}}>✓ Current</div>}
+                {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:4,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
           </div>
@@ -1924,7 +1924,7 @@ async function getMMIFb() {
                 onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'internist',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your specialty path.`);}}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
                 onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'internist',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your specialty path.`);}}>
-                Get Started →
+                Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>No account required · Data stored locally · Works offline</p>
             </div>
@@ -2009,7 +2009,7 @@ async function getMMIFb() {
             <div style={R({gap:10})}>
               <Arc pct={pomPct} size={50} stroke={4} color={pomM==='focus'?accent:C.green} label={fmtT(pomT)}/>
               <div style={CC({gap:6,flex:1})}>
-                <button style={btnSm(pomR?C.roseDim:C.greenDim,{color:pomR?C.rose:C.greenL,border:`1px solid ${pomR?C.rose:C.green}30`,padding:'5px 0',width:'100%',fontSize:11})} onClick={()=>setPR(r=>!r)}>{pomR?'⏸ Pause':'▶ Start'}</button>
+                <button style={{...btnSm(pomR?C.roseDim:C.greenDim,{color:pomR?C.rose:C.greenL,border:`1px solid ${pomR?C.rose:C.green}30`,padding:'5px 0',width:'100%',fontSize:11}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:5}} onClick={()=>setPR(r=>!r)}>{pomR?<><Pause size={11} fill="currentColor"/>Pause</>:<><Play size={11} fill="currentColor"/>Start</>}</button>
                 <button style={btnSm(C.s4,{color:C.t3,border:`1px solid ${C.b1}`,padding:'5px 0',width:'100%',fontSize:11})} onClick={()=>{setPR(false);setPT(pomM==='focus'?25*60:5*60);}}>↺ Reset</button>
               </div>
             </div>
