@@ -2,19 +2,20 @@
 // Achievement system — definitions and check logic
 // ─────────────────────────────────────────────────────────────────────────────
 
+// icon values are lucide-react component names, resolved to components in App.jsx (ACH_ICONS map)
 export const ACHIEVEMENTS = {
-  first_quiz:   { key:'first_quiz',   name:'First Steps',      desc:'Complete your first quiz',         icon:'🎯', xp:50  },
-  perfect_score:{ key:'perfect_score',name:'Perfect Score',    desc:'Score 100% on any quiz',           icon:'⭐', xp:100 },
-  quiz_10:      { key:'quiz_10',      name:'Quiz Champion',    desc:'Complete 10 quizzes',              icon:'🏆', xp:150 },
-  level_5:      { key:'level_5',      name:'Rising Star',      desc:'Reach Level 5',                   icon:'🌟', xp:200 },
-  level_10:     { key:'level_10',     name:'Dedicated Scholar',desc:'Reach Level 10',                  icon:'💎', xp:300 },
-  streak_7:     { key:'streak_7',     name:'Week Warrior',     desc:'Study 7 days in a row',           icon:'🔥', xp:250 },
-  streak_30:    { key:'streak_30',    name:'Iron Will',        desc:'Study 30 days in a row',          icon:'💪', xp:500 },
-  cards_100:    { key:'cards_100',    name:'Card Master',      desc:'Review 100 flashcards',           icon:'🃏', xp:150 },
-  unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'📚', xp:200 },
-  mmi_5:        { key:'mmi_5',        name:'Interview Ready',  desc:'Practice 5 MMI stations',         icon:'🎙️', xp:100 },
-  course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'🏃', xp:300 },
-  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use MetaBrain AI Coach 5 times',  icon:'🤖', xp:75  },
+  first_quiz:   { key:'first_quiz',   name:'First Steps',      desc:'Complete your first quiz',         icon:'Target', xp:50  },
+  perfect_score:{ key:'perfect_score',name:'Perfect Score',    desc:'Score 100% on any quiz',           icon:'Star', xp:100 },
+  quiz_10:      { key:'quiz_10',      name:'Quiz Champion',    desc:'Complete 10 quizzes',              icon:'Trophy', xp:150 },
+  level_5:      { key:'level_5',      name:'Rising Star',      desc:'Reach Level 5',                   icon:'Sparkles', xp:200 },
+  level_10:     { key:'level_10',     name:'Dedicated Scholar',desc:'Reach Level 10',                  icon:'Gem', xp:300 },
+  streak_7:     { key:'streak_7',     name:'Week Warrior',     desc:'Study 7 days in a row',           icon:'Flame', xp:250 },
+  streak_30:    { key:'streak_30',    name:'Iron Will',        desc:'Study 30 days in a row',          icon:'Dumbbell', xp:500 },
+  cards_100:    { key:'cards_100',    name:'Card Master',      desc:'Review 100 flashcards',           icon:'Layers3', xp:150 },
+  unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'BookOpen', xp:200 },
+  mmi_5:        { key:'mmi_5',        name:'Interview Ready',  desc:'Practice 5 MMI stations',         icon:'Mic', xp:100 },
+  course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'Milestone', xp:300 },
+  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use MetaBrain AI Coach 5 times',  icon:'MessageCircle', xp:75  },
 };
 
 /** Check which new achievements should be unlocked given current state */

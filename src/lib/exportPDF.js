@@ -20,7 +20,7 @@ function header(doc, title, subtitle='') {
   doc.setTextColor(...WHITE);
   doc.setFontSize(16);
   doc.setFont('helvetica','bold');
-  doc.text('🧬 MedSchoolPrep', 12, 12);
+  doc.text('MedSchoolPrep', 12, 12);
   doc.setFontSize(10);
   doc.setFont('helvetica','normal');
   doc.setTextColor(...LIGHT);
