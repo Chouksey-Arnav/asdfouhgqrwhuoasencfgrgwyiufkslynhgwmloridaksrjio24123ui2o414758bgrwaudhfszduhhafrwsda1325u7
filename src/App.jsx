@@ -216,8 +216,63 @@ function Stat({label,value,icon,color=C.blue,sub,onClick}){
 }
 
 // ── Video Modal ───────────────────────────────────────────────────────────────
-function VideoModal({ytId,title,onClose}){
+// YouTube's postMessage-based IFrame Player API is the only client-side way to know
+// whether a given ytId actually loaded (vs. removed/private/embedding-disabled) —
+// a plain <iframe> never fires a DOM error for that. We load the API once, attach a
+// player to our iframe, and surface real onError codes as a graceful fallback UI
+// instead of a silently broken embed.
+let ytApiPromise=null;
+function loadYouTubeIframeAPI(){
+  if(window.YT&&window.YT.Player)return Promise.resolve(window.YT);
+  if(ytApiPromise)return ytApiPromise;
+  ytApiPromise=new Promise(resolve=>{
+    const prev=window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady=()=>{prev&&prev();resolve(window.YT);};
+    if(!document.getElementById('yt-iframe-api')){
+      const tag=document.createElement('script');
+      tag.id='yt-iframe-api';
+      tag.src='https://www.youtube.com/iframe_api';
+      document.head.appendChild(tag);
+    }
+  });
+  return ytApiPromise;
+}
+const YT_ERROR_MESSAGES={
+  2:'This video link looks malformed.',
+  5:"This video can't be played in the current browser.",
+  100:'This video was removed or made private.',
+  101:'The video owner disabled embedded playback.',
+  150:'The video owner disabled embedded playback.',
+};
+function VideoModal({ytId,title,url,onClose}){
+  const frameId=useRef(`ytp-${ytId}-${Math.random().toString(36).slice(2)}`).current;
+  const playerRef=useRef(null);
+  const [status,setStatus]=useState('loading'); // loading | ready | error | timeout
+  const [errMsg,setErrMsg]=useState('');
+  const watchUrl=url||`https://www.youtube.com/watch?v=${ytId}`;
+
   useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
+
+  useEffect(()=>{
+    let cancelled=false;
+    const timeout=setTimeout(()=>setStatus(s=>s==='loading'?'timeout':s),9000);
+    loadYouTubeIframeAPI().then(YT=>{
+      if(cancelled)return;
+      playerRef.current=new YT.Player(frameId,{
+        events:{
+          onReady:()=>{if(!cancelled)setStatus('ready');},
+          onError:(e)=>{
+            if(cancelled)return;
+            setErrMsg(YT_ERROR_MESSAGES[e?.data]||'This video failed to load.');
+            setStatus('error');
+          },
+        },
+      });
+    });
+    return ()=>{cancelled=true;clearTimeout(timeout);try{playerRef.current?.destroy?.();}catch{}};
+  },[frameId]);
+
+  const broken=status==='error'||status==='timeout';
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.93)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:24,backdropFilter:'blur(8px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <motion.div initial={{scale:.95,y:10}} animate={{scale:1,y:0}} exit={{scale:.95,y:10}} style={{width:'100%',maxWidth:920,...glass({padding:0,overflow:'hidden',borderRadius:20,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
@@ -229,7 +284,15 @@ function VideoModal({ytId,title,onClose}){
           <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
         </div>
         <div style={{position:'relative',paddingBottom:'56.25%',height:0}}>
-          <iframe style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none'}} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1`} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+          <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+          {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:C.s1,pointerEvents:'none'}}>
+            <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
+          </div>}
+          {broken&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,background:C.s1,padding:24,textAlign:'center'}}>
+            <AlertTriangle size={28} color="#f87171"/>
+            <div style={{fontSize:13,color:C.t2,maxWidth:380,lineHeight:1.6}}>{status==='timeout'?"This video is taking too long to respond — it may be region-locked or temporarily unavailable.":errMsg}</div>
+            <a href={watchUrl} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}}>Watch on YouTube<ExternalLink size={12}/></a>
+          </div>}
         </div>
       </motion.div>
     </motion.div>
@@ -1309,7 +1372,7 @@ async function getMMIFb() {
           <div style={G(2,14)}>
             {yt.map((r,i)=>(
               <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',cursor:'pointer'})}>
-                <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden'}} onClick={()=>setVM({ytId:r.ytId,title:r.title})}>
+                <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden'}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}>
                   <img src={`https://img.youtube.com/vi/${r.ytId}/mqdefault.jpg`} alt={r.title} loading="lazy" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',transition:'transform .4s'}} onError={e=>{e.target.style.display='none';}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
                   <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(4,6,11,0.85) 0%,transparent 55%)'}}/>
                   <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -1322,7 +1385,7 @@ async function getMMIFb() {
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between'})}>
                     <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
-                    <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title})}><Play size={11} fill="currentColor"/>Watch</button>
+                    <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
                   </div>
                 </div>
               </motion.div>
@@ -1962,7 +2025,7 @@ async function getMMIFb() {
     <ErrorBoundary>
       <Toaster position="bottom-right" toastOptions={{style:{background:C.s1,color:C.t1,border:`1px solid ${C.b2}`,fontFamily:C.FB,fontSize:13,boxShadow:`0 8px 32px rgba(0,0,0,0.6)`},success:{iconTheme:{primary:C.green,secondary:C.s1}},error:{iconTheme:{primary:C.rose,secondary:C.s1}}}}/>
       <AnimatePresence>
-        {vidM&&<VideoModal key="vidmodal" ytId={vidM.ytId} title={vidM.title} onClose={()=>setVM(null)}/>}
+        {vidM&&<VideoModal key="vidmodal" ytId={vidM.ytId} title={vidM.title} url={vidM.url} onClose={()=>setVM(null)}/>}
       </AnimatePresence>
       <div style={{display:'flex',height:'100vh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
