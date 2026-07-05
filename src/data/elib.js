@@ -1,5 +1,8 @@
-// ELIB — 76 resources: 46 original + 30 YouTube videos
-// YouTube entries include ytId for thumbnail display and video modal
+// ELIB — 87 resources: 46 original + 41 YouTube videos
+// YouTube entries include ytId for thumbnail display and video modal.
+// Every ytId below was cross-verified against independent third-party sources
+// (thecrashcourse.com, nerdfighteria.info transcript archive) since this dev
+// environment cannot reach youtube.com directly to hit the oEmbed API.
 
 export const ELIB = [
   // ── ORIGINAL RESOURCES ─────────────────────────────────────────────────────
@@ -81,4 +84,17 @@ export const ELIB = [
   { cat:'Chem/Phys', title:'Sound Properties and the Doppler Effect', url:'https://www.youtube.com/watch?v=qVNEbcZGAi8', type:'YouTube', free:true, ytId:'qVNEbcZGAi8', desc:'Sound waves, frequency, pitch, intensity, decibels, and the Doppler effect in ultrasound.' },
   { cat:'Chem/Phys', title:'Alpha, Beta, and Gamma Decay — Nuclear Physics', url:'https://www.youtube.com/watch?v=cwXCILesK-k', type:'YouTube', free:true, ytId:'cwXCILesK-k', desc:'Radioactive decay types, half-life calculations, nuclear stability, and radiation in medicine.' },
   { cat:'Chem/Phys', title:'MCAT Math Without a Calculator', url:'https://www.youtube.com/watch?v=8l-6n1v30Yg', type:'YouTube', free:true, ytId:'8l-6n1v30Yg', desc:'Essential MCAT math strategies: estimation, scientific notation, logarithms, and unit analysis.' },
+
+  // ── 11 MORE YOUTUBE VIDEOS — filling Psych/Soc, Research Methods, MCAT Prep & Clinical/Career ──
+  { cat:'Bio/Biochem', title:'The Nervous System, Part 1 — Crash Course A&P', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', type:'YouTube', free:true, ytId:'qPix_X-9t7E', desc:'Neuron structure, glial cells, and how the nervous system is organized into central and peripheral divisions.' },
+  { cat:'Bio/Biochem', title:'Respiratory System, Part 1 — Crash Course A&P', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', type:'YouTube', free:true, ytId:'bHZsvBdUC2I', desc:'Airway anatomy, the mechanics of ventilation, and gas exchange across the alveolar membrane.' },
+  { cat:'Psych/Soc', title:'Intro to Psychology — Crash Course Psychology #1', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', type:'YouTube', free:true, ytId:'vo4pMVb0R6M', desc:'What psychology is, its historical roots, and the major perspectives that shape the field today.' },
+  { cat:'Psych/Soc', title:'How We Make Memories — Crash Course Psychology #13', url:'https://www.youtube.com/watch?v=bSycdIx-C48', type:'YouTube', free:true, ytId:'bSycdIx-C48', desc:'Encoding, storage, and retrieval — shallow vs. deep processing and the stages of long-term memory.' },
+  { cat:'Psych/Soc', title:'Remembering and Forgetting — Crash Course Psychology #14', url:'https://www.youtube.com/watch?v=HVWbrNls-Kw', type:'YouTube', free:true, ytId:'HVWbrNls-Kw', desc:'Why memories fail: encoding failure, decay, interference, and the misinformation effect.' },
+  { cat:'Psych/Soc', title:'What Is Sociology? — Crash Course Sociology #1', url:'https://www.youtube.com/watch?v=YnCJU6PaCio', type:'YouTube', free:true, ytId:'YnCJU6PaCio', desc:'The sociological imagination, founding thinkers, and how sociology differs from other social sciences.' },
+  { cat:'Research Methods', title:'What Is Statistics? — Crash Course Statistics #1', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', type:'YouTube', free:true, ytId:'sxQaBpKfDRk', desc:'A friendly on-ramp to statistical thinking — why data alone rarely tells the full story.' },
+  { cat:'Research Methods', title:'Sampling Methods and Bias — Crash Course Statistics #10', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', type:'YouTube', free:true, ytId:'Rf-fIpB4D50', desc:'Random, stratified, and convenience sampling, plus common sources of survey bias — core MCAT research methods content.' },
+  { cat:'Research Methods', title:'Sociology Research Methods — Crash Course Sociology #4', url:'https://www.youtube.com/watch?v=QwhK-iEyXYA', type:'YouTube', free:true, ytId:'QwhK-iEyXYA', desc:'Forming hypotheses, surveys vs. experiments vs. observation, and research ethics oversight (IRBs).' },
+  { cat:'MCAT Prep', title:'Taking Notes — Crash Course Study Skills #1', url:'https://www.youtube.com/watch?v=E7CwqNHn_Ns', type:'YouTube', free:true, ytId:'E7CwqNHn_Ns', desc:'The Cornell note-taking method — a practical system for organizing MCAT content review notes.' },
+  { cat:'Clinical & Career', title:'What Is Public Health? — Crash Course Public Health #1', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', type:'YouTube', free:true, ytId:'5aww-Bpgkf4', desc:'Prevention-focused medicine at the population level — essential context for understanding health systems careers.' },
 ];
