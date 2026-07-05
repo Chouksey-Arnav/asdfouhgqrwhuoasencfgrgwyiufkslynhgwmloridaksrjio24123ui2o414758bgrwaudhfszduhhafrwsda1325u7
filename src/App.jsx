@@ -881,7 +881,7 @@ async function getMMIFb() {
               ? <>Your answers leaned most toward <strong style={{color:C.t1}}>{topCats.join(' and ')}</strong> — a pattern consistent with <strong style={{color:C.t1}}>{path?.label}</strong>.</>
               : <>Based on your answers, <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</>}
           </p>
-          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced to build the MCAT content most relevant to {path?.label.toLowerCase()}.</p>
+          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the MCAT content most relevant to a {path?.label.toLowerCase()}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
             <button style={{...btn(C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
@@ -1855,7 +1855,7 @@ async function getMMIFb() {
             <div style={{textAlign:'center',marginBottom:36}}>
               <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,rgba(45,127,255,0.25),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.3)`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><Dna size={34} color={C.blueL}/></motion.div>
               <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
-              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>The complete AI-powered ecosystem for MCAT preparation and medical school admissions.</p>
+              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>MCAT preparation and medical school admissions coaching, in one place.</p>
             </div>
             {/* Feature pills */}
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
