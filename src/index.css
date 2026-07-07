@@ -15,6 +15,7 @@ body {
   overflow: hidden;
 }
 #root { display: flex; height: 100vh; overflow: hidden; }
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #1d2a40; border-radius: 2px; }
