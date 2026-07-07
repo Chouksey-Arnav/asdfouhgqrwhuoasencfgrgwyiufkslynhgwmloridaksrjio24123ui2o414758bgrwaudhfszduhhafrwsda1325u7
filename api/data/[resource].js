@@ -35,6 +35,31 @@ function pick(body, keys) {
   return out;
 }
 
+// Foreign keys a client can set, and the resource+column that must be owned
+// by the requesting user for that value to be accepted.
+const FK_OWNERSHIP = {
+  college_checklist_items: { college_id: 'colleges' },
+  deadlines: { college_id: 'colleges' },
+  essays: { college_id: 'colleges' },
+  essay_versions: { essay_id: 'essays' },
+};
+
+async function assertOwnedForeignKeys(supabase, resource, row, userId) {
+  const rules = FK_OWNERSHIP[resource];
+  if (!rules) return true;
+  for (const [column, targetTable] of Object.entries(rules)) {
+    const value = row[column];
+    if (value == null) continue;
+    const { data } = await supabase.from(targetTable).select('id').eq('id', value).eq('user_id', userId).maybeSingle();
+    if (!data) return false;
+  }
+  return true;
+}
+
+function firstValue(v) {
+  return Array.isArray(v) ? v[0] : v;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
@@ -65,16 +90,23 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const row = { ...pick(body, WRITABLE[resource]), user_id: user.id };
+      const fields = pick(body, WRITABLE[resource]);
+      if (!(await assertOwnedForeignKeys(supabase, resource, fields, user.id))) {
+        return res.status(403).json({ error: 'Referenced record not found.' });
+      }
+      const row = { ...fields, user_id: user.id };
       const { data, error } = await table.insert(row).select('*').single();
       if (error) throw error;
       return res.status(200).json({ data });
     }
 
     if (req.method === 'PATCH') {
-      const id = body?.id;
+      const id = firstValue(body?.id);
       if (!id) return res.status(400).json({ error: 'Missing id.' });
       const updates = pick(body, WRITABLE[resource]);
+      if (!(await assertOwnedForeignKeys(supabase, resource, updates, user.id))) {
+        return res.status(403).json({ error: 'Referenced record not found.' });
+      }
       if (resource === 'colleges' || resource === 'essays') updates.updated_at = new Date().toISOString();
       const { data, error } = await table.update(updates).eq('id', id).eq('user_id', user.id).select('*').single();
       if (error) throw error;
@@ -82,7 +114,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'DELETE') {
-      const id = req.query.id;
+      const id = firstValue(req.query.id);
       if (!id) return res.status(400).json({ error: 'Missing id.' });
       const { error } = await table.delete().eq('id', id).eq('user_id', user.id);
       if (error) throw error;
