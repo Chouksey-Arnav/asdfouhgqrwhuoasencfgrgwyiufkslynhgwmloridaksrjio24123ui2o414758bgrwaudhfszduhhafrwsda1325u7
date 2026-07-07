@@ -14,7 +14,7 @@ import {
   Home, Compass, Route, Layers, MessageCircle, Layers3, BookOpen,
   Trophy, Building2, LineChart, Settings, Mic, Flame, Zap, CheckCircle2, TrendingUp,
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
-  Stethoscope, Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
+  Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, Pause, ExternalLink, Plus,
 } from 'lucide-react';
@@ -78,14 +78,14 @@ const scCol  = p => p>=80?C.green:p>=60?C.blue:C.amber;
 const tierC  = t => ({Likely:C.green,Target:C.blue,Reach:C.amber,Stretch:C.rose}[t]||C.t2);
 const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Vercel environment variables.';
 
-// Score → predicted MCAT section (118–132)
-const scoreToSection = p => p>=90?131:p>=80?129:p>=70?127:p>=60?125:p>=50?123:120;
+// Quiz performance % → predicted SAT score (400–1600)
+const scoreToSection = p => Math.round(400+(Math.max(0,Math.min(100,p))/100)*1200);
 
-function scoreSchool(s,gpa,mcat,res,clin,vol,st){
-  let sc=100;const gN=parseFloat(gpa)||0,mN=parseInt(mcat)||0,gd=gN-s.gpa,md=mN-s.mcat;
+function scoreSchool(s,gpa,sat,lead,ec,vol,st){
+  let sc=100;const gN=parseFloat(gpa)||0,sN=parseInt(sat)||0,gd=gN-s.gpa,sd=sN-s.sat;
   if(gd>=0)sc+=15;else if(gd>=-0.1)sc-=5;else if(gd>=-0.2)sc-=15;else if(gd>=-0.3)sc-=25;else sc-=40;
-  if(md>=0)sc+=15;else if(md>=-2)sc-=5;else if(md>=-4)sc-=15;else if(md>=-6)sc-=25;else sc-=40;
-  sc+=Math.min((parseInt(res)||0)*3,10);const c=parseInt(clin)||0;sc+=c>=500?10:c>=200?6:c>=100?3:0;
+  if(sd>=0)sc+=15;else if(sd>=-40)sc-=5;else if(sd>=-80)sc-=15;else if(sd>=-120)sc-=25;else sc-=40;
+  sc+=Math.min((parseInt(lead)||0)*3,10);const c=parseInt(ec)||0;sc+=c>=500?10:c>=200?6:c>=100?3:0;
   const v=parseInt(vol)||0;sc+=v>=200?5:v>=100?3:0;
   if(s.type==='Public'&&st&&s.state===st)sc+=10;
   return{...s,tier:sc>=110?'Likely':sc>=92?'Target':sc>=72?'Reach':'Stretch',score:sc};
@@ -101,19 +101,19 @@ const NAV = [
 ];
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
-    'Explain Michaelis-Menten kinetics simply',
-    'What is the TCA cycle and why does it matter?',
-    'Explain Henderson-Hasselbalch with an example',
+    'Explain how to solve a system of equations simply',
+    'What is photosynthesis and why does it matter?',
+    'Explain supply and demand with an example',
   ]},
   { label:'Study Strategy', icon:'Compass', prompts:[
-    'How do I approach CARS passages on test day?',
-    'Most high-yield topics for MCAT Psych/Soc?',
-    'Give me a 2-week study schedule for Bio/Biochem',
+    'How do I approach SAT Reading passages on test day?',
+    'Most high-yield topics for SAT Math?',
+    'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const ACT_TYPES = ['Clinical','Research','Volunteering','Leadership','Shadowing','Teaching','Work Experience','Other'];
-const LIB_CATS  = ['All','Bio/Biochem','Chem/Phys','Psych/Soc','Research Methods','MCAT Prep','Clinical & Career'];
-const MMI_TYPES = ['All','Ethics','Professionalism','Personal','Motivation','Policy','Cultural Competency','Communication','Situational'];
+const ACT_TYPES = ['Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
+const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
+const MMI_TYPES = ['All','Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'];
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 function useMediaQuery(query) {
@@ -508,13 +508,13 @@ export default function App() {
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
-  const [aN,setAN]=useState('');const [aT,setAT]=useState('Clinical');const [aH,setAH]=useState('');const [aDate,setADate]=useState('');const [cF,setCF]=useState('All');
+  const [aN,setAN]=useState('');const [aT,setAT]=useState('Leadership');const [aH,setAH]=useState('');const [aDate,setADate]=useState('');const [cF,setCF]=useState('All');
 
   // ── Interview ───────────────────────────────────────────────────────────────
   const [mIdx,setMI]=useState(0);const [mAns,setMA]=useState('');const [mFb,setMF]=useState('');const [mLoad,setML]=useState(false);const [mTimer,setMT]=useState(0);const [mRun,setMR]=useState(false);const [mTF,setMTF]=useState('All');
 
   // ── Calc ────────────────────────────────────────────────────────────────────
-  const [cGPA,setCGPA]=useState('');const [cMCAT,setCMCAT]=useState('');const [cRes,setCR]=useState('0');const [cClin,setCC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
+  const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
 
   // ── Settings ────────────────────────────────────────────────────────────────
   const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
@@ -569,8 +569,8 @@ export default function App() {
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
 
   // ── Computed values ──────────────────────────────────────────────────────────
-  const eSpec   = user?.specialty||'surgeon';
-  const curPath = PATHS[eSpec]||PATHS['surgeon'];
+  const eSpec   = user?.specialty||'undecided';
+  const curPath = PATHS[eSpec]||PATHS['undecided'];
   const accent  = curPath?.accent||C.blue;
   const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
   const doneL   = allL.filter(l=>pathway[l.id]).length;
@@ -582,10 +582,10 @@ export default function App() {
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
   const daysToExam = user?.examDate ? Math.ceil((new Date(user.examDate+'T00:00:00') - new Date(new Date().toDateString())) / 86400000) : null;
 
-  // Predicted MCAT
-  const cats3   = ['Bio/Biochem','Chem/Phys','Psych/Soc'];
+  // Predicted SAT score
+  const cats3   = ['Life Sciences','Physical Sciences','Behavioral & Social Sciences'];
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
-  const predMCAT = secAvgs.every(v=>v!==null) ? secAvgs.reduce((s,v)=>s+scoreToSection(v),0) : null;
+  const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
 
   // FSRS due count
   const allCards = useMemo(()=>Object.values(cDecks).flat(),[cDecks]);
@@ -703,7 +703,7 @@ export default function App() {
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
-      const r=await callGeminiAI(`You are MetaBrain, an expert MCAT tutor and medical school admissions coach. The student is interested in ${curPath?.label||'medicine'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const r=await callGeminiAI(`You are MetaBrain, an expert SAT/ACT tutor and college admissions coach for high school students. The student is interested in ${curPath?.label||'college prep'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -769,13 +769,13 @@ async function getMMIFb() {
   }
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
-  const DIAG_CAT_LABELS = {biochem:'Biochemistry & Molecular Biology',chemphys:'Chemistry & Physics',psychsoc:'Psychology & Sociology',research:'Research Methods & Statistics'};
+  const DIAG_CAT_LABELS = {stem:'STEM & Engineering',humanities:'Humanities & Writing',business:'Business & Economics',socialSci:'Social Sciences'};
   function finalizeDiag(answers){
-    const counts={surgeon:0,internist:0,psychiatrist:0,researcher:0,pediatrician:0,emergency_doc:0};
-    const catCounts={biochem:0,chemphys:0,psychsoc:0,research:0};
-    const pm={biochem:['surgeon','pediatrician'],chemphys:['internist','emergency_doc'],psychsoc:['psychiatrist','pediatrician'],research:['researcher','internist']};
+    const counts={undecided:0,stem:0,humanities:0,business:0,socialSci:0,preHealth:0};
+    const catCounts={stem:0,humanities:0,business:0,socialSci:0};
+    const pm={stem:['stem','preHealth'],humanities:['humanities','undecided'],business:['business','undecided'],socialSci:['socialSci','preHealth']};
     answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k){if(catCounts[k]!==undefined)catCounts[k]++;if(pm[k])pm[k].forEach(sp=>{if(counts[sp]!==undefined)counts[sp]++;});}});
-    setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'internist');
+    setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'undecided');
     setDCats(Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([k])=>k));
     setDD(true);
   }
@@ -800,8 +800,8 @@ async function getMMIFb() {
   const fMmi    = useMemo(()=>mTF==='All'?MMI_QS:MMI_QS.filter(q=>q.type===mTF),[mTF]);
   const mmiQ    = fMmi[mIdx]||MMI_QS[0];
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
-  const hasCalc = cGPA&&cMCAT;
-  const calcR   = useMemo(()=>hasCalc?SCHOOL_DATA.filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cMCAT,cRes,cClin,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cMCAT,cRes,cClin,cVol,cSt,sType,hasCalc]);
+  const hasCalc = cGPA&&cSAT;
+  const calcR   = useMemo(()=>hasCalc?SCHOOL_DATA.filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cSAT,cLead,cEC,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cSAT,cLead,cEC,cVol,cSt,sType,hasCalc]);
 
   // All decks: built-in + custom
   const allDecksList = useMemo(()=>[
@@ -839,7 +839,7 @@ async function getMMIFb() {
               {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
               {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
               {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
-              {predMCAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predMCAT} predicted</span>}
+              {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
             </div>
           </div>
         </div>
@@ -894,7 +894,7 @@ async function getMMIFb() {
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
             {[
-              {Ic:Compass,lbl:'Diagnostic',sub:'Find your specialty',tab:'diagnostic',col:C.violet},
+              {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',tab:'diagnostic',col:C.violet},
               {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,tab:'pathway',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,tab:'quizzes',col:C.green},
               {Ic:MessageCircle,lbl:'AI Coach',sub:'MetaBrain tutor',tab:'coach',col:C.cyan},
@@ -930,15 +930,15 @@ async function getMMIFb() {
         </div>}
 
         {/* Predicted score */}
-        {predMCAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
+        {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
           <div style={R({gap:14})}>
             <div style={{width:52,height:52,borderRadius:12,background:`${C.green}15`,border:`1px solid ${C.green}25`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predMCAT}</div>
-              <div style={{fontSize:9,color:C.greenL,letterSpacing:'.05em'}}>MCAT</div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predSAT}</div>
+              <div style={{fontSize:9,color:C.greenL,letterSpacing:'.05em'}}>SAT</div>
             </div>
             <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Predicted MCAT Score</div>
-              <div style={{fontSize:12,color:C.t2,lineHeight:1.5}}>Based on your quiz performance across all 3 sections. Keep practicing to improve this estimate.</div>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Predicted SAT Score</div>
+              <div style={{fontSize:12,color:C.t2,lineHeight:1.5}}>Based on your quiz performance across all 3 subject areas. Keep practicing to improve this estimate.</div>
               <div style={{...R({gap:8,marginTop:8})}}>
                 {cats3.map((cat,i)=>secAvgs[i]!==null&&<span key={cat} style={pill(`${scCol(secAvgs[i])}18`,scCol(secAvgs[i]),{fontSize:10})}>{cat.split('/')[0]}: {scoreToSection(secAvgs[i])}</span>)}
               </div>
@@ -979,16 +979,16 @@ async function getMMIFb() {
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Specialty Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
+        <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`})}}>
-          <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}><Stethoscope size={34} color={accent}/></div>
+          <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}><Compass size={34} color={accent}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
           <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>
             {topCats.length>0
               ? <>Your answers leaned most toward <strong style={{color:C.t1}}>{topCats.join(' and ')}</strong> — a pattern consistent with <strong style={{color:C.t1}}>{path?.label}</strong>.</>
               : <>Based on your answers, <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</>}
           </p>
-          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the MCAT content most relevant to a {path?.label.toLowerCase()}.</p>
+          <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
             <button style={{...btn(C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
@@ -1015,7 +1015,7 @@ async function getMMIFb() {
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Specialty Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
+          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
           <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={accent} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
         </div>
         <Bar pct={(dStep/DIAG_QS.length)*100} color={accent} h={3}/>
@@ -1086,7 +1086,7 @@ async function getMMIFb() {
           );
         })}
         <div style={glass({padding:18})}>
-          <SL>Switch Specialty Path</SL>
+          <SL>Switch Study Track</SL>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>switchPath(key)} style={{...glass2({padding:14,cursor:'pointer',border:eSpec===key?`1px solid ${p.accent}50`:undefined,transition:'all .15s'})}} >
@@ -1130,7 +1130,7 @@ async function getMMIFb() {
             <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
             <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
           </div>
-          <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Bio/Biochem','Chem/Phys','Psych/Soc'].map(c=><option key={c}>{c}</option>)}</select>
+          <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=><option key={c}>{c}</option>)}</select>
           <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
           <div style={{position:'relative'}}>
             <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
@@ -1199,7 +1199,7 @@ async function getMMIFb() {
             <div>
               <div style={lbl()}>AI Coach</div>
               <h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain</h2>
-              <div style={{fontSize:12,color:C.t3,marginTop:4}}>Your MCAT content and study-strategy assistant</div>
+              <div style={{fontSize:12,color:C.t3,marginTop:4}}>Your SAT/ACT content and study-strategy assistant</div>
             </div>
             <div style={R({gap:8})}>
               {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
@@ -1253,7 +1253,7 @@ async function getMMIFb() {
           <div ref={chatEnd}/>
         </div>
         <div style={R({marginTop:14,flexShrink:0,gap:isMobile?6:10})}>
-          <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:geminiTokensRemaining<=0?.5:1}} placeholder={isMobile?"Ask MetaBrain…":"Ask MetaBrain about MCAT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={geminiTokensRemaining<=0}/>
+          <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:geminiTokensRemaining<=0?.5:1}} placeholder={isMobile?"Ask MetaBrain…":"Ask MetaBrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={geminiTokensRemaining<=0}/>
           <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||geminiTokensRemaining<=0}><ArrowUp size={isMobile?16:19}/></motion.button>
         </div>
         {msgs.length>0&&<button style={btnG({marginTop:8,fontSize:11,padding:'5px 14px',alignSelf:'flex-start',borderRadius:20})} onClick={()=>setMsgs([])}>Clear conversation</button>}
@@ -1342,7 +1342,7 @@ async function getMMIFb() {
             <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Sparkles size={17} color={C.violetL}/></div>
             <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — AI creates 10–14 high-yield cards</div></div>
           </div>
-          <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your MCAT study notes, lecture slides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+          <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
           <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
             <Sparkles size={14}/>{gLoad?'Generating…':'Generate Flashcards'}
           </motion.button>
@@ -1434,10 +1434,10 @@ async function getMMIFb() {
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
     const totH=port.reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const clinH=port.filter(a=>a.type==='Clinical').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
+    const leadH=port.filter(a=>a.type==='Leadership').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
     const resH=port.filter(a=>a.type==='Research').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
     const volH=port.filter(a=>a.type==='Volunteering').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const actColors={Clinical:C.green,Research:C.amber,Volunteering:C.violet,Leadership:C.blue,Shadowing:C.cyan,Teaching:C.orange,'Work Experience':C.rose,Other:C.t3};
+    const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
     return(
       <div style={CC({gap:22})}>
         <div><div style={lbl()}>Portfolio Builder</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Activity Tracker</h2></div>
@@ -1445,15 +1445,15 @@ async function getMMIFb() {
         {/* Summary stats */}
         <div style={G(4,14,{},isMobile)}>
           <Stat label="Total Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Clinical" value={clinH} icon={<Building2 size={16}/>} color={C.green} sub="Rec: 200+" m={isMobile}/>
-          <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 1+ yr" m={isMobile}/>
+          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub="Rec: 100+" m={isMobile}/>
+          <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
           <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+" m={isMobile}/>
         </div>
 
         {/* Progress bars toward recommended hours */}
         <div style={glass({padding:18})}>
-          <SL>Progress Toward Med School Requirements</SL>
-          {[{l:'Clinical Hours',val:clinH,target:200,col:C.green},{l:'Research Hours',val:resH,target:1000,col:C.amber},{l:'Volunteer Hours',val:volH,target:150,col:C.violet}].map(({l,val,target,col})=>(
+          <SL>Progress Toward Strong Application Benchmarks</SL>
+          {[{l:'Leadership Hours',val:leadH,target:100,col:C.blue},{l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},{l:'Volunteer Hours',val:volH,target:150,col:C.violet}].map(({l,val,target,col})=>(
             <div key={l} style={{marginBottom:14}}>
               <div style={R({justifyContent:'space-between',marginBottom:6})}>
                 <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
@@ -1468,7 +1468,7 @@ async function getMMIFb() {
         <div style={glass()}>
           <SL>Add New Activity</SL>
           <div style={G(2,12)}>
-            {[{l:'Activity Name',p:'e.g., ER Volunteering at Duke Medical',v:aN,s:setAN,t:'text'},{l:'Type',v:aT,s:setAT,sel:ACT_TYPES},{l:'Hours',p:'100',v:aH,s:setAH,t:'number'},{l:'Start Date',v:aDate,s:setADate,t:'date'}].map(f=>(
+            {[{l:'Activity Name',p:'e.g., Debate Team Captain',v:aN,s:setAN,t:'text'},{l:'Type',v:aT,s:setAT,sel:ACT_TYPES},{l:'Hours',p:'100',v:aH,s:setAH,t:'number'},{l:'Start Date',v:aDate,s:setADate,t:'date'}].map(f=>(
               <div key={f.l} style={CC({gap:4})}>
                 <span style={lbl()}>{f.l}</span>
                 {f.sel?<select style={inp()} value={f.v} onChange={e=>f.s(e.target.value)}>{f.sel.map(t=><option key={t}>{t}</option>)}</select>:<input type={f.t||'text'} style={inp()} placeholder={f.p||''} value={f.v} onChange={e=>f.s(e.target.value)}/>}
@@ -1508,7 +1508,7 @@ async function getMMIFb() {
           <div style={R({marginBottom:16})}>
             <SL extra={{margin:0}}>Opportunities & Competitions</SL>
             <select style={{...inp({width:'auto',marginLeft:'auto'})}} value={cF} onChange={e=>setCF(e.target.value)}>
-              {['All','Competition','Research','Scholarship','Clinical','Volunteering','Conference','Organization','National','State'].map(t=><option key={t}>{t}</option>)}
+              {['All','Competition','Research','Scholarship','Volunteering','Organization','Academic','National','State'].map(t=><option key={t}>{t}</option>)}
             </select>
           </div>
           <div style={G(2,12,{},isMobile)}>
@@ -1534,10 +1534,10 @@ async function getMMIFb() {
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Interview Simulator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MMI Practice</h2></div>
+          <div><div style={lbl()}>Interview Simulator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College Interview Practice</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             {mmiCount>0&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>{mmiCount} practiced</span>}
-            <span style={pill(C.s3,C.t2)}>{MMI_QS.length} Stations</span>
+            <span style={pill(C.s3,C.t2)}>{MMI_QS.length} Questions</span>
           </div>
         </div>
 
@@ -1598,9 +1598,9 @@ async function getMMIFb() {
 
         {/* Type breakdown */}
         <div style={glass({padding:18})}>
-          <SL>Station Types — Practice Distribution</SL>
+          <SL>Question Types — Practice Distribution</SL>
           <div style={G(4,8,{},isMobile)}>
-            {['Ethics','Professionalism','Personal','Motivation','Policy','Cultural Competency','Communication','Situational'].map(type=>{
+            {['Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'].map(type=>{
               const count=MMI_QS.filter(q=>q.type===type).length;
               return<div key={type} style={{...glass2({padding:10,textAlign:'center',cursor:'pointer',transition:'border-color .15s'}),border:mTF===type?`1px solid ${C.blue}50`:undefined}}
                 onClick={()=>{setMTF(type);setMI(0);setMA('');setMF('');setMR(false);setMT(0);}}>
@@ -1618,15 +1618,15 @@ async function getMMIFb() {
   function tCalc(){
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Admissions Calculator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>School List Builder</h2></div>
+        <div><div style={lbl()}>Admissions Calculator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College List Builder</h2></div>
         <div style={glass()}>
           <SL>Your Profile</SL>
           <div style={G(2,14,{},isMobile)}>
             {[
               {l:'Cumulative GPA',p:'3.75',t:'number',step:'0.01',min:'2',max:'4',v:cGPA,s:setCGPA},
-              {l:'MCAT Score (472–528)',p:'510',t:'number',min:'472',max:'528',v:cMCAT,s:setCMCAT},
-              {l:'Research Experience (years)',p:'1',t:'number',min:'0',v:cRes,s:setCR},
-              {l:'Clinical Hours',p:'200',t:'number',min:'0',v:cClin,s:setCC},
+              {l:'SAT Score (400–1600)',p:'1350',t:'number',min:'400',max:'1600',v:cSAT,s:setCSAT},
+              {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
+              {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
               {l:'Volunteer Hours',p:'100',t:'number',min:'0',v:cVol,s:setCV},
               {l:'State (2-letter)',p:'NC',t:'text',maxLength:2,v:cSt,s:(v)=>setCST(v.toUpperCase())},
             ].map(f=>(
@@ -1644,7 +1644,7 @@ async function getMMIFb() {
           </div>
         </div>
 
-        {!hasCalc&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>Enter your GPA and MCAT score above to see your personalized school list.</div>}
+        {!hasCalc&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>Enter your GPA and SAT score above to see your personalized college list.</div>}
 
         {/* Summary strip */}
         {calcR.length>0&&<div style={G(4,10,{},isMobile)}>
@@ -1656,7 +1656,7 @@ async function getMMIFb() {
 
         {/* Export button */}
         {calcR.length>0&&<div style={R({gap:10})}>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList(calcR,{gpa:cGPA,mcat:cMCAT})}><FileDown size={14}/>Export School List PDF</button>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList(calcR,{gpa:cGPA,sat:cSAT})}><FileDown size={14}/>Export College List PDF</button>
         </div>}
 
         {/* School tiers */}
@@ -1676,7 +1676,7 @@ async function getMMIFb() {
                     <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}55)`,flexShrink:0,boxShadow:`0 0 8px ${col}30`}}/>
                     <div style={{flex:1,minWidth:0}}>
                       <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.name}</div>
-                      <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>GPA {s.gpa} · MCAT {s.mcat} · {s.accept}% acceptance · {s.type} · {s.state}</div>
+                      <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>GPA {s.gpa} · SAT {s.sat} · {s.accept}% acceptance · {s.type} · {s.state}</div>
                     </div>
                     <span style={pill(`${col}18`,col,{fontSize:11,flexShrink:0})}>{s.tier}</span>
                   </motion.div>
@@ -1758,12 +1758,12 @@ async function getMMIFb() {
           <Stat label="Study Streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange} m={isMobile}/>
         </div>
 
-        {/* Predicted MCAT */}
-        {predMCAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
-          <SL extra={{marginBottom:12}}>Predicted MCAT Score</SL>
+        {/* Predicted SAT */}
+        {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
+          <SL extra={{marginBottom:12}}>Predicted SAT Score</SL>
           <div style={R({gap:20,flexWrap:'wrap'})}>
             <div style={{textAlign:'center'}}>
-              <div style={{fontSize:48,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predMCAT}</div>
+              <div style={{fontSize:48,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predSAT}</div>
               <div style={{fontSize:12,color:C.t3,marginTop:4}}>Total Score</div>
             </div>
             <div style={{flex:1,minWidth:200}}>
@@ -1859,7 +1859,7 @@ async function getMMIFb() {
         <div style={G(3,14,{},isMobile)}>
           <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
           <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
-          <Stat label="MMI Practice" value={mmiCount} icon={<Mic size={16}/>} color={C.cyan} sub="Stations answered" m={isMobile}/>
+          <Stat label="Interview Practice" value={mmiCount} icon={<Mic size={16}/>} color={C.cyan} sub="Questions answered" m={isMobile}/>
         </div>
 
         {/* Achievements */}
@@ -1908,7 +1908,7 @@ async function getMMIFb() {
         {/* Exam date */}
         <div style={glass({padding:18})}>
           <SL>Test Day</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your MCAT date to see a countdown and pacing guidance on your Home page.</p>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
             <button style={btn()} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
@@ -1932,7 +1932,7 @@ async function getMMIFb() {
 
         {/* Specialty path */}
         <div style={glass()}>
-          <SL>Specialty Path</SL>
+          <SL>Study Track</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
@@ -1966,7 +1966,7 @@ async function getMMIFb() {
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
-            MedSchoolPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks &nbsp;·&nbsp; {MMI_QS.length} MMI stations<br/>
+            MedSchoolPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks &nbsp;·&nbsp; {MMI_QS.length} interview questions<br/>
             Powered by: ts-fsrs · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
             All data stored locally in your browser via IndexedDB · No account required
           </div>
@@ -1987,22 +1987,22 @@ async function getMMIFb() {
           <div style={{position:'absolute',bottom:'-10%',left:'-5%',width:'35vw',height:'35vw',borderRadius:'50%',background:`radial-gradient(circle,rgba(6,182,212,0.07),transparent 65%)`,pointerEvents:'none'}}/>
           <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
             <div style={{textAlign:'center',marginBottom:36}}>
-              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,background:`linear-gradient(135deg,rgba(45,127,255,0.25),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.3)`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><Dna size={34} color={C.blueL}/></motion.div>
+              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
               <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
-              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>MCAT preparation and medical school admissions coaching, in one place.</p>
+              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and college admissions coaching, in one place.</p>
             </div>
             {/* Feature pills */}
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
-              {['180 MCAT Questions','FSRS Flashcards','AI Coach','MMI Practice','Admissions Calc','Offline PWA'].map(f=>(
+              {['SAT/ACT Practice','FSRS Flashcards','AI Coach','Interview Prep','College Planner','Offline PWA'].map(f=>(
                 <span key={f} style={pill(C.s2,C.t2,{border:`1px solid ${C.b1}`,fontSize:11})}>{f}</span>
               ))}
             </div>
             <div style={glass({padding:32})}>
               <span style={lbl()}>Your first name</span>
               <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
-                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'internist',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your specialty path.`);}}}/>
+                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'undecided',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your study track.`);}}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
-                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'internist',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your specialty path.`);}}>
+                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'undecided',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your study track.`);}}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>No account required · Data stored locally · Works offline</p>
@@ -2049,7 +2049,7 @@ async function getMMIFb() {
         {isMobile && (
           <header style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,background:C.s0,display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:100}}>
             <div style={R({gap:10})}>
-              <div style={{width:30,height:30,borderRadius:8,background:`linear-gradient(135deg,rgba(45,127,255,0.3),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.25)`,display:'flex',alignItems:'center',justifyContent:'center'}}><Dna size={16} color={C.blueL}/></div>
+              <div style={{width:30,height:30,borderRadius:8,overflow:'hidden'}}><img src="/icon.svg" width={30} height={30} alt="" style={{display:'block'}}/></div>
               <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
             </div>
             <div style={R({gap:10})}>
@@ -2068,10 +2068,10 @@ async function getMMIFb() {
             <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${accent}60,transparent)`}}/>
             <div style={{padding:'20px 18px 16px',borderBottom:`1px solid ${C.b1}`}}>
               <div style={R({gap:11})}>
-                <div style={{width:34,height:34,borderRadius:9,background:`linear-gradient(135deg,rgba(45,127,255,0.3),rgba(6,182,212,0.15))`,border:`1px solid rgba(45,127,255,0.25)`,display:'flex',alignItems:'center',justifyContent:'center'}}><Dna size={17} color={C.blueL}/></div>
+                <div style={{width:34,height:34,borderRadius:9,overflow:'hidden'}}><img src="/icon.svg" width={34} height={34} alt="" style={{display:'block'}}/></div>
                 <div>
                   <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
-                  <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>MCAT + ADMISSIONS</div>
+                  <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>SAT/ACT + ADMISSIONS</div>
                 </div>
               </div>
             </div>

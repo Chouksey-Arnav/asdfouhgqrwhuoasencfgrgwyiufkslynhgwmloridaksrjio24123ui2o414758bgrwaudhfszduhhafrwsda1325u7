@@ -1,7 +1,7 @@
 # Gemini 2.5 Flash Integration Setup Guide
 
 ## Overview
-Your MedSchoolPrep AI Coach now uses **Google Gemini 2.5 Flash** with automatic daily rate limiting. The implementation is exclusive to the AI Coach and does not affect other AI features in the app.
+Your MedSchoolPrep AI Coach (MetaBrain) now uses **Google Gemini 2.5 Flash** with automatic daily rate limiting. The implementation is exclusive to the AI Coach and does not affect other AI features in the app.
 
 ## What Changed
 
@@ -73,7 +73,7 @@ MetaBrain ✦
 [messages count]  [tokens: remaining/1000]  [pathfocus]
 ```
 
-Example: `5 messages  847/1000 tokens  Bio/Biochem focus`
+Example: `5 messages  847/1000 tokens  STEM & Engineering focus`
 
 ### Quota Exhaustion Banner
 When daily limit is reached:

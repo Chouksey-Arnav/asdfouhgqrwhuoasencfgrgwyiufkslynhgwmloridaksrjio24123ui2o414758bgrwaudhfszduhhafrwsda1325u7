@@ -1,6 +1,6 @@
 export const CHEM_PHYS_QUIZZES = [
   {
-    id:`cp01`, cat:`Chem/Phys`, title:`Atomic Structure & Periodic Trends`, diff:`Medium`, qs:[
+    id:`cp01`, cat:`Physical Sciences`, title:`Atomic Structure & Periodic Trends`, diff:`Medium`, qs:[
       { q:`The principal quantum number (n) determines:`, ch:[`Orbital shape`,`Electron spin state`,`Orbital orientation in space`,`Energy level and average distance from nucleus`], ans:3, exp:`n defines the shell (energy level) and correlates with distance from the nucleus. Higher n = higher energy, larger orbital, greater distance from nucleus. n can be 1, 2, 3...` },
       { q:`Moving across a period from left to right, atomic radius generally:`, ch:[`Increases`,`Decreases`,`First increases, then decreases`,`Remains constant`], ans:1, exp:`Atomic radius decreases left-to-right across a period because nuclear charge (Z) increases while electrons are added to the same shell, increasing effective nuclear charge (Zeff) and pulling electrons closer.` },
       { q:`Electronegativity is highest for which element?`, ch:[`Chlorine`,`Fluorine`,`Oxygen`,`Nitrogen`], ans:1, exp:`Fluorine (EN = 4.0 on Pauling scale) is the most electronegative element. Electronegativity increases up and to the right on the periodic table. O (3.5) and Cl (3.2) are next most electronegative.` },
@@ -19,7 +19,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp02`, cat:`Chem/Phys`, title:`Thermodynamics & Chemical Equilibrium`, diff:`Hard`, qs:[
+    id:`cp02`, cat:`Physical Sciences`, title:`Thermodynamics & Chemical Equilibrium`, diff:`Hard`, qs:[
       { q:`Gibbs free energy (ΔG) is defined as:`, ch:[`TΔS - ΔH`,`ΔH - TΔS`,`ΔS - TΔH`,`ΔH + TΔS`], ans:1, exp:`ΔG = ΔH - TΔS. A spontaneous reaction at constant T and P has ΔG < 0. The equation combines enthalpy (heat) and entropy contributions, weighted by temperature.` },
       { q:`A reaction with ΔH < 0 and ΔS < 0 is spontaneous:`, ch:[`At high temperatures only`,`At low temperatures only`,`At all temperatures`,`Never`], ans:1, exp:`When ΔH < 0 (exothermic) and ΔS < 0 (entropy decreases), ΔG = ΔH - TΔS < 0 only when |ΔH| > T|ΔS|, i.e., at low temperatures. At high T, the -TΔS term dominates and ΔG becomes positive (non-spontaneous).` },
       { q:`At equilibrium, ΔG equals:`, ch:[`-RT ln Keq`,`RT ln Keq`,`ΔG° (standard free energy)`,`Zero`], ans:3, exp:`At equilibrium, the forward and reverse reaction rates are equal and the free energy change for an additional increment of reaction is zero (ΔG = 0). This defines the equilibrium condition.` },
@@ -38,7 +38,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp03`, cat:`Chem/Phys`, title:`Fluids, Circuits & Optics`, diff:`Hard`, qs:[
+    id:`cp03`, cat:`Physical Sciences`, title:`Fluids, Circuits & Optics`, diff:`Hard`, qs:[
       { q:`Bernoulli's equation relates fluid speed to pressure. As fluid speed increases in a constricted tube:`, ch:[`Pressure stays constant`,`Pressure increases`,`Pressure decreases`,`Density increases`], ans:2, exp:`Bernoulli's principle: P + ½ρv² + ρgh = constant. In a constriction, velocity increases and pressure must decrease to conserve energy. This is why airplane wings generate lift and why arteries can bulge in aneurysms.` },
       { q:`The continuity equation (A1v1 = A2v2) for incompressible fluids states that:`, ch:[`Density changes with cross-section`,`Velocity is constant`,`Pressure is constant throughout`,`Flow rate (volume per time) is constant`], ans:3, exp:`The continuity equation expresses conservation of mass for incompressible fluids: A1v1 = A2v2, so fluid in a narrow region flows faster. This is why blood velocity is lowest in capillaries (large total cross-sectional area) despite low individual capillary radius.` },
       { q:`Ohm's Law states that current (I) equals:`, ch:[`Resistance (R) / Voltage (V)`,`Voltage (V) × Resistance (R)`,`Voltage (V) + Resistance (R)`,`Voltage (V) / Resistance (R)`], ans:3, exp:`Ohm's Law: I = V/R. Current is directly proportional to voltage and inversely proportional to resistance. At constant voltage, doubling resistance halves current. Units: V in volts, R in ohms (Ω), I in amperes (A).` },
@@ -57,7 +57,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp04`, cat:`Chem/Phys`, title:`Organic Chemistry Reactions`, diff:`Hard`, qs:[
+    id:`cp04`, cat:`Physical Sciences`, title:`Organic Chemistry Reactions`, diff:`Hard`, qs:[
       { q:`In an SN2 reaction, the rate depends on:`, ch:[`Only nucleophile concentration`,`Both substrate and nucleophile concentrations`,`Temperature only`,`Only substrate concentration`], ans:1, exp:`SN2 is bimolecular: rate = k[substrate][nucleophile]. The nucleophile attacks in a concerted, backside mechanism causing inversion of configuration (Walden inversion). Primary substrates react fastest; tertiary substrates do not undergo SN2.` },
       { q:`An E2 elimination reaction is favored by:`, ch:[`Polar aprotic solvents and strong nucleophiles`,`Weak nucleophiles and tertiary substrates`,`Strong bulky bases and high temperature`,`Polar protic solvents and weak bases`], ans:2, exp:`E2 is favored by strong, bulky bases (e.g., tert-butoxide) and high temperature. The mechanism is concerted (anti-periplanar geometry required). Unlike SN2, bulky bases favor elimination over substitution at tertiary and secondary substrates.` },
       { q:`Markovnikov's rule predicts that in HX addition to an alkene, H adds to the carbon with:`, ch:[`Fewer substituents (more hydrogens)`,`The smaller atomic radius`,`The higher electronegativity`,`More substituents`], ans:0, exp:`Markovnikov's rule: H adds to the carbon bearing more H atoms (fewer substituents), forming the more stable carbocation intermediate at the more substituted carbon. This explains the regioselectivity of electrophilic addition.` },
@@ -76,7 +76,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp05`, cat:`Chem/Phys`, title:`Acid-Base Chemistry & Electrochemistry`, diff:`Hard`, qs:[
+    id:`cp05`, cat:`Physical Sciences`, title:`Acid-Base Chemistry & Electrochemistry`, diff:`Hard`, qs:[
       { q:`According to the Brønsted-Lowry definition, an acid is:`, ch:[`A proton (H+) acceptor`,`An electron pair acceptor`,`An electron pair donor`,`A proton (H+) donor`], ans:3, exp:`Brønsted-Lowry: acids donate protons (H+); bases accept protons. This extends beyond Arrhenius (H+ in water) to any proton-transfer reaction. Lewis definition is broader still: acid = electron pair acceptor.` },
       { q:`The Henderson-Hasselbalch equation is:`, ch:[`pH = pKa + log([A-]/[HA])`,`pH = pKa × [A-]/[HA]`,`pH = pKa - log([HA]/[A-])`,`pH = Ka + log([H+])`], ans:0, exp:`Henderson-Hasselbalch: pH = pKa + log([conjugate base]/[acid]). At pH = pKa, [A-] = [HA] (50/50 ratio). Effective buffering range is approximately pKa ± 1 pH unit.` },
       { q:`A buffer is most effective at resisting pH change when:`, ch:[`The acid concentration is much greater than the base`,`pH equals pKa (equal concentrations of acid and conjugate base)`,`The solution is very dilute`,`pH is far from pKa`], ans:1, exp:`Maximum buffering capacity occurs when [HA] = [A-], i.e., pH = pKa. At this point, the buffer can absorb equal amounts of added acid or base. Practical buffering range: pKa ± 1.` },
@@ -95,7 +95,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp06`, cat:`Chem/Phys`, title:`Kinematics`, diff:`Easy`, qs:[
+    id:`cp06`, cat:`Physical Sciences`, title:`Kinematics`, diff:`Easy`, qs:[
       { q:`An object's velocity is the rate of change of its:`, ch:[`Acceleration`,`Position (displacement)`,`Mass`,`Force`], ans:1, exp:`Velocity = displacement / time, the rate of change of position. Acceleration is the rate of change of velocity.` },
       { q:`A car accelerates uniformly from rest to 20 m/s in 4 s. Its acceleration is:`, ch:[`80 m/s²`,`5 m/s²`,`16 m/s²`,`0.2 m/s²`], ans:1, exp:`a = Δv/Δt = (20-0)/4 = 5 m/s².` },
       { q:`An object thrown straight up experiences acceleration due to gravity that is:`, ch:[`Zero at the top`,`Always 9.8 m/s² downward`,`Upward on the way up, downward on the way down`,`Increasing as it rises`], ans:1, exp:`Near Earth's surface, gravitational acceleration is constant (~9.8 m/s² downward) throughout the entire flight, including at the peak (where velocity, not acceleration, is zero).` },
@@ -114,7 +114,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp07`, cat:`Chem/Phys`, title:`Newton's Laws`, diff:`Easy`, qs:[
+    id:`cp07`, cat:`Physical Sciences`, title:`Newton's Laws`, diff:`Easy`, qs:[
       { q:`Newton's First Law states that an object at rest or in motion will:`, ch:[`Always accelerate`,`Remain in that state unless acted on by a net external force`,`Eventually slow to a stop`,`Speed up over time`], ans:1, exp:`The law of inertia: objects maintain their state of motion (rest or constant velocity) unless a net external force acts on them.` },
       { q:`Newton's Second Law is expressed as:`, ch:[`F = ma`,`F = mv`,`F = m/a`,`F = a/m`], ans:0, exp:`F = ma: net force equals mass times acceleration. For constant mass, acceleration is directly proportional to net force and inversely proportional to mass.` },
       { q:`Newton's Third Law states that for every action there is:`, ch:[`A larger reaction`,`An equal and opposite reaction`,`No reaction`,`A delayed reaction`], ans:1, exp:`For every force exerted by object A on object B, object B exerts an equal magnitude, oppositely directed force on object A.` },
@@ -133,7 +133,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp08`, cat:`Chem/Phys`, title:`Work, Energy & Power`, diff:`Easy`, qs:[
+    id:`cp08`, cat:`Physical Sciences`, title:`Work, Energy & Power`, diff:`Easy`, qs:[
       { q:`Work is defined as:`, ch:[`Force × time`,`Force × displacement in the direction of force`,`Mass × acceleration`,`Energy / time`], ans:1, exp:`W = F·d·cosθ, where θ is the angle between the force and displacement vectors. Work is zero if force is perpendicular to displacement.` },
       { q:`The SI unit of energy and work is the:`, ch:[`Watt`,`Newton`,`Joule`,`Pascal`], ans:2, exp:`The Joule (J) = N·m is the SI unit of energy, work, and heat. The Watt (J/s) is the unit of power.` },
       { q:`Kinetic energy is calculated as:`, ch:[`mgh`,`½mv²`,`Fd`,`mv`], ans:1, exp:`KE = ½mv², the energy of motion. It depends on mass and the square of velocity.` },
@@ -152,7 +152,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp09`, cat:`Chem/Phys`, title:`Basic Waves`, diff:`Easy`, qs:[
+    id:`cp09`, cat:`Physical Sciences`, title:`Basic Waves`, diff:`Easy`, qs:[
       { q:`The wavelength of a wave is the distance between:`, ch:[`Two consecutive crests (or any two corresponding points)`,`A crest and the next trough`,`The amplitude and the baseline`,`One full cycle and the speed`], ans:0, exp:`Wavelength (λ) is the spatial period — the distance between two successive corresponding points (e.g., crest to crest).` },
       { q:`Frequency and period are related by:`, ch:[`f = T`,`f = 1/T`,`f = T²`,`f = 2T`], ans:1, exp:`Frequency (cycles per second, Hz) is the reciprocal of the period (time per cycle, seconds): f = 1/T.` },
       { q:`The wave speed equation relates speed (v), wavelength (λ), and frequency (f) as:`, ch:[`v = λ/f`,`v = λf`,`v = f/λ`,`v = λ + f`], ans:1, exp:`v = λf. Wave speed equals wavelength times frequency.` },
@@ -172,7 +172,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp10`, cat:`Chem/Phys`, title:`Sound`, diff:`Easy`, qs:[
+    id:`cp10`, cat:`Physical Sciences`, title:`Sound`, diff:`Easy`, qs:[
       { q:`Sound waves are classified as:`, ch:[`Transverse electromagnetic waves`,`Longitudinal mechanical waves`,`Standing waves only`,`Polarized waves`], ans:1, exp:`Sound consists of longitudinal pressure waves (compressions and rarefactions) traveling through a medium (gas, liquid, or solid).` },
       { q:`Sound travels fastest through:`, ch:[`A vacuum`,`Air`,`Water`,`Solids (e.g., steel)`], ans:3, exp:`Sound speed depends on the medium's stiffness and density; sound travels fastest in solids (e.g., ~5000 m/s in steel), slower in liquids, and slowest in gases. Sound cannot travel through a vacuum.` },
       { q:`The pitch of a sound is most closely related to its:`, ch:[`Amplitude`,`Frequency`,`Speed`,`Wavelength only, independent of medium`], ans:1, exp:`Pitch is the perceptual correlate of frequency: higher frequency = higher pitch.` },
@@ -191,7 +191,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp11`, cat:`Chem/Phys`, title:`Electrostatics`, diff:`Easy`, qs:[
+    id:`cp11`, cat:`Physical Sciences`, title:`Electrostatics`, diff:`Easy`, qs:[
       { q:`Like charges:`, ch:[`Attract each other`,`Repel each other`,`Have no interaction`,`Cancel each other out`], ans:1, exp:`Like charges (both positive or both negative) repel; opposite charges attract — Coulomb's law.` },
       { q:`Coulomb's Law states that the electric force between two charges is:`, ch:[`Proportional to the product of charges and inversely proportional to the square of distance`,`Inversely proportional to the product of charges`,`Proportional to distance squared`,`Independent of distance`], ans:0, exp:`F = kq1q2/r². The force is proportional to the product of the charges and inversely proportional to the square of the separation distance.` },
       { q:`The SI unit of electric charge is the:`, ch:[`Volt`,`Ampere`,`Coulomb`,`Ohm`], ans:2, exp:`Charge is measured in Coulombs (C). The elementary charge (of a proton or electron) is approximately 1.6 × 10⁻¹⁹ C.` },
@@ -210,7 +210,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp12`, cat:`Chem/Phys`, title:`Magnetism Basics`, diff:`Easy`, qs:[
+    id:`cp12`, cat:`Physical Sciences`, title:`Magnetism Basics`, diff:`Easy`, qs:[
       { q:`Magnetic field lines around a bar magnet point:`, ch:[`From south pole to north pole outside the magnet`,`From north pole to south pole outside the magnet`,`Randomly`,`Only inside the magnet`], ans:1, exp:`By convention, magnetic field lines emerge from the north pole and curve around to enter the south pole (outside the magnet); inside the magnet, they go from south to north.` },
       { q:`Like magnetic poles (e.g., two north poles):`, ch:[`Attract`,`Repel`,`Have no interaction`,`Merge into one pole`], ans:1, exp:`Like poles repel and unlike poles attract, analogous to electric charges.` },
       { q:`A moving electric charge creates:`, ch:[`Only an electric field`,`A magnetic field`,`No field`,`Only gravity`], ans:1, exp:`Moving charges (currents) generate magnetic fields, as described by the Biot-Savart law and Ampère's law.` },
@@ -230,7 +230,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp13`, cat:`Chem/Phys`, title:`Organic Functional Groups`, diff:`Easy`, qs:[
+    id:`cp13`, cat:`Physical Sciences`, title:`Organic Functional Groups`, diff:`Easy`, qs:[
       { q:`The functional group -OH (when bonded to a carbon chain) characterizes:`, ch:[`Ketones`,`Alcohols`,`Carboxylic acids`,`Amines`], ans:1, exp:`The hydroxyl group (-OH) attached to a carbon chain defines an alcohol (R-OH).` },
       { q:`A carbonyl group (C=O) located within a carbon chain (between two carbons) defines:`, ch:[`An aldehyde`,`A ketone`,`A carboxylic acid`,`An ether`], ans:1, exp:`A ketone has a carbonyl carbon bonded to two other carbon atoms (R-CO-R'). An aldehyde has the carbonyl at the end of the chain, bonded to at least one H.` },
       { q:`An aldehyde is characterized by a carbonyl group:`, ch:[`Bonded to two carbon groups`,`At the terminal position of a chain, bonded to at least one hydrogen`,`Bonded to an -OH group`,`Bonded to nitrogen`], ans:1, exp:`Aldehydes (R-CHO) have the carbonyl carbon at the end of the chain, bonded to one H and one R group (or two H for formaldehyde).` },
@@ -250,7 +250,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp14`, cat:`Chem/Phys`, title:`Basic Stereochemistry`, diff:`Easy`, qs:[
+    id:`cp14`, cat:`Physical Sciences`, title:`Basic Stereochemistry`, diff:`Easy`, qs:[
       { q:`Stereoisomers are molecules that have:`, ch:[`Different molecular formulas`,`The same connectivity of atoms but different spatial arrangements`,`Different functional groups`,`Different molecular weights`], ans:1, exp:`Stereoisomers share the same molecular formula and bond connectivity (constitution) but differ in the 3D spatial arrangement of atoms.` },
       { q:`A chiral carbon (stereocenter) is a carbon bonded to:`, ch:[`Four identical groups`,`Four different groups`,`Two double bonds`,`Only hydrogen atoms`], ans:1, exp:`A chiral (stereo) center is typically a carbon bonded to four different substituents, giving rise to two non-superimposable mirror-image forms (enantiomers).` },
       { q:`Enantiomers are:`, ch:[`Non-superimposable mirror images of each other`,`Identical molecules`,`Molecules with different molecular formulas`,`Superimposable mirror images`], ans:0, exp:`Enantiomers are pairs of stereoisomers that are non-superimposable mirror images, like left and right hands.` },
@@ -269,7 +269,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp15`, cat:`Chem/Phys`, title:`Colligative Properties`, diff:`Easy`, qs:[
+    id:`cp15`, cat:`Physical Sciences`, title:`Colligative Properties`, diff:`Easy`, qs:[
       { q:`Colligative properties depend primarily on:`, ch:[`The identity of the solute`,`The number (concentration) of solute particles, not their identity`,`The color of the solution`,`The molecular weight of the solvent only`], ans:1, exp:`Colligative properties (boiling point elevation, freezing point depression, vapor pressure lowering, osmotic pressure) depend on the number of dissolved particles, regardless of what they are.` },
       { q:`Adding a non-volatile solute to a solvent will:`, ch:[`Increase vapor pressure`,`Decrease vapor pressure (Raoult's Law)`,`Have no effect on vapor pressure`,`Decrease the boiling point`], ans:1, exp:`Raoult's Law: adding a non-volatile solute decreases the mole fraction of solvent at the surface, lowering the vapor pressure of the solution compared to pure solvent.` },
       { q:`Boiling point elevation occurs because:`, ch:[`Solute particles increase the vapor pressure`,`Solute particles lower vapor pressure, requiring a higher temperature to reach atmospheric pressure for boiling`,`Solute particles decrease the freezing point only`,`Solutes have no effect on boiling`], ans:1, exp:`Since the solution's vapor pressure is lowered, a higher temperature is needed to raise vapor pressure to atmospheric pressure (boiling condition), so the boiling point increases (ΔTb = iKbm).` },
@@ -288,7 +288,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp16`, cat:`Chem/Phys`, title:`Solutions & Concentrations`, diff:`Easy`, qs:[
+    id:`cp16`, cat:`Physical Sciences`, title:`Solutions & Concentrations`, diff:`Easy`, qs:[
       { q:`Molarity is defined as:`, ch:[`Moles of solute per kilogram of solvent`,`Moles of solute per liter of solution`,`Grams of solute per liter of solution`,`Moles of solute per mole of solvent`], ans:1, exp:`Molarity (M) = moles of solute / liters of solution. It is the most common concentration unit in chemistry.` },
       { q:`A solute is the substance that:`, ch:[`Is present in the largest amount`,`Is dissolved in the solvent`,`Always a liquid`,`Cannot dissolve`], ans:1, exp:`The solute is the substance being dissolved (typically present in smaller amount), while the solvent is the dissolving medium (often present in larger amount).` },
       { q:`If you dilute a solution by adding more solvent, the:`, ch:[`Number of moles of solute increases`,`Number of moles of solute stays the same, but concentration decreases`,`Concentration increases`,`Solute disappears`], ans:1, exp:`Dilution does not change the amount (moles) of solute, only the volume of solution, so concentration decreases according to M1V1 = M2V2.` },
@@ -307,7 +307,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp17`, cat:`Chem/Phys`, title:`Periodic Trends`, diff:`Easy`, qs:[
+    id:`cp17`, cat:`Physical Sciences`, title:`Periodic Trends`, diff:`Easy`, qs:[
       { q:`Atomic radius generally increases:`, ch:[`Across a period (left to right) and down a group`,`Down a group and right to left across a period`,`Across a period (left to right) and up a group`,`In all directions equally`], ans:1, exp:`Atomic radius increases down a group (more electron shells) and increases right-to-left across a period (decreasing nuclear charge for same shell).` },
       { q:`Ionization energy generally increases:`, ch:[`Down a group and left to right across a period`,`Down a group and right to left across a period`,`Up a group and left to right across a period`,`Up a group and right to left across a period`], ans:2, exp:`Ionization energy increases up a group (electrons closer to, more strongly held by, nucleus) and increases left to right across a period (increasing effective nuclear charge).` },
       { q:`Electronegativity is generally highest for elements in the:`, ch:[`Bottom-left of the periodic table`,`Top-right of the periodic table (excluding noble gases)`,`Center of the periodic table`,`Lanthanide series only`], ans:1, exp:`Electronegativity increases up and to the right; fluorine (top-right, excluding noble gases) is the most electronegative element.` },
@@ -326,7 +326,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp18`, cat:`Chem/Phys`, title:`Lewis Structures & VSEPR`, diff:`Easy`, qs:[
+    id:`cp18`, cat:`Physical Sciences`, title:`Lewis Structures & VSEPR`, diff:`Easy`, qs:[
       { q:`A Lewis structure represents:`, ch:[`Only the molecular formula`,`The arrangement of valence electrons (bonding and lone pairs) around atoms`,`Only the 3D shape of a molecule`,`Nuclear structure`], ans:1, exp:`Lewis structures show how valence electrons are distributed as bonding pairs (shared between atoms) and lone pairs (non-bonding) to satisfy the octet rule (generally).` },
       { q:`The octet rule states that atoms tend to:`, ch:[`Gain, lose, or share electrons to have 8 valence electrons (like noble gases)`,`Always have exactly 8 protons`,`Form only ionic bonds`,`Have 8 total electrons`], ans:0, exp:`The octet rule: main-group atoms tend to bond in ways that give them 8 valence electrons, achieving a stable noble-gas-like electron configuration (H and He are exceptions, aiming for 2).` },
       { q:`A double bond between two atoms involves the sharing of:`, ch:[`1 pair of electrons`,`2 pairs of electrons`,`3 pairs of electrons`,`4 pairs of electrons`], ans:1, exp:`A double bond consists of 2 shared electron pairs (one sigma and one pi bond); a single bond is 1 pair, and a triple bond is 3 pairs.` },
@@ -345,7 +345,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp19`, cat:`Chem/Phys`, title:`Ionic, Covalent & Metallic Bonding`, diff:`Easy`, qs:[
+    id:`cp19`, cat:`Physical Sciences`, title:`Ionic, Covalent & Metallic Bonding`, diff:`Easy`, qs:[
       { q:`Ionic bonds form through:`, ch:[`Sharing of electron pairs`,`Transfer of electrons from one atom to another, creating oppositely charged ions`,`Sharing of protons`,`Overlap of electron clouds in metals`], ans:1, exp:`Ionic bonds result from electron transfer (typically metal to nonmetal), creating cations and anions held together by electrostatic attraction.` },
       { q:`Covalent bonds form through:`, ch:[`Complete transfer of electrons`,`Sharing of electron pairs between atoms`,`Loss of all valence electrons`,`Metallic electron seas`], ans:1, exp:`Covalent bonds involve atoms (typically nonmetals) sharing one or more pairs of electrons to achieve stable electron configurations.` },
       { q:`A nonpolar covalent bond occurs when:`, ch:[`Two atoms with very different electronegativities bond`,`Two atoms with the same or very similar electronegativities share electrons roughly equally`,`Electrons are completely transferred`,`No electrons are shared`], ans:1, exp:`When electronegativity difference is small (~0-0.4), electrons are shared roughly equally, resulting in a nonpolar covalent bond (e.g., C-C, C-H bonds).` },
@@ -364,7 +364,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp20`, cat:`Chem/Phys`, title:`Rotational Motion & Torque`, diff:`Medium`, qs:[
+    id:`cp20`, cat:`Physical Sciences`, title:`Rotational Motion & Torque`, diff:`Medium`, qs:[
       { q:`Torque is defined as:`, ch:[`Force times mass`,`Force times the lever arm (perpendicular distance from pivot)`,`Mass times velocity`,`Force divided by distance`], ans:1, exp:`τ = rF sinθ, where r is the distance from the pivot to the point of force application, and θ is the angle between r and F. Torque causes rotational acceleration.` },
       { q:`The rotational analog of Newton's Second Law (F=ma) is:`, ch:[`τ = Iα (torque = moment of inertia × angular acceleration)`,`τ = mv`,`τ = Fd`,`τ = ½Iω²`], ans:0, exp:`τ = Iα is the rotational equivalent of F=ma, where I is the moment of inertia (rotational inertia) and α is angular acceleration.` },
       { q:`Moment of inertia (I) depends on:`, ch:[`Only the total mass of the object`,`The mass distribution relative to the axis of rotation`,`Only the angular velocity`,`Only the torque applied`], ans:1, exp:`I = Σmr², depends on how mass is distributed relative to the rotation axis. Mass farther from the axis contributes more to I (e.g., a hoop has greater I than a solid disk of the same mass and radius).` },
@@ -383,7 +383,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp21`, cat:`Chem/Phys`, title:`Momentum & Collisions`, diff:`Medium`, qs:[
+    id:`cp21`, cat:`Physical Sciences`, title:`Momentum & Collisions`, diff:`Medium`, qs:[
       { q:`Linear momentum is defined as:`, ch:[`p = mv`,`p = ma`,`p = Fv`,`p = ½mv²`], ans:0, exp:`Momentum p = mv (mass × velocity), a vector quantity in the direction of velocity.` },
       { q:`The law of conservation of momentum states that in a closed system with no external forces:`, ch:[`Total momentum before and after a collision is the same`,`Total kinetic energy is always conserved`,`Momentum increases over time`,`Momentum is converted to mass`], ans:0, exp:`In an isolated system (no net external force), total momentum is conserved: Σp_initial = Σp_final, regardless of whether the collision is elastic or inelastic.` },
       { q:`In a perfectly elastic collision:`, ch:[`Both momentum and kinetic energy are conserved`,`Only momentum is conserved; KE is lost`,`Only KE is conserved`,`Objects stick together`], ans:0, exp:`Elastic collisions conserve both total momentum and total kinetic energy. Examples include idealized billiard ball collisions and gas molecule collisions.` },
@@ -402,7 +402,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp22`, cat:`Chem/Phys`, title:`Simple Harmonic Motion`, diff:`Medium`, qs:[
+    id:`cp22`, cat:`Physical Sciences`, title:`Simple Harmonic Motion`, diff:`Medium`, qs:[
       { q:`Simple harmonic motion (SHM) is characterized by a restoring force that is:`, ch:[`Constant in magnitude`,`Directly proportional to displacement and directed opposite to it (F = -kx)`,`Independent of displacement`,`Always zero`], ans:1, exp:`SHM occurs when the restoring force obeys Hooke's law: F = -kx, proportional to displacement (x) from equilibrium and directed toward equilibrium.` },
       { q:`The period of a mass-spring system is given by:`, ch:[`T = 2π√(m/k)`,`T = 2π√(k/m)`,`T = 2π√(L/g)`,`T = 1/(2πf)`], ans:0, exp:`For a mass-spring system, T = 2π√(m/k), independent of amplitude. Larger mass increases T; stiffer spring (larger k) decreases T.` },
       { q:`The period of a simple pendulum (small angle) is given by:`, ch:[`T = 2π√(m/k)`,`T = 2π√(L/g)`,`T = 2πf`,`T = 2π√(g/L)`], ans:1, exp:`For a simple pendulum with small oscillations, T = 2π√(L/g), depending on length (L) and gravitational acceleration (g), but independent of mass and amplitude (for small angles).` },
@@ -421,7 +421,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp23`, cat:`Chem/Phys`, title:`Projectile Motion & Vectors`, diff:`Medium`, qs:[
+    id:`cp23`, cat:`Physical Sciences`, title:`Projectile Motion & Vectors`, diff:`Medium`, qs:[
       { q:`A vector quantity is one that has:`, ch:[`Only magnitude`,`Only direction`,`Both magnitude and direction`,`Neither magnitude nor direction`], ans:2, exp:`Vectors (e.g., velocity, force, displacement) have both magnitude and direction, unlike scalars (e.g., speed, mass, time) which have only magnitude.` },
       { q:`In projectile motion (ignoring air resistance), the horizontal component of velocity:`, ch:[`Decreases due to gravity`,`Remains constant throughout the flight`,`Increases due to gravity`,`Becomes zero at the peak`], ans:1, exp:`Gravity acts only vertically, so the horizontal velocity component remains unchanged throughout the flight (assuming no air resistance).` },
       { q:`In projectile motion, the vertical component of velocity at the peak of the trajectory is:`, ch:[`Maximum`,`Zero`,`Equal to the horizontal component`,`Negative infinity`], ans:1, exp:`At the peak (maximum height), the vertical velocity momentarily equals zero before the projectile begins descending; the horizontal velocity continues unchanged.` },
@@ -440,7 +440,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp24`, cat:`Chem/Phys`, title:`Gravitation & Orbits`, diff:`Medium`, qs:[
+    id:`cp24`, cat:`Physical Sciences`, title:`Gravitation & Orbits`, diff:`Medium`, qs:[
       { q:`Newton's law of universal gravitation states that the gravitational force between two masses is:`, ch:[`Proportional to the sum of the masses`,`Proportional to the product of the masses and inversely proportional to the square of the distance between them`,`Independent of mass`,`Proportional to distance squared`], ans:1, exp:`F = Gm1m2/r². Gravitational force increases with the product of the masses and decreases with the square of the separation distance.` },
       { q:`If the distance between two masses is tripled, the gravitational force between them becomes:`, ch:[`3 times as strong`,`1/3 as strong`,`1/9 as strong`,`9 times as strong`], ans:2, exp:`F ∝ 1/r². Tripling r reduces F by a factor of 1/3² = 1/9.` },
       { q:`The acceleration due to gravity (g) at a planet's surface depends on:`, ch:[`The planet's mass and radius (g = GM/R²)`,`Only the planet's mass`,`Only the planet's radius`,`The orbiting object's mass`], ans:0, exp:`g = GM/R², where M is the planet's mass and R is its radius. g is independent of the mass of the object experiencing the gravitational acceleration.` },
@@ -459,7 +459,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp25`, cat:`Chem/Phys`, title:`Calorimetry & Heat Transfer`, diff:`Medium`, qs:[
+    id:`cp25`, cat:`Physical Sciences`, title:`Calorimetry & Heat Transfer`, diff:`Medium`, qs:[
       { q:`The specific heat capacity of a substance is defined as:`, ch:[`The energy required to raise the temperature of 1 g of substance by 1°C`,`The total heat content of an object`,`The temperature at which a substance melts`,`The mass of a substance per unit volume`], ans:0, exp:`Specific heat (c) = energy required to raise the temperature of 1 g (or 1 kg) of a substance by 1°C (or 1 K). q = mcΔT.` },
       { q:`The heat transferred (q) when a substance changes temperature is given by:`, ch:[`q = mL`,`q = mcΔT`,`q = PV`,`q = mgh`], ans:1, exp:`q = mcΔT, where m is mass, c is specific heat capacity, and ΔT is the temperature change. This applies when no phase change occurs.` },
       { q:`The heat required for a phase change (e.g., melting or vaporization) at constant temperature is given by:`, ch:[`q = mcΔT`,`q = mL (where L is latent heat)`,`q = nRT`,`q = ½mv²`], ans:1, exp:`q = mL, where L is the latent heat of fusion (melting/freezing) or vaporization (boiling/condensation). Temperature remains constant during a phase change.` },
@@ -478,7 +478,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp26`, cat:`Chem/Phys`, title:`Ideal Gas Law & Kinetic Molecular Theory`, diff:`Medium`, qs:[
+    id:`cp26`, cat:`Physical Sciences`, title:`Ideal Gas Law & Kinetic Molecular Theory`, diff:`Medium`, qs:[
       { q:`The ideal gas law is expressed as:`, ch:[`PV = nRT`,`PV = nT/R`,`PV = RT/n`,`P = nRT/V²`], ans:0, exp:`PV = nRT, where P is pressure, V is volume, n is moles, R is the gas constant, and T is temperature in Kelvin.` },
       { q:`At constant temperature and amount of gas, Boyle's Law states that pressure and volume are:`, ch:[`Directly proportional`,`Inversely proportional (PV = constant)`,`Unrelated`,`Equal`], ans:1, exp:`Boyle's Law: P1V1 = P2V2 at constant T and n. As volume decreases, pressure increases proportionally.` },
       { q:`At constant pressure and amount of gas, Charles's Law states that volume and temperature (in Kelvin) are:`, ch:[`Inversely proportional`,`Directly proportional (V/T = constant)`,`Unrelated`,`Equal to a constant ratio of pressure`], ans:1, exp:`Charles's Law: V1/T1 = V2/T2 at constant P and n. Volume increases proportionally with absolute temperature.` },
@@ -497,7 +497,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp27`, cat:`Chem/Phys`, title:`Radioactivity & Half-Life`, diff:`Medium`, qs:[
+    id:`cp27`, cat:`Physical Sciences`, title:`Radioactivity & Half-Life`, diff:`Medium`, qs:[
       { q:`Alpha decay involves the emission of:`, ch:[`A high-energy electron`,`A helium nucleus (2 protons, 2 neutrons)`,`A photon only`,`A neutron`], ans:1, exp:`Alpha particles are helium nuclei (4He, 2 protons + 2 neutrons). Alpha decay decreases the atomic number by 2 and mass number by 4.` },
       { q:`Beta-minus (β-) decay involves:`, ch:[`A neutron converting to a proton, emitting an electron and an antineutrino`,`A proton converting to a neutron, emitting a positron`,`Emission of a helium nucleus`,`Emission of a gamma ray only`], ans:0, exp:`β- decay: n → p + e- + antineutrino. The atomic number increases by 1 (more protons) while mass number stays the same.` },
       { q:`Gamma decay involves the emission of:`, ch:[`A high-energy photon, with no change in atomic or mass number`,`An alpha particle`,`A beta particle`,`A neutron`], ans:0, exp:`Gamma decay releases excess energy as high-energy electromagnetic radiation (photons) without changing the atomic number or mass number — often follows alpha or beta decay.` },
@@ -516,7 +516,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp28`, cat:`Chem/Phys`, title:`Electromagnetic Induction`, diff:`Medium`, qs:[
+    id:`cp28`, cat:`Physical Sciences`, title:`Electromagnetic Induction`, diff:`Medium`, qs:[
       { q:`Faraday's Law of induction states that an induced EMF is proportional to:`, ch:[`The magnetic field strength only`,`The rate of change of magnetic flux through a circuit`,`The resistance of the circuit`,`The temperature of the conductor`], ans:1, exp:`EMF = -dΦ/dt (Faraday's Law). The induced EMF depends on how quickly the magnetic flux through a circuit changes, not on the flux itself.` },
       { q:`Lenz's Law states that the direction of an induced current is such that it:`, ch:[`Reinforces the change in magnetic flux that caused it`,`Opposes the change in magnetic flux that caused it`,`Is always clockwise`,`Has no relation to the magnetic flux`], ans:1, exp:`Lenz's Law (a consequence of energy conservation): induced current creates a magnetic field that opposes the change in flux that produced it.` },
       { q:`Magnetic flux (Φ) through a loop is given by:`, ch:[`Φ = BA cosθ`,`Φ = B/A`,`Φ = B + A`,`Φ = BA²`], ans:0, exp:`Φ = B·A·cosθ, where B is the magnetic field, A is the area of the loop, and θ is the angle between B and the normal to the loop's surface.` },
@@ -535,7 +535,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp29`, cat:`Chem/Phys`, title:`Geometric Optics — Mirrors`, diff:`Medium`, qs:[
+    id:`cp29`, cat:`Physical Sciences`, title:`Geometric Optics — Mirrors`, diff:`Medium`, qs:[
       { q:`For a plane (flat) mirror, the image formed is:`, ch:[`Real, inverted, and the same size as the object`,`Virtual, upright, and the same size as the object`,`Real and magnified`,`Virtual and reduced in size`], ans:1, exp:`Plane mirrors always produce virtual, upright images that are the same size as the object, located as far behind the mirror as the object is in front.` },
       { q:`A concave mirror is also known as a:`, ch:[`Diverging mirror`,`Converging mirror`,`Plane mirror`,`Compound mirror`], ans:1, exp:`Concave mirrors curve inward and converge parallel rays of light to a focal point in front of the mirror — hence 'converging mirror.'` },
       { q:`A convex mirror is also known as a:`, ch:[`Converging mirror`,`Diverging mirror`,`Plane mirror`,`Real-image mirror`], ans:1, exp:`Convex mirrors curve outward and cause parallel rays to diverge as if coming from a virtual focal point behind the mirror — hence 'diverging mirror.'` },
@@ -554,7 +554,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp30`, cat:`Chem/Phys`, title:`Interference & Diffraction`, diff:`Medium`, qs:[
+    id:`cp30`, cat:`Physical Sciences`, title:`Interference & Diffraction`, diff:`Medium`, qs:[
       { q:`Young's double-slit experiment demonstrates:`, ch:[`The particle nature of light only`,`The wave nature of light through interference patterns`,`That light has mass`,`That light cannot be polarized`], ans:1, exp:`Young's double-slit experiment produces alternating bright and dark fringes due to constructive and destructive interference, demonstrating light's wave nature.` },
       { q:`In a double-slit interference pattern, bright fringes (constructive interference) occur where the path difference between the two waves is:`, ch:[`An odd multiple of half wavelengths`,`An integer multiple of the wavelength (mλ)`,`Always zero`,`Equal to the slit separation`], ans:1, exp:`Constructive interference (bright fringes) occurs when path difference = mλ (m = 0, ±1, ±2, ...), where the waves arrive in phase.` },
       { q:`In a double-slit interference pattern, dark fringes (destructive interference) occur where the path difference is:`, ch:[`An integer multiple of the wavelength`,`(m + 1/2)λ — an odd multiple of half wavelengths`,`Zero`,`Equal to the wavelength squared`], ans:1, exp:`Destructive interference (dark fringes) occurs when path difference = (m+1/2)λ, where the waves arrive exactly out of phase and cancel.` },
@@ -573,7 +573,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp31`, cat:`Chem/Phys`, title:`Alkane & Cycloalkane Properties`, diff:`Medium`, qs:[
+    id:`cp31`, cat:`Physical Sciences`, title:`Alkane & Cycloalkane Properties`, diff:`Medium`, qs:[
       { q:`Alkanes are characterized by:`, ch:[`Only single C-C and C-H bonds (saturated hydrocarbons)`,`At least one C=C double bond`,`At least one C≡C triple bond`,`A benzene ring`], ans:0, exp:`Alkanes (CnH2n+2) are saturated hydrocarbons containing only single bonds between carbon atoms, with the maximum possible number of hydrogens.` },
       { q:`The general molecular formula for an acyclic alkane is:`, ch:[`CnH2n`,`CnH2n+2`,`CnH2n-2`,`CnHn`], ans:1, exp:`Acyclic (non-cyclic) alkanes follow CnH2n+2 — for example, methane CH4 (n=1), ethane C2H6 (n=2).` },
       { q:`Cycloalkanes have the general molecular formula:`, ch:[`CnH2n+2`,`CnH2n`,`CnH2n-2`,`CnH2n+4`], ans:1, exp:`Forming a ring removes 2 hydrogens compared to the corresponding acyclic alkane, giving cycloalkanes the formula CnH2n (one degree of unsaturation from the ring).` },
@@ -592,7 +592,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp32`, cat:`Chem/Phys`, title:`Alkene Reactions`, diff:`Medium`, qs:[
+    id:`cp32`, cat:`Physical Sciences`, title:`Alkene Reactions`, diff:`Medium`, qs:[
       { q:`Alkenes are characterized by:`, ch:[`Only single bonds`,`At least one carbon-carbon double bond (C=C)`,`A carbon-carbon triple bond`,`An aromatic ring`], ans:1, exp:`Alkenes (CnH2n) contain at least one C=C double bond, consisting of one sigma bond and one pi bond, giving them one degree of unsaturation per double bond.` },
       { q:`Hydrogenation of an alkene (H2, Pd/Pt/Ni catalyst) produces:`, ch:[`An alkyne`,`An alkane (addition of H2 across the double bond)`,`An alcohol`,`A carboxylic acid`], ans:1, exp:`Catalytic hydrogenation adds H2 across the C=C double bond, converting the alkene to the corresponding saturated alkane.` },
       { q:`Halogenation of an alkene (e.g., with Br2) proceeds via:`, ch:[`A bromonium ion intermediate, resulting in anti addition`,`A carbocation with syn addition only`,`A radical mechanism exclusively`,`No reaction occurs`], ans:0, exp:`Br2 adds across the double bond via a cyclic bromonium ion intermediate; the second bromide attacks from the opposite face, resulting in anti (trans) addition of the two bromine atoms.` },
@@ -611,7 +611,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp33`, cat:`Chem/Phys`, title:`Aromatic Chemistry & Electrophilic Aromatic Substitution`, diff:`Medium`, qs:[
+    id:`cp33`, cat:`Physical Sciences`, title:`Aromatic Chemistry & Electrophilic Aromatic Substitution`, diff:`Medium`, qs:[
       { q:`Benzene's stability is attributed to:`, ch:[`Three isolated double bonds`,`Delocalization of pi electrons across the ring (aromaticity)`,`Strong sigma bonds only`,`The presence of nitrogen`], ans:1, exp:`Benzene's six pi electrons are delocalized over all six carbons in a continuous ring of overlapping p-orbitals, providing significant resonance stabilization (aromaticity).` },
       { q:`Hückel's rule for aromaticity requires a planar, cyclic, fully conjugated system with:`, ch:[`4n pi electrons`,`4n+2 pi electrons (n=0,1,2...)`,`Any even number of electrons`,`No pi electrons`], ans:1, exp:`Hückel's rule: aromatic compounds have 4n+2 pi electrons (2, 6, 10, 14...) in a planar, fully conjugated cyclic system. Benzene has 6 pi electrons (n=1).` },
       { q:`Electrophilic aromatic substitution (EAS) replaces:`, ch:[`A ring carbon with a new substituent`,`A hydrogen on the aromatic ring with an electrophile, while preserving aromaticity`,`The entire ring`,`Only the pi electrons`], ans:1, exp:`In EAS, an electrophile attacks the electron-rich aromatic ring, displacing a hydrogen atom while regenerating the aromatic system in the product.` },
@@ -630,7 +630,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp34`, cat:`Chem/Phys`, title:`Aldehyde & Ketone Reactions`, diff:`Medium`, qs:[
+    id:`cp34`, cat:`Physical Sciences`, title:`Aldehyde & Ketone Reactions`, diff:`Medium`, qs:[
       { q:`Nucleophilic addition to a carbonyl group (aldehyde/ketone) involves:`, ch:[`A nucleophile attacking the electrophilic carbonyl carbon, breaking the pi bond`,`An electrophile attacking the oxygen`,`No change to the carbonyl`,`Substitution of the oxygen atom`], ans:0, exp:`The carbonyl carbon is electrophilic (partial positive charge due to C=O polarity); nucleophiles attack this carbon, with the pi electrons shifting to oxygen, forming an alkoxide intermediate.` },
       { q:`Aldehydes are generally ___ reactive toward nucleophilic addition than ketones.`, ch:[`Less`,`More (less steric hindrance and more electrophilic carbonyl carbon)`,`Equally`,`Not at all`], ans:1, exp:`Aldehydes have one H and one R group on the carbonyl carbon (less steric hindrance, more electrophilic carbon) compared to ketones with two R groups, making aldehydes more reactive toward nucleophilic addition.` },
       { q:`Reaction of an aldehyde or ketone with a Grignard reagent (RMgX) followed by aqueous workup produces:`, ch:[`An alcohol (the Grignard carbon adds to the carbonyl carbon)`,`A carboxylic acid`,`An alkene`,`An ether`], ans:0, exp:`Grignard reagents act as carbon nucleophiles, adding to the carbonyl carbon to form an alkoxide, which is protonated upon workup to give an alcohol (secondary from aldehydes, tertiary from ketones).` },
@@ -649,7 +649,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp35`, cat:`Chem/Phys`, title:`Carboxylic Acid Derivatives`, diff:`Medium`, qs:[
+    id:`cp35`, cat:`Physical Sciences`, title:`Carboxylic Acid Derivatives`, diff:`Medium`, qs:[
       { q:`Carboxylic acid derivatives include all of the following EXCEPT:`, ch:[`Esters`,`Amides`,`Acid chlorides`,`Alkenes`], ans:3, exp:`Carboxylic acid derivatives (esters, amides, acid chlorides, anhydrides) all share the acyl group (R-C=O) with a different leaving group attached. Alkenes are not carboxylic acid derivatives.` },
       { q:`The general order of reactivity of carboxylic acid derivatives toward nucleophilic acyl substitution (most to least reactive) is:`, ch:[`Amide > ester > anhydride > acid chloride`,`Acid chloride > anhydride > ester > amide`,`Ester > acid chloride > amide > anhydride`,`Amide > acid chloride > ester > anhydride`], ans:1, exp:`Reactivity correlates with leaving group ability: acid chlorides (best leaving group, Cl-) > anhydrides > esters > amides (worst leaving group, NH2-/NR2-, hardest to displace).` },
       { q:`Acid chlorides are typically synthesized from carboxylic acids using:`, ch:[`NaOH`,`SOCl2 or PCl5/PCl3`,`H2O`,`NaBH4`], ans:1, exp:`Thionyl chloride (SOCl2) or phosphorus chlorides (PCl3, PCl5) convert the -OH of a carboxylic acid into -Cl, producing an acid chloride (with byproducts SO2/HCl or H3PO3).` },
@@ -668,7 +668,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp36`, cat:`Chem/Phys`, title:`Amine Chemistry`, diff:`Medium`, qs:[
+    id:`cp36`, cat:`Physical Sciences`, title:`Amine Chemistry`, diff:`Medium`, qs:[
       { q:`Amines are classified as primary, secondary, or tertiary based on:`, ch:[`The number of carbon atoms in the molecule`,`The number of carbon (alkyl/aryl) groups directly bonded to the nitrogen`,`The number of nitrogen atoms`,`Their molecular weight`], ans:1, exp:`Primary amines (RNH2) have 1 carbon group on N; secondary (R2NH) have 2; tertiary (R3N) have 3 — this differs from the primary/secondary/tertiary classification of alcohols (which is based on the carbon, not the heteroatom).` },
       { q:`Amines act as Brønsted bases because:`, ch:[`The nitrogen lone pair can accept a proton`,`Nitrogen has no lone pair`,`They contain oxygen`,`They are always charged`], ans:0, exp:`The lone pair on nitrogen can accept a proton (H+), forming an ammonium ion (R3NH+) — this basicity is central to amine chemistry and biological function (e.g., neurotransmitters).` },
       { q:`Aniline (an aromatic amine) is a ___ base than cyclohexylamine (an aliphatic amine) because:`, ch:[`Stronger; the ring stabilizes the ammonium ion`,`Weaker; the nitrogen lone pair is delocalized into the aromatic ring, making it less available to accept a proton`,`Equal; ring has no effect`,`Stronger; aromatic rings always increase basicity`], ans:1, exp:`In aniline, the nitrogen lone pair is partially delocalized (resonance) into the benzene ring, reducing its availability for protonation and making aniline a much weaker base than aliphatic amines.` },
@@ -687,7 +687,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp37`, cat:`Chem/Phys`, title:`Mass Spectrometry`, diff:`Medium`, qs:[
+    id:`cp37`, cat:`Physical Sciences`, title:`Mass Spectrometry`, diff:`Medium`, qs:[
       { q:`Mass spectrometry measures:`, ch:[`The mass-to-charge ratio (m/z) of ionized molecular fragments`,`The color of a compound`,`The boiling point of a substance`,`The pH of a solution`], ans:0, exp:`Mass spectrometry ionizes molecules and separates the resulting ions based on their mass-to-charge ratio (m/z), providing information about molecular weight and structure.` },
       { q:`The molecular ion (M+) peak in a mass spectrum represents:`, ch:[`A fragment of the molecule`,`The intact molecule that has lost one electron (radical cation), giving the molecular weight`,`An impurity`,`The base peak always`], ans:1, exp:`The molecular ion (M+•) is formed when the molecule loses one electron during ionization (typically electron impact), and its m/z corresponds to the molecular weight of the compound.` },
       { q:`The base peak in a mass spectrum is:`, ch:[`Always the molecular ion peak`,`The most intense (tallest) peak in the spectrum, set to 100% relative abundance`,`The smallest peak`,`Always at m/z=1`], ans:1, exp:`The base peak is the most abundant ion (tallest peak), arbitrarily assigned 100% relative intensity; all other peaks are scaled relative to it. It may or may not be the molecular ion.` },
@@ -706,7 +706,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp38`, cat:`Chem/Phys`, title:`Infrared Spectroscopy`, diff:`Medium`, qs:[
+    id:`cp38`, cat:`Physical Sciences`, title:`Infrared Spectroscopy`, diff:`Medium`, qs:[
       { q:`Infrared (IR) spectroscopy is based on the principle that molecules:`, ch:[`Absorb IR radiation causing electronic transitions`,`Absorb IR radiation at frequencies matching their bond vibrational frequencies`,`Emit IR radiation when cooled`,`Reflect all IR radiation equally`], ans:1, exp:`IR spectroscopy measures absorption of infrared light corresponding to specific bond vibrations (stretching, bending) — different functional groups absorb at characteristic frequencies.` },
       { q:`The O-H stretch of an alcohol typically appears as:`, ch:[`A sharp peak around 1700 cm-1`,`A broad peak around 3200-3550 cm-1`,`A sharp peak around 2100 cm-1`,`No absorption at all`], ans:1, exp:`O-H stretches appear as broad peaks around 3200-3550 cm-1 due to hydrogen bonding, which causes a range of O-H bond strengths/frequencies in the sample.` },
       { q:`The carbonyl (C=O) stretch typically appears in the IR spectrum around:`, ch:[`3300 cm-1`,`1650-1750 cm-1`,`500 cm-1`,`2900 cm-1`], ans:1, exp:`C=O stretches are strong, sharp absorptions typically in the 1650-1750 cm-1 range; the exact position varies with the type of carbonyl (ketone, aldehyde, ester, amide, acid).` },
@@ -725,7 +725,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp39`, cat:`Chem/Phys`, title:`Reaction Mechanisms & Arrow Pushing`, diff:`Medium`, qs:[
+    id:`cp39`, cat:`Physical Sciences`, title:`Reaction Mechanisms & Arrow Pushing`, diff:`Medium`, qs:[
       { q:`In reaction mechanism arrow-pushing notation, a curved arrow represents:`, ch:[`The movement of an entire atom`,`The movement of a pair of electrons (from a nucleophile/electron source to an electrophile/electron sink)`,`The direction of the overall reaction`,`A change in temperature`], ans:1, exp:`Curved (full-headed) arrows show the movement of electron pairs from an electron-rich source (lone pair or bond) to an electron-poor sink (forming a new bond or filling an empty orbital).` },
       { q:`A single-barbed (fishhook) arrow in mechanisms represents:`, ch:[`The movement of a pair of electrons`,`The movement of a single electron (radical mechanisms)`,`The movement of a proton`,`A reversible reaction`], ans:1, exp:`Fishhook (single-barbed) arrows specifically denote single-electron movement, used in radical mechanisms (e.g., homolytic bond cleavage).` },
       { q:`A nucleophile is best described as a species that is:`, ch:[`Electron-poor and seeks electrons`,`Electron-rich and donates an electron pair to form a new bond`,`Always negatively charged`,`Unreactive`], ans:1, exp:`Nucleophiles ('nucleus-loving') are electron-rich species (often with lone pairs or pi bonds) that donate electron density to electrophiles to form new bonds. They can be neutral or negatively charged.` },
@@ -744,7 +744,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp40`, cat:`Chem/Phys`, title:`Chemical Kinetics & Rate Laws`, diff:`Hard`, qs:[
+    id:`cp40`, cat:`Physical Sciences`, title:`Chemical Kinetics & Rate Laws`, diff:`Hard`, qs:[
       { q:`The rate law for a reaction must be determined:`, ch:[`From the stoichiometric coefficients of the balanced equation`,`Experimentally, by measuring how rate depends on concentration`,`By calculating ΔG°`,`From the products' molecular weights`], ans:1, exp:`Rate laws (rate = k[A]^m[B]^n) cannot be predicted from stoichiometry alone (except for elementary steps) — they must be determined experimentally by measuring initial rates at varying concentrations.` },
       { q:`For a reaction with rate = k[A]^2, the reaction is said to be:`, ch:[`Zero-order in A`,`First-order in A`,`Second-order in A`,`Third-order overall`], ans:2, exp:`The exponent on [A] (2) gives the order with respect to A — this reaction is second-order in A (and second-order overall, if A is the only reactant in the rate law).` },
       { q:`For a zero-order reaction, a plot of [A] vs. time gives:`, ch:[`A straight line with negative slope = -k`,`A curve`,`A horizontal line`,`An exponential increase`], ans:0, exp:`For zero-order reactions, [A] = [A]0 - kt, so [A] vs t is linear with slope -k. (First-order: ln[A] vs t is linear; second-order: 1/[A] vs t is linear.)` },
@@ -764,7 +764,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp41`, cat:`Chem/Phys`, title:`Nuclear Chemistry`, diff:`Hard`, qs:[
+    id:`cp41`, cat:`Physical Sciences`, title:`Nuclear Chemistry`, diff:`Hard`, qs:[
       { q:`Nuclear fission involves:`, ch:[`Combining two light nuclei into a heavier one`,`Splitting a heavy nucleus into two (or more) lighter nuclei, releasing energy`,`The decay of a single proton`,`Electron capture only`], ans:1, exp:`Fission splits a heavy nucleus (e.g., U-235) into smaller fragments plus neutrons, releasing large amounts of energy due to the products having greater binding energy per nucleon.` },
       { q:`Nuclear fusion involves:`, ch:[`Splitting heavy nuclei`,`Combining light nuclei (e.g., hydrogen isotopes) into a heavier nucleus, releasing energy`,`Beta decay of a neutron`,`Gamma emission only`], ans:1, exp:`Fusion combines light nuclei (e.g., deuterium and tritium fusing to form helium) into a heavier nucleus, releasing energy because the product has higher binding energy per nucleon — the process powering stars.` },
       { q:`A nuclear chain reaction occurs when:`, ch:[`Each fission event releases neutrons that induce further fission events`,`No neutrons are produced`,`Only one fission event occurs total`,`Gamma rays cause spontaneous fusion`], ans:0, exp:`In a chain reaction, neutrons released by one fission event trigger additional fission events in nearby fissile nuclei, potentially leading to a self-sustaining (or runaway, if uncontrolled) reaction.` },
@@ -783,7 +783,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp42`, cat:`Chem/Phys`, title:`Coordination Chemistry`, diff:`Hard`, qs:[
+    id:`cp42`, cat:`Physical Sciences`, title:`Coordination Chemistry`, diff:`Hard`, qs:[
       { q:`A coordination compound consists of a central metal atom/ion bonded to surrounding:`, ch:[`Other metal atoms only`,`Ligands (molecules or ions that donate electron pairs)`,`Free electrons only`,`Protons`], ans:1, exp:`Coordination compounds consist of a central metal ion surrounded by ligands — molecules or ions with lone pairs that act as Lewis bases, donating electron pairs to the metal (Lewis acid).` },
       { q:`The coordination number of a metal center refers to:`, ch:[`The oxidation state of the metal`,`The number of donor atoms directly bonded to the central metal`,`The total number of electrons in the complex`,`The charge of the complex`], ans:1, exp:`Coordination number = number of ligand donor atoms bonded to the central metal ion (e.g., 6 for an octahedral complex, 4 for tetrahedral or square planar).` },
       { q:`A bidentate ligand is one that:`, ch:[`Donates one electron pair from one donor atom`,`Donates two electron pairs from two donor atoms to the same metal center`,`Cannot bond to metals`,`Always carries a -2 charge`], ans:1, exp:`Bidentate ligands (e.g., ethylenediamine, oxalate) have two donor atoms that simultaneously coordinate to the same metal center, forming a chelate ring.` },
@@ -802,7 +802,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp43`, cat:`Chem/Phys`, title:`Solubility Equilibria & Ksp`, diff:`Hard`, qs:[
+    id:`cp43`, cat:`Physical Sciences`, title:`Solubility Equilibria & Ksp`, diff:`Hard`, qs:[
       { q:`The solubility product constant (Ksp) is the equilibrium constant for:`, ch:[`The dissolution of an ionic solid into its constituent ions in solution`,`An acid-base reaction`,`A redox reaction`,`A gas-phase reaction`], ans:0, exp:`Ksp describes the equilibrium AaBb(s) ⇌ aA + bB, with Ksp = [A]^a[B]^b — the larger the Ksp, the more soluble the compound (generally, for similar stoichiometries).` },
       { q:`For a salt AB that dissociates as AB ⇌ A+ + B-, if the molar solubility is 's', Ksp equals:`, ch:[`s`,`s²`,`2s`,`s/2`], ans:1, exp:`For 1:1 stoichiometry, [A+]=[B-]=s, so Ksp=[A+][B-]=s×s=s².` },
       { q:`For a salt A2B that dissociates as A2B ⇌ 2A+ + B2-, if the molar solubility is 's', Ksp equals:`, ch:[`s²`,`2s²`,`4s³`,`s³`], ans:2, exp:`[A+]=2s, [B2-]=s. Ksp=[A+]²[B2-]=(2s)²(s)=4s²×s=4s³.` },
@@ -820,7 +820,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp44`, cat:`Chem/Phys`, title:`Surface Chemistry`, diff:`Hard`, qs:[
+    id:`cp44`, cat:`Physical Sciences`, title:`Surface Chemistry`, diff:`Hard`, qs:[
       { q:`Surface tension arises because:`, ch:[`Molecules at the surface of a liquid experience unbalanced cohesive forces, pulling them inward`,`Surface molecules have no intermolecular forces`,`Gravity acts only on surface molecules`,`Surface molecules are charged`], ans:0, exp:`Molecules at a liquid's surface lack neighbors above them, so net cohesive forces pull them inward and sideways, creating a 'tension' that minimizes surface area (e.g., water droplets forming spheres).` },
       { q:`Adding a surfactant to water generally:`, ch:[`Increases surface tension`,`Decreases surface tension by disrupting hydrogen bonding at the surface`,`Has no effect on surface tension`,`Causes water to freeze`], ans:1, exp:`Surfactants (e.g., soaps, detergents) have hydrophilic and hydrophobic ends; they orient at the air-water interface, disrupting water's hydrogen-bonding network and lowering surface tension.` },
       { q:`Capillary action (e.g., water rising in a thin tube) results from:`, ch:[`Adhesive forces between the liquid and the tube's surface being greater than cohesive forces within the liquid`,`Gravity pulling the liquid up`,`The liquid being heated`,`Cohesive forces being infinitely strong`], ans:0, exp:`Capillary action occurs when adhesion (liquid-surface attraction) exceeds cohesion (liquid-liquid attraction), causing the liquid to climb the tube walls (e.g., water in glass capillaries; this is reversed for mercury, which is non-wetting).` },
@@ -838,7 +838,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp45`, cat:`Chem/Phys`, title:`Faraday's Laws & Electrolysis`, diff:`Hard`, qs:[
+    id:`cp45`, cat:`Physical Sciences`, title:`Faraday's Laws & Electrolysis`, diff:`Hard`, qs:[
       { q:`Faraday's first law of electrolysis states that the mass of substance deposited is directly proportional to:`, ch:[`The temperature of the cell`,`The quantity of electric charge passed`,`The volume of the electrolyte`,`The pressure of the system`], ans:1, exp:`Mass deposited m = (Q/F) x (M/n), so mass is proportional to charge Q passed through the cell.` },
       { q:`One Faraday constant (F) represents:`, ch:[`The charge of one electron`,`The charge on one mole of electrons (~96,485 C/mol)`,`The energy of one mole of photons`,`Avogadro's number of protons`], ans:1, exp:`F = N_A x e = 96,485 C/mol, the charge carried by one mole of electrons.` },
       { q:`In the electrolysis of molten NaCl, what is produced at the cathode?`, ch:[`Cl2 gas`,`Na metal`,`O2 gas`,`H2 gas`], ans:1, exp:`Cathode is the site of reduction; Na+ + e- -> Na, depositing sodium metal.` },
@@ -857,7 +857,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp46`, cat:`Chem/Phys`, title:`Phase Diagrams`, diff:`Hard`, qs:[
+    id:`cp46`, cat:`Physical Sciences`, title:`Phase Diagrams`, diff:`Hard`, qs:[
       { q:`On a phase diagram, the triple point represents the unique conditions where:`, ch:[`Only solid and liquid coexist`,`Solid, liquid, and gas phases coexist in equilibrium`,`The substance is at its critical temperature`,`The substance has zero entropy`], ans:1, exp:`The triple point is the specific temperature and pressure at which all three phases coexist in equilibrium.` },
       { q:`The critical point on a phase diagram marks:`, ch:[`The point above which liquid and gas phases become indistinguishable`,`The freezing point at 1 atm`,`The triple point`,`The point of maximum density`], ans:0, exp:`Beyond the critical temperature and pressure, distinct liquid and gas phases no longer exist; the substance becomes a supercritical fluid.` },
       { q:`A negative slope of the solid-liquid boundary (as in water's phase diagram) indicates:`, ch:[`The solid is less dense than the liquid`,`The solid is more dense than the liquid`,`The substance has no triple point`,`The gas phase is unstable`], ans:0, exp:`Water's solid (ice) is less dense than liquid water, so increasing pressure favors melting, giving a negative slope (unusual among substances).` },
@@ -876,7 +876,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp47`, cat:`Chem/Phys`, title:`Real Gases & van der Waals`, diff:`Hard`, qs:[
+    id:`cp47`, cat:`Physical Sciences`, title:`Real Gases & van der Waals`, diff:`Hard`, qs:[
       { q:`The van der Waals equation modifies the ideal gas law to account for:`, ch:[`Molecular volume and intermolecular attractions`,`Temperature changes only`,`Quantum effects only`,`Changes in the gas constant R`], ans:0, exp:`The van der Waals equation adds a correction term 'a' for intermolecular attractions and 'b' for finite molecular volume.` },
       { q:`In the van der Waals equation (P + an^2/V^2)(V - nb) = nRT, the term 'nb' corrects for:`, ch:[`The kinetic energy of molecules`,`The volume occupied by gas molecules themselves`,`The pressure due to gravity`,`The heat capacity of the gas`], ans:1, exp:`The 'b' term accounts for the finite volume occupied by gas molecules, reducing the available free volume.` },
       { q:`Real gases deviate most from ideal behavior under conditions of:`, ch:[`High temperature and low pressure`,`Low temperature and high pressure`,`Standard temperature and pressure`,`Vacuum conditions`], ans:1, exp:`At low temperature and high pressure, intermolecular forces and molecular volume become significant, causing deviation from ideal behavior.` },
@@ -895,7 +895,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp48`, cat:`Chem/Phys`, title:`Advanced Buffers & Titration Curves`, diff:`Hard`, qs:[
+    id:`cp48`, cat:`Physical Sciences`, title:`Advanced Buffers & Titration Curves`, diff:`Hard`, qs:[
       { q:`The Henderson-Hasselbalch equation pH = pKa + log([A-]/[HA]) is most accurate when:`, ch:[`The ratio [A-]/[HA] is between 0.1 and 10`,`The acid is fully dissociated`,`The solution is at the equivalence point`,`There is no conjugate base present`], ans:0, exp:`The equation works best within about one pH unit of the pKa, where the ratio [A-]/[HA] is between 0.1 and 10 (the effective buffer range).` },
       { q:`At the half-equivalence point of a weak acid titration, which statement is true?`, ch:[`pH = pKa`,`pH = 7`,`[HA] = 0`,`The solution contains only conjugate base`], ans:0, exp:`At half-equivalence, [HA] = [A-], so log([A-]/[HA]) = log(1) = 0, giving pH = pKa.` },
       { q:`The equivalence point of a weak acid-strong base titration occurs at a pH:`, ch:[`Less than 7`,`Equal to 7`,`Greater than 7`,`Equal to the pKa`], ans:2, exp:`At equivalence, the solution contains the conjugate base of the weak acid, which hydrolyzes water to produce a basic solution (pH > 7).` },
@@ -914,7 +914,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp49`, cat:`Chem/Phys`, title:`Hess's Law & Bond Energies`, diff:`Hard`, qs:[
+    id:`cp49`, cat:`Physical Sciences`, title:`Hess's Law & Bond Energies`, diff:`Hard`, qs:[
       { q:`Hess's Law states that the total enthalpy change for a reaction is:`, ch:[`Dependent on the pathway taken`,`Independent of the pathway, depending only on initial and final states`,`Always zero for exothermic reactions`,`Equal to the activation energy`], ans:1, exp:`Hess's Law is a consequence of enthalpy being a state function: total ΔH depends only on initial and final states, not the path.` },
       { q:`If reaction A -> B has ΔH1 and B -> C has ΔH2, what is ΔH for A -> C?`, ch:[`ΔH1 - ΔH2`,`ΔH1 x ΔH2`,`ΔH1 + ΔH2`,`ΔH2 - ΔH1`], ans:2, exp:`By Hess's Law, the enthalpy changes of sequential steps sum to give the overall enthalpy change.` },
       { q:`Bond dissociation energy is defined as the energy required to:`, ch:[`Form a bond between two atoms in the gas phase`,`Break a bond homolytically in the gas phase`,`Melt a solid`,`Ionize an atom`], ans:1, exp:`Bond dissociation energy is the energy needed to homolytically cleave a bond, producing two radicals in the gas phase.` },
@@ -933,7 +933,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp50`, cat:`Chem/Phys`, title:`Poiseuille's Law & CV Applications`, diff:`Hard`, qs:[
+    id:`cp50`, cat:`Physical Sciences`, title:`Poiseuille's Law & CV Applications`, diff:`Hard`, qs:[
       { q:`Poiseuille's Law states that the flow rate (Q) through a tube is proportional to:`, ch:[`The radius to the fourth power`,`The radius squared`,`The length of the tube`,`The viscosity directly (not inversely)`], ans:0, exp:`Poiseuille's Law: Q = (πΔPr^4)/(8ηL), showing flow rate depends on radius to the fourth power — a small change in radius dramatically affects flow.` },
       { q:`If the radius of a blood vessel is halved, the flow rate (assuming constant pressure gradient) decreases by a factor of:`, ch:[`2`,`4`,`8`,`16`], ans:3, exp:`Since Q ∝ r^4, halving r reduces Q by (1/2)^4 = 1/16.` },
       { q:`According to Poiseuille's Law, flow rate is inversely proportional to:`, ch:[`Radius`,`Pressure gradient`,`Viscosity and length of the tube`,`Cross-sectional area`], ans:2, exp:`Q = (πΔPr^4)/(8ηL); flow rate decreases as viscosity (η) or tube length (L) increases.` },
@@ -952,7 +952,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp51`, cat:`Chem/Phys`, title:`Capacitors & RC Circuits`, diff:`Hard`, qs:[
+    id:`cp51`, cat:`Physical Sciences`, title:`Capacitors & RC Circuits`, diff:`Hard`, qs:[
       { q:`The capacitance of a parallel plate capacitor is given by C = ε0A/d. Increasing the plate separation (d) will:`, ch:[`Increase capacitance`,`Decrease capacitance`,`Have no effect on capacitance`,`Double the charge stored`], ans:1, exp:`Capacitance is inversely proportional to plate separation; increasing d decreases C.` },
       { q:`The energy stored in a capacitor is given by U = (1/2)CV^2. If voltage is doubled while capacitance stays constant, stored energy:`, ch:[`Doubles`,`Quadruples`,`Stays the same`,`Halves`], ans:1, exp:`Energy depends on V^2, so doubling V increases energy by a factor of 4.` },
       { q:`When a capacitor is fully charged in a DC circuit, the current flowing through it is:`, ch:[`Maximum`,`Zero`,`Equal to the initial current`,`Infinite`], ans:1, exp:`At full charge, the capacitor's voltage equals the source voltage and no further charge flows, so current drops to zero.` },
@@ -971,7 +971,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp52`, cat:`Chem/Phys`, title:`Electromagnetic Spectrum`, diff:`Hard`, qs:[
+    id:`cp52`, cat:`Physical Sciences`, title:`Electromagnetic Spectrum`, diff:`Hard`, qs:[
       { q:`Across the electromagnetic spectrum, as wavelength increases, frequency:`, ch:[`Increases`,`Decreases`,`Stays the same`,`Becomes zero`], ans:1, exp:`Frequency and wavelength are inversely related (c = λf); as wavelength increases, frequency decreases.` },
       { q:`Which type of electromagnetic radiation has the highest energy per photon?`, ch:[`Radio waves`,`Visible light`,`Infrared`,`Gamma rays`], ans:3, exp:`Photon energy E = hf is proportional to frequency; gamma rays have the highest frequency and thus the highest energy per photon.` },
       { q:`Ultraviolet radiation can cause DNA damage primarily because:`, ch:[`Its photon energy is sufficient to break chemical bonds and form pyrimidine dimers`,`It has very low frequency`,`It cannot penetrate the atmosphere at all`,`It has no electric field component`], ans:0, exp:`UV photons carry enough energy to be absorbed by DNA bases, causing covalent bond formation between adjacent pyrimidines (thymine dimers).` },
@@ -990,7 +990,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp53`, cat:`Chem/Phys`, title:`Special Relativity`, diff:`Hard`, qs:[
+    id:`cp53`, cat:`Physical Sciences`, title:`Special Relativity`, diff:`Hard`, qs:[
       { q:`Einstein's first postulate of special relativity states that:`, ch:[`The laws of physics are the same in all inertial reference frames`,`Time is absolute for all observers`,`Mass can be created or destroyed`,`Light speed varies depending on the observer's motion`], ans:0, exp:`The principle of relativity states that physical laws hold identically in every inertial (non-accelerating) reference frame.` },
       { q:`The second postulate of special relativity states that the speed of light in a vacuum:`, ch:[`Depends on the speed of the source`,`Is the same for all observers, regardless of their relative motion`,`Is infinite`,`Varies with the observer's velocity`], ans:1, exp:`The speed of light c is constant for all inertial observers, independent of the motion of the light source or observer.` },
       { q:`Time dilation predicts that a clock moving relative to an observer will appear to:`, ch:[`Run faster than a stationary clock`,`Run slower than a stationary clock`,`Stop completely`,`Run at the same rate always`], ans:1, exp:`From the perspective of a stationary observer, a moving clock ticks slower (time dilation), as described by t = t0/sqrt(1 - v^2/c^2).` },
@@ -1009,7 +1009,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp54`, cat:`Chem/Phys`, title:`Chirality — R/S & Diastereomers`, diff:`Hard`, qs:[
+    id:`cp54`, cat:`Physical Sciences`, title:`Chirality — R/S & Diastereomers`, diff:`Hard`, qs:[
       { q:`A chiral center (stereocenter) is typically a carbon atom bonded to:`, ch:[`Four identical groups`,`Four different groups`,`Two identical and two different groups`,`Only three groups`], ans:1, exp:`A chiral carbon has four different substituents, making it non-superimposable on its mirror image.` },
       { q:`To assign R/S configuration, the priority of substituents is determined by:`, ch:[`Alphabetical order of group names`,`Atomic number of the atoms directly attached to the stereocenter (Cahn-Ingold-Prelog rules)`,`Molecular weight of the entire molecule`,`The order the groups were added during synthesis`], ans:1, exp:`CIP priority rules rank substituents based on atomic number of the directly bonded atom first, then comparing further out if there's a tie.` },
       { q:`In assigning R/S, after ranking priorities 1-4, if the lowest priority group points toward the viewer, and 1->2->3 appears clockwise, the configuration is:`, ch:[`R`,`S`,`Cannot be determined`,`Meso`], ans:1, exp:`When the lowest priority group points toward the viewer, the apparent rotation must be reversed; clockwise (which would normally be R) becomes S.` },
@@ -1028,7 +1028,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp55`, cat:`Chem/Phys`, title:`Protecting Groups & Retrosynthesis`, diff:`Hard`, qs:[
+    id:`cp55`, cat:`Physical Sciences`, title:`Protecting Groups & Retrosynthesis`, diff:`Hard`, qs:[
       { q:`A protecting group is used in synthesis to:`, ch:[`Permanently alter a functional group`,`Temporarily mask a functional group's reactivity so it does not interfere with a reaction elsewhere in the molecule`,`Increase the molecular weight permanently`,`Replace a functional group entirely`], ans:1, exp:`Protecting groups temporarily block a reactive functional group, allowing selective reactions elsewhere, then are removed to restore the original group.` },
       { q:`A common protecting group for alcohols is the:`, ch:[`Tosylate group (permanent)`,`TMS (trimethylsilyl) ether`,`Carboxylic acid`,`Nitro group`], ans:1, exp:`Silyl ethers (e.g., TMS, TBS) are commonly used to protect alcohols, and can be removed later with fluoride sources (e.g., TBAF).` },
       { q:`Acetals are commonly used to protect which functional group?`, ch:[`Alcohols`,`Aldehydes and ketones (carbonyls)`,`Carboxylic acids`,`Amines`], ans:1, exp:`Treating an aldehyde or ketone with a diol (e.g., ethylene glycol) under acid catalysis forms a cyclic acetal, protecting the carbonyl from nucleophilic addition or reduction.` },
@@ -1047,7 +1047,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp56`, cat:`Chem/Phys`, title:`Polycyclic Aromatics`, diff:`Hard`, qs:[
+    id:`cp56`, cat:`Physical Sciences`, title:`Polycyclic Aromatics`, diff:`Hard`, qs:[
       { q:`Naphthalene, the simplest polycyclic aromatic hydrocarbon, consists of:`, ch:[`Two fused benzene rings sharing two adjacent carbon atoms`,`Three separate benzene rings connected by single bonds`,`A single benzene ring with two substituents`,`A non-aromatic bicyclic system`], ans:0, exp:`Naphthalene is composed of two fused six-membered aromatic rings sharing an edge (two carbons), with 10 pi electrons total delocalized across the system.` },
       { q:`Polycyclic aromatic hydrocarbons (PAHs) are typically formed by:`, ch:[`Complete combustion of organic matter`,`Incomplete combustion of organic materials (e.g., tobacco smoke, charred food)`,`Photosynthesis`,`Hydrolysis of proteins`], ans:1, exp:`PAHs commonly form during incomplete combustion processes, where carbon-rich fragments combine to form fused aromatic ring systems.` },
       { q:`Anthracene and phenanthrene are both composed of three fused benzene rings but differ in:`, ch:[`Molecular formula`,`The arrangement (linear vs angular) of the fused rings`,`The number of carbon atoms`,`Aromaticity — only one is aromatic`], ans:1, exp:`Anthracene has a linear arrangement of three fused rings, while phenanthrene has an angular (bent) arrangement; both are aromatic with the same molecular formula (C14H10).` },
@@ -1065,7 +1065,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp57`, cat:`Chem/Phys`, title:`Photochemistry`, diff:`Hard`, qs:[
+    id:`cp57`, cat:`Physical Sciences`, title:`Photochemistry`, diff:`Hard`, qs:[
       { q:`When a molecule absorbs a photon and an electron is promoted to a higher energy orbital, the molecule enters a(n):`, ch:[`Ground state`,`Excited state`,`Ionized state permanently`,`Transition state of a chemical reaction only`], ans:1, exp:`Absorption of a photon with sufficient energy promotes an electron to a higher-energy orbital, creating an excited electronic state.` },
       { q:`According to the Jablonski diagram, fluorescence occurs when:`, ch:[`An excited electron returns to the ground state by emitting a photon without a change in spin state (singlet to singlet)`,`An electron is permanently lost from the molecule`,`A molecule absorbs infrared radiation only`,`Two molecules collide and react chemically`], ans:0, exp:`Fluorescence is rapid emission of a photon as an excited singlet state electron returns to the ground singlet state, typically occurring within nanoseconds.` },
       { q:`Phosphorescence differs from fluorescence in that it involves:`, ch:[`Emission from a triplet excited state to a singlet ground state, which is spin-forbidden and thus slower (longer-lived)`,`No photon emission at all`,`Emission that occurs faster than fluorescence`,`Only absorption, no emission`], ans:0, exp:`Phosphorescence involves an intersystem crossing to a triplet state, followed by a spin-forbidden transition back to the singlet ground state, resulting in much longer emission lifetimes (milliseconds to seconds or longer).` },
@@ -1083,7 +1083,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp58`, cat:`Chem/Phys`, title:`NMR Spectroscopy`, diff:`Hard`, qs:[
+    id:`cp58`, cat:`Physical Sciences`, title:`NMR Spectroscopy`, diff:`Hard`, qs:[
       { q:`Nuclear Magnetic Resonance (NMR) spectroscopy relies on the principle that certain nuclei (e.g., 1H, 13C):`, ch:[`Have no magnetic properties`,`Possess a nuclear spin and magnetic moment that interacts with an external magnetic field`,`Absorb only gamma radiation`,`Are always radioactive`], ans:1, exp:`Nuclei with non-zero spin (like 1H and 13C) have magnetic moments that align with or against an applied magnetic field, and transitions between these alignments are detected in NMR.` },
       { q:`Chemical shift in NMR is reported in units of:`, ch:[`Hertz only`,`Parts per million (ppm), independent of the spectrometer's field strength`,`Joules`,`Degrees Celsius`], ans:1, exp:`Chemical shift (δ) is expressed in ppm, a relative scale independent of the magnetic field strength of the instrument, allowing comparison across different spectrometers.` },
       { q:`Tetramethylsilane (TMS) is commonly used in NMR as:`, ch:[`A solvent that absorbs all signals`,`A reference standard set at 0 ppm`,`A paramagnetic contrast agent`,`A radioactive tracer`], ans:1, exp:`TMS protons are highly shielded and resonate at a distinct upfield position, defined as 0 ppm, serving as the reference point for chemical shift values.` },
@@ -1102,7 +1102,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp59`, cat:`Chem/Phys`, title:`Multi-Step Synthesis`, diff:`Hard`, qs:[
+    id:`cp59`, cat:`Physical Sciences`, title:`Multi-Step Synthesis`, diff:`Hard`, qs:[
       { q:`In a multi-step synthesis, choosing the order of reactions is critical primarily because:`, ch:[`Reaction order has no effect on the final product`,`Functional group compatibility and selectivity must be maintained at each step to avoid unwanted side reactions`,`All reactions must be run at the same temperature`,`Only the first step matters for the final yield`], ans:1, exp:`Each step's reagents and conditions must be compatible with all functional groups present; planning order avoids side reactions and ensures the desired transformations occur selectively.` },
       { q:`Overall yield of a multi-step synthesis is calculated by:`, ch:[`Adding the percent yields of each step`,`Multiplying the fractional yields of each individual step together`,`Taking the average of all step yields`,`Using only the yield of the final step`], ans:1, exp:`Overall yield = (yield1) x (yield2) x ... x (yieldn), as expressed as fractions, since each step's product becomes the next step's starting material.` },
       { q:`A synthesis requiring conversion of an alkene to a vicinal diol with anti stereochemistry would use:`, ch:[`OsO4 (syn dihydroxylation)`,`A peroxyacid followed by aqueous acid (epoxide ring opening, anti addition)`,`Simple hydration with H2O/H+ (Markovnikov, no diol)`,`Ozonolysis (cleaves the double bond)`], ans:1, exp:`Epoxidation followed by acid-catalyzed ring opening with water proceeds via backside attack, giving anti (trans) diol stereochemistry, in contrast to OsO4's syn addition.` },
@@ -1120,7 +1120,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp60`, cat:`Chem/Phys`, title:`Quantum Mechanics — Particle in a Box`, diff:`Expert`, qs:[
+    id:`cp60`, cat:`Physical Sciences`, title:`Quantum Mechanics — Particle in a Box`, diff:`Expert`, qs:[
       { q:`The "particle in a box" model describes a particle confined to a region with:`, ch:[`Infinite potential energy walls at the boundaries and zero potential energy inside`,`Zero potential energy everywhere, including outside the box`,`A continuously varying potential throughout`,`No boundaries at all`], ans:0, exp:`The idealized particle-in-a-box model assumes infinite potential walls confine the particle to a finite region where the potential is zero.` },
       { q:`In the particle in a box model, the energy levels of the particle are:`, ch:[`Continuous, allowing any energy value`,`Quantized, taking only discrete values`,`Always equal to zero`,`Independent of the box size`], ans:1, exp:`Solving the Schrödinger equation for this system yields quantized energy levels En = n^2h^2/(8mL^2), where n is a positive integer (quantum number).` },
       { q:`According to the particle in a box model, energy levels En are proportional to:`, ch:[`n (linearly)`,`n^2 and inversely proportional to L^2 (box length squared)`,`1/n`,`L (box length, directly)`], ans:1, exp:`En = n^2h^2/(8mL^2): energy increases with the square of the quantum number n and decreases with the square of the box length L.` },
@@ -1139,7 +1139,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp61`, cat:`Chem/Phys`, title:`Statistical Thermodynamics & Boltzmann`, diff:`Expert`, qs:[
+    id:`cp61`, cat:`Physical Sciences`, title:`Statistical Thermodynamics & Boltzmann`, diff:`Expert`, qs:[
       { q:`The Boltzmann distribution describes:`, ch:[`The relative populations of energy states in a system at thermal equilibrium`,`The exact position of a single particle at any instant`,`The total mass of a system`,`The chemical formula of a compound`], ans:0, exp:`The Boltzmann distribution gives the probability (or relative population) of a system occupying a particular energy state at thermal equilibrium, as a function of temperature.` },
       { q:`According to the Boltzmann distribution, the population ratio of two energy states is given by N2/N1 = exp(-ΔE/kT). As temperature increases, this ratio:`, ch:[`Decreases toward zero`,`Increases, approaching more equal populations of states`,`Remains constant`,`Becomes negative`], ans:1, exp:`At higher temperatures, exp(-ΔE/kT) increases (approaches 1), meaning higher energy states become more populated relative to lower ones.` },
       { q:`Entropy (S) in statistical thermodynamics is related to the number of microstates (W) by the Boltzmann equation:`, ch:[`S = kW`,`S = k ln W`,`S = k/W`,`S = W/k`], ans:1, exp:`Boltzmann's entropy formula S = k ln W relates entropy to the natural log of the number of accessible microstates corresponding to a given macrostate.` },
@@ -1157,7 +1157,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp62`, cat:`Chem/Phys`, title:`Pericyclic Reactions & Rearrangements`, diff:`Expert`, qs:[
+    id:`cp62`, cat:`Physical Sciences`, title:`Pericyclic Reactions & Rearrangements`, diff:`Expert`, qs:[
       { q:`Pericyclic reactions are characterized by:`, ch:[`A stepwise mechanism involving discrete carbocation intermediates`,`A concerted mechanism proceeding through a cyclic transition state with no intermediates`,`Always requiring a strong acid catalyst`,`Random bond breaking with no defined transition state`], ans:1, exp:`Pericyclic reactions proceed in a single concerted step through a cyclic array of continuously bonding/breaking atoms, without forming discrete intermediates.` },
       { q:`The Diels-Alder reaction is an example of a:`, ch:[`[4+2] cycloaddition between a diene and a dienophile`,`Sigmatropic rearrangement`,`Electrocyclic ring opening`,`Free radical chain reaction`], ans:0, exp:`The Diels-Alder reaction is a [4+2] cycloaddition: a conjugated diene (4 pi electrons) reacts with a dienophile (2 pi electrons) to form a six-membered ring.` },
       { q:`In the Diels-Alder reaction, electron-poor dienophiles (e.g., with electron-withdrawing groups) react faster with:`, ch:[`Electron-poor dienes`,`Electron-rich dienes`,`Any diene equally regardless of electronics`,`Only with other dienophiles`], ans:1, exp:`Normal-demand Diels-Alder reactions are favored by electron-rich dienes (HOMO) reacting with electron-poor dienophiles (LUMO), as this minimizes the HOMO-LUMO energy gap.` },
@@ -1176,7 +1176,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp63`, cat:`Chem/Phys`, title:`Concentration Cells & Nernst Applications`, diff:`Expert`, qs:[
+    id:`cp63`, cat:`Physical Sciences`, title:`Concentration Cells & Nernst Applications`, diff:`Expert`, qs:[
       { q:`A concentration cell generates an EMF due to:`, ch:[`A difference in temperature between two electrodes`,`A difference in ion concentration between two half-cells of the same electrode material`,`The use of two different metals`,`A difference in pressure of an inert gas`], ans:1, exp:`Concentration cells consist of identical electrodes in solutions of differing ion concentration; the resulting concentration gradient drives current flow until concentrations equalize.` },
       { q:`The Nernst equation, E = E° - (RT/nF) ln Q, allows calculation of:`, ch:[`The standard cell potential only`,`The cell potential under non-standard conditions (concentrations different from 1 M)`,`The rate constant of a reaction`,`The pH of a buffer`], ans:1, exp:`The Nernst equation adjusts the standard potential E° to account for actual reaction quotient Q, giving the cell potential under any given conditions.` },
       { q:`In a concentration cell at equilibrium (E = 0), the reaction quotient Q equals:`, ch:[`0`,`1, the equilibrium constant K`,`Infinity`,`A negative number`], ans:1, exp:`At equilibrium, E = 0, so 0 = E° - (RT/nF) ln Q; for a concentration cell, E° = 0 (identical electrodes), giving ln Q = 0, i.e., Q = K = 1, meaning concentrations have equalized.` },
@@ -1194,7 +1194,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp64`, cat:`Chem/Phys`, title:`Fluorescence, Phosphorescence & FRET`, diff:`Expert`, qs:[
+    id:`cp64`, cat:`Physical Sciences`, title:`Fluorescence, Phosphorescence & FRET`, diff:`Expert`, qs:[
       { q:`Förster Resonance Energy Transfer (FRET) involves:`, ch:[`Direct collision between donor and acceptor molecules`,`Non-radiative energy transfer from an excited donor fluorophore to a nearby acceptor fluorophore via dipole-dipole coupling`,`The emission of a photon that travels to and is absorbed by the acceptor`,`Transfer of an electron from donor to acceptor`], ans:1, exp:`FRET is a non-radiative process where energy is transferred through space via dipole-dipole interactions between an excited donor and a nearby acceptor, without an actual photon being emitted and reabsorbed.` },
       { q:`The efficiency of FRET is highly dependent on:`, ch:[`The temperature of the sample only`,`The distance between donor and acceptor, decreasing with the sixth power of distance (1/r^6)`,`The color of the light source`,`The pH of the solution exclusively`], ans:1, exp:`FRET efficiency E = 1/(1+(r/R0)^6), making it extremely sensitive to distance — useful for measuring nanometer-scale distances (molecular rulers).` },
       { q:`For FRET to occur efficiently, the donor's emission spectrum must:`, ch:[`Be completely non-overlapping with the acceptor's absorption spectrum`,`Significantly overlap with the acceptor's absorption spectrum (spectral overlap)`,`Be in the infrared region only`,`Have a longer wavelength than the acceptor's emission`], ans:1, exp:`Spectral overlap between donor emission and acceptor absorption is a prerequisite for resonance energy transfer to occur.` },
@@ -1212,7 +1212,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp65`, cat:`Chem/Phys`, title:`Reynolds Number & Turbulence`, diff:`Expert`, qs:[
+    id:`cp65`, cat:`Physical Sciences`, title:`Reynolds Number & Turbulence`, diff:`Expert`, qs:[
       { q:`The Reynolds number (Re) is a dimensionless quantity used to predict:`, ch:[`The boiling point of a liquid`,`Whether fluid flow will be laminar or turbulent`,`The pH of a solution`,`The molecular weight of a gas`], ans:1, exp:`Re = ρvD/η compares inertial forces to viscous forces in a fluid, predicting the transition from laminar (low Re) to turbulent (high Re) flow.` },
       { q:`A low Reynolds number (typically below ~2000 in pipe flow) is associated with:`, ch:[`Turbulent flow`,`Laminar flow`,`No flow at all`,`Supersonic flow`], ans:1, exp:`Low Re indicates viscous forces dominate over inertial forces, resulting in smooth, orderly laminar flow.` },
       { q:`Increasing fluid velocity, while keeping all other factors constant, will cause the Reynolds number to:`, ch:[`Decrease`,`Increase`,`Remain unchanged`,`Become zero`], ans:1, exp:`Re is directly proportional to velocity (Re = ρvD/η); increasing v increases Re, making turbulence more likely.` },
@@ -1231,7 +1231,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp66`, cat:`Chem/Phys`, title:`Advanced NMR & DEPT`, diff:`Expert`, qs:[
+    id:`cp66`, cat:`Physical Sciences`, title:`Advanced NMR & DEPT`, diff:`Expert`, qs:[
       { q:`DEPT (Distortionless Enhancement by Polarization Transfer) NMR is used to:`, ch:[`Determine the boiling point of a compound`,`Distinguish between CH, CH2, CH3, and quaternary carbons in 13C NMR spectra`,`Measure the pH of a solution`,`Replace mass spectrometry entirely`], ans:1, exp:`DEPT experiments use polarization transfer from 1H to 13C with varying pulse angles to differentiate carbon types based on the number of attached protons.` },
       { q:`In a DEPT-135 experiment, CH and CH3 carbons appear as:`, ch:[`Negative peaks`,`Positive peaks`,`No signal at all`,`Peaks at exactly 0 ppm`], ans:1, exp:`In DEPT-135, CH and CH3 carbons give positive peaks, CH2 carbons give negative peaks, and quaternary carbons (no attached H) give no signal.` },
       { q:`In a DEPT-135 spectrum, CH2 carbons characteristically appear as:`, ch:[`Positive peaks`,`Negative peaks (inverted relative to CH and CH3)`,`Peaks identical to quaternary carbons`,`Doublets only`], ans:1, exp:`CH2 carbons are phase-inverted (negative) in DEPT-135 spectra, distinguishing them from CH and CH3 (positive) and quaternary carbons (absent).` },
@@ -1250,7 +1250,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp67`, cat:`Chem/Phys`, title:`Polymer Chemistry`, diff:`Expert`, qs:[
+    id:`cp67`, cat:`Physical Sciences`, title:`Polymer Chemistry`, diff:`Expert`, qs:[
       { q:`Addition (chain-growth) polymerization, such as the formation of polyethylene from ethylene, proceeds via:`, ch:[`Loss of a small molecule (like water) with each monomer addition`,`Sequential addition of monomers to a growing chain without loss of any atoms`,`Random combination of unrelated molecules with no chain growth`,`Hydrolysis of ester bonds`], ans:1, exp:`Addition polymerization involves monomers (often containing double bonds) adding sequentially to a reactive chain end without byproduct formation, conserving all atoms in the polymer.` },
       { q:`Condensation (step-growth) polymerization, such as the formation of nylon, typically involves:`, ch:[`No chemical reaction between monomers`,`Reaction between functional groups on monomers with the loss of a small molecule (e.g., water) at each step`,`Only radical mechanisms`,`A single monomer reacting with itself only`], ans:1, exp:`Step-growth (condensation) polymerization links monomers via reactions (e.g., esterification, amide formation) that release small molecules like water as byproducts.` },
       { q:`Proteins are biological polymers formed via:`, ch:[`Addition polymerization of alkenes`,`Condensation polymerization of amino acids, forming peptide bonds with loss of water`,`Radical chain polymerization`,`Polymerization of nucleotides`], ans:1, exp:`Peptide bond formation between amino acids is a condensation reaction releasing water, making proteins step-growth (condensation) biopolymers.` },
@@ -1269,7 +1269,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp68`, cat:`Chem/Phys`, title:`Anchimeric Assistance`, diff:`Expert`, qs:[
+    id:`cp68`, cat:`Physical Sciences`, title:`Anchimeric Assistance`, diff:`Expert`, qs:[
       { q:`Anchimeric assistance (neighboring group participation) refers to:`, ch:[`A nearby group in a molecule stabilizing a reaction intermediate or transition state through intramolecular interaction`,`A reaction that occurs only between two separate molecules`,`The complete absence of any intramolecular interactions`,`A type of catalyst added externally to the reaction`], ans:0, exp:`Anchimeric assistance occurs when a neighboring functional group (lone pair, pi bond, or sigma bond) intramolecularly stabilizes a developing positive charge (e.g., carbocation) during a reaction.` },
       { q:`Anchimeric assistance in solvolysis reactions typically results in:`, ch:[`A decrease in reaction rate compared to a substrate without the neighboring group`,`An increase in reaction rate (rate enhancement) due to stabilization of the transition state`,`No effect on reaction rate`,`Complete inhibition of the reaction`], ans:1, exp:`Neighboring group participation stabilizes the developing cationic transition state, lowering the activation energy and accelerating the reaction (often called "anchimeric rate enhancement").` },
       { q:`A classic example of anchimeric assistance involves a neighboring carboxylate or ether oxygen lone pair attacking the backside of a leaving group, forming a:`, ch:[`Bridged cyclic intermediate (e.g., a three- or five-membered ring oxocarbenium/episulfonium-like ion)`,`Free carbanion`,`Permanent covalent dimer with another molecule`,`Aromatic ring system`], ans:0, exp:`Neighboring group participation often forms a bridged bicyclic or cyclic cationic intermediate (such as an oxonium or episulfonium ion), which can then be opened by a nucleophile.` },
@@ -1286,7 +1286,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp69`, cat:`Chem/Phys`, title:`Carnot Cycle & Engine Efficiency`, diff:`Expert`, qs:[
+    id:`cp69`, cat:`Physical Sciences`, title:`Carnot Cycle & Engine Efficiency`, diff:`Expert`, qs:[
       { q:`The Carnot cycle is an idealized thermodynamic cycle consisting of:`, ch:[`Four isothermal processes`,`Two isothermal and two adiabatic processes`,`Four adiabatic processes`,`Two isobaric and two isochoric processes`], ans:1, exp:`The Carnot cycle consists of two isothermal (constant temperature) processes and two adiabatic (no heat exchange) processes, forming a reversible cycle.` },
       { q:`The efficiency of a Carnot engine operating between a hot reservoir at temperature Th and a cold reservoir at Tc (in Kelvin) is given by:`, ch:[`η = Th/Tc`,`η = 1 - (Tc/Th)`,`η = Tc - Th`,`η = Tc/Th`], ans:1, exp:`Carnot efficiency η = 1 - (Tc/Th), representing the maximum possible efficiency for any heat engine operating between those two temperatures.` },
       { q:`According to the Carnot efficiency formula, to increase efficiency, one could:`, ch:[`Decrease Th and increase Tc`,`Increase Th and/or decrease Tc`,`Make Th equal to Tc`,`Efficiency cannot be changed by temperature`], ans:1, exp:`Since η = 1 - Tc/Th, increasing the hot reservoir temperature or decreasing the cold reservoir temperature increases the ratio's denominator effect, increasing efficiency.` },
@@ -1304,7 +1304,7 @@ export const CHEM_PHYS_QUIZZES = [
     ]
   },
   {
-    id:`cp70`, cat:`Chem/Phys`, title:`High-Resolution & Protein Mass Spectrometry`, diff:`Expert`, qs:[
+    id:`cp70`, cat:`Physical Sciences`, title:`High-Resolution & Protein Mass Spectrometry`, diff:`Expert`, qs:[
       { q:`In mass spectrometry, the mass-to-charge ratio (m/z) is the fundamental quantity measured because:`, ch:[`Mass spectrometers can only measure mass directly, never charge`,`Ions are separated and detected based on their behavior in electric/magnetic fields, which depends on both mass and charge`,`m/z is always equal to the molecular weight regardless of charge`,`Charge has no effect on ion behavior`], ans:1, exp:`The trajectories of ions in electric and magnetic fields depend on both their mass and charge, so the detected signal corresponds to the ratio m/z, not mass alone.` },
       { q:`Electrospray ionization (ESI), commonly used for protein mass spectrometry, typically produces:`, ch:[`Only singly charged ions, regardless of protein size`,`Multiply charged ions, allowing large proteins to be detected within a typical mass spectrometer's m/z range`,`Fragmented peptide ions exclusively`,`Negatively charged radicals only`], ans:1, exp:`ESI generates a distribution of multiply charged ions (e.g., [M+nH]^n+), which brings the m/z of large biomolecules like proteins into a measurable range for most mass analyzers.` },
       { q:`The isotope pattern observed for a peptide in high-resolution mass spectrometry arises primarily because of:`, ch:[`Random instrument noise`,`The natural abundance of heavier isotopes (e.g., 13C) in the molecule, creating a series of peaks separated by approximately 1 Da`,`Multiple different compounds being present`,`The peptide's secondary structure`], ans:1, exp:`Naturally occurring isotopes (mainly 13C at ~1.1% abundance) create a predictable isotope envelope, with peaks spaced by ~1 Da (for singly charged ions) corresponding to the number of heavy isotopes incorporated.` },
