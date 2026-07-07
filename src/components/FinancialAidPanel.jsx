@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, DollarSign } from 'lucide-react';
+import { Plus, Trash2, DollarSign, CalendarPlus } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 
@@ -14,6 +14,8 @@ const STATUSES = [
 
 export default function FinancialAidPanel({ accent = C.blue }) {
   const [scholarships, setScholarships] = useState([]);
+  const [colleges, setColleges] = useState([]);
+  const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
   const [amount, setAmount] = useState('');
@@ -21,11 +23,25 @@ export default function FinancialAidPanel({ accent = C.blue }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setScholarships(await listItems('scholarships')); }
-    catch (err) { toast.error(err.message); }
+    try {
+      const [s, c, d] = await Promise.all([listItems('scholarships'), listItems('colleges'), listItems('deadlines')]);
+      setScholarships(s);
+      setColleges(c);
+      setDeadlineCollegeIds(new Set(d.filter(x => x.kind === 'css_profile' && x.college_id).map(x => x.college_id)));
+    } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  async function addAidDeadline(college) {
+    try {
+      await createItem('deadlines', { college_id: college.id, title: `${college.name} — Financial Aid Deadline`, due_date: college.financial_aid_deadline, kind: 'css_profile' });
+      setDeadlineCollegeIds(prev => new Set([...prev, college.id]));
+      toast.success('Added to Deadlines');
+    } catch (err) { toast.error(err.message); }
+  }
+
+  const aidSchools = colleges.filter(c => c.css_profile_required || c.financial_aid_deadline);
 
   async function addScholarship(e) {
     e.preventDefault();
@@ -66,7 +82,27 @@ export default function FinancialAidPanel({ accent = C.blue }) {
 
       <div style={glass({padding:18})}>
         <div style={lbl()}>FAFSA & CSS Profile</div>
-        <p style={{fontSize:12,color:C.t2,marginBottom:0,lineHeight:1.6}}>FAFSA typically opens October 1 — add it to your Deadlines tab so it counts down alongside your application deadlines. Each school may also require the CSS Profile; check individual college financial aid pages for their specific deadlines.</p>
+        <p style={{fontSize:12,color:C.t2,marginBottom:aidSchools.length?14:0,lineHeight:1.6}}>FAFSA typically opens October 1 — add it to your Deadlines tab so it counts down alongside your application deadlines. Mark CSS Profile requirements and financial aid deadlines per school on the College List tab; they'll show up here.</p>
+        {aidSchools.length > 0 && (
+          <CC style={{gap:8}}>
+            {aidSchools.map(c => (
+              <div key={c.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10}}>
+                <div style={{flex:1,minWidth:0}}>
+                  <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{c.name}</span>
+                  {c.css_profile_required && <span style={{marginLeft:8,fontSize:10,color:C.violetL}}>CSS Profile</span>}
+                </div>
+                {c.financial_aid_deadline ? (
+                  <>
+                    <span style={{fontSize:11,color:C.t3}}>Due {new Date(c.financial_aid_deadline+'T00:00:00').toLocaleDateString()}</span>
+                    {!deadlineCollegeIds.has(c.id) && (
+                      <button style={btnSm('rgba(255,255,255,0.06)',{color:C.t2})} onClick={()=>addAidDeadline(c)}><CalendarPlus size={12}/>Track</button>
+                    )}
+                  </>
+                ) : <span style={{fontSize:11,color:C.t3}}>No deadline set yet</span>}
+              </div>
+            ))}
+          </CC>
+        )}
       </div>
 
       <div style={glass({padding:18})}>

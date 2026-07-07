@@ -144,7 +144,10 @@ export default function CollegeListPanel({ accent = C.blue }) {
                       <span style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{college.name}</span>
                       <span style={pill(`${cat.color}18`, cat.color)}>{cat.label}</span>
                     </div>
-                    <div style={{fontSize:11,color:C.t3,marginTop:4}}>{items.length ? `${doneCount}/${items.length} checklist items` : 'No checklist yet'}</div>
+                    <div style={{fontSize:11,color:C.t3,marginTop:4}}>
+                      {items.length ? `${doneCount}/${items.length} checklist items` : 'No checklist yet'}
+                      {college.css_profile_required && <span style={{marginLeft:8,color:C.violetL}}>· CSS Profile required</span>}
+                    </div>
                   </div>
                   <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={college.status} onClick={e=>e.stopPropagation()} onChange={e=>updateCollege(college.id, { status: e.target.value })}>
                     {STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
@@ -164,6 +167,21 @@ export default function CollegeListPanel({ accent = C.blue }) {
                           <div>
                             <label style={lbl()}>RD Deadline</label>
                             <input type="date" style={inp()} value={college.rd_deadline||''} onChange={e=>updateCollege(college.id,{rd_deadline:e.target.value})} />
+                          </div>
+                        </div>
+                        <div style={G(2,10,{marginTop:10},true)}>
+                          <div>
+                            <label style={lbl()}>Financial Aid Deadline</label>
+                            <input type="date" style={inp()} value={college.financial_aid_deadline||''} onChange={e=>updateCollege(college.id,{financial_aid_deadline:e.target.value})} />
+                          </div>
+                          <div>
+                            <label style={lbl()}>Requires CSS Profile?</label>
+                            <div onClick={()=>updateCollege(college.id,{css_profile_required:!college.css_profile_required})} style={{...R({gap:8,cursor:'pointer',height:38})}}>
+                              <div style={{width:36,height:20,borderRadius:10,background:college.css_profile_required?accent:C.s4,position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${college.css_profile_required?accent:C.b2}`}}>
+                                <div style={{width:14,height:14,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:college.css_profile_required?18:2,transition:'left .2s'}}/>
+                              </div>
+                              <span style={{fontSize:12,color:C.t2}}>{college.css_profile_required?'Yes':'No'}</span>
+                            </div>
                           </div>
                         </div>
                         <div style={{marginTop:14}}>
