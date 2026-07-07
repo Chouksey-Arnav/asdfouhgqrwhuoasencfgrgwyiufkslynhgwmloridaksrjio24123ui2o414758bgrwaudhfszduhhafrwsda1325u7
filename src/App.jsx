@@ -424,8 +424,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
       <div style={R({marginBottom:m?18:26})}>
         <div style={{flex:1}}>
           <div style={R({gap:8,marginBottom:10})}>
-            <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{quiz.cat}</span>
-            <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{qi+1} / {tot}</span>
+            <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{readonly?'Reviewing':'Question'} {qi+1} / {tot}</span>
             {!readonly&&<span style={{fontSize:11,color:C.t3,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:4,marginLeft:'auto',marginRight:12}}><Timer size={11}/>{fmtT(elapsed)}</span>}
           </div>
           <Bar pct={prog} color={accent} h={3} glow/>
@@ -485,6 +484,60 @@ function FlipCard({card,flipped,onClick,m=false}){
   );
 }
 
+// ── Pathway Overview Card ────────────────────────────────────────────────────
+const PATH_ICONS = { undecided:Compass, stem:FlaskConical, humanities:BookOpen, business:Building2, socialSci:Handshake, preHealth:Dna };
+function PathwayCard({ pathKey, p, current, onSelect, m=false }){
+  const Ic = PATH_ICONS[pathKey]||Compass;
+  const lessonCount = (p.units||[]).reduce((s,u)=>s+(u.lessons?.length||0),0);
+  return(
+    <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} whileHover={{y:-2,borderColor:`${p.accent}45`,boxShadow:`0 10px 32px rgba(0,0,0,0.5),0 0 0 1px ${p.accent}25`}}
+      style={{...glass({padding:m?18:24,transition:'box-shadow .2s,border-color .2s'}),border:current?`1px solid ${p.accent}55`:`1px solid ${C.b1}`}}>
+      <div style={R({alignItems:'flex-start',marginBottom:14})}>
+        <div style={{width:44,height:44,borderRadius:12,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic size={20} color={p.accent}/></div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={R({gap:8})}>
+            <div style={{fontSize:16,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.01em'}}>{p.label}</div>
+            {current&&<span style={{...pill(`${p.accent}20`,p.accent,{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>Current</span>}
+          </div>
+          {p.tagline&&<div style={{fontSize:12,color:p.accent,marginTop:2,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
+        </div>
+      </div>
+      {p.overview&&<p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:'0 0 16px'}}>{p.overview}</p>}
+      {p.highlights&&<div style={{marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>What this pathway builds</div>
+        <div style={CC({gap:7})}>
+          {p.highlights.map((h,i)=>(
+            <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start'}}>
+              <Check size={12} color={p.accent} style={{flexShrink:0,marginTop:2}}/>
+              <span style={{fontSize:12,color:C.t2,lineHeight:1.6}}>{h}</span>
+            </div>
+          ))}
+        </div>
+      </div>}
+      {p.outcomes&&<div style={{marginBottom:16}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Leads toward majors like</div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+          {p.outcomes.map(o=><span key={o} style={pill(C.s3,C.t2,{fontSize:10,border:`1px solid ${C.b1}`})}>{o}</span>)}
+        </div>
+      </div>}
+      {p.bestFor&&<div style={{marginBottom:18,background:'rgba(255,255,255,0.02)',border:`1px solid ${C.b1}`,borderRadius:10,padding:'12px 14px'}}>
+        <div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>This might be for you if</div>
+        <div style={CC({gap:5})}>
+          {p.bestFor.map((b,i)=><div key={i} style={{fontSize:11.5,color:C.t2,lineHeight:1.6}}>· {b}</div>)}
+        </div>
+      </div>}
+      <div style={R({justifyContent:'space-between'})}>
+        <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{(p.units||[]).length} units · {lessonCount} lessons</span>
+        <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} disabled={current}
+          style={{...btn(current?C.s3:`linear-gradient(135deg,${p.accent},${p.accent}cc)`,{fontSize:11.5,padding:'8px 16px',opacity:current?.6:1,cursor:current?'default':'pointer',boxShadow:current?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
+          onClick={()=>!current&&onSelect(pathKey)}>
+          {current?<>Currently Active<Check size={13}/></>:<>Select This Pathway<ChevronRight size={13}/></>}
+        </motion.button>
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Achievement Toast ─────────────────────────────────────────────────────────
 function showAchievementToast(achievement) {
   play('achieve');
@@ -534,6 +587,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
+  const [dIntro,setDIntro]=useState(true); // show pathway overview + manual selection before the diagnostic quiz starts
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
   const [aQuiz,setAQ]=useState(null);const [qSrch,setQSrch]=useState('');const [qCat,setQC]=useState('All');const [qDiff,setQD]=useState('All');const [qSort,setQSort]=useState('default');
@@ -1057,15 +1111,46 @@ async function getMMIFb() {
           <SL>Explore Other Paths</SL>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('pathway');}} style={{...glass2({cursor:'pointer',textAlign:'center',padding:14,transition:'background .15s'})}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:p.accent,fontFamily:C.FD}}>{p.label}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:3}}>{p.units.length} units</div>
+                {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
+                <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
               </motion.div>
             ))}
           </div>
         </div>
+        <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(true);}}><Compass size={13}/>Back to Pathway Overview</button>
       </div>
     );}
+
+    // ── Intro / manual-selection landing ────────────────────────────────────
+    if(dIntro){
+      return(
+        <div style={CC({gap:22})}>
+          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
+            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific interest, so studying also builds toward the college major you're most likely to pursue. Take the two-minute diagnostic for a recommendation, or read through the pathways yourself and pick one directly — you can always switch later.</p>
+          </div>
+          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+            <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
+            <div style={{flex:1,minWidth:220}}>
+              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} quick questions about how you think and what excites you — takes about 2 minutes.</div>
+            </div>
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.blueGrad,{fontSize:13,padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
+          </motion.div>
+          <div>
+            <SL>All Pathways — Choose Manually</SL>
+            <div style={G(isMobile?1:2,16,{},false)}>
+              {Object.entries(PATHS).map(([key,p])=>(
+                <PathwayCard key={key} pathKey={key} p={p} current={eSpec===key} m={isMobile}
+                  onSelect={(k)=>{saveUser({...user,specialty:k});setTab('pathway');toast.success(`${p.label} pathway activated`);}}/>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     const q=DIAG_QS[dStep];if(!q)return null;
     return(
       <div style={CC({gap:22})}>
@@ -1087,7 +1172,10 @@ async function getMMIFb() {
             ))}
           </div>
         </motion.div>
-        {dStep>0&&<button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}><ChevronLeft size={14}/>Back</button>}
+        <div style={R({gap:10})}>
+          {dStep>0&&<button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDS(s=>s-1);setDA(a=>a.slice(0,-1));}}><ChevronLeft size={14}/>Back</button>}
+          <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setDS(0);setDA([]);}}><Compass size={13}/>Back to Pathway Overview</button>
+        </div>
       </div>
     );
   }
@@ -1097,12 +1185,17 @@ async function getMMIFb() {
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Learning Pathway</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2></div>
+          <div><div style={lbl()}>Learning Pathway</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
+            {curPath?.tagline&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{curPath.tagline}</div>}
+          </div>
           <div style={{marginLeft:'auto',...R({gap:12})}}>
             <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.t2,fontFamily:C.FM}}>{doneL}/{allL.length}</div><div style={{fontSize:10,color:C.t3}}>lessons</div></div>
             <Arc pct={mastery} size={60} stroke={5} color={accent} label={`${mastery}%`}/>
           </div>
         </div>
+        {curPath?.overview&&<div style={{...glass2({padding:'14px 18px',background:`${accent}08`,border:`1px solid ${accent}20`})}}>
+          <p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:0}}>{curPath.overview}</p>
+        </div>}
         <Bar pct={mastery} color={accent} h={5} glow/>
         {units.map((unit,ui)=>{
           const p=unitM(unit);const done=p===100;
@@ -1141,12 +1234,16 @@ async function getMMIFb() {
           );
         })}
         <div style={glass({padding:18})}>
-          <SL>Switch Study Track</SL>
+          <div style={R({justifyContent:'space-between',marginBottom:14})}>
+            <SL extra={{marginBottom:0}}>Switch Study Track</SL>
+            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setTab('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+          </div>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>switchPath(key)} style={{...glass2({padding:14,cursor:'pointer',border:eSpec===key?`1px solid ${p.accent}50`:undefined,transition:'all .15s'})}} >
                 <div style={{fontSize:12,fontWeight:700,color:eSpec===key?p.accent:C.t2,fontFamily:C.FD}}>{p.label}</div>
-                {eSpec===key&&<div style={{fontSize:10,color:C.t3,marginTop:2}}>Current</div>}
+                {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
+                {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:6,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
           </div>
@@ -1161,42 +1258,59 @@ async function getMMIFb() {
     const diffLevels=['Easy','Medium','Hard','Expert'];
     const COURSE_CAT_MAP={Biology:'Life Sciences','Environmental Science':'Life Sciences',Chemistry:'Physical Sciences',Physics:'Physical Sciences','AP Psychology':'Behavioral & Social Sciences','US History':'Behavioral & Social Sciences','World History':'Behavioral & Social Sciences','AP US History':'Behavioral & Social Sciences','AP World History':'Behavioral & Social Sciences'};
     const myCourseCats=new Set((user.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean));
+    const filtersActive = qSrch.trim()!==''||qCat!=='All'||qDiff!=='All'||qSort!=='default';
+    const clearFilters = ()=>{setQSrch('');setQC('All');setQD('All');setQSort('default');};
     return(
       <div style={CC({gap:22})}>
-        <div style={R({flexWrap:'wrap',gap:12,justifyContent:'space-between'})}>
-          <div>
-            <div style={lbl()}>Quiz Library</div>
-            <div style={R({gap:10,flexWrap:'wrap',alignItems:'center',marginTop:4})}>
-              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{ALL_QUIZZES.length} Quizzes</h2>
-            </div>
-            <div style={{fontSize:12,color:C.t3,marginTop:3,fontFamily:C.FM}}>{TOTAL_QUESTIONS} questions · order scrambled each attempt</div>
-          </div>
-          <div style={R({gap:8,alignSelf:'flex-start'})}>{qTaken>0&&<span style={pill(C.greenDim,C.greenL)}>{qTaken}/{ALL_QUIZZES.length} done</span>}{avgSc>0&&<span style={pill(`${scCol(avgSc)}18`,scCol(avgSc),{fontFamily:C.FM})}>{avgSc}% avg</span>}</div>
+        <div style={R()}>
+          <div><div style={lbl()}>Quiz Library</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Practice Quizzes</h2></div>
         </div>
-        <div style={R({gap:8,flexWrap:'wrap'})}>
-          {diffLevels.map(d=>{const cnt=ALL_QUIZZES.filter(q=>q.diff===d).length;const dc=dColors[d];return cnt>0&&(
-            <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{...glass({padding:'7px 14px',background:qDiff===d?`${dc}15`:`${dc}07`,border:`1px solid ${qDiff===d?dc+'50':dc+'20'}`}),display:'flex',gap:7,alignItems:'center',cursor:'pointer',borderRadius:10,transition:'all .15s'}}>
-              <span style={{width:7,height:7,borderRadius:'50%',background:dc,flexShrink:0}}/>
-              <span style={{fontSize:11,color:dc,fontWeight:700}}>{d}</span>
-              <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{cnt}</span>
-            </div>
-          );})}
-        </div>
-        <div style={R({flexWrap:'wrap',gap:10})}>
-          <div style={{flex:1,minWidth:180,position:'relative'}}>
-            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
-            <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
+        {/* Stat tiles */}
+        <div style={G(3,12,{},isMobile)}>
+          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:36,height:36,borderRadius:10,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.blueL}/></div>
+            <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>quizzes · {TOTAL_QUESTIONS} questions</div></div>
           </div>
-          <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=><option key={c}>{c}</option>)}</select>
-          <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
-          <div style={{position:'relative'}}>
-            <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
-            <select style={inp({width:'auto',paddingLeft:30})} value={qSort} onChange={e=>setQSort(e.target.value)}>
-              <option value="default">Sort: Default</option>
-              <option value="unattempted">Sort: Unattempted first</option>
-              <option value="difficulty">Sort: Easiest first</option>
-              <option value="score">Sort: Lowest score first</option>
-            </select>
+          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:36,height:36,borderRadius:10,background:C.greenDim,border:`1px solid ${C.green}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><CheckCircle2 size={16} color={C.greenL}/></div>
+            <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{qTaken}/{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>completed</div></div>
+          </div>
+          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:36,height:36,borderRadius:10,background:avgSc>0?`${scCol(avgSc)}18`:C.s3,border:`1px solid ${avgSc>0?scCol(avgSc)+'30':C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Target size={16} color={avgSc>0?scCol(avgSc):C.t3}/></div>
+            <div><div style={{fontSize:19,fontWeight:800,color:avgSc>0?scCol(avgSc):C.t3,fontFamily:C.FM,lineHeight:1}}>{avgSc>0?`${avgSc}%`:'—'}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>average score</div></div>
+          </div>
+        </div>
+        {/* Filter toolbar */}
+        <div style={glass({padding:16})}>
+          <div style={R({justifyContent:'space-between',marginBottom:12})}>
+            <SL extra={{marginBottom:0}}>Filter & Sort</SL>
+            {filtersActive&&<button style={{...btnG({fontSize:10.5,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:5}} onClick={clearFilters}><RefreshCw size={10}/>Reset filters</button>}
+          </div>
+          <div style={R({gap:8,flexWrap:'wrap',marginBottom:14})}>
+            {diffLevels.map(d=>{const cnt=ALL_QUIZZES.filter(q=>q.diff===d).length;const dc=dColors[d];return cnt>0&&(
+              <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{background:qDiff===d?`${dc}18`:'rgba(255,255,255,0.02)',border:`1px solid ${qDiff===d?dc+'55':C.b1}`,padding:'7px 14px',display:'flex',gap:7,alignItems:'center',cursor:'pointer',borderRadius:9,transition:'all .15s'}}>
+                <span style={{width:7,height:7,borderRadius:'50%',background:dc,flexShrink:0}}/>
+                <span style={{fontSize:11,color:qDiff===d?dc:C.t2,fontWeight:700}}>{d}</span>
+                <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{cnt}</span>
+              </div>
+            );})}
+          </div>
+          <div style={R({flexWrap:'wrap',gap:10})}>
+            <div style={{flex:1,minWidth:180,position:'relative'}}>
+              <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
+              <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
+            </div>
+            <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=><option key={c}>{c}</option>)}</select>
+            <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
+            <div style={{position:'relative'}}>
+              <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
+              <select style={inp({width:'auto',paddingLeft:30})} value={qSort} onChange={e=>setQSort(e.target.value)}>
+                <option value="default">Sort: Default</option>
+                <option value="unattempted">Sort: Unattempted first</option>
+                <option value="difficulty">Sort: Easiest first</option>
+                <option value="score">Sort: Lowest score first</option>
+              </select>
+            </div>
           </div>
         </div>
         {/* Recommended next quiz — persistent, driven by weakest attempted category */}
@@ -1208,11 +1322,14 @@ async function getMMIFb() {
           </div>
           <button style={{...btn(`linear-gradient(135deg,${C.amber},${C.amberL})`,{fontSize:12,padding:'8px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAQ(recommendedQuiz.quiz);play('click');}}>Start Now<ChevronRight size={14}/></button>
         </div>}
+        <div style={R({justifyContent:'space-between'})}>
+          <SL extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SL>
+        </div>
         <div style={G(2,14,{},isMobile)}>
           {fQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;
             return(
-              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:qi*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden'}),transition:'box-shadow .2s'}}>
+              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden'}),transition:'box-shadow .2s'}}>
                 {taken&&<div style={{height:3,background:`linear-gradient(90deg,${scc},${scc}88)`}}/>}
                 <div style={{padding:22}}>
                   <div style={R({marginBottom:14,flexWrap:'wrap'})}>
@@ -1221,7 +1338,7 @@ async function getMMIFb() {
                     <span style={{marginLeft:'auto',fontSize:11,color:C.t3}}>{q.cat}</span>
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM}}>{q.qs.length} questions</div>
+                  <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM,display:'flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{q.qs.length} questions</div>
                   <div style={R()}>
                     {taken?(
                       <>
@@ -1996,13 +2113,17 @@ async function getMMIFb() {
 
         {/* Specialty path */}
         <div style={glass()}>
-          <SL>Study Track</SL>
+          <div style={R({justifyContent:'space-between',marginBottom:8})}>
+            <SL extra={{marginBottom:0}}>Study Track</SL>
+            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setTab('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+          </div>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:sSpec===key?p.accent:eSpec===key?p.accent:C.t2,fontFamily:C.FD}}>{p.label}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:3}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
+                {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
+                <div style={{fontSize:11,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
                 {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:4,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
