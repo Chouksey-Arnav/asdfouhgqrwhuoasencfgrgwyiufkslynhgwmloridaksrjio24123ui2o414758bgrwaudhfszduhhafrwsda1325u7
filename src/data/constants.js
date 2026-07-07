@@ -7,6 +7,16 @@
 export const PATHS = {
   undecided: {
     label:'Exploring / Undecided', accent:'#64748b', quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
+    tagline:'Keep every door open while you figure out what excites you.',
+    overview:'You don\'t need a declared major to get into a great college — you need strong fundamentals and evidence that you can think clearly across subjects. This pathway builds a balanced foundation in math, reading/writing, and science so that whichever major you eventually pick (in high school or your first undecided year of undergrad), you\'re not starting from behind. It\'s the default track for students who want to keep exploring rather than lock in early.',
+    highlights:[
+      'A balanced core across math, verbal reasoning, and science — the exact mix colleges and the SAT/ACT test',
+      'Freedom to sample STEM, humanities, business, and social-science content before committing to one',
+      'A stronger, more flexible application profile if you haven\'t settled on an intended major yet',
+      'A natural on-ramp into any other pathway here once your interests sharpen',
+    ],
+    outcomes:['Undeclared / General Studies','Liberal Arts (any concentration)','Any major requiring strong SAT/ACT scores'],
+    bestFor:['You genuinely don\'t know what you want to study yet','You want to keep your options as wide as possible','You\'d rather build broad strength than specialize early'],
     units:[
       { id:'ud1', title:'Core Math Review', quizCat:'Physical Sciences', lessons:[
         { id:'ud1l1', title:'Algebra II Essentials', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
@@ -27,6 +37,16 @@ export const PATHS = {
   },
   stem: {
     label:'STEM & Engineering', accent:'#3b82f6', quizCats:['Life Sciences','Physical Sciences'],
+    tagline:'For students who want to build, calculate, and solve technical problems.',
+    overview:'This pathway sharpens the math and science reasoning that STEM and engineering majors lean on from day one of freshman year — functions, problem-solving under time pressure, and the physics/chemistry fundamentals that show up on both the SAT/ACT and in intro college coursework. It\'s built for students heading toward engineering, computer science, math, or the physical sciences, where a strong quantitative foundation in high school translates directly into a smoother first year of undergrad.',
+    highlights:[
+      'Deep practice in algebra, precalculus, and trigonometry — the math tested on the SAT/ACT and required for calculus-based intro STEM courses',
+      'Chemistry and physics fundamentals that mirror what engineering and CS majors take freshman year',
+      'An introduction to programming logic, useful whether or not you\'ve coded before',
+      'Strong Physical Sciences and Life Sciences quiz performance, the sections that matter most for STEM-focused admissions',
+    ],
+    outcomes:['Computer Science','Mechanical / Electrical / Civil Engineering','Mathematics','Physics','Data Science'],
+    bestFor:['You like problems with a clear, provable answer','You\'re drawn to building things — apps, robots, systems','You want a technical major that rewards quantitative skill'],
     units:[
       { id:'st1', title:'Algebra II & Precalculus', quizCat:'Physical Sciences', lessons:[
         { id:'st1l1', title:'Functions & Graphing', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
@@ -47,6 +67,16 @@ export const PATHS = {
   },
   humanities: {
     label:'Humanities & Writing', accent:'#8b5cf6', quizCats:['Behavioral & Social Sciences'],
+    tagline:'For students who think in arguments, stories, and ideas.',
+    overview:'This pathway trains the close reading, persuasive writing, and historical/civic reasoning that humanities majors and strong college essayists rely on. It\'s aimed at students who want to sharpen their voice and their thinking — through literature, history, government, and rhetoric — before heading into majors like English, history, political science, or pre-law tracks, where the ability to build a clear written argument matters more than any single test score.',
+    highlights:[
+      'Advanced reading comprehension and rhetorical analysis — directly boosts SAT/ACT Reading & Writing scores',
+      'U.S. and world history depth that strengthens both classroom performance and college essay material',
+      'A structured approach to essay writing that carries over to the college application essay itself',
+      'Practice building and defending an argument, a core skill for humanities, law, and journalism paths',
+    ],
+    outcomes:['English / Literature','History','Political Science','Pre-Law','Journalism & Communications'],
+    bestFor:['You\'d rather write an essay than solve an equation','You\'re curious about why things happened, not just what happened','You want a major built around reading, discussion, and argument'],
     units:[
       { id:'hu1', title:'Reading & Rhetoric', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'hu1l1', title:'SAT Reading & Writing Practice', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
@@ -67,6 +97,16 @@ export const PATHS = {
   },
   business: {
     label:'Business & Economics', accent:'#f59e0b', quizCats:['Physical Sciences','Behavioral & Social Sciences'],
+    tagline:'For students who want to understand markets, money, and how organizations work.',
+    overview:'This pathway blends quantitative reasoning with economics, leadership, and communication — the mix that undergraduate business schools and economics departments expect incoming students to already have some comfort with. It\'s built for students eyeing majors like business administration, finance, marketing, or economics, where being fluent in statistics, market logic, and public speaking gives you a head start over classmates encountering it for the first time freshman year.',
+    highlights:[
+      'Micro- and macroeconomic reasoning that shows up in both SAT/ACT passages and intro college econ courses',
+      'Statistics and data literacy — core to business analytics, finance, and any data-driven major',
+      'Leadership and communication practice (public speaking, teamwork, negotiation) that group-project-heavy business programs reward',
+      'A strong foundation for case-based and quantitative-reasoning admissions interviews',
+    ],
+    outcomes:['Business Administration','Finance','Economics','Marketing','Entrepreneurship'],
+    bestFor:['You\'re interested in how companies and markets actually work','You like leading teams and pitching ideas','You want a major that mixes numbers with people skills'],
     units:[
       { id:'bz1', title:'Micro & Macroeconomics', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'bz1l1', title:'Supply, Demand & Markets', url:'https://www.khanacademy.org/economics-finance-domain/microeconomics', src:'Khan Academy' },
@@ -87,6 +127,16 @@ export const PATHS = {
   },
   socialSci: {
     label:'Social Sciences', accent:'#10b981', quizCats:['Behavioral & Social Sciences'],
+    tagline:'For students fascinated by why people think, act, and organize the way they do.',
+    overview:'This pathway builds the psychology, sociology, and research-methods literacy that social-science majors need — how studies are designed, how bias creeps into data, and how individuals behave in groups. It\'s aimed at students considering psychology, sociology, criminal justice, or public policy, where understanding both human behavior and how to responsibly study it is the foundation of nearly every intro course.',
+    highlights:[
+      'Core psychology concepts (cognition, learning, development) tested on the SAT/ACT and used throughout intro psych courses',
+      'Sociology and research-methods grounding — study design, bias, and statistics applied to real social questions',
+      'Civics and current-events fluency that strengthens both classroom discussion and college interviews',
+      'A head start on the statistical reasoning social-science majors need for research methods requirements',
+    ],
+    outcomes:['Psychology','Sociology','Criminal Justice','Public Policy','Social Work'],
+    bestFor:['You\'re endlessly curious about why people do what they do','You like reading and interpreting studies, not just numbers','You want a major centered on people, communities, and behavior'],
     units:[
       { id:'ss1', title:'Psychology Foundations', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'ss1l1', title:'Social Psychology & Cognition', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtOPRKzVLY0jJY-uHOH9KVU6', src:'Crash Course' },
@@ -107,6 +157,16 @@ export const PATHS = {
   },
   preHealth: {
     label:'Pre-Health (Optional)', accent:'#ef4444', quizCats:['Life Sciences','Physical Sciences'],
+    tagline:'For students weighing a future in medicine or another health profession — no commitment required.',
+    overview:'This is an opt-in exploration track, not a requirement — it exists for students who suspect they might want to pursue medicine, nursing, dentistry, or another health career and want to test that interest before committing to it in college. It emphasizes biology, chemistry, and physiology fundamentals alongside honest guidance on what shadowing, volunteering, and health-career admissions actually look for, so you arrive at undergrad already knowing whether a pre-health track is worth pursuing.',
+    highlights:[
+      'Cell biology, genetics, and physiology fundamentals that map directly onto intro biology and pre-med coursework',
+      'Chemistry grounding (acid-base, organic basics) that eases the transition into college-level chem, a common pre-health bottleneck',
+      'Realistic guidance on clinical exposure — shadowing, volunteering, and what health programs actually screen for',
+      'A low-pressure way to confirm (or rule out) a health-sciences path before declaring anything in college',
+    ],
+    outcomes:['Biology / Pre-Med','Nursing','Public Health','Dentistry','Physician Assistant Studies'],
+    bestFor:['You\'re curious about medicine but not sure it\'s "the" path yet','You want to test a health-sciences interest before committing in college','You like biology and chemistry more than most of your other classes'],
     units:[
       { id:'ph1', title:'Biology & Biochemistry Foundations', quizCat:'Life Sciences', lessons:[
         { id:'ph1l1', title:'Cell Biology & Metabolism', url:'https://www.youtube.com/watch?v=4eLjRcHnMCk', src:'YouTube' },
