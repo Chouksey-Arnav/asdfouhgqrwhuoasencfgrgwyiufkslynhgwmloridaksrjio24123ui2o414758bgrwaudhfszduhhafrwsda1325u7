@@ -61,9 +61,13 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
     try { await deleteItem('essays', id); } catch (err) { toast.error(err.message); }
   }
 
-  async function patchEssay(id, patch) {
+  function setEssayLocal(id, patch) {
     setEssays(prev => prev.map(e => e.id === id ? { ...e, ...patch } : e));
     setSelected(prev => prev && prev.id === id ? { ...prev, ...patch } : prev);
+  }
+
+  async function patchEssay(id, patch) {
+    setEssayLocal(id, patch);
     try { await updateItem('essays', id, patch); } catch (err) { toast.error(err.message); }
   }
 
@@ -124,7 +128,9 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
         {selected && (
           <div style={glass({padding:18})}>
             <div style={R({gap:10,flexWrap:'wrap',marginBottom:14,justifyContent:'space-between'})}>
-              <input style={{...inp({fontSize:15,fontWeight:700,width:'auto',flex:1,minWidth:160})}} value={selected.title} onChange={e=>patchEssay(selected.id,{title:e.target.value})} />
+              <input style={{...inp({fontSize:15,fontWeight:700,width:'auto',flex:1,minWidth:160})}} value={selected.title}
+                onChange={e=>setEssayLocal(selected.id,{title:e.target.value})}
+                onBlur={e=>updateItem('essays', selected.id, { title: e.target.value }).catch(err=>toast.error(err.message))} />
               <select style={inp({width:'auto'})} value={selected.status} onChange={e=>patchEssay(selected.id,{status:e.target.value})}>
                 {STATUSES.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
@@ -139,12 +145,17 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
               </div>
               <div>
                 <label style={lbl()}>Word limit</label>
-                <input type="number" style={inp()} value={selected.word_limit} onChange={e=>patchEssay(selected.id,{word_limit:Number(e.target.value)||650})} />
+                <input type="number" style={inp()} value={selected.word_limit}
+                  onChange={e=>setEssayLocal(selected.id,{word_limit:Number(e.target.value)||650})}
+                  onBlur={e=>updateItem('essays', selected.id, { word_limit: Number(e.target.value)||650 }).catch(err=>toast.error(err.message))} />
               </div>
             </div>
             <div style={{marginTop:12}}>
               <label style={lbl()}>Prompt</label>
-              <input style={inp()} value={selected.prompt||''} onChange={e=>patchEssay(selected.id,{prompt:e.target.value})} placeholder="Paste the essay prompt here…" />
+              <input style={inp()} value={selected.prompt||''}
+                onChange={e=>setEssayLocal(selected.id,{prompt:e.target.value})}
+                onBlur={e=>updateItem('essays', selected.id, { prompt: e.target.value }).catch(err=>toast.error(err.message))}
+                placeholder="Paste the essay prompt here…" />
             </div>
             <div style={{marginTop:12}}>
               <div style={R({justifyContent:'space-between',marginBottom:7})}>

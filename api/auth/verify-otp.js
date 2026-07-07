@@ -34,29 +34,56 @@ export default async function handler(req, res) {
   try {
     const supabase = getSupabaseAdmin();
 
-    const { data: otpRow, error: fetchErr } = await supabase
+    const { data: latestRow } = await supabase
       .from('otp_codes')
-      .select('*')
+      .select('id, expires_at')
       .eq('email', email)
       .eq('consumed', false)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
-    if (fetchErr) throw fetchErr;
 
-    if (!otpRow || new Date(otpRow.expires_at) < new Date()) {
+    if (!latestRow || new Date(latestRow.expires_at) < new Date()) {
       return res.status(400).json({ error: 'Code expired. Request a new one.' });
     }
-    if (otpRow.attempts >= MAX_ATTEMPTS) {
+
+    // Conditionally increment attempts using the current value as an optimistic-
+    // concurrency guard (`.eq('attempts', current.attempts)`): if a concurrent
+    // request already incremented this row, this update matches zero rows and
+    // we bail out below instead of both requests checking a guess "for free".
+    const { data: current, error: curErr } = await supabase
+      .from('otp_codes')
+      .select('*')
+      .eq('id', latestRow.id)
+      .single();
+    if (curErr) throw curErr;
+
+    if (current.attempts >= MAX_ATTEMPTS) {
       return res.status(429).json({ error: 'Too many incorrect attempts. Request a new code.' });
     }
 
-    if (otpRow.code_hash !== hashCode(code)) {
-      await supabase.from('otp_codes').update({ attempts: otpRow.attempts + 1 }).eq('id', otpRow.id);
+    const { data: afterIncrement, error: incErr } = await supabase
+      .from('otp_codes')
+      .update({ attempts: current.attempts + 1 })
+      .eq('id', latestRow.id)
+      .eq('attempts', current.attempts)
+      .select('*')
+      .maybeSingle();
+    if (incErr) throw incErr;
+    if (!afterIncrement) {
+      // Another concurrent request won the race and already incremented this row.
+      return res.status(429).json({ error: 'Too many concurrent attempts. Please wait and try again.' });
+    }
+
+    const expected = Buffer.from(afterIncrement.code_hash, 'hex');
+    const actual = Buffer.from(hashCode(code), 'hex');
+    const matches = expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
+
+    if (!matches) {
       return res.status(400).json({ error: 'Incorrect code. Please try again.' });
     }
 
-    await supabase.from('otp_codes').update({ consumed: true }).eq('id', otpRow.id);
+    await supabase.from('otp_codes').update({ consumed: true }).eq('id', afterIncrement.id);
 
     let { data: user, error: userErr } = await supabase
       .from('app_users')
