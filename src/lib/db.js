@@ -155,6 +155,10 @@ export async function getStreak() {
 export async function getStudyDaysCount() {
   return db.studyDays.count();
 }
+export async function getStudyDays() {
+  const rows = await db.studyDays.toArray();
+  return rows.map(r => r.date);
+}
 
 // ── MMI Sessions ──────────────────────────────────────────────────────────────
 export async function recordMMISession(questionIdx) {

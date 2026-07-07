@@ -26,6 +26,7 @@ import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, MMI_QS, COMPETITIONS, DIAG_QS } from './data/constants';
 
 import * as DB from './lib/db';
+import * as AuthAPI from './lib/authApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
@@ -33,6 +34,13 @@ import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, 
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements } from './lib/achievements';
+import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
+import CollegeListPanel from './components/CollegeListPanel';
+import EssayWorkspacePanel from './components/EssayWorkspacePanel';
+import ScoreTrackerPanel from './components/ScoreTrackerPanel';
+import FinancialAidPanel from './components/FinancialAidPanel';
+import StreakHeatmap from './components/StreakHeatmap';
+import ActivitiesResumePanel from './components/ActivitiesResumePanel';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
@@ -92,13 +100,31 @@ function scoreSchool(s,gpa,sat,lead,ec,vol,st){
 }
 
 const NAV = [
-  {id:'home',ic:Home,label:'Home'},{id:'diagnostic',ic:Compass,label:'Diagnostic'},
-  {id:'pathway',ic:Route,label:'Pathway'},{id:'quizzes',ic:Layers,label:'Quiz Library'},
-  {id:'coach',ic:MessageCircle,label:'AI Coach'},{id:'flashcards',ic:Layers3,label:'Flashcards'},
-  {id:'library',ic:BookOpen,label:'E-Library'},{id:'portfolio',ic:Building2,label:'Portfolio'},
-  {id:'interview',ic:Mic,label:'Interview Sim'},{id:'calc',ic:Calculator,label:'Admissions'},
-  {id:'analytics',ic:LineChart,label:'Analytics'},{id:'settings',ic:Settings,label:'Settings'},
+  {id:'home',ic:Home,label:'Home',group:'Home'},
+
+  {id:'pathway',ic:Route,label:'Pathway',group:'Study'},
+  {id:'quizzes',ic:Layers,label:'Quiz Library',group:'Study'},
+  {id:'flashcards',ic:Layers3,label:'Flashcards',group:'Study'},
+  {id:'coach',ic:MessageCircle,label:'AI Coach',group:'Study'},
+  {id:'library',ic:BookOpen,label:'E-Library',group:'Study'},
+
+  {id:'diagnostic',ic:Compass,label:'Diagnostic',group:'Test Prep'},
+  {id:'scores',ic:TrendingUp,label:'SAT/ACT Tracker',group:'Test Prep'},
+
+  {id:'calc',ic:Calculator,label:'Admissions',group:'Applications'},
+  {id:'colleges',ic:Building2,label:'College List',group:'Applications'},
+  {id:'essays',ic:ScrollText,label:'Essay Workspace',group:'Applications'},
+  {id:'deadlines',ic:CalendarDays,label:'Deadlines',group:'Applications'},
+  {id:'aid',ic:Handshake,label:'Financial Aid',group:'Applications'},
+  {id:'portfolio',ic:Building2,label:'Portfolio',group:'Applications'},
+  {id:'resume',ic:Award,label:'Resume Builder',group:'Applications'},
+  {id:'interview',ic:Mic,label:'Interview Sim',group:'Applications'},
+
+  {id:'analytics',ic:LineChart,label:'Analytics',group:'Insights'},
+
+  {id:'settings',ic:Settings,label:'Settings',group:'Account'},
 ];
+const NAV_GROUPS = ['Home','Study','Test Prep','Applications','Insights','Account'];
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
     'Explain how to solve a system of equations simply',
@@ -464,7 +490,7 @@ function showAchievementToast(achievement) {
   ), { duration:5000 });
 }
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
-export default function App() {
+export default function App({ account, onAccountChange }) {
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // ── DB loading ──────────────────────────────────────────────────────────────
@@ -480,6 +506,7 @@ export default function App() {
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
+  const upcomingDeadlines = useDeadlines();
   const [totalReviews, setTotalReviews] = useState(0);
   const [mmiCount, setMmiCount] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
@@ -872,12 +899,26 @@ async function getMMIFb() {
           </div>}
         </div>}
 
+        {/* Deadline countdown */}
+        {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
+        {upcomingDeadlines&&upcomingDeadlines.length===0&&(
+          <div style={{...glass({padding:16}),display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
+            <div style={{fontSize:13,color:C.t2}}>You haven't added any application deadlines yet.</div>
+            <button style={btnG({fontSize:12,padding:'8px 16px'})} onClick={()=>setTab('deadlines')}>Add Deadlines</button>
+          </div>
+        )}
+
         {/* Stats */}
         <div style={G(4,14,{},isMobile)}>
           <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${250-xpIn} to Level ${lvl+1}`} m={isMobile}/>
           <Stat label="Level" value={lvl} icon={<Trophy size={16}/>} color={C.violet} sub={`${Math.floor((xpIn/250)*100)}% to next`} m={isMobile}/>
           <Stat label="Quizzes Done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
           <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`} m={isMobile}/>
+        </div>
+
+        {/* Study activity heatmap */}
+        <div style={glass({padding:18,overflowX:'auto'})}>
+          <StreakHeatmap accent={accent}/>
         </div>
 
         {/* XP Progress */}
@@ -1953,13 +1994,20 @@ async function getMMIFb() {
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
+        {/* Account */}
+        <div style={glass({padding:18})}>
+          <SL>Account</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your college list, essays, deadlines, and test scores sync to this account.</p>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
+        </div>
+
         {/* Danger zone */}
         <div style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset Progress</button>
-            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Sign out and permanently delete all local data? This cannot be undone.'))signOut();}}>Sign Out & Clear All</button>
+            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){await AuthAPI.logout();signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
           </div>
         </div>
 
@@ -2005,7 +2053,7 @@ async function getMMIFb() {
                 onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'undecided',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your study track.`);}}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
-              <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>No account required · Data stored locally · Works offline</p>
+              <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
             </div>
           </motion.div>
         </div>
@@ -2035,7 +2083,16 @@ async function getMMIFb() {
   }
 
   // ═══ MAIN LAYOUT ═══════════════════════════════════════════════════════════════
-  const tRenders={home:tHome,diagnostic:tDiag,pathway:tPath,quizzes:tQuizzes,coach:tCoach,flashcards:tFlash,library:tLib,portfolio:tPort,interview:tInterview,calc:tCalc,analytics:tAnalytics,settings:tSettings};
+  const tRenders={
+    home:tHome,diagnostic:tDiag,pathway:tPath,quizzes:tQuizzes,coach:tCoach,flashcards:tFlash,
+    library:tLib,portfolio:tPort,interview:tInterview,calc:tCalc,analytics:tAnalytics,settings:tSettings,
+    deadlines:()=><DeadlinesPanel accent={accent}/>,
+    colleges:()=><CollegeListPanel accent={accent}/>,
+    essays:()=><EssayWorkspacePanel accent={accent}/>,
+    scores:()=><ScoreTrackerPanel accent={accent}/>,
+    aid:()=><FinancialAidPanel accent={accent}/>,
+    resume:()=><ActivitiesResumePanel accent={accent}/>,
+  };
 
   return(
     <ErrorBoundary>
@@ -2089,14 +2146,21 @@ async function getMMIFb() {
               {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
-              {NAV.map(n=>{
-                const active=tab===n.id;
-                return(
-                  <motion.div key={n.id} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:9,cursor:'pointer',marginBottom:1,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:400,fontSize:13,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
-                    <n.ic size={15} style={{opacity:active?1:0.7}}/><span>{n.label}</span>
-                  </motion.div>
-                );
-              })}
+              {NAV_GROUPS.map(group=>(
+                <div key={group} style={{marginBottom:4}}>
+                  {group!=='Home'&&<div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'12px 12px 4px'}}>{group}</div>}
+                  {NAV.filter(n=>n.group===group).map(n=>{
+                    const active=tab===n.id;
+                    const badge=n.id==='flashcards'&&dueCards>0?dueCards:null;
+                    return(
+                      <motion.div key={n.id} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:9,cursor:'pointer',marginBottom:1,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:400,fontSize:13,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
+                        <n.ic size={15} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
+                        {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              ))}
             </nav>
           </aside>
         )}
