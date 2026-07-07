@@ -139,7 +139,7 @@ export default async function handler(req, res) {
     
     const systemPrompt = system 
       ? String(system).slice(0, 2000)
-      : 'You are MetaBrain, an expert MCAT tutor and medical school admissions coach. Be concise, accurate, and encouraging.';
+      : 'You are MetaBrain, an expert SAT/ACT tutor and college admissions coach for high school students. Be concise, accurate, and encouraging.';
 
     // Build request body with proper Gemini API format
     const requestBody = {

@@ -2,7 +2,7 @@
   "name": "medschool-prep",
   "version": "2.0.0",
   "type": "module",
-  "description": "MCAT preparation and medical school admissions coaching",
+  "description": "SAT/ACT preparation and college admissions coaching",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

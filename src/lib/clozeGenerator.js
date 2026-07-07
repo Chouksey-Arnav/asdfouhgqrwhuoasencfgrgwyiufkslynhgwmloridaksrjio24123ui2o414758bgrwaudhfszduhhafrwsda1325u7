@@ -2,7 +2,7 @@
 // Pure JS cloze-deletion flashcard generation from pasted text notes.
 // Zero API calls, zero network, works fully offline. Instant generation.
 
-const MCAT_TERMS = [
+const HS_TERMS = [
   'glycolysis','pyruvate','acetyl-CoA','NADH','FADH2','ATP','ADP','phosphate',
   'enzyme','substrate','inhibitor','Km','Vmax','catalyst','equilibrium',
   'enthalpy','entropy','Gibbs','oxidation','reduction','electrode','cathode','anode',
@@ -37,6 +37,14 @@ const MCAT_TERMS = [
   'Hardy-Weinberg','allele frequency','genetic drift','natural selection','mutation',
   'recombination','crossing over','linkage','epistasis','pleiotropy','penetrance',
   'expressivity','imprinting','epigenetics','methylation','acetylation','chromatin',
+  'quadratic','polynomial','derivative','integral','logarithm','exponent','matrix',
+  'vector','probability','hypothesis','correlation','variance','mean','median',
+  'supply','demand','inflation','GDP','opportunity cost','equilibrium price',
+  'monopoly','tariff','recession','amendment','legislation','judicial','executive',
+  'federalism','democracy','revolution','colonization','industrialization',
+  'imperialism','totalitarianism','metaphor','allegory','protagonist','antagonist',
+  'symbolism','thesis','rhetoric','syntax','conditioning','cognition','perception',
+  'stimulus','reinforcement','motivation','identity','socialization',
 ];
 
 const DEFINITION_PATTERNS = [
@@ -46,8 +54,8 @@ const DEFINITION_PATTERNS = [
 ];
 
 /**
- * Generate cloze-deletion flashcards from pasted MCAT study notes.
- * Three strategies: definition detection → MCAT term cloze → mid-sentence blank.
+ * Generate cloze-deletion flashcards from pasted study notes.
+ * Three strategies: definition detection → key-term cloze → mid-sentence blank.
  * @param {string} text - Cleaned note text
  * @param {number} maxCards - Maximum cards to generate (default 14)
  * @returns {Array<{front: string, back: string}>}
@@ -85,10 +93,10 @@ export function generateClozeFromNotes(text, maxCards = 14) {
     }
   }
 
-  // ── Strategy 2: MCAT term cloze deletion ────────────────────────────────────
+  // ── Strategy 2: key-term cloze deletion ─────────────────────────────────────
   for (const sentence of sentences) {
     if (cards.length >= maxCards) break;
-    const termFound = MCAT_TERMS.find(term => {
+    const termFound = HS_TERMS.find(term => {
       const rx = new RegExp(`\\b${term.replace(/[-]/g, '[-]')}\\b`, 'i');
       return rx.test(sentence) && !usedTerms.has(term.toLowerCase());
     });

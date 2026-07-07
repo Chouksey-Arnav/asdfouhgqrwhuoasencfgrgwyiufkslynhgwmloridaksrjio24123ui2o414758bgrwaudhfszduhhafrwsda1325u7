@@ -70,7 +70,7 @@ export function scoreMmiResponse(answer, question, timerSeconds) {
   let empathy = 1.5;
   const empathyFound = EMPATHY_LEXICON.filter(w => lower.includes(w));
   empathy += Math.min(5.0, empathyFound.length * 0.65);
-  const highEmpathyTypes = ['Ethics','Communication','Cultural Competency','Personal','Situational'];
+  const highEmpathyTypes = ['Communication','Community & Diversity','Personal','Situational'];
   if (highEmpathyTypes.includes(question.type)) {
     empathy += empathyFound.length >= 4 ? 2.5 : empathyFound.length >= 2 ? 1.5 : 0.5;
   } else {
@@ -139,7 +139,7 @@ export function scoreMmiResponse(answer, question, timerSeconds) {
   const contentLabel   = content >= 8 ? `All key considerations addressed thoroughly` : content >= 6.5 ? `Most considerations covered` : content >= 5 ? `Partial coverage — some key points missed` : `Key considerations need more direct attention`;
   const empathyLabel   = empathy >= 8 ? `Strong empathetic awareness throughout` : empathy >= 6.5 ? `Good empathetic language present` : empathy >= 5 ? `Some empathy shown` : `Acknowledge the human and emotional impact more directly`;
   const commLabel      = communication >= 8 ? `Clear, varied, and professional` : communication >= 6.5 ? `Reasonably clear with room to improve` : communication >= 5 ? `Somewhat clear, work on variety and flow` : `Focus on sentence structure and vocabulary range`;
-  const overallLabel   = overall >= 8.5 ? `Excellent response — strong MMI candidate` : overall >= 7 ? `Good response with some areas to develop` : overall >= 5.5 ? `Developing response — keep practicing` : `Needs significant development — review MMI technique`;
+  const overallLabel   = overall >= 8.5 ? `Excellent response — strong interview candidate` : overall >= 7 ? `Good response with some areas to develop` : overall >= 5.5 ? `Developing response — keep practicing` : `Needs significant development — review interview technique`;
 
   const feedbackText =
     `**Structure:** ${structure}/10 — ${structureLabel}\n` +

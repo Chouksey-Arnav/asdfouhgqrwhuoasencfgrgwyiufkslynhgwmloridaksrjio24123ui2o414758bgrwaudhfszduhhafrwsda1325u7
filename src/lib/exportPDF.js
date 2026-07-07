@@ -101,7 +101,7 @@ export function exportSchoolList(schools, profile={}) {
   const tiers = ['Likely','Target','Reach','Stretch'];
   const tc    = { Likely:GREEN, Target:BLUE, Reach:AMBER, Stretch:RED };
 
-  let y = header(doc, 'Medical School List', `GPA ${profile.gpa||'—'} · MCAT ${profile.mcat||'—'} · Generated ${new Date().toLocaleDateString()}`);
+  let y = header(doc, 'College List', `GPA ${profile.gpa||'—'} · SAT ${profile.sat||'—'} · Generated ${new Date().toLocaleDateString()}`);
 
   // Profile summary
   doc.setFillColor(15, 24, 40);
@@ -148,7 +148,7 @@ export function exportSchoolList(schools, profile={}) {
       doc.setTextColor(...LIGHT);
       doc.setFont('helvetica','normal');
       doc.setFontSize(7);
-      doc.text(`GPA ${s.gpa} · MCAT ${s.mcat} · ${s.accept}% acceptance · ${s.type} · ${s.state}`, 17, y+8);
+      doc.text(`GPA ${s.gpa} · SAT ${s.sat} · ${s.accept}% acceptance · ${s.type} · ${s.state}`, 17, y+8);
       y += 11;
     });
     y += 4;

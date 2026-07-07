@@ -7,11 +7,11 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico'],
+      includeAssets: ['icon.svg', 'favicon.png'],
       manifest: {
         name: 'MedSchoolPrep',
         short_name: 'MedPrep',
-        description: 'AI-powered MCAT prep and med school admissions',
+        description: 'AI-powered SAT/ACT prep and college admissions planning',
         theme_color: '#04060b',
         background_color: '#04060b',
         display: 'standalone',

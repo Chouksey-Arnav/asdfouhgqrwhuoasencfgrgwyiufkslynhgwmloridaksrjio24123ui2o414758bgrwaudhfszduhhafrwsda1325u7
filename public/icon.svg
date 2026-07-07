@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2d7fff"/>
+      <stop offset="1" stop-color="#1a4fd6"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#eaf2ff"/>
+      <stop offset="1" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
+  <!-- ascending path: three rising steps resolving into a peak/checkmark, admissions-neutral growth motif -->
+  <path d="M20 66 L38 66 L38 50 L54 50 L54 34 L64 34" fill="none" stroke="url(#mark)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
+  <path d="M20 72 L37 55 L50 64 L80 30" fill="none" stroke="url(#mark)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M64 30 L80 30 L80 46" fill="none" stroke="url(#mark)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
