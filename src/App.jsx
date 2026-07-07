@@ -474,6 +474,91 @@ function FlipCard({card,flipped,onClick,m=false}){
   );
 }
 
+// ── Card Manager Modal (add/edit/delete cards in a custom deck) ──────────────
+function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=false}){
+  const [editIdx,setEditIdx]=useState(null);
+  const [editFront,setEditFront]=useState('');
+  const [editBack,setEditBack]=useState('');
+  const [newFront,setNewFront]=useState('');
+  const [newBack,setNewBack]=useState('');
+
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
+
+  function startEdit(i){setEditIdx(i);setEditFront(cards[i].front);setEditBack(cards[i].back);}
+  function saveEdit(){if(editFront.trim()&&editBack.trim())onUpdate(editIdx,editFront.trim(),editBack.trim());setEditIdx(null);}
+  function addCard(){if(!newFront.trim()||!newBack.trim())return;onAdd(newFront.trim(),newBack.trim());setNewFront('');setNewBack('');}
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(6px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:640,maxHeight:'85vh',display:'flex',flexDirection:'column',...glass({padding:0,overflow:'hidden',borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
+        <div style={{...R({justifyContent:'space-between'}),padding:'16px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
+          <div>
+            <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Manage Cards</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:2}}>{deckName} · {cards.length} card{cards.length===1?'':'s'}</div>
+          </div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:20}}>
+          <div style={CC({gap:10,marginBottom:18})}>
+            {cards.map((c,i)=>(
+              <div key={i} style={glass2({padding:14})}>
+                {editIdx===i?(
+                  <div style={CC({gap:8})}>
+                    <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editFront} onChange={e=>setEditFront(e.target.value)} placeholder="Front (question)"/>
+                    <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editBack} onChange={e=>setEditBack(e.target.value)} placeholder="Back (answer)"/>
+                    <div style={R({gap:8})}>
+                      <button style={btnSm(C.blueGrad,{color:'#fff',fontSize:11})} onClick={saveEdit}>Save</button>
+                      <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>setEditIdx(null)}>Cancel</button>
+                    </div>
+                  </div>
+                ):(
+                  <div style={R({alignItems:'flex-start',gap:10})}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12.5,color:C.t1,fontWeight:600,lineHeight:1.5,marginBottom:5}}>{c.front}</div>
+                      <div style={{fontSize:12,color:C.t3,lineHeight:1.5}}>{c.back}</div>
+                    </div>
+                    <div style={R({gap:4,flexShrink:0})}>
+                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>startEdit(i)} title="Edit"><ScrollText size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>onDelete(i)} title="Delete"><Trash2 size={13}/></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {cards.length===0&&<div style={{textAlign:'center',color:C.t3,padding:'20px 0',fontSize:12.5}}>No cards yet — add your first one below.</div>}
+          </div>
+        </div>
+        <div style={{padding:18,borderTop:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
+          <div style={lbl()}>Add a card</div>
+          <div style={CC({gap:8})}>
+            <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newFront} onChange={e=>setNewFront(e.target.value)} placeholder="Front (question)"/>
+            <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newBack} onChange={e=>setNewBack(e.target.value)} placeholder="Back (answer)"/>
+            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add Card</button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── New Deck Modal ────────────────────────────────────────────────────────────
+function NewDeckModal({onCreate,onClose,m=false}){
+  const [name,setName]=useState('');
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(6px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:420,...glass({borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:14}}>New Deck</div>
+        <input autoFocus style={{...inp(),marginBottom:14}} placeholder="Deck name (e.g. Cell Biology Vocab)" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onCreate(name.trim());}}/>
+        <div style={R({gap:8})}>
+          <button style={btn(C.blueGrad,{fontSize:12.5})} onClick={()=>name.trim()&&onCreate(name.trim())} disabled={!name.trim()}>Create Deck</button>
+          <button style={btnG({fontSize:12.5})} onClick={onClose}>Cancel</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ── Pathway Overview Card ────────────────────────────────────────────────────
 const PATH_ICONS = { undecided:Compass, stem:FlaskConical, humanities:BookOpen, business:Building2, socialSci:Handshake, preHealth:Dna };
 function PathwayCard({ pathKey, p, current, onSelect, m=false }){
@@ -586,6 +671,11 @@ export default function App({ account, onAccountChange }) {
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
+  const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
+  const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
+  const [newDeckOpen,setNewDeckOpen]=useState(false);
+  const [newDeckName,setNewDeckName]=useState('');
+  const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});
 
   // ── Library ─────────────────────────────────────────────────────────────────
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
@@ -639,14 +729,42 @@ export default function App({ account, onAccountChange }) {
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
   const saveDeck = useCallback(async(name,cards)=>{ setCDecks_(d=>({...d,[name]:cards})); await DB.saveDeck(name,cards); },[]);
   const deleteDeck_ = useCallback(async(name)=>{ setCDecks_(d=>{const nd={...d};delete nd[name];return nd;}); await DB.deleteDeck(name); },[]);
+  const createDeck = useCallback(async(name)=>{ await saveDeck(name,[]); },[saveDeck]);
+  const addCardToDeck = useCallback(async(name,front,back)=>{
+    const cards=[...(cDecks[name]||[]),{front,back}];
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
+  const updateCardInDeck = useCallback(async(name,idx,front,back)=>{
+    const cards=[...(cDecks[name]||[])];
+    if(cards[idx])cards[idx]={...cards[idx],front,back};
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
+  const deleteCardFromDeck = useCallback(async(name,idx)=>{
+    const cards=(cDecks[name]||[]).filter((_,i)=>i!==idx);
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
   const savePort = useCallback((p)=>{ setPort_(p); },[]);
   const saveCatPerf = useCallback((cat,score)=>{ setCatPerf_(cp=>({...cp,[cat]:{ total:(cp[cat]?.total||0)+score, count:(cp[cat]?.count||0)+1 }})); DB.updateCatPerf(cat,score).catch(console.error); },[]);
 
   // ── Timers ───────────────────────────────────────────────────────────────────
   useEffect(()=>{if(!pomR)return;const id=setInterval(()=>setPT(t=>t>0?t-1:0),1000);return()=>clearInterval(id);},[pomR]);
   useEffect(()=>{if(pomT===0&&pomR){setPR(false);play('bell');const n=pomM==='focus'?'break':'focus';setPomM(n);setPT(n==='focus'?25*60:5*60);if(pomM==='focus')setPomSessions(s=>s+1);toast.success(pomM==='focus'?'Focus session complete — take a short break.':"Break's over — back to studying.");}},[ pomT,pomR,pomM]);
-  useEffect(()=>{if(!mRun)return;const id=setInterval(()=>setMT(t=>t+1),1000);return()=>clearInterval(id);},[mRun]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
+
+  // ── Flashcard study keyboard shortcuts (Space/Enter flip, 1-4 rate) ──────────
+  useEffect(()=>{
+    if(tab!=='flashcards'||!activeDeck)return;
+    function onKey(e){
+      if(e.target&&['TEXTAREA','INPUT'].includes(e.target.tagName))return;
+      if(e.key===' '||e.key==='Enter'){e.preventDefault();setFlip(f=>!f);return;}
+      if(flip&&['1','2','3','4'].includes(e.key)){
+        const label=['Again','Hard','Good','Easy'][parseInt(e.key,10)-1];
+        rateCard(label);
+      }
+    }
+    document.addEventListener('keydown',onKey);
+    return()=>document.removeEventListener('keydown',onKey);
+  },[tab,activeDeck,flip,currentCard,cIdx]);
 
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'undecided';
@@ -667,9 +785,13 @@ export default function App({ account, onAccountChange }) {
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
   const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
 
-  // FSRS due count
-  const allCards = useMemo(()=>Object.values(cDecks).flat(),[cDecks]);
+  // FSRS due count (across built-in and custom decks)
+  const allCards = useMemo(()=>[...Object.values(FLASH_DECKS).flat(),...Object.values(cDecks).flat()],[cDecks]);
   const dueCards = useMemo(()=>getDueCards(allCards).length,[allCards]);
+  const avgRetention = useMemo(()=>{
+    const rets = allCards.map(c=>getRetainability(c)).filter(r=>r!==null);
+    return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;
+  },[allCards]);
 
   // Next lesson to resume (first not-done lesson in current pathway, in order)
   const nextLesson = useMemo(()=>{
@@ -797,6 +919,22 @@ export default function App({ account, onAccountChange }) {
       toast.error(e.message.slice(0, 80));
     }
     setGL(false);
+  }
+
+  async function rateCard(label){
+    if(!currentCard||!activeDeck)return;
+    const updated=scheduleCard(currentCard,label);
+    const deckName=activeDeck.name;
+    const allDeckCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
+    const idx=allDeckCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
+    if(idx>=0)allDeckCards[idx]=updated;
+    if(!activeDeck.builtin)await saveDeck(deckName,allDeckCards);
+    await DB.recordCardReview(currentCard.id||cIdx);
+    const newTotal=totalReviews+1;setTotalReviews(newTotal);
+    checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
+    setSessionStats(s=>({...s,reviewed:s.reviewed+1,[label.toLowerCase()]:s[label.toLowerCase()]+1}));
+    setCIdx(i=>Math.min(deckCards.length-1,i+1));
+    setFlip(false);
   }
 
   // ── Quiz finish ───────────────────────────────────────────────────────────────
@@ -1388,14 +1526,27 @@ export default function App({ account, onAccountChange }) {
   // ── FLASHCARDS ────────────────────────────────────────────────────────────────
   function tFlash(){
     if(activeDeck){
+      const sessionTotal=sessionStats.reviewed;
+      const sessionAcc=sessionTotal>0?Math.round(((sessionStats.good+sessionStats.easy)/sessionTotal)*100):null;
       if(!currentCard)return(
         <div style={CC({gap:16})}>
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
           <div style={{...glass({padding:40,textAlign:'center'})}}>
             <div style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></div>
             <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
-            {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            {sessionTotal>0&&(
+              <div style={{...G(4,10,{},isMobile),marginBottom:24,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:C.FD}}>{sessionAcc}%</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Remembered</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.rose,fontFamily:C.FD}}>{sessionStats.again}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Again</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.blue,fontFamily:C.FD}}>{fmtT(Math.round((Date.now()-sessionStats.startedAt)/1000))}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Time</div></div>
+              </div>
+            )}
+            <div style={R({justifyContent:'center',gap:10})}>
+              {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>Study Again</button>
+            </div>
           </div>
         </div>
       );
@@ -1406,16 +1557,18 @@ export default function App({ account, onAccountChange }) {
             <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due</div>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed this session`:''}</div>
             </div>
             <div style={R({gap:6})}>
               <button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>
               <button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>
+              {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
           </div>
           <Bar pct={((cIdx+1)/deckCards.length)*100} color={accent} h={3} glow/>
           <FlipCard card={currentCard} flipped={flip} onClick={()=>setFlip(f=>!f)} m={isMobile}/>
+          <div style={{textAlign:'center',fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{!isMobile&&(flip?'Press 1–4 to rate · ':'Press Space to flip · ')}Click card to flip</div>
           <div style={R({justifyContent:'space-between'})}>
             <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'9px 20px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setCIdx(i=>Math.max(0,i-1));setFlip(false);}} disabled={cIdx===0}><ChevronLeft size={14}/>Prev</motion.button>
             {flip&&(
@@ -1423,18 +1576,7 @@ export default function App({ account, onAccountChange }) {
                 {[['Again',0,C.rose],['Hard',1,C.amber],['Good',2,C.blue],['Easy',3,C.green]].map(([label,q,col])=>(
                   <motion.button key={label} whileHover={{scale:1.06}} whileTap={{scale:.94}}
                     style={{...btnSm(`${col}20`,{color:col,border:`1px solid ${col}30`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:6}}
-                    onClick={async()=>{
-                      const updated=scheduleCard(currentCard,label);
-                      const deckName=activeDeck.name;
-                      const allCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
-                      const idx=allCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
-                      if(idx>=0)allCards[idx]=updated;
-                      if(!activeDeck.builtin)await saveDeck(deckName,allCards);
-                      await DB.recordCardReview(currentCard.id||cIdx);
-                      const newTotal=totalReviews+1;setTotalReviews(newTotal);
-                      checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
-                      setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);
-                    }}>
+                    onClick={()=>rateCard(label)}>
                     {label}<span style={{fontSize:9,color:`${col}99`,fontFamily:C.FM}}>{q+1}</span>
                   </motion.button>
                 ))}
@@ -1444,50 +1586,113 @@ export default function App({ account, onAccountChange }) {
           </div>
           {/* Export deck */}
           <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
+          <AnimatePresence>
+            {manageDeck&&<CardManagerModal
+              deckName={manageDeck}
+              cards={cDecks[manageDeck]||[]}
+              onAdd={(f,b)=>addCardToDeck(manageDeck,f,b)}
+              onUpdate={(idx,f,b)=>updateCardInDeck(manageDeck,idx,f,b)}
+              onDelete={idx=>deleteCardFromDeck(manageDeck,idx)}
+              onClose={()=>setManageDeck(null)}
+              m={isMobile}
+            />}
+          </AnimatePresence>
         </div>
       );
     }
+
+    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
+    const filteredDecks=allDecksList.filter(deck=>{
+      if(deckFilter==='all')return true;
+      const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
+      if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
+      if(deckFilter==='custom')return !deck.builtin;
+      if(deckFilter==='builtin')return deck.builtin;
+      return true;
+    });
 
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
           <div><div style={lbl()}>Flashcards</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
-            {dueCards>0&&<span style={pill(C.violetDim,C.violetL,{fontFamily:C.FM})}>{dueCards} due</span>}
-            <span style={pill(C.blueDim,C.blueL)}>{Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks</span>
+            <button style={{...btn(C.blueGrad,{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
           </div>
         </div>
-        <div style={{position:'relative'}}>
-          <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
-          <input style={inp({paddingLeft:36})} placeholder="Search decks…" value={dSrch} onChange={e=>setDS2(e.target.value)}/>
+
+        {/* Overview stats */}
+        <div style={G(4,12,{},isMobile)}>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{builtinCount+customCount}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Decks</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
         </div>
+
+        <div style={R({flexWrap:'wrap',gap:10})}>
+          <div style={{flex:1,minWidth:200,position:'relative'}}>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
+            <input style={inp({paddingLeft:36})} placeholder="Search decks…" value={dSrch} onChange={e=>setDS2(e.target.value)}/>
+          </div>
+          <div style={R({gap:6})}>
+            {[['all','All'],['due','Due'],['builtin','Built-in'],['custom','My Decks']].map(([key,label])=>(
+              <button key={key} style={btnSm(deckFilter===key?C.blueGrad:C.s4,{fontSize:11,color:deckFilter===key?'#fff':C.t2,border:`1px solid ${deckFilter===key?'transparent':C.b1}`})} onClick={()=>setDeckFilter(key)}>{label}</button>
+            ))}
+          </div>
+        </div>
+
         {/* AI Generator */}
         <div style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`})}}>
           <div style={R({marginBottom:14})}>
             <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Sparkles size={17} color={C.violetL}/></div>
-            <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — AI creates 10–14 high-yield cards</div></div>
+            <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — instantly generates 10–14 high-yield cards, no API needed</div></div>
           </div>
           <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
           <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
             <Sparkles size={14}/>{gLoad?'Generating…':'Generate Flashcards'}
           </motion.button>
         </div>
+
         <div style={G(3,12,{},isMobile)}>
-          {allDecksList.map(deck=>{
+          {filteredDecks.map(deck=>{
             const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
             const dc=getDueCards(deckCardsAll).length;
+            const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             return(
-              <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s'})}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
-                <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
-                <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards</div>
-                {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{marginTop:8,fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
-                {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{marginTop:8,fontSize:10})}}>AI-generated</div>}
+              <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
+                <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
+                  <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
+                  <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
+                    {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
+                    {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
+                  </div>
+                </div>
+                {!deck.builtin&&(
+                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} title="Manage cards"><ScrollText size={13}/></button>
+                )}
               </motion.div>
             );
           })}
         </div>
-        {allDecksList.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No decks found.</div>}
+        {filteredDecks.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No decks match this filter.</div>}
+
+        <AnimatePresence>
+          {manageDeck&&<CardManagerModal
+            deckName={manageDeck}
+            cards={cDecks[manageDeck]||[]}
+            onAdd={(f,b)=>addCardToDeck(manageDeck,f,b)}
+            onUpdate={(idx,f,b)=>updateCardInDeck(manageDeck,idx,f,b)}
+            onDelete={idx=>deleteCardFromDeck(manageDeck,idx)}
+            onClose={()=>setManageDeck(null)}
+            m={isMobile}
+          />}
+          {newDeckOpen&&<NewDeckModal
+            onCreate={async(name)=>{await createDeck(name);setNewDeckOpen(false);setManageDeck(name);toast.success(`"${name}" created — add your first cards`);}}
+            onClose={()=>setNewDeckOpen(false)}
+            m={isMobile}
+          />}
+        </AnimatePresence>
       </div>
     );
   }
