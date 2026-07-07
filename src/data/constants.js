@@ -289,6 +289,24 @@ export const MMI_QS = [
   { q:`How has your background or community shaped who you are?`, type:'Community & Diversity', points:['Specific, personal detail','Connection to values or goals','Avoiding generic statements'] },
   { q:`What do you hope to be doing five years after graduation?`, type:'Motivation', points:['Thoughtful, realistic vision','Flexibility — it\'s fine not to have it all figured out','Connection between goals and the school\'s offerings'] },
   { q:`Do you have any questions for me about the school?`, type:'Communication', points:['Specific, well-researched questions','Genuine curiosity, not just "checking a box"','Engagement and follow-up'] },
+
+  // BS/MD program — early-commitment medical track interviews probe certainty and maturity
+  { q:`Why are you certain you want to commit to medicine now, rather than exploring as an undergrad first?`, type:'Motivation', program:'bsmd', points:['Evidence of sustained exposure (shadowing, volunteering, research)','Honest reflection on the tradeoffs of an early commitment','Realistic understanding of the physician path'] },
+  { q:`Describe a healthcare experience (shadowing, volunteering, caregiving) that confirmed medicine is right for you.`, type:'Personal', program:'bsmd', points:['Specific, firsthand experience — not secondhand or vague','What it revealed about the realities of patient care','Emotional maturity in discussing difficult moments'] },
+  { q:`How do you plan to handle the accelerated, high-pressure pace of a combined BS/MD curriculum?`, type:'Situational', program:'bsmd', points:['Concrete study/time-management strategy','Awareness of burnout risk and how you\'ll manage it','Support systems you\'d lean on'] },
+  { q:`What would you do if, partway through the program, you decided medicine wasn't for you?`, type:'Situational', program:'bsmd', points:['Honesty rather than a rehearsed "that could never happen"','Awareness that BS/MD programs have exit points','Maturity about sunk-cost thinking'] },
+
+  // Military academy — service, leadership under structure, and commitment to duty
+  { q:`Why are you seeking a service academy education instead of a traditional four-year college?`, type:'Motivation', program:'military', points:['Genuine understanding of the military commitment, not just "free tuition"','Specific reasons tied to service and leadership, not just adventure','Awareness of the physical and academic demands'] },
+  { q:`Describe a time you had to follow orders or a rule you personally disagreed with.`, type:'Situational', program:'military', points:['Respect for chain of command and structure','Honest reflection, not just compliance for its own sake','Ability to raise concerns appropriately within a hierarchy'] },
+  { q:`Tell me about a time you led a team under pressure or in a high-stakes situation.`, type:'Personal', program:'military', points:['Concrete example of decisive leadership','Accountability for outcomes, good or bad','Composure under stress'] },
+  { q:`What does service before self mean to you, and how have you lived it?`, type:'Community & Diversity', program:'military', points:['Specific examples of sacrifice or service','Understanding this is a multi-year commitment, not a slogan','Connection between personal values and the academy\'s mission'] },
+
+  // Liberal arts college — intellectual curiosity, discussion-based learning, community fit
+  { q:`Liberal arts education emphasizes breadth over early specialization. How do you feel about not immediately declaring a major?`, type:'Academic Interests', program:'lac', points:['Genuine intellectual curiosity across disciplines','Comfort with exploration rather than a rigid plan','Specific interests you\'d want to explore'] },
+  { q:`Describe your ideal classroom discussion. What would you bring to a 15-person seminar?`, type:'Communication', program:'lac', points:['Understanding of discussion-based, not lecture-based, learning','Specific habits (listening, building on others\' ideas)','Genuine enthusiasm for small-community learning'] },
+  { q:`How do you contribute to a tight-knit residential campus community?`, type:'Community & Diversity', program:'lac', points:['Specific examples of community involvement','Understanding that LACs prize engaged, present students','Balance of individual pursuits and communal life'] },
+  { q:`What's a topic outside your intended area of study that you'd want to take a class in, and why?`, type:'Academic Interests', program:'lac', points:['Authentic curiosity, not a strategic-sounding answer','Specificity — a real course or field, not "everything"','Connection to broader intellectual goals'] },
 ];
 
 // ── EXTRACURRICULARS, COMPETITIONS & PROGRAMS ────────────────────────────────

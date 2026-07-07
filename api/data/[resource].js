@@ -18,7 +18,7 @@ const RESOURCES = new Set([
 
 // Columns a client may write per resource (id, user_id, created_at are server-controlled).
 const WRITABLE = {
-  colleges: ['name', 'category', 'status', 'ea_ed_deadline', 'rd_deadline', 'notes'],
+  colleges: ['name', 'category', 'status', 'ea_ed_deadline', 'rd_deadline', 'notes', 'css_profile_required', 'financial_aid_deadline'],
   college_checklist_items: ['college_id', 'label', 'done', 'sort_order'],
   deadlines: ['college_id', 'title', 'due_date', 'kind'],
   essays: ['college_id', 'title', 'prompt', 'word_limit', 'status', 'content'],

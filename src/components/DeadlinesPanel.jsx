@@ -11,6 +11,8 @@ const KINDS = [
   { id: 'regular_decision', label: 'Regular Decision' },
   { id: 'fafsa', label: 'FAFSA Opens' },
   { id: 'css_profile', label: 'CSS Profile' },
+  { id: 'ap_exam', label: 'AP Exam' },
+  { id: 'ib_exam', label: 'IB Exam' },
   { id: 'scholarship', label: 'Scholarship' },
   { id: 'custom', label: 'Custom' },
 ];

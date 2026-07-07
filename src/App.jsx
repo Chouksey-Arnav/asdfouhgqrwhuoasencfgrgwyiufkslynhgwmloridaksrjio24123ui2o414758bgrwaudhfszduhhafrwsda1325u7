@@ -140,6 +140,19 @@ const QUICK_P_GROUPS = [
 const ACT_TYPES = ['Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
 const MMI_TYPES = ['All','Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'];
+const COURSE_GROUPS = [
+  { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
+  { group:'Science', items:['Biology','Chemistry','Physics','Environmental Science'] },
+  { group:'English', items:['English','AP English Language','AP English Literature'] },
+  { group:'History & Social Studies', items:['US History','World History','AP US History','AP World History','AP Government','AP Psychology'] },
+  { group:'World Language', items:['Spanish','French','Mandarin','Other Language'] },
+];
+const INTERVIEW_PROGRAMS = [
+  { id:'general', label:'General Admissions' },
+  { id:'bsmd', label:'BS/MD Program' },
+  { id:'military', label:'Military Academy' },
+  { id:'lac', label:'Liberal Arts College' },
+];
 
 // ── Responsive hook ───────────────────────────────────────────────────────────
 function useMediaQuery(query) {
@@ -538,7 +551,7 @@ export default function App({ account, onAccountChange }) {
   const [aN,setAN]=useState('');const [aT,setAT]=useState('Leadership');const [aH,setAH]=useState('');const [aDate,setADate]=useState('');const [cF,setCF]=useState('All');
 
   // ── Interview ───────────────────────────────────────────────────────────────
-  const [mIdx,setMI]=useState(0);const [mAns,setMA]=useState('');const [mFb,setMF]=useState('');const [mLoad,setML]=useState(false);const [mTimer,setMT]=useState(0);const [mRun,setMR]=useState(false);const [mTF,setMTF]=useState('All');
+  const [mIdx,setMI]=useState(0);const [mAns,setMA]=useState('');const [mFb,setMF]=useState('');const [mLoad,setML]=useState(false);const [mTimer,setMT]=useState(0);const [mRun,setMR]=useState(false);const [mTF,setMTF]=useState('All');const [mProg,setMProg]=useState('general');
 
   // ── Calc ────────────────────────────────────────────────────────────────────
   const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
@@ -730,7 +743,8 @@ export default function App({ account, onAccountChange }) {
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
-      const r=await callGeminiAI(`You are MetaBrain, an expert SAT/ACT tutor and college admissions coach for high school students. The student is interested in ${curPath?.label||'college prep'}. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const courseNote=user.courses?.length?` The student is currently taking: ${user.courses.join(', ')}${user.apIb?' (AP/IB student)':''} — tailor examples to these courses when relevant.`:'';
+      const r=await callGeminiAI(`You are MetaBrain, an expert SAT/ACT tutor and college admissions coach for high school students. The student is interested in ${curPath?.label||'college prep'}.${courseNote} Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -824,7 +838,7 @@ async function getMMIFb() {
     return arr;
   },[qSrch,qCat,qDiff,qSort,qScores]);
   const fLib    = useMemo(()=>{ return fuseSearch(libFuse,lSrch)||ELIB; },[lSrch]).filter(r=>lCat==='All'||r.cat===lCat);
-  const fMmi    = useMemo(()=>mTF==='All'?MMI_QS:MMI_QS.filter(q=>q.type===mTF),[mTF]);
+  const fMmi    = useMemo(()=>MMI_QS.filter(q=>(mTF==='All'||q.type===mTF)&&(q.program||'general')===mProg),[mTF,mProg]);
   const mmiQ    = fMmi[mIdx]||MMI_QS[0];
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
@@ -1145,6 +1159,8 @@ async function getMMIFb() {
   function tQuizzes(){
     const dColors={Easy:C.green,Medium:C.cyan,Hard:C.amber,Expert:C.rose};
     const diffLevels=['Easy','Medium','Hard','Expert'];
+    const COURSE_CAT_MAP={Biology:'Life Sciences','Environmental Science':'Life Sciences',Chemistry:'Physical Sciences',Physics:'Physical Sciences','AP Psychology':'Behavioral & Social Sciences','US History':'Behavioral & Social Sciences','World History':'Behavioral & Social Sciences','AP US History':'Behavioral & Social Sciences','AP World History':'Behavioral & Social Sciences'};
+    const myCourseCats=new Set((user.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean));
     return(
       <div style={CC({gap:22})}>
         <div style={R({flexWrap:'wrap',gap:12,justifyContent:'space-between'})}>
@@ -1199,8 +1215,9 @@ async function getMMIFb() {
               <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:qi*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden'}),transition:'box-shadow .2s'}}>
                 {taken&&<div style={{height:3,background:`linear-gradient(90deg,${scc},${scc}88)`}}/>}
                 <div style={{padding:22}}>
-                  <div style={R({marginBottom:14})}>
+                  <div style={R({marginBottom:14,flexWrap:'wrap'})}>
                     <span style={pill(`${dc}18`,dc,{fontSize:10})}>{q.diff}</span>
+                    {myCourseCats.has(q.cat)&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}>Matches your courses</span>}
                     <span style={{marginLeft:'auto',fontSize:11,color:C.t3}}>{q.cat}</span>
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
@@ -1578,8 +1595,14 @@ async function getMMIFb() {
           <div><div style={lbl()}>Interview Simulator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College Interview Practice</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             {mmiCount>0&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>{mmiCount} practiced</span>}
-            <span style={pill(C.s3,C.t2)}>{MMI_QS.length} Questions</span>
+            <span style={pill(C.s3,C.t2)}>{MMI_QS.filter(q=>(q.program||'general')===mProg).length} Questions</span>
           </div>
+        </div>
+
+        <div style={R({gap:8,flexWrap:'wrap'})}>
+          {INTERVIEW_PROGRAMS.map(p=>(
+            <button key={p.id} onClick={()=>{setMProg(p.id);setMTF('All');setMI(0);setMA('');setMF('');setMR(false);setMT(0);}} style={btnSm(mProg===p.id?accent:'rgba(255,255,255,0.06)',{color:'#fff'})}>{p.label}</button>
+          ))}
         </div>
 
         <div style={R({flexWrap:'wrap',gap:10})}>
@@ -1642,7 +1665,7 @@ async function getMMIFb() {
           <SL>Question Types — Practice Distribution</SL>
           <div style={G(4,8,{},isMobile)}>
             {['Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'].map(type=>{
-              const count=MMI_QS.filter(q=>q.type===type).length;
+              const count=MMI_QS.filter(q=>q.type===type&&(q.program||'general')===mProg).length;
               return<div key={type} style={{...glass2({padding:10,textAlign:'center',cursor:'pointer',transition:'border-color .15s'}),border:mTF===type?`1px solid ${C.blue}50`:undefined}}
                 onClick={()=>{setMTF(type);setMI(0);setMA('');setMF('');setMR(false);setMT(0);}}>
                 <div style={{fontSize:12,fontWeight:600,color:mTF===type?C.blueL:C.t2,fontFamily:C.FD,marginBottom:2}}>{type}</div>
@@ -1985,6 +2008,37 @@ async function getMMIFb() {
             ))}
           </div>
           {sSpec&&sSpec!==eSpec&&<motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16}} onClick={()=>{switchPath(sSpec);setSS('');}}>Switch to {PATHS[sSpec]?.label}</motion.button>}
+        </div>
+
+        {/* Course load */}
+        <div style={glass()}>
+          <SL>Current Course Load</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Tell us what you're taking so the AI Coach and Quiz Library can point you to relevant material.</p>
+          {COURSE_GROUPS.map(g=>(
+            <div key={g.group} style={{marginBottom:14}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>{g.group}</div>
+              <div style={R({gap:6,flexWrap:'wrap'})}>
+                {g.items.map(course=>{
+                  const active=(user.courses||[]).includes(course);
+                  return(
+                    <button key={course} type="button" onClick={()=>{
+                      const next=active?(user.courses||[]).filter(c=>c!==course):[...(user.courses||[]),course];
+                      saveUser({...user,courses:next});
+                    }} style={btnSm(active?accent:'rgba(255,255,255,0.06)',{color:'#fff'})}>{course}</button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          <div style={{...R({gap:10,marginTop:6,paddingTop:14,borderTop:`1px solid ${C.b1}`})}}>
+            <div onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:11,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`}}>
+              <div style={{width:16,height:16,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.apIb?20:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1}}>I'm an AP/IB student</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:1}}>Unlocks AP/IB exam deadline types on the Deadlines tab</div>
+            </div>
+          </div>
         </div>
 
         {/* Export / Backup */}
