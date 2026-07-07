@@ -21,6 +21,12 @@ db.version(1).stores({
   mmiSessions:   '++id, questionIdx, answeredAt',
 });
 
+// v2: medical-school interview (MMI) module removed — app is scoped to
+// SAT/ACT prep + college admissions for high school/undergrad students.
+db.version(2).stores({
+  mmiSessions: null,
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -160,14 +166,6 @@ export async function getStudyDays() {
   return rows.map(r => r.date);
 }
 
-// ── MMI Sessions ──────────────────────────────────────────────────────────────
-export async function recordMMISession(questionIdx) {
-  await db.mmiSessions.add({ questionIdx, answeredAt: Date.now() });
-}
-export async function getMMICount() {
-  return db.mmiSessions.count();
-}
-
 // ── Full export ────────────────────────────────────────────────────────────────
 export async function exportAllData() {
   const data = {
@@ -183,7 +181,7 @@ export async function exportAllData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `medschoolprep-backup-${data.exportDate.split('T')[0]}.json`;
+  a.href = url; a.download = `ascendprep-backup-${data.exportDate.split('T')[0]}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -192,6 +190,6 @@ export async function clearAllData() {
   await Promise.all([
     db.user.clear(), db.lessons.clear(), db.quizScores.clear(),
     db.flashCards.clear(), db.portfolio.clear(), db.catPerf.clear(),
-    db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(), db.mmiSessions.clear(),
+    db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
   ]);
 }

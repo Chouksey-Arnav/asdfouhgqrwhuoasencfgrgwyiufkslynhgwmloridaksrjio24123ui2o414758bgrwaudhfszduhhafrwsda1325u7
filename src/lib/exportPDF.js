@@ -20,7 +20,7 @@ function header(doc, title, subtitle='') {
   doc.setTextColor(...WHITE);
   doc.setFontSize(16);
   doc.setFont('helvetica','bold');
-  doc.text('MedSchoolPrep', 12, 12);
+  doc.text('AscendPrep', 12, 12);
   doc.setFontSize(10);
   doc.setFont('helvetica','normal');
   doc.setTextColor(...LIGHT);
@@ -33,7 +33,7 @@ function header(doc, title, subtitle='') {
 function footer(doc, pageNum, total) {
   doc.setFontSize(8);
   doc.setTextColor(...LIGHT);
-  doc.text(`MedSchoolPrep · Generated ${new Date().toLocaleDateString()} · Page ${pageNum} of ${total}`, 14, 290);
+  doc.text(`AscendPrep · Generated ${new Date().toLocaleDateString()} · Page ${pageNum} of ${total}`, 14, 290);
   doc.setDrawColor(...BLUE);
   doc.setLineWidth(0.3);
   doc.line(14, 286, 196, 286);

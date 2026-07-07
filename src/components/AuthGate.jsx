@@ -82,7 +82,7 @@ export default function AuthGate({ children }) {
         <div style={R({gap:10,marginBottom:22})}>
           <div style={{width:34,height:34,borderRadius:9,overflow:'hidden'}}><img src="/icon.svg" width={34} height={34} alt="" /></div>
           <div>
-            <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+            <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>AscendPrep</div>
             <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>SAT/ACT + ADMISSIONS</div>
           </div>
         </div>

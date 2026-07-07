@@ -13,13 +13,12 @@ export const ACHIEVEMENTS = {
   streak_30:    { key:'streak_30',    name:'Iron Will',        desc:'Study 30 days in a row',          icon:'Dumbbell', xp:500 },
   cards_100:    { key:'cards_100',    name:'Card Master',      desc:'Review 100 flashcards',           icon:'Layers3', xp:150 },
   unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'BookOpen', xp:200 },
-  mmi_5:        { key:'mmi_5',        name:'Interview Ready',  desc:'Practice 5 MMI stations',         icon:'Mic', xp:100 },
   course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'Milestone', xp:300 },
-  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use MetaBrain AI Coach 5 times',  icon:'MessageCircle', xp:75  },
+  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Metabrain AI Coach 5 times',  icon:'MessageCircle', xp:75  },
 };
 
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mmiCount, mastery, aiChats, unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
@@ -32,7 +31,6 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('streak_30',     streak >= 30);
   check('cards_100',     cardReviews >= 100);
   check('unit_master',   mastery >= 33);   // at least 1 of 3 units mastered
-  check('mmi_5',         mmiCount >= 5);
   check('course_half',   mastery >= 50);
   check('ai_user',       aiChats >= 5);
 

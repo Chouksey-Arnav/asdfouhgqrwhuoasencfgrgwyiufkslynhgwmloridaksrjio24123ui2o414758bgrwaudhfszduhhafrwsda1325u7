@@ -140,8 +140,8 @@ export const PATHS = {
     units:[
       { id:'ss1', title:'Psychology Foundations', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'ss1l1', title:'Social Psychology & Cognition', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtOPRKzVLY0jJY-uHOH9KVU6', src:'Crash Course' },
-        { id:'ss1l2', title:'Learning Theory & Memory', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
-        { id:'ss1l3', title:'Personality & Development', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
+        { id:'ss1l2', title:'Learning Theory & Memory', url:'https://www.khanacademy.org/science/ap-psychology/behavior', src:'Khan Academy' },
+        { id:'ss1l3', title:'Personality & Development', url:'https://www.khanacademy.org/science/ap-psychology/personality', src:'Khan Academy' },
       ]},
       { id:'ss2', title:'Sociology & Research Methods', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'ss2l1', title:'Social Stratification & Inequality', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMJ-AfB_7J1538YKWkZAnGA', src:'Crash Course' },
@@ -151,7 +151,7 @@ export const PATHS = {
       { id:'ss3', title:'Government, Civics & Current Events', quizCat:'Behavioral & Social Sciences', lessons:[
         { id:'ss3l1', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy' },
         { id:'ss3l2', title:'World History Overview', url:'https://www.khanacademy.org/humanities/world-history', src:'Khan Academy' },
-        { id:'ss3l3', title:'Cultural Anthropology Basics', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
+        { id:'ss3l3', title:'Cultural Anthropology Basics', url:'https://www.khanacademy.org/science/ap-psychology/social-psychology', src:'Khan Academy' },
       ]},
     ]
   },
@@ -179,9 +179,9 @@ export const PATHS = {
         { id:'ph2l3', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
       ]},
       { id:'ph3', title:'Exploring a Health Career', quizCat:'Life Sciences', lessons:[
-        { id:'ph3l1', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
-        { id:'ph3l2', title:'What Pre-Health Programs Look For', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
-        { id:'ph3l3', title:'Intro to Public Health', url:'https://www.khanacademy.org/test-prep/mcat', src:'Khan Academy' },
+        { id:'ph3l1', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ph3l2', title:'What Pre-Health Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ph3l3', title:'Intro to Public Health', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
       ]},
     ]
   },
@@ -325,48 +325,6 @@ export const SCHOOL_DATA = [
   { name:'Arizona State University', gpa:3.5, sat:1220, accept:88.0, state:'AZ', type:'Public' },
   { name:'University of Oregon', gpa:3.6, sat:1200, accept:85.0, state:'OR', type:'Public' },
   { name:'University of Alabama', gpa:3.7, sat:1200, accept:80.0, state:'AL', type:'Public' },
-];
-
-// ── COLLEGE INTERVIEW QUESTIONS ───────────────────────────────────────────────
-export const MMI_QS = [
-  { q:`Why do you want to attend this college, and what will you contribute to campus?`, type:'Motivation', points:['Specific, researched reasons (programs, culture, opportunities)','Genuine fit over generic praise','What you\'d bring, not just what you\'d get'] },
-  { q:`Tell me about a challenge you've faced and how you handled it.`, type:'Personal', points:['Concrete, specific example','What you learned or how you grew','Honesty over a "perfect" narrative'] },
-  { q:`Describe an extracurricular activity or project you're most proud of.`, type:'Personal', points:['Depth and initiative over a long list','Your specific role and impact','Why it mattered to you personally'] },
-  { q:`What academic subject are you most passionate about, and why?`, type:'Academic Interests', points:['Genuine curiosity beyond grades','A specific moment that sparked interest','Connection to future goals'] },
-  { q:`How do you handle disagreements with a teacher, coach, or teammate?`, type:'Situational', points:['Maturity and self-awareness','Respectful communication','Resolution, not just complaint'] },
-  { q:`What is something about you that isn't on your application?`, type:'Personal', points:['Authenticity','A detail that adds dimension, not repeats your resume','Comfort with vulnerability'] },
-  { q:`Describe a time you failed at something and what you learned from it.`, type:'Personal', points:['Honesty about the failure itself','Reflection and growth, not just a happy ending','Self-awareness'] },
-  { q:`What does diversity mean to you, and how have you engaged with people different from you?`, type:'Community & Diversity', points:['Genuine reflection, not a rehearsed answer','Specific experiences','Respect for perspectives unlike your own'] },
-  { q:`If you could change one thing about your high school, what would it be?`, type:'Situational', points:['Constructive, thoughtful critique','Awareness of tradeoffs','Diplomacy, not just complaining'] },
-  { q:`What book, article, or idea has shaped how you think recently?`, type:'Academic Interests', points:['Actually engaging with the content','Why it mattered, not just a summary','Intellectual curiosity'] },
-  { q:`Tell me about a leadership experience, even an informal one.`, type:'Personal', points:['Leadership doesn\'t require a title','Concrete actions and outcomes','What you learned about working with others'] },
-  { q:`How do you plan to get involved outside the classroom in college?`, type:'Motivation', points:['Specific clubs, research, or communities researched at the school','Balance of ambition and realism','Connection to your interests'] },
-  { q:`What is a current event or issue you care about, and why?`, type:'Academic Interests', points:['Awareness beyond headlines','Ability to see multiple sides','Personal connection to the issue'] },
-  { q:`Describe how you contribute to a group project when members disagree.`, type:'Situational', points:['Collaboration and compromise','Active listening','Keeping the group focused on the goal'] },
-  { q:`What would your friends say is your best quality? Your biggest flaw?`, type:'Personal', points:['Genuine self-reflection','Specific example for each','Comfort acknowledging imperfection'] },
-  { q:`Why did you choose your intended major (or how are you approaching being undecided)?`, type:'Motivation', points:['Authentic reasoning, not just prestige or salary','Openness to exploration if undecided','Connection to past experiences'] },
-  { q:`Tell me about a time you had to manage a heavy workload. How did you prioritize?`, type:'Situational', points:['Concrete time-management strategy','Self-awareness about limits',`What you'd do differently next time`] },
-  { q:`How has your background or community shaped who you are?`, type:'Community & Diversity', points:['Specific, personal detail','Connection to values or goals','Avoiding generic statements'] },
-  { q:`What do you hope to be doing five years after graduation?`, type:'Motivation', points:['Thoughtful, realistic vision','Flexibility — it\'s fine not to have it all figured out','Connection between goals and the school\'s offerings'] },
-  { q:`Do you have any questions for me about the school?`, type:'Communication', points:['Specific, well-researched questions','Genuine curiosity, not just "checking a box"','Engagement and follow-up'] },
-
-  // BS/MD program — early-commitment medical track interviews probe certainty and maturity
-  { q:`Why are you certain you want to commit to medicine now, rather than exploring as an undergrad first?`, type:'Motivation', program:'bsmd', points:['Evidence of sustained exposure (shadowing, volunteering, research)','Honest reflection on the tradeoffs of an early commitment','Realistic understanding of the physician path'] },
-  { q:`Describe a healthcare experience (shadowing, volunteering, caregiving) that confirmed medicine is right for you.`, type:'Personal', program:'bsmd', points:['Specific, firsthand experience — not secondhand or vague','What it revealed about the realities of patient care','Emotional maturity in discussing difficult moments'] },
-  { q:`How do you plan to handle the accelerated, high-pressure pace of a combined BS/MD curriculum?`, type:'Situational', program:'bsmd', points:['Concrete study/time-management strategy','Awareness of burnout risk and how you\'ll manage it','Support systems you\'d lean on'] },
-  { q:`What would you do if, partway through the program, you decided medicine wasn't for you?`, type:'Situational', program:'bsmd', points:['Honesty rather than a rehearsed "that could never happen"','Awareness that BS/MD programs have exit points','Maturity about sunk-cost thinking'] },
-
-  // Military academy — service, leadership under structure, and commitment to duty
-  { q:`Why are you seeking a service academy education instead of a traditional four-year college?`, type:'Motivation', program:'military', points:['Genuine understanding of the military commitment, not just "free tuition"','Specific reasons tied to service and leadership, not just adventure','Awareness of the physical and academic demands'] },
-  { q:`Describe a time you had to follow orders or a rule you personally disagreed with.`, type:'Situational', program:'military', points:['Respect for chain of command and structure','Honest reflection, not just compliance for its own sake','Ability to raise concerns appropriately within a hierarchy'] },
-  { q:`Tell me about a time you led a team under pressure or in a high-stakes situation.`, type:'Personal', program:'military', points:['Concrete example of decisive leadership','Accountability for outcomes, good or bad','Composure under stress'] },
-  { q:`What does service before self mean to you, and how have you lived it?`, type:'Community & Diversity', program:'military', points:['Specific examples of sacrifice or service','Understanding this is a multi-year commitment, not a slogan','Connection between personal values and the academy\'s mission'] },
-
-  // Liberal arts college — intellectual curiosity, discussion-based learning, community fit
-  { q:`Liberal arts education emphasizes breadth over early specialization. How do you feel about not immediately declaring a major?`, type:'Academic Interests', program:'lac', points:['Genuine intellectual curiosity across disciplines','Comfort with exploration rather than a rigid plan','Specific interests you\'d want to explore'] },
-  { q:`Describe your ideal classroom discussion. What would you bring to a 15-person seminar?`, type:'Communication', program:'lac', points:['Understanding of discussion-based, not lecture-based, learning','Specific habits (listening, building on others\' ideas)','Genuine enthusiasm for small-community learning'] },
-  { q:`How do you contribute to a tight-knit residential campus community?`, type:'Community & Diversity', program:'lac', points:['Specific examples of community involvement','Understanding that LACs prize engaged, present students','Balance of individual pursuits and communal life'] },
-  { q:`What's a topic outside your intended area of study that you'd want to take a class in, and why?`, type:'Academic Interests', program:'lac', points:['Authentic curiosity, not a strategic-sounding answer','Specificity — a real course or field, not "everything"','Connection to broader intellectual goals'] },
 ];
 
 // ── EXTRACURRICULARS, COMPETITIONS & PROGRAMS ────────────────────────────────
