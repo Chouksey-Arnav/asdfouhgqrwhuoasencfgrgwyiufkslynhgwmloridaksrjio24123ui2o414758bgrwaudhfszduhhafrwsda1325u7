@@ -1,5 +1,7 @@
 // /api/auth/send-otp — generates a 6-digit code, stores its hash in Supabase,
-// and emails it via Nodemailer. Rate-limited per email and per IP.
+// and emails it via Nodemailer. Rate-limited per email and per IP using the
+// database as the source of truth (an in-memory counter doesn't survive
+// across ephemeral serverless instances).
 import crypto from 'crypto';
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { sendOtpEmail } from '../_lib/mailer.js';
@@ -8,19 +10,6 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_PER_WINDOW = 5;
 const WINDOW_MS = 15 * 60 * 1000;
-
-const rateMap = new Map(); // key (email or ip) -> { count, resetAt }
-
-function isRateLimited(key) {
-  const now = Date.now();
-  const entry = rateMap.get(key);
-  if (!entry || now > entry.resetAt) {
-    rateMap.set(key, { count: 1, resetAt: now + WINDOW_MS });
-    return false;
-  }
-  entry.count += 1;
-  return entry.count > MAX_PER_WINDOW;
-}
 
 function hashCode(code) {
   return crypto.createHash('sha256').update(code).digest('hex');
@@ -46,16 +35,27 @@ export default async function handler(req, res) {
   }
 
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
-  if (isRateLimited(`email:${email}`) || isRateLimited(`ip:${ip}`)) {
-    return res.status(429).json({ error: 'Too many code requests. Try again in a few minutes.' });
-  }
-
-  const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
 
   try {
     const supabase = getSupabaseAdmin();
+    const windowStart = new Date(Date.now() - WINDOW_MS).toISOString();
+
+    const [{ count: emailCount }, { count: ipCount }] = await Promise.all([
+      supabase.from('otp_codes').select('id', { count: 'exact', head: true }).eq('email', email).gte('created_at', windowStart),
+      supabase.from('otp_codes').select('id', { count: 'exact', head: true }).eq('ip', ip).gte('created_at', windowStart),
+    ]);
+    if ((emailCount ?? 0) >= MAX_PER_WINDOW || (ipCount ?? 0) >= MAX_PER_WINDOW) {
+      return res.status(429).json({ error: 'Too many code requests. Try again in a few minutes.' });
+    }
+
+    // Invalidate any still-active codes for this email so a fresh request
+    // can't be combined with an older one to multiply the guess budget.
+    await supabase.from('otp_codes').update({ consumed: true }).eq('email', email).eq('consumed', false);
+
+    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
     const { error: dbError } = await supabase.from('otp_codes').insert({
       email,
+      ip,
       code_hash: hashCode(code),
       expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
     });

@@ -84,7 +84,7 @@ export default function FinancialAidPanel({ accent = C.blue }) {
         <div style={lbl()}>FAFSA & CSS Profile</div>
         <p style={{fontSize:12,color:C.t2,marginBottom:aidSchools.length?14:0,lineHeight:1.6}}>FAFSA typically opens October 1 — add it to your Deadlines tab so it counts down alongside your application deadlines. Mark CSS Profile requirements and financial aid deadlines per school on the College List tab; they'll show up here.</p>
         {aidSchools.length > 0 && (
-          <CC style={{gap:8}}>
+          <div style={CC({gap:8})}>
             {aidSchools.map(c => (
               <div key={c.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10}}>
                 <div style={{flex:1,minWidth:0}}>
@@ -101,7 +101,7 @@ export default function FinancialAidPanel({ accent = C.blue }) {
                 ) : <span style={{fontSize:11,color:C.t3}}>No deadline set yet</span>}
               </div>
             ))}
-          </CC>
+          </div>
         )}
       </div>
 
