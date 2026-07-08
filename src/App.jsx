@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { generateClozeFromNotes, cleanNotesText } from './lib/clozeGenerator';
-import { scoreMmiResponse } from './lib/mmiScorer';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -12,21 +11,22 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import {
   Home, Compass, Route, Layers, MessageCircle, Layers3, BookOpen,
-  Trophy, Building2, LineChart, Settings, Mic, Flame, Zap, CheckCircle2, TrendingUp,
+  Trophy, Building2, LineChart, Settings, Flame, Zap, CheckCircle2, TrendingUp,
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
-  ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, Pause, ExternalLink, Plus,
+  ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Mic, Milestone, MessageCircle };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, MMI_QS, COMPETITIONS, DIAG_QS } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS } from './data/constants';
 
 import * as DB from './lib/db';
 import * as AuthAPI from './lib/authApi';
+import { listItems, createItem } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
@@ -118,7 +118,6 @@ const NAV = [
   {id:'aid',ic:Handshake,label:'Financial Aid',group:'Applications'},
   {id:'portfolio',ic:Building2,label:'Portfolio',group:'Applications'},
   {id:'resume',ic:Award,label:'Resume Builder',group:'Applications'},
-  {id:'interview',ic:Mic,label:'Interview Sim',group:'Applications'},
 
   {id:'analytics',ic:LineChart,label:'Analytics',group:'Insights'},
 
@@ -137,9 +136,7 @@ const QUICK_P_GROUPS = [
     'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const ACT_TYPES = ['Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
-const MMI_TYPES = ['All','Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'];
 const COURSE_GROUPS = [
   { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
   { group:'Science', items:['Biology','Chemistry','Physics','Environmental Science'] },
@@ -147,13 +144,6 @@ const COURSE_GROUPS = [
   { group:'History & Social Studies', items:['US History','World History','AP US History','AP World History','AP Government','AP Psychology'] },
   { group:'World Language', items:['Spanish','French','Mandarin','Other Language'] },
 ];
-const INTERVIEW_PROGRAMS = [
-  { id:'general', label:'General Admissions' },
-  { id:'bsmd', label:'BS/MD Program' },
-  { id:'military', label:'Military Academy' },
-  { id:'lac', label:'Liberal Arts College' },
-];
-
 // ── Responsive hook ───────────────────────────────────────────────────────────
 function useMediaQuery(query) {
   const [matches, setMatches] = useState(false);
@@ -211,7 +201,7 @@ function LoadingScreen() {
   return (
     <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
       <div style={{width:56,height:56,borderRadius:16,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',animation:'spin 1.1s linear infinite'}}><RefreshCw size={26} color={C.blue}/></div>
-      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
+      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading AscendPrep…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -484,6 +474,91 @@ function FlipCard({card,flipped,onClick,m=false}){
   );
 }
 
+// ── Card Manager Modal (add/edit/delete cards in a custom deck) ──────────────
+function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=false}){
+  const [editIdx,setEditIdx]=useState(null);
+  const [editFront,setEditFront]=useState('');
+  const [editBack,setEditBack]=useState('');
+  const [newFront,setNewFront]=useState('');
+  const [newBack,setNewBack]=useState('');
+
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
+
+  function startEdit(i){setEditIdx(i);setEditFront(cards[i].front);setEditBack(cards[i].back);}
+  function saveEdit(){if(editFront.trim()&&editBack.trim())onUpdate(editIdx,editFront.trim(),editBack.trim());setEditIdx(null);}
+  function addCard(){if(!newFront.trim()||!newBack.trim())return;onAdd(newFront.trim(),newBack.trim());setNewFront('');setNewBack('');}
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(6px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:640,maxHeight:'85vh',display:'flex',flexDirection:'column',...glass({padding:0,overflow:'hidden',borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
+        <div style={{...R({justifyContent:'space-between'}),padding:'16px 20px',borderBottom:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
+          <div>
+            <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Manage Cards</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:2}}>{deckName} · {cards.length} card{cards.length===1?'':'s'}</div>
+          </div>
+          <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:20}}>
+          <div style={CC({gap:10,marginBottom:18})}>
+            {cards.map((c,i)=>(
+              <div key={i} style={glass2({padding:14})}>
+                {editIdx===i?(
+                  <div style={CC({gap:8})}>
+                    <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editFront} onChange={e=>setEditFront(e.target.value)} placeholder="Front (question)"/>
+                    <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editBack} onChange={e=>setEditBack(e.target.value)} placeholder="Back (answer)"/>
+                    <div style={R({gap:8})}>
+                      <button style={btnSm(C.blueGrad,{color:'#fff',fontSize:11})} onClick={saveEdit}>Save</button>
+                      <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>setEditIdx(null)}>Cancel</button>
+                    </div>
+                  </div>
+                ):(
+                  <div style={R({alignItems:'flex-start',gap:10})}>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:12.5,color:C.t1,fontWeight:600,lineHeight:1.5,marginBottom:5}}>{c.front}</div>
+                      <div style={{fontSize:12,color:C.t3,lineHeight:1.5}}>{c.back}</div>
+                    </div>
+                    <div style={R({gap:4,flexShrink:0})}>
+                      <button style={{background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>startEdit(i)} title="Edit"><ScrollText size={13}/></button>
+                      <button style={{background:'none',border:'none',color:C.rose,cursor:'pointer',padding:6,borderRadius:6}} onClick={()=>onDelete(i)} title="Delete"><Trash2 size={13}/></button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+            {cards.length===0&&<div style={{textAlign:'center',color:C.t3,padding:'20px 0',fontSize:12.5}}>No cards yet — add your first one below.</div>}
+          </div>
+        </div>
+        <div style={{padding:18,borderTop:`1px solid ${C.b1}`,background:C.s1,flexShrink:0}}>
+          <div style={lbl()}>Add a card</div>
+          <div style={CC({gap:8})}>
+            <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newFront} onChange={e=>setNewFront(e.target.value)} placeholder="Front (question)"/>
+            <textarea style={inp({minHeight:44,resize:'vertical',fontSize:12.5})} value={newBack} onChange={e=>setNewBack(e.target.value)} placeholder="Back (answer)"/>
+            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={addCard} disabled={!newFront.trim()||!newBack.trim()}><Plus size={14}/>Add Card</button>
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// ── New Deck Modal ────────────────────────────────────────────────────────────
+function NewDeckModal({onCreate,onClose,m=false}){
+  const [name,setName]=useState('');
+  useEffect(()=>{const h=e=>{if(e.key==='Escape')onClose();};document.addEventListener('keydown',h);return()=>document.removeEventListener('keydown',h);},[onClose]);
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(6px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
+      <motion.div initial={{scale:.96,y:10}} animate={{scale:1,y:0}} exit={{scale:.96,y:10}} style={{width:'100%',maxWidth:420,...glass({borderRadius:m?12:18,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
+        <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:14}}>New Deck</div>
+        <input autoFocus style={{...inp(),marginBottom:14}} placeholder="Deck name (e.g. Cell Biology Vocab)" value={name} onChange={e=>setName(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&name.trim())onCreate(name.trim());}}/>
+        <div style={R({gap:8})}>
+          <button style={btn(C.blueGrad,{fontSize:12.5})} onClick={()=>name.trim()&&onCreate(name.trim())} disabled={!name.trim()}>Create Deck</button>
+          <button style={btnG({fontSize:12.5})} onClick={onClose}>Cancel</button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 // ── Pathway Overview Card ────────────────────────────────────────────────────
 const PATH_ICONS = { undecided:Compass, stem:FlaskConical, humanities:BookOpen, business:Building2, socialSci:Handshake, preHealth:Dna };
 function PathwayCard({ pathKey, p, current, onSelect, m=false }){
@@ -568,16 +643,18 @@ export default function App({ account, onAccountChange }) {
   const [qScores,  setQScores_] = useState({});
   const [qHistory, setQHistory] = useState([]);
   const [cDecks,   setCDecks_]  = useState({});
-  const [port,     setPort_]    = useState([]);
+  const [portActivities, setPortActivities] = useState([]);
+  const [portAwards,     setPortAwards]     = useState([]);
+  const [portGpa,        setPortGpa]        = useState([]);
+  const [portLoaded,     setPortLoaded]     = useState(false);
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
   const upcomingDeadlines = useDeadlines();
   const [totalReviews, setTotalReviews] = useState(0);
-  const [mmiCount, setMmiCount] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
-  const [geminiTokensRemaining, setGeminiTokensRemaining] = useState(1000);
-  const [geminiTokensUsedToday, setGeminiTokensUsedToday] = useState(0);
+  const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(1200);
+  const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [tab,   setTab]   = useState('home');
@@ -597,15 +674,18 @@ export default function App({ account, onAccountChange }) {
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
+  const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
+  const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
+  const [newDeckOpen,setNewDeckOpen]=useState(false);
+  const [newDeckName,setNewDeckName]=useState('');
+  const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});
 
   // ── Library ─────────────────────────────────────────────────────────────────
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
-  const [aN,setAN]=useState('');const [aT,setAT]=useState('Leadership');const [aH,setAH]=useState('');const [aDate,setADate]=useState('');const [cF,setCF]=useState('All');
+  const [cF,setCF]=useState('All');
 
-  // ── Interview ───────────────────────────────────────────────────────────────
-  const [mIdx,setMI]=useState(0);const [mAns,setMA]=useState('');const [mFb,setMF]=useState('');const [mLoad,setML]=useState(false);const [mTimer,setMT]=useState(0);const [mRun,setMR]=useState(false);const [mTF,setMTF]=useState('All');const [mProg,setMProg]=useState('general');
 
   // ── Calc ────────────────────────────────────────────────────────────────────
   const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
@@ -620,10 +700,10 @@ export default function App({ account, onAccountChange }) {
   useEffect(()=>{
     async function init(){
       try{
-        const [u,pw,qs,qh,decks,portfolio,cp,ach,str,rev,mmi] = await Promise.all([
+        const [u,pw,qs,qh,decks,cp,ach,str,rev] = await Promise.all([
           DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
-          DB.getFlashDecks(), DB.getPortfolio(), DB.getCatPerf(),
-          DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(), DB.getMMICount()
+          DB.getFlashDecks(), DB.getCatPerf(),
+          DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews()
         ]);
         if(u){setUser_(u);}
         setPathway_(pw||{});
@@ -634,12 +714,10 @@ export default function App({ account, onAccountChange }) {
         // Custom decks override built-in if same name
         Object.entries(decks||{}).forEach(([name,cards])=>{allDecks[name]=cards;});
         setCDecks_(allDecks);
-        setPort_(portfolio||[]);
         setCatPerf_(cp||{});
         setAchiev_(ach||new Set());
         setStreak(str||0);
         setTotalReviews(rev||0);
-        setMmiCount(mmi||0);
         await DB.recordStudyToday();
       }catch(e){console.error('DB init error:',e);}
       setDbReady(true);
@@ -647,20 +725,67 @@ export default function App({ account, onAccountChange }) {
     init();
   },[]);
 
+  // ── Portfolio (Supabase-backed: activities, awards, GPA history) ─────────────
+  useEffect(()=>{
+    if(tab!=='portfolio'||portLoaded)return;
+    (async()=>{
+      try{
+        const [a,w,g]=await Promise.all([listItems('activities'),listItems('awards'),listItems('gpa_entries')]);
+        setPortActivities(a||[]);
+        setPortAwards(w||[]);
+        setPortGpa(g||[]);
+      }catch(e){console.error('Portfolio load error:',e);}
+      setPortLoaded(true);
+    })();
+  },[tab,portLoaded]);
+
+  const addPortActivity = useCallback(async(fields)=>{
+    const row=await createItem('activities',{activity_type:fields.type,position:fields.name,description:fields.desc||'',status:'ongoing',hours_per_week:0,weeks_per_year:0,grade_levels:[],sort_order:portActivities.length,...fields.overrides});
+    setPortActivities(p=>[...p,row]);
+    return row;
+  },[portActivities.length]);
+
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
   const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:Date.now()})); DB.setLessonDone(lessonId).catch(console.error); },[]);
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
   const saveDeck = useCallback(async(name,cards)=>{ setCDecks_(d=>({...d,[name]:cards})); await DB.saveDeck(name,cards); },[]);
   const deleteDeck_ = useCallback(async(name)=>{ setCDecks_(d=>{const nd={...d};delete nd[name];return nd;}); await DB.deleteDeck(name); },[]);
-  const savePort = useCallback((p)=>{ setPort_(p); },[]);
+  const createDeck = useCallback(async(name)=>{ await saveDeck(name,[]); },[saveDeck]);
+  const addCardToDeck = useCallback(async(name,front,back)=>{
+    const cards=[...(cDecks[name]||[]),{front,back}];
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
+  const updateCardInDeck = useCallback(async(name,idx,front,back)=>{
+    const cards=[...(cDecks[name]||[])];
+    if(cards[idx])cards[idx]={...cards[idx],front,back};
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
+  const deleteCardFromDeck = useCallback(async(name,idx)=>{
+    const cards=(cDecks[name]||[]).filter((_,i)=>i!==idx);
+    await saveDeck(name,cards);
+  },[cDecks,saveDeck]);
   const saveCatPerf = useCallback((cat,score)=>{ setCatPerf_(cp=>({...cp,[cat]:{ total:(cp[cat]?.total||0)+score, count:(cp[cat]?.count||0)+1 }})); DB.updateCatPerf(cat,score).catch(console.error); },[]);
 
   // ── Timers ───────────────────────────────────────────────────────────────────
   useEffect(()=>{if(!pomR)return;const id=setInterval(()=>setPT(t=>t>0?t-1:0),1000);return()=>clearInterval(id);},[pomR]);
   useEffect(()=>{if(pomT===0&&pomR){setPR(false);play('bell');const n=pomM==='focus'?'break':'focus';setPomM(n);setPT(n==='focus'?25*60:5*60);if(pomM==='focus')setPomSessions(s=>s+1);toast.success(pomM==='focus'?'Focus session complete — take a short break.':"Break's over — back to studying.");}},[ pomT,pomR,pomM]);
-  useEffect(()=>{if(!mRun)return;const id=setInterval(()=>setMT(t=>t+1),1000);return()=>clearInterval(id);},[mRun]);
   useEffect(()=>{chatEnd.current?.scrollIntoView({behavior:'smooth'});},[msgs]);
+
+  // ── Flashcard study keyboard shortcuts (Space/Enter flip, 1-4 rate) ──────────
+  useEffect(()=>{
+    if(tab!=='flashcards'||!activeDeck)return;
+    function onKey(e){
+      if(e.target&&['TEXTAREA','INPUT'].includes(e.target.tagName))return;
+      if(e.key===' '||e.key==='Enter'){e.preventDefault();setFlip(f=>!f);return;}
+      if(flip&&['1','2','3','4'].includes(e.key)){
+        const label=['Again','Hard','Good','Easy'][parseInt(e.key,10)-1];
+        rateCard(label);
+      }
+    }
+    document.addEventListener('keydown',onKey);
+    return()=>document.removeEventListener('keydown',onKey);
+  },[tab,activeDeck,flip,currentCard,cIdx]);
 
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'undecided';
@@ -681,9 +806,13 @@ export default function App({ account, onAccountChange }) {
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
   const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
 
-  // FSRS due count
-  const allCards = useMemo(()=>Object.values(cDecks).flat(),[cDecks]);
+  // FSRS due count (across built-in and custom decks)
+  const allCards = useMemo(()=>[...Object.values(FLASH_DECKS).flat(),...Object.values(cDecks).flat()],[cDecks]);
   const dueCards = useMemo(()=>getDueCards(allCards).length,[allCards]);
+  const avgRetention = useMemo(()=>{
+    const rets = allCards.map(c=>getRetainability(c)).filter(r=>r!==null);
+    return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;
+  },[allCards]);
 
   // Next lesson to resume (first not-done lesson in current pathway, in order)
   const nextLesson = useMemo(()=>{
@@ -720,17 +849,17 @@ export default function App({ account, onAccountChange }) {
       const allDone=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]);
       if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}`,{duration:4000});}
     }
-    checkAndUnlockAchievements({...user,xp:(user?.xp||0)+xpGain},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,aiChatCount);
+    checkAndUnlockAchievements({...user,xp:(user?.xp||0)+xpGain},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
   }
 
   function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
-  function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPort_([]);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
+  function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
 
   // ── Achievement checker ──────────────────────────────────────────────────────
-  const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mmiC,mast,aiC)=>{
+  const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC)=>{
     const unlocked = await DB.getAchievements();
-    const toUnlock = checkAchievements({ level:u?Math.floor((u.xp||0)/250)+1:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mmiCount:mmiC, mastery:mast, aiChats:aiC, unlocked });
+    const toUnlock = checkAchievements({ level:u?Math.floor((u.xp||0)/250)+1:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC, unlocked });
     for(const achievement of toUnlock){
       const isNew = await DB.unlockAchievement(achievement.key);
       if(isNew){
@@ -755,36 +884,20 @@ export default function App({ account, onAccountChange }) {
     prevLvlRef.current=curLvl;
   },[user?.xp]);
 
-  // ── AI ────────────────────────────────────────────────────────────────────────
-  async function callAI(sys, msg, toks = 900, hist = null) {
-    const r = await fetch('/api/openrouter', {
+  // ── AI (Metabrain, powered by Groq) ────────────────────────────────────────────
+  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'deep') {
+    const r = await fetch('/api/groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks }),
+      body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier }),
     });
     const d = await r.json();
-    if (!r.ok) {
-      const m = d?.error || '';
-      if (r.status === 429) throw new Error('Rate limit reached. Please wait a moment.');
-      if (r.status === 500 && m.includes('not configured')) throw new Error('Add OPENROUTER_KEY to Vercel environment variables.');
-      throw new Error(m || `Error ${r.status}`);
-    }
-    return d.content || '';
-  }
-
-  async function callGeminiAI(sys, msg, toks = 700, hist = null) {
-    const r = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks }),
-    });
-    const d = await r.json();
-    if (typeof d.tokensRemaining === 'number') setGeminiTokensRemaining(d.tokensRemaining);
-    if (typeof d.tokensUsedToday === 'number') setGeminiTokensUsedToday(d.tokensUsedToday);
+    if (typeof d.requestsRemaining === 'number') setCoachRequestsRemaining(d.requestsRemaining);
+    if (typeof d.requestsUsedToday === 'number') setCoachRequestsUsedToday(d.requestsUsedToday);
     if (!r.ok) {
       const m = d?.error || '';
       if (r.status === 429) throw new Error(m || 'Rate limit reached. Please wait a moment.');
-      if (r.status === 500 && m.includes('not configured')) throw new Error('Add GEMINI_KEY to Vercel environment variables.');
+      if (r.status === 500 && m.includes('not configured')) throw new Error('Add GROQ_API_KEY to Vercel environment variables.');
       throw new Error(m || `Error ${r.status}`);
     }
     return d.content || '';
@@ -792,15 +905,22 @@ export default function App({ account, onAccountChange }) {
 
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
-    if(geminiTokensRemaining<=0){toast.error(`Your daily Gemini quota (1000 tokens) has been reached. Try again tomorrow.`);return;}
+    if(coachRequestsRemaining<=0){toast.error(`Your daily Metabrain quota has been reached. Try again tomorrow.`);return;}
     const um={role:'user',content:message};const next=[...msgs,um];
     setMsgs(next);setCi('');setCLoad(true);
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
       const courseNote=user.courses?.length?` The student is currently taking: ${user.courses.join(', ')}${user.apIb?' (AP/IB student)':''} — tailor examples to these courses when relevant.`:'';
-      const r=await callGeminiAI(`You are MetaBrain, an expert SAT/ACT tutor and college admissions coach for high school students. The student is interested in ${curPath?.label||'college prep'}.${courseNote} Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'));
+      const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+      const perfNote=weakIdx?` Their weakest quiz section is ${cats3[weakIdx.i]} at ${weakIdx.v}% — proactively bring this up if it's relevant to what they ask.`:'';
+      const dueNote=dueCards>0?` They have ${dueCards} flashcard(s) due for review.`:'';
+      const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
+      const deadlineNote=nextDeadline?` Their next upcoming deadline is "${nextDeadline.title}" in ${nextDeadline.days} day(s).`:'';
+      const portNote=portActivities.length?` They've logged ${portActivities.length} activity/activities in their Portfolio.`:'';
+      const contextNote=`${perfNote}${dueNote}${deadlineNote}${portNote}`;
+      const r=await callGroqAI(`You are Metabrain, an expert SAT/ACT tutor and college admissions coach for high school and undergraduate students. The student is interested in ${curPath?.label||'college prep'}.${courseNote}${contextNote} Use this context to give specific, personalized guidance when relevant, but don't force it into unrelated questions. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'),'deep');
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
-      checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mmiCount,mastery,newCount);
+      checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
     setCLoad(false);
   }
@@ -828,23 +948,21 @@ export default function App({ account, onAccountChange }) {
     }
     setGL(false);
   }
-async function getMMIFb() {
-    if (!mAns.trim() || mLoad) return;
-    setML(true);
-    setMF('');
-    const q = fMmi[mIdx];
-    // Pure JS scoring — instant, no API, no cost, works offline
-    const { feedbackText } = scoreMmiResponse(mAns, q, mTimer);
-    setMF(feedbackText);
-    await DB.recordMMISession(mIdx);
-    const newMmi = mmiCount + 1;
-    setMmiCount(newMmi);
-    checkAndUnlockAchievements(
-      user, qTaken, qHistory.filter(q => q.score === 100).length,
-      streak, totalReviews, newMmi, mastery, aiChatCount
-    );
-    toast.success(`Feedback scored instantly — zero API!`, { icon: '◈', duration: 2000 });
-    setML(false);
+
+  async function rateCard(label){
+    if(!currentCard||!activeDeck)return;
+    const updated=scheduleCard(currentCard,label);
+    const deckName=activeDeck.name;
+    const allDeckCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
+    const idx=allDeckCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
+    if(idx>=0)allDeckCards[idx]=updated;
+    if(!activeDeck.builtin)await saveDeck(deckName,allDeckCards);
+    await DB.recordCardReview(currentCard.id||cIdx);
+    const newTotal=totalReviews+1;setTotalReviews(newTotal);
+    checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
+    setSessionStats(s=>({...s,reviewed:s.reviewed+1,[label.toLowerCase()]:s[label.toLowerCase()]+1}));
+    setCIdx(i=>Math.min(deckCards.length-1,i+1));
+    setFlip(false);
   }
 
   // ── Quiz finish ───────────────────────────────────────────────────────────────
@@ -858,7 +976,7 @@ async function getMMIFb() {
     saveUser(newUser);
     toast.success(`${pct}% · +${xpGain} XP`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:3000});
     const newQCount=qTaken+1;
-    checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mmiCount,mastery,aiChatCount);
+    checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
     setAQ(null);
   }
@@ -892,8 +1010,6 @@ async function getMMIFb() {
     return arr;
   },[qSrch,qCat,qDiff,qSort,qScores]);
   const fLib    = useMemo(()=>{ return fuseSearch(libFuse,lSrch)||ELIB; },[lSrch]).filter(r=>lCat==='All'||r.cat===lCat);
-  const fMmi    = useMemo(()=>MMI_QS.filter(q=>(mTF==='All'||q.type===mTF)&&(q.program||'general')===mProg),[mTF,mProg]);
-  const mmiQ    = fMmi[mIdx]||MMI_QS[0];
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
   const calcR   = useMemo(()=>hasCalc?SCHOOL_DATA.filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cSAT,cLead,cEC,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cSAT,cLead,cEC,cVol,cSt,sType,hasCalc]);
@@ -1006,7 +1122,7 @@ async function getMMIFb() {
               {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',tab:'diagnostic',col:C.violet},
               {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,tab:'pathway',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,tab:'quizzes',col:C.green},
-              {Ic:MessageCircle,lbl:'AI Coach',sub:'MetaBrain tutor',tab:'coach',col:C.cyan},
+              {Ic:MessageCircle,lbl:'AI Coach',sub:'Metabrain 2.0 tutor',tab:'coach',col:C.cyan},
               {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,tab:'flashcards',col:dueCards>0?C.violet:C.orange},
               {Ic:Building2,lbl:'Admissions',sub:'School list builder',tab:'calc',col:C.rose},
             ].map((a,i)=>(
@@ -1366,14 +1482,14 @@ async function getMMIFb() {
   // ── AI COACH ─────────────────────────────────────────────────────────────────
   const COACH_ICONS = { FlaskConical, Compass };
   function tCoach(){
-    const usagePct=Math.round(((1000-geminiTokensRemaining)/1000)*100);
+    const usagePct=Math.round(((1200-coachRequestsRemaining)/1200)*100);
     return(
       <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 64px)'}}>
         <div style={{paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0}}>
           <div style={R({justifyContent:'space-between',alignItems:'flex-start'})}>
             <div>
               <div style={lbl()}>AI Coach</div>
-              <h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>MetaBrain</h2>
+              <h2 style={{fontSize:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Metabrain 2.0</h2>
               <div style={{fontSize:12,color:C.t3,marginTop:4}}>Your SAT/ACT content and study-strategy assistant</div>
             </div>
             <div style={R({gap:8})}>
@@ -1389,7 +1505,7 @@ async function getMMIFb() {
             <Bar pct={usagePct} color={usagePct>=100?C.rose:C.violet} h={4}/>
           </div>
         </div>
-        {geminiTokensRemaining<=0&&(
+        {coachRequestsRemaining<=0&&(
           <div style={{flexShrink:0,marginBottom:14,padding:'10px 16px',borderRadius:12,background:C.roseDim,border:`1px solid ${C.rose}30`,fontSize:13,color:C.t1}}>
             You've reached today's coaching limit. It resets tomorrow.
           </div>
@@ -1428,8 +1544,8 @@ async function getMMIFb() {
           <div ref={chatEnd}/>
         </div>
         <div style={R({marginTop:14,flexShrink:0,gap:isMobile?6:10})}>
-          <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:geminiTokensRemaining<=0?.5:1}} placeholder={isMobile?"Ask MetaBrain…":"Ask MetaBrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={geminiTokensRemaining<=0}/>
-          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||geminiTokensRemaining<=0}><ArrowUp size={isMobile?16:19}/></motion.button>
+          <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Metabrain…":"Ask Metabrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+          <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}><ArrowUp size={isMobile?16:19}/></motion.button>
         </div>
         {msgs.length>0&&<button style={btnG({marginTop:8,fontSize:11,padding:'5px 14px',alignSelf:'flex-start',borderRadius:20})} onClick={()=>setMsgs([])}>Clear conversation</button>}
       </div>
@@ -1438,14 +1554,27 @@ async function getMMIFb() {
   // ── FLASHCARDS ────────────────────────────────────────────────────────────────
   function tFlash(){
     if(activeDeck){
+      const sessionTotal=sessionStats.reviewed;
+      const sessionAcc=sessionTotal>0?Math.round(((sessionStats.good+sessionStats.easy)/sessionTotal)*100):null;
       if(!currentCard)return(
         <div style={CC({gap:16})}>
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
           <div style={{...glass({padding:40,textAlign:'center'})}}>
             <div style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></div>
             <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
-            {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            {sessionTotal>0&&(
+              <div style={{...G(4,10,{},isMobile),marginBottom:24,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:C.FD}}>{sessionAcc}%</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Remembered</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.rose,fontFamily:C.FD}}>{sessionStats.again}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Again</div></div>
+                <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.blue,fontFamily:C.FD}}>{fmtT(Math.round((Date.now()-sessionStats.startedAt)/1000))}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Time</div></div>
+              </div>
+            )}
+            <div style={R({justifyContent:'center',gap:10})}>
+              {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>Study Again</button>
+            </div>
           </div>
         </div>
       );
@@ -1456,16 +1585,18 @@ async function getMMIFb() {
             <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due</div>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed this session`:''}</div>
             </div>
             <div style={R({gap:6})}>
               <button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>
               <button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>
+              {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
           </div>
           <Bar pct={((cIdx+1)/deckCards.length)*100} color={accent} h={3} glow/>
           <FlipCard card={currentCard} flipped={flip} onClick={()=>setFlip(f=>!f)} m={isMobile}/>
+          <div style={{textAlign:'center',fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{!isMobile&&(flip?'Press 1–4 to rate · ':'Press Space to flip · ')}Click card to flip</div>
           <div style={R({justifyContent:'space-between'})}>
             <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'9px 20px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setCIdx(i=>Math.max(0,i-1));setFlip(false);}} disabled={cIdx===0}><ChevronLeft size={14}/>Prev</motion.button>
             {flip&&(
@@ -1473,18 +1604,7 @@ async function getMMIFb() {
                 {[['Again',0,C.rose],['Hard',1,C.amber],['Good',2,C.blue],['Easy',3,C.green]].map(([label,q,col])=>(
                   <motion.button key={label} whileHover={{scale:1.06}} whileTap={{scale:.94}}
                     style={{...btnSm(`${col}20`,{color:col,border:`1px solid ${col}30`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:6}}
-                    onClick={async()=>{
-                      const updated=scheduleCard(currentCard,label);
-                      const deckName=activeDeck.name;
-                      const allCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
-                      const idx=allCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
-                      if(idx>=0)allCards[idx]=updated;
-                      if(!activeDeck.builtin)await saveDeck(deckName,allCards);
-                      await DB.recordCardReview(currentCard.id||cIdx);
-                      const newTotal=totalReviews+1;setTotalReviews(newTotal);
-                      checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mmiCount,mastery,aiChatCount);
-                      setCIdx(i=>Math.min(deckCards.length-1,i+1));setFlip(false);
-                    }}>
+                    onClick={()=>rateCard(label)}>
                     {label}<span style={{fontSize:9,color:`${col}99`,fontFamily:C.FM}}>{q+1}</span>
                   </motion.button>
                 ))}
@@ -1494,50 +1614,113 @@ async function getMMIFb() {
           </div>
           {/* Export deck */}
           <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportFlashDeck(activeDeck.name,deckCards)}><FileDown size={13}/>Export Deck PDF</button>
+          <AnimatePresence>
+            {manageDeck&&<CardManagerModal
+              deckName={manageDeck}
+              cards={cDecks[manageDeck]||[]}
+              onAdd={(f,b)=>addCardToDeck(manageDeck,f,b)}
+              onUpdate={(idx,f,b)=>updateCardInDeck(manageDeck,idx,f,b)}
+              onDelete={idx=>deleteCardFromDeck(manageDeck,idx)}
+              onClose={()=>setManageDeck(null)}
+              m={isMobile}
+            />}
+          </AnimatePresence>
         </div>
       );
     }
+
+    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
+    const filteredDecks=allDecksList.filter(deck=>{
+      if(deckFilter==='all')return true;
+      const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
+      if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
+      if(deckFilter==='custom')return !deck.builtin;
+      if(deckFilter==='builtin')return deck.builtin;
+      return true;
+    });
 
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
           <div><div style={lbl()}>Flashcards</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
-            {dueCards>0&&<span style={pill(C.violetDim,C.violetL,{fontFamily:C.FM})}>{dueCards} due</span>}
-            <span style={pill(C.blueDim,C.blueL)}>{Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks</span>
+            <button style={{...btn(C.blueGrad,{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
           </div>
         </div>
-        <div style={{position:'relative'}}>
-          <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
-          <input style={inp({paddingLeft:36})} placeholder="Search decks…" value={dSrch} onChange={e=>setDS2(e.target.value)}/>
+
+        {/* Overview stats */}
+        <div style={G(4,12,{},isMobile)}>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{builtinCount+customCount}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Decks</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
+          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
         </div>
+
+        <div style={R({flexWrap:'wrap',gap:10})}>
+          <div style={{flex:1,minWidth:200,position:'relative'}}>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
+            <input style={inp({paddingLeft:36})} placeholder="Search decks…" value={dSrch} onChange={e=>setDS2(e.target.value)}/>
+          </div>
+          <div style={R({gap:6})}>
+            {[['all','All'],['due','Due'],['builtin','Built-in'],['custom','My Decks']].map(([key,label])=>(
+              <button key={key} style={btnSm(deckFilter===key?C.blueGrad:C.s4,{fontSize:11,color:deckFilter===key?'#fff':C.t2,border:`1px solid ${deckFilter===key?'transparent':C.b1}`})} onClick={()=>setDeckFilter(key)}>{label}</button>
+            ))}
+          </div>
+        </div>
+
         {/* AI Generator */}
         <div style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`})}}>
           <div style={R({marginBottom:14})}>
             <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Sparkles size={17} color={C.violetL}/></div>
-            <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — AI creates 10–14 high-yield cards</div></div>
+            <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — instantly generates 10–14 high-yield cards, no API needed</div></div>
           </div>
           <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
           <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
             <Sparkles size={14}/>{gLoad?'Generating…':'Generate Flashcards'}
           </motion.button>
         </div>
+
         <div style={G(3,12,{},isMobile)}>
-          {allDecksList.map(deck=>{
+          {filteredDecks.map(deck=>{
             const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
             const dc=getDueCards(deckCardsAll).length;
+            const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             return(
-              <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s'})}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
-                <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
-                <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards</div>
-                {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{marginTop:8,fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
-                {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{marginTop:8,fontSize:10})}}>AI-generated</div>}
+              <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
+                <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>
+                  <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
+                  <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
+                  <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
+                    {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
+                    {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
+                  </div>
+                </div>
+                {!deck.builtin&&(
+                  <button style={{position:'absolute',top:14,right:14,background:'none',border:'none',color:C.t3,cursor:'pointer',padding:6,borderRadius:6}} onClick={e=>{e.stopPropagation();setManageDeck(deck.name);}} title="Manage cards"><ScrollText size={13}/></button>
+                )}
               </motion.div>
             );
           })}
         </div>
-        {allDecksList.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No decks found.</div>}
+        {filteredDecks.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No decks match this filter.</div>}
+
+        <AnimatePresence>
+          {manageDeck&&<CardManagerModal
+            deckName={manageDeck}
+            cards={cDecks[manageDeck]||[]}
+            onAdd={(f,b)=>addCardToDeck(manageDeck,f,b)}
+            onUpdate={(idx,f,b)=>updateCardInDeck(manageDeck,idx,f,b)}
+            onDelete={idx=>deleteCardFromDeck(manageDeck,idx)}
+            onClose={()=>setManageDeck(null)}
+            m={isMobile}
+          />}
+          {newDeckOpen&&<NewDeckModal
+            onCreate={async(name)=>{await createDeck(name);setNewDeckOpen(false);setManageDeck(name);toast.success(`"${name}" created — add your first cards`);}}
+            onClose={()=>setNewDeckOpen(false)}
+            m={isMobile}
+          />}
+        </AnimatePresence>
       </div>
     );
   }
@@ -1608,21 +1791,32 @@ async function getMMIFb() {
   }
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
-    const totH=port.reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const leadH=port.filter(a=>a.type==='Leadership').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const resH=port.filter(a=>a.type==='Research').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const volH=port.filter(a=>a.type==='Volunteering').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
+    const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
+    const totH=Math.round(portActivities.reduce((s,a)=>s+annualH(a),0));
+    const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
+    const resH=Math.round(portActivities.filter(a=>a.activity_type==='Research').reduce((s,a)=>s+annualH(a),0));
+    const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
     const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
+    const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
+    const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
+
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Portfolio Builder</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Activity Tracker</h2></div>
+        <div style={R()}>
+          <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Application Overview</h2></div>
+          <div style={{marginLeft:'auto',...R({gap:8})}}>
+            <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
+            <span style={pill(C.amberDim,C.amberL)}>{portAwards.length} awards</span>
+          </div>
+        </div>
 
         {/* Summary stats */}
-        <div style={G(4,14,{},isMobile)}>
-          <Stat label="Total Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
+        <div style={G(5,14,{},isMobile)}>
+          <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
           <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub="Rec: 100+" m={isMobile}/>
           <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
           <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+" m={isMobile}/>
+          <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
         {/* Progress bars toward recommended hours */}
@@ -1639,43 +1833,37 @@ async function getMMIFb() {
           ))}
         </div>
 
-        {/* Add activity */}
-        <div style={glass()}>
-          <SL>Add New Activity</SL>
-          <div style={G(2,12)}>
-            {[{l:'Activity Name',p:'e.g., Debate Team Captain',v:aN,s:setAN,t:'text'},{l:'Type',v:aT,s:setAT,sel:ACT_TYPES},{l:'Hours',p:'100',v:aH,s:setAH,t:'number'},{l:'Start Date',v:aDate,s:setADate,t:'date'}].map(f=>(
-              <div key={f.l} style={CC({gap:4})}>
-                <span style={lbl()}>{f.l}</span>
-                {f.sel?<select style={inp()} value={f.v} onChange={e=>f.s(e.target.value)}>{f.sel.map(t=><option key={t}>{t}</option>)}</select>:<input type={f.t||'text'} style={inp()} placeholder={f.p||''} value={f.v} onChange={e=>f.s(e.target.value)}/>}
-              </div>
-            ))}
-          </div>
-          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16,display:'inline-flex',alignItems:'center',gap:8}} onClick={async()=>{
-            if(!aN.trim())return;
-            const item={name:aN,type:aT,hours:aH,date:aDate,addedAt:Date.now()};
-            const id=await DB.addPortfolioItem(item);
-            setPort_(p=>[...p,{...item,id}]);
-            setAN('');setAH('');setADate('');
-            toast.success(`Added: ${aN.slice(0,40)}`);
-          }}><Plus size={15}/>Add to Portfolio</motion.button>
+        {/* Quick links to the rest of the application system */}
+        <div style={G(4,10,{},isMobile)}>
+          {[
+            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',tab:'resume',icon:Award,col:C.violet},
+            {label:'College List',sub:'Track schools & deadlines',tab:'colleges',icon:Building2,col:C.blue},
+            {label:'Test Scores',sub:'SAT/ACT history',tab:'scores',icon:TrendingUp,col:C.green},
+            {label:'Essays',sub:'Draft & manage essays',tab:'essays',icon:ScrollText,col:C.amber},
+          ].map(l=>(
+            <motion.div key={l.tab} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>setTab(l.tab)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
+              <l.icon size={16} color={l.col}/>
+              <div style={{fontSize:12.5,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:8}}>{l.label}</div>
+              <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{l.sub}</div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Activity list */}
-        {port.length>0&&<div style={CC({gap:8})}>
-          <SL>My Activities ({port.length})</SL>
+        {portActivities.length>0&&<div style={CC({gap:8})}>
+          <SL>My Activities ({portActivities.length})</SL>
           <AnimatePresence>
-            {port.map((act)=>{const col=actColors[act.type]||C.blue;return(
-              <motion.div key={act.id||act.name} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
+            {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
+              <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
                 <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.name}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.type} · {act.hours||'?'}h{act.date?` · ${act.date}`:''}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.position}{act.organization?` · ${act.organization}`:''}</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
                 </div>
-                <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={async()=>{await DB.deletePortfolioItem(act.id);setPort_(p=>p.filter(a=>a.id!==act.id));toast('Removed');}}>Remove</button>
               </motion.div>
             );})}
           </AnimatePresence>
-          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList([],{note:'Portfolio export'})}><FileDown size={13}/>Export Portfolio PDF</button>
+          <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
         </div>}
 
         {/* Opportunities */}
@@ -1695,100 +1883,9 @@ async function getMMIFb() {
                 </div>
                 <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:5}}>{c.name}</div>
                 <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>{c.desc}</div>
-                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{const item={name:c.name,type:c.type,hours:'0',date:'',addedAt:Date.now()};const id=await DB.addPortfolioItem(item);setPort_(p=>[...p,{...item,id}]);toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
+                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{await addPortActivity({type:c.type,name:c.name,desc:c.desc});toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
               </motion.div>
             );})}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── INTERVIEW SIM ─────────────────────────────────────────────────────────────
-  function tInterview(){
-    return(
-      <div style={CC({gap:22})}>
-        <div style={R()}>
-          <div><div style={lbl()}>Interview Simulator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College Interview Practice</h2></div>
-          <div style={{marginLeft:'auto',...R({gap:8})}}>
-            {mmiCount>0&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>{mmiCount} practiced</span>}
-            <span style={pill(C.s3,C.t2)}>{MMI_QS.filter(q=>(q.program||'general')===mProg).length} Questions</span>
-          </div>
-        </div>
-
-        <div style={R({gap:8,flexWrap:'wrap'})}>
-          {INTERVIEW_PROGRAMS.map(p=>(
-            <button key={p.id} onClick={()=>{setMProg(p.id);setMTF('All');setMI(0);setMA('');setMF('');setMR(false);setMT(0);}} style={btnSm(mProg===p.id?accent:'rgba(255,255,255,0.06)',{color:'#fff'})}>{p.label}</button>
-          ))}
-        </div>
-
-        <div style={R({flexWrap:'wrap',gap:10})}>
-          <select style={inp({width:'auto'})} value={mTF} onChange={e=>{setMTF(e.target.value);setMI(0);setMA('');setMF('');setMR(false);setMT(0);}}>
-            {MMI_TYPES.map(t=><option key={t}>{t}</option>)}
-          </select>
-          <div style={{marginLeft:'auto',...R({gap:8})}}>
-            <span style={{fontSize:12,color:C.t3,fontFamily:C.FM}}>Station {mIdx+1} / {fMmi.length}</span>
-            <button style={{...btnG({padding:'7px 14px',fontSize:12}),display:'inline-flex',alignItems:'center'}} onClick={()=>{setMI(i=>Math.max(0,i-1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===0}><ChevronLeft size={14}/></button>
-            <button style={{...btnG({padding:'7px 14px',fontSize:12}),display:'inline-flex',alignItems:'center'}} onClick={()=>{setMI(i=>Math.min(fMmi.length-1,i+1));setMA('');setMF('');setMR(false);setMT(0);}} disabled={mIdx===fMmi.length-1}><ChevronRight size={14}/></button>
-          </div>
-        </div>
-
-        {mmiQ&&<motion.div key={mIdx} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={glass()}>
-          {/* Header row */}
-          <div style={R({marginBottom:18})}>
-            <span style={pill(C.blueDim,C.blueL,{fontSize:11})}>{mmiQ.type}</span>
-            <div style={{marginLeft:'auto',...R({gap:12})}}>
-              <span style={{fontSize:20,fontWeight:700,fontFamily:C.FM,color:mRun?C.green:mTimer>0?C.amber:C.t3,transition:'color .3s'}}>{fmtT(mTimer)}</span>
-              {!mRun
-                ?<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:12,padding:'8px 18px',boxShadow:`0 4px 12px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:7}} onClick={()=>{setMT(0);setMR(true);}}><Play size={13} fill="currentColor"/>Start Timer</motion.button>
-                :<motion.button whileHover={{scale:1.04}} style={{...btn(`linear-gradient(135deg,${C.rose},#dc2626)`,{fontSize:12,padding:'8px 18px'}),display:'inline-flex',alignItems:'center',gap:7}} onClick={()=>setMR(false)}><Pause size={13} fill="currentColor"/>Pause</motion.button>}
-            </div>
-          </div>
-
-          {/* Question */}
-          <p style={{fontSize:16,fontWeight:700,lineHeight:1.75,marginBottom:18,color:C.t1,fontFamily:C.FD}}>{mmiQ.q}</p>
-
-          {/* Key considerations */}
-          <div style={{marginBottom:18,background:C.amberDim,border:`1px solid ${C.amber}25`,borderRadius:12,padding:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.amberL,letterSpacing:'.1em',marginBottom:10}}>KEY CONSIDERATIONS</div>
-            {mmiQ.points.map((pt,pi)=>(
-              <div key={pi} style={{fontSize:13,color:C.t2,lineHeight:1.7,marginBottom:4,display:'flex',gap:8}}>
-                <span style={{color:C.amberL,flexShrink:0,fontWeight:700}}>›</span>{pt}
-              </div>
-            ))}
-          </div>
-
-          {/* Response textarea */}
-          <textarea style={{...inp({minHeight:140,resize:'vertical',fontFamily:C.FB,lineHeight:1.7,marginBottom:14})}} placeholder="Structure your response: Brief intro → Address key considerations → Conclude with your position or action. Aim for 2–3 minutes of clear, organized speech." value={mAns} onChange={e=>setMA(e.target.value)}/>
-
-          <div style={R({gap:10})}>
-            <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={btn(C.blueGrad,{fontSize:13,boxShadow:`0 4px 16px ${accent}30`})} onClick={getMMIFb} disabled={mLoad||!mAns.trim()}>
-              {mLoad?'Analyzing response…':'Get AI Feedback'}
-            </motion.button>
-            {mAns.trim()&&<button style={btnG({fontSize:12,padding:'10px 18px'})} onClick={()=>{setMA('');setMF('');setMT(0);setMR(false);}}>Reset</button>}
-          </div>
-
-          {/* AI Feedback */}
-          <AnimatePresence>
-            {mFb&&<motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{marginTop:18,background:C.greenDim,border:`1px solid ${C.green}25`,borderRadius:12,padding:18}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.greenL,letterSpacing:'.1em',marginBottom:12}}>AI FEEDBACK</div>
-              <div dangerouslySetInnerHTML={{__html:renderMarkdown(mFb)}} style={{fontSize:14,color:C.t1,fontFamily:C.FB}}/>
-            </motion.div>}
-          </AnimatePresence>
-        </motion.div>}
-
-        {/* Type breakdown */}
-        <div style={glass({padding:18})}>
-          <SL>Question Types — Practice Distribution</SL>
-          <div style={G(4,8,{},isMobile)}>
-            {['Personal','Motivation','Academic Interests','Community & Diversity','Situational','Communication'].map(type=>{
-              const count=MMI_QS.filter(q=>q.type===type&&(q.program||'general')===mProg).length;
-              return<div key={type} style={{...glass2({padding:10,textAlign:'center',cursor:'pointer',transition:'border-color .15s'}),border:mTF===type?`1px solid ${C.blue}50`:undefined}}
-                onClick={()=>{setMTF(type);setMI(0);setMA('');setMF('');setMR(false);setMT(0);}}>
-                <div style={{fontSize:12,fontWeight:600,color:mTF===type?C.blueL:C.t2,fontFamily:C.FD,marginBottom:2}}>{type}</div>
-                <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{count} q</div>
-              </div>;
-            })}
           </div>
         </div>
       </div>
@@ -2040,7 +2137,7 @@ async function getMMIFb() {
         <div style={G(3,14,{},isMobile)}>
           <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
           <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
-          <Stat label="Interview Practice" value={mmiCount} icon={<Mic size={16}/>} color={C.cyan} sub="Questions answered" m={isMobile}/>
+          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Metabrain conversations" m={isMobile}/>
         </div>
 
         {/* Achievements */}
@@ -2189,9 +2286,9 @@ async function getMMIFb() {
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
-            MedSchoolPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks &nbsp;·&nbsp; {MMI_QS.length} interview questions<br/>
+            AscendPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
             Powered by: ts-fsrs · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
-            All data stored locally in your browser via IndexedDB · No account required
+            Metabrain 2.0 is powered by large language model technology · All progress data stored locally in your browser via IndexedDB · No account required for your study data
           </div>
         </div>
       </div>
@@ -2211,12 +2308,12 @@ async function getMMIFb() {
           <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
             <div style={{textAlign:'center',marginBottom:36}}>
               <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
-              <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
+              <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>AscendPrep</h1>
               <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and college admissions coaching, in one place.</p>
             </div>
             {/* Feature pills */}
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
-              {['SAT/ACT Practice','FSRS Flashcards','AI Coach','Interview Prep','College Planner','Offline PWA'].map(f=>(
+              {['SAT/ACT Practice','FSRS Flashcards','AI Coach','Portfolio Tracker','College Planner','Offline PWA'].map(f=>(
                 <span key={f} style={pill(C.s2,C.t2,{border:`1px solid ${C.b1}`,fontSize:11})}>{f}</span>
               ))}
             </div>
@@ -2260,7 +2357,7 @@ async function getMMIFb() {
   // ═══ MAIN LAYOUT ═══════════════════════════════════════════════════════════════
   const tRenders={
     home:tHome,diagnostic:tDiag,pathway:tPath,quizzes:tQuizzes,coach:tCoach,flashcards:tFlash,
-    library:tLib,portfolio:tPort,interview:tInterview,calc:tCalc,analytics:tAnalytics,settings:tSettings,
+    library:tLib,portfolio:tPort,calc:tCalc,analytics:tAnalytics,settings:tSettings,
     deadlines:()=><DeadlinesPanel accent={accent}/>,
     colleges:()=><CollegeListPanel accent={accent}/>,
     essays:()=><EssayWorkspacePanel accent={accent}/>,
@@ -2282,7 +2379,7 @@ async function getMMIFb() {
           <header style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,background:C.s0,display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:100}}>
             <div style={R({gap:10})}>
               <div style={{width:30,height:30,borderRadius:8,overflow:'hidden'}}><img src="/icon.svg" width={30} height={30} alt="" style={{display:'block'}}/></div>
-              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>AscendPrep</div>
             </div>
             <div style={R({gap:10})}>
               <div style={{textAlign:'right'}}>
@@ -2302,7 +2399,7 @@ async function getMMIFb() {
               <div style={R({gap:11})}>
                 <div style={{width:34,height:34,borderRadius:9,overflow:'hidden'}}><img src="/icon.svg" width={34} height={34} alt="" style={{display:'block'}}/></div>
                 <div>
-                  <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+                  <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>AscendPrep</div>
                   <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>SAT/ACT + ADMISSIONS</div>
                 </div>
               </div>

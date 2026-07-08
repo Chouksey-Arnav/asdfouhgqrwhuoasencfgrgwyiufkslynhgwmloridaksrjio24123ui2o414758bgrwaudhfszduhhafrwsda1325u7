@@ -21,6 +21,27 @@ db.version(1).stores({
   mmiSessions:   '++id, questionIdx, answeredAt',
 });
 
+// v2: medical-school interview (MMI) module removed — app is scoped to
+// SAT/ACT prep + college admissions for high school/undergrad students.
+db.version(2).stores({
+  mmiSessions: null,
+});
+
+// v3: GPA tracker for the Portfolio's academic-history section (superseded by
+// the Supabase-backed gpa_entries resource in v4 — kept here only so the
+// version-history chain stays valid for anyone who already ran v3).
+db.version(3).stores({
+  gpaEntries: '++id, term, gpa, addedAt',
+});
+
+// v4: Portfolio and GPA history moved to the Supabase-backed resources
+// (activities, awards, gpa_entries via api/data/[resource].js) so activity
+// tracking is one consistent system instead of a local-only duplicate.
+db.version(4).stores({
+  portfolio: null,
+  gpaEntries: null,
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -88,17 +109,6 @@ export async function getTotalCardReviews() {
   return db.cardReviews.count();
 }
 
-// ── Portfolio ─────────────────────────────────────────────────────────────────
-export async function getPortfolio() {
-  return db.portfolio.toArray();
-}
-export async function addPortfolioItem(item) {
-  return db.portfolio.add(item);
-}
-export async function deletePortfolioItem(id) {
-  await db.portfolio.delete(id);
-}
-
 // ── Category Performance ───────────────────────────────────────────────────────
 export async function getCatPerf() {
   const rows = await db.catPerf.toArray();
@@ -160,21 +170,12 @@ export async function getStudyDays() {
   return rows.map(r => r.date);
 }
 
-// ── MMI Sessions ──────────────────────────────────────────────────────────────
-export async function recordMMISession(questionIdx) {
-  await db.mmiSessions.add({ questionIdx, answeredAt: Date.now() });
-}
-export async function getMMICount() {
-  return db.mmiSessions.count();
-}
-
 // ── Full export ────────────────────────────────────────────────────────────────
 export async function exportAllData() {
   const data = {
     user: await db.user.toArray(),
     lessons: await db.lessons.toArray(),
     quizScores: await db.quizScores.toArray(),
-    portfolio: await db.portfolio.toArray(),
     achievements: await db.achievements.toArray(),
     studyDays: await db.studyDays.toArray(),
     exportDate: new Date().toISOString(),
@@ -183,7 +184,7 @@ export async function exportAllData() {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `medschoolprep-backup-${data.exportDate.split('T')[0]}.json`;
+  a.href = url; a.download = `ascendprep-backup-${data.exportDate.split('T')[0]}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -191,7 +192,7 @@ export async function exportAllData() {
 export async function clearAllData() {
   await Promise.all([
     db.user.clear(), db.lessons.clear(), db.quizScores.clear(),
-    db.flashCards.clear(), db.portfolio.clear(), db.catPerf.clear(),
-    db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(), db.mmiSessions.clear(),
+    db.flashCards.clear(), db.catPerf.clear(),
+    db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
   ]);
 }

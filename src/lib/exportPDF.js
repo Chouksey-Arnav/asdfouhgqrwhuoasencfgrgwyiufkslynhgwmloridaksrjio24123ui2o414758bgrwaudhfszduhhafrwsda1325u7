@@ -20,7 +20,7 @@ function header(doc, title, subtitle='') {
   doc.setTextColor(...WHITE);
   doc.setFontSize(16);
   doc.setFont('helvetica','bold');
-  doc.text('MedSchoolPrep', 12, 12);
+  doc.text('AscendPrep', 12, 12);
   doc.setFontSize(10);
   doc.setFont('helvetica','normal');
   doc.setTextColor(...LIGHT);
@@ -33,7 +33,7 @@ function header(doc, title, subtitle='') {
 function footer(doc, pageNum, total) {
   doc.setFontSize(8);
   doc.setTextColor(...LIGHT);
-  doc.text(`MedSchoolPrep · Generated ${new Date().toLocaleDateString()} · Page ${pageNum} of ${total}`, 14, 290);
+  doc.text(`AscendPrep · Generated ${new Date().toLocaleDateString()} · Page ${pageNum} of ${total}`, 14, 290);
   doc.setDrawColor(...BLUE);
   doc.setLineWidth(0.3);
   doc.line(14, 286, 196, 286);
@@ -156,6 +156,99 @@ export function exportSchoolList(schools, profile={}) {
 
   footer(doc, page, page);
   doc.save(`school-list-${Date.now()}.pdf`);
+}
+
+export function exportPortfolioResume(studentName, activities, awards, gpaEntries=[]) {
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  let y = header(doc, `Student Profile: ${studentName || 'Student'}`, `Activities, honors & academic history · ${new Date().toLocaleDateString()}`);
+  let page = 1;
+
+  function ensureRoom(needed) {
+    if (y + needed > 270) { footer(doc, page, page); doc.addPage(); page++; y = header(doc, `Student Profile (continued)`); }
+  }
+
+  // GPA snapshot
+  if (gpaEntries.length) {
+    ensureRoom(20);
+    const latest = gpaEntries[gpaEntries.length - 1];
+    doc.setFillColor(15, 24, 40);
+    doc.roundedRect(14, y, 182, 14, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(9);
+    doc.setFont('helvetica','bold');
+    doc.text(`Current GPA: ${latest.gpa}`, 20, y+9);
+    doc.setTextColor(...LIGHT);
+    doc.setFont('helvetica','normal');
+    doc.text(`${gpaEntries.length} term${gpaEntries.length===1?'':'s'} tracked · Latest: ${latest.term}`, 90, y+9);
+    y += 20;
+  }
+
+  // Activities section
+  if (activities.length) {
+    ensureRoom(12);
+    doc.setFillColor(...BLUE);
+    doc.roundedRect(14, y, 182, 7, 1, 1, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(`ACTIVITIES (${activities.length})`, 18, y+5);
+    y += 11;
+
+    activities.forEach((a) => {
+      ensureRoom(22);
+      doc.setFillColor(248,250,252);
+      doc.rect(14, y, 182, 18, 'F');
+      doc.setDrawColor(230,234,240);
+      doc.line(14, y+18, 196, y+18);
+      doc.setTextColor(20,30,50);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','bold');
+      doc.text(`${a.position || a.name || 'Activity'}${a.organization?` — ${a.organization}`:''}`, 17, y+5);
+      doc.setTextColor(...LIGHT);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.text(`${a.activity_type || a.type || ''}${a.status?` · ${a.status}`:''}${(a.hours_per_week||a.hours)?` · ${a.hours_per_week||a.hours} hrs`:''}`, 17, y+10);
+      if (a.description) {
+        const descLines = doc.splitTextToSize(a.description, 175);
+        doc.setTextColor(60,70,90);
+        doc.text(descLines[0] || '', 17, y+15);
+      }
+      y += 21;
+    });
+    y += 3;
+  }
+
+  // Honors & Awards section
+  if (awards.length) {
+    ensureRoom(12);
+    doc.setFillColor(...AMBER);
+    doc.roundedRect(14, y, 182, 7, 1, 1, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(`HONORS & AWARDS (${awards.length})`, 18, y+5);
+    y += 11;
+
+    awards.forEach((a) => {
+      ensureRoom(10);
+      doc.setFillColor(248,250,252);
+      doc.rect(14, y, 182, 9, 'F');
+      doc.setDrawColor(230,234,240);
+      doc.line(14, y+9, 196, y+9);
+      doc.setTextColor(20,30,50);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','bold');
+      doc.text(a.title, 17, y+4);
+      doc.setTextColor(...LIGHT);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.text([a.level, a.grade_level && `Grade ${a.grade_level}`].filter(Boolean).join(' · '), 17, y+8);
+      y += 11;
+    });
+  }
+
+  footer(doc, page, page);
+  doc.save(`portfolio-resume-${Date.now()}.pdf`);
 }
 
 export function exportFlashDeck(deckName, cards) {

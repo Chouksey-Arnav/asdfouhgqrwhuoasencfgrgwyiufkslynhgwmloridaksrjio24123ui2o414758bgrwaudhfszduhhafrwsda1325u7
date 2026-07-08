@@ -9,7 +9,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'favicon.png'],
       manifest: {
-        name: 'MedSchoolPrep',
+        name: 'AscendPrep',
         short_name: 'MedPrep',
         description: 'AI-powered SAT/ACT prep and college admissions planning',
         theme_color: '#04060b',
