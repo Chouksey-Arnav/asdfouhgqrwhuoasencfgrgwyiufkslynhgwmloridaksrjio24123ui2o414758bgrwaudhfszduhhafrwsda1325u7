@@ -16,13 +16,17 @@ import {
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
+  Mic, Hammer, Sun, ShieldCheck, Crown,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap };
+const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES } from './data/constants';
+import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount } from './lib/gamification';
+import InterviewPrepPanel from './components/InterviewPrepPanel';
 
 import * as DB from './lib/db';
 import * as AuthAPI from './lib/authApi';
@@ -118,6 +122,7 @@ const NAV = [
   {id:'aid',ic:Handshake,label:'Financial Aid',group:'Applications'},
   {id:'portfolio',ic:Building2,label:'Portfolio',group:'Applications'},
   {id:'resume',ic:Award,label:'Resume Builder',group:'Applications'},
+  {id:'interview',ic:Mic,label:'Interview Prep',group:'Applications'},
 
   {id:'analytics',ic:LineChart,label:'Analytics',group:'Insights'},
 
@@ -653,8 +658,12 @@ export default function App({ account, onAccountChange }) {
   const upcomingDeadlines = useDeadlines();
   const [totalReviews, setTotalReviews] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
+  const [interviewCount, setInterviewCount] = useState(0);
   const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(1200);
   const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
+  const [appCounts, setAppCounts] = useState({colleges:0,essays:0,resume:false});
+  const [weekCardReviews, setWeekCardReviews] = useState(0);
+  const [questTick, setQuestTick] = useState(0);
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [tab,   setTab]   = useState('home');
@@ -689,6 +698,9 @@ export default function App({ account, onAccountChange }) {
 
   // ── Calc ────────────────────────────────────────────────────────────────────
   const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
+  const [customSchools,setCustomSchools]=useState([]);
+  const [showAddSchool,setShowAddSchool]=useState(false);
+  const [csName,setCsName]=useState('');const [csGPA,setCsGPA]=useState('');const [csSAT,setCsSAT]=useState('');const [csAccept,setCsAccept]=useState('');const [csState,setCsState]=useState('');const [csType,setCsType]=useState('Public');
 
   // ── Settings ────────────────────────────────────────────────────────────────
   const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
@@ -705,7 +717,7 @@ export default function App({ account, onAccountChange }) {
           DB.getFlashDecks(), DB.getCatPerf(),
           DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews()
         ]);
-        if(u){setUser_(u);}
+        if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
         setPathway_(pw||{});
         setQScores_(qs||{});
         setQHistory(qh||[]);
@@ -738,6 +750,28 @@ export default function App({ account, onAccountChange }) {
       setPortLoaded(true);
     })();
   },[tab,portLoaded]);
+
+  // ── Lightweight Applications-side counts, for the achievement/reward loop ────
+  useEffect(()=>{
+    if(!user||!['colleges','essays','analytics','deadlines'].includes(tab))return;
+    (async()=>{
+      try{
+        const [cols,ess]=await Promise.all([listItems('colleges'),listItems('essays')]);
+        setAppCounts(c=>({...c,colleges:cols?.length||0,essays:ess?.length||0}));
+      }catch(e){/* non-critical — achievement counts, fail silently */}
+    })();
+  },[tab,user]);
+
+  useEffect(()=>{
+    if(!user)return;
+    checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
+  },[appCounts,portActivities.length,(upcomingDeadlines||[]).length]);
+
+  // ── Weekly quest progress (cards reviewed since Monday) ──────────────────────
+  useEffect(()=>{
+    if(!['home','analytics'].includes(tab))return;
+    DB.getCardReviewsSince(getStartOfWeek().getTime()).then(setWeekCardReviews).catch(()=>{});
+  },[tab,totalReviews]);
 
   const addPortActivity = useCallback(async(fields)=>{
     const row=await createItem('activities',{activity_type:fields.type,position:fields.name,description:fields.desc||'',status:'ongoing',hours_per_week:0,weeks_per_year:0,grade_levels:[],sort_order:portActivities.length,...fields.overrides});
@@ -794,8 +828,10 @@ export default function App({ account, onAccountChange }) {
   const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
   const doneL   = allL.filter(l=>pathway[l.id]).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
-  const lvl     = user?Math.floor((user.xp||0)/250)+1:1;
-  const xpIn    = user?(user.xp||0)%250:0;
+  const levelInfo = getLevelInfo(user?.xp||0);
+  const lvl     = levelInfo.level;
+  const xpIn    = levelInfo.xpIntoLevel;
+  const xpForNext = levelInfo.xpForNext;
   const qTaken  = Object.keys(qScores).length;
   const avgSc   = qTaken>0?Math.round(Object.values(qScores).reduce((a,b)=>a+b,0)/qTaken):0;
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
@@ -857,9 +893,14 @@ export default function App({ account, onAccountChange }) {
   function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
 
   // ── Achievement checker ──────────────────────────────────────────────────────
-  const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC)=>{
+  const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC,extra={})=>{
     const unlocked = await DB.getAchievements();
-    const toUnlock = checkAchievements({ level:u?Math.floor((u.xp||0)/250)+1:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC, unlocked });
+    const toUnlock = checkAchievements({
+      level:u?getLevelInfo(u.xp||0).level:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC,
+      interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
+      activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
+      unlocked,
+    });
     for(const achievement of toUnlock){
       const isNew = await DB.unlockAchievement(achievement.key);
       if(isNew){
@@ -869,13 +910,13 @@ export default function App({ account, onAccountChange }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
   useEffect(()=>{
     if(!user)return;
-    const curLvl=Math.floor((user.xp||0)/250)+1;
+    const curLvl=getLevelInfo(user.xp||0).level;
     if(curLvl>prevLvlRef.current){
       celebrateLevelUp();
       play('levelUp');
@@ -908,7 +949,7 @@ export default function App({ account, onAccountChange }) {
     if(coachRequestsRemaining<=0){toast.error(`Your daily Metabrain quota has been reached. Try again tomorrow.`);return;}
     const um={role:'user',content:message};const next=[...msgs,um];
     setMsgs(next);setCi('');setCLoad(true);
-    const newCount=aiChatCount+1;setAiChatCount(newCount);
+    const newCount=aiChatCount+1;setAiChatCount(newCount);saveUser({...user,aiChatCount:newCount});bumpWeeklyCoachCount(getIsoWeekKey());
     try{
       const courseNote=user.courses?.length?` The student is currently taking: ${user.courses.join(', ')}${user.apIb?' (AP/IB student)':''} — tailor examples to these courses when relevant.`:'';
       const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
@@ -918,7 +959,15 @@ export default function App({ account, onAccountChange }) {
       const deadlineNote=nextDeadline?` Their next upcoming deadline is "${nextDeadline.title}" in ${nextDeadline.days} day(s).`:'';
       const portNote=portActivities.length?` They've logged ${portActivities.length} activity/activities in their Portfolio.`:'';
       const contextNote=`${perfNote}${dueNote}${deadlineNote}${portNote}`;
-      const r=await callGroqAI(`You are Metabrain, an expert SAT/ACT tutor and college admissions coach for high school and undergraduate students. The student is interested in ${curPath?.label||'college prep'}.${courseNote}${contextNote} Use this context to give specific, personalized guidance when relevant, but don't force it into unrelated questions. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'),'deep');
+      const pathNote=PATH_COACH_NOTES[eSpec]||PATH_COACH_NOTES.undecided;
+      const sysPrompt=`You are Metabrain, the AI coach inside AscendPrep, a college-prep platform built specifically for high school students in grades 9–12 — every student you talk to is roughly 14–18 years old, preparing for the SAT/ACT and undergraduate admissions, not graduate or professional school. Never bring up the MCAT, LSAT, GRE, GMAT, clinical rotations, or med/grad-school interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
+
+The platform also includes: pathway study units, a quiz library, spaced-repetition flashcards, a diagnostic, an SAT/ACT score tracker, an admissions calculator, a college application tracker, an essay workspace, deadline tracking, financial aid planning, an activities portfolio, a resume builder, and a mock interview practice simulator — point students at the right one when it's the natural next step.
+
+The student is on the ${curPath?.label||'college prep'} pathway. ${pathNote}${courseNote}${contextNote}
+
+Be concise, warm, and encouraging — celebrate effort and progress, not just results, and when a student seems behind or discouraged, give one concrete, achievable next step rather than generic reassurance. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks or $...$ for formulas when helpful.`;
+      const r=await callGroqAI(sysPrompt,message,700,next.filter(m=>m.role!=='error'),'deep');
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
@@ -1012,7 +1061,14 @@ export default function App({ account, onAccountChange }) {
   const fLib    = useMemo(()=>{ return fuseSearch(libFuse,lSrch)||ELIB; },[lSrch]).filter(r=>lCat==='All'||r.cat===lCat);
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
-  const calcR   = useMemo(()=>hasCalc?SCHOOL_DATA.filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cSAT,cLead,cEC,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cSAT,cLead,cEC,cVol,cSt,sType,hasCalc]);
+  const calcR   = useMemo(()=>hasCalc?[...SCHOOL_DATA,...customSchools].filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cSAT,cLead,cEC,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cSAT,cLead,cEC,cVol,cSt,sType,hasCalc,customSchools]);
+
+  function addCustomSchool(){
+    if(!csName.trim())return;
+    setCustomSchools(prev=>[...prev,{name:csName.trim(),gpa:parseFloat(csGPA)||0,sat:parseInt(csSAT)||0,accept:parseFloat(csAccept)||0,state:csState,type:csType,custom:true}]);
+    setCsName('');setCsGPA('');setCsSAT('');setCsAccept('');setCsState('');setCsType('Public');setShowAddSchool(false);
+    toast.success('School added to your list');
+  }
 
   // All decks: built-in + custom
   const allDecksList = useMemo(()=>[
@@ -1094,8 +1150,8 @@ export default function App({ account, onAccountChange }) {
 
         {/* Stats */}
         <div style={G(4,14,{},isMobile)}>
-          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${250-xpIn} to Level ${lvl+1}`} m={isMobile}/>
-          <Stat label="Level" value={lvl} icon={<Trophy size={16}/>} color={C.violet} sub={`${Math.floor((xpIn/250)*100)}% to next`} m={isMobile}/>
+          <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} sub={`${xpForNext-xpIn} to Level ${lvl+1}`} m={isMobile}/>
+          <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} sub={`${levelInfo.pct}% to next`} m={isMobile}/>
           <Stat label="Quizzes Done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
           <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`} m={isMobile}/>
         </div>
@@ -1108,10 +1164,10 @@ export default function App({ account, onAccountChange }) {
         {/* XP Progress */}
         <div style={glass({padding:18})}>
           <div style={R({justifyContent:'space-between',marginBottom:10})}>
-            <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
-            <span style={{fontSize:12,fontFamily:C.FM,color:C.blueL,fontWeight:600}}>{xpIn} / 250 XP</span>
+            <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
+            <span style={{fontSize:12,fontFamily:C.FM,color:C.blueL,fontWeight:600}}>{xpIn} / {xpForNext} XP</span>
           </div>
-          <Bar pct={(xpIn/250)*100} color={accent} h={8} glow/>
+          <Bar pct={levelInfo.pct} color={accent} h={8} glow/>
         </div>
 
         {/* Quick Actions */}
@@ -1906,13 +1962,19 @@ export default function App({ account, onAccountChange }) {
               {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
               {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
               {l:'Volunteer Hours',p:'100',t:'number',min:'0',v:cVol,s:setCV},
-              {l:'State (2-letter)',p:'NC',t:'text',maxLength:2,v:cSt,s:(v)=>setCST(v.toUpperCase())},
             ].map(f=>(
               <div key={f.l} style={CC({gap:4})}>
                 <span style={lbl()}>{f.l}</span>
                 <input type={f.t} step={f.step} min={f.min} max={f.max} maxLength={f.maxLength} style={inp()} placeholder={f.p} value={f.v} onChange={e=>f.s(e.target.value)}/>
               </div>
             ))}
+            <div style={CC({gap:4})}>
+              <span style={lbl()}>Home State (optional)</span>
+              <select style={inp()} value={cSt} onChange={e=>setCST(e.target.value)}>
+                <option value="">— Not sure / prefer not to say —</option>
+                {US_STATES.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
+              </select>
+            </div>
           </div>
           <div style={R({gap:8,marginTop:16})}>
             <span style={{fontSize:12,color:C.t2,fontWeight:500}}>School type:</span>
@@ -1920,6 +1982,35 @@ export default function App({ account, onAccountChange }) {
               <motion.button key={t} whileHover={{scale:1.04}} whileTap={{scale:.96}} style={btnSm(sType===t?C.blueGrad:C.s4,{color:sType===t?'#fff':C.t2,border:sType===t?'none':`1px solid ${C.b1}`})} onClick={()=>setST(t)}>{t}</motion.button>
             ))}
           </div>
+        </div>
+
+        {/* Add a custom school not in the built-in list */}
+        <div style={glass({padding:18})}>
+          <div style={R({justifyContent:'space-between'})}>
+            <SL extra={{marginBottom:showAddSchool?14:0}}>Don't see a school you're considering?</SL>
+            <button style={{...btnG({fontSize:12,padding:'7px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setShowAddSchool(v=>!v)}><Plus size={13}/>{showAddSchool?'Cancel':'Add a school not listed'}</button>
+          </div>
+          {showAddSchool&&<div style={CC({gap:12})}>
+            <div style={G(2,12,{},isMobile)}>
+              <div style={CC({gap:4})}><span style={lbl()}>School Name</span><input style={inp()} placeholder="e.g. My State University" value={csName} onChange={e=>setCsName(e.target.value)}/></div>
+              <div style={CC({gap:4})}><span style={lbl()}>Type</span>
+                <select style={inp()} value={csType} onChange={e=>setCsType(e.target.value)}><option>Public</option><option>Private</option></select>
+              </div>
+              <div style={CC({gap:4})}><span style={lbl()}>Avg. Admitted GPA (optional)</span><input type="number" step="0.01" style={inp()} placeholder="3.5" value={csGPA} onChange={e=>setCsGPA(e.target.value)}/></div>
+              <div style={CC({gap:4})}><span style={lbl()}>Avg. Admitted SAT (optional)</span><input type="number" style={inp()} placeholder="1200" value={csSAT} onChange={e=>setCsSAT(e.target.value)}/></div>
+              <div style={CC({gap:4})}><span style={lbl()}>Acceptance Rate % (optional)</span><input type="number" style={inp()} placeholder="50" value={csAccept} onChange={e=>setCsAccept(e.target.value)}/></div>
+              <div style={CC({gap:4})}><span style={lbl()}>State (optional)</span>
+                <select style={inp()} value={csState} onChange={e=>setCsState(e.target.value)}>
+                  <option value="">—</option>
+                  {US_STATES.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'})}} onClick={addCustomSchool}>Add to My List</button>
+          </div>}
+          {customSchools.length>0&&<div style={{marginTop:14,...R({gap:6,flexWrap:'wrap'})}}>
+            {customSchools.map((s,i)=><span key={i} style={pill(C.violetDim,C.violetL,{fontSize:11})}>{s.name}</span>)}
+          </div>}
         </div>
 
         {!hasCalc&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>Enter your GPA and SAT score above to see your personalized college list.</div>}
@@ -1968,7 +2059,23 @@ export default function App({ account, onAccountChange }) {
   }
   // ── ANALYTICS ─────────────────────────────────────────────────────────────────
   function tAnalytics(){
+    void questTick; // re-render after claiming a quest (claim state lives in localStorage)
     const recentScores=qHistory.slice(-12);
+    const weekKey=getIsoWeekKey();
+    const weekStart=getStartOfWeek().getTime();
+    const quizzesThisWeek=qHistory.filter(q=>q.completedAt>=weekStart).length;
+    const quests=getWeeklyQuests({quizzesThisWeek,cardsThisWeek:weekCardReviews,coachOrInterviewThisWeek:getWeeklyCoachCount(weekKey)});
+    const claimedQuests=getClaimedQuests(weekKey);
+    function claimQuestReward(q){
+      if(!q.done||claimedQuests.has(q.id))return;
+      claimQuest(weekKey,q.id);
+      const nu={...user,xp:(user?.xp||0)+q.xp};
+      saveUser(nu);
+      celebrateXP?.();
+      play('achieve');
+      toast.success(`Quest complete: ${q.label} — +${q.xp} XP`,{icon:<Sparkles size={16}/>});
+      setQuestTick(t=>t+1);
+    }
     const catStats=cats3.map((cat,i)=>{
       const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
       const taken=cQ.filter(q=>qScores[q.id]!==undefined);
@@ -2024,14 +2131,58 @@ export default function App({ account, onAccountChange }) {
     };
     const doughnutOpts={responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:C.s2,titleColor:C.t1,bodyColor:C.t2,borderColor:C.b2,borderWidth:1}}};
 
+    const TierIcon=TIER_ICONS[levelInfo.tierIcon]||Sparkles;
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Analytics</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Performance Dashboard</h2></div>
+        <div><div style={lbl()}>Analytics</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Progress</h2></div>
+
+        {/* Identity / Level card */}
+        <div style={{...glass({padding:22}),background:`linear-gradient(135deg,${levelInfo.tierColor}22,${accent}10)`,border:`1px solid ${levelInfo.tierColor}35`}}>
+          <div style={R({gap:16,flexWrap:'wrap',justifyContent:'space-between'})}>
+            <div style={R({gap:14})}>
+              <div style={{width:52,height:52,borderRadius:16,background:`${levelInfo.tierColor}25`,border:`1.5px solid ${levelInfo.tierColor}55`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                <TierIcon size={24} color={levelInfo.tierColor}/>
+              </div>
+              <div>
+                <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</div>
+                <div style={{fontSize:12,color:C.t3,marginTop:2}}>{(user.xp||0).toLocaleString()} XP total{streak>0?` · ${streak}-day streak`:''}</div>
+              </div>
+            </div>
+            <div style={{textAlign:'right',minWidth:120}}>
+              <div style={{fontSize:12,color:C.t2,fontFamily:C.FM,fontWeight:600}}>{xpIn} / {xpForNext} XP</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>{xpForNext-xpIn} XP to Level {lvl+1}</div>
+            </div>
+          </div>
+          <div style={{marginTop:16}}><Bar pct={levelInfo.pct} color={levelInfo.tierColor} h={8} glow/></div>
+        </div>
+
+        {/* Weekly Quests */}
+        <div style={glass({padding:18})}>
+          <SL extra={{marginBottom:14}}>This Week's Quests</SL>
+          <div style={CC({gap:10})}>
+            {quests.map(q=>{const claimed=claimedQuests.has(q.id);return(
+              <div key={q.id} style={{...glass2({padding:14})}}>
+                <div style={R({justifyContent:'space-between',marginBottom:8})}>
+                  <span style={{fontSize:12,fontWeight:600,color:q.done?C.t1:C.t2}}>{q.label}</span>
+                  <div style={R({gap:8})}>
+                    <span style={{fontSize:11,fontFamily:C.FM,color:C.t3}}>{q.progress}/{q.target}</span>
+                    {claimed
+                      ?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}><Check size={10}/>+{q.xp}xp</span>
+                      :q.done
+                        ?<motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...pill(C.amberDim,C.amberL,{fontSize:10,cursor:'pointer',border:'none'})}} onClick={()=>claimQuestReward(q)}>Claim +{q.xp}xp</motion.button>
+                        :<span style={pill(C.s3,C.t3,{fontSize:10})}>+{q.xp}xp</span>}
+                  </div>
+                </div>
+                <Bar pct={q.pct} color={q.done?C.green:accent} h={5} glow={q.done}/>
+              </div>
+            );})}
+          </div>
+        </div>
 
         {/* Top stats */}
         <div style={G(4,14,{},isMobile)}>
           <Stat label="Total XP" value={(user.xp||0).toLocaleString()} icon={<Zap size={16}/>} color={C.amber} m={isMobile}/>
-          <Stat label="Level" value={lvl} icon={<Trophy size={16}/>} color={C.violet} m={isMobile}/>
+          <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} m={isMobile}/>
           <Stat label="Avg Score" value={`${avgSc}%`} icon={<LineChart size={16}/>} color={scCol(avgSc)} m={isMobile}/>
           <Stat label="Study Streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange} m={isMobile}/>
         </div>
@@ -2141,18 +2292,36 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Achievements */}
-        {achiev.size>0&&<div style={glass({padding:18})}>
+        {(()=>{
+          const progressFor={
+            first_quiz:[qTaken,1], perfect_score:[qHistory.filter(q=>q.score===100).length,1], quiz_10:[qTaken,10],
+            level_5:[lvl,5], level_10:[lvl,10], streak_7:[streak,7], streak_30:[streak,30], cards_100:[totalReviews,100],
+            unit_master:[mastery,33], course_half:[mastery,50], ai_user:[aiChatCount,5],
+            college_added:[appCounts.colleges,1], deadline_set:[(upcomingDeadlines||[]).length,1], essay_started:[appCounts.essays,1],
+            activity_logged:[portActivities.length,1], interview_first:[interviewCount,1], interview_5:[interviewCount,5],
+          };
+          return(
+        <div style={glass({padding:18})}>
           <SL>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
           <div style={G(4,10,{},isMobile)}>
-            {Object.values(ACHIEVEMENTS).map(a=>{const has=achiev.has(a.key);const AIc=ACH_ICONS[a.icon]||Award;return(
-              <div key={a.key} title={`${a.name}: ${a.desc}${has?` (+${a.xp} XP)`:''}`} style={{...glass2({padding:12,textAlign:'center',opacity:has?1:.35,border:has?`1px solid ${C.amber}30`:undefined,transition:'opacity .2s'})}}>
+            {Object.values(ACHIEVEMENTS).map(a=>{
+              const has=achiev.has(a.key);const AIc=ACH_ICONS[a.icon]||Award;
+              const prog=progressFor[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
+              return(
+              <div key={a.key} title={`${a.name}: ${a.desc}${has?` (+${a.xp} XP)`:''}`} style={{...glass2({padding:12,textAlign:'center',opacity:has?1:.55,border:has?`1px solid ${C.amber}30`:undefined,transition:'opacity .2s'})}}>
                 <div style={{display:'flex',justifyContent:'center',marginBottom:6}}><AIc size={20} color={has?C.amberL:C.t3}/></div>
                 <div style={{fontSize:10,fontWeight:600,color:has?C.amberL:C.t3,lineHeight:1.3,fontFamily:C.FD}}>{a.name}</div>
                 {has&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:9,marginTop:6,fontFamily:C.FM})}}>+{a.xp}xp</div>}
+                {!has&&pct!==null&&<div style={{marginTop:8}}>
+                  <Bar pct={pct} color={accent} h={3}/>
+                  <div style={{fontSize:9,color:C.t3,marginTop:4,fontFamily:C.FM}}>{prog[0]}/{prog[1]}</div>
+                </div>}
               </div>
             );})}
           </div>
-        </div>}
+        </div>
+          );
+        })()}
       </div>
     );
   }
@@ -2363,7 +2532,8 @@ export default function App({ account, onAccountChange }) {
     essays:()=><EssayWorkspacePanel accent={accent}/>,
     scores:()=><ScoreTrackerPanel accent={accent}/>,
     aid:()=><FinancialAidPanel accent={accent}/>,
-    resume:()=><ActivitiesResumePanel accent={accent}/>,
+    resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
+    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={()=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc});}}/>,
   };
 
   return(
@@ -2411,10 +2581,10 @@ export default function App({ account, onAccountChange }) {
                 </div>
                 <div style={{flex:1,minWidth:0}}>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:C.FD}}>{user.name}</div>
-                  <div style={{fontSize:11,color:C.t3}}>Lv.{lvl} · {curPath?.label}</div>
+                  <div style={{fontSize:11,color:C.t3}}>Lv.{lvl} {levelInfo.tier} · {curPath?.label}</div>
                 </div>
               </div>
-              <Bar pct={(xpIn/250)*100} color={accent} h={3} glow/>
+              <Bar pct={levelInfo.pct} color={accent} h={3} glow/>
               {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>

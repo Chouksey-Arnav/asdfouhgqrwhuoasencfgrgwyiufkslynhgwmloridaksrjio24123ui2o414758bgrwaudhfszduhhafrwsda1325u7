@@ -187,6 +187,19 @@ export const PATHS = {
   },
 };
 
+// ── AI COACH — PATHWAY-SPECIFIC BEHAVIORAL NOTES ─────────────────────────────
+// Short, behavioral (not marketing) guidance injected into the Metabrain system
+// prompt so the coach's advice matches what's actually realistic/appropriate for
+// a high schooler on each track. Distinct from PATHS[].overview/highlights above.
+export const PATH_COACH_NOTES = {
+  undecided: 'This student hasn\'t settled on a direction yet — encourage exploration (electives, clubs, a diagnostic quiz) rather than pushing them toward any single major or career.',
+  stem: 'Point them toward math/science depth, coding exposure, and STEM competitions (Science Olympiad, FIRST Robotics, Regeneron STS) when relevant — keep it high-school-scaled (school clubs, summer programs), not college-lab-level.',
+  humanities: 'Point them toward reading/writing depth, debate or Model UN, school publications, and essay craft when relevant.',
+  business: 'Point them toward DECA/FBLA, personal-finance literacy, and leadership roles (clubs, student government) when relevant.',
+  socialSci: 'Point them toward psychology/sociology curiosity, school research projects, and civic involvement when relevant.',
+  preHealth: 'This is an EXPLORATORY track only, not a commitment. Steer them toward age-appropriate exposure — shadowing a local provider with a parent/guardian\'s help, hospital teen-volunteer programs, HOSA, school science fairs, or a summer pre-college research program. Never bring up the MCAT, clinical rotations, or medical-school-style interview prep (MMI/CASPer) — this student is years away from any of that, and it isn\'t useful or relevant to them right now.',
+};
+
 // ── FLASHCARD DECKS ───────────────────────────────────────────────────────────
 export const FLASH_DECKS = {
   'Algebra II Essentials': [
@@ -289,12 +302,33 @@ export const FLASH_DECKS = {
   ],
 };
 
+// ── US STATES ──────────────────────────────────────────────────────────────────
+// Full state list for the Admissions Calculator's "home state" field, so the
+// in-state-tuition bonus resolves reliably instead of relying on a free-typed
+// 2-letter code that silently fails to match on any typo.
+export const US_STATES = [
+  {code:'AL',name:'Alabama'},{code:'AK',name:'Alaska'},{code:'AZ',name:'Arizona'},{code:'AR',name:'Arkansas'},
+  {code:'CA',name:'California'},{code:'CO',name:'Colorado'},{code:'CT',name:'Connecticut'},{code:'DE',name:'Delaware'},
+  {code:'DC',name:'District of Columbia'},{code:'FL',name:'Florida'},{code:'GA',name:'Georgia'},{code:'HI',name:'Hawaii'},
+  {code:'ID',name:'Idaho'},{code:'IL',name:'Illinois'},{code:'IN',name:'Indiana'},{code:'IA',name:'Iowa'},
+  {code:'KS',name:'Kansas'},{code:'KY',name:'Kentucky'},{code:'LA',name:'Louisiana'},{code:'ME',name:'Maine'},
+  {code:'MD',name:'Maryland'},{code:'MA',name:'Massachusetts'},{code:'MI',name:'Michigan'},{code:'MN',name:'Minnesota'},
+  {code:'MS',name:'Mississippi'},{code:'MO',name:'Missouri'},{code:'MT',name:'Montana'},{code:'NE',name:'Nebraska'},
+  {code:'NV',name:'Nevada'},{code:'NH',name:'New Hampshire'},{code:'NJ',name:'New Jersey'},{code:'NM',name:'New Mexico'},
+  {code:'NY',name:'New York'},{code:'NC',name:'North Carolina'},{code:'ND',name:'North Dakota'},{code:'OH',name:'Ohio'},
+  {code:'OK',name:'Oklahoma'},{code:'OR',name:'Oregon'},{code:'PA',name:'Pennsylvania'},{code:'RI',name:'Rhode Island'},
+  {code:'SC',name:'South Carolina'},{code:'SD',name:'South Dakota'},{code:'TN',name:'Tennessee'},{code:'TX',name:'Texas'},
+  {code:'UT',name:'Utah'},{code:'VT',name:'Vermont'},{code:'VA',name:'Virginia'},{code:'WA',name:'Washington'},
+  {code:'WV',name:'West Virginia'},{code:'WI',name:'Wisconsin'},{code:'WY',name:'Wyoming'},
+];
+
 // ── COLLEGE DATA ──────────────────────────────────────────────────────────────
 // Approximate, illustrative admitted-student GPA/SAT ranges and acceptance rates
 // for well-known U.S. undergraduate institutions. Figures are rounded estimates
 // for planning purposes — verify against each school's official Common Data Set
 // before relying on them for real decisions.
 export const SCHOOL_DATA = [
+  // ── Highly selective private (reach for most) ──────────────────────────────
   { name:'Harvard University', gpa:3.9, sat:1520, accept:3.4, state:'MA', type:'Private' },
   { name:'Massachusetts Institute of Technology', gpa:3.9, sat:1540, accept:4.0, state:'MA', type:'Private' },
   { name:'Stanford University', gpa:3.96, sat:1505, accept:3.9, state:'CA', type:'Private' },
@@ -302,29 +336,115 @@ export const SCHOOL_DATA = [
   { name:'Yale University', gpa:3.9, sat:1515, accept:4.6, state:'CT', type:'Private' },
   { name:'Columbia University', gpa:3.9, sat:1505, accept:3.9, state:'NY', type:'Private' },
   { name:'University of Pennsylvania', gpa:3.9, sat:1510, accept:5.9, state:'PA', type:'Private' },
-  { name:'Duke University', gpa:3.9, sat:1515, accept:6.0, state:'NC', type:'Private' },
+  { name:'Duke University', gpa:3.9, sat:1515, accept:6.0, state:'NC', type:'Private', preHealth:true },
   { name:'Northwestern University', gpa:3.9, sat:1500, accept:7.2, state:'IL', type:'Private' },
-  { name:'Johns Hopkins University', gpa:3.92, sat:1535, accept:6.5, state:'MD', type:'Private' },
+  { name:'Johns Hopkins University', gpa:3.92, sat:1535, accept:6.5, state:'MD', type:'Private', preHealth:true },
   { name:'Cornell University', gpa:3.9, sat:1490, accept:7.3, state:'NY', type:'Private' },
-  { name:'University of California, Berkeley', gpa:3.89, sat:1440, accept:11.4, state:'CA', type:'Public' },
-  { name:'University of California, Los Angeles', gpa:3.93, sat:1440, accept:8.6, state:'CA', type:'Public' },
-  { name:'University of Michigan', gpa:3.88, sat:1470, accept:17.7, state:'MI', type:'Public' },
-  { name:'University of North Carolina at Chapel Hill', gpa:4.0, sat:1425, accept:16.8, state:'NC', type:'Public' },
-  { name:'University of Virginia', gpa:4.0, sat:1450, accept:18.7, state:'VA', type:'Public' },
-  { name:'Georgia Institute of Technology', gpa:3.9, sat:1465, accept:16.0, state:'GA', type:'Public' },
+  { name:'Brown University', gpa:3.9, sat:1495, accept:5.1, state:'RI', type:'Private' },
+  { name:'Dartmouth College', gpa:3.9, sat:1505, accept:6.2, state:'NH', type:'Private' },
+  { name:'Rice University', gpa:3.9, sat:1520, accept:9.0, state:'TX', type:'Private', preHealth:true },
+  { name:'Vanderbilt University', gpa:3.85, sat:1510, accept:6.7, state:'TN', type:'Private', preHealth:true },
+  { name:'University of Chicago', gpa:3.9, sat:1535, accept:5.4, state:'IL', type:'Private' },
+  { name:'Washington University in St. Louis', gpa:3.85, sat:1520, accept:12.0, state:'MO', type:'Private', preHealth:true },
+  { name:'Emory University', gpa:3.8, sat:1470, accept:11.0, state:'GA', type:'Private', preHealth:true },
+  { name:'Georgetown University', gpa:3.9, sat:1470, accept:12.0, state:'DC', type:'Private' },
+  { name:'Carnegie Mellon University', gpa:3.85, sat:1520, accept:11.3, state:'PA', type:'Private' },
+  { name:'University of Notre Dame', gpa:3.9, sat:1480, accept:12.9, state:'IN', type:'Private' },
+  { name:'Tufts University', gpa:3.9, sat:1470, accept:9.7, state:'MA', type:'Private' },
+
+  // ── Selective private (target/reach depending on profile) ─────────────────
   { name:'New York University', gpa:3.7, sat:1470, accept:8.0, state:'NY', type:'Private' },
   { name:'University of Southern California', gpa:3.79, sat:1460, accept:9.5, state:'CA', type:'Private' },
   { name:'Boston University', gpa:3.7, sat:1440, accept:10.8, state:'MA', type:'Private' },
+  { name:'Boston College', gpa:3.8, sat:1440, accept:15.9, state:'MA', type:'Private', preHealth:true },
+  { name:'Case Western Reserve University', gpa:3.8, sat:1440, accept:33.0, state:'OH', type:'Private', preHealth:true },
+  { name:'Tulane University', gpa:3.6, sat:1400, accept:11.0, state:'LA', type:'Private', preHealth:true },
+  { name:'University of Miami', gpa:3.7, sat:1370, accept:19.0, state:'FL', type:'Private', preHealth:true },
+  { name:'University of Rochester', gpa:3.6, sat:1400, accept:41.0, state:'NY', type:'Private', preHealth:true },
+  { name:'Northeastern University', gpa:3.9, sat:1480, accept:6.6, state:'MA', type:'Private' },
+  { name:'Fordham University', gpa:3.6, sat:1330, accept:47.0, state:'NY', type:'Private' },
+  { name:'Villanova University', gpa:3.8, sat:1420, accept:23.0, state:'PA', type:'Private' },
+  { name:'Wake Forest University', gpa:3.75, sat:1400, accept:22.0, state:'NC', type:'Private' },
+  { name:'Southern Methodist University', gpa:3.6, sat:1350, accept:53.0, state:'TX', type:'Private' },
+  { name:'Syracuse University', gpa:3.5, sat:1300, accept:44.0, state:'NY', type:'Private' },
+  { name:'University of Denver', gpa:3.6, sat:1290, accept:66.0, state:'CO', type:'Private' },
+  { name:'Drexel University', gpa:3.5, sat:1290, accept:76.0, state:'PA', type:'Private' },
+  { name:'Baylor University', gpa:3.7, sat:1290, accept:45.0, state:'TX', type:'Private' },
+  { name:'Loyola Marymount University', gpa:3.7, sat:1290, accept:47.0, state:'CA', type:'Private' },
+
+  // ── Small liberal arts colleges (a mix, not just elite) ────────────────────
+  { name:'Williams College', gpa:3.9, sat:1500, accept:8.5, state:'MA', type:'Private' },
+  { name:'Amherst College', gpa:3.9, sat:1495, accept:7.1, state:'MA', type:'Private' },
+  { name:'Swarthmore College', gpa:3.9, sat:1480, accept:7.5, state:'PA', type:'Private' },
+  { name:'Davidson College', gpa:3.8, sat:1420, accept:17.0, state:'NC', type:'Private' },
+  { name:'Colgate University', gpa:3.8, sat:1430, accept:19.0, state:'NY', type:'Private' },
+  { name:'Bates College', gpa:3.7, sat:1400, accept:15.0, state:'ME', type:'Private' },
+  { name:'Kenyon College', gpa:3.7, sat:1370, accept:32.0, state:'OH', type:'Private' },
+  { name:'Denison University', gpa:3.6, sat:1350, accept:30.0, state:'OH', type:'Private' },
+  { name:'DePauw University', gpa:3.6, sat:1290, accept:59.0, state:'IN', type:'Private' },
+  { name:'Allegheny College', gpa:3.5, sat:1230, accept:79.0, state:'PA', type:'Private' },
+  { name:'Hope College', gpa:3.6, sat:1220, accept:82.0, state:'MI', type:'Private' },
+
+  // ── Flagship / large public universities across many states ───────────────
+  { name:'University of California, Berkeley', gpa:3.89, sat:1440, accept:11.4, state:'CA', type:'Public' },
+  { name:'University of California, Los Angeles', gpa:3.93, sat:1440, accept:8.6, state:'CA', type:'Public' },
+  { name:'University of California, San Diego', gpa:3.85, sat:1400, accept:23.8, state:'CA', type:'Public' },
+  { name:'University of California, Davis', gpa:3.8, sat:1330, accept:38.0, state:'CA', type:'Public' },
+  { name:'University of California, Irvine', gpa:3.85, sat:1330, accept:21.0, state:'CA', type:'Public' },
+  { name:'University of California, Santa Barbara', gpa:3.85, sat:1360, accept:26.0, state:'CA', type:'Public' },
+  { name:'University of Michigan', gpa:3.88, sat:1470, accept:17.7, state:'MI', type:'Public' },
+  { name:'University of North Carolina at Chapel Hill', gpa:4.0, sat:1425, accept:16.8, state:'NC', type:'Public', preHealth:true },
+  { name:'University of Virginia', gpa:4.0, sat:1450, accept:18.7, state:'VA', type:'Public' },
+  { name:'College of William & Mary', gpa:3.9, sat:1420, accept:33.0, state:'VA', type:'Public' },
+  { name:'Georgia Institute of Technology', gpa:3.9, sat:1465, accept:16.0, state:'GA', type:'Public' },
+  { name:'University of Georgia', gpa:3.85, sat:1350, accept:40.0, state:'GA', type:'Public' },
   { name:'University of Washington', gpa:3.8, sat:1350, accept:45.0, state:'WA', type:'Public' },
+  { name:'Washington State University', gpa:3.5, sat:1130, accept:83.0, state:'WA', type:'Public' },
   { name:'Ohio State University', gpa:3.7, sat:1310, accept:53.0, state:'OH', type:'Public' },
+  { name:'University of Pittsburgh', gpa:3.8, sat:1360, accept:47.0, state:'PA', type:'Public', preHealth:true },
   { name:'Penn State University', gpa:3.6, sat:1280, accept:49.0, state:'PA', type:'Public' },
+  { name:'Rutgers University-New Brunswick', gpa:3.7, sat:1310, accept:66.0, state:'NJ', type:'Public', preHealth:true },
   { name:'University of Texas at Austin', gpa:3.84, sat:1355, accept:29.0, state:'TX', type:'Public' },
+  { name:'Texas A&M University', gpa:3.6, sat:1250, accept:63.0, state:'TX', type:'Public' },
   { name:'University of Wisconsin-Madison', gpa:3.8, sat:1400, accept:43.0, state:'WI', type:'Public' },
   { name:'Indiana University Bloomington', gpa:3.6, sat:1240, accept:78.0, state:'IN', type:'Public' },
+  { name:'Purdue University', gpa:3.7, sat:1320, accept:53.0, state:'IN', type:'Public' },
   { name:'University of Florida', gpa:4.0, sat:1390, accept:23.0, state:'FL', type:'Public' },
+  { name:'Florida State University', gpa:3.9, sat:1290, accept:33.0, state:'FL', type:'Public' },
   { name:'Arizona State University', gpa:3.5, sat:1220, accept:88.0, state:'AZ', type:'Public' },
+  { name:'University of Arizona', gpa:3.5, sat:1200, accept:87.0, state:'AZ', type:'Public' },
   { name:'University of Oregon', gpa:3.6, sat:1200, accept:85.0, state:'OR', type:'Public' },
   { name:'University of Alabama', gpa:3.7, sat:1200, accept:80.0, state:'AL', type:'Public' },
+  { name:'Auburn University', gpa:3.7, sat:1250, accept:44.0, state:'AL', type:'Public' },
+  { name:'University of South Carolina', gpa:3.7, sat:1250, accept:64.0, state:'SC', type:'Public' },
+  { name:'Clemson University', gpa:3.9, sat:1330, accept:41.0, state:'SC', type:'Public' },
+  { name:'University of Colorado Boulder', gpa:3.6, sat:1260, accept:79.0, state:'CO', type:'Public' },
+  { name:'University of Minnesota Twin Cities', gpa:3.75, sat:1350, accept:70.0, state:'MN', type:'Public' },
+  { name:'University of Iowa', gpa:3.6, sat:1190, accept:84.0, state:'IA', type:'Public' },
+  { name:'University of Kansas', gpa:3.5, sat:1150, accept:93.0, state:'KS', type:'Public' },
+  { name:'University of Missouri', gpa:3.5, sat:1180, accept:78.0, state:'MO', type:'Public' },
+  { name:'University of Nebraska-Lincoln', gpa:3.5, sat:1160, accept:79.0, state:'NE', type:'Public' },
+  { name:'University of Utah', gpa:3.6, sat:1210, accept:78.0, state:'UT', type:'Public' },
+  { name:'University of Connecticut', gpa:3.7, sat:1310, accept:56.0, state:'CT', type:'Public' },
+  { name:'University of Maryland, College Park', gpa:3.85, sat:1380, accept:44.0, state:'MD', type:'Public' },
+  { name:'University at Buffalo (SUNY)', gpa:3.5, sat:1250, accept:66.0, state:'NY', type:'Public' },
+  { name:'Stony Brook University (SUNY)', gpa:3.6, sat:1330, accept:47.0, state:'NY', type:'Public', preHealth:true },
+  { name:'University at Albany (SUNY)', gpa:3.4, sat:1180, accept:71.0, state:'NY', type:'Public' },
+  { name:'James Madison University', gpa:3.6, sat:1190, accept:74.0, state:'VA', type:'Public' },
+  { name:'Virginia Tech', gpa:3.8, sat:1310, accept:51.0, state:'VA', type:'Public' },
+  { name:'Michigan State University', gpa:3.5, sat:1180, accept:83.0, state:'MI', type:'Public' },
+  { name:'University of Illinois Urbana-Champaign', gpa:3.8, sat:1400, accept:44.0, state:'IL', type:'Public' },
+  { name:'University of Delaware', gpa:3.6, sat:1230, accept:74.0, state:'DE', type:'Public' },
+  { name:'University of New Hampshire', gpa:3.4, sat:1170, accept:88.0, state:'NH', type:'Public' },
+  { name:'University of Vermont', gpa:3.5, sat:1250, accept:64.0, state:'VT', type:'Public' },
+  { name:'Miami University (Ohio)', gpa:3.7, sat:1280, accept:85.0, state:'OH', type:'Public', preHealth:true },
+  { name:'University of Cincinnati', gpa:3.5, sat:1190, accept:78.0, state:'OH', type:'Public' },
+  { name:'University of Oklahoma', gpa:3.6, sat:1220, accept:80.0, state:'OK', type:'Public' },
+  { name:'Louisiana State University', gpa:3.4, sat:1160, accept:76.0, state:'LA', type:'Public' },
+  { name:'University of Mississippi', gpa:3.4, sat:1130, accept:88.0, state:'MS', type:'Public' },
+  { name:'West Virginia University', gpa:3.3, sat:1100, accept:88.0, state:'WV', type:'Public' },
+  { name:'University of Nevada, Reno', gpa:3.4, sat:1120, accept:87.0, state:'NV', type:'Public' },
+  { name:'Montana State University', gpa:3.3, sat:1120, accept:91.0, state:'MT', type:'Public' },
 ];
 
 // ── EXTRACURRICULARS, COMPETITIONS & PROGRAMS ────────────────────────────────
