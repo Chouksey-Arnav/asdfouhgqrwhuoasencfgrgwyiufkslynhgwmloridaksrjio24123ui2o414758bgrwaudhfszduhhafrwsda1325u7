@@ -108,6 +108,9 @@ export async function recordCardReview(cardId) {
 export async function getTotalCardReviews() {
   return db.cardReviews.count();
 }
+export async function getCardReviewsSince(timestamp) {
+  return db.cardReviews.where('reviewedAt').aboveOrEqual(timestamp).count();
+}
 
 // ── Category Performance ───────────────────────────────────────────────────────
 export async function getCatPerf() {

@@ -119,7 +119,7 @@ export default async function handler(req, res) {
   const groqMessages = [];
   const systemPrompt = system
     ? String(system).slice(0, 2000)
-    : 'You are Metabrain, an expert SAT/ACT tutor and college admissions coach for high school and undergraduate students. Be concise, accurate, and encouraging.';
+    : 'You are Metabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {

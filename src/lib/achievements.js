@@ -15,10 +15,17 @@ export const ACHIEVEMENTS = {
   unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'BookOpen', xp:200 },
   course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'Milestone', xp:300 },
   ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Metabrain AI Coach 5 times',  icon:'MessageCircle', xp:75  },
+  college_added:{ key:'college_added',name:'List Builder',     desc:'Add your first school to your college list', icon:'Building2', xp:75 },
+  deadline_set: { key:'deadline_set', name:'On the Radar',     desc:'Track your first application deadline', icon:'CalendarDays', xp:50 },
+  essay_started:{ key:'essay_started',name:'First Draft',      desc:'Start your first essay draft',    icon:'ScrollText', xp:100 },
+  activity_logged:{ key:'activity_logged', name:'Making Moves', desc:'Log your first activity in your Portfolio', icon:'Award', xp:75 },
+  resume_built: { key:'resume_built', name:'Resume Ready',     desc:'Build your first resume',         icon:'Award', xp:100 },
+  interview_first:{ key:'interview_first', name:'Nervous No More', desc:'Complete your first mock interview', icon:'Mic', xp:75 },
+  interview_5:  { key:'interview_5',  name:'Interview Ready',  desc:'Complete 5 mock interviews',      icon:'GraduationCap', xp:200 },
 };
 
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
@@ -33,6 +40,13 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('unit_master',   mastery >= 33);   // at least 1 of 3 units mastered
   check('course_half',   mastery >= 50);
   check('ai_user',       aiChats >= 5);
+  check('college_added', colleges >= 1);
+  check('deadline_set',  deadlines >= 1);
+  check('essay_started', essays >= 1);
+  check('activity_logged', activities >= 1);
+  check('resume_built',  resumeBuilt);
+  check('interview_first', interviewSessions >= 1);
+  check('interview_5',   interviewSessions >= 5);
 
   return toUnlock;
 }
