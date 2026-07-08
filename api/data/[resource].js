@@ -14,6 +14,7 @@ const RESOURCES = new Set([
   'scholarships',
   'activities',
   'awards',
+  'gpa_entries',
 ]);
 
 // Columns a client may write per resource (id, user_id, created_at are server-controlled).
@@ -25,8 +26,9 @@ const WRITABLE = {
   essay_versions: ['essay_id', 'content', 'word_count'],
   test_scores: ['test_type', 'test_date', 'composite', 'section_scores', 'is_target'],
   scholarships: ['name', 'amount', 'deadline', 'status', 'notes'],
-  activities: ['activity_type', 'position', 'description', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'sort_order'],
+  activities: ['activity_type', 'position', 'organization', 'description', 'impact', 'status', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'sort_order'],
   awards: ['title', 'grade_level', 'level', 'sort_order'],
+  gpa_entries: ['term', 'gpa', 'weighted', 'course_rigor'],
 };
 
 function pick(body, keys) {

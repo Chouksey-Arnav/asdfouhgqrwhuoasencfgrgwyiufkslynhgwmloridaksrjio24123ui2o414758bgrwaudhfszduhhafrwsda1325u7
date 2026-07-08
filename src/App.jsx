@@ -26,6 +26,7 @@ import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS } from './data/c
 
 import * as DB from './lib/db';
 import * as AuthAPI from './lib/authApi';
+import { listItems, createItem } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
@@ -135,7 +136,6 @@ const QUICK_P_GROUPS = [
     'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const ACT_TYPES = ['Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
 const COURSE_GROUPS = [
   { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
@@ -643,7 +643,10 @@ export default function App({ account, onAccountChange }) {
   const [qScores,  setQScores_] = useState({});
   const [qHistory, setQHistory] = useState([]);
   const [cDecks,   setCDecks_]  = useState({});
-  const [port,     setPort_]    = useState([]);
+  const [portActivities, setPortActivities] = useState([]);
+  const [portAwards,     setPortAwards]     = useState([]);
+  const [portGpa,        setPortGpa]        = useState([]);
+  const [portLoaded,     setPortLoaded]     = useState(false);
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
@@ -681,7 +684,7 @@ export default function App({ account, onAccountChange }) {
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
-  const [aN,setAN]=useState('');const [aT,setAT]=useState('Leadership');const [aH,setAH]=useState('');const [aDate,setADate]=useState('');const [cF,setCF]=useState('All');
+  const [cF,setCF]=useState('All');
 
 
   // ── Calc ────────────────────────────────────────────────────────────────────
@@ -697,9 +700,9 @@ export default function App({ account, onAccountChange }) {
   useEffect(()=>{
     async function init(){
       try{
-        const [u,pw,qs,qh,decks,portfolio,cp,ach,str,rev] = await Promise.all([
+        const [u,pw,qs,qh,decks,cp,ach,str,rev] = await Promise.all([
           DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
-          DB.getFlashDecks(), DB.getPortfolio(), DB.getCatPerf(),
+          DB.getFlashDecks(), DB.getCatPerf(),
           DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews()
         ]);
         if(u){setUser_(u);}
@@ -711,7 +714,6 @@ export default function App({ account, onAccountChange }) {
         // Custom decks override built-in if same name
         Object.entries(decks||{}).forEach(([name,cards])=>{allDecks[name]=cards;});
         setCDecks_(allDecks);
-        setPort_(portfolio||[]);
         setCatPerf_(cp||{});
         setAchiev_(ach||new Set());
         setStreak(str||0);
@@ -722,6 +724,26 @@ export default function App({ account, onAccountChange }) {
     }
     init();
   },[]);
+
+  // ── Portfolio (Supabase-backed: activities, awards, GPA history) ─────────────
+  useEffect(()=>{
+    if(tab!=='portfolio'||portLoaded)return;
+    (async()=>{
+      try{
+        const [a,w,g]=await Promise.all([listItems('activities'),listItems('awards'),listItems('gpa_entries')]);
+        setPortActivities(a||[]);
+        setPortAwards(w||[]);
+        setPortGpa(g||[]);
+      }catch(e){console.error('Portfolio load error:',e);}
+      setPortLoaded(true);
+    })();
+  },[tab,portLoaded]);
+
+  const addPortActivity = useCallback(async(fields)=>{
+    const row=await createItem('activities',{activity_type:fields.type,position:fields.name,description:fields.desc||'',status:'ongoing',hours_per_week:0,weeks_per_year:0,grade_levels:[],sort_order:portActivities.length,...fields.overrides});
+    setPortActivities(p=>[...p,row]);
+    return row;
+  },[portActivities.length]);
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
@@ -743,7 +765,6 @@ export default function App({ account, onAccountChange }) {
     const cards=(cDecks[name]||[]).filter((_,i)=>i!==idx);
     await saveDeck(name,cards);
   },[cDecks,saveDeck]);
-  const savePort = useCallback((p)=>{ setPort_(p); },[]);
   const saveCatPerf = useCallback((cat,score)=>{ setCatPerf_(cp=>({...cp,[cat]:{ total:(cp[cat]?.total||0)+score, count:(cp[cat]?.count||0)+1 }})); DB.updateCatPerf(cat,score).catch(console.error); },[]);
 
   // ── Timers ───────────────────────────────────────────────────────────────────
@@ -833,7 +854,7 @@ export default function App({ account, onAccountChange }) {
 
   function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
-  function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPort_([]);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
+  function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
 
   // ── Achievement checker ──────────────────────────────────────────────────────
   const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC)=>{
@@ -1763,21 +1784,32 @@ export default function App({ account, onAccountChange }) {
   }
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
-    const totH=port.reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const leadH=port.filter(a=>a.type==='Leadership').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const resH=port.filter(a=>a.type==='Research').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
-    const volH=port.filter(a=>a.type==='Volunteering').reduce((s,a)=>s+(parseInt(a.hours)||0),0);
+    const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
+    const totH=Math.round(portActivities.reduce((s,a)=>s+annualH(a),0));
+    const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
+    const resH=Math.round(portActivities.filter(a=>a.activity_type==='Research').reduce((s,a)=>s+annualH(a),0));
+    const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
     const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
+    const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
+    const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
+
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Portfolio Builder</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Activity Tracker</h2></div>
+        <div style={R()}>
+          <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Application Overview</h2></div>
+          <div style={{marginLeft:'auto',...R({gap:8})}}>
+            <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
+            <span style={pill(C.amberDim,C.amberL)}>{portAwards.length} awards</span>
+          </div>
+        </div>
 
         {/* Summary stats */}
-        <div style={G(4,14,{},isMobile)}>
-          <Stat label="Total Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
+        <div style={G(5,14,{},isMobile)}>
+          <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
           <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub="Rec: 100+" m={isMobile}/>
           <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
           <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+" m={isMobile}/>
+          <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
         {/* Progress bars toward recommended hours */}
@@ -1794,43 +1826,37 @@ export default function App({ account, onAccountChange }) {
           ))}
         </div>
 
-        {/* Add activity */}
-        <div style={glass()}>
-          <SL>Add New Activity</SL>
-          <div style={G(2,12)}>
-            {[{l:'Activity Name',p:'e.g., Debate Team Captain',v:aN,s:setAN,t:'text'},{l:'Type',v:aT,s:setAT,sel:ACT_TYPES},{l:'Hours',p:'100',v:aH,s:setAH,t:'number'},{l:'Start Date',v:aDate,s:setADate,t:'date'}].map(f=>(
-              <div key={f.l} style={CC({gap:4})}>
-                <span style={lbl()}>{f.l}</span>
-                {f.sel?<select style={inp()} value={f.v} onChange={e=>f.s(e.target.value)}>{f.sel.map(t=><option key={t}>{t}</option>)}</select>:<input type={f.t||'text'} style={inp()} placeholder={f.p||''} value={f.v} onChange={e=>f.s(e.target.value)}/>}
-              </div>
-            ))}
-          </div>
-          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16,display:'inline-flex',alignItems:'center',gap:8}} onClick={async()=>{
-            if(!aN.trim())return;
-            const item={name:aN,type:aT,hours:aH,date:aDate,addedAt:Date.now()};
-            const id=await DB.addPortfolioItem(item);
-            setPort_(p=>[...p,{...item,id}]);
-            setAN('');setAH('');setADate('');
-            toast.success(`Added: ${aN.slice(0,40)}`);
-          }}><Plus size={15}/>Add to Portfolio</motion.button>
+        {/* Quick links to the rest of the application system */}
+        <div style={G(4,10,{},isMobile)}>
+          {[
+            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',tab:'resume',icon:Award,col:C.violet},
+            {label:'College List',sub:'Track schools & deadlines',tab:'colleges',icon:Building2,col:C.blue},
+            {label:'Test Scores',sub:'SAT/ACT history',tab:'scores',icon:TrendingUp,col:C.green},
+            {label:'Essays',sub:'Draft & manage essays',tab:'essays',icon:ScrollText,col:C.amber},
+          ].map(l=>(
+            <motion.div key={l.tab} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>setTab(l.tab)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
+              <l.icon size={16} color={l.col}/>
+              <div style={{fontSize:12.5,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:8}}>{l.label}</div>
+              <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{l.sub}</div>
+            </motion.div>
+          ))}
         </div>
 
         {/* Activity list */}
-        {port.length>0&&<div style={CC({gap:8})}>
-          <SL>My Activities ({port.length})</SL>
+        {portActivities.length>0&&<div style={CC({gap:8})}>
+          <SL>My Activities ({portActivities.length})</SL>
           <AnimatePresence>
-            {port.map((act)=>{const col=actColors[act.type]||C.blue;return(
-              <motion.div key={act.id||act.name} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
+            {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
+              <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
                 <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.name}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.type} · {act.hours||'?'}h{act.date?` · ${act.date}`:''}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.position}{act.organization?` · ${act.organization}`:''}</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
                 </div>
-                <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={async()=>{await DB.deletePortfolioItem(act.id);setPort_(p=>p.filter(a=>a.id!==act.id));toast('Removed');}}>Remove</button>
               </motion.div>
             );})}
           </AnimatePresence>
-          <button style={{...btnG({alignSelf:'flex-start',fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList([],{note:'Portfolio export'})}><FileDown size={13}/>Export Portfolio PDF</button>
+          <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
         </div>}
 
         {/* Opportunities */}
@@ -1850,7 +1876,7 @@ export default function App({ account, onAccountChange }) {
                 </div>
                 <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:5}}>{c.name}</div>
                 <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>{c.desc}</div>
-                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{const item={name:c.name,type:c.type,hours:'0',date:'',addedAt:Date.now()};const id=await DB.addPortfolioItem(item);setPort_(p=>[...p,{...item,id}]);toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
+                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{await addPortActivity({type:c.type,name:c.name,desc:c.desc});toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
               </motion.div>
             );})}
           </div>
