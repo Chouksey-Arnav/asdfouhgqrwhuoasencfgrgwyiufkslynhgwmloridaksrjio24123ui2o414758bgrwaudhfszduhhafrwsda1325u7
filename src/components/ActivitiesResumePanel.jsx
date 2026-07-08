@@ -17,7 +17,7 @@ function emptyGpa() {
   return { term: '', gpa: '', weighted: false, course_rigor: '' };
 }
 
-export default function ActivitiesResumePanel({ accent = C.blue }) {
+export default function ActivitiesResumePanel({ accent = C.blue, onResumeExported }) {
   const [activities, setActivities] = useState([]);
   const [awards, setAwards] = useState([]);
   const [gpaEntries, setGpaEntries] = useState([]);
@@ -115,6 +115,7 @@ export default function ActivitiesResumePanel({ accent = C.blue }) {
   function exportPdf() {
     exportPortfolioResume(null, activities, awards, gpaEntries);
     toast.success('Resume PDF downloaded');
+    onResumeExported?.();
   }
 
   const chartData = useMemo(() => ({
