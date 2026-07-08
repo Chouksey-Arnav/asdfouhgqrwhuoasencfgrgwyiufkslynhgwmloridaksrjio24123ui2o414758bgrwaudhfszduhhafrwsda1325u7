@@ -911,7 +911,14 @@ export default function App({ account, onAccountChange }) {
     const newCount=aiChatCount+1;setAiChatCount(newCount);
     try{
       const courseNote=user.courses?.length?` The student is currently taking: ${user.courses.join(', ')}${user.apIb?' (AP/IB student)':''} — tailor examples to these courses when relevant.`:'';
-      const r=await callGroqAI(`You are Metabrain, an expert SAT/ACT tutor and college admissions coach for high school and undergraduate students. The student is interested in ${curPath?.label||'college prep'}.${courseNote} Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'),'deep');
+      const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+      const perfNote=weakIdx?` Their weakest quiz section is ${cats3[weakIdx.i]} at ${weakIdx.v}% — proactively bring this up if it's relevant to what they ask.`:'';
+      const dueNote=dueCards>0?` They have ${dueCards} flashcard(s) due for review.`:'';
+      const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
+      const deadlineNote=nextDeadline?` Their next upcoming deadline is "${nextDeadline.title}" in ${nextDeadline.days} day(s).`:'';
+      const portNote=portActivities.length?` They've logged ${portActivities.length} activity/activities in their Portfolio.`:'';
+      const contextNote=`${perfNote}${dueNote}${deadlineNote}${portNote}`;
+      const r=await callGroqAI(`You are Metabrain, an expert SAT/ACT tutor and college admissions coach for high school and undergraduate students. The student is interested in ${curPath?.label||'college prep'}.${courseNote}${contextNote} Use this context to give specific, personalized guidance when relevant, but don't force it into unrelated questions. Be concise, accurate, and encouraging. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks for formulas when helpful.`,message,700,next.filter(m=>m.role!=='error'),'deep');
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,newCount);
     }catch(e){setMsgs(m=>[...m,{role:'error',content:e.message}]);toast.error(e.message.slice(0,80));}
