@@ -819,7 +819,7 @@ export default function App({ account, onAccountChange }) {
     }
     document.addEventListener('keydown',onKey);
     return()=>document.removeEventListener('keydown',onKey);
-  },[tab,activeDeck,flip,currentCard,cIdx]);
+  },[tab,activeDeck,flip,cIdx]);
 
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'undecided';
@@ -1855,6 +1855,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
     const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
     const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
+    const PIcon=PATH_ICONS[eSpec]||Compass;
 
     return(
       <div style={CC({gap:22})}>
@@ -1863,6 +1864,53 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
             <span style={pill(C.amberDim,C.amberL)}>{portAwards.length} awards</span>
+          </div>
+        </div>
+
+        {/* Cross-app snapshot — pulls every feature area into one view so Portfolio reads as the hub, not just a resume tracker */}
+        <div style={glass({padding:18})}>
+          <SL extra={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}><PIcon size={12}/>{curPath.label} · Level {lvl} {levelInfo.tier}</SL>
+          <div style={G(4,10,{},isMobile)}>
+            <div onClick={()=>setTab('quizzes')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Layers size={13} color={C.green}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Quizzes</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{qTaken}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{ALL_QUIZZES.length}</span></div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{mastery}% pathway mastery</div>
+            </div>
+            <div onClick={()=>setTab('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Layers3 size={13} color={C.violet}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Flashcards</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{totalReviews}<span style={{fontSize:11,color:C.t3,fontWeight:600}}> reviews</span></div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueCards} card{dueCards===1?'':'s'} due today</div>
+            </div>
+            <div onClick={()=>setTab('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Mic size={13} color={C.cyan}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Interview Prep</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{interviewCount}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>mock sessions practiced</div>
+            </div>
+            <div onClick={()=>setTab('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><MessageCircle size={13} color={C.blue}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>AI Coach</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{aiChatCount}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Metabrain</div>
+            </div>
+            <div onClick={()=>setTab('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Building2 size={13} color={C.amber}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>College List</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.colleges}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>schools tracked</div>
+            </div>
+            <div onClick={()=>setTab('essays')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><ScrollText size={13} color={C.orange}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Essays</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.essays}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>drafts in progress</div>
+            </div>
+            <div onClick={()=>setTab('deadlines')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><CalendarDays size={13} color={C.rose}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Deadlines</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{(upcomingDeadlines||[]).length}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>upcoming</div>
+            </div>
+            <div onClick={()=>setTab('analytics')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Trophy size={13} color={C.amberL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Achievements</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{achiev.size}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{Object.keys(ACHIEVEMENTS).length}</span></div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{streak}-day streak</div>
+            </div>
           </div>
         </div>
 
@@ -1893,9 +1941,10 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={G(4,10,{},isMobile)}>
           {[
             {label:'Resume Builder',sub:'Full activity, awards & GPA editor',tab:'resume',icon:Award,col:C.violet},
-            {label:'College List',sub:'Track schools & deadlines',tab:'colleges',icon:Building2,col:C.blue},
-            {label:'Test Scores',sub:'SAT/ACT history',tab:'scores',icon:TrendingUp,col:C.green},
-            {label:'Essays',sub:'Draft & manage essays',tab:'essays',icon:ScrollText,col:C.amber},
+            {label:'Test Scores',sub:'SAT/ACT history & trend',tab:'scores',icon:TrendingUp,col:C.green},
+            {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',tab:'aid',icon:Handshake,col:C.cyan},
+            {label:'Study Pathway',sub:'Your track, units & lessons',tab:'pathway',icon:Route,col:C.blue},
+            {label:'E-Library',sub:'Curated readings & videos',tab:'library',icon:BookOpen,col:C.orange},
           ].map(l=>(
             <motion.div key={l.tab} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>setTab(l.tab)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
               <l.icon size={16} color={l.col}/>
