@@ -28,6 +28,8 @@ async function req(path, options = {}) {
 
 export const sendOtp = (email) => req('/auth/send-otp', { method: 'POST', body: JSON.stringify({ email }) });
 export const verifyOtp = (email, code) => req('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ email, code }) });
+export const loginPassword = (email, password) => req('/auth/login-password', { method: 'POST', body: JSON.stringify({ email, password }) });
+export const setPassword = (newPassword) => req('/auth/set-password', { method: 'POST', body: JSON.stringify({ newPassword }) });
 export const fetchMe = () => req('/auth/me', { method: 'GET' });
 export const updateMe = (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) });
 export const logout = () => req('/auth/logout', { method: 'POST' }).finally(clearToken);
