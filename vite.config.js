@@ -24,6 +24,10 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Quiz library data is precached offline-first, so it easily exceeds
+        // Workbox's 2 MiB default as the library grows — raise the ceiling
+        // rather than excluding it from the offline cache.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

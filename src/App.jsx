@@ -24,7 +24,9 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP } from './data/constants';
+import { rankQuizzes, getMetabrainPickPrompt } from './lib/recommend';
+import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
 
@@ -886,14 +888,23 @@ export default function App({ account, onAccountChange }) {
     return null;
   },[curPath,pathway]);
 
-  // Recommended next quiz — weakest attempted category first, else any untaken quiz
-  const recommendedQuiz = useMemo(()=>{
-    const attempted = secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v);
-    const weak = attempted.length && attempted[0].v<75 ? {cat:cats3[attempted[0].i],score:attempted[0].v} : null;
-    const pool = weak ? ALL_QUIZZES.filter(q=>q.cat===weak.cat&&qScores[q.id]===undefined) : ALL_QUIZZES.filter(q=>qScores[q.id]===undefined);
-    if(!pool.length) return null;
-    return {quiz:pool[0],reason:weak?`Your ${weak.cat} average is ${weak.score}% — this closes the gap fastest.`:'Next unattempted quiz in your library.'};
-  },[qScores]);
+  // Metabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
+  // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
+  const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
+  const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
+  const rankedQuizzes = useMemo(()=>rankQuizzes({
+    quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
+    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:6,
+  }),[qScores,catAverages,courseCats,curPath]);
+  const topPick = rankedQuizzes[0];
+
+  // Optional one-line Metabrain (Groq) narration of the #1 pick — the ranking
+  // above is fully deterministic and never depends on this; it's cosmetic.
+  const askMetabrainAboutPick = useCallback(async(pick)=>{
+    const prompt = getMetabrainPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
+    if(!prompt) return null;
+    return callGroqAI('You are Metabrain, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'fast');
+  },[user?.name,curPath]);
 
   // ── Pathway helpers ──────────────────────────────────────────────────────────
   const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>pathway[l.id]).length/unit.lessons.length*100):0;
@@ -1176,7 +1187,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </div>
 
         {/* Continue where you left off */}
-        {(nextLesson||recommendedQuiz)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
+        {(nextLesson||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
           <div style={{flex:1,minWidth:220}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Continue</div>
             {nextLesson?(
@@ -1190,18 +1201,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
             {nextLesson&&<button onClick={()=>setTab('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
           </div>
-          {recommendedQuiz&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Recommended Quiz</div>
+          {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Metabrain's #1 Pick</div>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
-              <div style={{width:36,height:36,borderRadius:10,background:`${C.green}15`,border:`1px solid ${C.green}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.green}/></div>
+              <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
               <div style={{minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{recommendedQuiz.quiz.title}</div>
-                <div style={{fontSize:11,color:C.t3,marginTop:1}}>{recommendedQuiz.reason}</div>
+                <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{topPick.quiz.title}</div>
+                <div style={{fontSize:11,color:C.t3,marginTop:1}}>{topPick.reason}</div>
               </div>
             </div>
-            <button onClick={()=>setTab('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>Go to Quiz Library</button>
+            <button onClick={()=>setTab('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>
           </div>}
         </div>}
+
+        {/* Metabrain ranked quiz recommendations — top 3 on the dashboard */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMetabrain={askMetabrainAboutPick} compact/>}
 
         {/* Deadline countdown */}
         {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
@@ -1549,15 +1563,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </div>
           </div>
         </div>
-        {/* Recommended next quiz — persistent, driven by weakest attempted category */}
-        {recommendedQuiz&&<div style={{...glass({padding:16,background:C.amberDim,border:`1px solid ${C.amber}25`}),display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-          <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}18`,border:`1px solid ${C.amber}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Target size={17} color={C.amberL}/></div>
-          <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:13,fontWeight:700,color:C.amberL,fontFamily:C.FD}}>Recommended: {recommendedQuiz.quiz.title}</div>
-            <div style={{fontSize:12,color:C.t2,marginTop:2}}>{recommendedQuiz.reason}</div>
-          </div>
-          <button style={{...btn(`linear-gradient(135deg,${C.amber},${C.amberL})`,{fontSize:12,padding:'8px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAQ(recommendedQuiz.quiz);play('click');}}>Start Now<ChevronRight size={14}/></button>
-        </div>}
+        {/* Metabrain ranked quiz recommendations — full top-6 list */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMetabrain={askMetabrainAboutPick}/>}
         <div style={R({justifyContent:'space-between'})}>
           <SL extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SL>
         </div>

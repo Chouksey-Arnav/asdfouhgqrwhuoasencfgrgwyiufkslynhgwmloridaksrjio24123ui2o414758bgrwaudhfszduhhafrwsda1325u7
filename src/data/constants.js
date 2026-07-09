@@ -187,6 +187,18 @@ export const PATHS = {
   },
 };
 
+// ── COURSE → QUIZ CATEGORY MAP ────────────────────────────────────────────────
+// Maps a student's self-reported courses (Settings) to the 3 quiz-library
+// categories, so the Quiz Library and Metabrain Quiz Recommendations can both
+// surface "matches your courses" without duplicating this mapping.
+export const COURSE_CAT_MAP = {
+  Biology:'Life Sciences', 'Environmental Science':'Life Sciences',
+  Chemistry:'Physical Sciences', Physics:'Physical Sciences',
+  'AP Psychology':'Behavioral & Social Sciences', 'US History':'Behavioral & Social Sciences',
+  'World History':'Behavioral & Social Sciences', 'AP US History':'Behavioral & Social Sciences',
+  'AP World History':'Behavioral & Social Sciences',
+};
+
 // ── AI COACH — PATHWAY-SPECIFIC BEHAVIORAL NOTES ─────────────────────────────
 // Short, behavioral (not marketing) guidance injected into the Metabrain system
 // prompt so the coach's advice matches what's actually realistic/appropriate for
