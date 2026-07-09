@@ -1,11 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
-import AuthGate from './components/AuthGate.jsx';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <AuthGate>{({ user, setUser }) => <App account={user} onAccountChange={setUser} />}</AuthGate>
+    <App account={null} onAccountChange={() => {}} />
   </React.StrictMode>
 );
