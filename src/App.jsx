@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { generateClozeFromNotes, cleanNotesText } from './lib/clozeGenerator';
+import { generateAIFlashcards } from './lib/aiFlashcards';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -16,7 +16,7 @@ import {
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
-  Mic, Hammer, Sun, ShieldCheck, Crown,
+  Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap };
@@ -456,23 +456,49 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
 }
 
 // ── Flip Card ─────────────────────────────────────────────────────────────────
-function FlipCard({card,flipped,onClick,m=false}){
+const DIFF_COLOR = { easy:C.green, medium:C.amber, hard:C.rose };
+function FlipCard({card,flipped,onClick,m=false,streak=0}){
+  const [showHint,setShowHint]=useState(false);
   const ret=getRetainability(card);const nxt=card.due?nextReviewLabel(card):null;
+  const dCol=DIFF_COLOR[card.difficulty]||C.blueL;
+  const heat=Math.min(streak,10)/10; // 0→1, brightens the glow as the streak climbs
+  const glowShadow=streak>=3
+    ? `0 8px 40px rgba(245,158,11,${0.10+heat*0.28}),0 0 0 1px rgba(245,158,11,${0.14+heat*0.22}),inset 0 1px 0 rgba(255,255,255,0.05)`
+    : '0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)';
   return(
-    <div onClick={()=>{onClick();play('flip');}} style={{perspective:1200,cursor:'pointer',width:'100%',minHeight:m?320:260}}>
-      <motion.div animate={{rotateY:flipped?180:0}} transition={{duration:.55,ease:[.16,1,.3,1]}} style={{position:'relative',width:'100%',minHeight:m?320:260,transformStyle:'preserve-3d'}}>
+    <div style={{perspective:1200,width:'100%',minHeight:m?320:260}}>
+      <motion.div key={card.front} initial={{opacity:0,scale:.97}} animate={{opacity:1,scale:1,rotateY:flipped?180:0}} transition={{rotateY:{duration:.55,ease:[.16,1,.3,1]},opacity:{duration:.25},scale:{duration:.25}}} style={{position:'relative',width:'100%',minHeight:m?320:260,transformStyle:'preserve-3d'}}>
         {/* Front */}
-        <div style={{position:'absolute',inset:0,backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',...glass({display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36})}}>
+        <div onClick={()=>{onClick();play('flip');setShowHint(false);}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',...glass({display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease'})}}>
+          <div style={{position:'absolute',top:16,left:16,...R({gap:6})}}>
+            {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
+            {card.difficulty&&<span style={pill(`${dCol}18`,dCol,{fontSize:9.5})}>{card.difficulty}</span>}
+          </div>
           {nxt&&<div style={{...pill(C.blueDim,C.blueL,{fontSize:10,position:'absolute',top:16,right:16})}}>{`Next: ${nxt}`}</div>}
-          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.14em',textTransform:'uppercase'}}>QUESTION · Tap to reveal</div>
+          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.14em',textTransform:'uppercase',marginTop:card.category||card.difficulty?14:0}}>QUESTION · Tap to reveal</div>
           <MathText text={card.front} style={{fontSize:m?16:18,fontWeight:600,lineHeight:1.65,color:C.t1,fontFamily:C.FD,display:'block'}}/>
+          {card.hint&&(
+            <div onClick={e=>e.stopPropagation()}>
+              {showHint?(
+                <div style={{...pill(C.amberDim,C.amberL,{fontSize:11,gap:6,maxWidth:360,whiteSpace:'normal',textAlign:'left'})}}><Lightbulb size={12} style={{flexShrink:0}}/>{card.hint}</div>
+              ):(
+                <button onClick={()=>setShowHint(true)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><Lightbulb size={12}/>Show hint</button>
+              )}
+            </div>
+          )}
           <div style={R({gap:5,justifyContent:'center',marginTop:4})}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:'50%',background:C.s5}}/>)}</div>
         </div>
         {/* Back */}
-        <div style={{position:'absolute',inset:0,backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',transform:'rotateY(180deg)',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.08))`,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36}}>
+        <div onClick={()=>{onClick();play('flip');}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',transform:'rotateY(180deg)',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.08))`,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease'}}>
+          <div style={{position:'absolute',top:16,left:16,...R({gap:6})}}>
+            {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
+          </div>
           <div style={{fontSize:10,fontWeight:700,color:C.blueL,letterSpacing:'.14em',textTransform:'uppercase'}}>ANSWER</div>
           <MathText text={card.back} style={{fontSize:m?14:16,lineHeight:1.8,color:C.t1,fontFamily:C.FB,display:'block'}}/>
-          {ret!==null&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,marginTop:4})}}>Retention: {ret}%</div>}
+          <div style={R({gap:6,justifyContent:'center'})}>
+            {ret!==null&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10})}}>Retention: {ret}%</div>}
+            {streak>=3&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} streak</div>}
+          </div>
         </div>
       </motion.div>
     </div>
@@ -687,7 +713,11 @@ export default function App({ account, onAccountChange }) {
   const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
-  const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});
+  const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+  const [genMode,setGenMode]=useState('notes'); // 'notes' | 'topic'
+  const [genTopic,setGenTopic]=useState('');
+  const [genCount,setGenCount]=useState(12);
+  const [genEngine,setGenEngine]=useState(null); // last-used engine label, shown after a successful generation
 
   // ── Library ─────────────────────────────────────────────────────────────────
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
@@ -975,25 +1005,31 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   }
 
   async function genDeck() {
-    if (!notes.trim() || gLoad) return;
+    const isTopic = genMode === 'topic';
+    const sourceOk = isTopic ? genTopic.trim().length >= 2 : notes.trim().length >= 40;
+    if (!sourceOk || gLoad) {
+      if (!sourceOk) toast.error(isTopic ? 'Enter a topic to generate a deck about.' : 'Paste at least a few sentences of notes (minimum ~5 sentences).');
+      return;
+    }
     setGL(true);
     try {
-      const cleaned = cleanNotesText(notes);
-      const cards   = generateClozeFromNotes(cleaned, 14);
-      if (cards.length < 2) {
-        toast.error(`Not enough content to generate cards — paste more notes with complete sentences (minimum ~5 sentences).`);
-        setGL(false);
-        return;
-      }
-      const deckName = `Notes Deck — ${new Date().toLocaleDateString()}`;
+      const { cards, engine, model, error: fallbackErr } = await generateAIFlashcards({
+        mode: genMode, text: notes, topic: genTopic, count: genCount, specialty: eSpec,
+      });
+      const deckName = isTopic ? genTopic.trim().slice(0, 60) : `Notes Deck — ${new Date().toLocaleDateString()}`;
       await saveDeck(deckName, cards);
-      setNotes('');
+      setNotes(''); setGenTopic('');
       setAD({ name: deckName, cards, builtin: false });
       setCIdx(0);
       setFlip(false);
-      toast.success(`Generated ${cards.length} flashcards instantly — no API used!`);
+      setGenEngine(engine);
+      if (engine === 'ai') {
+        toast.success(`Generated ${cards.length} AI flashcards — powered by Llama 3.3 70B.`, { icon: <Brain size={16}/> });
+      } else {
+        toast(`AI engine unavailable (${fallbackErr?.slice(0,60) || 'offline'}) — generated ${cards.length} cards with the local engine instead.`, { icon: <Wand2 size={16}/>, duration: 4500 });
+      }
     } catch (e) {
-      toast.error(e.message.slice(0, 80));
+      toast.error(e.message.slice(0, 120));
     }
     setGL(false);
   }
@@ -1009,7 +1045,23 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     await DB.recordCardReview(currentCard.id||cIdx);
     const newTotal=totalReviews+1;setTotalReviews(newTotal);
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
-    setSessionStats(s=>({...s,reviewed:s.reviewed+1,[label.toLowerCase()]:s[label.toLowerCase()]+1}));
+
+    // ── Combo streak + XP: the dopamine loop for card review ──────────────────
+    const correct = label !== 'Again';
+    const xpMap = { Again: 0, Hard: 2, Good: 4, Easy: 6 };
+    const nextCombo = correct ? sessionStats.streak + 1 : 0;
+    const bonus = correct && nextCombo >= 3 ? Math.min(5, Math.floor(nextCombo / 3)) : 0;
+    const xpGain = xpMap[label] + bonus;
+    const nextBest = Math.max(sessionStats.bestStreak, nextCombo);
+    if (xpGain > 0) { saveUser({ ...user, xp: (user?.xp || 0) + xpGain }); play('xp'); }
+    if (correct && [5, 10, 15, 20, 25].includes(nextCombo)) {
+      play('achieve');
+      celebrateStreak();
+      toast.success(`${nextCombo} in a row — you're on fire!`, { icon: <Flame size={16} color={C.amberL}/>, duration: 2600 });
+    } else if (!correct && sessionStats.streak >= 5) {
+      toast(`Streak broken at ${sessionStats.streak} — back at it.`, { icon: <RefreshCw size={14}/>, duration: 1800 });
+    }
+    setSessionStats(s => ({ ...s, reviewed: s.reviewed + 1, [label.toLowerCase()]: s[label.toLowerCase()] + 1, streak: nextCombo, bestStreak: nextBest, xp: s.xp + xpGain }));
     setCIdx(i=>Math.min(deckCards.length-1,i+1));
     setFlip(false);
   }
@@ -1084,6 +1136,18 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   },[activeDeck,cDecks,studyMode]);
 
   const currentCard = deckCards[cIdx];
+
+  // ── Perfect-session celebration (fires once when a completed session was 100% remembered) ──
+  const celebratedSessionRef=useRef(null);
+  useEffect(()=>{
+    if(!activeDeck||currentCard)return;
+    const total=sessionStats.reviewed;
+    if(total<3||sessionStats.again>0)return;
+    const key=`${activeDeck.name}:${sessionStats.startedAt}`;
+    if(celebratedSessionRef.current===key)return;
+    celebratedSessionRef.current=key;
+    celebratePerfect();
+  },[activeDeck,currentCard,sessionStats]);
   // ═══ TAB RENDERS ══════════════════════════════════════════════════════════════
 
   const SL = ({children,extra={}}) => <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:16,...extra}}>{children}</div>;
@@ -1612,36 +1676,51 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     if(activeDeck){
       const sessionTotal=sessionStats.reviewed;
       const sessionAcc=sessionTotal>0?Math.round(((sessionStats.good+sessionStats.easy)/sessionTotal)*100):null;
-      if(!currentCard)return(
+      if(!currentCard){
+        return(
         <div style={CC({gap:16})}>
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
-          <div style={{...glass({padding:40,textAlign:'center'})}}>
-            <div style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></div>
+          <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
+            <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
             <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
             <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
-            {sessionTotal>0&&(
-              <div style={{...G(4,10,{},isMobile),marginBottom:24,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
+            {sessionTotal>0&&(<>
+              <div style={{...G(4,10,{},isMobile),marginBottom:14,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.green,fontFamily:C.FD}}>{sessionAcc}%</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Remembered</div></div>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.rose,fontFamily:C.FD}}>{sessionStats.again}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Again</div></div>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.blue,fontFamily:C.FD}}>{fmtT(Math.round((Date.now()-sessionStats.startedAt)/1000))}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Time</div></div>
               </div>
-            )}
+              <div style={{...G(2,10,{},isMobile),marginBottom:24,maxWidth:240,marginLeft:'auto',marginRight:'auto'}}>
+                <div style={{...glass2({textAlign:'center',padding:12,background:C.amberDim,border:`1px solid ${C.amber}25`})}}><div style={{fontSize:16,fontWeight:800,color:C.amberL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Flame size={14}/>{sessionStats.bestStreak}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Best streak</div></div>
+                <div style={{...glass2({textAlign:'center',padding:12,background:C.violetDim,border:`1px solid ${C.violet}25`})}}><div style={{fontSize:16,fontWeight:800,color:C.violetL,fontFamily:C.FD,display:'flex',alignItems:'center',justifyContent:'center',gap:4}}><Zap size={14}/>{sessionStats.xp}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>XP earned</div></div>
+              </div>
+            </>)}
             <div style={R({justifyContent:'center',gap:10})}>
               {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
-              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>Study Again</button>
+              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>
             </div>
-          </div>
+          </motion.div>
         </div>
-      );
+      );}
       const dueCount=getDueCards(activeDeck.builtin?(FLASH_DECKS[activeDeck.name]||[]):(cDecks[activeDeck.name]||[])).length;
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
             <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
-              <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed this session`:''}</div>
+              <div style={R({justifyContent:'center',gap:8})}>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
+                <AnimatePresence>
+                  {sessionStats.streak>=3&&(
+                    <motion.div key={sessionStats.streak} initial={{scale:.4,opacity:0}} animate={{scale:1,opacity:1}} exit={{scale:.4,opacity:0}} transition={{type:'spring',stiffness:400,damping:12}}
+                      style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}>
+                      <Flame size={11}/>{sessionStats.streak}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}</div>
             </div>
             <div style={R({gap:6})}>
               <button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>
@@ -1651,7 +1730,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </div>
           </div>
           <Bar pct={((cIdx+1)/deckCards.length)*100} color={accent} h={3} glow/>
-          <FlipCard card={currentCard} flipped={flip} onClick={()=>setFlip(f=>!f)} m={isMobile}/>
+          <FlipCard card={currentCard} flipped={flip} onClick={()=>setFlip(f=>!f)} m={isMobile} streak={sessionStats.streak}/>
           <div style={{textAlign:'center',fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{!isMobile&&(flip?'Press 1–4 to rate · ':'Press Space to flip · ')}Click card to flip</div>
           <div style={R({justifyContent:'space-between'})}>
             <motion.button whileHover={{scale:1.04}} style={{...btnG({padding:'9px 20px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setCIdx(i=>Math.max(0,i-1));setFlip(false);}} disabled={cIdx===0}><ChevronLeft size={14}/>Prev</motion.button>
@@ -1727,12 +1806,30 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* AI Generator */}
         <div style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`})}}>
           <div style={R({marginBottom:14})}>
-            <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Sparkles size={17} color={C.violetL}/></div>
-            <div><div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div><div style={{fontSize:11,color:C.t2,marginTop:1}}>Paste your notes — instantly generates 10–14 high-yield cards, no API needed</div></div>
+            <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Brain size={17} color={C.violetL}/></div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div>
+              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Real active-recall cards, written by an AI tutor — powered by Llama 3.3 70B on Groq</div>
+            </div>
           </div>
-          <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
-          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
-            <Sparkles size={14}/>{gLoad?'Generating…':'Generate Flashcards'}
+          <div style={R({gap:6,marginBottom:12})}>
+            {[['notes','From my notes'],['topic','From a topic']].map(([key,label])=>(
+              <button key={key} style={btnSm(genMode===key?`linear-gradient(135deg,${C.violet},#7c3aed)`:C.s4,{fontSize:11,color:genMode===key?'#fff':C.t2,border:`1px solid ${genMode===key?'transparent':C.b1}`})} onClick={()=>setGenMode(key)}>{label}</button>
+            ))}
+            <div style={{marginLeft:'auto',...R({gap:6})}}>
+              <span style={{fontSize:10,color:C.t3}}>Cards</span>
+              <select style={inp({width:'auto',padding:'5px 10px',fontSize:11})} value={genCount} onChange={e=>setGenCount(parseInt(e.target.value,10))}>
+                {[8,12,16,20,24].map(n=><option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+          </div>
+          {genMode==='notes'?(
+            <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+          ):(
+            <input style={{...inp({marginBottom:12})}} placeholder='Any topic — e.g. "Krebs cycle", "SAT contronyms", "WWI causes"…' value={genTopic} onChange={e=>setGenTopic(e.target.value)}/>
+          )}
+          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||(genMode==='notes'?!notes.trim():!genTopic.trim())}>
+            <Sparkles size={14}/>{gLoad?'Generating…':`Generate ${genCount} Flashcards`}
           </motion.button>
         </div>
 
@@ -1743,7 +1840,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             return(
               <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
-                <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now()});}}>
+                <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
@@ -2505,8 +2602,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
             AscendPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
-            Powered by: ts-fsrs · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
-            Metabrain 2.0 is powered by large language model technology · All progress data stored locally in your browser via IndexedDB · No account required for your study data
+            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · Llama 3.3 70B on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
+            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Metabrain 2.0 and AI deck generation are powered by large language model technology · All progress data stored locally in your browser via IndexedDB · No account required for your study data
           </div>
         </div>
       </div>
