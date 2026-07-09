@@ -16,7 +16,7 @@ import {
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
-  Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2,
+  Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Stethoscope, HeartPulse, Pill, Activity, Globe,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap };
@@ -593,7 +593,7 @@ function NewDeckModal({onCreate,onClose,m=false}){
 }
 
 // ── Pathway Overview Card ────────────────────────────────────────────────────
-const PATH_ICONS = { undecided:Compass, stem:FlaskConical, humanities:BookOpen, business:Building2, socialSci:Handshake, preHealth:Dna };
+const PATH_ICONS = { undecided:Compass, physician:Stethoscope, nursing:HeartPulse, research:Dna, pharmacy:Pill, alliedHealth:Activity, publicHealth:Globe };
 function PathwayCard({ pathKey, p, current, onSelect, m=false }){
   const Ic = PATH_ICONS[pathKey]||Compass;
   const lessonCount = (p.units||[]).reduce((s,u)=>s+(u.lessons?.length||0),0);
@@ -1094,14 +1094,12 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   }
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
-  const DIAG_CAT_LABELS = {stem:'STEM & Engineering',humanities:'Humanities & Writing',business:'Business & Economics',socialSci:'Social Sciences'};
+  const DIAG_CAT_LABELS = {physician:'Physician (MD/DO)',nursing:'Nursing',research:'Biomedical Research',pharmacy:'Pharmacy',alliedHealth:'Allied Health & Therapy',publicHealth:'Public Health & Policy'};
   function finalizeDiag(answers){
-    const counts={undecided:0,stem:0,humanities:0,business:0,socialSci:0,preHealth:0};
-    const catCounts={stem:0,humanities:0,business:0,socialSci:0};
-    const pm={stem:['stem','preHealth'],humanities:['humanities','undecided'],business:['business','undecided'],socialSci:['socialSci','preHealth']};
-    answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k){if(catCounts[k]!==undefined)catCounts[k]++;if(pm[k])pm[k].forEach(sp=>{if(counts[sp]!==undefined)counts[sp]++;});}});
+    const counts={undecided:0,physician:0,nursing:0,research:0,pharmacy:0,alliedHealth:0,publicHealth:0};
+    answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k&&counts[k]!==undefined)counts[k]++;});
     setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'undecided');
-    setDCats(Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([k])=>k));
+    setDCats(Object.entries(counts).filter(([k])=>k!=='undecided').sort((a,b)=>b[1]-a[1]).map(([k])=>k));
     setDD(true);
   }
 
@@ -1334,11 +1332,11 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   // ── DIAGNOSTIC ────────────────────────────────────────────────────────────────
   function tDiag(){
     if(dDone&&dRes){const path=PATHS[dRes];
-      const topCats=(dCats||[]).slice(0,2).map(k=>DIAG_CAT_LABELS[k]).filter(Boolean);
+      const topCats=(dCats||[]).map(k=>DIAG_CAT_LABELS[k]).filter(l=>l&&l!==path?.label).slice(0,1);
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
+        <div><div style={lbl()}>Medical Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`})}}>
           <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}><Compass size={34} color={accent}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
@@ -1377,14 +1375,14 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     if(dIntro){
       return(
         <div style={CC({gap:22})}>
-          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
-            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific interest, so studying also builds toward the college major you're most likely to pursue. Take the two-minute diagnostic for a recommendation, or read through the pathways yourself and pick one directly — you can always switch later.</p>
+          <div><div style={lbl()}>Medical Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Medical Path</h2>
+            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below is a real health career — physician, nurse, researcher, pharmacist, allied health, and public health — each sequencing the same core SAT/ACT and science prep around the content most relevant to that role. The diagnostic goes beyond "which subject do you like" — it asks about your personality, how you handle pressure and ambiguity, and what kind of impact you want to have, then matches you to the medical path that fits who you are, not just what you're good at. Or skip it and read through the pathways yourself — you can always switch later.</p>
           </div>
           <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
             <div style={{flex:1,minWidth:220}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} quick questions about how you think and what excites you — takes about 2 minutes.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about your personality, character, and interests — takes about 3 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.blueGrad,{fontSize:13,padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
@@ -1405,7 +1403,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
+          <div><div style={lbl()}>Medical Pathway Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
           <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={accent} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
         </div>
         <Bar pct={(dStep/DIAG_QS.length)*100} color={accent} h={3}/>
