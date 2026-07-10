@@ -141,7 +141,19 @@ const QUICK_P_GROUPS = [
     'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
+const LIB_CATS  = [
+  'All',
+  'Mathematics',
+  'Computer Science & Tech',
+  'Humanities & Writing',
+  'Business & Economics',
+  'Psychology & Sociology',
+  'Life Sciences',
+  'Physical Sciences',
+  'Test Prep: SAT/ACT & Study Skills',
+  'Admissions & College Planning',
+  'Extracurriculars & Opportunities'
+];
 const COURSE_GROUPS = [
   { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
   { group:'Science', items:['Biology','Chemistry','Physics','Environmental Science'] },
@@ -1783,8 +1795,11 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
 
   // ── E-LIBRARY ─────────────────────────────────────────────────────────────────
   function tLib(){
-    const yt=fLib.filter(r=>r.type==='YouTube');const reg=fLib.filter(r=>r.type!=='YouTube');
     const tc={Article:C.blue,Book:C.amber,Course:C.violet,App:C.green,Community:'#ec4899',Podcast:C.cyan};
+    const activeCats = lCat === 'All'
+      ? LIB_CATS.filter(c => c !== 'All')
+      : [lCat];
+
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
@@ -1797,50 +1812,73 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
           <select style={inp({width:'auto'})} value={lCat} onChange={e=>setLC(e.target.value)}>{LIB_CATS.map(c=><option key={c}>{c}</option>)}</select>
         </div>
-        {yt.length>0&&<div>
-          <SL>Video Resources ({yt.length})</SL>
-          <div style={G(2,14,{},isMobile)}>
-            {yt.map((r,i)=>(
-              <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',cursor:'pointer'})}>
-                <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden'}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}>
-                  <img src={`https://img.youtube.com/vi/${r.ytId}/mqdefault.jpg`} alt={r.title} loading="lazy" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',transition:'transform .4s'}} onError={e=>{e.target.style.display='none';}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
-                  <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(4,6,11,0.85) 0%,transparent 55%)'}}/>
-                  <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    <motion.div whileHover={{scale:1.12,background:'rgba(255,255,255,0.22)'}} style={{width:52,height:52,borderRadius:'50%',background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',border:'1.5px solid rgba(255,255,255,0.25)'}}><Play size={20} color="white" fill="white"/></motion.div>
+
+        {activeCats.map(cat => {
+          const catItems = fLib.filter(r => r.cat === cat);
+          if (catItems.length === 0) return null;
+          const catYt = catItems.filter(r => r.type === 'YouTube');
+          const catReg = catItems.filter(r => r.type !== 'YouTube');
+
+          return (
+            <div key={cat} style={CC({gap:12, marginTop:8})}>
+              <div style={{borderBottom:`1.5px solid ${C.s3}`,paddingBottom:8,marginTop:12,marginBottom:4}}>
+                <h3 style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>{cat}</h3>
+                <div style={{fontSize:11,color:C.t3,marginTop:2}}>{catItems.length} matching resources</div>
+              </div>
+
+              {catYt.length > 0 && (
+                <div style={CC({gap:10})}>
+                  <SL>Video Resources ({catYt.length})</SL>
+                  <div style={G(2,14,{},isMobile)}>
+                    {catYt.map((r,i)=>(
+                      <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',cursor:'pointer'})}>
+                        <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden'}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}>
+                          <img src={`https://img.youtube.com/vi/${r.ytId}/mqdefault.jpg`} alt={r.title} loading="lazy" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',transition:'transform .4s'}} onError={e=>{e.target.style.display='none';}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
+                          <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(4,6,11,0.85) 0%,transparent 55%)'}}/>
+                          <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                            <motion.div whileHover={{scale:1.12,background:'rgba(255,255,255,0.22)'}} style={{width:52,height:52,borderRadius:'50%',background:'rgba(255,255,255,0.12)',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',justifyContent:'center',border:'1.5px solid rgba(255,255,255,0.25)'}}><Play size={20} color="white" fill="white"/></motion.div>
+                          </div>
+                          <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:5})}>YouTube</span>
+                        </div>
+                        <div style={{padding:'14px 18px'}}>
+                          <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,marginBottom:5,fontFamily:C.FD}}>{r.title}</div>
+                          <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
+                          <div style={R({justifyContent:'space-between'})}>
+                            <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
+                            <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
                   </div>
-                  <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:5})}>YouTube</span>
                 </div>
-                <div style={{padding:'14px 18px'}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,marginBottom:5,fontFamily:C.FD}}>{r.title}</div>
-                  <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
-                  <div style={R({justifyContent:'space-between'})}>
-                    <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
-                    <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
+              )}
+
+              {catReg.length > 0 && (
+                <div style={CC({gap:10, marginTop:catYt.length > 0 ? 10 : 0})}>
+                  <SL>Articles, Books & Courses ({catReg.length})</SL>
+                  <div style={G(2,12,{},isMobile)}>
+                    {catReg.map((r,i)=>{const col=tc[r.type]||C.t2;return(
+                      <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s'})}>
+                        <div style={R({justifyContent:'space-between',marginBottom:12})}>
+                          <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
+                          <div style={R({gap:6})}>
+                            {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
+                            <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
+                          </div>
+                        </div>
+                        <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                        <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
+                        <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
+                      </motion.div>
+                    );})}
                   </div>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>}
-        {reg.length>0&&<div>
-          {yt.length>0&&<SL>Articles, Books & Courses ({reg.length})</SL>}
-          <div style={G(2,12,{},isMobile)}>
-            {reg.map((r,i)=>{const col=tc[r.type]||C.t2;return(
-              <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s'})}>
-                <div style={R({justifyContent:'space-between',marginBottom:12})}>
-                  <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
-                  <div style={R({gap:6})}>
-                    {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
-                    <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
-                  </div>
-                </div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
-                <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
-                <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
-              </motion.div>
-            );})}
-          </div>
-        </div>}
+              )}
+            </div>
+          );
+        })}
+
         {fLib.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No resources match your search.</div>}
       </div>
     );
