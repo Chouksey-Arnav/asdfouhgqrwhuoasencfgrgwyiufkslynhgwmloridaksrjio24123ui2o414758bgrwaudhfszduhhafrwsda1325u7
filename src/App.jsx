@@ -756,10 +756,8 @@ export default function App({ account, onAccountChange }) {
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
   const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
-  const [genMode,setGenMode]=useState('notes'); // 'notes' | 'topic'
-  const [genTopic,setGenTopic]=useState('');
-  const [genCount,setGenCount]=useState(12);
-  const [genEngine,setGenEngine]=useState(null); // last-used engine label, shown after a successful generation
+  const [genCount,setGenCount]=useState(20);
+  const [genCountInput,setGenCountInput]=useState('20'); // raw text of the count field, so typing isn't clobbered mid-edit
 
   // ── Library ─────────────────────────────────────────────────────────────────
   const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
@@ -1135,49 +1133,51 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     setCLoad(false);
   }
 
-  const GEN_STAGES = {
-    notes: ['Reading your notes…', 'Extracting key concepts…', 'Writing flashcards…', 'Polishing answers…'],
-    topic: ['Thinking about the topic…', 'Drafting questions…', 'Writing answers…', 'Polishing the deck…'],
-  };
+  const GEN_STAGES = ['Reading your notes…', 'Extracting key concepts…', 'Selecting the best cards…', 'Polishing answers…'];
+  const GEN_COUNT_MIN = 5, GEN_COUNT_MAX = 150;
+
+  function commitGenCount(raw) {
+    const n = parseInt(raw, 10);
+    if (Number.isNaN(n)) { setGenCountInput(String(genCount)); return; }
+    const clamped = Math.min(GEN_COUNT_MAX, Math.max(GEN_COUNT_MIN, n));
+    if (clamped !== n) toast(`Card count clamped to ${clamped} (range is ${GEN_COUNT_MIN}–${GEN_COUNT_MAX}).`, { icon: <Wand2 size={14}/> });
+    setGenCount(clamped);
+    setGenCountInput(String(clamped));
+  }
 
   async function genDeck() {
-    const isTopic = genMode === 'topic';
-    const sourceOk = isTopic ? genTopic.trim().length >= 2 : notes.trim().length >= 40;
+    const sourceOk = notes.trim().length >= 40;
     if (!sourceOk || gLoad) {
       if (!sourceOk) {
-        toast.error(isTopic ? 'Enter a topic to generate a deck about.' : 'Paste at least a few sentences of notes (minimum ~5 sentences).');
+        toast.error('Paste at least a few sentences of notes (minimum ~5 sentences).');
         setGShake(true); setTimeout(()=>setGShake(false), 420);
       }
       return;
     }
-    const stages = GEN_STAGES[genMode] || GEN_STAGES.notes;
     setGL(true); setGStage(0);
-    const stageTimer = setInterval(()=>setGStage(s=>Math.min(s+1, stages.length-1)), 750);
+    const stageTimer = setInterval(()=>setGStage(s=>Math.min(s+1, GEN_STAGES.length-1)), 750);
     const startedAt = Date.now();
     try {
-      const { cards, engine, model, error: fallbackErr } = await generateAIFlashcards({
-        mode: genMode, text: notes, topic: genTopic, count: genCount, specialty: eSpec,
-      });
+      const { cards, requested, generated, coverage } = generateAIFlashcards({ text: notes, count: genCount });
       // Guarantee the stage narrative has time to actually play out, so
-      // generation never feels like an instant flicker even when the local
+      // generation never feels like an instant flicker even though the local
       // engine resolves in a few milliseconds.
-      const minFloor = stages.length * 550;
+      const minFloor = GEN_STAGES.length * 550;
       const elapsed = Date.now() - startedAt;
       if (elapsed < minFloor) await new Promise(r => setTimeout(r, minFloor - elapsed));
-      const deckName = isTopic ? genTopic.trim().slice(0, 60) : `Notes Deck — ${new Date().toLocaleDateString()}`;
+      const deckName = `Notes Deck — ${new Date().toLocaleDateString()}`;
       await saveDeck(deckName, cards);
-      setNotes(''); setGenTopic('');
+      setNotes('');
       setAD({ name: deckName, cards, builtin: false });
       setCIdx(0);
       setFlip(false);
-      setGenEngine(engine);
-      if (engine === 'ai') {
-        toast.success(`Generated ${cards.length} AI flashcards — powered by Llama 3.3 70B.`, { icon: <Brain size={16}/> });
+      if (coverage === 'full') {
+        toast.success(`Generated all ${generated} flashcards you asked for.`, { icon: <Brain size={16}/> });
       } else {
-        toast(`AI engine unavailable (${fallbackErr?.slice(0,60) || 'offline'}) — generated ${cards.length} cards with the local engine instead.`, { icon: <Wand2 size={16}/>, duration: 4500 });
+        toast(`Generated ${generated} of the ${requested} you asked for — that's every distinct fact we could find in your notes. Add more detail for more cards.`, { icon: <Wand2 size={16}/>, duration: 5000 });
       }
     } catch (e) {
-      toast.error(e.message.slice(0, 120));
+      toast.error(e.message.slice(0, 160));
     }
     clearInterval(stageTimer);
     setGL(false);
@@ -2012,36 +2012,32 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <motion.div animate={gLoad?{rotate:360}:{rotate:0}} transition={gLoad?{duration:1.6,repeat:Infinity,ease:'linear'}:{duration:.3}}
               style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Brain size={17} color={C.violetL}/></motion.div>
             <div style={{flex:1}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div>
-              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Real active-recall cards, written by an AI tutor — powered by Llama 3.3 70B on Groq</div>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate Deck From Notes</div>
+              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Turns your notes into flashcards — runs entirely on your device, no account or API needed</div>
             </div>
           </div>
-          <div style={R({gap:6,marginBottom:12})}>
-            {[['notes','From my notes'],['topic','From a topic']].map(([key,label])=>(
-              <button key={key} disabled={gLoad} style={btnSm(genMode===key?`linear-gradient(135deg,${C.violet},#7c3aed)`:C.s4,{fontSize:11,color:genMode===key?'#fff':C.t2,border:`1px solid ${genMode===key?'transparent':C.b1}`,opacity:gLoad?.6:1,cursor:gLoad?'not-allowed':'pointer'})} onClick={()=>setGenMode(key)}>{label}</button>
-            ))}
-            <div style={{marginLeft:'auto',...R({gap:6})}}>
-              <span style={{fontSize:10,color:C.t3}}>Cards</span>
-              <select disabled={gLoad} style={inp({width:'auto',padding:'5px 10px',fontSize:11,opacity:gLoad?.6:1})} value={genCount} onChange={e=>setGenCount(parseInt(e.target.value,10))}>
-                {[8,12,16,20,24].map(n=><option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
+          <div style={R({gap:6,marginBottom:12,justifyContent:'flex-end'})}>
+            <span style={{fontSize:10,color:C.t3}}>Cards</span>
+            <input
+              type="number" min={GEN_COUNT_MIN} max={GEN_COUNT_MAX} step={1}
+              disabled={gLoad}
+              style={inp({width:70,padding:'5px 10px',fontSize:11,opacity:gLoad?.6:1})}
+              value={genCountInput}
+              onChange={e=>setGenCountInput(e.target.value)}
+              onBlur={e=>commitGenCount(e.target.value)}
+            />
           </div>
-          {genMode==='notes'?(
-            <div style={{position:'relative',marginBottom:12}}>
-              <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
-              <div style={{position:'absolute',right:10,bottom:8,fontSize:9.5,color:C.t4,fontFamily:C.FM,pointerEvents:'none'}}>{notes.length>0?`${notes.trim().split(/\s+/).filter(Boolean).length} words`:''}</div>
-            </div>
-          ):(
-            <input disabled={gLoad} style={{...inp({marginBottom:12,opacity:gLoad?.6:1})}} placeholder='Any topic — e.g. "Krebs cycle", "SAT contronyms", "WWI causes"…' value={genTopic} onChange={e=>setGenTopic(e.target.value)}/>
-          )}
-          <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`,minWidth:220,justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||(genMode==='notes'?!notes.trim():!genTopic.trim())}>
+          <div style={{position:'relative',marginBottom:12}}>
+            <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+            <div style={{position:'absolute',right:10,bottom:8,fontSize:9.5,color:C.t4,fontFamily:C.FM,pointerEvents:'none'}}>{notes.length>0?`${notes.trim().split(/\s+/).filter(Boolean).length} words`:''}</div>
+          </div>
+          <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`,minWidth:220,justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
             {gLoad?(
               <>
                 <motion.span animate={{rotate:360}} transition={{duration:.9,repeat:Infinity,ease:'linear'}} style={{display:'flex'}}><RefreshCw size={14}/></motion.span>
                 <AnimatePresence mode="wait">
                   <motion.span key={gStage} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:.18}}>
-                    {(GEN_STAGES[genMode]||GEN_STAGES.notes)[gStage]}
+                    {GEN_STAGES[gStage]}
                   </motion.span>
                 </AnimatePresence>
               </>
@@ -2049,7 +2045,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </motion.button>
           <AnimatePresence>
             {gLoad&&(
-              <motion.div initial={{scaleX:0}} animate={{scaleX:1}} exit={{opacity:0}} transition={{duration:(GEN_STAGES[genMode]||GEN_STAGES.notes).length*0.55,ease:'linear'}}
+              <motion.div initial={{scaleX:0}} animate={{scaleX:1}} exit={{opacity:0}} transition={{duration:GEN_STAGES.length*0.55,ease:'linear'}}
                 style={{position:'absolute',left:0,bottom:0,height:2,width:'100%',transformOrigin:'left',background:`linear-gradient(90deg,${C.violet},#7c3aed)`}}/>
             )}
           </AnimatePresence>
@@ -2978,8 +2974,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
             MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
-            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · Llama 3.3 70B on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
-            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Metabrain 2.0 and AI deck generation are powered by large language model technology · All progress data stored locally in your browser via IndexedDB · No account required for your study data
+            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Llama 3.3 70B on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
+            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Metabrain 2.0 is powered by large language model technology · All progress data stored locally in your browser via IndexedDB
           </div>
         </div>
       </div>
