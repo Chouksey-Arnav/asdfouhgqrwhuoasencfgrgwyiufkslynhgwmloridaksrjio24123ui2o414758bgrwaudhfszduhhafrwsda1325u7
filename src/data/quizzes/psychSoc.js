@@ -1840,4 +1840,349 @@ export const PSYCH_SOC_QUIZZES = [
 { q:`In personal budgeting, distinguishing between "needs" (like housing and groceries) and "wants" (like entertainment subscriptions) helps individuals primarily to:`, ch:[`Avoid paying any bills`,`Qualify automatically for lower interest rates`,`Prioritize essential spending and identify areas where they can cut back to save money`,`Eliminate the need for a budget entirely`], ans:2, exp:`Recognizing which expenses are essential versus discretionary allows people to make more intentional spending choices and find realistic areas to reduce spending when trying to save or manage debt.` },
 { q:`Over time, inflation affects personal savings held in cash by:`, ch:[`Increasing the purchasing power of that cash`,`Having no effect on purchasing power`,`Automatically increasing the interest earned`,`Eroding the purchasing power of that money if it earns no return above the inflation rate`], ans:3, exp:`If savings sit in an account earning little to no interest while prices rise due to inflation, the real purchasing power of that money declines over time, which is why many financial advisors recommend investing at least part of long-term savings.` }
 ] },
+  {
+    id: `ps116`,
+    cat: `Behavioral & Social Sciences`,
+    title: `Psychological Defense Mechanisms`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which defense mechanism involves unconsciously blocking unacceptable thoughts, memories, or impulses from awareness?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 0,
+        exp: `Repression is the primary ego defense mechanism where anxiety-provoking thoughts, feelings, or memories are kept entirely out of conscious awareness by pushing them into the unconscious.`
+      },
+      {
+        q: `Which defense mechanism involves attributing one's own unacceptable thoughts or feelings onto another person?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 1,
+        exp: `Projection is the process of attributing one's own unacceptable or threatening impulses, thoughts, or desires onto someone else, as if those feelings belong to them rather than oneself.`
+      },
+      {
+        q: `Which defense mechanism involves redirecting an emotional impulse (like anger) from a dangerous target to a safer, substitute target?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 2,
+        exp: `Displacement shifts sexual or aggressive impulses toward a more acceptable or less threatening target, diverting the original emotion to a safer substitute.`
+      },
+      {
+        q: `Which defense mechanism involves channeling unacceptable or raw impulses into socially constructive and productive activities?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 3,
+        exp: `Sublimation is a mature defense mechanism where unmanageable or forbidden drives (like aggression or libido) are channeled into socially laudable channels, such as sports, science, or art.`
+      },
+      {
+        q: `A person who is angry at their boss but comes home and yells at their family is demonstrating which defense mechanism?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 2,
+        exp: `Yelling at family members instead of one's boss is a classic example of displacement: redirecting anger away from the actual, more powerful source to a safer, less threatening recipient.`
+      },
+      {
+        q: `A person who has strong unconscious feelings of hostility but constantly accuses others of being hostile toward them is demonstrating which defense mechanism?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 1,
+        exp: `Attributing one's own hostile feelings to others is projection: the individual handles their own unacceptable aggression by seeing it in everyone else.`
+      },
+      {
+        q: `An aggressive individual who channels their energy into becoming a successful competitive boxer is demonstrating which defense mechanism?`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 3,
+        exp: `Channeling physical aggression into a structured, socially accepted sport like boxing is a prime example of sublimation (refining raw impulses into constructive behaviors).`
+      },
+      {
+        q: `Unconsciously pushing a traumatic childhood memory deep into the mind so it cannot be recalled is an example of:`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 0,
+        exp: `Blocking out painful memories of trauma automatically and without conscious intent is the definition of repression.`
+      },
+      {
+        q: `Instead of expressing anger at a friend, an artist paints a powerful, intense masterpiece. This is:`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 3,
+        exp: `This is sublimation. Creative expression is a mature way to process and transform negative or disruptive emotional impulses into beautiful, socially valued works.`
+      },
+      {
+        q: `An unfaithful partner who constantly accuses their spouse of cheating is exhibiting:`,
+        ch: [`Repression`, `Projection`, `Displacement`, `Sublimation`],
+        ans: 1,
+        exp: `The unfaithful partner projects their own guilt and desires for infidelity onto their spouse, accusing them of the very behavior they themselves are guilty of or desire.`
+      }
+    ]
+  },
+  {
+    id: `ps117`,
+    cat: `Behavioral & Social Sciences`,
+    title: `Classical Conditioning Component Matching`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `In Pavlov's classic dog experiment, what is the food that naturally and automatically triggers salivation?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 0,
+        exp: `The food is the Unconditioned Stimulus (US) because it naturally and automatically elicits a biological response without any prior training or conditioning.`
+      },
+      {
+        q: `In Pavlov's classic experiment, what is the salivation that occurs naturally in response to food?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 1,
+        exp: `The natural salivation is the Unconditioned Response (UR). It is an unlearned, automatic reflex triggered by the unconditioned stimulus (food).`
+      },
+      {
+        q: `In Pavlov's classic experiment, what is the bell after it has been repeatedly paired with food and now triggers salivation on its own?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 2,
+        exp: `The bell becomes the Conditioned Stimulus (CS). Initially a neutral stimulus, through repeated pairings with the US, it acquires the ability to elicit the response independently.`
+      },
+      {
+        q: `In Pavlov's classic experiment, what is the salivation that occurs specifically in response to the bell alone?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 3,
+        exp: `Salivation in response to the bell is the Conditioned Response (CR). While physically similar to the UR, it is distinct because it is triggered by the conditioned stimulus, representing learned behavior.`
+      },
+      {
+        q: `If a person develops a fear of dogs after being bitten, what is the original painful bite?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 0,
+        exp: `The bite is the Unconditioned Stimulus (US) because it inherently causes pain and fear without requiring any prior conditioning.`
+      },
+      {
+        q: `What is the fear and pain felt immediately when being bitten by a dog?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 1,
+        exp: `The immediate physical and emotional pain from the bite is the Unconditioned Response (UR), which is a natural, unlearned biological reaction to injury.`
+      },
+      {
+        q: `What does the dog become when its mere sight triggers anxiety after the bite incident?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 2,
+        exp: `The dog itself is now the Conditioned Stimulus (CS). Through association with the painful bite (US), the sight of the dog now elicits fear on its own.`
+      },
+      {
+        q: `What is the anxiety felt upon merely seeing a dog after the bite incident?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 3,
+        exp: `The anxiety felt upon seeing the dog is the Conditioned Response (CR). It is a learned emotional response triggered by the conditioned stimulus.`
+      },
+      {
+        q: `In a study, a flashing light is paired with a loud startle noise. What is the loud noise?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 0,
+        exp: `The loud startle noise is the Unconditioned Stimulus (US) because it naturally, automatically produces a startle response in all subjects.`
+      },
+      {
+        q: `What is the startle blink in response to the flashing light alone after multiple pairings?`,
+        ch: [`Unconditioned Stimulus (US)`, `Unconditioned Response (UR)`, `Conditioned Stimulus (CS)`, `Conditioned Response (CR)`],
+        ans: 3,
+        exp: `The startle blink in response to the flashing light is the Conditioned Response (CR), since it is now triggered by the learned association with the light.`
+      }
+    ]
+  },
+  {
+    id: `ps118`,
+    cat: `Behavioral & Social Sciences`,
+    title: `Operant Conditioning Reinforcement Schedules`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which schedule reinforces behavior after a set, predictable number of responses (e.g., getting a free coffee after buying 10)?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 0,
+        exp: `A Fixed Ratio (FR) schedule delivers reinforcement after a fixed, constant number of responses are completed. It produces high response rates with a brief pause after reinforcement.`
+      },
+      {
+        q: `Which schedule reinforces behavior after an unpredictable, average number of responses (e.g., a slot machine)?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 1,
+        exp: `A Variable Ratio (VR) schedule delivers reinforcement after an unpredictable, varying number of responses. This schedule produces the highest response rate and has the strongest resistance to extinction.`
+      },
+      {
+        q: `Which schedule reinforces behavior after a set, predictable amount of time has elapsed (e.g., a weekly paycheck)?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 2,
+        exp: `A Fixed Interval (FI) schedule reinforces the first response after a constant, set amount of time. It produces a characteristic 'scalloped' pattern where response rates spike as the reinforcement time approaches.`
+      },
+      {
+        q: `Which schedule reinforces behavior after an unpredictable, average amount of time has elapsed (e.g., checking your phone for notifications)?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 3,
+        exp: `A Variable Interval (VI) schedule reinforces responses after varying, unpredictable time intervals. It produces a steady, moderate rate of response with no pauses.`
+      },
+      {
+        q: `A factory worker is paid $5 for every 10 items they assemble. What schedule is this?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 0,
+        exp: `This is a Fixed Ratio (FR-10) schedule. The reward is contingent on completing a set, predictable number of actions (10 assemblies).`
+      },
+      {
+        q: `Which reinforcement schedule produces the highest rate of steady responding and the greatest resistance to extinction?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 1,
+        exp: `The Variable Ratio (VR) schedule is highly effective because the reward could come at any time, keeping the organism motivated to perform the behavior continuously.`
+      },
+      {
+        q: `A student studies in bursts right before a scheduled weekly quiz, showing a 'scallop' response pattern. What schedule is this?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 2,
+        exp: `This is a Fixed Interval (FI) schedule. Because the quiz occurs at a predictable time, studying behavior increases sharply just before the event and drops to zero immediately afterward (scalloping).`
+      },
+      {
+        q: `A fisherman casts their line and waits for a bite, which occurs on average every 15 minutes but at unpredictable times. What schedule is this?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 3,
+        exp: `This is a Variable Interval (VI) schedule. The reinforcement depends on the passage of unpredictable, average intervals of time.`
+      },
+      {
+        q: `A buy-one-get-one-free punch card at a sandwich shop is an example of which schedule?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 0,
+        exp: `Punch cards require a constant, set number of purchases (e.g. 10) to earn the reward, representing a Fixed Ratio (FR) schedule.`
+      },
+      {
+        q: `Playing a video game where defeating monsters drops a rare item on average 1% of the time is which schedule?`,
+        ch: [`Fixed Ratio (FR)`, `Variable Ratio (VR)`, `Fixed Interval (FI)`, `Variable Interval (VI)`],
+        ans: 1,
+        exp: `Because the item drop could happen on any turn, but averages out to 1 in 100 over time, this is a Variable Ratio (VR) schedule.`
+      }
+    ]
+  },
+  {
+    id: `ps119`,
+    cat: `Behavioral & Social Sciences`,
+    title: `Social Influence & Group Dynamics`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What term describes the tendency for people to perform simple or well-learned tasks better when others are watching?`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 0,
+        exp: `Social Facilitation states that the presence of others increases physical arousal, which enhances performance on simple or well-rehearsed tasks (though it can impair performance on complex or new tasks).`
+      },
+      {
+        q: `What term describes the tendency for individuals to exert less effort when working in a group toward a common goal where individual contributions aren't measured?`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 1,
+        exp: `Social Loafing occurs when people feel less personally accountable in a group setting, leading them to slack off and rely on others to carry the workload.`
+      },
+      {
+        q: `What term describes the deterioration of mental efficiency and moral judgment that occurs when a highly cohesive group prioritizes agreement over realistic evaluation of options?`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 2,
+        exp: `Groupthink is a psychological phenomenon where the desire for harmony and uniformity in a group leads to irrational or dysfunctional decision-making without dissenting viewpoints.`
+      },
+      {
+        q: `What term describes the loss of self-awareness and self-restraint occurring in group situations (like a large crowd or mob) that foster anonymity?`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 3,
+        exp: `Deindividuation occurs in crowd settings where anonymity and high arousal reduce individual identity, leading to uninhibited, impulsive, or anti-social behaviors.`
+      },
+      {
+        q: `A student works less hard on a group project than they would on an individual project. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 1,
+        exp: `This is social loafing, as the student's individual output is pooled with the group, decreasing their personal motivation and effort.`
+      },
+      {
+        q: `An expert pianist plays a flawless concert with a large, enthusiastic audience, performing even better than in private practice. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 0,
+        exp: `This is social facilitation. For a highly trained expert, having an audience increases arousal and enhances their highly practiced, dominant response.`
+      },
+      {
+        q: `During a street riot, an otherwise law-abiding citizen joins in on vandalism because they feel anonymous in the crowd. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 3,
+        exp: `This is deindividuation, as the anonymity of the crowd reduces the citizen's personal accountability and self-monitoring, prompting uncharacteristic behaviors.`
+      },
+      {
+        q: `A corporate board of advisors rushes to approve a flawed product launch because no one wants to dissent and disrupt the cohesive harmony of the meeting. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 2,
+        exp: `This is groupthink, where pressure for consensus overrides critical analysis and leads to a major decision failure.`
+      },
+      {
+        q: `In a tug-of-war game, individuals pull with less force when pulling as a team than when pulling individually. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 1,
+        exp: `Tug-of-war is a classic example of social loafing: because the collective force hides individual contributions, team members pull less hard than they would alone.`
+      },
+      {
+        q: `Wearing matching uniforms and masks can make soldiers feel less like individuals and more likely to follow aggressive orders. This is:`,
+        ch: [`Social Facilitation`, `Social Loafing`, `Groupthink`, `Deindividuation`],
+        ans: 3,
+        exp: `Matching uniforms and masks act as powerful deindividuation cues, stripping away personal identity and replacing individual morals with group norms.`
+      }
+    ]
+  },
+  {
+    id: `ps120`,
+    cat: `Behavioral & Social Sciences`,
+    title: `Economic Systems & Market Types`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which market structure features a single seller with complete control over prices and no close substitutes for their product?`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 3,
+        exp: `A Monopoly exists when a single firm is the sole supplier of a good or service, giving it absolute market power and the ability to set prices without direct competition.`
+      },
+      {
+        q: `Which market structure features many small firms selling identical products, with easy entry/exit and firms acting as price takers?`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 0,
+        exp: `Perfect Competition represents an idealized market with many buyers and sellers, homogeneous products, perfect information, and free entry/exit, making every firm a price taker.`
+      },
+      {
+        q: `Which market structure features a few large, dominant firms that hold significant market share and often watch each other's prices closely?`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 2,
+        exp: `An Oligopoly is dominated by a small number of large sellers. Decisions by one firm (e.g. pricing, marketing) directly affect and prompt reactions from the others.`
+      },
+      {
+        q: `Which market structure features many firms selling slightly differentiated products, relying on branding and advertising (e.g., restaurants, clothing brands)?`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 1,
+        exp: `Monopolistic Competition features many sellers of products that are similar but not identical, allowing individual firms some control over their prices through brand differentiation.`
+      },
+      {
+        q: `The market for local residential electricity or tap water utility is typically an example of a:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 3,
+        exp: `Utilities are classical 'natural monopolies' because the massive infrastructure costs make it highly inefficient to have multiple competing power or water grids.`
+      },
+      {
+        q: `The global market for commercial aircraft (dominated primarily by Boeing and Airbus) is an example of an:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 2,
+        exp: `Because only two massive companies supply nearly all commercial jetliners worldwide, this is a highly concentrated duopoly, which is a two-firm oligopoly.`
+      },
+      {
+        q: `A highly competitive local agricultural market for identical red apples is closest to:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 0,
+        exp: `Agricultural commodity markets feature many independent farmers selling identical products (e.g. apples, wheat), approximating perfect competition.`
+      },
+      {
+        q: `The market for athletic shoes, where brands like Nike, Adidas, and Under Armour sell distinct, branded products, is:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 1,
+        exp: `Athletic footwear is characterized by monopolistic competition. While the shoes all serve the same basic purpose, branding, designs, and endorsements differentiate them.`
+      },
+      {
+        q: `A pharmaceutical company holding an exclusive 20-year patent on a unique, life-saving drug behaves as a:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 3,
+        exp: `Patents grant legal monopolies, preventing competitors from copying a drug and allowing the patent-holder to act as the sole seller for the patent's duration.`
+      },
+      {
+        q: `The mobile wireless carrier market in the US, dominated by three major networks, is an example of an:`,
+        ch: [`Perfect Competition`, `Monopolistic Competition`, `Oligopoly`, `Monopoly`],
+        ans: 2,
+        exp: `Because three major carriers control the vast majority of the network infrastructure and customer base, the wireless market is a classic oligopoly.`
+      }
+    ]
+  }
 ];
