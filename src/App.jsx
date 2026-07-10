@@ -16,7 +16,7 @@ import {
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
-  Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2,
+  Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
 } from 'lucide-react';
 
@@ -38,7 +38,10 @@ import { listItems, createItem } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
-import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak } from './lib/celebrate';
+import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
+import { awardXP, BONUS_COPY } from './lib/rewards';
+import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
+import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements } from './lib/achievements';
@@ -49,6 +52,7 @@ import ScoreTrackerPanel from './components/ScoreTrackerPanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import StreakHeatmap from './components/StreakHeatmap';
 import ActivitiesResumePanel from './components/ActivitiesResumePanel';
+import RewardChest from './components/RewardChest';
 import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
@@ -702,6 +706,9 @@ export default function App({ account, onAccountChange }) {
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
+  const [streakFreezes, setStreakFreezes] = useState(0);
+  const [cosmetics, setCosmetics] = useState(new Set());
+  const [chest, setChest] = useState(null); // { title, eyebrow, xp, cosmetic }
   const upcomingDeadlines = useDeadlines();
   const [totalReviews, setTotalReviews] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
@@ -775,10 +782,14 @@ export default function App({ account, onAccountChange }) {
   useEffect(()=>{
     async function init(){
       try{
-        const [u,pw,qs,qh,decks,cp,ach,str,rev] = await Promise.all([
+        // Must run before getStreak() so a bridged (freeze-covered) gap is
+        // already reflected in the streak calculation below.
+        await DB.checkAndApplyStreakFreeze();
+        const [u,pw,qs,qh,decks,cp,ach,str,rev,freezes,cos] = await Promise.all([
           DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
           DB.getFlashDecks(), DB.getCatPerf(),
-          DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews()
+          DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(),
+          DB.getStreakFreezeCount(), DB.getCosmetics(),
         ]);
         if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
         setPathway_(pw||{});
@@ -793,6 +804,8 @@ export default function App({ account, onAccountChange }) {
         setAchiev_(ach||new Set());
         setStreak(str||0);
         setTotalReviews(rev||0);
+        setStreakFreezes(freezes||0);
+        setCosmetics(cos||new Set());
         await DB.recordStudyToday();
       }catch(e){console.error('DB init error:',e);}
       setDbReady(true);
@@ -849,6 +862,10 @@ export default function App({ account, onAccountChange }) {
     return row;
   },[portActivities.length]);
 
+  // ── Reward chest (unwrap/reveal ceremony for quest claims + daily check-in) ──
+  const openChest = useCallback((opts)=>{ setChest(opts); },[]);
+  const closeChest = useCallback(()=>{ setChest(null); },[]);
+
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
   const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:Date.now()})); DB.setLessonDone(lessonId).catch(console.error); },[]);
@@ -902,6 +919,7 @@ export default function App({ account, onAccountChange }) {
   const lvl     = levelInfo.level;
   const xpIn    = levelInfo.xpIntoLevel;
   const xpForNext = levelInfo.xpForNext;
+  const nearLevelUp = (xpForNext-xpIn) > 0 && (xpForNext-xpIn) <= 25;
   const qTaken  = Object.keys(qScores).length;
   const avgSc   = qTaken>0?Math.round(Object.values(qScores).reduce((a,b)=>a+b,0)/qTaken):0;
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
@@ -951,12 +969,14 @@ export default function App({ account, onAccountChange }) {
   function doneLesson(lesson){
     if(pathway[lesson.id])return;
     saveLesson(lesson.id);
-    const xpGain=25;
-    const newUser={...user,xp:(user?.xp||0)+xpGain};
+    const { finalXP, tier } = awardXP(25);
+    const newUser={...user,xp:(user?.xp||0)+finalXP};
     saveUser(newUser);
     play('xp');
-    celebrateXP();
-    toast.success(`+${xpGain} XP — ${lesson.title}`, { icon:<BookOpen size={16}/>, duration:2500 });
+    if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
+    else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
+    else celebrateXP();
+    toast.success(`${BONUS_COPY[tier](finalXP)} — ${lesson.title}`, { icon:<BookOpen size={16}/>, duration: tier==='jackpot'?4000:2500 });
     // Check unit mastery
     const units=curPath?.units||[];
     const unit=units.find(u=>u.lessons.some(l=>l.id===lesson.id));
@@ -964,7 +984,7 @@ export default function App({ account, onAccountChange }) {
       const allDone=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]);
       if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}`,{duration:4000});}
     }
-    checkAndUnlockAchievements({...user,xp:(user?.xp||0)+xpGain},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
+    checkAndUnlockAchievements({...user,xp:(user?.xp||0)+finalXP},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
   }
 
   function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
@@ -987,6 +1007,13 @@ export default function App({ account, onAccountChange }) {
         setAchiev_(prev=>new Set([...prev,achievement.key]));
         const bonusXP=achievement.xp||0;
         if(u&&bonusXP>0){const nu={...u,xp:(u.xp||0)+bonusXP};saveUser(nu);}
+        if(achievement.key==='streak_7'||achievement.key==='streak_30'){
+          const granted=await DB.grantStreakFreeze();
+          if(granted){
+            setStreakFreezes(await DB.getStreakFreezeCount());
+            toast(`Streak Freeze earned — one skipped day won't break your streak.`,{icon:<Snowflake size={14} color={C.blueL}/>,duration:4500});
+          }
+        }
         showAchievementToast(achievement);
       }
     }
@@ -1004,6 +1031,49 @@ export default function App({ account, onAccountChange }) {
     }
     prevLvlRef.current=curLvl;
   },[user?.xp]);
+
+  // ── Daily check-in (rewards opening the app, before any studying) ───────────
+  const checkinTriggeredRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||!user||checkinTriggeredRef.current)return;
+    checkinTriggeredRef.current=true;
+    (async()=>{
+      const already = await getTodayCheckinStatus();
+      if(already)return;
+      const day = await getNextCheckinDay();
+      const reward = getCheckinReward(day);
+      const cosmetic = reward.chest ? rollCosmetic(cosmetics) : null;
+      openChest({
+        title: `Day ${day} Check-in`,
+        eyebrow: 'Welcome back',
+        xp: reward.xp,
+        cosmetic,
+        onOpen: async ()=>{
+          await claimCheckin(day);
+          saveUser({ ...user, xp: (user.xp||0) + reward.xp });
+          play('xp');
+          if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
+        },
+      });
+    })();
+  },[dbReady,user]);
+
+  // ── Streak-at-risk nudge — opportunity-framed, once per day, dismissible ────
+  const streakNudgeRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||!user||streakNudgeRef.current||streak<=2)return;
+    if(new Date().getHours()<18)return; // evening only
+    (async()=>{
+      const todayKey = new Date().toISOString().split('T')[0];
+      const nudgeKey = `streakNudge:${todayKey}`;
+      if(localStorage.getItem(nudgeKey))return;
+      const days = await DB.getStudyDays();
+      if(days.includes(todayKey))return; // already studied today
+      localStorage.setItem(nudgeKey,'1');
+      streakNudgeRef.current=true;
+      toast(`Your ${streak}-day streak is waiting — one quiz keeps it alive.`,{icon:<Flame size={14} color={C.amberL}/>,duration:5000});
+    })();
+  },[dbReady,user,streak]);
 
   // ── AI (Metabrain, powered by Groq) ────────────────────────────────────────────
   async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'deep') {
@@ -1101,9 +1171,17 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const xpMap = { Again: 0, Hard: 2, Good: 4, Easy: 6 };
     const nextCombo = correct ? sessionStats.streak + 1 : 0;
     const bonus = correct && nextCombo >= 3 ? Math.min(5, Math.floor(nextCombo / 3)) : 0;
-    const xpGain = xpMap[label] + bonus;
+    const baseGain = xpMap[label] + bonus;
     const nextBest = Math.max(sessionStats.bestStreak, nextCombo);
-    if (xpGain > 0) { saveUser({ ...user, xp: (user?.xp || 0) + xpGain }); play('xp'); }
+    let xpGain = 0, cardTier = 'none';
+    if (baseGain > 0) {
+      ({ finalXP: xpGain, tier: cardTier } = awardXP(baseGain));
+      saveUser({ ...user, xp: (user?.xp || 0) + xpGain });
+      play('xp');
+      if (cardTier === 'jackpot') { celebrateJackpot(); play('jackpot'); }
+      else if (cardTier === 'big' || cardTier === 'bonus') { celebrateBonusXP(); }
+      if (cardTier !== 'none') toast.success(BONUS_COPY[cardTier](xpGain), { duration: cardTier==='jackpot'?3500:1800 });
+    }
     if (correct && [5, 10, 15, 20, 25].includes(nextCombo)) {
       play('achieve');
       celebrateStreak();
@@ -1122,10 +1200,12 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const pct=total>0?Math.round((score/total)*100):0;
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
-    const xpGain=Math.round(pct*0.5);
+    const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
     const newUser={...user,xp:(user?.xp||0)+xpGain};
     saveUser(newUser);
-    toast.success(`${pct}% · +${xpGain} XP`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:3000});
+    if(quizTier==='jackpot'){celebrateJackpot();play('jackpot');}
+    else if(quizTier==='big'||quizTier==='bonus'){celebrateBonusXP();}
+    toast.success(`${pct}% · ${BONUS_COPY[quizTier](xpGain)}`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:quizTier==='jackpot'?4000:3000});
     const newQCount=qTaken+1;
     checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
@@ -1218,6 +1298,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
                 {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
                 {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
@@ -1280,13 +1361,17 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </div>
 
         {/* XP Progress */}
-        <div style={glass({padding:18})}>
+        <motion.div
+          animate={nearLevelUp?{boxShadow:[`0 0 0px ${accent}00`,`0 0 26px ${accent}55`,`0 0 0px ${accent}00`]}:{boxShadow:'0 0 0px transparent'}}
+          transition={nearLevelUp?{duration:1.6,repeat:Infinity,ease:'easeInOut'}:{}}
+          style={glass({padding:18})}
+        >
           <div style={R({justifyContent:'space-between',marginBottom:10})}>
             <div><span style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</span><span style={{fontSize:12,color:C.t3,marginLeft:8,display:'inline-flex',alignItems:'center',gap:4}}><ArrowRight size={11}/>Level {lvl+1}</span></div>
-            <span style={{fontSize:12,fontFamily:C.FM,color:C.blueL,fontWeight:600}}>{xpIn} / {xpForNext} XP</span>
+            <span style={{fontSize:12,fontFamily:C.FM,color:nearLevelUp?C.amberL:C.blueL,fontWeight:700}}>{nearLevelUp?`Only ${xpForNext-xpIn} XP to go!`:`${xpIn} / ${xpForNext} XP`}</span>
           </div>
-          <Bar pct={levelInfo.pct} color={accent} h={8} glow/>
-        </div>
+          <Bar pct={levelInfo.pct} color={nearLevelUp?C.amber:accent} h={8} glow/>
+        </motion.div>
 
         {/* Quick Actions */}
         <div>
@@ -2315,12 +2400,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     function claimQuestReward(q){
       if(!q.done||claimedQuests.has(q.id))return;
       claimQuest(weekKey,q.id);
+      // Quest XP stays deterministic and is granted immediately — only the
+      // *reveal* is a variable, anticipation-building chest-open moment.
       const nu={...user,xp:(user?.xp||0)+q.xp};
       saveUser(nu);
-      celebrateXP?.();
-      play('achieve');
-      toast.success(`Quest complete: ${q.label} — +${q.xp} XP`,{icon:<Sparkles size={16}/>});
       setQuestTick(t=>t+1);
+      const wonCosmetic = Math.random()<0.25 ? rollCosmetic(cosmetics) : null;
+      openChest({
+        title: 'Quest Complete',
+        eyebrow: q.label,
+        xp: q.xp,
+        cosmetic: wonCosmetic,
+        onOpen: async ()=>{
+          if(wonCosmetic){ await DB.unlockCosmetic(wonCosmetic.key); setCosmetics(prev=>new Set([...prev,wonCosmetic.key])); }
+        },
+      });
     }
     const catStats=cats3.map((cat,i)=>{
       const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
@@ -2456,27 +2550,35 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               </div>
               <div>
                 <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</div>
-                <div style={{fontSize:12,color:C.t3,marginTop:2}}>{(user.xp||0).toLocaleString()} XP total{streak>0?` · ${streak}-day streak`:''}</div>
+                <div style={{fontSize:12,color:C.t3,marginTop:2,display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+                  <span>{(user.xp||0).toLocaleString()} XP total{streak>0?` · ${streak}-day streak`:''}</span>
+                  {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Snowflake size={10}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
+                </div>
               </div>
             </div>
             <div style={{textAlign:'right',minWidth:120}}>
-              <div style={{fontSize:12,color:C.t2,fontFamily:C.FM,fontWeight:600}}>{xpIn} / {xpForNext} XP</div>
+              <div style={{fontSize:12,color:nearLevelUp?C.amberL:C.t2,fontFamily:C.FM,fontWeight:600}}>{nearLevelUp?`Almost there!`:`${xpIn} / ${xpForNext} XP`}</div>
               <div style={{fontSize:11,color:C.t3,marginTop:2}}>{xpForNext-xpIn} XP to Level {lvl+1}</div>
             </div>
           </div>
-          <div style={{marginTop:16}}><Bar pct={levelInfo.pct} color={levelInfo.tierColor} h={8} glow/></div>
+          <div style={{marginTop:16}}><Bar pct={levelInfo.pct} color={nearLevelUp?C.amber:levelInfo.tierColor} h={8} glow/></div>
         </div>
 
         {/* Weekly Quests */}
         <div style={glass({padding:18})}>
           <SL extra={{marginBottom:14}}>This Week's Quests</SL>
           <div style={CC({gap:10})}>
-            {quests.map(q=>{const claimed=claimedQuests.has(q.id);return(
-              <div key={q.id} style={{...glass2({padding:14})}}>
+            {quests.map(q=>{const claimed=claimedQuests.has(q.id);const almostDone=!q.done&&q.pct>=80;return(
+              <motion.div
+                key={q.id}
+                animate={almostDone?{scale:[1,1.015,1]}:{scale:1}}
+                transition={almostDone?{duration:1.4,repeat:Infinity,ease:'easeInOut'}:{}}
+                style={{...glass2({padding:14}),border:almostDone?`1px solid ${C.amber}45`:undefined,boxShadow:almostDone?`0 0 16px ${C.amber}22`:undefined}}
+              >
                 <div style={R({justifyContent:'space-between',marginBottom:8})}>
                   <span style={{fontSize:12,fontWeight:600,color:q.done?C.t1:C.t2}}>{q.label}</span>
                   <div style={R({gap:8})}>
-                    <span style={{fontSize:11,fontFamily:C.FM,color:C.t3}}>{q.progress}/{q.target}</span>
+                    <span style={{fontSize:11,fontFamily:C.FM,color:almostDone?C.amberL:C.t3}}>{q.progress}/{q.target}</span>
                     {claimed
                       ?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}><Check size={10}/>+{q.xp}xp</span>
                       :q.done
@@ -2484,8 +2586,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                         :<span style={pill(C.s3,C.t3,{fontSize:10})}>+{q.xp}xp</span>}
                   </div>
                 </div>
-                <Bar pct={q.pct} color={q.done?C.green:accent} h={5} glow={q.done}/>
-              </div>
+                <Bar pct={q.pct} color={q.done?C.green:almostDone?C.amber:accent} h={5} glow={q.done||almostDone}/>
+              </motion.div>
             );})}
           </div>
         </div>
@@ -2901,6 +3003,15 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       <AnimatePresence>
         {vidM&&<VideoModal key="vidmodal" ytId={vidM.ytId} title={vidM.title} url={vidM.url} onClose={()=>setVM(null)} m={isMobile}/>}
       </AnimatePresence>
+      <RewardChest
+        open={!!chest}
+        title={chest?.title}
+        eyebrow={chest?.eyebrow}
+        xp={chest?.xp||0}
+        cosmetic={chest?.cosmetic}
+        onOpen={()=>{ chest?.onOpen?.(); }}
+        onClose={closeChest}
+      />
       <div style={{display:'flex',flexDirection:isMobile?'column':'row',height:'100vh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}

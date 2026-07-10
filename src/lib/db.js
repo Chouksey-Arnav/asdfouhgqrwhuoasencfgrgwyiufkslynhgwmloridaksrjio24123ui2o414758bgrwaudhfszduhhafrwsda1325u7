@@ -52,6 +52,15 @@ db.version(5).stores({
   interviewSessions: '++id, mode, pathwayKey, completedAt',
 });
 
+// v6: Dopamine-loop gamification additions — earned streak-freeze tokens
+// (loss-aversion safety net), the daily check-in cycle, and cosmetic-only
+// chest unlocks.
+db.version(6).stores({
+  streakFreezes: '++id, earnedAt, usedOn',
+  checkins:      'date, day',
+  cosmetics:     'key, unlockedAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -161,6 +170,8 @@ export async function recordStudyToday() {
 export async function getStreak() {
   const days = await db.studyDays.orderBy('date').reverse().toArray();
   if (!days.length) return 0;
+  const freezes = await db.streakFreezes.toArray();
+  const bridgedDates = new Set(freezes.filter(f => f.usedOn).map(f => f.usedOn));
   let streak = 0;
   let check = new Date();
   check.setHours(0,0,0,0);
@@ -171,9 +182,72 @@ export async function getStreak() {
     if (diff === 0 || diff === 1) {
       streak++;
       check = d;
+    } else if (diff === 2) {
+      // Exactly one full day was missed — bridge it only if a streak freeze
+      // was already spent to cover that specific date (see
+      // checkAndApplyStreakFreeze, called once per app load).
+      const missed = new Date(check);
+      missed.setDate(missed.getDate() - 1);
+      const missedKey = missed.toISOString().split('T')[0];
+      if (bridgedDates.has(missedKey)) { streak++; check = d; }
+      else break;
     } else break;
   }
   return streak;
+}
+
+// ── Streak Freezes ────────────────────────────────────────────────────────────
+// Earned (not purchased) safety net against loss-aversion streak breaks —
+// capped at 2 held at once so consistency still matters.
+const MAX_STREAK_FREEZES = 2;
+
+export async function getStreakFreezeCount() {
+  return db.streakFreezes.filter(f => !f.usedOn).count();
+}
+export async function grantStreakFreeze() {
+  const held = await getStreakFreezeCount();
+  if (held >= MAX_STREAK_FREEZES) return false;
+  await db.streakFreezes.add({ earnedAt: Date.now(), usedOn: null });
+  return true;
+}
+/**
+ * Run once per app load, before getStreak(). If exactly one day was missed
+ * since the last study day and an unused freeze is available, spends it to
+ * bridge that specific date so getStreak() can see it via `usedOn`.
+ * Returns true if a freeze was newly applied this call.
+ */
+export async function checkAndApplyStreakFreeze() {
+  const days = await db.studyDays.orderBy('date').reverse().toArray();
+  if (!days.length) return false;
+  const mostRecent = new Date(days[0].date); mostRecent.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const gapDays = Math.round((today - mostRecent) / 86400000);
+  if (gapDays !== 2) return false; // only bridges a single missed day
+  const missed = new Date(mostRecent); missed.setDate(missed.getDate() + 1);
+  const missedKey = missed.toISOString().split('T')[0];
+  const alreadyBridged = await db.streakFreezes.where('usedOn').equals(missedKey).count();
+  if (alreadyBridged) return false;
+  const unused = await db.streakFreezes.filter(f => !f.usedOn).first();
+  if (!unused) return false;
+  await db.streakFreezes.update(unused.id, { usedOn: missedKey });
+  return true;
+}
+
+// ── Daily Check-in ────────────────────────────────────────────────────────────
+export async function getCheckin(date) {
+  return db.checkins.get(date);
+}
+export async function recordCheckin(date, day) {
+  try { await db.checkins.add({ date, day }); return true; } catch { return false; }
+}
+
+// ── Cosmetics (chest-reveal unlocks) ─────────────────────────────────────────
+export async function getCosmetics() {
+  const rows = await db.cosmetics.toArray();
+  return new Set(rows.map(r => r.key));
+}
+export async function unlockCosmetic(key) {
+  try { await db.cosmetics.add({ key, unlockedAt: Date.now() }); return true; } catch { return false; }
 }
 export async function getStudyDaysCount() {
   return db.studyDays.count();
@@ -244,5 +318,6 @@ export async function clearAllData() {
     db.flashCards.clear(), db.catPerf.clear(),
     db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
     db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
+    db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
   ]);
 }
