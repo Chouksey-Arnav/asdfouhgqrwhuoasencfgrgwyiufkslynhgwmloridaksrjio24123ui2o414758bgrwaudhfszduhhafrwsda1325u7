@@ -10,6 +10,7 @@ function serialize(user) {
     gradeLevel: user.grade_level,
     testTrack: user.test_track,
     onboardingComplete: user.onboarding_complete,
+    hasPassword: !!user.password_hash,
   };
 }
 

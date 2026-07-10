@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Mail, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, ShieldCheck, ArrowRight, Loader2, Lock, KeyRound } from 'lucide-react';
 import { C, glass, btn, inp, lbl, R, CC } from '../lib/theme';
-import { getToken, setToken, clearToken, sendOtp, verifyOtp, fetchMe } from '../lib/authApi';
+import { getToken, setToken, clearToken, sendOtp, verifyOtp, loginPassword, setPassword as setPasswordApi, fetchMe } from '../lib/authApi';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
   const [user, setUser] = useState(null);
-  const [step, setStep] = useState('email'); // email | code
+  // email | code | password | createPassword
+  const [step, setStep] = useState('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -29,6 +33,15 @@ export default function AuthGate({ children }) {
   }, []);
 
   useEffect(() => { restore(); }, [restore]);
+
+  function afterSignIn(signedInUser) {
+    setUser(signedInUser);
+    if (!signedInUser.hasPassword) {
+      setStep('createPassword');
+      return;
+    }
+    setStatus('signedIn');
+  }
 
   async function handleSendCode(e) {
     e.preventDefault();
@@ -54,9 +67,44 @@ export default function AuthGate({ children }) {
     try {
       const { token, user } = await verifyOtp(email.trim(), code.trim());
       setToken(token);
-      setUser(user);
-      setStatus('signedIn');
       toast.success('Signed in.');
+      afterSignIn(user);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handlePasswordLogin(e) {
+    e.preventDefault();
+    setError('');
+    if (!EMAIL_RE.test(email.trim())) { setError('Enter a valid email address.'); return; }
+    if (!password) { setError('Enter your password.'); return; }
+    setBusy(true);
+    try {
+      const { token, user } = await loginPassword(email.trim(), password);
+      setToken(token);
+      toast.success('Signed in.');
+      afterSignIn(user);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCreatePassword(e) {
+    e.preventDefault();
+    setError('');
+    if (newPassword.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (newPassword !== confirmPassword) { setError('Passwords do not match.'); return; }
+    setBusy(true);
+    try {
+      await setPasswordApi(newPassword);
+      setUser((u) => ({ ...u, hasPassword: true }));
+      setStatus('signedIn');
+      toast.success('Password set — you can now sign in on any device.');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -92,8 +140,8 @@ export default function AuthGate({ children }) {
             <motion.form key="email" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onSubmit={handleSendCode}>
               <div style={CC({gap:16})}>
                 <div>
-                  <div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,marginBottom:4}}>Sign in</div>
-                  <div style={{fontSize:13,color:C.t2}}>We'll email you a 6-digit code — no password needed.</div>
+                  <div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,marginBottom:4}}>Sign in or sign up</div>
+                  <div style={{fontSize:13,color:C.t2}}>We'll email you a 6-digit code — no password needed the first time.</div>
                 </div>
                 <div>
                   <label style={lbl()}>Email</label>
@@ -106,9 +154,12 @@ export default function AuthGate({ children }) {
                 <button type="submit" disabled={busy} style={btn(C.blueGrad,{width:'100%',opacity:busy?0.7:1})}>
                   {busy ? 'Sending…' : <>Send code <ArrowRight size={14}/></>}
                 </button>
+                <button type="button" onClick={()=>{setStep('password');setError('');}} style={{background:'none',border:'none',color:C.t3,fontSize:12,cursor:'pointer',fontFamily:C.FB}}>
+                  Already set a password? Sign in with it
+                </button>
               </div>
             </motion.form>
-          ) : (
+          ) : step === 'code' ? (
             <motion.form key="code" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onSubmit={handleVerify}>
               <div style={CC({gap:16})}>
                 <div>
@@ -128,6 +179,63 @@ export default function AuthGate({ children }) {
                 </button>
                 <button type="button" onClick={()=>{setStep('email');setCode('');setError('');}} style={{background:'none',border:'none',color:C.t3,fontSize:12,cursor:'pointer',fontFamily:C.FB}}>
                   Use a different email
+                </button>
+              </div>
+            </motion.form>
+          ) : step === 'password' ? (
+            <motion.form key="password" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onSubmit={handlePasswordLogin}>
+              <div style={CC({gap:16})}>
+                <div>
+                  <div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,marginBottom:4}}>Sign in with password</div>
+                  <div style={{fontSize:13,color:C.t2}}>Use the account you set a password for.</div>
+                </div>
+                <div>
+                  <label style={lbl()}>Email</label>
+                  <div style={{position:'relative'}}>
+                    <Mail size={15} color={C.t3} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)'}} />
+                    <input autoFocus type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" style={inp({paddingLeft:36})} />
+                  </div>
+                </div>
+                <div>
+                  <label style={lbl()}>Password</label>
+                  <div style={{position:'relative'}}>
+                    <Lock size={15} color={C.t3} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)'}} />
+                    <input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={inp({paddingLeft:36})} />
+                  </div>
+                </div>
+                {error && <div style={{fontSize:12,color:C.roseL}}>{error}</div>}
+                <button type="submit" disabled={busy} style={btn(C.blueGrad,{width:'100%',opacity:busy?0.7:1})}>
+                  {busy ? 'Signing in…' : <>Sign in <ArrowRight size={14}/></>}
+                </button>
+                <button type="button" onClick={()=>{setStep('email');setPassword('');setError('');}} style={{background:'none',border:'none',color:C.t3,fontSize:12,cursor:'pointer',fontFamily:C.FB}}>
+                  Forgot your password? Sign in with a code instead
+                </button>
+              </div>
+            </motion.form>
+          ) : (
+            <motion.form key="createPassword" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onSubmit={handleCreatePassword}>
+              <div style={CC({gap:16})}>
+                <div>
+                  <div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,marginBottom:4}}>Set a password</div>
+                  <div style={{fontSize:13,color:C.t2}}>Create a password so you can sign in on any device — phone, tablet, or computer — without waiting for a code.</div>
+                </div>
+                <div>
+                  <label style={lbl()}>New password</label>
+                  <div style={{position:'relative'}}>
+                    <KeyRound size={15} color={C.t3} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)'}} />
+                    <input autoFocus type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="At least 8 characters" style={inp({paddingLeft:36})} />
+                  </div>
+                </div>
+                <div>
+                  <label style={lbl()}>Confirm password</label>
+                  <div style={{position:'relative'}}>
+                    <Lock size={15} color={C.t3} style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)'}} />
+                    <input type="password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Re-enter password" style={inp({paddingLeft:36})} />
+                  </div>
+                </div>
+                {error && <div style={{fontSize:12,color:C.roseL}}>{error}</div>}
+                <button type="submit" disabled={busy} style={btn(C.blueGrad,{width:'100%',opacity:busy?0.7:1})}>
+                  {busy ? 'Saving…' : <>Save password & continue <ArrowRight size={14}/></>}
                 </button>
               </div>
             </motion.form>

@@ -118,6 +118,7 @@ export default async function handler(req, res) {
         gradeLevel: user.grade_level,
         testTrack: user.test_track,
         onboardingComplete: user.onboarding_complete,
+        hasPassword: !!user.password_hash,
       },
     });
   } catch (err) {
