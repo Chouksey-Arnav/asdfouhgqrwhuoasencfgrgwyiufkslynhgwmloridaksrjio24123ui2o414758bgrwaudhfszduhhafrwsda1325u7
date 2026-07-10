@@ -2244,4 +2244,349 @@ export const BIO_BIOCHEM_QUIZZES = [
       }
     ]
   },
+  {
+    id: `bb96`,
+    cat: `Life Sciences`,
+    title: `Endocrine Hormone Response Directionality`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `How does parathyroid hormone (PTH) release affect blood calcium levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `PTH is secreted by the parathyroid glands in response to low blood calcium. It increases blood calcium levels by stimulating bone resorption (osteoclast activity), enhancing renal calcium reabsorption, and increasing intestinal calcium absorption via vitamin D activation.`
+      },
+      {
+        q: `How does insulin release affect blood glucose levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Insulin is released by pancreatic beta cells in response to high blood glucose. It decreases blood glucose levels by promoting glucose uptake into muscle and adipose tissues via GLUT4 translocation and by stimulating glycogenesis.`
+      },
+      {
+        q: `How does calcitonin release affect blood calcium levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Calcitonin is secreted by the thyroid's parafollicular cells (C-cells) in response to high blood calcium. It decreases blood calcium levels primarily by inhibiting osteoclast activity and promoting renal excretion of calcium.`
+      },
+      {
+        q: `In a patient with Type 1 Diabetes, how does glucagon release change after a high-carbohydrate meal?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `In Type 1 Diabetes, the lack of paracrine insulin signaling (which normally suppresses glucagon) causes glucagon levels to paradoxically increase or remain elevated even after a high-carbohydrate meal, contributing to hyperglycemia.`
+      },
+      {
+        q: `How does antidiuretic hormone (ADH) release affect urine volume?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `ADH (vasopressin) is secreted in response to high plasma osmolarity or low blood volume. It decreases urine volume by inducing aquaporin-2 channel insertion in the renal collecting duct, promoting water reabsorption.`
+      },
+      {
+        q: `How does aldosterone release affect blood pressure?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `Aldosterone is a mineralocorticoid released from the adrenal cortex. It increases blood pressure by promoting renal sodium and water reabsorption in the distal tubule and collecting duct, expanding blood volume.`
+      },
+      {
+        q: `How does thyroid-stimulating hormone (TSH) release affect thyroid hormone production?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `TSH is released by the anterior pituitary and binds to receptors on thyroid follicular cells, which increases the production and release of thyroid hormones (T3 and T4).`
+      },
+      {
+        q: `How does high cortisol level in Cushing's syndrome affect muscle mass over time?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Chronic high levels of cortisol in Cushing's syndrome lead to muscle wasting (decreased muscle mass) because cortisol is a catabolic hormone that promotes protein breakdown in skeletal muscle to supply amino acids for gluconeogenesis.`
+      },
+      {
+        q: `In healthy individuals, how does a high blood calcium level affect PTH secretion?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `High blood calcium binds to calcium-sensing receptors (CaSR) on parathyroid cells, triggering intracellular signaling that decreases PTH secretion through negative feedback.`
+      },
+      {
+        q: `How does epinephrine release affect heart rate?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `Epinephrine is released by the adrenal medulla during sympathetic activation. It binds to beta-1 adrenergic receptors on the heart, which increases heart rate (positive chronotropy) and contractility.`
+      }
+    ]
+  },
+  {
+    id: `bb97`,
+    cat: `Life Sciences`,
+    title: `Autonomic Nervous System Actions`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which branch of the autonomic nervous system is responsible for dilating the pupils (mydriasis)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sympathetic activation dilates the pupils (mydriasis) by contracting the pupillary dilator (radial) muscle of the iris, allowing more light to enter for better distance vision in fight-or-flight situations.`
+      },
+      {
+        q: `Which branch of the autonomic nervous system is responsible for slowing down the heart rate (bradycardia)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Parasympathetic activation slows the heart rate (negative chronotropy) via the vagus nerve (CN X), which releases acetylcholine acting on M2 muscarinic receptors at the sinoatrial node.`
+      },
+      {
+        q: `Which branch of the autonomic nervous system is responsible for stimulating digestion and saliva flow?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Parasympathetic activation governs the 'rest-and-digest' state, stimulating gastrointestinal secretions, saliva flow, and intestinal motility to facilitate digestion.`
+      },
+      {
+        q: `Which branch is activated during a 'fight-or-flight' response to a perceived threat?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `The sympathetic nervous system coordinates the 'fight-or-flight' response, preparing the body for intense physical activity by raising heart rate, dilating airways, and releasing glucose.`
+      },
+      {
+        q: `Which branch is responsible for constricting the bronchioles to normal resting state?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic system constricts bronchiolar smooth muscle via muscarinic receptors when high-airflow demand is no longer needed, returning airways to their baseline resting diameter.`
+      },
+      {
+        q: `Which branch stimulates glucose release from the liver into the blood?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sympathetic activation stimulates hepatic glycogenolysis and gluconeogenesis, increasing blood glucose levels to supply working skeletal muscles with energy.`
+      },
+      {
+        q: `Which branch is responsible for stimulating urination by contracting the detrusor muscle?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Micturition (urination) is promoted by the parasympathetic system, which contracts the detrusor muscle of the bladder wall and relaxes the internal urethral sphincter.`
+      },
+      {
+        q: `Which branch promotes sweating (diaphoresis) across the body?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sweating is mediated by the sympathetic nervous system. Uniquely, the sympathetic fibers innervating sweat glands are cholinergic, releasing acetylcholine rather than norepinephrine.`
+      },
+      {
+        q: `Which branch is predominantly active during restful sleep (rest-and-digest)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic nervous system dominates during periods of rest, sleep, and recovery, conserving energy and promoting maintenance activities.`
+      },
+      {
+        q: `Which branch is responsible for increasing gastrointestinal motility?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic system increases GI motility and relaxes sphincters to move food through the digestive tract, whereas the sympathetic system inhibits these processes.`
+      }
+    ]
+  },
+  {
+    id: `bb98`,
+    cat: `Life Sciences`,
+    title: `Genetic Inheritance Patterns`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What is the most likely inheritance pattern for Cystic Fibrosis, where two unaffected carrier parents have a 25% chance of having an affected child?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `Cystic Fibrosis is an autosomal recessive disorder caused by mutations in the CFTR gene. It requires two copies of the mutated gene to display the phenotype; heterozygotes are unaffected carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Huntington's Disease, where having only one copy of the mutated gene is sufficient to cause the neurodegenerative disorder?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Huntington's Disease is an autosomal dominant condition caused by a CAG trinucleotide repeat expansion in the HTT gene. Having a single mutant allele causes the disease, and there are no silent carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Hemophilia A, which primarily affects males who inherit the mutation from their carrier mothers?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `Hemophilia A is an X-linked recessive bleeding disorder. Males (XY) are hemizygous and express the disease with one mutant X chromosome, whereas females (XX) are typically unaffected carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Sickle Cell Anemia, which requires both parents to pass on the mutated hemoglobin gene for the full disease to manifest?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `Sickle Cell Anemia is an autosomal recessive blood disorder. Inheriting one copy of the mutation causes sickle cell trait (usually asymptomatic), while two copies cause the full disease.`
+      },
+      {
+        q: `What is the inheritance pattern for Red-Green Color Blindness, a condition that is much more common in males than in females?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `Red-green color blindness is an X-linked recessive trait. It is far more common in males because they have only one X chromosome; females must inherit two copies to be affected.`
+      },
+      {
+        q: `What is the inheritance pattern for Duchenne Muscular Dystrophy, a progressive muscle wasting disease affecting almost exclusively boys?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `DMD is an X-linked recessive disorder caused by a lack of functional dystrophin protein. It primarily affects males; affected females are extremely rare.`
+      },
+      {
+        q: `What is the inheritance pattern for Achondroplasia (a common form of dwarfism), where a single copy of the mutated FGFR3 gene causes the phenotype?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Achondroplasia is inherited in an autosomal dominant fashion, though a high percentage of cases arise from de novo mutations. Homozygosity is typically lethal.`
+      },
+      {
+        q: `What is the inheritance pattern for Phenylketonuria (PKU), a metabolic disorder requiring a strict diet low in phenylalanine from birth?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `PKU is an autosomal recessive metabolic disorder. Both alleles of the phenylalanine hydroxylase (PAH) gene must be defective to cause the enzyme deficiency.`
+      },
+      {
+        q: `What is the inheritance pattern for Alport Syndrome (when caused by mutations in the COL4A5 gene), which presents with kidney disease, hearing loss, and eye abnormalities and is passed from an affected father to all of his daughters but none of his sons?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 2,
+        exp: `COL4A5-related Alport Syndrome is X-linked dominant. An affected father passes his single mutant X chromosome to all of his daughters (making them affected) but none of his sons (who receive his Y chromosome).`
+      },
+      {
+        q: `What is the inheritance pattern for Marfan Syndrome, a connective tissue disorder characterized by tall stature and risk of aortic aneurysm, where an affected parent has a 50% chance of passing it to any child?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Marfan Syndrome is an autosomal dominant disorder caused by mutations in the FBN1 gene on chromosome 15, which codes for the connective tissue protein fibrillin-1.`
+      }
+    ]
+  },
+  {
+    id: `bb99`,
+    cat: `Life Sciences`,
+    title: `Cellular Organelle Functions`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which organelle is the site of the Citric Acid Cycle and oxidative phosphorylation?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Mitochondria house the enzymes for the Citric Acid Cycle (TCA cycle) in their matrix and the complexes of the electron transport chain in their inner membrane.`
+      },
+      {
+        q: `Which organelle contains hydrolytic enzymes that break down cellular waste and macromolecules?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `Lysosomes are acidic organelles containing hydrolases that digest extracellular materials (via endocytosis/phagocytosis) and intracellular debris (via autophagy).`
+      },
+      {
+        q: `Which organelle has ribosomes attached to its surface and is the primary site of secretory protein synthesis?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 3,
+        exp: `The Rough ER is studded with ribosomes, which translate proteins destined for membranes, lysosomes, or extracellular secretion directly into its lumen.`
+      },
+      {
+        q: `Which organelle modifies, sorts, and packages proteins coming from the endoplasmic reticulum?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 2,
+        exp: `The Golgi Apparatus processes proteins by adding or modifying carbohydrate chains (glycosylation) and packages them into vesicles for delivery.`
+      },
+      {
+        q: `In which organelle does the beta-oxidation of medium-chain fatty acids primarily occur?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Beta-oxidation of short- and medium-chain fatty acids occurs within the mitochondrial matrix, converting them to acetyl-CoA to feed the TCA cycle.`
+      },
+      {
+        q: `Which organelle is responsible for Tay-Sachs disease when its hexosaminidase A enzyme is deficient?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `Tay-Sachs is a lysosomal storage disease. Deficiency of hexosaminidase A leads to the accumulation of GM2 ganglioside lipids within lysosomes, particularly in neurons.`
+      },
+      {
+        q: `Which organelle adds mannose-6-phosphate tags to proteins destined for the lysosome?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 2,
+        exp: `The cis-Golgi network phosphorylates mannose residues on specific glycoproteins, creating the mannose-6-phosphate (M6P) tag that routes them to lysosomes.`
+      },
+      {
+        q: `Where are disulfide bonds first formed and monitored during protein folding?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 3,
+        exp: `Disulfide bond formation is catalyzed by protein disulfide isomerase (PDI) within the oxidizing environment of the Rough ER lumen.`
+      },
+      {
+        q: `Which organelle contains its own circular DNA and reproduces independently of the cell cycle?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Mitochondria contain their own circular genome (mtDNA) and replicate via binary fission, reflecting their evolutionary origin as endosymbiotic alpha-proteobacteria.`
+      },
+      {
+        q: `Which organelle undergoes autophagic fusion to degrade damaged cellular structures?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `During autophagy, double-membraned autophagosomes engulf damaged organelles and then fuse with lysosomes, where acid hydrolases digest the cargo.`
+      }
+    ]
+  },
+  {
+    id: `bb100`,
+    cat: `Life Sciences`,
+    title: `Biomolecule Classifications`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `To which class of biomolecules does Glycogen belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 0,
+        exp: `Glycogen is a highly branched polysaccharide composed of glucose monomers, functioning as the primary carbohydrate energy storage in animals.`
+      },
+      {
+        q: `To which class of biomolecules does Cholesterol belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Cholesterol is a sterol (a type of lipid) characterized by a four-ring hydrocarbon structure, acting as a cell membrane component and steroid hormone precursor.`
+      },
+      {
+        q: `To which class of biomolecules does Insulin belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Insulin is a peptide hormone, which is a class of protein consisting of 51 amino acids arranged in two polypeptide chains linked by disulfide bonds.`
+      },
+      {
+        q: `To which class of biomolecules does messenger RNA (mRNA) belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 3,
+        exp: `mRNA is a single-stranded nucleic acid composed of ribonucleotide monomers that carries genetic instructions from DNA to the ribosome.`
+      },
+      {
+        q: `To which class of biomolecules does Cellulose belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 0,
+        exp: `Cellulose is a linear carbohydrate polysaccharide made of beta-glucose units, providing structural strength to plant cell walls.`
+      },
+      {
+        q: `To which class of biomolecules does Collagen belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Collagen is an abundant structural protein in animals, featuring a unique triple-helix conformation rich in glycine and proline.`
+      },
+      {
+        q: `To which class of biomolecules does a Triglyceride belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Triglycerides are lipids formed from one glycerol molecule esterified to three fatty acids, serving as the main form of energy storage in adipose tissue.`
+      },
+      {
+        q: `To which class of biomolecules does DNA belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 3,
+        exp: `DNA (deoxyribonucleic acid) is a double-stranded nucleic acid consisting of deoxyribonucleotide polymers, which stores hereditary information.`
+      },
+      {
+        q: `To which class of biomolecules does Amylase belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Amylase is a digestive enzyme (a catalytic protein) that breaks down starch into smaller maltose sugars.`
+      },
+      {
+        q: `To which class of biomolecules does Sphingomyelin belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Sphingomyelin is a sphingolipid found in animal cell membranes, particularly enriched in the myelin sheath surrounding nerve cell axons.`
+      }
+    ]
+  }
 ];

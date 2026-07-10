@@ -1672,4 +1672,349 @@ export const CHEM_PHYS_QUIZZES = [
 { q:`A table shows a company's profit over 4 years: Year1=$10k, Year2=$15k, Year3=$12k, Year4=$20k. What was the percent increase from Year 1 to Year 4?`, ch:[`100%`,`50%`,`200%`,`20%`], ans:0, exp:`Percent increase equals (new value - old value) / old value × 100: (20-10)/10 × 100 = 100%.` },
 { q:`A box plot shows a median of 50 and the box (interquartile range) spanning from 40 to 65. What does this box represent?`, ch:[`The full range of all data`,`The middle 50% of the data`,`Only the outliers`,`The mean and standard deviation`], ans:1, exp:`The box in a box plot spans from the first quartile (Q1) to the third quartile (Q3), which together contain the middle 50% of the data set.` }
 ]},
+  {
+    id: `cp96`,
+    cat: `Physical Sciences`,
+    title: `Ideal Gas Law Proportionality`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `At constant volume and moles, what happens to the pressure of an ideal gas when the temperature increases?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `According to Gay-Lussac's Law (P ∝ T at constant V and n), increasing the absolute temperature causes gas particles to move faster and collide with the container walls more forcefully and frequently, which increases pressure.`
+      },
+      {
+        q: `At constant temperature and moles, what happens to the volume of an ideal gas when the external pressure increases?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 1,
+        exp: `Boyle's Law states that pressure and volume are inversely proportional at constant temperature (V ∝ 1/P). Thus, increasing the external pressure compresses the gas, causing volume to decrease.`
+      },
+      {
+        q: `At constant pressure and moles, what happens to the volume of an ideal gas when the temperature increases?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `Charles's Law states that volume and absolute temperature are directly proportional at constant pressure (V ∝ T). Heating the gas causes it to expand, increasing its volume.`
+      },
+      {
+        q: `At constant temperature and pressure, what happens to the volume of a balloon when more moles of gas are added?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `Avogadro's Law states that volume is directly proportional to the number of moles of gas at constant temperature and pressure (V ∝ n). Adding more particles increases the space needed, so volume increases.`
+      },
+      {
+        q: `In a rigid, closed steel container (constant volume), what happens to the pressure if we cool the gas down?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 1,
+        exp: `Cooling the gas decreases the average kinetic energy of its particles, causing them to collide with the walls less frequently and with less force, which decreases the pressure inside the container.`
+      },
+      {
+        q: `At constant temperature and volume, what happens to the pressure of a gas if we double the number of moles?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `From the ideal gas law (PV = nRT), pressure is directly proportional to the number of moles at constant T and V (P ∝ n). Doubling the particles doubles the collision frequency, which increases pressure.`
+      },
+      {
+        q: `According to Boyle's law, if we expand the volume of a syringe at constant temperature, what happens to the gas pressure inside?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 1,
+        exp: `Expanding the volume provides more space for the gas particles, reducing the frequency of collisions with the walls per unit area, which decreases the pressure.`
+      },
+      {
+        q: `If we heat a gas in a flexible balloon while holding external pressure constant, what happens to the balloon's volume?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `Holding pressure constant means the balloon must expand to accommodate the faster-moving, heated gas particles, so the volume increases.`
+      },
+      {
+        q: `According to Charles's law, if we cool a gas sample from 300K to 150K at constant pressure, what happens to its volume?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 1,
+        exp: `Since volume is directly proportional to absolute temperature, cooling the gas to half its absolute temperature reduces the space it occupies, so volume decreases.`
+      },
+      {
+        q: `If we compress a gas sample to half its volume while simultaneously doubling its absolute temperature, what happens to the pressure?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Depends on the gas identity`],
+        ans: 0,
+        exp: `Both changes act to raise pressure: halving the volume doubles the pressure (Boyle's Law), and doubling the temperature doubles the pressure (Gay-Lussac's Law). Combined, the pressure increases fourfold.`
+      }
+    ]
+  },
+  {
+    id: `cp97`,
+    cat: `Physical Sciences`,
+    title: `Chemical Bonding Types`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What type of bond forms between sodium and chlorine in NaCl?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 0,
+        exp: `Sodium (a metal with low electronegativity) transfers its valence electron to chlorine (a nonmetal with high electronegativity), forming Na+ and Cl- ions held together by an ionic bond.`
+      },
+      {
+        q: `What type of bond forms between two identical nitrogen atoms in N2?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 2,
+        exp: `Two identical nitrogen atoms have the same electronegativity, sharing three pairs of electrons completely equally to form a nonpolar covalent triple bond.`
+      },
+      {
+        q: `What type of bond forms between hydrogen and oxygen in a water molecule (H2O)?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 1,
+        exp: `Oxygen is significantly more electronegative than hydrogen, pulling the shared electrons closer to itself and creating a polar covalent bond with partial charges.`
+      },
+      {
+        q: `What type of bond holds copper atoms together in a solid wire?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 3,
+        exp: `Copper is a metal held together by metallic bonding, where a lattice of positive copper ions is surrounded by a free-flowing, delocalized 'sea' of valence electrons.`
+      },
+      {
+        q: `What type of bond forms between carbon and hydrogen in methane (CH4) due to their very similar electronegativities?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 2,
+        exp: `Carbon (2.5) and hydrogen (2.1) have an electronegativity difference of only 0.4. This small difference results in a nonpolar covalent bond where electrons are shared relatively equally.`
+      },
+      {
+        q: `What type of bond forms when electrons are completely transferred from a metal to a nonmetal?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 0,
+        exp: `A complete transfer of electrons creates oppositely charged cations and anions, which are held together by electrostatic attraction in an ionic bond.`
+      },
+      {
+        q: `What type of bond forms when electrons are shared unequally between two nonmetal atoms?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 1,
+        exp: `Unequal sharing of electrons due to moderate differences in electronegativity (~0.4 to 1.7) results in a polar covalent bond with permanent dipoles.`
+      },
+      {
+        q: `What type of bond is characterized by a 'sea of delocalized electrons' surrounding metal cations?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 3,
+        exp: `Metallic bonding features delocalized valence electrons that are free to flow through the metal lattice, giving metals their excellent electrical and thermal conductivity.`
+      },
+      {
+        q: `What type of bond forms between magnesium and oxygen in MgO?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 0,
+        exp: `Magnesium (metal) transfers two electrons to oxygen (nonmetal), forming Mg2+ and O2- ions locked in a strong, high-melting ionic crystal lattice.`
+      },
+      {
+        q: `What type of bond forms between carbon and oxygen in carbon dioxide (CO2)?`,
+        ch: [`Ionic bond`, `Polar covalent bond`, `Nonpolar covalent bond`, `Metallic bond`],
+        ans: 1,
+        exp: `The electronegativity difference between carbon (2.5) and oxygen (3.5) is 1.0, making the individual C=O double bonds polar covalent, although the linear molecular geometry makes the overall molecule nonpolar.`
+      }
+    ]
+  },
+  {
+    id: `cp98`,
+    cat: `Physical Sciences`,
+    title: `Acid-Base Characterization`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `How is Hydrochloric acid (HCl) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 0,
+        exp: `HCl is a strong mineral acid that fully dissociates (100% ionization) in aqueous solution to yield hydronium ions (H3O+) and chloride ions.`
+      },
+      {
+        q: `How is Acetic acid (CH3COOH) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 1,
+        exp: `Acetic acid is an organic carboxylic acid that only partially ionizes in water, establishing an equilibrium and leaving the vast majority of molecules intact as CH3COOH.`
+      },
+      {
+        q: `How is Sodium hydroxide (NaOH) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 2,
+        exp: `NaOH is an alkali metal hydroxide that dissociates completely in water, releasing sodium ions and hydroxide ions (OH-), making it a strong base.`
+      },
+      {
+        q: `How is Ammonia (NH3) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 3,
+        exp: `Ammonia is a nitrogenous base that does not contain OH- itself but acts as a weak base by partially accepting a proton from water, generating NH4+ and OH- ions.`
+      },
+      {
+        q: `How is Nitric acid (HNO3) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 0,
+        exp: `Nitric acid is a highly corrosive strong acid that ionizes completely in water, commonly used in chemistry and industry.`
+      },
+      {
+        q: `How is Carbonic acid (H2CO3) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 1,
+        exp: `Carbonic acid is a weak diprotic acid formed when carbon dioxide dissolves in water, crucial for blood pH buffering (bicarbonate buffer system).`
+      },
+      {
+        q: `How is Potassium hydroxide (KOH) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 2,
+        exp: `KOH is a strong alkaline base that dissolves and dissociates completely in water to yield potassium ions and hydroxide ions.`
+      },
+      {
+        q: `How is Methylamine (CH3NH2) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 3,
+        exp: `Methylamine is an organic amine. Similar to ammonia, its nitrogen lone pair weakly accepts protons from water, classifying it as a weak base.`
+      },
+      {
+        q: `How is Sulfuric acid (H2SO4) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 0,
+        exp: `Sulfuric acid is a strong diprotic acid. Its first dissociation step (H2SO4 → H+ + HSO4-) is 100% complete, qualifying it as a strong acid.`
+      },
+      {
+        q: `How is Phosphoric acid (H3PO4) classified in water?`,
+        ch: [`Strong Acid`, `Weak Acid`, `Strong Base`, `Weak Base`],
+        ans: 1,
+        exp: `Phosphoric acid is a moderate-to-weak triprotic acid. It does not dissociate completely in any of its three ionization steps, establishing three sequential weak-acid equilibria.`
+      }
+    ]
+  },
+  {
+    id: `cp99`,
+    cat: `Physical Sciences`,
+    title: `Metric Prefix Scaling`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What multiplier corresponds to the prefix 'milli'?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 0,
+        exp: `The prefix 'milli-' (symbol m) represents one-thousandth, or 10^-3. For example, 1 millimeter is 10^-3 meters.`
+      },
+      {
+        q: `What multiplier corresponds to the prefix 'micro'?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 1,
+        exp: `The prefix 'micro-' (symbol μ) represents one-millionth, or 10^-6. For example, a micrometer is 10^-6 meters.`
+      },
+      {
+        q: `What multiplier corresponds to the prefix 'nano'?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 2,
+        exp: `The prefix 'nano-' (symbol n) represents one-billionth, or 10^-9. For example, 1 nanometer is 10^-9 meters.`
+      },
+      {
+        q: `What multiplier corresponds to the prefix 'pico'?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 3,
+        exp: `The prefix 'pico-' (symbol p) represents one-trillionth, or 10^-12. For example, 1 picometer is 10^-12 meters.`
+      },
+      {
+        q: `Which scale is used for measuring cellular structures on the micrometer scale?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 1,
+        exp: `Eukaryotic cells are typically 10 to 100 micrometers in diameter, putting them on the micro-scale (10^-6 meters).`
+      },
+      {
+        q: `Which scale represents the size of small molecules and chemical bond lengths, typically in picometers?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 3,
+        exp: `Chemical bond lengths are on the order of 100 to 200 picometers (or 1 to 2 Ångstroms), corresponding to the pico-scale (10^-12 meters).`
+      },
+      {
+        q: `Which scale corresponds to nanomedicine and nanoparticles, typically in nanometers?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 2,
+        exp: `Nanotechnology and molecular structures like DNA double helix width (~2 nm) reside on the nano-scale (10^-9 meters).`
+      },
+      {
+        q: `Which scale corresponds to milligrams of a medication dose, which is one-thousandth of a gram?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 0,
+        exp: `A milligram (mg) represents one-thousandth of a gram, placing it on the milli-scale (10^-3 grams).`
+      },
+      {
+        q: `If a cell has a volume of 1 picoliter, what fraction of a liter is that?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 3,
+        exp: `One picoliter (pL) is one-trillionth of a liter, representing 10^-12 liters.`
+      },
+      {
+        q: `If an electrical current is 1 milliampere, what fraction of an ampere is that?`,
+        ch: [`10^-3 (milli)`, `10^-6 (micro)`, `10^-9 (nano)`, `10^-12 (pico)`],
+        ans: 0,
+        exp: `One milliampere (mA) is one-thousandth of an ampere, representing 10^-3 amperes.`
+      }
+    ]
+  },
+  {
+    id: `cp100`,
+    cat: `Physical Sciences`,
+    title: `Solutions & Cell Tonicity Outcomes`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What happens to a red blood cell when placed in a hypotonic solution (like pure water)?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 0,
+        exp: `Pure water has a lower solute concentration (hypotonic) than the cell's cytoplasm. Water rushes into the cell by osmosis, causing it to swell and potentially burst (hemolysis).`
+      },
+      {
+        q: `What happens to a red blood cell when placed in a hypertonic solution (like concentrated saltwater)?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 1,
+        exp: `Concentrated saltwater has a higher solute concentration (hypertonic) than the cytoplasm. Water leaves the cell by osmosis, causing the cell to shrink and shrivel (crenation).`
+      },
+      {
+        q: `What happens to a red blood cell when placed in an isotonic solution (like 0.9% normal saline)?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 2,
+        exp: `Normal saline (0.9% NaCl) is isotonic to the cell's cytoplasm. Water moves in and out of the cell at equal rates, resulting in no net change in cell volume.`
+      },
+      {
+        q: `If a plant cell is placed in pure distilled water, what happens to the cell before turgor pressure halts water entry?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 0,
+        exp: `Water enters the plant cell because distilled water is hypotonic. The cell swells and exerts turgor pressure against its rigid cell wall, which prevents it from actually bursting.`
+      },
+      {
+        q: `If a cell with an internal osmolarity of 300 mOsm is placed in a solution of 600 mOsm, what is the physical outcome?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 1,
+        exp: `The 600 mOsm solution is hypertonic relative to the 300 mOsm interior. Water exits the cell down its water activity gradient, causing the cell to shrink.`
+      },
+      {
+        q: `If a cell with an internal osmolarity of 300 mOsm is placed in a solution of 150 mOsm, what is the physical outcome?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 0,
+        exp: `The 150 mOsm solution is hypotonic. Water enters the cell, causing it to swell and potentially lyse.`
+      },
+      {
+        q: `If a patient is given an IV fluid that is perfectly isotonic to blood plasma, what happens to their circulating red blood cells?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 2,
+        exp: `Isotonic IV fluids expand blood volume without disrupting the osmotic balance of red blood cells, ensuring there is no net change in cell volume.`
+      },
+      {
+        q: `During severe dehydration, the extracellular fluid becomes hypertonic. What happens to the tissue cells?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 1,
+        exp: `Dehydration raises extracellular osmolarity (hypertonicity). Water is drawn out of the tissue cells, causing them to shrink.`
+      },
+      {
+        q: `If a freshwater fish's red blood cells are exposed to marine ocean water, what is the cellular outcome?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 1,
+        exp: `Ocean water is highly hypertonic to a freshwater fish's cells, drawing water out of the cells and causing them to shrink.`
+      },
+      {
+        q: `If a marine fish's red blood cells are exposed to fresh river water, what is the cellular outcome?`,
+        ch: [`The cell swells and may burst (lyse)`, `The cell shrinks (crenates)`, `There is no net change in cell volume`, `The cell dissolves completely`],
+        ans: 0,
+        exp: `Fresh river water is extremely hypotonic to a marine fish's cells, causing water to rush in, which swells and lyses the cells.`
+      }
+    ]
+  }
 ];

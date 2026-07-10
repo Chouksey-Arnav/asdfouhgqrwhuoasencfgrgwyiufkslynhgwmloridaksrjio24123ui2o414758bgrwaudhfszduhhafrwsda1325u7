@@ -97,7 +97,23 @@ const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center',
 // ── Quiz scrambling ───────────────────────────────────────────────────────────
 function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 const TOTAL_QUESTIONS = ALL_QUIZZES.reduce((n,q)=>n+q.qs.length,0);
-function scrambleQuiz(qs){return shuffleArr(qs).map(q=>{const idx=shuffleArr([0,1,2,3]);return{...q,ch:idx.map(i=>q.ch[i]),ans:idx.indexOf(q.ans)};});}
+function scrambleQuiz(quiz){
+  const qs = quiz.qs;
+  const shuffled = shuffleArr(qs);
+  if (quiz.sameChoices) {
+    const numChoices = shuffled[0].ch.length;
+    const idx = shuffleArr([...Array(numChoices).keys()]);
+    return shuffled.map(q => ({
+      ...q,
+      ch: idx.map(i => q.ch[i]),
+      ans: idx.indexOf(q.ans)
+    }));
+  }
+  return shuffled.map(q=>{
+    const idx=shuffleArr([...Array(q.ch.length).keys()]);
+    return{...q,ch:idx.map(i=>q.ch[i]),ans:idx.indexOf(q.ans)};
+  });
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtT   = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
@@ -371,7 +387,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
   const scoreRef=useRef(0);
   const [qi,setQi]=useState(0);const [sel,setSel]=useState(null);const [conf,setConf]=useState(false);
   const [answers,setAnswers]=useState([]);const [phase,setPhase]=useState('quiz');const [ri,setRi]=useState(0);
-  const [scrambledQs]=useState(()=>readonly?quiz.qs:scrambleQuiz(quiz.qs));
+  const [scrambledQs]=useState(()=>readonly?quiz.qs:scrambleQuiz(quiz));
   const [elapsed,setElapsed]=useState(0);
   const tot=scrambledQs.length,q=scrambledQs[qi],prog=Math.round(((qi+(conf?1:0))/tot)*100);
 
