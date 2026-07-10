@@ -49,3 +49,25 @@ export function celebrateStreak() {
   setTimeout(() => fire(120, { x: 1,   y: 0.6 }), 100);
   setTimeout(() => fire(90,  { x: 0.5, y: 0.4 }), 200);
 }
+
+/** Variable-reward bonus tier — bigger and gold-tinted vs. a plain XP burst. */
+export function celebrateBonusXP() {
+  confetti({ particleCount: 55, spread: 65, origin: { y: 0.65 }, colors: GOLD, scalar: 1, ticks: 150 });
+}
+
+/** Jackpot tier (2% roll) — the rarest, most visually distinct moment in the app. */
+export function celebrateJackpot() {
+  const end = Date.now() + 1600;
+  const fire = () => {
+    confetti({ particleCount: 8, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: MULTI, scalar: 1.1, ticks: 250 });
+    confetti({ particleCount: 8, angle: 120, spread: 70, origin: { x: 1, y: 0.6 }, colors: MULTI, scalar: 1.1, ticks: 250 });
+    if (Date.now() < end) requestAnimationFrame(fire);
+  };
+  fire();
+  confetti({ particleCount: 120, spread: 100, origin: { y: 0.5 }, colors: MULTI, shapes: ['star','circle'], scalar: 1.3, ticks: 300 });
+}
+
+/** Chest unwrap moment — a quick, tight burst timed to the reveal, not the tap. */
+export function celebrateChestOpen() {
+  confetti({ particleCount: 70, spread: 75, origin: { y: 0.55 }, colors: MULTI, scalar: 1, ticks: 200 });
+}
