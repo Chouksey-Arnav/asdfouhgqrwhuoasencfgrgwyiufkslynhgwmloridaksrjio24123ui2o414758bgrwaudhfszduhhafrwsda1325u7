@@ -6,8 +6,10 @@ import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill } from '../li
 import { getQuestionSet, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 
 const PATHWAY_LABELS = {
-  general: 'General Admissions', undecided: 'Exploring / Undecided', stem: 'STEM & Engineering',
-  humanities: 'Humanities & Writing', business: 'Business & Economics', socialSci: 'Social Sciences', preHealth: 'Pre-Health',
+  general: 'General Admissions', exploring: 'Exploring Pre-Health', physician: 'Physician (MD/DO)',
+  nursing: 'Nursing', physicianAssistant: 'Physician Assistant', pharmacy: 'Pharmacy', dentistry: 'Dentistry',
+  biomedResearch: 'Biomedical Research', physicalOccupTherapy: 'PT/OT', publicHealth: 'Public Health',
+  healthAdmin: 'Health Administration',
 };
 
 function randomIdx(len, exclude = -1) {
@@ -17,7 +19,7 @@ function randomIdx(len, exclude = -1) {
   return i;
 }
 
-export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'undecided', onSessionComplete }) {
+export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'exploring', onSessionComplete }) {
   const [setKey, setSetKey] = useState(pathwayKey);
   const questions = useMemo(() => getQuestionSet(setKey), [setKey]);
   const [qIdx, setQIdx] = useState(0);
