@@ -54,6 +54,7 @@ import RecommendersPanel from './components/RecommendersPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
 import { computeApplicationStrength } from './lib/applicationStrength';
+import { buildInsights } from './lib/insights';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
@@ -708,6 +709,7 @@ export default function App({ account, onAccountChange }) {
   const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
   const [appCounts, setAppCounts] = useState({colleges:0,essays:0,resume:false});
   const [clinicalHoursTotal, setClinicalHoursTotal] = useState(0);
+  const [clinicalHoursEntries, setClinicalHoursEntries] = useState([]);
   const [recommendersCount, setRecommendersCount] = useState(0);
   const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
@@ -821,6 +823,7 @@ export default function App({ account, onAccountChange }) {
       }catch(e){/* non-critical — achievement counts, fail silently */}
       try{
         const [hours,recs,sessions]=await Promise.all([DB.getClinicalHours(),DB.getRecommenders(),DB.getInterviewSessions()]);
+        setClinicalHoursEntries(hours||[]);
         setClinicalHoursTotal((hours||[]).reduce((s,h)=>s+(h.hours||0),0));
         setRecommendersCount((recs||[]).length);
         setMmiCasperCount((sessions||[]).filter(s=>s.mode==='mmi'||s.mode==='casper').length);
@@ -2370,9 +2373,74 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const doughnutOpts={responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:C.s2,titleColor:C.t1,bodyColor:C.t2,borderColor:C.b2,borderWidth:1}}};
 
     const TierIcon=TIER_ICONS[levelInfo.tierIcon]||Sparkles;
+    const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
+    const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
+    const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
+    const benchmarks=curPath?.benchmarks||{};
+    const strength=computeApplicationStrength({
+      mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
+      recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
+    });
+    const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
+    const insights=buildInsights({
+      catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
+      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
+    });
+    const diagPath=user?.diagnosticResult?PATHS[user.diagnosticResult]:null;
+    // Clinical hour trend — cumulative by month
+    const hoursByMonth={};
+    [...clinicalHoursEntries].sort((a,b)=>a.entryDate.localeCompare(b.entryDate)).forEach(e=>{
+      const m=e.entryDate.slice(0,7);
+      hoursByMonth[m]=(hoursByMonth[m]||0)+(e.hours||0);
+    });
+    const monthKeys=Object.keys(hoursByMonth).sort();
+    let running=0;
+    const clinicalTrendData={
+      labels:monthKeys.map(m=>new Date(m+'-01').toLocaleDateString(undefined,{month:'short',year:'2-digit'})),
+      datasets:[{
+        label:'Cumulative Hours', data:monthKeys.map(m=>{running+=hoursByMonth[m];return running;}),
+        borderColor:`${accent}e6`, backgroundColor:`${accent}14`, borderWidth:2.5, pointRadius:4, tension:0.3, fill:true,
+      }],
+    };
+
     return(
       <div style={CC({gap:22})}>
         <div><div style={lbl()}>Progress</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Progress</h2></div>
+
+        {/* Application-strength readiness gauge */}
+        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
+          <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
+            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Academic {strength.subscores.academic}% · Clinical {strength.subscores.clinical}% · Application {strength.subscores.application}% · Activities {strength.subscores.activities}%</div>
+          </div>
+          <button style={btnG({fontSize:12})} onClick={()=>goPortfolio('overview')}>View Portfolio<ChevronRight size={13}/></button>
+        </div>
+
+        {/* Insight callouts */}
+        {insights.length>0&&<div style={CC({gap:8})}>
+          {insights.map((ins,i)=>{
+            const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
+            return(
+              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
+                <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
+                {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
+              </div>
+            );
+          })}
+        </div>}
+
+        {/* Diagnostic result */}
+        {diagPath&&<div style={{...glass2({padding:16,display:'flex',alignItems:'center',gap:14})}}>
+          {(()=>{const DIc=PATH_ICONS[user.diagnosticResult]||Compass;return <div style={{width:38,height:38,borderRadius:11,background:`${diagPath.accent}18`,border:`1px solid ${diagPath.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><DIc size={17} color={diagPath.accent}/></div>;})()}
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Your Diagnostic Result</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:2}}>{diagPath.label}{eSpec!==user.diagnosticResult?` — currently on ${curPath?.label}`:''}</div>
+          </div>
+          <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>{setDIntro(false);setDD(false);setDS(0);setDA([]);goPrep('diagnostic');}}>Retake<RefreshCw size={12} style={{marginLeft:4}}/></button>
+        </div>}
 
         {/* Identity / Level card */}
         <div style={{...glass({padding:22}),background:`linear-gradient(135deg,${levelInfo.tierColor}22,${accent}10)`,border:`1px solid ${levelInfo.tierColor}35`}}>
@@ -2498,6 +2566,32 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
         </div>}
 
+        {/* Clinical/shadowing hour trend */}
+        {monthKeys.length>=2&&<div style={glass({padding:20})}>
+          <SL>Clinical & Shadowing Hours — Cumulative</SL>
+          <div style={{height:180,position:'relative'}}>
+            <Line data={clinicalTrendData} options={lineOpts}/>
+          </div>
+        </div>}
+
+        {/* Benchmark bars vs. active pathway targets */}
+        <div style={glass({padding:18})}>
+          <SL>Progress Toward {curPath?.label} Benchmarks</SL>
+          {[
+            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
+            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
+            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
+          ].map(({l,val,target,col})=>(
+            <div key={l} style={{marginBottom:14}}>
+              <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
+                <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
+              </div>
+              <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
+            </div>
+          ))}
+        </div>
+
         {/* Recent quiz scores table */}
         {recentScores.length>0&&<div style={glass()}>
           <SL>Recent Quiz Scores</SL>
@@ -2537,6 +2631,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             unit_master:[mastery,33], course_half:[mastery,50], ai_user:[aiChatCount,5],
             college_added:[appCounts.colleges,1], deadline_set:[(upcomingDeadlines||[]).length,1], essay_started:[appCounts.essays,1],
             activity_logged:[portActivities.length,1], interview_first:[interviewCount,1], interview_5:[interviewCount,5],
+            clinical_hours_50:[clinicalHoursTotal,50], recommender_added:[recommendersCount,1], mmi_practiced:[mmiCasperCount,1],
           };
           return(
         <div style={glass({padding:18})}>
@@ -2781,7 +2876,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     scores:()=><ScoreTrackerPanel accent={accent}/>,
     aid:()=><FinancialAidPanel accent={accent}/>,
     resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await DB.getClinicalHours();const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await DB.getClinicalHours();setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
     recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await DB.getRecommenders();setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
     interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
