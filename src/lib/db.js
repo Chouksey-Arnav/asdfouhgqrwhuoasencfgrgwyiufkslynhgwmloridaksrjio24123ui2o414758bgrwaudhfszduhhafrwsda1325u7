@@ -42,10 +42,20 @@ db.version(4).stores({
   gpaEntries: null,
 });
 
-// v5: Dopamine-loop gamification additions — earned streak-freeze tokens
+// v5: Clinical/shadowing hours, LOR/committee-letter recommenders, and
+// interview practice sessions (Standard/MMI/CASPer) — student-filled logs
+// rather than official application records, so they stay local-only like
+// quiz/flashcard data instead of requiring new Supabase tables/RLS policies.
+db.version(5).stores({
+  clinicalHours:     '++id, siteName, siteType, hours, entryDate',
+  recommenders:      '++id, name, relationship, status, type',
+  interviewSessions: '++id, mode, pathwayKey, completedAt',
+});
+
+// v6: Dopamine-loop gamification additions — earned streak-freeze tokens
 // (loss-aversion safety net), the daily check-in cycle, and cosmetic-only
 // chest unlocks.
-db.version(5).stores({
+db.version(6).stores({
   streakFreezes: '++id, earnedAt, usedOn',
   checkins:      'date, day',
   cosmetics:     'key, unlockedAt',
@@ -247,6 +257,39 @@ export async function getStudyDays() {
   return rows.map(r => r.date);
 }
 
+// ── Clinical / Shadowing Hours ────────────────────────────────────────────────
+export async function getClinicalHours() {
+  return db.clinicalHours.orderBy('entryDate').reverse().toArray();
+}
+export async function addClinicalHours(entry) {
+  return db.clinicalHours.add({ ...entry, loggedAt: Date.now() });
+}
+export async function deleteClinicalHours(id) {
+  await db.clinicalHours.delete(id);
+}
+
+// ── Recommenders (LOR writers / committee letters) ───────────────────────────
+export async function getRecommenders() {
+  return db.recommenders.toArray();
+}
+export async function addRecommender(entry) {
+  return db.recommenders.add({ ...entry, addedAt: Date.now() });
+}
+export async function updateRecommender(id, updates) {
+  await db.recommenders.update(id, updates);
+}
+export async function deleteRecommender(id) {
+  await db.recommenders.delete(id);
+}
+
+// ── Interview Practice Sessions (Standard/MMI/CASPer) ─────────────────────────
+export async function getInterviewSessions() {
+  return db.interviewSessions.orderBy('completedAt').reverse().toArray();
+}
+export async function addInterviewSession(entry) {
+  return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
+}
+
 // ── Full export ────────────────────────────────────────────────────────────────
 export async function exportAllData() {
   const data = {
@@ -255,13 +298,16 @@ export async function exportAllData() {
     quizScores: await db.quizScores.toArray(),
     achievements: await db.achievements.toArray(),
     studyDays: await db.studyDays.toArray(),
+    clinicalHours: await db.clinicalHours.toArray(),
+    recommenders: await db.recommenders.toArray(),
+    interviewSessions: await db.interviewSessions.toArray(),
     exportDate: new Date().toISOString(),
-    version: '2.0',
+    version: '3.0',
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `ascendprep-backup-${data.exportDate.split('T')[0]}.json`;
+  a.href = url; a.download = `medschoolprep-backup-${data.exportDate.split('T')[0]}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -271,6 +317,7 @@ export async function clearAllData() {
     db.user.clear(), db.lessons.clear(), db.quizScores.clear(),
     db.flashCards.clear(), db.catPerf.clear(),
     db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
+    db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
   ]);
 }

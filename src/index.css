@@ -37,3 +37,4 @@ body::before {
   z-index: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; }

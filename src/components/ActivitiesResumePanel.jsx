@@ -6,7 +6,7 @@ import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G } from '..
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
 
-const ACT_TYPES = ['Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
+const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 const GRADE_LEVELS = ['9','10','11','12','Post-graduate'];
 const STATUSES = ['ongoing','completed'];
 

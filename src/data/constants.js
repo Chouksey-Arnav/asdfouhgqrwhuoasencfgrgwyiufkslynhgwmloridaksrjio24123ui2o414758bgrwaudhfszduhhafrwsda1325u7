@@ -1,203 +1,391 @@
 // All non-quiz, non-elib constants
 
 // ── LEARNING PATHS ────────────────────────────────────────────────────────────
-// Interest-based study tracks for college-bound high schoolers. "Pre-Health" is
-// an opt-in career-exploration track, not the default — the default track is
-// "Undecided / Exploring" so a new user isn't assumed into any single career path.
+// Medicine & health-career study tracks for college-bound high schoolers.
+// "Exploring Pre-Health" is the default track — a new user isn't assumed into
+// any single health career, but every track here is health/medicine-scoped
+// (this app exists to prep students for a med/health path, not a general major).
+//
+// Each pathway carries, beyond the display fields:
+//   - idealVector: the pathway's position on the 5 DIAG_AXES (see below), used
+//     by src/lib/diagnosticEngine.js to score the diagnostic against it.
+//   - benchmarks: rough high-school-scale targets (not med-school-applicant
+//     numbers) for shadowing/clinical/volunteer/leadership hours, used by the
+//     Portfolio and Progress benchmark bars.
+//   - accent2/glow/gradient: the pathway's visual identity beyond a single hex.
 export const PATHS = {
-  undecided: {
-    label:'Exploring / Undecided', accent:'#64748b', quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
-    tagline:'Keep every door open while you figure out what excites you.',
-    overview:'You don\'t need a declared major to get into a great college — you need strong fundamentals and evidence that you can think clearly across subjects. This pathway builds a balanced foundation in math, reading/writing, and science so that whichever major you eventually pick (in high school or your first undecided year of undergrad), you\'re not starting from behind. It\'s the default track for students who want to keep exploring rather than lock in early.',
+  exploring: {
+    label:'Exploring Pre-Health', accent:'#64748b', accent2:'#94a3b8', glow:'rgba(100,116,139,0.30)',
+    gradient:'linear-gradient(135deg,#64748b 0%,#334155 100%)',
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:0, handsOn:0, acuity:0, autonomy:0, directCare:0 },
+    benchmarks:{ shadowingHours:15, clinicalHours:40, volunteerHours:60, leadershipHours:30 },
+    tagline:'Keep every door in medicine open while you figure out which one is yours.',
+    overview:'You don\'t need to have picked "the" health career to get real value out of this pathway — you need strong science fundamentals and honest exposure to what different medicine and health-science careers actually look like day to day. This track builds a balanced foundation across biology, chemistry, and the behavioral/social science side of patient care, so that whichever health path you eventually pick, you\'re not starting from behind. It\'s the default track for students who know they\'re drawn to medicine broadly but haven\'t narrowed it down yet.',
     highlights:[
-      'A balanced core across math, verbal reasoning, and science — the exact mix colleges and the SAT/ACT test',
-      'Freedom to sample STEM, humanities, business, and social-science content before committing to one',
-      'A stronger, more flexible application profile if you haven\'t settled on an intended major yet',
-      'A natural on-ramp into any other pathway here once your interests sharpen',
+      'A balanced core across life sciences, physical sciences, and behavioral/social sciences — the same mix every health career draws on',
+      'Freedom to sample physician, nursing, research, and allied-health content before committing to one',
+      'Low-pressure exposure to shadowing and volunteering so you can test the field itself, not just the coursework',
+      'A natural on-ramp into any other pathway here once your interests sharpen — retake the diagnostic anytime',
     ],
-    outcomes:['Undeclared / General Studies','Liberal Arts (any concentration)','Any major requiring strong SAT/ACT scores'],
-    bestFor:['You genuinely don\'t know what you want to study yet','You want to keep your options as wide as possible','You\'d rather build broad strength than specialize early'],
+    outcomes:['Undeclared Pre-Health / Biology','Any med/health-track major requiring strong science fundamentals','A confident, informed choice of specific health career before you declare'],
+    bestFor:['You know you want to help people through medicine or health science, but not which role yet','You want to keep your options wide across clinical, research, and allied-health careers','You\'d rather build broad strength than specialize before you\'ve tested the field'],
     units:[
-      { id:'ud1', title:'Core Math Review', quizCat:'Physical Sciences', lessons:[
-        { id:'ud1l1', title:'Algebra II Essentials', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
-        { id:'ud1l2', title:'Precalculus Foundations', url:'https://www.khanacademy.org/math/precalculus', src:'Khan Academy' },
-        { id:'ud1l3', title:'Statistics & Data Basics', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+      { id:'ex1', title:'Life Sciences Foundations', quizCat:'Life Sciences', lessons:[
+        { id:'ex1l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy' },
+        { id:'ex1l2', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'ex1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
       ]},
-      { id:'ud2', title:'SAT Reading & Writing', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ud2l1', title:'SAT Reading & Writing Practice', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
-        { id:'ud2l2', title:'Grammar & Usage Essentials', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
-        { id:'ud2l3', title:'Essay Writing Fundamentals', url:'https://owl.purdue.edu/owl/general_writing/index.html', src:'Purdue OWL' },
+      { id:'ex2', title:'Physical Sciences Foundations', quizCat:'Physical Sciences', lessons:[
+        { id:'ex2l1', title:'Chemistry Fundamentals', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'ex2l2', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
+        { id:'ex2l3', title:'Statistics & Data Basics', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
       ]},
-      { id:'ud3', title:'Science Survey', quizCat:'Life Sciences', lessons:[
-        { id:'ud3l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy' },
-        { id:'ud3l2', title:'Chemistry Fundamentals', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'ud3l3', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
+      { id:'ex3', title:'Exploring Health Careers', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'ex3l1', title:'Intro to Psychology', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', src:'YouTube' },
+        { id:'ex3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ex3l3', title:'What Pre-Health Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
-  stem: {
-    label:'STEM & Engineering', accent:'#3b82f6', quizCats:['Life Sciences','Physical Sciences'],
-    tagline:'For students who want to build, calculate, and solve technical problems.',
-    overview:'This pathway sharpens the math and science reasoning that STEM and engineering majors lean on from day one of freshman year — functions, problem-solving under time pressure, and the physics/chemistry fundamentals that show up on both the SAT/ACT and in intro college coursework. It\'s built for students heading toward engineering, computer science, math, or the physical sciences, where a strong quantitative foundation in high school translates directly into a smoother first year of undergrad.',
+  physician: {
+    label:'Physician (MD/DO)', accent:'#2d7fff', accent2:'#60a5fa', glow:'rgba(45,127,255,0.35)',
+    gradient:'linear-gradient(135deg,#2d7fff 0%,#1d4ed8 100%)',
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:0.7, handsOn:0.3, acuity:0.6, autonomy:0.8, directCare:0.9 },
+    benchmarks:{ shadowingHours:40, clinicalHours:100, volunteerHours:100, leadershipHours:50 },
+    tagline:'For students who want the final call on diagnosis and treatment, patient in front of them.',
+    overview:'This pathway builds the deep biology, chemistry, and physiology fundamentals that pre-med coursework and the MCAT eventually demand, while staying scoped to what a high schooler can realistically do now — strong science grades, real shadowing exposure, and an honest look at what the physician path actually requires (years of school, high-stakes decision-making, direct responsibility for patients). It\'s for students who want to be the one making the call, not just supporting it.',
     highlights:[
-      'Deep practice in algebra, precalculus, and trigonometry — the math tested on the SAT/ACT and required for calculus-based intro STEM courses',
-      'Chemistry and physics fundamentals that mirror what engineering and CS majors take freshman year',
-      'An introduction to programming logic, useful whether or not you\'ve coded before',
-      'Strong Physical Sciences and Life Sciences quiz performance, the sections that matter most for STEM-focused admissions',
+      'Deep biology and biochemistry practice — cell biology, genetics, and physiology that intro pre-med coursework builds directly on',
+      'Chemistry fundamentals (general, organic-basics, acid-base) that ease the transition into college-level chem, the classic pre-med bottleneck',
+      'Realistic guidance on shadowing physicians and what medical schools actually screen for, scoped to what\'s appropriate at your age',
+      'A results screen that\'s honest about the length and intensity of this path, not just the prestige of it',
     ],
-    outcomes:['Computer Science','Mechanical / Electrical / Civil Engineering','Mathematics','Physics','Data Science'],
-    bestFor:['You like problems with a clear, provable answer','You\'re drawn to building things — apps, robots, systems','You want a technical major that rewards quantitative skill'],
+    outcomes:['Biology / Pre-Med','Neuroscience','Chemistry (pre-med track)','Any rigorous science major with an MD/DO goal after undergrad'],
+    bestFor:['You want to be the one making the final diagnosis and treatment call','You\'re comfortable with high-stakes, fast-moving situations','You\'re willing to commit to the longest training path in medicine'],
     units:[
-      { id:'st1', title:'Algebra II & Precalculus', quizCat:'Physical Sciences', lessons:[
-        { id:'st1l1', title:'Functions & Graphing', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
-        { id:'st1l2', title:'Polynomial & Rational Functions', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
-        { id:'st1l3', title:'Trigonometry Basics', url:'https://www.khanacademy.org/math/precalculus', src:'Khan Academy' },
+      { id:'phy1', title:'Biology & Biochemistry Foundations', quizCat:'Life Sciences', lessons:[
+        { id:'phy1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'phy1l2', title:'Human Physiology Systems', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'phy1l3', title:'Immune System & Homeostasis', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube' },
       ]},
-      { id:'st2', title:'Chemistry & Physics Core', quizCat:'Physical Sciences', lessons:[
-        { id:'st2l1', title:'Chemical Reactions & Stoichiometry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'st2l2', title:'Motion, Forces & Energy', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
-        { id:'st2l3', title:'Electricity & Circuits', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
+      { id:'phy2', title:'Chemistry for Medicine', quizCat:'Physical Sciences', lessons:[
+        { id:'phy2l1', title:'General & Organic Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'phy2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+        { id:'phy2l3', title:'Acid-Base Chemistry & Titrations', url:'https://www.youtube.com/watch?v=eB1qG5EEDk0', src:'YouTube' },
       ]},
-      { id:'st3', title:'AP Science & Intro Programming', quizCat:'Life Sciences', lessons:[
-        { id:'st3l1', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'st3l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
-        { id:'st3l3', title:'Intro to Computer Science', url:'https://www.khanacademy.org/computing/computer-science', src:'Khan Academy' },
+      { id:'phy3', title:'The Physician Path', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'phy3l1', title:'Doctor-Patient Communication & Ethics', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
+        { id:'phy3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'phy3l3', title:'What Medical Schools Actually Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
-  humanities: {
-    label:'Humanities & Writing', accent:'#8b5cf6', quizCats:['Behavioral & Social Sciences'],
-    tagline:'For students who think in arguments, stories, and ideas.',
-    overview:'This pathway trains the close reading, persuasive writing, and historical/civic reasoning that humanities majors and strong college essayists rely on. It\'s aimed at students who want to sharpen their voice and their thinking — through literature, history, government, and rhetoric — before heading into majors like English, history, political science, or pre-law tracks, where the ability to build a clear written argument matters more than any single test score.',
+  nursing: {
+    label:'Nursing (RN/BSN)', accent:'#ec4899', accent2:'#f472b6', glow:'rgba(236,72,153,0.35)',
+    gradient:'linear-gradient(135deg,#ec4899 0%,#be185d 100%)',
+    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:0.9, handsOn:0.8, acuity:0.5, autonomy:-0.2, directCare:0.9 },
+    benchmarks:{ shadowingHours:30, clinicalHours:120, volunteerHours:100, leadershipHours:40 },
+    tagline:'For students who want to be the person a patient actually sees the most.',
+    overview:'This pathway builds anatomy/physiology depth alongside the math and communication skills nursing programs expect on day one — dosage calculations, patient assessment basics, and the psychology of care. It\'s for students who want hands-on, direct patient contact as the center of their career, working as part of a team rather than carrying sole diagnostic responsibility, and who care as much about how someone is treated as what treatment they receive.',
     highlights:[
-      'Advanced reading comprehension and rhetorical analysis — directly boosts SAT/ACT Reading & Writing scores',
-      'U.S. and world history depth that strengthens both classroom performance and college essay material',
-      'A structured approach to essay writing that carries over to the college application essay itself',
-      'Practice building and defending an argument, a core skill for humanities, law, and journalism paths',
+      'Anatomy & physiology depth (via Crash Course A&P) that maps directly onto nursing-program prerequisites',
+      'Math and statistics grounding for dosage calculations, a skill nursing programs test early and often',
+      'Patient communication and psychology content — nursing is a relationship-heavy profession, and this track treats it that way',
+      'Realistic guidance on hospital teen-volunteer programs and what nursing programs actually look for',
     ],
-    outcomes:['English / Literature','History','Political Science','Pre-Law','Journalism & Communications'],
-    bestFor:['You\'d rather write an essay than solve an equation','You\'re curious about why things happened, not just what happened','You want a major built around reading, discussion, and argument'],
+    outcomes:['Nursing (BSN)','Health Sciences','Biology (nursing-track)','Public Health (clinical track)'],
+    bestFor:['You want constant, direct contact with patients over a career, not occasional','You like hands-on work as much as you like understanding why it works','You\'d rather be deeply embedded in a care team than working solo'],
     units:[
-      { id:'hu1', title:'Reading & Rhetoric', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'hu1l1', title:'SAT Reading & Writing Practice', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
-        { id:'hu1l2', title:'Analyzing Arguments & Rhetoric', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
-        { id:'hu1l3', title:'Grammar & Usage Essentials', url:'https://www.khanacademy.org/test-prep/sat', src:'Khan Academy' },
+      { id:'nur1', title:'Anatomy & Physiology Foundations', quizCat:'Life Sciences', lessons:[
+        { id:'nur1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
+        { id:'nur1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube' },
+        { id:'nur1l3', title:'The Respiratory System', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', src:'YouTube' },
       ]},
-      { id:'hu2', title:'U.S. & World History', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'hu2l1', title:'U.S. History Overview', url:'https://www.khanacademy.org/humanities/us-history', src:'Khan Academy' },
-        { id:'hu2l2', title:'World History Overview', url:'https://www.khanacademy.org/humanities/world-history', src:'Khan Academy' },
-        { id:'hu2l3', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy' },
+      { id:'nur2', title:'Chemistry & Math for Nursing', quizCat:'Life Sciences', lessons:[
+        { id:'nur2l1', title:'General Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'nur2l2', title:'Statistics for Dosage & Data', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'nur2l3', title:'Algebra Review for Calculations', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
       ]},
-      { id:'hu3', title:'Essay Writing & Composition', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'hu3l1', title:'The College Essay & Narrative Voice', url:'https://owl.purdue.edu/owl/general_writing/index.html', src:'Purdue OWL' },
-        { id:'hu3l2', title:'Persuasive Writing Techniques', url:'https://owl.purdue.edu/owl/general_writing/index.html', src:'Purdue OWL' },
-        { id:'hu3l3', title:'Literary Analysis Basics', url:'https://www.khanacademy.org/humanities', src:'Khan Academy' },
+      { id:'nur3', title:'Patient Care & Communication', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'nur3l1', title:'Psychology of Patient Care', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
+        { id:'nur3l2', title:'Hospital & Clinical Volunteering 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'nur3l3', title:'What Nursing Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
-  business: {
-    label:'Business & Economics', accent:'#f59e0b', quizCats:['Physical Sciences','Behavioral & Social Sciences'],
-    tagline:'For students who want to understand markets, money, and how organizations work.',
-    overview:'This pathway blends quantitative reasoning with economics, leadership, and communication — the mix that undergraduate business schools and economics departments expect incoming students to already have some comfort with. It\'s built for students eyeing majors like business administration, finance, marketing, or economics, where being fluent in statistics, market logic, and public speaking gives you a head start over classmates encountering it for the first time freshman year.',
+  physicianAssistant: {
+    label:'Physician Assistant', accent:'#06b6d4', accent2:'#22d3ee', glow:'rgba(6,182,212,0.35)',
+    gradient:'linear-gradient(135deg,#06b6d4 0%,#0e7490 100%)',
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:0.7, handsOn:0.5, acuity:0.5, autonomy:0.1, directCare:0.85 },
+    benchmarks:{ shadowingHours:40, clinicalHours:100, volunteerHours:80, leadershipHours:40 },
+    tagline:'For students who want physician-level clinical work without going it alone.',
+    overview:'This pathway covers the same biology, chemistry, and physiology fundamentals as the physician track, since PA programs draw on the same science base, but leans into what actually differentiates the role: working closely with a supervising physician and a care team rather than carrying sole responsibility. It\'s for students drawn to hands-on clinical work — diagnosing, treating, prescribing — who\'d rather do that as part of a team than shoulder every decision alone.',
     highlights:[
-      'Micro- and macroeconomic reasoning that shows up in both SAT/ACT passages and intro college econ courses',
-      'Statistics and data literacy — core to business analytics, finance, and any data-driven major',
-      'Leadership and communication practice (public speaking, teamwork, negotiation) that group-project-heavy business programs reward',
-      'A strong foundation for case-based and quantitative-reasoning admissions interviews',
+      'The same core biology/physiology and chemistry depth pre-med students build, since PA programs share that prerequisite base',
+      'Content framed around collaborative, team-based clinical practice rather than solo diagnostic responsibility',
+      'A faster, more direct training path than the MD/DO route — this track is honest about that tradeoff',
+      'Realistic shadowing guidance focused on PA-supervised clinical settings',
     ],
-    outcomes:['Business Administration','Finance','Economics','Marketing','Entrepreneurship'],
-    bestFor:['You\'re interested in how companies and markets actually work','You like leading teams and pitching ideas','You want a major that mixes numbers with people skills'],
+    outcomes:['Biology / Health Sciences (PA-track)','Exercise Science','Any science major with strong direct clinical hours before PA school'],
+    bestFor:['You want hands-on diagnostic and treatment work without years of solo-authority training first','You like being part of a physician-led care team, not working in isolation','You want a faster path into direct patient care than the MD/DO route'],
     units:[
-      { id:'bz1', title:'Micro & Macroeconomics', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'bz1l1', title:'Supply, Demand & Markets', url:'https://www.khanacademy.org/economics-finance-domain/microeconomics', src:'Khan Academy' },
-        { id:'bz1l2', title:'Macroeconomic Indicators', url:'https://www.khanacademy.org/economics-finance-domain/macroeconomics', src:'Khan Academy' },
-        { id:'bz1l3', title:'Personal Finance Basics', url:'https://www.khanacademy.org/college-careers-more/personal-finance', src:'Khan Academy' },
+      { id:'pa1', title:'Biology & Physiology Core', quizCat:'Life Sciences', lessons:[
+        { id:'pa1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'pa1l2', title:'Human Physiology Systems', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'pa1l3', title:'Immune System & Homeostasis', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube' },
       ]},
-      { id:'bz2', title:'Statistics & Data for Business', quizCat:'Physical Sciences', lessons:[
-        { id:'bz2l1', title:'Descriptive Statistics', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'bz2l2', title:'Probability Fundamentals', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'bz2l3', title:'Reading Charts & Data Sets', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+      { id:'pa2', title:'Chemistry Foundations', quizCat:'Physical Sciences', lessons:[
+        { id:'pa2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'pa2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+        { id:'pa2l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
       ]},
-      { id:'bz3', title:'Leadership & Communication', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'bz3l1', title:'Public Speaking Fundamentals', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'bz3l2', title:'Teamwork & Group Projects', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'bz3l3', title:'Negotiation Basics', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+      { id:'pa3', title:'The PA Path', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'pa3l1', title:'Team-Based Clinical Care & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
+        { id:'pa3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'pa3l3', title:'What PA Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
-  socialSci: {
-    label:'Social Sciences', accent:'#10b981', quizCats:['Behavioral & Social Sciences'],
-    tagline:'For students fascinated by why people think, act, and organize the way they do.',
-    overview:'This pathway builds the psychology, sociology, and research-methods literacy that social-science majors need — how studies are designed, how bias creeps into data, and how individuals behave in groups. It\'s aimed at students considering psychology, sociology, criminal justice, or public policy, where understanding both human behavior and how to responsibly study it is the foundation of nearly every intro course.',
+  pharmacy: {
+    label:'Pharmacy (PharmD)', accent:'#8b5cf6', accent2:'#a78bfa', glow:'rgba(139,92,246,0.35)',
+    gradient:'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)',
+    quizCats:['Life Sciences','Physical Sciences'],
+    idealVector:{ peopleFacing:0.0, handsOn:0.2, acuity:-0.1, autonomy:0.3, directCare:0.1 },
+    benchmarks:{ shadowingHours:25, clinicalHours:60, volunteerHours:60, leadershipHours:40 },
+    tagline:'For students who want the chemistry of how treatment actually works.',
+    overview:'This pathway leans hard into chemistry — organic chemistry basics, reaction kinetics, and how molecules interact with the body — since that\'s the core science pharmacists live in every day, from checking drug interactions to understanding dosing. It\'s for students who like precision and getting the details exactly right more than they like constant patient-facing conversation, but who still want their work to directly matter to someone\'s treatment.',
     highlights:[
-      'Core psychology concepts (cognition, learning, development) tested on the SAT/ACT and used throughout intro psych courses',
-      'Sociology and research-methods grounding — study design, bias, and statistics applied to real social questions',
-      'Civics and current-events fluency that strengthens both classroom discussion and college interviews',
-      'A head start on the statistical reasoning social-science majors need for research methods requirements',
+      'Deep chemistry practice — organic chemistry basics and reaction kinetics that map directly onto how drugs are designed and metabolized',
+      'Biology grounding in how proteins and cellular processes are actually drug targets, not just abstract biochemistry',
+      'Math and statistics for dosing and drug-interaction reasoning',
+      'Realistic guidance on pharmacy shadowing and what PharmD programs actually screen for',
     ],
-    outcomes:['Psychology','Sociology','Criminal Justice','Public Policy','Social Work'],
-    bestFor:['You\'re endlessly curious about why people do what they do','You like reading and interpreting studies, not just numbers','You want a major centered on people, communities, and behavior'],
+    outcomes:['Chemistry (pharmacy-track)','Biochemistry','Biology with a strong chemistry sequence'],
+    bestFor:['You like precision — getting a calculation or interaction exactly right matters to you','You\'re drawn to chemistry more than any other science class','You want your work to matter to patients without constant direct patient contact'],
     units:[
-      { id:'ss1', title:'Psychology Foundations', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ss1l1', title:'Social Psychology & Cognition', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtOPRKzVLY0jJY-uHOH9KVU6', src:'Crash Course' },
-        { id:'ss1l2', title:'Learning Theory & Memory', url:'https://www.khanacademy.org/science/ap-psychology/behavior', src:'Khan Academy' },
-        { id:'ss1l3', title:'Personality & Development', url:'https://www.khanacademy.org/science/ap-psychology/personality', src:'Khan Academy' },
+      { id:'ph1', title:'Chemistry for Pharmacy', quizCat:'Physical Sciences', lessons:[
+        { id:'ph1l1', title:'Organic Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'ph1l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+        { id:'ph1l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
       ]},
-      { id:'ss2', title:'Sociology & Research Methods', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ss2l1', title:'Social Stratification & Inequality', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMJ-AfB_7J1538YKWkZAnGA', src:'Crash Course' },
-        { id:'ss2l2', title:'Study Design & Bias', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'ss2l3', title:'Statistics & Hypothesis Testing', url:'https://www.youtube.com/c/joshstarmer', src:'StatQuest' },
+      { id:'ph2', title:'Biology & the Human Body', quizCat:'Life Sciences', lessons:[
+        { id:'ph2l1', title:'Cell Biology & Metabolism (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'ph2l2', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'ph2l3', title:'Protein Synthesis & Drug Targets', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube' },
       ]},
-      { id:'ss3', title:'Government, Civics & Current Events', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ss3l1', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy' },
-        { id:'ss3l2', title:'World History Overview', url:'https://www.khanacademy.org/humanities/world-history', src:'Khan Academy' },
-        { id:'ss3l3', title:'Cultural Anthropology Basics', url:'https://www.khanacademy.org/science/ap-psychology/social-psychology', src:'Khan Academy' },
+      { id:'ph3', title:'Exploring Pharmacy', quizCat:'Physical Sciences', lessons:[
+        { id:'ph3l1', title:'Math & Statistics for Dosing', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'ph3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ph3l3', title:'What Pharmacy Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
-  preHealth: {
-    label:'Pre-Health (Optional)', accent:'#ef4444', quizCats:['Life Sciences','Physical Sciences'],
-    tagline:'For students weighing a future in medicine or another health profession — no commitment required.',
-    overview:'This is an opt-in exploration track, not a requirement — it exists for students who suspect they might want to pursue medicine, nursing, dentistry, or another health career and want to test that interest before committing to it in college. It emphasizes biology, chemistry, and physiology fundamentals alongside honest guidance on what shadowing, volunteering, and health-career admissions actually look for, so you arrive at undergrad already knowing whether a pre-health track is worth pursuing.',
+  dentistry: {
+    label:'Dentistry (DDS/DMD)', accent:'#14b8a6', accent2:'#2dd4bf', glow:'rgba(20,184,166,0.35)',
+    gradient:'linear-gradient(135deg,#14b8a6 0%,#0f766e 100%)',
+    quizCats:['Life Sciences','Physical Sciences'],
+    idealVector:{ peopleFacing:0.5, handsOn:0.9, acuity:0.0, autonomy:0.7, directCare:0.7 },
+    benchmarks:{ shadowingHours:30, clinicalHours:60, volunteerHours:60, leadershipHours:40 },
+    tagline:'For students who want precise, hands-on procedural work with their own patients.',
+    overview:'This pathway pairs biology and chemistry fundamentals with an emphasis on manual precision — dentistry is one of the most hands-on paths in medicine, where fine motor skill matters as much as diagnostic knowledge. It\'s for students who like working with their hands on a well-defined, visible problem, want to run their own practice one day, and want steady, scheduled patient relationships rather than unpredictable acute-care shifts.',
     highlights:[
-      'Cell biology, genetics, and physiology fundamentals that map directly onto intro biology and pre-med coursework',
-      'Chemistry grounding (acid-base, organic basics) that eases the transition into college-level chem, a common pre-health bottleneck',
-      'Realistic guidance on clinical exposure — shadowing, volunteering, and what health programs actually screen for',
-      'A low-pressure way to confirm (or rule out) a health-sciences path before declaring anything in college',
+      'Biology and anatomy depth (via Crash Course A&P) alongside chemistry fundamentals relevant to dental materials and oral health',
+      'An honest emphasis on manual precision and hands-on skill, which dental programs screen for directly',
+      'Realistic guidance on dental shadowing and clinic volunteering',
+      'A path with more entrepreneurial upside (private practice ownership) than most other health careers here',
     ],
-    outcomes:['Biology / Pre-Med','Nursing','Public Health','Dentistry','Physician Assistant Studies'],
-    bestFor:['You\'re curious about medicine but not sure it\'s "the" path yet','You want to test a health-sciences interest before committing in college','You like biology and chemistry more than most of your other classes'],
+    outcomes:['Biology (pre-dental track)','Chemistry','Any strong science major with real dental shadowing hours before dental school'],
+    bestFor:['You like precise, hands-on work more than fast-paced acute-care chaos','You could see yourself running your own practice one day','You want steady, scheduled patient relationships rather than unpredictable shifts'],
     units:[
-      { id:'ph1', title:'Biology & Biochemistry Foundations', quizCat:'Life Sciences', lessons:[
-        { id:'ph1l1', title:'Cell Biology & Metabolism', url:'https://www.youtube.com/watch?v=4eLjRcHnMCk', src:'YouTube' },
-        { id:'ph1l2', title:'Genetics & Molecular Biology', url:'https://www.youtube.com/watch?v=Qqe4thU-os8', src:'YouTube' },
-        { id:'ph1l3', title:'Human Physiology Overview', url:'https://www.youtube.com/watch?v=X9ZZ6tcxArI', src:'YouTube' },
+      { id:'de1', title:'Biology & Oral Anatomy', quizCat:'Life Sciences', lessons:[
+        { id:'de1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
+        { id:'de1l2', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'de1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
       ]},
-      { id:'ph2', title:'Chemistry for Health Sciences', quizCat:'Physical Sciences', lessons:[
-        { id:'ph2l1', title:'Acid-Base Chemistry', url:'https://www.youtube.com/watch?v=eB1qG5EEDk0', src:'YouTube' },
-        { id:'ph2l2', title:'Organic Chemistry Basics', url:'https://www.youtube.com/watch?v=wX-y00bZ4qI', src:'YouTube' },
-        { id:'ph2l3', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+      { id:'de2', title:'Chemistry & Materials', quizCat:'Physical Sciences', lessons:[
+        { id:'de2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
+        { id:'de2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+        { id:'de2l3', title:'Acid-Base Chemistry (Enamel & pH)', url:'https://www.youtube.com/watch?v=eB1qG5EEDk0', src:'YouTube' },
       ]},
-      { id:'ph3', title:'Exploring a Health Career', quizCat:'Life Sciences', lessons:[
-        { id:'ph3l1', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ph3l2', title:'What Pre-Health Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ph3l3', title:'Intro to Public Health', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+      { id:'de3', title:'The Dental Path', quizCat:'Life Sciences', lessons:[
+        { id:'de3l1', title:'Patient Communication & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
+        { id:'de3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'de3l3', title:'What Dental Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
       ]},
     ]
   },
+  biomedResearch: {
+    label:'Biomedical & Clinical Research', accent:'#f59e0b', accent2:'#fbbf24', glow:'rgba(245,158,11,0.35)',
+    gradient:'linear-gradient(135deg,#f59e0b 0%,#b45309 100%)',
+    quizCats:['Life Sciences','Physical Sciences'],
+    idealVector:{ peopleFacing:-0.7, handsOn:0.1, acuity:-0.5, autonomy:0.5, directCare:-0.8 },
+    benchmarks:{ shadowingHours:10, clinicalHours:20, volunteerHours:40, leadershipHours:30 },
+    tagline:'For students who\'d rather find the treatment than deliver it.',
+    overview:'This pathway goes deepest into biology, biochemistry, and the scientific method of any track here — genetics, molecular biology, and how a real study is designed and analyzed. It\'s for students who are energized by the "why" behind a disease more than the day-to-day of treating patients, who\'d rather spend years on one careful question in a lab than see many patients in a day, and whose impact comes from findings that could eventually help far more people than they\'ll ever meet directly.',
+    highlights:[
+      'The deepest biology and genetics content in the app — DNA replication, transcription/translation, and molecular mechanisms',
+      'Chemistry and thermodynamics fundamentals that underlie lab technique and biochemical research',
+      'Real research-methods grounding — sampling, bias, statistical significance — plus a direct link to PubMed for when you\'re ready for an independent project',
+      'Guidance on pre-college summer research programs, the realistic entry point into research at this age',
+    ],
+    outcomes:['Biology / Molecular Biology','Biochemistry','Genetics','Biomedical Engineering (research track)'],
+    bestFor:['You\'re more energized by why something happens than by treating it directly','You\'d rather spend months on one careful question than see many patients a day','You want your impact to scale beyond the people you personally meet'],
+    units:[
+      { id:'br1', title:'Biology & Genetics Deep Dive', quizCat:'Life Sciences', lessons:[
+        { id:'br1l1', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
+        { id:'br1l2', title:'DNA Replication', url:'https://www.youtube.com/watch?v=Qqe4thU-os8', src:'YouTube' },
+        { id:'br1l3', title:'Transcription & Translation', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube' },
+      ]},
+      { id:'br2', title:'Chemistry & Lab Foundations', quizCat:'Physical Sciences', lessons:[
+        { id:'br2l1', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
+        { id:'br2l2', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
+        { id:'br2l3', title:'Gibbs Free Energy & Thermodynamics', url:'https://www.youtube.com/watch?v=Tj-w1W_pZ8M', src:'YouTube' },
+      ]},
+      { id:'br3', title:'Research Methods & the Scientific Process', quizCat:'Life Sciences', lessons:[
+        { id:'br3l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'br3l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube' },
+        { id:'br3l3', title:'PubMed Research Database', url:'https://pubmed.ncbi.nlm.nih.gov/', src:'PubMed' },
+      ]},
+    ]
+  },
+  physicalOccupTherapy: {
+    label:'Physical & Occupational Therapy', accent:'#84cc16', accent2:'#a3e635', glow:'rgba(132,204,22,0.35)',
+    gradient:'linear-gradient(135deg,#84cc16 0%,#4d7c0f 100%)',
+    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:0.6, handsOn:0.9, acuity:-0.3, autonomy:0.2, directCare:0.7 },
+    benchmarks:{ shadowingHours:40, clinicalHours:100, volunteerHours:60, leadershipHours:30 },
+    tagline:'For students who want to help someone get their life back, one session at a time.',
+    overview:'This pathway pairs anatomy and movement science with the physics of how the body works mechanically — biomechanics, force, and motion — since PT/OT is where medicine and physical movement intersect most directly. It\'s for students who like hands-on, relationship-driven work over a longer timeline than acute care, and who find real satisfaction in someone\'s slow, visible progress rather than a single decisive intervention.',
+    highlights:[
+      'Anatomy and movement-focused physiology content (via Crash Course A&P and the nervous system)',
+      'Physics fundamentals reframed around how the body actually moves — kinematics, forces, and fluid dynamics',
+      'A longitudinal-care framing that matches how PT/OT actually works — progress over weeks, not single interventions',
+      'Realistic guidance on PT/OT shadowing and what those programs actually look for',
+    ],
+    outcomes:['Kinesiology / Exercise Science','Biology (PT/OT track)','Athletic Training','Sports Medicine (allied-health track)'],
+    bestFor:['You want hands-on work built around a long-term relationship, not a single procedure','You\'re drawn to how the body moves as much as how it heals','You get real satisfaction from someone\'s slow, visible progress'],
+    units:[
+      { id:'pt1', title:'Anatomy & Movement', quizCat:'Life Sciences', lessons:[
+        { id:'pt1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
+        { id:'pt1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube' },
+        { id:'pt1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+      ]},
+      { id:'pt2', title:'Physics of the Body', quizCat:'Life Sciences', lessons:[
+        { id:'pt2l1', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
+        { id:'pt2l2', title:'Kinematics — Motion & Forces', url:'https://www.youtube.com/watch?v=xZMwK2HwJ7c', src:'YouTube' },
+        { id:'pt2l3', title:'Fluids at Rest (Circulation & Pressure)', url:'https://www.youtube.com/watch?v=b5SqYoO4VXI', src:'YouTube' },
+      ]},
+      { id:'pt3', title:'The PT/OT Path', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'pt3l1', title:'Psychology of Rehab & Motivation', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
+        { id:'pt3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'pt3l3', title:'What PT/OT Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+      ]},
+    ]
+  },
+  publicHealth: {
+    label:'Public Health', accent:'#10b981', accent2:'#34d399', glow:'rgba(16,185,129,0.35)',
+    gradient:'linear-gradient(135deg,#10b981 0%,#047857 100%)',
+    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    idealVector:{ peopleFacing:-0.2, handsOn:-0.5, acuity:-0.7, autonomy:0.4, directCare:-0.85 },
+    benchmarks:{ shadowingHours:15, clinicalHours:30, volunteerHours:100, leadershipHours:60 },
+    tagline:'For students who want to treat a community, not one patient at a time.',
+    overview:'This pathway combines biology and disease fundamentals with statistics and epidemiology thinking — how disease spreads, how data reveals patterns individual clinicians can\'t see, and how policy actually changes health outcomes at scale. It\'s for students who think in populations and systems rather than individual cases, and who\'d rather prevent ten thousand cases of something than treat one.',
+    highlights:[
+      'Biology and disease-transmission fundamentals paired directly with statistics and epidemiological reasoning',
+      'A dedicated introduction to what public health actually is as a field — most students have never seen this content before',
+      'Sociology and government/civics content, since public health lives at the intersection of science and policy',
+      'Volunteer-hour guidance weighted toward community health work, not just clinical shadowing',
+    ],
+    outcomes:['Public Health','Epidemiology','Health Policy','Global Health','Sociology (public-health track)'],
+    bestFor:['You think in populations and systems, not just individual cases','You\'re drawn to prevention over treatment','You want your work to touch thousands of people even if you never meet most of them'],
+    units:[
+      { id:'pu1', title:'Life Sciences for Public Health', quizCat:'Life Sciences', lessons:[
+        { id:'pu1l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy' },
+        { id:'pu1l2', title:'Immune System & Disease Spread', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube' },
+        { id:'pu1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube' },
+      ]},
+      { id:'pu2', title:'Data & Epidemiology', quizCat:'Life Sciences', lessons:[
+        { id:'pu2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'pu2l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube' },
+        { id:'pu2l3', title:'What Is Statistics?', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube' },
+      ]},
+      { id:'pu3', title:'Health Policy & Communities', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'pu3l1', title:'Sociology & Society', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMJ-AfB_7J1538YKWkZAnGA', src:'YouTube' },
+        { id:'pu3l2', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy' },
+        { id:'pu3l3', title:'Community Health Volunteering', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+      ]},
+    ]
+  },
+  healthAdmin: {
+    label:'Health Administration', accent:'#f97316', accent2:'#fb923c', glow:'rgba(249,115,22,0.35)',
+    gradient:'linear-gradient(135deg,#f97316 0%,#c2410c 100%)',
+    quizCats:['Behavioral & Social Sciences','Physical Sciences'],
+    idealVector:{ peopleFacing:-0.3, handsOn:-0.7, acuity:-0.6, autonomy:0.6, directCare:-0.9 },
+    benchmarks:{ shadowingHours:15, clinicalHours:20, volunteerHours:60, leadershipHours:80 },
+    tagline:'For students who want to make sure the whole hospital actually works.',
+    overview:'This pathway blends economics, statistics, and leadership content, since running a clinic, hospital, or health system draws on business and organizational skill applied to a healthcare setting. It\'s for students who like the idea of medicine\'s impact and mission but are more energized by solving systems problems — staffing, budgets, patient flow — than by clinical care itself, and who want their leadership skill to be the thing that lets the actual caregivers do their jobs well.',
+    highlights:[
+      'Micro- and macroeconomic reasoning applied specifically to healthcare systems and costs',
+      'Statistics and data literacy for operational decision-making — staffing, scheduling, resource allocation',
+      'Leadership and communication practice, the core day-to-day skill of this career',
+      'Realistic framing of health administration as a legitimate, high-impact way to be "in medicine" without direct clinical care',
+    ],
+    outcomes:['Health Administration / Health Sciences Management','Business Administration (healthcare track)','Economics (health-policy track)','Public Health (administration track)'],
+    bestFor:['You\'re energized by fixing systems and processes more than treating patients directly','You want medicine\'s mission and impact without a clinical role','You like leading teams and owning outcomes at an organizational level'],
+    units:[
+      { id:'ha1', title:'Economics & Healthcare Systems', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'ha1l1', title:'Microeconomics', url:'https://www.khanacademy.org/economics-finance-domain/microeconomics', src:'Khan Academy' },
+        { id:'ha1l2', title:'Macroeconomics', url:'https://www.khanacademy.org/economics-finance-domain/macroeconomics', src:'Khan Academy' },
+        { id:'ha1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube' },
+      ]},
+      { id:'ha2', title:'Data & Statistics for Operations', quizCat:'Physical Sciences', lessons:[
+        { id:'ha2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'ha2l2', title:'Reading Charts & Data Sets', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'ha2l3', title:'Personal Finance Basics', url:'https://www.khanacademy.org/college-careers-more/personal-finance', src:'Khan Academy' },
+      ]},
+      { id:'ha3', title:'Leadership & the Business of Healthcare', quizCat:'Behavioral & Social Sciences', lessons:[
+        { id:'ha3l1', title:'Public Speaking Fundamentals', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ha3l2', title:'Teamwork & Group Projects', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ha3l3', title:'What Health Administration Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+      ]},
+    ]
+  },
+};
+
+// ── COURSE → QUIZ CATEGORY MAP ────────────────────────────────────────────────
+// Maps a student's self-reported courses (Settings) to the 3 quiz-library
+// categories, so the Quiz Library and Metabrain Quiz Recommendations can both
+// surface "matches your courses" without duplicating this mapping.
+export const COURSE_CAT_MAP = {
+  Biology:'Life Sciences', 'Environmental Science':'Life Sciences', 'Anatomy & Physiology':'Life Sciences',
+  Chemistry:'Physical Sciences', Physics:'Physical Sciences',
+  'AP Psychology':'Behavioral & Social Sciences', 'US History':'Behavioral & Social Sciences',
+  'World History':'Behavioral & Social Sciences', 'AP US History':'Behavioral & Social Sciences',
+  'AP World History':'Behavioral & Social Sciences', 'Health Science':'Life Sciences',
 };
 
 // ── AI COACH — PATHWAY-SPECIFIC BEHAVIORAL NOTES ─────────────────────────────
 // Short, behavioral (not marketing) guidance injected into the Metabrain system
 // prompt so the coach's advice matches what's actually realistic/appropriate for
 // a high schooler on each track. Distinct from PATHS[].overview/highlights above.
+// All tracks here (including "exploring") are EXPLORATORY, not commitments —
+// never bring up the MCAT, clinical rotations, or clinical-style interview prep
+// (MMI/CASPer) as something this student needs right now; they're years away.
 export const PATH_COACH_NOTES = {
-  undecided: 'This student hasn\'t settled on a direction yet — encourage exploration (electives, clubs, a diagnostic quiz) rather than pushing them toward any single major or career.',
-  stem: 'Point them toward math/science depth, coding exposure, and STEM competitions (Science Olympiad, FIRST Robotics, Regeneron STS) when relevant — keep it high-school-scaled (school clubs, summer programs), not college-lab-level.',
-  humanities: 'Point them toward reading/writing depth, debate or Model UN, school publications, and essay craft when relevant.',
-  business: 'Point them toward DECA/FBLA, personal-finance literacy, and leadership roles (clubs, student government) when relevant.',
-  socialSci: 'Point them toward psychology/sociology curiosity, school research projects, and civic involvement when relevant.',
-  preHealth: 'This is an EXPLORATORY track only, not a commitment. Steer them toward age-appropriate exposure — shadowing a local provider with a parent/guardian\'s help, hospital teen-volunteer programs, HOSA, school science fairs, or a summer pre-college research program. Never bring up the MCAT, clinical rotations, or medical-school-style interview prep (MMI/CASPer) — this student is years away from any of that, and it isn\'t useful or relevant to them right now.',
+  exploring: 'This student hasn\'t settled on a specific health career yet — encourage exploration (shadowing a range of roles, the diagnostic quiz, HOSA, school science fairs) rather than pushing them toward one specific track.',
+  physician: 'Point them toward rigorous science coursework, physician shadowing (with a parent/guardian\'s help), hospital teen-volunteer programs, HOSA, and school science fairs when relevant — keep it high-school-scaled, not med-school-scaled.',
+  nursing: 'Point them toward anatomy/physiology coursework, hospital or clinic teen-volunteer programs, CNA-adjacent volunteer roles where locally available, and HOSA when relevant.',
+  physicianAssistant: 'Point them toward strong science coursework and clinical shadowing similar to the physician track, framed around team-based care rather than solo responsibility.',
+  pharmacy: 'Point them toward chemistry depth, pharmacy shadowing or volunteering, and math/stats coursework when relevant.',
+  dentistry: 'Point them toward biology/chemistry coursework, dental-office shadowing or free-clinic volunteering, and hands-on/fine-motor activities (art, instruments, etc.) as relevant transferable experience.',
+  biomedResearch: 'Point them toward AP science depth, school science fairs, Science Olympiad, Regeneron STS, and pre-college summer research programs when relevant — keep it high-school-scaled, not college-lab-level.',
+  physicalOccupTherapy: 'Point them toward anatomy/kinesiology-adjacent coursework, athletic training room or PT-clinic shadowing, and sports/dance/movement background as relevant transferable experience.',
+  publicHealth: 'Point them toward statistics/AP Psychology coursework, community health volunteering, and civics/government involvement when relevant.',
+  healthAdmin: 'Point them toward DECA/FBLA, personal-finance and statistics literacy, and leadership roles (clubs, student government) framed around healthcare systems when relevant.',
 };
 
 // ── FLASHCARD DECKS ───────────────────────────────────────────────────────────
@@ -472,17 +660,127 @@ export const COMPETITIONS = [
 ];
 
 // ── DIAGNOSTIC QUESTIONS ──────────────────────────────────────────────────────
-// Interest diagnostic mapping to study tracks: stem, humanities, business, socialSci
+// Personality/work-style + real career-content diagnostic that sorts students
+// into one of the medicine/health-career pathways above. Scored by
+// src/lib/diagnosticEngine.js, not by simple vote-counting.
+//
+// DIAG_AXES: the 5 work-style dimensions every "axis" question's choices pull
+// on (each choice carries a partial vector, roughly -1..1 per axis). Every
+// PATHS[key].idealVector is hand-authored on this same 5-axis scale so a
+// student's answers can be compared against it.
+export const DIAG_AXES = ['peopleFacing','handsOn','acuity','autonomy','directCare'];
+export const DIAG_AXIS_LABELS = {
+  peopleFacing:'Patient-facing vs. behind-the-scenes',
+  handsOn:'Hands-on/procedural vs. cognitive/analytical',
+  acuity:'Fast-paced & episodic vs. longitudinal & preventive',
+  autonomy:'Independent decision-making vs. team/protocol-driven',
+  directCare:'Direct individual care vs. systems/population-level impact',
+};
+
+// "axis" questions: each choice carries a partial {axis:weight} vector.
+// "scenario" questions: real career-content questions where each choice
+// carries direct {pathwayKey:weight} bonus votes instead.
 export const DIAG_QS = [
-  { q:'Which subject excites you most right now?', ch:['Math & Science','History, Literature & Writing','Business, Economics & Finance','Psychology & Sociology'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'You find the most satisfaction in work that involves:', ch:['Solving technical or quantitative problems','Reading, writing, and analyzing ideas','Strategy, markets, and organizing people','Understanding human behavior and society'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'Which elective would you choose if you could add one to your schedule?', ch:['Computer Science or Engineering','Creative Writing or World Literature','Entrepreneurship or Personal Finance','Sociology or AP Psychology'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'A graph shows a company\'s revenue rising while profit falls. What explains this best?', ch:['Rising variable costs outpacing revenue growth','A shift in public perception of the brand','A change in consumer social behavior','A statistical sampling error in the data'], type:'content', map:['business','humanities','socialSci','stem'] },
-  { q:'Which career aspect appeals to you most?', ch:['Designing, building, or analyzing systems','Telling stories or shaping ideas that influence people','Leading teams and making strategic decisions','Helping people and communities directly'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'When you think about your future work, you imagine:', ch:['A lab, workshop, or technical environment','A studio, classroom, or publication','A boardroom, startup, or trading floor','A clinic, school, or community organization'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'Which aspect of studying energizes you the most?', ch:['Working through math and science problems','Reading deeply and forming arguments','Analyzing markets, trends, and decisions','Discussing human behavior and society'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'The bystander effect describes:', ch:['A statistical sampling bias','A rhetorical technique in persuasive writing','A pricing anomaly in behavioral economics','Diffusion of responsibility reducing individual action in groups'], type:'content', map:['stem','humanities','business','socialSci'] },
-  { q:'Which project would you rather lead?', ch:['Building an app or entering a science fair','Editing the school newspaper or literary magazine','Running a school fundraiser or small business pitch','Organizing a community service initiative'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'How comfortable are you with ambiguity in your work?', ch:['I prefer clear problems with defined, correct answers','I enjoy interpreting and arguing multiple perspectives','I like calculated risk-taking with uncertain outcomes','I thrive in complex, interpersonal, uncertain situations'], type:'interest', map:['stem','humanities','business','socialSci'] },
-  { q:'Which best describes opportunity cost?', ch:['The energy lost in an inefficient system','The persuasive cost of a weak argument','The value of the next-best alternative given up by a choice','The social cost of a norm violation'], type:'content', map:['stem','humanities','business','socialSci'] },
+  { id:'q1', type:'axis', q:'A patient in front of you is anxious and in pain. What\'s your instinct?', ch:[
+    { text:'Calm them down and start assessing/treating right now', axes:{peopleFacing:0.8,handsOn:0.6,acuity:0.7,autonomy:0.3,directCare:0.9} },
+    { text:'Ask what\'s been done so far and coordinate with the team', axes:{peopleFacing:0.5,handsOn:-0.1,acuity:0.2,autonomy:-0.4,directCare:0.4} },
+    { text:'Think through what\'s causing it before touching anything', axes:{peopleFacing:-0.1,handsOn:-0.7,acuity:-0.2,autonomy:0.5,directCare:0.1} },
+    { text:'Think about how to prevent this from happening to others in the first place', axes:{peopleFacing:-0.4,handsOn:-0.6,acuity:-0.8,autonomy:0.2,directCare:-0.8} },
+  ]},
+  { id:'q2', type:'axis', q:'Pick the work environment that sounds most like you:', ch:[
+    { text:'A busy ER or urgent-care clinic — constant motion', axes:{acuity:0.9,peopleFacing:0.5,autonomy:0.3,handsOn:0.3,directCare:0.6} },
+    { text:'A quiet lab, running the same careful experiment for months', axes:{acuity:-0.8,peopleFacing:-0.8,autonomy:0.3,handsOn:0.1,directCare:-0.8} },
+    { text:'A patient\'s bedside, getting to know them over days or weeks', axes:{acuity:-0.2,peopleFacing:0.8,autonomy:-0.3,handsOn:0.6,directCare:0.9} },
+    { text:'An office, building programs that help thousands of people', axes:{acuity:-0.6,peopleFacing:-0.3,autonomy:0.5,handsOn:-0.6,directCare:-0.9} },
+  ]},
+  { id:'q3', type:'axis', q:'When you\'re learning something hands-on (a sport, instrument, or lab skill), you...', ch:[
+    { text:'Want to physically practice the motion immediately', axes:{handsOn:0.9,acuity:0.2} },
+    { text:'Want to understand the theory first, then try it', axes:{handsOn:-0.6,autonomy:0.3,acuity:-0.3} },
+    { text:'Want a coach or mentor guiding you step by step', axes:{handsOn:0.3,autonomy:-0.6,peopleFacing:0.3} },
+    { text:'Want to figure it out yourself through trial and error', axes:{handsOn:0.4,autonomy:0.8} },
+  ]},
+  { id:'q4', type:'axis', q:'A group project is going off the rails. You...', ch:[
+    { text:'Take charge and start making the calls yourself', axes:{autonomy:0.9,peopleFacing:0.3} },
+    { text:'Get everyone in a room and talk through it together', axes:{autonomy:-0.6,peopleFacing:0.7} },
+    { text:'Quietly fix the part that\'s actually broken', axes:{autonomy:0.4,handsOn:0.3,peopleFacing:-0.4} },
+    { text:'Step back and ask what process failed so it doesn\'t happen again', axes:{autonomy:0.3,peopleFacing:-0.5,acuity:-0.6} },
+  ]},
+  { id:'q5', type:'axis', q:'Which sounds like a better use of your Saturday?', ch:[
+    { text:'Volunteering at a hospital or clinic, talking with patients', axes:{peopleFacing:0.8,directCare:0.7} },
+    { text:'Organizing a charity 5k or community fundraiser', axes:{peopleFacing:0.2,directCare:-0.3,acuity:0.3,autonomy:0.3} },
+    { text:'Building or fixing something with your hands', axes:{handsOn:0.8,peopleFacing:-0.3} },
+    { text:'Reading a book or article that teaches you something new', axes:{peopleFacing:-0.6,handsOn:-0.6,acuity:-0.4} },
+  ]},
+  { id:'q6', type:'axis', q:'How do you feel about owning a high-stakes decision, right now, with incomplete information?', ch:[
+    { text:'I\'d rather have that responsibility than watch from the sidelines', axes:{autonomy:0.8,acuity:0.5} },
+    { text:'I\'ll make the call if I have to, but I\'d rather have backup', axes:{autonomy:0.1,acuity:0.2} },
+    { text:'I\'d rather follow a clear protocol than freelance a decision', axes:{autonomy:-0.7,acuity:0.1} },
+    { text:'I\'d rather take my time and get it right than decide fast', axes:{autonomy:0.2,acuity:-0.8} },
+  ]},
+  { id:'q7', type:'axis', q:'Which class assignment would you actually enjoy?', ch:[
+    { text:'Dissecting something and labeling every structure precisely', axes:{handsOn:0.8,acuity:-0.1,peopleFacing:-0.3} },
+    { text:'Interviewing someone about their life experience', axes:{peopleFacing:0.8,handsOn:-0.5} },
+    { text:'Designing an experiment to test a hypothesis', axes:{handsOn:0.1,autonomy:0.5,peopleFacing:-0.5,acuity:-0.4} },
+    { text:'Analyzing a dataset to find a trend nobody noticed', axes:{handsOn:-0.7,peopleFacing:-0.7,acuity:-0.5,autonomy:0.4} },
+  ]},
+  { id:'q8', type:'axis', q:'You\'d rather be the person who...', ch:[
+    { text:'Is physically doing the procedure', axes:{handsOn:0.9,directCare:0.6} },
+    { text:'Is deciding what the plan should be', axes:{autonomy:0.8,handsOn:-0.2} },
+    { text:'Makes sure everyone follows through and nothing falls through the cracks', axes:{autonomy:0.4,peopleFacing:0.2,handsOn:-0.5} },
+    { text:'Explains what\'s happening to someone who\'s scared or confused', axes:{peopleFacing:0.9,directCare:0.5} },
+  ]},
+  { id:'q9', type:'axis', q:'When someone you care about is venting to you, you naturally...', ch:[
+    { text:'Ask questions and stay with them in the moment', axes:{peopleFacing:0.7,directCare:0.4} },
+    { text:'Start problem-solving out loud', axes:{handsOn:0.3,autonomy:0.4,peopleFacing:0.2} },
+    { text:'Listen, but mostly process it internally afterward', axes:{peopleFacing:-0.4,acuity:-0.3} },
+    { text:'Wonder if this is part of a bigger pattern affecting more people than just them', axes:{peopleFacing:-0.5,directCare:-0.7,acuity:-0.5} },
+  ]},
+  { id:'q10', type:'axis', q:'Pick the medical-drama character you\'d actually want to be, honestly:', ch:[
+    { text:'The one running into the OR at 3am', axes:{acuity:0.9,handsOn:0.7,autonomy:0.5,directCare:0.6} },
+    { text:'The one who knows every patient on the floor by name', axes:{peopleFacing:0.9,directCare:0.8,autonomy:-0.3} },
+    { text:'The one in the basement lab who cracks the case with data', axes:{peopleFacing:-0.8,acuity:-0.6,directCare:-0.8} },
+    { text:'The one making sure the whole place actually runs', axes:{autonomy:0.6,handsOn:-0.7,directCare:-0.9,peopleFacing:-0.2} },
+  ]},
+  { id:'q11', type:'axis', q:'How do you want to spend the first few years of your career?', ch:[
+    { text:'In constant contact with people who need help right now', axes:{peopleFacing:0.7,directCare:0.7,acuity:0.4} },
+    { text:'Building deep technical/procedural skill in one specific craft', axes:{handsOn:0.8,autonomy:0.2} },
+    { text:'Building expertise that scales — research or systems that help far more people than you\'ll ever meet', axes:{directCare:-0.8,peopleFacing:-0.4,acuity:-0.5} },
+    { text:'A mix — hands-on some days, planning/thinking on others', axes:{peopleFacing:0.2,handsOn:0.2,directCare:0.1} },
+  ]},
+  { id:'q12', type:'axis', q:'A mistake happens on your team. What matters most to you in the aftermath?', ch:[
+    { text:'Fixing the immediate problem in front of you', axes:{acuity:0.6,handsOn:0.4,directCare:0.3} },
+    { text:'Making sure the person affected is okay and knows what happened', axes:{peopleFacing:0.7,directCare:0.5} },
+    { text:'Figuring out exactly what went wrong, step by step', axes:{handsOn:0.3,acuity:-0.3,autonomy:0.3} },
+    { text:'Changing the system so it can\'t happen again', axes:{autonomy:0.4,directCare:-0.6,acuity:-0.6,peopleFacing:-0.3} },
+  ]},
+  { id:'q13', type:'scenario', q:'Which shadowing day sounds the most interesting to you?', ch:[
+    { text:'Shadowing a physician running a full clinic day', pathways:{physician:3,physicianAssistant:1} },
+    { text:'Shadowing a nurse managing a hospital floor', pathways:{nursing:3,physicianAssistant:1} },
+    { text:'Shadowing a pharmacist checking prescriptions and drug interactions', pathways:{pharmacy:3} },
+    { text:'Shadowing a physical therapist running rehab sessions', pathways:{physicalOccupTherapy:3} },
+  ]},
+  { id:'q14', type:'scenario', q:'Which project would you rather spend a semester on?', ch:[
+    { text:'Working in a lab testing a new treatment on cell cultures', pathways:{biomedResearch:3} },
+    { text:'Volunteering at a free dental clinic', pathways:{dentistry:3} },
+    { text:'Mapping where a disease outbreak is spreading in a community', pathways:{publicHealth:3} },
+    { text:'Redesigning how a clinic schedules patients so nobody waits two hours', pathways:{healthAdmin:3} },
+  ]},
+  { id:'q15', type:'scenario', q:'If you could sit in on one professional conversation, which would you pick?', ch:[
+    { text:'A doctor explaining a diagnosis to a scared family', pathways:{physician:2,physicianAssistant:2} },
+    { text:'A nurse calming a patient down before a procedure', pathways:{nursing:3} },
+    { text:'A researcher presenting findings that could change treatment guidelines', pathways:{biomedResearch:3} },
+    { text:'A hospital director negotiating budget to keep the ER fully staffed', pathways:{healthAdmin:3} },
+  ]},
+  { id:'q16', type:'scenario', q:'Which of these would you actually enjoy studying in depth?', ch:[
+    { text:'How drugs move through and affect the body', pathways:{pharmacy:3} },
+    { text:'How joints, muscles, and movement work and heal', pathways:{physicalOccupTherapy:3} },
+    { text:'How diseases spread through populations and how to stop them', pathways:{publicHealth:3} },
+    { text:'How teeth, gums, and the mouth affect overall health', pathways:{dentistry:3} },
+  ]},
+  { id:'q17', type:'scenario', q:'Honestly, where are you right now?', ch:[
+    { text:'Confident medicine/health is for me — I just need to know which specific role', pathways:{} },
+    { text:'I like medicine/health in general but haven\'t picked a lane', pathways:{exploring:3} },
+    { text:'Not sure medicine is even right for me yet, but I want to keep exploring it', pathways:{exploring:4} },
+    { text:'I already know exactly which one I want — just double-checking', pathways:{} },
+  ]},
 ];
