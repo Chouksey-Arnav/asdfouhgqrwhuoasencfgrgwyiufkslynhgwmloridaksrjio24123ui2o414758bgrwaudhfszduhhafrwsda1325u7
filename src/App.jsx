@@ -17,15 +17,17 @@ import {
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2,
+  Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck };
 const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP } from './data/constants';
 import { rankQuizzes, getMetabrainPickPrompt } from './lib/recommend';
+import { scorePathways } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
@@ -47,6 +49,13 @@ import ScoreTrackerPanel from './components/ScoreTrackerPanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import StreakHeatmap from './components/StreakHeatmap';
 import ActivitiesResumePanel from './components/ActivitiesResumePanel';
+import ClinicalHoursPanel from './components/ClinicalHoursPanel';
+import RecommendersPanel from './components/RecommendersPanel';
+import PortfolioTimeline from './components/PortfolioTimeline';
+import SubNav from './components/ui/SubNav';
+import EmptyState from './components/ui/EmptyState';
+import { computeApplicationStrength } from './lib/applicationStrength';
+import { buildInsights } from './lib/insights';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
@@ -105,32 +114,38 @@ function scoreSchool(s,gpa,sat,lead,ec,vol,st){
   return{...s,tier:sc>=110?'Likely':sc>=92?'Target':sc>=72?'Reach':'Stretch',score:sc};
 }
 
+// Boiled down from 17 flat destinations to 4: Home + three pillars. Prep and
+// Portfolio each absorb several formerly-top-level tabs via their own SubNav
+// (see prepView/portfolioView state + PREP_SUBNAV/PORTFOLIO_SUBNAV below).
+// Settings lives in the account menu (avatar click), not the main nav.
 const NAV = [
-  {id:'home',ic:Home,label:'Home',group:'Home'},
-
-  {id:'pathway',ic:Route,label:'Pathway',group:'Study'},
-  {id:'quizzes',ic:Layers,label:'Quiz Library',group:'Study'},
-  {id:'flashcards',ic:Layers3,label:'Flashcards',group:'Study'},
-  {id:'coach',ic:MessageCircle,label:'AI Coach',group:'Study'},
-  {id:'library',ic:BookOpen,label:'E-Library',group:'Study'},
-
-  {id:'diagnostic',ic:Compass,label:'Diagnostic',group:'Test Prep'},
-  {id:'scores',ic:TrendingUp,label:'SAT/ACT Tracker',group:'Test Prep'},
-
-  {id:'calc',ic:Calculator,label:'Admissions',group:'Applications'},
-  {id:'colleges',ic:Building2,label:'College List',group:'Applications'},
-  {id:'essays',ic:ScrollText,label:'Essay Workspace',group:'Applications'},
-  {id:'deadlines',ic:CalendarDays,label:'Deadlines',group:'Applications'},
-  {id:'aid',ic:Handshake,label:'Financial Aid',group:'Applications'},
-  {id:'portfolio',ic:Building2,label:'Portfolio',group:'Applications'},
-  {id:'resume',ic:Award,label:'Resume Builder',group:'Applications'},
-  {id:'interview',ic:Mic,label:'Interview Prep',group:'Applications'},
-
-  {id:'analytics',ic:LineChart,label:'Analytics',group:'Insights'},
-
-  {id:'settings',ic:Settings,label:'Settings',group:'Account'},
+  {id:'home',ic:Home,label:'Home'},
+  {id:'prep',ic:Compass,label:'Prep'},
+  {id:'portfolio',ic:Building2,label:'Portfolio'},
+  {id:'progress',ic:LineChart,label:'Progress'},
 ];
-const NAV_GROUPS = ['Home','Study','Test Prep','Applications','Insights','Account'];
+const PREP_SUBNAV = [
+  {id:'diagnostic',ic:Compass,label:'Diagnostic'},
+  {id:'pathway',ic:Route,label:'Pathway'},
+  {id:'quizzes',ic:Layers,label:'Quiz Library'},
+  {id:'flashcards',ic:Layers3,label:'Flashcards'},
+  {id:'coach',ic:MessageCircle,label:'AI Coach'},
+  {id:'library',ic:BookOpen,label:'E-Library'},
+];
+const PORTFOLIO_SUBNAV = [
+  {id:'overview',ic:Building2,label:'Overview'},
+  {id:'timeline',ic:Milestone,label:'Timeline'},
+  {id:'colleges',ic:GraduationCap,label:'College List'},
+  {id:'essays',ic:ScrollText,label:'Essays'},
+  {id:'deadlines',ic:CalendarDays,label:'Deadlines'},
+  {id:'aid',ic:Handshake,label:'Financial Aid'},
+  {id:'resume',ic:Award,label:'Activities & Resume'},
+  {id:'clinical',ic:Stethoscope,label:'Clinical Hours'},
+  {id:'recommenders',ic:UserCheck,label:'Recommenders'},
+  {id:'interview',ic:Mic,label:'Interview Prep'},
+  {id:'scores',ic:TrendingUp,label:'Test Scores'},
+  {id:'calc',ic:Calculator,label:'Admissions Calc'},
+];
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
     'Explain how to solve a system of equations simply',
@@ -208,7 +223,7 @@ function LoadingScreen() {
   return (
     <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
       <div style={{width:56,height:56,borderRadius:16,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',animation:'spin 1.1s linear infinite'}}><RefreshCw size={26} color={C.blue}/></div>
-      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading AscendPrep…</div>
+      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -593,7 +608,11 @@ function NewDeckModal({onCreate,onClose,m=false}){
 }
 
 // ── Pathway Overview Card ────────────────────────────────────────────────────
-const PATH_ICONS = { undecided:Compass, stem:FlaskConical, humanities:BookOpen, business:Building2, socialSci:Handshake, preHealth:Dna };
+const PATH_ICONS = {
+  exploring:Compass, physician:Stethoscope, nursing:HeartPulse, physicianAssistant:ClipboardList,
+  pharmacy:Pill, dentistry:Smile, biomedResearch:Microscope, physicalOccupTherapy:Dumbbell,
+  publicHealth:Globe, healthAdmin:Landmark,
+};
 function PathwayCard({ pathKey, p, current, onSelect, m=false }){
   const Ic = PATH_ICONS[pathKey]||Compass;
   const lessonCount = (p.units||[]).reduce((s,u)=>s+(u.lessons?.length||0),0);
@@ -690,6 +709,10 @@ export default function App({ account, onAccountChange }) {
   const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(1200);
   const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
   const [appCounts, setAppCounts] = useState({colleges:0,essays:0,resume:false});
+  const [clinicalHoursTotal, setClinicalHoursTotal] = useState(0);
+  const [clinicalHoursEntries, setClinicalHoursEntries] = useState([]);
+  const [recommendersCount, setRecommendersCount] = useState(0);
+  const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
   const [questTick, setQuestTick] = useState(0);
 
@@ -697,7 +720,15 @@ export default function App({ account, onAccountChange }) {
   const [tab,   setTab]   = useState('home');
   const [uname, setUname] = useState(''); // onboarding input
   const [vidM,  setVM]    = useState(null);
-  const [showMore, setShowMore] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+
+  // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
+  // Prep and Portfolio each absorb several formerly-top-level tabs; these track
+  // which absorbed view is active, switched via the SubNav pill bar.
+  const [prepView, setPrepView] = useState('pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
+  const [portfolioView, setPortfolioView] = useState('overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
+  const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
+  const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
@@ -785,23 +816,30 @@ export default function App({ account, onAccountChange }) {
 
   // ── Lightweight Applications-side counts, for the achievement/reward loop ────
   useEffect(()=>{
-    if(!user||!['colleges','essays','analytics','deadlines'].includes(tab))return;
+    if(!user||!['portfolio','progress'].includes(tab))return;
     (async()=>{
       try{
         const [cols,ess]=await Promise.all([listItems('colleges'),listItems('essays')]);
         setAppCounts(c=>({...c,colleges:cols?.length||0,essays:ess?.length||0}));
       }catch(e){/* non-critical — achievement counts, fail silently */}
+      try{
+        const [hours,recs,sessions]=await Promise.all([DB.getClinicalHours(),DB.getRecommenders(),DB.getInterviewSessions()]);
+        setClinicalHoursEntries(hours||[]);
+        setClinicalHoursTotal((hours||[]).reduce((s,h)=>s+(h.hours||0),0));
+        setRecommendersCount((recs||[]).length);
+        setMmiCasperCount((sessions||[]).filter(s=>s.mode==='mmi'||s.mode==='casper').length);
+      }catch(e){/* non-critical */}
     })();
   },[tab,user]);
 
   useEffect(()=>{
     if(!user)return;
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
-  },[appCounts,portActivities.length,(upcomingDeadlines||[]).length]);
+  },[appCounts,portActivities.length,(upcomingDeadlines||[]).length,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
 
   // ── Weekly quest progress (cards reviewed since Monday) ──────────────────────
   useEffect(()=>{
-    if(!['home','analytics'].includes(tab))return;
+    if(!['home','progress'].includes(tab))return;
     DB.getCardReviewsSince(getStartOfWeek().getTime()).then(setWeekCardReviews).catch(()=>{});
   },[tab,totalReviews]);
 
@@ -840,7 +878,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── Flashcard study keyboard shortcuts (Space/Enter flip, 1-4 rate) ──────────
   useEffect(()=>{
-    if(tab!=='flashcards'||!activeDeck)return;
+    if(tab!=='prep'||prepView!=='flashcards'||!activeDeck)return;
     function onKey(e){
       if(e.target&&['TEXTAREA','INPUT'].includes(e.target.tagName))return;
       if(e.key===' '||e.key==='Enter'){e.preventDefault();setFlip(f=>!f);return;}
@@ -851,11 +889,11 @@ export default function App({ account, onAccountChange }) {
     }
     document.addEventListener('keydown',onKey);
     return()=>document.removeEventListener('keydown',onKey);
-  },[tab,activeDeck,flip,cIdx]);
+  },[tab,prepView,activeDeck,flip,cIdx]);
 
   // ── Computed values ──────────────────────────────────────────────────────────
-  const eSpec   = user?.specialty||'undecided';
-  const curPath = PATHS[eSpec]||PATHS['undecided'];
+  const eSpec   = user?.specialty||'exploring';
+  const curPath = PATHS[eSpec]||PATHS['exploring'];
   const accent  = curPath?.accent||C.blue;
   const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
   const doneL   = allL.filter(l=>pathway[l.id]).length;
@@ -940,6 +978,7 @@ export default function App({ account, onAccountChange }) {
       level:u?getLevelInfo(u.xp||0).level:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC,
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
+      clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
       unlocked,
     });
     for(const achievement of toUnlock){
@@ -951,7 +990,7 @@ export default function App({ account, onAccountChange }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
@@ -1000,10 +1039,10 @@ export default function App({ account, onAccountChange }) {
       const deadlineNote=nextDeadline?` Their next upcoming deadline is "${nextDeadline.title}" in ${nextDeadline.days} day(s).`:'';
       const portNote=portActivities.length?` They've logged ${portActivities.length} activity/activities in their Portfolio.`:'';
       const contextNote=`${perfNote}${dueNote}${deadlineNote}${portNote}`;
-      const pathNote=PATH_COACH_NOTES[eSpec]||PATH_COACH_NOTES.undecided;
-      const sysPrompt=`You are Metabrain, the AI coach inside AscendPrep, a college-prep platform built specifically for high school students in grades 9–12 — every student you talk to is roughly 14–18 years old, preparing for the SAT/ACT and undergraduate admissions, not graduate or professional school. Never bring up the MCAT, LSAT, GRE, GMAT, clinical rotations, or med/grad-school interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
+      const pathNote=PATH_COACH_NOTES[eSpec]||PATH_COACH_NOTES.exploring;
+      const sysPrompt=`You are Metabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9–12 who are interested in medicine or a health career — every student you talk to is roughly 14–18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
-The platform also includes: pathway study units, a quiz library, spaced-repetition flashcards, a diagnostic, an SAT/ACT score tracker, an admissions calculator, a college application tracker, an essay workspace, deadline tracking, financial aid planning, an activities portfolio, a resume builder, and a mock interview practice simulator — point students at the right one when it's the natural next step.
+The platform is organized around three areas: Prep (a pathway diagnostic, pathway study units, a quiz library, spaced-repetition flashcards, and a curated e-library), Portfolio (SAT/ACT score tracking, an admissions calculator, college application tracking, essay workspace, deadlines, financial aid, an activities/clinical-hours resume builder, and mock interview practice), and Progress (XP, achievements, and readiness analytics) — point students at the right one when it's the natural next step.
 
 The student is on the ${curPath?.label||'college prep'} pathway. ${pathNote}${courseNote}${contextNote}
 
@@ -1094,15 +1133,12 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   }
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
-  const DIAG_CAT_LABELS = {stem:'STEM & Engineering',humanities:'Humanities & Writing',business:'Business & Economics',socialSci:'Social Sciences'};
   function finalizeDiag(answers){
-    const counts={undecided:0,stem:0,humanities:0,business:0,socialSci:0,preHealth:0};
-    const catCounts={stem:0,humanities:0,business:0,socialSci:0};
-    const pm={stem:['stem','preHealth'],humanities:['humanities','undecided'],business:['business','undecided'],socialSci:['socialSci','preHealth']};
-    answers.forEach((ans,i)=>{const q=DIAG_QS[i];const k=q?.map?.[ans];if(k){if(catCounts[k]!==undefined)catCounts[k]++;if(pm[k])pm[k].forEach(sp=>{if(counts[sp]!==undefined)counts[sp]++;});}});
-    setDR(Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'undecided');
-    setDCats(Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).map(([k])=>k));
+    const { top, ranked } = scorePathways(answers);
+    setDR(top);
+    setDCats(ranked.filter(k=>k!==top).slice(0,2)); // top 2 alternates, shown as "you might also fit"
     setDD(true);
+    saveUser({...user,diagnosticResult:top});
   }
 
   // ── Search indexes (memoized) ─────────────────────────────────────────────────
@@ -1167,21 +1203,25 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tHome(){
     const units=curPath?.units||[];
     const recentQuiz=qHistory.slice(-1)[0];
+    const HomeIcon=PATH_ICONS[eSpec]||Compass;
     return(
       <div style={CC({gap:22})}>
-        {/* Hero */}
-        <div style={{...glass({padding:28}),background:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid rgba(45,127,255,0.15)`,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${accent}10,transparent 70%)`,pointerEvents:'none'}}/>
-          <div style={{position:'relative'}}>
-            <div style={{fontSize:11,fontWeight:700,color:C.blueL,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
-            <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
-            <div style={R({gap:8,flexWrap:'wrap'})}>
-              <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
-              <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
-              {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
-              {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
-              {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
-              {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
+        {/* Hero — tinted with the active pathway's own gradient/glow so identity shifts per pathway */}
+        <div style={{...glass({padding:28}),background:curPath?.gradient?`linear-gradient(135deg,${curPath.accent}14,${(curPath.accent2||curPath.accent)}08)`:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid ${accent}26`,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${curPath?.glow||`${accent}18`},transparent 70%)`,pointerEvents:'none'}}/>
+          <div style={{position:'relative',...R({gap:18,alignItems:'flex-start'})}}>
+            <div style={{width:52,height:52,borderRadius:15,background:`${accent}1c`,border:`1.5px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 0 24px ${curPath?.glow||`${accent}25`}`}}><HomeIcon size={24} color={accent}/></div>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
+              <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
+              <div style={R({gap:8,flexWrap:'wrap'})}>
+                <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
+                <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
+                {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
+                {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
+                {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
+              </div>
             </div>
           </div>
         </div>
@@ -1199,7 +1239,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 </div>
               </div>
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
-            {nextLesson&&<button onClick={()=>setTab('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
+            {nextLesson&&<button onClick={()=>goPrep('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
           </div>
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Metabrain's #1 Pick</div>
@@ -1210,7 +1250,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 <div style={{fontSize:11,color:C.t3,marginTop:1}}>{topPick.reason}</div>
               </div>
             </div>
-            <button onClick={()=>setTab('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>
+            <button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>
           </div>}
         </div>}
 
@@ -1222,7 +1262,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {upcomingDeadlines&&upcomingDeadlines.length===0&&(
           <div style={{...glass({padding:16}),display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
             <div style={{fontSize:13,color:C.t2}}>You haven't added any application deadlines yet.</div>
-            <button style={btnG({fontSize:12,padding:'8px 16px'})} onClick={()=>setTab('deadlines')}>Add Deadlines</button>
+            <button style={btnG({fontSize:12,padding:'8px 16px'})} onClick={()=>goPortfolio('deadlines')}>Add Deadlines</button>
           </div>
         )}
 
@@ -1253,15 +1293,15 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
             {[
-              {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',tab:'diagnostic',col:C.violet},
-              {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,tab:'pathway',col:accent},
-              {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,tab:'quizzes',col:C.green},
-              {Ic:MessageCircle,lbl:'AI Coach',sub:'Metabrain 2.0 tutor',tab:'coach',col:C.cyan},
-              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,tab:'flashcards',col:dueCards>0?C.violet:C.orange},
-              {Ic:Building2,lbl:'Admissions',sub:'School list builder',tab:'calc',col:C.rose},
+              {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',pillar:'prep',view:'diagnostic',col:C.violet},
+              {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathway',col:accent},
+              {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
+              {Ic:MessageCircle,lbl:'AI Coach',sub:'Metabrain 2.0 tutor',pillar:'prep',view:'coach',col:C.cyan},
+              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueCards>0?C.violet:C.orange},
+              {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
             ].map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
-                onClick={()=>{setTab(a.tab);play('click');}}
+                onClick={()=>{if(a.pillar==='prep')goPrep(a.view);else if(a.pillar==='portfolio')goPortfolio(a.view);play('click');}}
                 style={{...glass({padding:20}),cursor:'pointer',transition:'border-color .2s',position:'relative',overflow:'hidden'}}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=`${a.col}35`}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
@@ -1325,7 +1365,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               </div>
             );})}
           </div>
-          <button onClick={()=>setTab('pathway')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
+          <button onClick={()=>goPrep('pathway')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
         </div>
       </div>
     );
@@ -1334,22 +1374,19 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   // ── DIAGNOSTIC ────────────────────────────────────────────────────────────────
   function tDiag(){
     if(dDone&&dRes){const path=PATHS[dRes];
-      const topCats=(dCats||[]).slice(0,2).map(k=>DIAG_CAT_LABELS[k]).filter(Boolean);
+      const ResIcon=PATH_ICONS[dRes]||Compass;
+      const alternates=(dCats||[]).map(k=>PATHS[k]).filter(Boolean);
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
-        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`})}}>
-          <div style={{width:80,height:80,borderRadius:'50%',background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${accent}30`}}><Compass size={34} color={accent}/></div>
+        <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
+        <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:path?.gradient?`linear-gradient(135deg,${path.accent}14,${path.accent2||path.accent}08)`:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid ${path?.accent||C.blue}30`})}}>
+          <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={path?.accent||accent}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
-          <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>
-            {topCats.length>0
-              ? <>Your answers leaned most toward <strong style={{color:C.t1}}>{topCats.join(' and ')}</strong> — a pattern consistent with <strong style={{color:C.t1}}>{path?.label}</strong>.</>
-              : <>Based on your answers, <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</>}
-          </p>
+          <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
-            <button style={{...btn(C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
+            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
@@ -1357,11 +1394,25 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <Milestone size={14} color={C.t3}/>
           <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
         </div>
+        {alternates.length>0&&<div style={glass({padding:18})}>
+          <SL>You Might Also Fit</SL>
+          <div style={G(2,10,{},isMobile)}>
+            {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
+                <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={p.accent}/></div>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700,color:p.accent,fontFamily:C.FD}}>{p.label}</div>
+                  {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:2,lineHeight:1.4}}>{p.tagline}</div>}
+                </div>
+              </motion.div>
+            );})}
+          </div>
+        </div>}
         <div style={glass({padding:18})}>
-          <SL>Explore Other Paths</SL>
+          <SL>All Pathways</SL>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:p.accent,fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
                 <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
@@ -1377,14 +1428,14 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     if(dIntro){
       return(
         <div style={CC({gap:22})}>
-          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
-            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific interest, so studying also builds toward the college major you're most likely to pursue. Take the two-minute diagnostic for a recommendation, or read through the pathways yourself and pick one directly — you can always switch later.</p>
+          <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
+            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic — real questions about how you think and what pulls you in, not just "pick your favorite subject" — for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.</p>
           </div>
           <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
             <div style={{flex:1,minWidth:220}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} quick questions about how you think and what excites you — takes about 2 minutes.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what pulls you in, and what these careers actually look like — takes about 4 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.blueGrad,{fontSize:13,padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
@@ -1393,7 +1444,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
                 <PathwayCard key={key} pathKey={key} p={p} current={eSpec===key} m={isMobile}
-                  onSelect={(k)=>{saveUser({...user,specialty:k});setTab('pathway');toast.success(`${p.label} pathway activated`);}}/>
+                  onSelect={(k)=>{saveUser({...user,specialty:k});goPrep('pathway');toast.success(`${p.label} pathway activated`);}}/>
               ))}
             </div>
           </div>
@@ -1405,7 +1456,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Study Track Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
+          <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
           <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={accent} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
         </div>
         <Bar pct={(dStep/DIAG_QS.length)*100} color={accent} h={3}/>
@@ -1417,7 +1468,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 onClick={()=>{const next=[...dAns,ci];setDA(next);play('select');if(dStep<DIAG_QS.length-1)setDS(s=>s+1);else finalizeDiag(next);}}
                 style={{...glass2({padding:'15px 18px',cursor:'pointer',transition:'all .15s'}),display:'flex',alignItems:'center',gap:14}}>
                 <span style={{width:28,height:28,borderRadius:8,background:C.s4,border:`1px solid ${C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.t3,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
-                <span style={{fontSize:14,color:C.t1,fontFamily:C.FB}}>{ch}</span>
+                <span style={{fontSize:14,color:C.t1,fontFamily:C.FB}}>{ch.text}</span>
               </motion.div>
             ))}
           </div>
@@ -1486,7 +1537,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={glass({padding:18})}>
           <div style={R({justifyContent:'space-between',marginBottom:14})}>
             <SL extra={{marginBottom:0}}>Switch Study Track</SL>
-            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setTab('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
@@ -1601,7 +1652,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             );
           })}
         </div>
-        {fQuiz.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>No quizzes match your search — try a different term.</div>}
+        {fQuiz.length===0&&<EmptyState icon={Layers} accent={accent} title="No quizzes match" body="Try a different search term or clear your filters." actionLabel="Clear Filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
       </div>
     );
   }
@@ -1945,7 +1996,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             );})}
           </div>
         </div>}
-        {fLib.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No resources match your search.</div>}
+        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');}}/>}
       </div>
     );
   }
@@ -1956,10 +2007,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
     const resH=Math.round(portActivities.filter(a=>a.activity_type==='Research').reduce((s,a)=>s+annualH(a),0));
     const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
-    const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
+    const actColors={'Clinical/Shadowing':accent,'Patient Care (paid)':C.rose,'Health Club/HOSA':C.cyan,Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
     const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
     const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
     const PIcon=PATH_ICONS[eSpec]||Compass;
+    const benchmarks=curPath?.benchmarks||{};
+    const strength=computeApplicationStrength({
+      mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
+      recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
+    });
+    const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
 
     return(
       <div style={CC({gap:22})}>
@@ -1971,46 +2028,74 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
         </div>
 
+        {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
+        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
+          <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
+            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — updates as you fill in Portfolio.</div>
+          </div>
+          <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+            {Object.entries(strength.subscores).map(([k,v])=>(
+              <div key={k} style={{textAlign:'center',minWidth:64}}>
+                <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{v}%</div>
+                <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Cross-app snapshot — pulls every feature area into one view so Portfolio reads as the hub, not just a resume tracker */}
         <div style={glass({padding:18})}>
           <SL extra={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}><PIcon size={12}/>{curPath.label} · Level {lvl} {levelInfo.tier}</SL>
           <div style={G(4,10,{},isMobile)}>
-            <div onClick={()=>setTab('quizzes')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPrep('quizzes')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Layers size={13} color={C.green}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Quizzes</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{qTaken}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{ALL_QUIZZES.length}</span></div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>{mastery}% pathway mastery</div>
             </div>
-            <div onClick={()=>setTab('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPrep('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Layers3 size={13} color={C.violet}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Flashcards</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{totalReviews}<span style={{fontSize:11,color:C.t3,fontWeight:600}}> reviews</span></div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueCards} card{dueCards===1?'':'s'} due today</div>
             </div>
-            <div onClick={()=>setTab('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPortfolio('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Mic size={13} color={C.cyan}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Interview Prep</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{interviewCount}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>mock sessions practiced</div>
             </div>
-            <div onClick={()=>setTab('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPrep('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><MessageCircle size={13} color={C.blue}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>AI Coach</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{aiChatCount}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Metabrain</div>
             </div>
-            <div onClick={()=>setTab('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPortfolio('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Building2 size={13} color={C.amber}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>College List</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.colleges}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>schools tracked</div>
             </div>
-            <div onClick={()=>setTab('essays')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPortfolio('essays')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><ScrollText size={13} color={C.orange}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Essays</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.essays}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>drafts in progress</div>
             </div>
-            <div onClick={()=>setTab('deadlines')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPortfolio('deadlines')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><CalendarDays size={13} color={C.rose}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Deadlines</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{(upcomingDeadlines||[]).length}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>upcoming</div>
             </div>
-            <div onClick={()=>setTab('analytics')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+            <div onClick={()=>goPortfolio('clinical')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Stethoscope size={13} color={accent}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Clinical Hours</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{clinicalHoursTotal}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>hours logged</div>
+            </div>
+            <div onClick={()=>goPortfolio('recommenders')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><UserCheck size={13} color={C.violetL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Recommenders</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{recommendersCount}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>tracked</div>
+            </div>
+            <div onClick={()=>setTab('progress')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Trophy size={13} color={C.amberL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Achievements</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{achiev.size}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{Object.keys(ACHIEVEMENTS).length}</span></div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>{streak}-day streak</div>
@@ -2021,16 +2106,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* Summary stats */}
         <div style={G(5,14,{},isMobile)}>
           <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub="Rec: 100+" m={isMobile}/>
+          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub={`Rec: ${benchmarks.leadershipHours||100}+`} m={isMobile}/>
           <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
-          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+" m={isMobile}/>
+          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub={`Rec: ${benchmarks.volunteerHours||150}+`} m={isMobile}/>
           <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
-        {/* Progress bars toward recommended hours */}
+        {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks */}
         <div style={glass({padding:18})}>
-          <SL>Progress Toward Strong Application Benchmarks</SL>
-          {[{l:'Leadership Hours',val:leadH,target:100,col:C.blue},{l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},{l:'Volunteer Hours',val:volH,target:150,col:C.violet}].map(({l,val,target,col})=>(
+          <SL>Progress Toward {curPath?.label} Benchmarks</SL>
+          {[
+            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
+            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
+            {l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},
+            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
+          ].map(({l,val,target,col})=>(
             <div key={l} style={{marginBottom:14}}>
               <div style={R({justifyContent:'space-between',marginBottom:6})}>
                 <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
@@ -2044,13 +2134,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* Quick links to the rest of the application system */}
         <div style={G(4,10,{},isMobile)}>
           {[
-            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',tab:'resume',icon:Award,col:C.violet},
-            {label:'Test Scores',sub:'SAT/ACT history & trend',tab:'scores',icon:TrendingUp,col:C.green},
-            {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',tab:'aid',icon:Handshake,col:C.cyan},
-            {label:'Study Pathway',sub:'Your track, units & lessons',tab:'pathway',icon:Route,col:C.blue},
-            {label:'E-Library',sub:'Curated readings & videos',tab:'library',icon:BookOpen,col:C.orange},
+            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',pillar:'portfolio',view:'resume',icon:Award,col:C.violet},
+            {label:'Clinical Hours',sub:'Log shadowing & clinical time',pillar:'portfolio',view:'clinical',icon:Stethoscope,col:accent},
+            {label:'Recommenders',sub:'Track letters of recommendation',pillar:'portfolio',view:'recommenders',icon:UserCheck,col:C.violetL},
+            {label:'Timeline',sub:'Everything, chronologically',pillar:'portfolio',view:'timeline',icon:Milestone,col:C.roseL},
+            {label:'Test Scores',sub:'SAT/ACT history & trend',pillar:'portfolio',view:'scores',icon:TrendingUp,col:C.green},
+            {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',pillar:'portfolio',view:'aid',icon:Handshake,col:C.cyan},
+            {label:'Study Pathway',sub:'Your track, units & lessons',pillar:'prep',view:'pathway',icon:Route,col:C.blue},
+            {label:'E-Library',sub:'Curated readings & videos',pillar:'prep',view:'library',icon:BookOpen,col:C.orange},
           ].map(l=>(
-            <motion.div key={l.tab} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>setTab(l.tab)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
+            <motion.div key={l.view} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>l.pillar==='prep'?goPrep(l.view):goPortfolio(l.view)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
               <l.icon size={16} color={l.col}/>
               <div style={{fontSize:12.5,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:8}}>{l.label}</div>
               <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{l.sub}</div>
@@ -2285,9 +2378,74 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const doughnutOpts={responsive:true,maintainAspectRatio:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{backgroundColor:C.s2,titleColor:C.t1,bodyColor:C.t2,borderColor:C.b2,borderWidth:1}}};
 
     const TierIcon=TIER_ICONS[levelInfo.tierIcon]||Sparkles;
+    const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
+    const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
+    const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
+    const benchmarks=curPath?.benchmarks||{};
+    const strength=computeApplicationStrength({
+      mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
+      recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
+    });
+    const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
+    const insights=buildInsights({
+      catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
+      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
+    });
+    const diagPath=user?.diagnosticResult?PATHS[user.diagnosticResult]:null;
+    // Clinical hour trend — cumulative by month
+    const hoursByMonth={};
+    [...clinicalHoursEntries].sort((a,b)=>a.entryDate.localeCompare(b.entryDate)).forEach(e=>{
+      const m=e.entryDate.slice(0,7);
+      hoursByMonth[m]=(hoursByMonth[m]||0)+(e.hours||0);
+    });
+    const monthKeys=Object.keys(hoursByMonth).sort();
+    let running=0;
+    const clinicalTrendData={
+      labels:monthKeys.map(m=>new Date(m+'-01').toLocaleDateString(undefined,{month:'short',year:'2-digit'})),
+      datasets:[{
+        label:'Cumulative Hours', data:monthKeys.map(m=>{running+=hoursByMonth[m];return running;}),
+        borderColor:`${accent}e6`, backgroundColor:`${accent}14`, borderWidth:2.5, pointRadius:4, tension:0.3, fill:true,
+      }],
+    };
+
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Analytics</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Progress</h2></div>
+        <div><div style={lbl()}>Progress</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Progress</h2></div>
+
+        {/* Application-strength readiness gauge */}
+        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
+          <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
+            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Academic {strength.subscores.academic}% · Clinical {strength.subscores.clinical}% · Application {strength.subscores.application}% · Activities {strength.subscores.activities}%</div>
+          </div>
+          <button style={btnG({fontSize:12})} onClick={()=>goPortfolio('overview')}>View Portfolio<ChevronRight size={13}/></button>
+        </div>
+
+        {/* Insight callouts */}
+        {insights.length>0&&<div style={CC({gap:8})}>
+          {insights.map((ins,i)=>{
+            const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
+            return(
+              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
+                <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
+                {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
+              </div>
+            );
+          })}
+        </div>}
+
+        {/* Diagnostic result */}
+        {diagPath&&<div style={{...glass2({padding:16,display:'flex',alignItems:'center',gap:14})}}>
+          {(()=>{const DIc=PATH_ICONS[user.diagnosticResult]||Compass;return <div style={{width:38,height:38,borderRadius:11,background:`${diagPath.accent}18`,border:`1px solid ${diagPath.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><DIc size={17} color={diagPath.accent}/></div>;})()}
+          <div style={{flex:1}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Your Diagnostic Result</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:2}}>{diagPath.label}{eSpec!==user.diagnosticResult?` — currently on ${curPath?.label}`:''}</div>
+          </div>
+          <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>{setDIntro(false);setDD(false);setDS(0);setDA([]);goPrep('diagnostic');}}>Retake<RefreshCw size={12} style={{marginLeft:4}}/></button>
+        </div>}
 
         {/* Identity / Level card */}
         <div style={{...glass({padding:22}),background:`linear-gradient(135deg,${levelInfo.tierColor}22,${accent}10)`,border:`1px solid ${levelInfo.tierColor}35`}}>
@@ -2413,6 +2571,32 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
         </div>}
 
+        {/* Clinical/shadowing hour trend */}
+        {monthKeys.length>=2&&<div style={glass({padding:20})}>
+          <SL>Clinical & Shadowing Hours — Cumulative</SL>
+          <div style={{height:180,position:'relative'}}>
+            <Line data={clinicalTrendData} options={lineOpts}/>
+          </div>
+        </div>}
+
+        {/* Benchmark bars vs. active pathway targets */}
+        <div style={glass({padding:18})}>
+          <SL>Progress Toward {curPath?.label} Benchmarks</SL>
+          {[
+            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
+            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
+            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
+          ].map(({l,val,target,col})=>(
+            <div key={l} style={{marginBottom:14}}>
+              <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
+                <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
+              </div>
+              <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
+            </div>
+          ))}
+        </div>
+
         {/* Recent quiz scores table */}
         {recentScores.length>0&&<div style={glass()}>
           <SL>Recent Quiz Scores</SL>
@@ -2452,6 +2636,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             unit_master:[mastery,33], course_half:[mastery,50], ai_user:[aiChatCount,5],
             college_added:[appCounts.colleges,1], deadline_set:[(upcomingDeadlines||[]).length,1], essay_started:[appCounts.essays,1],
             activity_logged:[portActivities.length,1], interview_first:[interviewCount,1], interview_5:[interviewCount,5],
+            clinical_hours_50:[clinicalHoursTotal,50], recommender_added:[recommendersCount,1], mmi_practiced:[mmiCasperCount,1],
           };
           return(
         <div style={glass({padding:18})}>
@@ -2534,7 +2719,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Study Track</SL>
-            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);setTab('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
@@ -2608,7 +2793,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
-            AscendPrep v2.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
+            MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
             Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · Llama 3.3 70B on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
             Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Metabrain 2.0 and AI deck generation are powered by large language model technology · All progress data stored locally in your browser via IndexedDB · No account required for your study data
           </div>
@@ -2630,21 +2815,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
             <div style={{textAlign:'center',marginBottom:36}}>
               <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
-              <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>AscendPrep</h1>
-              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and college admissions coaching, in one place.</p>
+              <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
+              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and a personalized path into medicine — for high schoolers heading toward a health career.</p>
             </div>
             {/* Feature pills */}
             <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
-              {['SAT/ACT Practice','FSRS Flashcards','AI Coach','Portfolio Tracker','College Planner','Offline PWA'].map(f=>(
+              {['Pathway Diagnostic','SAT/ACT Practice','FSRS Flashcards','AI Coach','Application Portfolio','Progress Analytics'].map(f=>(
                 <span key={f} style={pill(C.s2,C.t2,{border:`1px solid ${C.b1}`,fontSize:11})}>{f}</span>
               ))}
             </div>
             <div style={glass({padding:32})}>
               <span style={lbl()}>Your first name</span>
               <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
-                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'undecided',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your study track.`);}}}/>
+                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`);}}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
-                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'undecided',xp:0,streak:1,lastActive:Date.now()};saveUser(u);setTab('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your study track.`);}}>
+                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`);}}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
@@ -2677,17 +2862,38 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   }
 
   // ═══ MAIN LAYOUT ═══════════════════════════════════════════════════════════════
-  const tRenders={
-    home:tHome,diagnostic:tDiag,pathway:tPath,quizzes:tQuizzes,coach:tCoach,flashcards:tFlash,
-    library:tLib,portfolio:tPort,calc:tCalc,analytics:tAnalytics,settings:tSettings,
+  // ── Prep: diagnostic/pathway/quizzes/flashcards/coach/library, switched via SubNav ──
+  const prepRenders={ diagnostic:tDiag, pathway:tPath, quizzes:tQuizzes, flashcards:tFlash, coach:tCoach, library:tLib };
+  function tPrep(){
+    return(
+      <div>
+        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile}/>
+        {(prepRenders[prepView]||tPath)()}
+      </div>
+    );
+  }
+  // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
+  const portfolioRenders={
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={accent}/>,
     deadlines:()=><DeadlinesPanel accent={accent}/>,
     colleges:()=><CollegeListPanel accent={accent}/>,
     essays:()=><EssayWorkspacePanel accent={accent}/>,
     scores:()=><ScoreTrackerPanel accent={accent}/>,
     aid:()=><FinancialAidPanel accent={accent}/>,
     resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={()=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc});}}/>,
+    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await DB.getClinicalHours();setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await DB.getRecommenders();setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
+  function tPortWrap(){
+    return(
+      <div>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile}/>
+        {(portfolioRenders[portfolioView]||tPort)()}
+      </div>
+    );
+  }
+  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, progress:tAnalytics };
 
   return(
     <ErrorBoundary>
@@ -2702,14 +2908,14 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <header style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,background:C.s0,display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:100}}>
             <div style={R({gap:10})}>
               <div style={{width:30,height:30,borderRadius:8,overflow:'hidden'}}><img src="/icon.svg" width={30} height={30} alt="" style={{display:'block'}}/></div>
-              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>AscendPrep</div>
+              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
             </div>
             <div style={R({gap:10})}>
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
               </div>
-              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:'#fff',cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
+              <div onClick={() => setShowAccountMenu(true)} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:'#fff',cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
             </div>
           </header>
         )}
@@ -2722,12 +2928,12 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <div style={R({gap:11})}>
                 <div style={{width:34,height:34,borderRadius:9,overflow:'hidden'}}><img src="/icon.svg" width={34} height={34} alt="" style={{display:'block'}}/></div>
                 <div>
-                  <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>AscendPrep</div>
-                  <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>SAT/ACT + ADMISSIONS</div>
+                  <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+                  <div style={{fontSize:9,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase'}}>YOUR PATH INTO MEDICINE</div>
                 </div>
               </div>
             </div>
-            <div style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`}}>
+            <div onClick={()=>setShowAccountMenu(true)} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer'}}>
               <div style={R({gap:11,marginBottom:12})}>
                 <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
                   {user.name[0].toUpperCase()}
@@ -2736,26 +2942,22 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontFamily:C.FD}}>{user.name}</div>
                   <div style={{fontSize:11,color:C.t3}}>Lv.{lvl} {levelInfo.tier} · {curPath?.label}</div>
                 </div>
+                <Settings size={15} color={C.t3}/>
               </div>
               <Bar pct={levelInfo.pct} color={accent} h={3} glow/>
               {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
-              {NAV_GROUPS.map(group=>(
-                <div key={group} style={{marginBottom:4}}>
-                  {group!=='Home'&&<div style={{fontSize:9,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'12px 12px 4px'}}>{group}</div>}
-                  {NAV.filter(n=>n.group===group).map(n=>{
-                    const active=tab===n.id;
-                    const badge=n.id==='flashcards'&&dueCards>0?dueCards:null;
-                    return(
-                      <motion.div key={n.id} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 12px',borderRadius:9,cursor:'pointer',marginBottom:1,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:400,fontSize:13,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
-                        <n.ic size={15} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
-                        {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              ))}
+              {NAV.map(n=>{
+                const active=tab===n.id;
+                const badge=n.id==='prep'&&dueCards>0?dueCards:null;
+                return(
+                  <motion.div key={n.id} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
+                    <n.ic size={17} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
+                    {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
+                  </motion.div>
+                );
+              })}
             </nav>
           </aside>
         )}
@@ -2774,45 +2976,38 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
 
         {/* ══ BOTTOM NAV (Mobile) ══════════════════════════════════════════════ */}
         {isMobile && (
-          <>
-            <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
-              {[
-                {id:'home',ic:Home,label:'Home'},
-                {id:'quizzes',ic:Layers,label:'Quizzes'},
-                {id:'flashcards',ic:Layers3,label:'Flash'},
-                {id:'coach',ic:MessageCircle,label:'Coach'},
-                {id:'more',ic:Plus,label:'More',onClick:()=>setShowMore(true)},
-              ].map(n=>(
-                <div key={n.id} onClick={n.onClick||(()=>setTab(n.id))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:60}}>
+          <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
+            {NAV.map(n=>{
+              const badge=n.id==='prep'&&dueCards>0?dueCards:null;
+              return(
+                <div key={n.id} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:70}}>
                   <n.ic size={20} color={tab===n.id?accent:C.t3}/>
                   <span style={{fontSize:10,fontWeight:600}}>{n.label}</span>
+                  {badge&&<span style={{position:'absolute',top:-4,right:14,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
                 </div>
-              ))}
-            </nav>
-
-            {/* More Menu Overlay */}
-            <AnimatePresence>
-              {showMore && (
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowMore(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:200,display:'flex',alignItems:'flex-end'}}>
-                  <motion.div initial={{y:'100%'}} animate={{y:0}} exit={{y:'100%'}} transition={{type:'spring',damping:25,stiffness:200}} style={{width:'100%',background:C.s1,borderRadius:'24px 24px 0 0',padding:'24px 16px 40px',maxHeight:'80vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20,padding:'0 8px'}}>
-                      <h3 style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>All Tools</h3>
-                      <button onClick={()=>setShowMore(false)} style={{background:C.s3,border:'none',borderRadius:'50%',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',color:C.t1}}><X size={18}/></button>
-                    </div>
-                    <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12}}>
-                      {NAV.map(n=>(
-                        <div key={n.id} onClick={()=>{setTab(n.id);setShowMore(false);}} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8,padding:12,background:tab===n.id?`${accent}15`:C.s2,borderRadius:16,border:`1px solid ${tab===n.id?accent:C.b1}`}}>
-                          <n.ic size={20} color={tab===n.id?accent:C.t2}/>
-                          <span style={{fontSize:11,fontWeight:600,color:tab===n.id?C.t1:C.t2,textAlign:'center'}}>{n.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </>
+              );
+            })}
+          </nav>
         )}
+
+        {/* ══ ACCOUNT MENU (Settings — reached via avatar tap, not the main nav) ══ */}
+        <AnimatePresence>
+          {showAccountMenu && (
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowAccountMenu(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:400,display:'flex',alignItems:isMobile?'flex-end':'center',justifyContent:'center'}}>
+              <motion.div
+                initial={isMobile?{y:'100%'}:{opacity:0,scale:.96}} animate={isMobile?{y:0}:{opacity:1,scale:1}} exit={isMobile?{y:'100%'}:{opacity:0,scale:.96}}
+                transition={isMobile?{type:'spring',damping:25,stiffness:200}:{duration:.18}}
+                style={{width:isMobile?'100%':'min(640px,92vw)',maxHeight:isMobile?'86vh':'86vh',overflowY:'auto',background:C.s1,borderRadius:isMobile?'24px 24px 0 0':16,padding:isMobile?'22px 16px 40px':'26px 26px 30px',border:isMobile?undefined:`1px solid ${C.b1}`,boxShadow:'0 20px 60px rgba(0,0,0,0.6)'}}
+                onClick={e=>e.stopPropagation()}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
+                  <h3 style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Account & Settings</h3>
+                  <button onClick={()=>setShowAccountMenu(false)} style={{background:C.s3,border:'none',borderRadius:'50%',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',color:C.t1,cursor:'pointer'}}><X size={18}/></button>
+                </div>
+                {tSettings()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </ErrorBoundary>
   );

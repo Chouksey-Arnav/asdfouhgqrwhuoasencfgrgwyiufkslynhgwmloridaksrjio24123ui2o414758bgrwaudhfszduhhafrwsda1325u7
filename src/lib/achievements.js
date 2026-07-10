@@ -22,10 +22,13 @@ export const ACHIEVEMENTS = {
   resume_built: { key:'resume_built', name:'Resume Ready',     desc:'Build your first resume',         icon:'Award', xp:100 },
   interview_first:{ key:'interview_first', name:'Nervous No More', desc:'Complete your first mock interview', icon:'Mic', xp:75 },
   interview_5:  { key:'interview_5',  name:'Interview Ready',  desc:'Complete 5 mock interviews',      icon:'GraduationCap', xp:200 },
+  clinical_hours_50:{ key:'clinical_hours_50', name:'Boots on the Ground', desc:'Log 50 clinical or shadowing hours', icon:'Stethoscope', xp:150 },
+  recommender_added:{ key:'recommender_added', name:'Lining It Up', desc:'Add your first recommender', icon:'UserCheck', xp:75 },
+  mmi_practiced:{ key:'mmi_practiced', name:'Format Familiar', desc:'Try an MMI or CASPer practice scenario', icon:'Sparkles', xp:75 },
 };
 
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
@@ -47,6 +50,9 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('resume_built',  resumeBuilt);
   check('interview_first', interviewSessions >= 1);
   check('interview_5',   interviewSessions >= 5);
+  check('clinical_hours_50', clinicalHours >= 50);
+  check('recommender_added', recommenders >= 1);
+  check('mmi_practiced', mmiCasperSessions >= 1);
 
   return toUnlock;
 }
