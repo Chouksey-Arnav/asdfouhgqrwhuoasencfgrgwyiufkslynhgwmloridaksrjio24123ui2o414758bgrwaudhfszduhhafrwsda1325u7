@@ -388,6 +388,77 @@ export const PATH_COACH_NOTES = {
   healthAdmin: 'Point them toward DECA/FBLA, personal-finance and statistics literacy, and leadership roles (clubs, student government) framed around healthcare systems when relevant.',
 };
 
+// ── GRADE / CLASS-YEAR STAGE ──────────────────────────────────────────────────
+// Captured once during onboarding (and editable in Settings). Used to pick a
+// tone-appropriate checklist in the Portfolio "Roadmap" panel — this app spans
+// students from early high school through the undergrad transition, and what's
+// actually actionable looks very different at each stage.
+export const GRADE_STAGES = [
+  { key:'freshman',  label:'Freshman',  sub:'9th grade' },
+  { key:'sophomore', label:'Sophomore', sub:'10th grade' },
+  { key:'junior',     label:'Junior',    sub:'11th grade' },
+  { key:'senior',     label:'Senior',    sub:'12th grade' },
+  { key:'gap',        label:'Heading to Undergrad', sub:'Gap year / already graduated' },
+];
+
+// ── CLASS-YEAR ROADMAP ────────────────────────────────────────────────────────
+// Each item's `key` maps to a boolean computed live in App.jsx from state that
+// already exists elsewhere (diagnostic taken, hours logged, etc.) — no new
+// tracking fields required. `pillar`/`view` match NAV/PREP_SUBNAV/PORTFOLIO_SUBNAV
+// ids so a click can jump straight there via goPrep/goPortfolio.
+export const CLASS_YEAR_ROADMAP = {
+  freshman: {
+    label:'Freshman Year Roadmap', blurb:'Explore broadly, build study habits, and get your first real taste of health-related experience — nothing here needs to be decided yet.',
+    items:[
+      { key:'diagnostic',  label:'Find your pathway with the 2-minute diagnostic', pillar:'prep', view:'diagnostic' },
+      { key:'flashcards',  label:'Build a study habit — review a flashcard deck', pillar:'prep', view:'flashcards' },
+      { key:'quiz',        label:'Take a practice quiz in your strongest subject', pillar:'prep', view:'quizzes' },
+      { key:'activity',    label:'Join a club, sport, or volunteering activity', pillar:'portfolio', view:'resume' },
+      { key:'clinical',    label:'Start logging any shadowing or clinical exposure', pillar:'portfolio', view:'clinical' },
+    ],
+  },
+  sophomore: {
+    label:'Sophomore Year Roadmap', blurb:'Deepen the activities you started, get comfortable with SAT/ACT-style questions, and start paying attention to what colleges look for.',
+    items:[
+      { key:'quiz',        label:'Take a full practice quiz in each SAT/ACT section', pillar:'prep', view:'quizzes' },
+      { key:'activity',    label:'Grow into a leadership or ongoing role in an activity', pillar:'portfolio', view:'resume' },
+      { key:'clinical',    label:'Keep growing your shadowing / clinical hours', pillar:'portfolio', view:'clinical' },
+      { key:'colleges',    label:'Start a loose college list — no commitment yet', pillar:'portfolio', view:'colleges' },
+      { key:'deadlines',   label:'Get in the habit of tracking deadlines', pillar:'portfolio', view:'deadlines' },
+    ],
+  },
+  junior: {
+    label:'Junior Year Roadmap', blurb:'This is the highest-leverage year — serious SAT/ACT prep, a real college list, and the first building blocks of your application.',
+    items:[
+      { key:'quiz',        label:'Take SAT/ACT prep seriously across all sections', pillar:'prep', view:'quizzes' },
+      { key:'colleges',    label:'Build out your real college list', pillar:'portfolio', view:'colleges' },
+      { key:'recommenders',label:'Start lining up letters of recommendation', pillar:'portfolio', view:'recommenders' },
+      { key:'essays',      label:'Start brainstorming your personal statement', pillar:'portfolio', view:'essays' },
+      { key:'interview',   label:'Practice interviews (MMI/CASPer-style if relevant)', pillar:'portfolio', view:'interview' },
+    ],
+  },
+  senior: {
+    label:'Senior Year Roadmap', blurb:'Time to finalize and submit — tight deadline tracking matters more than anything else this year.',
+    items:[
+      { key:'colleges',    label:'Finalize your college list and application plan', pillar:'portfolio', view:'colleges' },
+      { key:'essays',      label:'Finish and polish your essays', pillar:'portfolio', view:'essays' },
+      { key:'recommenders',label:'Confirm recommenders have submitted their letters', pillar:'portfolio', view:'recommenders' },
+      { key:'deadlines',   label:'Track every application deadline closely', pillar:'portfolio', view:'deadlines' },
+      { key:'aid',         label:'Apply for financial aid & scholarships', pillar:'portfolio', view:'aid' },
+    ],
+  },
+  gap: {
+    label:'Heading to Undergrad Roadmap', blurb:'Whether it\'s a gap year or you\'re about to start college, keep momentum on the fundamentals and stay organized for what\'s next.',
+    items:[
+      { key:'clinical',    label:'Keep clinical/shadowing exposure going', pillar:'portfolio', view:'clinical' },
+      { key:'quiz',        label:'Stay sharp on core science fundamentals', pillar:'prep', view:'quizzes' },
+      { key:'resume',      label:'Build a resume for pre-health clubs & jobs', pillar:'portfolio', view:'resume' },
+      { key:'recommenders',label:'Keep track of who you\'ll need letters from', pillar:'portfolio', view:'recommenders' },
+      { key:'deadlines',   label:'Stay organized with upcoming deadlines', pillar:'portfolio', view:'deadlines' },
+    ],
+  },
+};
+
 // ── FLASHCARD DECKS ───────────────────────────────────────────────────────────
 export const FLASH_DECKS = {
   'Algebra II Essentials': [
