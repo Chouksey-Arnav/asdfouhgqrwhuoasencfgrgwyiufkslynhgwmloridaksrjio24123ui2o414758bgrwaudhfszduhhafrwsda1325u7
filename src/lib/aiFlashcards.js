@@ -1,35 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// AI flashcard generation client — talks to /api/flashcards, which runs on
-// Groq's LPU stack against Meta's open-weight Llama 3.3 70B model (the same
-// model tier used for Metabrain's deep coaching). Falls back to the local,
-// offline NLP generator (src/lib/noteFlashcardEngine.js) if the AI endpoint
-// is unreachable, unconfigured, or rate-limited, so deck generation never
-// hard-fails a student mid-session.
+// Flashcard generation client. Fully offline: no API key, no network call,
+// ever. Notes go through the local extraction engine (src/lib/noteFlashcardEngine.js)
+// entirely in-browser. There is no hosted/generative path here — every card's
+// answer is a direct quote or a trivial trim of the notes you pasted, so there's
+// nothing to fall back to and nothing that can silently fail on a bad connection.
 // ─────────────────────────────────────────────────────────────────────────────
 import { generateFlashcardsFromNotes, cleanNotesText } from './noteFlashcardEngine';
 
 /**
- * Generate a flashcard deck via the AI engine.
- * @param {{mode:'notes'|'topic', text?:string, topic?:string, count?:number, specialty?:string}} params
- * @returns {Promise<{cards:Array, engine:'ai'|'fallback', model?:string}>}
+ * Generate a flashcard deck from pasted study notes.
+ * @param {{text:string, count?:number}} params
+ * @returns {{cards:Array, requested:number, generated:number, coverage:'full'|'partial'}}
  */
-export async function generateAIFlashcards({ mode, text = '', topic = '', count = 12, specialty = '' }) {
-  try {
-    const r = await fetch('/api/flashcards', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, text, topic, count, specialty }),
-    });
-    let d = null;
-    try { d = await r.json(); } catch { /* non-JSON response (e.g. no API route in this environment) */ }
-    if (!r.ok) throw new Error(d?.error || `AI deck generator is unavailable right now (${r.status}).`);
-    if (!d || !Array.isArray(d.cards) || d.cards.length < 2) throw new Error('AI returned an unusable deck.');
-    return { cards: d.cards, engine: 'ai', model: d.model_used };
-  } catch (e) {
-    if (mode === 'notes' && text.trim().length >= 40) {
-      const cards = generateFlashcardsFromNotes(cleanNotesText(text), Math.min(count, 14));
-      if (cards.length >= 2) return { cards, engine: 'fallback', error: e.message };
-    }
-    throw e;
+export function generateAIFlashcards({ text = '', count = 20 }) {
+  if (text.trim().length < 40) {
+    throw new Error('Paste at least a few sentences of notes to generate a deck.');
   }
+  const result = generateFlashcardsFromNotes(cleanNotesText(text), count);
+  if (result.cards.length < 2) {
+    throw new Error('Could not find enough distinct facts in that text — try pasting more detailed notes.');
+  }
+  return result;
 }
