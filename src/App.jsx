@@ -36,7 +36,7 @@ import * as DB from './lib/db';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
-import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, fuseSearch } from './lib/search';
+import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
 import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
 import { awardXP, BONUS_COPY } from './lib/rewards';
@@ -490,13 +490,14 @@ function FlipCard({card,flipped,onClick,m=false,streak=0}){
     <div style={{perspective:1200,width:'100%',minHeight:m?320:260}}>
       <motion.div key={card.front} initial={{opacity:0,scale:.97}} animate={{opacity:1,scale:1,rotateY:flipped?180:0}} transition={{rotateY:{duration:.55,ease:[.16,1,.3,1]},opacity:{duration:.25},scale:{duration:.25}}} style={{position:'relative',width:'100%',minHeight:m?320:260,transformStyle:'preserve-3d'}}>
         {/* Front */}
-        <div onClick={()=>{onClick();play('flip');setShowHint(false);}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',...glass({display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease'})}}>
-          <div style={{position:'absolute',top:16,left:16,...R({gap:6})}}>
+        <div onClick={()=>{onClick();play('flip');setShowHint(false);}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',...glass({display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease',overflowY:'auto'})}}>
+          <div style={{position:'absolute',top:16,left:16,...R({gap:6,flexWrap:'wrap',maxWidth:'60%'})}}>
             {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
             {card.difficulty&&<span style={pill(`${dCol}18`,dCol,{fontSize:9.5})}>{card.difficulty}</span>}
+            {card.type==='cloze'&&<span style={pill(C.violetDim,C.violetL,{fontSize:9.5})}>Fill in the blank</span>}
           </div>
           {nxt&&<div style={{...pill(C.blueDim,C.blueL,{fontSize:10,position:'absolute',top:16,right:16})}}>{`Next: ${nxt}`}</div>}
-          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.14em',textTransform:'uppercase',marginTop:card.category||card.difficulty?14:0}}>QUESTION · Tap to reveal</div>
+          <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.14em',textTransform:'uppercase',marginTop:card.category||card.difficulty||card.type==='cloze'?14:0}}>QUESTION · Tap to reveal</div>
           <MathText text={card.front} style={{fontSize:m?16:18,fontWeight:600,lineHeight:1.65,color:C.t1,fontFamily:C.FD,display:'block'}}/>
           {card.hint&&(
             <div onClick={e=>e.stopPropagation()}>
@@ -510,7 +511,7 @@ function FlipCard({card,flipped,onClick,m=false,streak=0}){
           <div style={R({gap:5,justifyContent:'center',marginTop:4})}>{[0,1,2].map(i=><div key={i} style={{width:5,height:5,borderRadius:'50%',background:C.s5}}/>)}</div>
         </div>
         {/* Back */}
-        <div onClick={()=>{onClick();play('flip');}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',transform:'rotateY(180deg)',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.08))`,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease'}}>
+        <div onClick={()=>{onClick();play('flip');}} style={{position:'absolute',inset:0,cursor:'pointer',backfaceVisibility:'hidden',WebkitBackfaceVisibility:'hidden',transform:'rotateY(180deg)',background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.08))`,border:`1px solid rgba(45,127,255,0.2)`,borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',textAlign:'center',flexDirection:'column',gap:16,padding:m?24:36,boxShadow:glowShadow,transition:'box-shadow .4s ease',overflowY:'auto'}}>
           <div style={{position:'absolute',top:16,left:16,...R({gap:6})}}>
             {card.category&&<span style={pill(C.s4,C.t2,{fontSize:9.5})}>{card.category}</span>}
           </div>
@@ -699,6 +700,7 @@ export default function App({ account, onAccountChange }) {
   const [qScores,  setQScores_] = useState({});
   const [qHistory, setQHistory] = useState([]);
   const [cDecks,   setCDecks_]  = useState({});
+  const [deckCreatedAt, setDeckCreatedAt] = useState({});
   const [portActivities, setPortActivities] = useState([]);
   const [portAwards,     setPortAwards]     = useState([]);
   const [portGpa,        setPortGpa]        = useState([]);
@@ -748,7 +750,7 @@ export default function App({ account, onAccountChange }) {
   const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
-  const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
+  const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [gStage,setGStage]=useState(0);const [gShake,setGShake]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
   const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
   const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
   const [newDeckOpen,setNewDeckOpen]=useState(false);
@@ -785,9 +787,9 @@ export default function App({ account, onAccountChange }) {
         // Must run before getStreak() so a bridged (freeze-covered) gap is
         // already reflected in the streak calculation below.
         await DB.checkAndApplyStreakFreeze();
-        const [u,pw,qs,qh,decks,cp,ach,str,rev,freezes,cos] = await Promise.all([
+        const [u,pw,qs,qh,decks,deckMeta,cp,ach,str,rev,freezes,cos] = await Promise.all([
           DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
-          DB.getFlashDecks(), DB.getCatPerf(),
+          DB.getFlashDecks(), DB.getDeckCreatedAtMap(), DB.getCatPerf(),
           DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(),
           DB.getStreakFreezeCount(), DB.getCosmetics(),
         ]);
@@ -800,6 +802,7 @@ export default function App({ account, onAccountChange }) {
         // Custom decks override built-in if same name
         Object.entries(decks||{}).forEach(([name,cards])=>{allDecks[name]=cards;});
         setCDecks_(allDecks);
+        setDeckCreatedAt(deckMeta||{});
         setCatPerf_(cp||{});
         setAchiev_(ach||new Set());
         setStreak(str||0);
@@ -870,8 +873,16 @@ export default function App({ account, onAccountChange }) {
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
   const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:Date.now()})); DB.setLessonDone(lessonId).catch(console.error); },[]);
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
-  const saveDeck = useCallback(async(name,cards)=>{ setCDecks_(d=>({...d,[name]:cards})); await DB.saveDeck(name,cards); },[]);
-  const deleteDeck_ = useCallback(async(name)=>{ setCDecks_(d=>{const nd={...d};delete nd[name];return nd;}); await DB.deleteDeck(name); },[]);
+  const saveDeck = useCallback(async(name,cards)=>{
+    setCDecks_(d=>({...d,[name]:cards}));
+    setDeckCreatedAt(m=>m[name]?m:{...m,[name]:Date.now()});
+    await DB.saveDeck(name,cards);
+  },[]);
+  const deleteDeck_ = useCallback(async(name)=>{
+    setCDecks_(d=>{const nd={...d};delete nd[name];return nd;});
+    setDeckCreatedAt(m=>{const nm={...m};delete nm[name];return nm;});
+    await DB.deleteDeck(name);
+  },[]);
   const createDeck = useCallback(async(name)=>{ await saveDeck(name,[]); },[saveDeck]);
   const addCardToDeck = useCallback(async(name,front,back)=>{
     const cards=[...(cDecks[name]||[]),{front,back}];
@@ -1124,18 +1135,35 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     setCLoad(false);
   }
 
+  const GEN_STAGES = {
+    notes: ['Reading your notes…', 'Extracting key concepts…', 'Writing flashcards…', 'Polishing answers…'],
+    topic: ['Thinking about the topic…', 'Drafting questions…', 'Writing answers…', 'Polishing the deck…'],
+  };
+
   async function genDeck() {
     const isTopic = genMode === 'topic';
     const sourceOk = isTopic ? genTopic.trim().length >= 2 : notes.trim().length >= 40;
     if (!sourceOk || gLoad) {
-      if (!sourceOk) toast.error(isTopic ? 'Enter a topic to generate a deck about.' : 'Paste at least a few sentences of notes (minimum ~5 sentences).');
+      if (!sourceOk) {
+        toast.error(isTopic ? 'Enter a topic to generate a deck about.' : 'Paste at least a few sentences of notes (minimum ~5 sentences).');
+        setGShake(true); setTimeout(()=>setGShake(false), 420);
+      }
       return;
     }
-    setGL(true);
+    const stages = GEN_STAGES[genMode] || GEN_STAGES.notes;
+    setGL(true); setGStage(0);
+    const stageTimer = setInterval(()=>setGStage(s=>Math.min(s+1, stages.length-1)), 750);
+    const startedAt = Date.now();
     try {
       const { cards, engine, model, error: fallbackErr } = await generateAIFlashcards({
         mode: genMode, text: notes, topic: genTopic, count: genCount, specialty: eSpec,
       });
+      // Guarantee the stage narrative has time to actually play out, so
+      // generation never feels like an instant flicker even when the local
+      // engine resolves in a few milliseconds.
+      const minFloor = stages.length * 550;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minFloor) await new Promise(r => setTimeout(r, minFloor - elapsed));
       const deckName = isTopic ? genTopic.trim().slice(0, 60) : `Notes Deck — ${new Date().toLocaleDateString()}`;
       await saveDeck(deckName, cards);
       setNotes(''); setGenTopic('');
@@ -1151,6 +1179,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     } catch (e) {
       toast.error(e.message.slice(0, 120));
     }
+    clearInterval(stageTimer);
     setGL(false);
   }
 
@@ -1249,11 +1278,25 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     toast.success('School added to your list');
   }
 
-  // All decks: built-in + custom
-  const allDecksList = useMemo(()=>[
-    ...Object.entries(FLASH_DECKS).map(([n,c])=>({name:n,cards:c,builtin:true})),
-    ...Object.entries(cDecks).map(([n,c])=>({name:n,cards:c,builtin:false})),
-  ].filter(d=>!dSrch||d.name.toLowerCase().includes(dSrch.toLowerCase())),[cDecks,dSrch]);
+  // All decks: custom decks first (newest created on top), then built-in decks —
+  // so a deck you just generated or created is always the first thing you see.
+  const allDecksList = useMemo(()=>{
+    const customSorted = Object.entries(cDecks)
+      .map(([n,c])=>({name:n,cards:c,builtin:false}))
+      .sort((a,b)=>(deckCreatedAt[b.name]||0)-(deckCreatedAt[a.name]||0));
+    return [
+      ...customSorted,
+      ...Object.entries(FLASH_DECKS).map(([n,c])=>({name:n,cards:c,builtin:true})),
+    ];
+  },[cDecks,deckCreatedAt]);
+  const deckFuse = useMemo(()=>buildDeckSearch(allDecksList),[allDecksList]);
+  const newestDeckName = useMemo(()=>{
+    const entries = Object.entries(deckCreatedAt);
+    if(!entries.length) return null;
+    return entries.reduce((a,b)=>b[1]>a[1]?b:a)[0];
+  },[deckCreatedAt]);
+  const [dSrchLive,setDSrchLive] = useState('');
+  useEffect(()=>{ const t=setTimeout(()=>setDS2(dSrchLive),120); return()=>clearTimeout(t); },[dSrchLive]);
 
   // Active deck cards (sorted for study)
   const deckCards = useMemo(()=>{
@@ -1908,7 +1951,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     }
 
     const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
-    const filteredDecks=allDecksList.filter(deck=>{
+    const searched=searchDecks(deckFuse,allDecksList,dSrch)||allDecksList;
+    const filteredDecks=searched.filter(deck=>{
       if(deckFilter==='all')return true;
       const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
       if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
@@ -1936,8 +1980,23 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
 
         <div style={R({flexWrap:'wrap',gap:10})}>
           <div style={{flex:1,minWidth:200,position:'relative'}}>
-            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
-            <input style={inp({paddingLeft:36})} placeholder="Search decks…" value={dSrch} onChange={e=>setDS2(e.target.value)}/>
+            <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none',transition:'color .2s'}}><Search size={14}/></span>
+            <input
+              style={inp({paddingLeft:36,paddingRight:dSrchLive?32:14,transition:'box-shadow .2s, border-color .2s'})}
+              placeholder="Search decks or cards…"
+              value={dSrchLive}
+              onChange={e=>setDSrchLive(e.target.value)}
+            />
+            <AnimatePresence>
+              {dSrchLive&&(
+                <motion.button
+                  initial={{opacity:0,scale:.6}} animate={{opacity:1,scale:1}} exit={{opacity:0,scale:.6}} transition={{duration:.12}}
+                  style={{position:'absolute',right:8,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',color:C.t3,cursor:'pointer',padding:4,borderRadius:6,display:'flex'}}
+                  onClick={()=>{setDSrchLive('');setDS2('');}}
+                  aria-label="Clear search"
+                ><X size={14}/></motion.button>
+              )}
+            </AnimatePresence>
           </div>
           <div style={R({gap:6})}>
             {[['all','All'],['due','Due'],['builtin','Built-in'],['custom','My Decks']].map(([key,label])=>(
@@ -1947,9 +2006,11 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </div>
 
         {/* AI Generator */}
-        <div style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`})}}>
+        <motion.div animate={gShake?{x:[0,-7,7,-5,5,-2,2,0]}:{x:0}} transition={{duration:.42}}
+          style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`,position:'relative',overflow:'hidden'})}}>
           <div style={R({marginBottom:14})}>
-            <div style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Brain size={17} color={C.violetL}/></div>
+            <motion.div animate={gLoad?{rotate:360}:{rotate:0}} transition={gLoad?{duration:1.6,repeat:Infinity,ease:'linear'}:{duration:.3}}
+              style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Brain size={17} color={C.violetL}/></motion.div>
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate AI Deck</div>
               <div style={{fontSize:11,color:C.t2,marginTop:1}}>Real active-recall cards, written by an AI tutor — powered by Llama 3.3 70B on Groq</div>
@@ -1957,37 +2018,58 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
           <div style={R({gap:6,marginBottom:12})}>
             {[['notes','From my notes'],['topic','From a topic']].map(([key,label])=>(
-              <button key={key} style={btnSm(genMode===key?`linear-gradient(135deg,${C.violet},#7c3aed)`:C.s4,{fontSize:11,color:genMode===key?'#fff':C.t2,border:`1px solid ${genMode===key?'transparent':C.b1}`})} onClick={()=>setGenMode(key)}>{label}</button>
+              <button key={key} disabled={gLoad} style={btnSm(genMode===key?`linear-gradient(135deg,${C.violet},#7c3aed)`:C.s4,{fontSize:11,color:genMode===key?'#fff':C.t2,border:`1px solid ${genMode===key?'transparent':C.b1}`,opacity:gLoad?.6:1,cursor:gLoad?'not-allowed':'pointer'})} onClick={()=>setGenMode(key)}>{label}</button>
             ))}
             <div style={{marginLeft:'auto',...R({gap:6})}}>
               <span style={{fontSize:10,color:C.t3}}>Cards</span>
-              <select style={inp({width:'auto',padding:'5px 10px',fontSize:11})} value={genCount} onChange={e=>setGenCount(parseInt(e.target.value,10))}>
+              <select disabled={gLoad} style={inp({width:'auto',padding:'5px 10px',fontSize:11,opacity:gLoad?.6:1})} value={genCount} onChange={e=>setGenCount(parseInt(e.target.value,10))}>
                 {[8,12,16,20,24].map(n=><option key={n} value={n}>{n}</option>)}
               </select>
             </div>
           </div>
           {genMode==='notes'?(
-            <textarea style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,marginBottom:12})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+            <div style={{position:'relative',marginBottom:12}}>
+              <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
+              <div style={{position:'absolute',right:10,bottom:8,fontSize:9.5,color:C.t4,fontFamily:C.FM,pointerEvents:'none'}}>{notes.length>0?`${notes.trim().split(/\s+/).filter(Boolean).length} words`:''}</div>
+            </div>
           ):(
-            <input style={{...inp({marginBottom:12})}} placeholder='Any topic — e.g. "Krebs cycle", "SAT contronyms", "WWI causes"…' value={genTopic} onChange={e=>setGenTopic(e.target.value)}/>
+            <input disabled={gLoad} style={{...inp({marginBottom:12,opacity:gLoad?.6:1})}} placeholder='Any topic — e.g. "Krebs cycle", "SAT contronyms", "WWI causes"…' value={genTopic} onChange={e=>setGenTopic(e.target.value)}/>
           )}
-          <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`}),display:'inline-flex',alignItems:'center',gap:8}} onClick={genDeck} disabled={gLoad||(genMode==='notes'?!notes.trim():!genTopic.trim())}>
-            <Sparkles size={14}/>{gLoad?'Generating…':`Generate ${genCount} Flashcards`}
+          <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`,minWidth:220,justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||(genMode==='notes'?!notes.trim():!genTopic.trim())}>
+            {gLoad?(
+              <>
+                <motion.span animate={{rotate:360}} transition={{duration:.9,repeat:Infinity,ease:'linear'}} style={{display:'flex'}}><RefreshCw size={14}/></motion.span>
+                <AnimatePresence mode="wait">
+                  <motion.span key={gStage} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-4}} transition={{duration:.18}}>
+                    {(GEN_STAGES[genMode]||GEN_STAGES.notes)[gStage]}
+                  </motion.span>
+                </AnimatePresence>
+              </>
+            ):(<><Sparkles size={14}/>{`Generate ${genCount} Flashcards`}</>)}
           </motion.button>
-        </div>
+          <AnimatePresence>
+            {gLoad&&(
+              <motion.div initial={{scaleX:0}} animate={{scaleX:1}} exit={{opacity:0}} transition={{duration:(GEN_STAGES[genMode]||GEN_STAGES.notes).length*0.55,ease:'linear'}}
+                style={{position:'absolute',left:0,bottom:0,height:2,width:'100%',transformOrigin:'left',background:`linear-gradient(90deg,${C.violet},#7c3aed)`}}/>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
         <div style={G(3,12,{},isMobile)}>
-          {filteredDecks.map(deck=>{
+          {filteredDecks.map((deck,i)=>{
             const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
             const dc=getDueCards(deckCardsAll).length;
             const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
+            const isNewest=!deck.builtin&&deck.name===newestDeckName;
             return(
-              <motion.div key={deck.name} whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
+              <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
+                whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
                   <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
+                    {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
                     {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
                     {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
                   </div>
