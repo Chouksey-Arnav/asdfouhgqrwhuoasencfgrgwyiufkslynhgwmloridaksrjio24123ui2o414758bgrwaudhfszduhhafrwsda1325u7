@@ -17,10 +17,10 @@ import {
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2,
-  Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark,
+  Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck };
 const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
@@ -49,7 +49,11 @@ import ScoreTrackerPanel from './components/ScoreTrackerPanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import StreakHeatmap from './components/StreakHeatmap';
 import ActivitiesResumePanel from './components/ActivitiesResumePanel';
+import ClinicalHoursPanel from './components/ClinicalHoursPanel';
+import RecommendersPanel from './components/RecommendersPanel';
+import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
+import { computeApplicationStrength } from './lib/applicationStrength';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
@@ -128,11 +132,14 @@ const PREP_SUBNAV = [
 ];
 const PORTFOLIO_SUBNAV = [
   {id:'overview',ic:Building2,label:'Overview'},
+  {id:'timeline',ic:Milestone,label:'Timeline'},
   {id:'colleges',ic:GraduationCap,label:'College List'},
   {id:'essays',ic:ScrollText,label:'Essays'},
   {id:'deadlines',ic:CalendarDays,label:'Deadlines'},
   {id:'aid',ic:Handshake,label:'Financial Aid'},
   {id:'resume',ic:Award,label:'Activities & Resume'},
+  {id:'clinical',ic:Stethoscope,label:'Clinical Hours'},
+  {id:'recommenders',ic:UserCheck,label:'Recommenders'},
   {id:'interview',ic:Mic,label:'Interview Prep'},
   {id:'scores',ic:TrendingUp,label:'Test Scores'},
   {id:'calc',ic:Calculator,label:'Admissions Calc'},
@@ -700,6 +707,9 @@ export default function App({ account, onAccountChange }) {
   const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(1200);
   const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
   const [appCounts, setAppCounts] = useState({colleges:0,essays:0,resume:false});
+  const [clinicalHoursTotal, setClinicalHoursTotal] = useState(0);
+  const [recommendersCount, setRecommendersCount] = useState(0);
+  const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
   const [questTick, setQuestTick] = useState(0);
 
@@ -809,13 +819,19 @@ export default function App({ account, onAccountChange }) {
         const [cols,ess]=await Promise.all([listItems('colleges'),listItems('essays')]);
         setAppCounts(c=>({...c,colleges:cols?.length||0,essays:ess?.length||0}));
       }catch(e){/* non-critical — achievement counts, fail silently */}
+      try{
+        const [hours,recs,sessions]=await Promise.all([DB.getClinicalHours(),DB.getRecommenders(),DB.getInterviewSessions()]);
+        setClinicalHoursTotal((hours||[]).reduce((s,h)=>s+(h.hours||0),0));
+        setRecommendersCount((recs||[]).length);
+        setMmiCasperCount((sessions||[]).filter(s=>s.mode==='mmi'||s.mode==='casper').length);
+      }catch(e){/* non-critical */}
     })();
   },[tab,user]);
 
   useEffect(()=>{
     if(!user)return;
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
-  },[appCounts,portActivities.length,(upcomingDeadlines||[]).length]);
+  },[appCounts,portActivities.length,(upcomingDeadlines||[]).length,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
 
   // ── Weekly quest progress (cards reviewed since Monday) ──────────────────────
   useEffect(()=>{
@@ -958,6 +974,7 @@ export default function App({ account, onAccountChange }) {
       level:u?getLevelInfo(u.xp||0).level:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC,
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
+      clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
       unlocked,
     });
     for(const achievement of toUnlock){
@@ -969,7 +986,7 @@ export default function App({ account, onAccountChange }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
@@ -1982,10 +1999,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
     const resH=Math.round(portActivities.filter(a=>a.activity_type==='Research').reduce((s,a)=>s+annualH(a),0));
     const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
-    const actColors={Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
+    const actColors={'Clinical/Shadowing':accent,'Patient Care (paid)':C.rose,'Health Club/HOSA':C.cyan,Leadership:C.blue,Volunteering:C.violet,Research:C.amber,Athletics:C.green,'Arts & Performance':C.cyan,'Work Experience':C.rose,'Clubs & Organizations':C.orange,Other:C.t3};
     const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
     const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
     const PIcon=PATH_ICONS[eSpec]||Compass;
+    const benchmarks=curPath?.benchmarks||{};
+    const strength=computeApplicationStrength({
+      mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
+      recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
+    });
+    const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
 
     return(
       <div style={CC({gap:22})}>
@@ -1994,6 +2017,24 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
             <span style={pill(C.amberDim,C.amberL)}>{portAwards.length} awards</span>
+          </div>
+        </div>
+
+        {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
+        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
+          <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
+            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — updates as you fill in Portfolio.</div>
+          </div>
+          <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+            {Object.entries(strength.subscores).map(([k,v])=>(
+              <div key={k} style={{textAlign:'center',minWidth:64}}>
+                <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{v}%</div>
+                <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -2036,6 +2077,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{(upcomingDeadlines||[]).length}</div>
               <div style={{fontSize:10,color:C.t3,marginTop:2}}>upcoming</div>
             </div>
+            <div onClick={()=>goPortfolio('clinical')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><Stethoscope size={13} color={accent}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Clinical Hours</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{clinicalHoursTotal}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>hours logged</div>
+            </div>
+            <div onClick={()=>goPortfolio('recommenders')} style={{...glass2({padding:14,cursor:'pointer'})}}>
+              <div style={R({gap:6,marginBottom:6})}><UserCheck size={13} color={C.violetL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Recommenders</span></div>
+              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{recommendersCount}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>tracked</div>
+            </div>
             <div onClick={()=>setTab('progress')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Trophy size={13} color={C.amberL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Achievements</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{achiev.size}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{Object.keys(ACHIEVEMENTS).length}</span></div>
@@ -2047,16 +2098,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* Summary stats */}
         <div style={G(5,14,{},isMobile)}>
           <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub="Rec: 100+" m={isMobile}/>
+          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub={`Rec: ${benchmarks.leadershipHours||100}+`} m={isMobile}/>
           <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
-          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub="Rec: 150+" m={isMobile}/>
+          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub={`Rec: ${benchmarks.volunteerHours||150}+`} m={isMobile}/>
           <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
-        {/* Progress bars toward recommended hours */}
+        {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks */}
         <div style={glass({padding:18})}>
-          <SL>Progress Toward Strong Application Benchmarks</SL>
-          {[{l:'Leadership Hours',val:leadH,target:100,col:C.blue},{l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},{l:'Volunteer Hours',val:volH,target:150,col:C.violet}].map(({l,val,target,col})=>(
+          <SL>Progress Toward {curPath?.label} Benchmarks</SL>
+          {[
+            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
+            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
+            {l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},
+            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
+          ].map(({l,val,target,col})=>(
             <div key={l} style={{marginBottom:14}}>
               <div style={R({justifyContent:'space-between',marginBottom:6})}>
                 <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
@@ -2071,6 +2127,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={G(4,10,{},isMobile)}>
           {[
             {label:'Resume Builder',sub:'Full activity, awards & GPA editor',pillar:'portfolio',view:'resume',icon:Award,col:C.violet},
+            {label:'Clinical Hours',sub:'Log shadowing & clinical time',pillar:'portfolio',view:'clinical',icon:Stethoscope,col:accent},
+            {label:'Recommenders',sub:'Track letters of recommendation',pillar:'portfolio',view:'recommenders',icon:UserCheck,col:C.violetL},
+            {label:'Timeline',sub:'Everything, chronologically',pillar:'portfolio',view:'timeline',icon:Milestone,col:C.roseL},
             {label:'Test Scores',sub:'SAT/ACT history & trend',pillar:'portfolio',view:'scores',icon:TrendingUp,col:C.green},
             {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',pillar:'portfolio',view:'aid',icon:Handshake,col:C.cyan},
             {label:'Study Pathway',sub:'Your track, units & lessons',pillar:'prep',view:'pathway',icon:Route,col:C.blue},
@@ -2715,14 +2774,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   }
   // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
   const portfolioRenders={
-    overview:tPort, calc:tCalc,
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={accent}/>,
     deadlines:()=><DeadlinesPanel accent={accent}/>,
     colleges:()=><CollegeListPanel accent={accent}/>,
     essays:()=><EssayWorkspacePanel accent={accent}/>,
     scores:()=><ScoreTrackerPanel accent={accent}/>,
     aid:()=><FinancialAidPanel accent={accent}/>,
     resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={()=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc});}}/>,
+    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await DB.getClinicalHours();const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await DB.getRecommenders();setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
