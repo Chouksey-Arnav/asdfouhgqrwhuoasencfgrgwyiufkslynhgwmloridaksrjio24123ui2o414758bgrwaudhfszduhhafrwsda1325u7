@@ -53,6 +53,7 @@ import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
+import EmptyState from './components/ui/EmptyState';
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 
@@ -222,7 +223,7 @@ function LoadingScreen() {
   return (
     <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
       <div style={{width:56,height:56,borderRadius:16,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',animation:'spin 1.1s linear infinite'}}><RefreshCw size={26} color={C.blue}/></div>
-      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading AscendPrep…</div>
+      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -1202,21 +1203,25 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tHome(){
     const units=curPath?.units||[];
     const recentQuiz=qHistory.slice(-1)[0];
+    const HomeIcon=PATH_ICONS[eSpec]||Compass;
     return(
       <div style={CC({gap:22})}>
-        {/* Hero */}
-        <div style={{...glass({padding:28}),background:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid rgba(45,127,255,0.15)`,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${accent}10,transparent 70%)`,pointerEvents:'none'}}/>
-          <div style={{position:'relative'}}>
-            <div style={{fontSize:11,fontWeight:700,color:C.blueL,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
-            <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
-            <div style={R({gap:8,flexWrap:'wrap'})}>
-              <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
-              <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
-              {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
-              {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
-              {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
-              {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
+        {/* Hero — tinted with the active pathway's own gradient/glow so identity shifts per pathway */}
+        <div style={{...glass({padding:28}),background:curPath?.gradient?`linear-gradient(135deg,${curPath.accent}14,${(curPath.accent2||curPath.accent)}08)`:'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))',border:`1px solid ${accent}26`,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-60,top:-60,width:200,height:200,borderRadius:'50%',background:`radial-gradient(circle,${curPath?.glow||`${accent}18`},transparent 70%)`,pointerEvents:'none'}}/>
+          <div style={{position:'relative',...R({gap:18,alignItems:'flex-start'})}}>
+            <div style={{width:52,height:52,borderRadius:15,background:`${accent}1c`,border:`1.5px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 0 24px ${curPath?.glow||`${accent}25`}`}}><HomeIcon size={24} color={accent}/></div>
+            <div>
+              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
+              <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
+              <div style={R({gap:8,flexWrap:'wrap'})}>
+                <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
+                <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
+                {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
+                {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
+                {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
+              </div>
             </div>
           </div>
         </div>
@@ -1647,7 +1652,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             );
           })}
         </div>
-        {fQuiz.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>No quizzes match your search — try a different term.</div>}
+        {fQuiz.length===0&&<EmptyState icon={Layers} accent={accent} title="No quizzes match" body="Try a different search term or clear your filters." actionLabel="Clear Filters" onAction={()=>{setQSrch('');setQC('All');setQD('All');}}/>}
       </div>
     );
   }
@@ -1991,7 +1996,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             );})}
           </div>
         </div>}
-        {fLib.length===0&&<div style={{textAlign:'center',color:C.t3,padding:60}}>No resources match your search.</div>}
+        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');}}/>}
       </div>
     );
   }

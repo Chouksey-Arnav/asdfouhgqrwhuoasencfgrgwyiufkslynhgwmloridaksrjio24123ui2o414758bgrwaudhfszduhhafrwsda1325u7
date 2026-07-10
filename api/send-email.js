@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from:    'AscendPrep <noreply@yourverifieddomain.com>',
+        from:    'MedSchoolPrep <noreply@yourverifieddomain.com>',
         to:      [String(to).slice(0, 200)],
         subject: String(subject).slice(0, 200),
         html:    String(html).slice(0, 50000),
