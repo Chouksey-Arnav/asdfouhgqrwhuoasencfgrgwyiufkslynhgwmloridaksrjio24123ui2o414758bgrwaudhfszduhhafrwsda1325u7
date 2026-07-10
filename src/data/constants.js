@@ -1002,7 +1002,43 @@ export const DIAG_QS = [
     { text:'How diseases spread through populations and how to stop them', pathways:{publicHealth:3} },
     { text:'How teeth, gums, and the mouth affect overall health', pathways:{dentistry:3} },
   ]},
-  { id:'q17', type:'scenario', q:'Honestly, where are you right now?', ch:[
+  { id:'q17', type:'axis', q:'Which subject genuinely interests you, even when you\'re not being tested on it?', ch:[
+    { text:'Biology & anatomy — how the human body actually works', axes:{handsOn:0.3,directCare:0.4,peopleFacing:0.1} },
+    { text:'Chemistry & pharmacology — how molecules and drugs interact', axes:{handsOn:0.1,autonomy:0.3,acuity:-0.3,directCare:-0.1} },
+    { text:'Psychology — why people think, feel, and behave the way they do', axes:{peopleFacing:0.7,directCare:0.3,acuity:-0.1} },
+    { text:'Data & statistics — numbers that reveal a bigger pattern', axes:{peopleFacing:-0.6,autonomy:0.4,directCare:-0.6,acuity:-0.4} },
+  ]},
+  { id:'q18', type:'axis', q:'How do you actually handle high-pressure moments — a big exam, game, or performance?', ch:[
+    { text:'I thrive on it — pressure brings out my best work', axes:{acuity:0.7,autonomy:0.4} },
+    { text:'I prepare obsessively so pressure never catches me off guard', axes:{acuity:0.2,handsOn:0.2,autonomy:0.1} },
+    { text:'I get through it, but I do my best work when things are steady and planned', axes:{acuity:-0.7} },
+    { text:'I actively try to avoid put-on-the-spot situations if I can', axes:{acuity:-0.5,peopleFacing:-0.3} },
+  ]},
+  { id:'q19', type:'axis', q:'Ten years into your career, what would make it feel meaningful?', ch:[
+    { text:'Knowing I personally helped save or change someone\'s life', axes:{directCare:0.8,peopleFacing:0.4} },
+    { text:'Being the specific expert people trust and rely on for one thing', axes:{autonomy:0.5,handsOn:0.4} },
+    { text:'Having discovered or built something that outlives me', axes:{directCare:-0.7,peopleFacing:-0.4,acuity:-0.4} },
+    { text:'Knowing a system I built made things better for huge numbers of people', axes:{directCare:-0.8,autonomy:0.4,peopleFacing:-0.3} },
+  ]},
+  { id:'q20', type:'scenario', q:'Which volunteer opportunity would you pick, no hesitation?', ch:[
+    { text:'Answering questions on a poison-control or health-info hotline', pathways:{pharmacy:2,publicHealth:1} },
+    { text:'Running free health screenings at a community fair', pathways:{publicHealth:3} },
+    { text:'Assisting the front desk and chairside at a dental office', pathways:{dentistry:2} },
+    { text:'Helping run the logistics for a hospital blood drive', pathways:{healthAdmin:3} },
+  ]},
+  { id:'q21', type:'scenario', q:'Which show or book premise would actually hook you?', ch:[
+    { text:'A team of surgeons racing to save someone in a trauma bay', pathways:{physician:3} },
+    { text:'A scientist whose discovery changes how a disease gets treated', pathways:{biomedResearch:3} },
+    { text:'A nurse who becomes the one steady presence for a family through a hard diagnosis', pathways:{nursing:3} },
+    { text:'An athlete\'s long comeback from injury, told through their therapist', pathways:{physicalOccupTherapy:3} },
+  ]},
+  { id:'q22', type:'scenario', q:'Which training path sounds like the better long-term fit for you?', ch:[
+    { text:'Med school and residency — years of training before full autonomy, maximum scope once you\'re there', pathways:{physician:3} },
+    { text:'A shorter, more flexible path where you still diagnose and treat patients, often alongside a doctor', pathways:{physicianAssistant:4} },
+    { text:'A path where you specialize deeply in one drug or therapy area and become the go-to expert', pathways:{pharmacy:2} },
+    { text:'A path that gets you hands-on with patients sooner rather than later', pathways:{nursing:2} },
+  ]},
+  { id:'q23', type:'scenario', q:'Honestly, where are you right now?', ch:[
     { text:'Confident medicine/health is for me — I just need to know which specific role', pathways:{} },
     { text:'I like medicine/health in general but haven\'t picked a lane', pathways:{exploring:3} },
     { text:'Not sure medicine is even right for me yet, but I want to keep exploring it', pathways:{exploring:4} },
