@@ -13,10 +13,12 @@ const MINUTE_LIMIT = 20;
 const DAILY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
-// Model routing: 'deep' for tutoring/coaching conversations that need real reasoning,
-// 'fast' for lightweight tasks (quick lookups, short generations) where speed/cost matter more.
+// Model routing: 'deep' for tasks that benefit from stronger reasoning (still a
+// cheap model — llama-3.3-70b-versatile was ~10x pricier for marginal gains on
+// this app's short, well-scoped tasks), 'fast' for lightweight chat turns where
+// speed/cost matter most and Groq's free/low-tier TPM caps bite hardest.
 const MODELS = {
-  deep: 'llama-3.3-70b-versatile',
+  deep: 'openai/gpt-oss-20b',
   fast: 'llama-3.1-8b-instant',
 };
 

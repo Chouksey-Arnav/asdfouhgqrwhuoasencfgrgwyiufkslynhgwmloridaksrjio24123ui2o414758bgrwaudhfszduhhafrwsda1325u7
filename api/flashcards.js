@@ -1,9 +1,9 @@
 // /api/flashcards.js — Vercel serverless function
 // Dedicated AI flashcard-generation engine. Runs on Groq's LPU inference
-// stack against Meta's open-weight Llama 3.3 70B model — the same open-source
-// model family Groq uses for "deep" Metabrain coaching — so the cards this
-// endpoint returns are held to the same reasoning quality bar as the coach,
-// not a cheaper/smaller model. The API key never reaches the browser.
+// stack against openai/gpt-oss-20b — the same cheap "deep" model used for
+// Metabrain's stronger-reasoning tasks — chosen for cost/TPM headroom over
+// llama-3.3-70b-versatile while still handling structured JSON generation
+// reliably. The API key never reaches the browser.
 //
 // Two generation modes:
 //   'notes' — extract the highest-yield concepts out of a student's pasted
@@ -22,7 +22,7 @@ const MINUTE_LIMIT = 8;
 const DAILY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
-const MODEL = 'llama-3.3-70b-versatile';
+const MODEL = 'openai/gpt-oss-20b';
 
 function isDailyLimited(ip) {
   const now = Date.now();
