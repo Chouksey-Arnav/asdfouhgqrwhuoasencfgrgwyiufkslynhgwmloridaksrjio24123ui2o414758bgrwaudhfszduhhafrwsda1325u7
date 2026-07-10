@@ -34,11 +34,42 @@ export function buildLibrarySearch(resources) {
 }
 
 export function buildDeckSearch(decks) {
+  // Typo-tolerant fuzzy matching on the deck NAME only — fuzzy matching card
+  // front/back text too (with a loose threshold) turned out to surface mostly
+  // unrelated decks for a specific term, since Fuse's approximate matching
+  // treats a long deck name or a 15-card block of text as one big haystack
+  // that a short query can "sort of" fit into. Card content search is handled
+  // separately (exact substring) in searchDecks below for precision.
   return new Fuse(decks, {
     keys: [{ name: 'name', weight: 1 }],
-    threshold: 0.4,
-    minMatchCharLength: 1,
+    threshold: 0.35,
+    ignoreLocation: true,
+    minMatchCharLength: 2,
   });
+}
+
+/**
+ * Search decks by name (fuzzy/typo-tolerant) or by exact card content
+ * (front/back text) — merged, deck-name matches ranked first.
+ * @param {ReturnType<typeof buildDeckSearch>} deckFuse
+ * @param {Array} decks
+ * @param {string} query
+ * @returns {Array|null} null if the query is empty (caller should show all)
+ */
+export function searchDecks(deckFuse, decks, query) {
+  const q = query && query.trim();
+  if (!q) return null;
+  const nameMatches = fuseSearch(deckFuse, q) || [];
+  const matchedNames = new Set(nameMatches.map(d => d.name));
+  const needle = q.toLowerCase();
+  const contentMatches = decks.filter(d =>
+    !matchedNames.has(d.name) &&
+    (d.cards || []).some(c =>
+      (c.front && c.front.toLowerCase().includes(needle)) ||
+      (c.back && c.back.toLowerCase().includes(needle))
+    )
+  );
+  return [...nameMatches, ...contentMatches];
 }
 
 export function buildSchoolSearch(schools) {

@@ -2,11 +2,11 @@
 // AI flashcard generation client — talks to /api/flashcards, which runs on
 // Groq's LPU stack against Meta's open-weight Llama 3.3 70B model (the same
 // model tier used for Metabrain's deep coaching). Falls back to the local,
-// offline cloze-deletion generator (src/lib/clozeGenerator.js) if the AI
-// endpoint is unreachable, unconfigured, or rate-limited, so deck generation
-// never hard-fails a student mid-session.
+// offline NLP generator (src/lib/noteFlashcardEngine.js) if the AI endpoint
+// is unreachable, unconfigured, or rate-limited, so deck generation never
+// hard-fails a student mid-session.
 // ─────────────────────────────────────────────────────────────────────────────
-import { generateClozeFromNotes, cleanNotesText } from './clozeGenerator';
+import { generateFlashcardsFromNotes, cleanNotesText } from './noteFlashcardEngine';
 
 /**
  * Generate a flashcard deck via the AI engine.
@@ -27,7 +27,7 @@ export async function generateAIFlashcards({ mode, text = '', topic = '', count 
     return { cards: d.cards, engine: 'ai', model: d.model_used };
   } catch (e) {
     if (mode === 'notes' && text.trim().length >= 40) {
-      const cards = generateClozeFromNotes(cleanNotesText(text), Math.min(count, 14));
+      const cards = generateFlashcardsFromNotes(cleanNotesText(text), Math.min(count, 14));
       if (cards.length >= 2) return { cards, engine: 'fallback', error: e.message };
     }
     throw e;

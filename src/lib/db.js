@@ -61,6 +61,13 @@ db.version(6).stores({
   cosmetics:     'key, unlockedAt',
 });
 
+// v7: Per-deck creation timestamp for custom flashcard decks, so newly
+// generated/created decks can be pinned to the top of the "All Decks" list
+// (newest first) instead of trailing behind the built-in decks.
+db.version(7).stores({
+  deckMeta: 'name, createdAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -114,12 +121,21 @@ export async function saveDeck(deckName, cards) {
   await db.flashCards.where('deckName').equals(deckName).delete();
   const rows = cards.map(c => ({ deckName, ...c }));
   await db.flashCards.bulkAdd(rows);
+  // First time we see this deck name, stamp it so it can be sorted
+  // newest-first in the deck list. Re-saves (editing cards) don't bump it.
+  const existing = await db.deckMeta.get(deckName);
+  if (!existing) await db.deckMeta.put({ name: deckName, createdAt: Date.now() });
 }
 export async function updateCard(id, updates) {
   await db.flashCards.update(id, updates);
 }
 export async function deleteDeck(deckName) {
   await db.flashCards.where('deckName').equals(deckName).delete();
+  await db.deckMeta.delete(deckName);
+}
+export async function getDeckCreatedAtMap() {
+  const rows = await db.deckMeta.toArray();
+  return Object.fromEntries(rows.map(r => [r.name, r.createdAt]));
 }
 export async function recordCardReview(cardId) {
   await db.cardReviews.add({ cardId, reviewedAt: Date.now() });
@@ -319,5 +335,6 @@ export async function clearAllData() {
     db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
     db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
+    db.deckMeta.clear(),
   ]);
 }
