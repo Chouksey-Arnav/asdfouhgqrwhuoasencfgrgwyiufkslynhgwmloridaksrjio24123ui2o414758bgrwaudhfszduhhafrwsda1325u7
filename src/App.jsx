@@ -1579,7 +1579,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
             <div style={{flex:1,minWidth:220}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what pulls you in, and what these careers actually look like — takes about 4 minutes.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
             <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.blueGrad,{fontSize:13,padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
