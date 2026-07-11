@@ -110,7 +110,7 @@ export const PF_C_QUIZZES = [
   {
     id: 'pfc07',
     cat: 'Physical Sciences',
-    title: `Probability Basics`,
+    title: `Probability Basics (Foundations)`,
     diff: 'Medium',
     qs: [
       { q: `A fair six-sided die is rolled once. What is the probability of rolling a 4?`, ch: [`1/6`,`1/4`,`1/3`,`1/2`], ans: 0, exp: `There is one favorable outcome (rolling a 4) out of six equally likely outcomes, so the probability is 1/6.` },

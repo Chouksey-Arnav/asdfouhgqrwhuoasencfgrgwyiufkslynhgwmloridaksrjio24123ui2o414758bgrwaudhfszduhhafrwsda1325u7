@@ -74,7 +74,7 @@ export const PF_A_QUIZZES = [
   {
     id: 'pfa05',
     cat: 'Physical Sciences',
-    title: `The Mole & Basic Stoichiometry`,
+    title: `The Mole & Basic Stoichiometry (Foundations)`,
     diff: 'Medium',
     qs: [
       { q: `One mole of any substance contains how many particles?`, ch: [`6.022 × 10^23`,`1,000`,`3.14 × 10^8`,`22.4`], ans: 0, exp: `A mole is defined as containing Avogadro's number of particles, 6.022 × 10^23, whether those particles are atoms, molecules, or ions.` },

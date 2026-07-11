@@ -1,6 +1,6 @@
 export const PF_B_QUIZZES = [
   {
-    id: 'pfb01', cat: 'Physical Sciences', title: `Motion, Speed & Velocity Basics`, diff: 'Easy',
+    id: 'pfb01', cat: 'Physical Sciences', title: `Motion, Speed & Velocity Basics (Foundations)`, diff: 'Easy',
     qs: [
       { q: `A car travels 150 miles in 3 hours. What is its average speed?`, ch: [`40 mph`,`50 mph`,`45 mph`,`60 mph`], ans: 1, exp: `Average speed = distance ÷ time = 150 miles ÷ 3 hours = 50 mph.` },
       { q: `What distinguishes velocity from speed?`, ch: [`Velocity is always a larger number`,`Velocity includes direction, while speed does not`,`Velocity is measured in different units`,`Speed can be negative but velocity cannot`], ans: 1, exp: `Speed is a scalar (magnitude only), while velocity is a vector that includes both magnitude and direction of motion.` },
@@ -45,7 +45,7 @@ export const PF_B_QUIZZES = [
     ]
   },
   {
-    id: 'pfb04', cat: 'Physical Sciences', title: `Work, Energy & Power Basics`, diff: 'Medium',
+    id: 'pfb04', cat: 'Physical Sciences', title: `Work, Energy & Power Basics (Foundations)`, diff: 'Medium',
     qs: [
       { q: `The formula for work done by a constant force in the direction of motion is:`, ch: [`W = F/d`,`W = F + d`,`W = Fd`,`W = d/F`], ans: 2, exp: `Work equals force multiplied by the distance moved in the direction of that force: W = Fd.` },
       { q: `Work and energy are both measured in which SI unit?`, ch: [`Newtons`,`Watts`,`Joules`,`Pascals`], ans: 2, exp: `Both work and energy are measured in joules (J), since doing work on an object transfers energy to it.` },
@@ -75,7 +75,7 @@ export const PF_B_QUIZZES = [
     ]
   },
   {
-    id: 'pfb06', cat: 'Physical Sciences', title: `Waves & Sound Basics`, diff: 'Easy',
+    id: 'pfb06', cat: 'Physical Sciences', title: `Waves & Sound Basics (Foundations)`, diff: 'Easy',
     qs: [
       { q: `A wave is best described as a disturbance that:`, ch: [`Transfers matter from one place to another`,`Transfers energy without permanently transferring matter`,`Only exists in a vacuum`,`Always requires an electric field`], ans: 1, exp: `Waves carry energy through a medium (or space, for light) as the medium's particles oscillate, without the matter itself traveling along with the wave.` },
       { q: `Sound waves are an example of which type of wave?`, ch: [`Transverse waves`,`Longitudinal waves`,`Electromagnetic waves`,`Standing waves only`], ans: 1, exp: `Sound is a longitudinal wave, meaning the particles of the medium vibrate back and forth in the same direction the wave travels, creating compressions and rarefactions.` },
@@ -120,7 +120,7 @@ export const PF_B_QUIZZES = [
     ]
   },
   {
-    id: 'pfb09', cat: 'Physical Sciences', title: `Magnetism Basics`, diff: 'Easy',
+    id: 'pfb09', cat: 'Physical Sciences', title: `Magnetism Basics (Foundations)`, diff: 'Easy',
     qs: [
       { q: `Two magnets are brought close together. If their north poles face each other, they will:`, ch: [`Attract each other`,`Repel each other`,`Have no effect on each other`,`Stick together permanently`], ans: 1, exp: `Like magnetic poles (north-north or south-south) repel each other, while opposite poles (north-south) attract.` },
       { q: `Outside a bar magnet, magnetic field lines point:`, ch: [`From the south pole to the north pole`,`From the north pole to the south pole`,`Randomly in all directions`,`Only toward the center of the magnet`], ans: 1, exp: `By convention, magnetic field lines outside a magnet travel from the north pole, curve around, and enter the south pole.` },

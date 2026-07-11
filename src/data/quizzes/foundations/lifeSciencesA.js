@@ -75,7 +75,7 @@ export const LF_A_QUIZZES = [
   {
     id: 'lfa05',
     cat: 'Life Sciences',
-    title: `Mendelian Genetics & Punnett Squares`,
+    title: `Mendelian Genetics & Punnett Squares (Foundations)`,
     diff: 'Easy',
     qs: [
       { q: `A dominant allele is one that:`, ch: [`Is only expressed when two copies are present`,`Is expressed in the phenotype even when only one copy is present`,`Never affects the phenotype`,`Is always found on the Y chromosome`], ans: 1, exp: `A dominant allele masks the effect of a recessive allele and is expressed in the phenotype whenever at least one copy is present.` },
