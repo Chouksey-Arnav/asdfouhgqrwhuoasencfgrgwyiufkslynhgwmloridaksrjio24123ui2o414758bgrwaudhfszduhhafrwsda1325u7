@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, FileText, History } from 'lucide-react';
+import { Plus, Trash2, FileText, History, Brain, Sparkles, Loader2 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 
@@ -24,6 +24,8 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   const [newTitle, setNewTitle] = useState('');
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState('');
+  const [feedback, setFeedback] = useState(null);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -39,6 +41,7 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   useEffect(() => {
     if (!selected) { setVersions([]); return; }
     setDraft(selected.content || '');
+    setFeedback(null);
     listItems('essay_versions').then(all => {
       setVersions(all.filter(v => v.essay_id === selected.id).sort((a,b)=>b.created_at.localeCompare(a.created_at)));
     }).catch(() => {});
@@ -80,6 +83,26 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
       setEssays(prev => prev.map(e => e.id === selected.id ? { ...e, content: draft } : e));
       toast.success('Draft saved as a new version');
     } catch (err) { toast.error(err.message); }
+  }
+
+  async function getEssayFeedback() {
+    if (!draft.trim() || feedbackLoading) return;
+    setFeedbackLoading(true);
+    setFeedback(null);
+    try {
+      const system = `You are Metabrain, an AI writing coach inside MedSchoolPrep, helping a high school student (grades 9-12) draft a college application essay — this is a Common App / undergraduate admissions essay, not a graduate or medical school personal statement. Essay prompt: "${selected.prompt || '(no prompt given)'}" Word limit: ${selected.word_limit}. Student's draft (${wc}/${selected.word_limit} words): """${draft}""" Give feedback in this structure: 2-3 sentences on what's working well, then 2-3 specific, actionable suggestions to strengthen the essay (voice, structure, specificity, a concrete anecdote, showing vs telling), then one encouraging closing sentence. Be warm, concrete, and constructive — this is a teenager building confidence, not a professional writer. Under 180 words. No markdown formatting, just plain sentences and short line breaks between the three parts.`;
+      const r = await fetch('/api/groq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system, message: draft, maxTokens: 320, tier: 'deep' }),
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
+      setFeedback(d.content || '');
+    } catch (err) {
+      toast.error(err.message?.slice(0, 100) || 'Could not get feedback right now.');
+    }
+    setFeedbackLoading(false);
   }
 
   const wc = wordCount(draft);
@@ -164,7 +187,26 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
               </div>
               <textarea style={{...inp(),minHeight:260,resize:'vertical',lineHeight:1.6}} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Write your essay here…" />
             </div>
-            <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:12}} onClick={saveVersion}>Save Version</button>
+            <div style={R({gap:10,marginTop:12,flexWrap:'wrap'})}>
+              <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={saveVersion}>Save Version</button>
+              <button
+                style={{...pill('transparent', C.violetL, { fontSize:12.5, cursor:'pointer', border:`1px solid ${C.violet}35`, padding:'9px 16px' }), display:'inline-flex', alignItems:'center', gap:6, opacity: !draft.trim()||feedbackLoading?0.6:1 }}
+                disabled={!draft.trim()||feedbackLoading}
+                onClick={getEssayFeedback}
+              >
+                {feedbackLoading ? <><Loader2 size={13} className="spin"/>Metabrain is reading…</> : <><Brain size={13}/>Get Metabrain Feedback</>}
+              </button>
+            </div>
+
+            {feedback && (
+              <div style={{...glass2({padding:14}),marginTop:12,background:C.violetDim,border:`1px solid ${C.violet}25`}}>
+                <div style={R({gap:8,marginBottom:8})}>
+                  <Sparkles size={14} color={C.violetL}/>
+                  <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Metabrain Feedback</span>
+                </div>
+                <div style={{fontSize:13.5,color:C.t1,lineHeight:1.7,whiteSpace:'pre-wrap'}}>{feedback}</div>
+              </div>
+            )}
 
             {versions.length > 0 && (
               <div style={{marginTop:20,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
