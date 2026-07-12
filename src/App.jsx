@@ -26,7 +26,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP } from './data/constants';
 import { rankQuizzes, getMetabrainPickPrompt } from './lib/recommend';
 import { scorePathways } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
@@ -296,6 +296,25 @@ function Stat({label,value,icon,color=C.blue,sub,onClick,m=false}){
           {sub&&<div style={{fontSize:10,color:C.t3,marginTop:2}}>{sub}</div>}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Page header (colored icon badge + eyebrow/title/sub) ─────────────────────
+// A single reusable header pattern applied across Progress/Portfolio/Flashcards
+// so the top of every section reads as one consistent, colorful design system
+// instead of each tab inventing its own title treatment.
+function PageHeader({icon,color=C.blue,eyebrow,title,sub,right,m=false}){
+  const Ic=icon;
+  return(
+    <div style={{...glass({padding:m?16:20,background:`linear-gradient(120deg,${color}14,transparent 70%)`,border:`1px solid ${color}25`}),display:'flex',alignItems:'center',gap:m?12:16,flexWrap:'wrap'}}>
+      {Ic&&<div style={{width:m?38:46,height:m?38:46,borderRadius:14,background:`linear-gradient(135deg,${color}40,${color}18)`,border:`1.5px solid ${color}45`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${color}25`}}><Ic size={m?18:22} color={color}/></div>}
+      <div style={{flex:1,minWidth:160}}>
+        {eyebrow&&<div style={{fontSize:10,fontWeight:700,color:color,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:3}}>{eyebrow}</div>}
+        <h2 style={{fontSize:m?19:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{title}</h2>
+        {sub&&<div style={{fontSize:m?11.5:12.5,color:C.t2,marginTop:4,lineHeight:1.5,maxWidth:520}}>{sub}</div>}
+      </div>
+      {right&&<div style={{flexShrink:0}}>{right}</div>}
     </div>
   );
 }
@@ -635,6 +654,13 @@ const PATH_ICONS = {
   pharmacy:Pill, dentistry:Smile, biomedResearch:Microscope, physicalOccupTherapy:Dumbbell,
   publicHealth:Globe, healthAdmin:Landmark,
 };
+// Roadmap item key → icon + accent, used by the Portfolio Class Year Roadmap.
+const ROADMAP_ICONS = {
+  diagnostic:{Ic:Compass,color:C.blue}, flashcards:{Ic:Layers3,color:C.violet}, quiz:{Ic:Layers,color:C.green},
+  activity:{Ic:Award,color:C.orange}, clinical:{Ic:Stethoscope,color:C.cyan}, colleges:{Ic:GraduationCap,color:C.amber},
+  recommenders:{Ic:UserCheck,color:C.violetL}, essays:{Ic:ScrollText,color:C.rose}, deadlines:{Ic:CalendarDays,color:C.roseL},
+  interview:{Ic:Mic,color:C.blueL}, resume:{Ic:Award,color:C.violet}, aid:{Ic:Handshake,color:C.green}, mastery:{Ic:Route,color:C.blue},
+};
 function PathwayCard({ pathKey, p, current, onSelect, m=false }){
   const Ic = PATH_ICONS[pathKey]||Compass;
   const lessonCount = (p.units||[]).reduce((s,u)=>s+(u.lessons?.length||0),0);
@@ -747,6 +773,15 @@ export default function App({ account, onAccountChange }) {
   const [uname, setUname] = useState(''); // onboarding input
   const [vidM,  setVM]    = useState(null);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
+  const [cmdQ,    setCmdQ]    = useState('');
+
+  // ── Onboarding (multi-step, one question per screen) ─────────────────────────
+  const [obStep, setObStep] = useState(0); // 0 welcome · 1 name · 2 grade · 3 interest · 4 building
+  const [obGrade, setObGrade] = useState(null);
+  const [obInterest, setObInterest] = useState(null); // pathway key or 'unsure'
+  const [obBuildIdx, setObBuildIdx] = useState(0); // 0-2, which "building your plan" line is checked
+  const [sGrade, setSGrade] = useState(''); // settings: grade-stage editor
 
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
   // Prep and Portfolio each absorb several formerly-top-level tabs; these track
@@ -755,6 +790,30 @@ export default function App({ account, onAccountChange }) {
   const [portfolioView, setPortfolioView] = useState('overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
+
+  // ── Quick-switch command palette — one searchable jump point across every ────
+  // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
+  // absorbed sub-app inside them) reads as one thing you can move around in fast.
+  const COMMANDS = useMemo(()=>[
+    ...NAV.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
+    ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
+    ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
+  ],[goPrep,goPortfolio]);
+  const filteredCmds = useMemo(()=>{
+    const q=cmdQ.trim().toLowerCase();
+    if(!q) return COMMANDS;
+    return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
+  },[COMMANDS,cmdQ]);
+  useEffect(()=>{
+    function onKey(e){
+      if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); setCmdOpen(o=>!o); }
+      else if(e.key==='Escape'){ setCmdOpen(false); }
+    }
+    document.addEventListener('keydown',onKey);
+    return ()=>document.removeEventListener('keydown',onKey);
+  },[]);
+  useEffect(()=>{ if(!cmdOpen) setCmdQ(''); },[cmdOpen]);
+  const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
@@ -3098,6 +3157,26 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       </div>
     );
   }
+
+  // ── Onboarding "building your plan" transition — ticks off a short checklist ──
+  // then creates the account. Lives up here (not inside the JSX below) because
+  // hooks must run unconditionally on every render, before the early returns.
+  useEffect(()=>{
+    if(obStep!==4)return;
+    setObBuildIdx(0);
+    const t1=setTimeout(()=>setObBuildIdx(1),500);
+    const t2=setTimeout(()=>setObBuildIdx(2),1000);
+    const t3=setTimeout(()=>{
+      const specialty = (obInterest&&obInterest!=='unsure') ? obInterest : 'exploring';
+      const u={ name:uname.trim(), specialty, gradeStage:obGrade, xp:0, streak:1, lastActive:Date.now() };
+      saveUser(u);
+      if(!obInterest||obInterest==='unsure'){ goPrep('diagnostic'); toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`); }
+      else { goPrep('pathway'); toast.success(`Welcome, ${uname.trim()}! Your ${PATHS[specialty]?.label} pathway is ready.`); }
+    },1550);
+    return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[obStep]);
+
   // ═══ ONBOARDING ════════════════════════════════════════════════════════════════
   if(!dbReady) return <LoadingScreen/>;
 
@@ -3217,6 +3296,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
             </div>
             <div style={R({gap:10})}>
+              <button onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
@@ -3239,6 +3319,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 </div>
               </div>
             </div>
+            <button onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
+              <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
+            </button>
             <div onClick={()=>setShowAccountMenu(true)} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer'}}>
               <div style={R({gap:11,marginBottom:12})}>
                 <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
@@ -3310,6 +3393,40 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                   <button onClick={()=>setShowAccountMenu(false)} style={{background:C.s3,border:'none',borderRadius:'50%',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',color:C.t1,cursor:'pointer'}}><X size={18}/></button>
                 </div>
                 {tSettings()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ══ QUICK-SWITCH COMMAND PALETTE (⌘K) ═══════════════════════════════════ */}
+        <AnimatePresence>
+          {cmdOpen && (
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setCmdOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:500,display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:isMobile?60:'12vh'}}>
+              <motion.div initial={{opacity:0,y:-10,scale:.98}} animate={{opacity:1,y:0,scale:1}} exit={{opacity:0,y:-10,scale:.98}} transition={{duration:.16}}
+                style={{width:'min(520px,92vw)',maxHeight:'64vh',display:'flex',flexDirection:'column',background:C.s1,borderRadius:16,border:`1px solid ${C.b2}`,boxShadow:'0 24px 70px rgba(0,0,0,0.65)',overflow:'hidden'}}
+                onClick={e=>e.stopPropagation()}>
+                <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderBottom:`1px solid ${C.b1}`}}>
+                  <Search size={16} color={C.t3}/>
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
+                  <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
+                </div>
+                <div style={{overflowY:'auto',padding:8}}>
+                  {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
+                  {['Jump to','Prep','Portfolio'].map(group=>{
+                    const items=filteredCmds.filter(c=>c.group===group);
+                    if(!items.length)return null;
+                    return(
+                      <div key={group} style={{marginBottom:6}}>
+                        <div style={{fontSize:9.5,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'8px 10px 4px'}}>{group}</div>
+                        {items.map(cmd=>(
+                          <motion.div key={cmd.id} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13}}>
+                            <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span><ChevronRight size={13} color={C.t4}/>
+                          </motion.div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
               </motion.div>
             </motion.div>
           )}
