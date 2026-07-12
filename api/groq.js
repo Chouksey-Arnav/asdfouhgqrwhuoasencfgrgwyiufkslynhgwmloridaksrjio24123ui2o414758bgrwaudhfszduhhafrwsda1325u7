@@ -13,10 +13,12 @@ const MINUTE_LIMIT = 20;
 const DAILY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
 
-// Model routing: 'deep' for tutoring/coaching conversations that need real reasoning,
-// 'fast' for lightweight tasks (quick lookups, short generations) where speed/cost matter more.
+// Model routing: 'deep' for tasks that benefit from stronger reasoning (still a
+// cheap model — llama-3.3-70b-versatile was ~10x pricier for marginal gains on
+// this app's short, well-scoped tasks), 'fast' for lightweight chat turns where
+// speed/cost matter most and Groq's free/low-tier TPM caps bite hardest.
 const MODELS = {
-  deep: 'llama-3.3-70b-versatile',
+  deep: 'openai/gpt-oss-20b',
   fast: 'llama-3.1-8b-instant',
 };
 
@@ -142,25 +144,60 @@ export default async function handler(req, res) {
     });
   }
 
-  // ── Call Groq API ──────────────────────────────────────────────────────────
+  // ── Call Groq API (with timeout + one retry on transient failure) ──────────
+  const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), 1500);
+
+  async function callGroqOnce(useModel, timeoutMs) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${GROQ_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: useModel,
+          max_tokens: clampedTokens,
+          temperature: 0.7,
+          messages: groqMessages,
+        }),
+        signal: controller.signal,
+      });
+      const data = await response.json();
+      return { response, data };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Groq's message.content is normally a string, but some models/response
+  // shapes can return an array of content parts (e.g. [{type:'text',text:'…'}]).
+  // Coerce defensively so the client never receives anything but a string.
+  function extractText(message) {
+    const c = message?.content;
+    if (typeof c === 'string' && c.trim()) return c;
+    if (Array.isArray(c)) {
+      const joined = c.map(part => (typeof part === 'string' ? part : part?.text || '')).join('');
+      if (joined.trim()) return joined;
+    }
+    // Some reasoning models put the answer in `reasoning`/`reasoning_content`
+    // when `content` is empty.
+    if (typeof message?.reasoning === 'string' && message.reasoning.trim()) return message.reasoning;
+    if (typeof message?.reasoning_content === 'string' && message.reasoning_content.trim()) return message.reasoning_content;
+    return '';
+  }
+
   try {
-    const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), 1500);
+    let { response, data } = await callGroqOnce(model, 20000);
 
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${GROQ_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model,
-        max_tokens: clampedTokens,
-        temperature: 0.7,
-        messages: groqMessages,
-      }),
-    });
-
-    const data = await response.json();
+    // One retry on transient failure (5xx, network hiccup) so a single blip
+    // doesn't dead-end the chat. Skip 429s — retrying immediately into a rate
+    // limit just wastes the retry.
+    if (!response.ok && response.status >= 500) {
+      ({ response, data } = await callGroqOnce(model, 15000));
+    }
 
     if (!response.ok) {
       const errMsg = data?.error?.message || `Metabrain error (${response.status})`;
@@ -173,9 +210,9 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: errMsg });
     }
 
-    const content = data?.choices?.[0]?.message?.content;
+    const content = extractText(data?.choices?.[0]?.message);
     if (!content) {
-      return res.status(502).json({ error: 'Empty response from Metabrain.' });
+      return res.status(502).json({ error: 'Metabrain had trouble forming a response. Please try again.' });
     }
 
     addRequestToday(ip);
@@ -184,7 +221,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       content,
-      model_used: model,
+      model_used: data?.model || model,
       requestsUsedToday,
       requestsRemaining,
       dailyLimit: DAILY_LIMIT,
@@ -192,6 +229,9 @@ export default async function handler(req, res) {
 
   } catch (err) {
     console.error('API handler error:', err);
+    if (err?.name === 'AbortError') {
+      return res.status(504).json({ error: 'Metabrain took too long to respond. Please try again.' });
+    }
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
 }

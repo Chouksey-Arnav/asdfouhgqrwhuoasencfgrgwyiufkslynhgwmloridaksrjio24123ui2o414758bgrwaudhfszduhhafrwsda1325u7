@@ -1,8 +1,8 @@
 {
-  "name": "ascendprep",
-  "version": "2.0.0",
+  "name": "medschoolprep",
+  "version": "3.0.0",
   "type": "module",
-  "description": "SAT/ACT preparation and college admissions coaching",
+  "description": "A personalized path into medicine for high schoolers — pathway diagnostic, SAT/ACT prep, and application portfolio",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,6 +12,7 @@
     "@supabase/supabase-js": "^2.110.1",
     "canvas-confetti": "^1.9.3",
     "chart.js": "^4.4.4",
+    "compromise": "^14.15.1",
     "dexie": "^4.0.8",
     "dompurify": "^3.1.6",
     "framer-motion": "^11.3.31",

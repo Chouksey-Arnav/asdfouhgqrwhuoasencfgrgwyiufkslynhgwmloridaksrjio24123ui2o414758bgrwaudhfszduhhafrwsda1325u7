@@ -42,6 +42,32 @@ db.version(4).stores({
   gpaEntries: null,
 });
 
+// v5: Clinical/shadowing hours, LOR/committee-letter recommenders, and
+// interview practice sessions (Standard/MMI/CASPer) — student-filled logs
+// rather than official application records, so they stay local-only like
+// quiz/flashcard data instead of requiring new Supabase tables/RLS policies.
+db.version(5).stores({
+  clinicalHours:     '++id, siteName, siteType, hours, entryDate',
+  recommenders:      '++id, name, relationship, status, type',
+  interviewSessions: '++id, mode, pathwayKey, completedAt',
+});
+
+// v6: Dopamine-loop gamification additions — earned streak-freeze tokens
+// (loss-aversion safety net), the daily check-in cycle, and cosmetic-only
+// chest unlocks.
+db.version(6).stores({
+  streakFreezes: '++id, earnedAt, usedOn',
+  checkins:      'date, day',
+  cosmetics:     'key, unlockedAt',
+});
+
+// v7: Per-deck creation timestamp for custom flashcard decks, so newly
+// generated/created decks can be pinned to the top of the "All Decks" list
+// (newest first) instead of trailing behind the built-in decks.
+db.version(7).stores({
+  deckMeta: 'name, createdAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -95,12 +121,21 @@ export async function saveDeck(deckName, cards) {
   await db.flashCards.where('deckName').equals(deckName).delete();
   const rows = cards.map(c => ({ deckName, ...c }));
   await db.flashCards.bulkAdd(rows);
+  // First time we see this deck name, stamp it so it can be sorted
+  // newest-first in the deck list. Re-saves (editing cards) don't bump it.
+  const existing = await db.deckMeta.get(deckName);
+  if (!existing) await db.deckMeta.put({ name: deckName, createdAt: Date.now() });
 }
 export async function updateCard(id, updates) {
   await db.flashCards.update(id, updates);
 }
 export async function deleteDeck(deckName) {
   await db.flashCards.where('deckName').equals(deckName).delete();
+  await db.deckMeta.delete(deckName);
+}
+export async function getDeckCreatedAtMap() {
+  const rows = await db.deckMeta.toArray();
+  return Object.fromEntries(rows.map(r => [r.name, r.createdAt]));
 }
 export async function recordCardReview(cardId) {
   await db.cardReviews.add({ cardId, reviewedAt: Date.now() });
@@ -151,6 +186,8 @@ export async function recordStudyToday() {
 export async function getStreak() {
   const days = await db.studyDays.orderBy('date').reverse().toArray();
   if (!days.length) return 0;
+  const freezes = await db.streakFreezes.toArray();
+  const bridgedDates = new Set(freezes.filter(f => f.usedOn).map(f => f.usedOn));
   let streak = 0;
   let check = new Date();
   check.setHours(0,0,0,0);
@@ -161,9 +198,72 @@ export async function getStreak() {
     if (diff === 0 || diff === 1) {
       streak++;
       check = d;
+    } else if (diff === 2) {
+      // Exactly one full day was missed — bridge it only if a streak freeze
+      // was already spent to cover that specific date (see
+      // checkAndApplyStreakFreeze, called once per app load).
+      const missed = new Date(check);
+      missed.setDate(missed.getDate() - 1);
+      const missedKey = missed.toISOString().split('T')[0];
+      if (bridgedDates.has(missedKey)) { streak++; check = d; }
+      else break;
     } else break;
   }
   return streak;
+}
+
+// ── Streak Freezes ────────────────────────────────────────────────────────────
+// Earned (not purchased) safety net against loss-aversion streak breaks —
+// capped at 2 held at once so consistency still matters.
+const MAX_STREAK_FREEZES = 2;
+
+export async function getStreakFreezeCount() {
+  return db.streakFreezes.filter(f => !f.usedOn).count();
+}
+export async function grantStreakFreeze() {
+  const held = await getStreakFreezeCount();
+  if (held >= MAX_STREAK_FREEZES) return false;
+  await db.streakFreezes.add({ earnedAt: Date.now(), usedOn: null });
+  return true;
+}
+/**
+ * Run once per app load, before getStreak(). If exactly one day was missed
+ * since the last study day and an unused freeze is available, spends it to
+ * bridge that specific date so getStreak() can see it via `usedOn`.
+ * Returns true if a freeze was newly applied this call.
+ */
+export async function checkAndApplyStreakFreeze() {
+  const days = await db.studyDays.orderBy('date').reverse().toArray();
+  if (!days.length) return false;
+  const mostRecent = new Date(days[0].date); mostRecent.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const gapDays = Math.round((today - mostRecent) / 86400000);
+  if (gapDays !== 2) return false; // only bridges a single missed day
+  const missed = new Date(mostRecent); missed.setDate(missed.getDate() + 1);
+  const missedKey = missed.toISOString().split('T')[0];
+  const alreadyBridged = await db.streakFreezes.where('usedOn').equals(missedKey).count();
+  if (alreadyBridged) return false;
+  const unused = await db.streakFreezes.filter(f => !f.usedOn).first();
+  if (!unused) return false;
+  await db.streakFreezes.update(unused.id, { usedOn: missedKey });
+  return true;
+}
+
+// ── Daily Check-in ────────────────────────────────────────────────────────────
+export async function getCheckin(date) {
+  return db.checkins.get(date);
+}
+export async function recordCheckin(date, day) {
+  try { await db.checkins.add({ date, day }); return true; } catch { return false; }
+}
+
+// ── Cosmetics (chest-reveal unlocks) ─────────────────────────────────────────
+export async function getCosmetics() {
+  const rows = await db.cosmetics.toArray();
+  return new Set(rows.map(r => r.key));
+}
+export async function unlockCosmetic(key) {
+  try { await db.cosmetics.add({ key, unlockedAt: Date.now() }); return true; } catch { return false; }
 }
 export async function getStudyDaysCount() {
   return db.studyDays.count();
@@ -171,6 +271,39 @@ export async function getStudyDaysCount() {
 export async function getStudyDays() {
   const rows = await db.studyDays.toArray();
   return rows.map(r => r.date);
+}
+
+// ── Clinical / Shadowing Hours ────────────────────────────────────────────────
+export async function getClinicalHours() {
+  return db.clinicalHours.orderBy('entryDate').reverse().toArray();
+}
+export async function addClinicalHours(entry) {
+  return db.clinicalHours.add({ ...entry, loggedAt: Date.now() });
+}
+export async function deleteClinicalHours(id) {
+  await db.clinicalHours.delete(id);
+}
+
+// ── Recommenders (LOR writers / committee letters) ───────────────────────────
+export async function getRecommenders() {
+  return db.recommenders.toArray();
+}
+export async function addRecommender(entry) {
+  return db.recommenders.add({ ...entry, addedAt: Date.now() });
+}
+export async function updateRecommender(id, updates) {
+  await db.recommenders.update(id, updates);
+}
+export async function deleteRecommender(id) {
+  await db.recommenders.delete(id);
+}
+
+// ── Interview Practice Sessions (Standard/MMI/CASPer) ─────────────────────────
+export async function getInterviewSessions() {
+  return db.interviewSessions.orderBy('completedAt').reverse().toArray();
+}
+export async function addInterviewSession(entry) {
+  return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
 }
 
 // ── Full export ────────────────────────────────────────────────────────────────
@@ -181,13 +314,16 @@ export async function exportAllData() {
     quizScores: await db.quizScores.toArray(),
     achievements: await db.achievements.toArray(),
     studyDays: await db.studyDays.toArray(),
+    clinicalHours: await db.clinicalHours.toArray(),
+    recommenders: await db.recommenders.toArray(),
+    interviewSessions: await db.interviewSessions.toArray(),
     exportDate: new Date().toISOString(),
-    version: '2.0',
+    version: '3.0',
   };
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `ascendprep-backup-${data.exportDate.split('T')[0]}.json`;
+  a.href = url; a.download = `medschoolprep-backup-${data.exportDate.split('T')[0]}.json`;
   a.click(); URL.revokeObjectURL(url);
 }
 
@@ -197,5 +333,8 @@ export async function clearAllData() {
     db.user.clear(), db.lessons.clear(), db.quizScores.clear(),
     db.flashCards.clear(), db.catPerf.clear(),
     db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
+    db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
+    db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
+    db.deckMeta.clear(),
   ]);
 }

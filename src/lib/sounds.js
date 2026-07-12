@@ -40,6 +40,8 @@ export const SFX = {
   achieve:  () => { [523,659,784,988,1047].forEach((f,i) => setTimeout(() => tone(f, 0.3, 'sine', 0.1), i*60)); },
   click:    () => tone(660, 0.05, 'triangle', 0.04),
   select:   () => tone(520, 0.08, 'sine', 0.05),
+  jackpot:  () => { [523,659,784,1047,1319,1568].forEach((f,i) => setTimeout(() => tone(f, 0.35, 'sine', 0.12), i*70)); setTimeout(() => tone(1568, 0.7, 'sine', 0.14, 0.01, 0.6), 450); },
+  chest:    () => { tone(330, 0.12, 'triangle', 0.07); setTimeout(() => tone(660, 0.25, 'sine', 0.1), 110); },
 };
 
 let sfxEnabled = true;

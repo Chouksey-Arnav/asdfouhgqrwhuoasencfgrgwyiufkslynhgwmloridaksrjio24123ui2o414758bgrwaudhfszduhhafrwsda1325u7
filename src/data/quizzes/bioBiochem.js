@@ -1317,4 +1317,1276 @@ export const BIO_BIOCHEM_QUIZZES = [
       { q:`The 'prodrug' concept is used in which clinical scenario and involves what pharmacological principle?`, ch:[`Prodrugs are used when a drug has no effect on its own`,`Prodrugs are pharmacologically inactive (or weakly active) compounds that are enzymatically converted to active drug in vivo — used to: improve bioavailability (enalapril → enalaprilat, ACE inhibitor; oseltamivir → oseltamivir carboxylate), improve permeability (valacyclovir → acyclovir), target specific tissues (codeine → morphine by CYP2D6), or reduce toxicity (5-fluorouracil prodrugs: capecitabine)`,`Prodrugs are always more toxic than the active drug`,`Prodrugs cannot be converted if CYP enzymes are absent`], ans:1, exp:`Prodrug examples by activation mechanism: Ester hydrolysis: enalapril (enalaprilat by esterases), valacyclovir (acyclovir by valacyclovirase), oseltamivir (ester hydrolysis in liver), aspirin (no prodrug, but rapidly hydrolyzed to salicylate). CYP-mediated: codeine → morphine (CYP2D6, ~10%); clopidogrel → active thiolactone (CYP2C19, CYP3A4); tamoxifen → endoxifen (CYP2D6). Bacteria/tumor-specific activation: 5-fluorouracil (FUDR) activated in rapidly dividing cells; capecitabine → 5-FU by thymidine phosphorylase (higher in tumor tissue). Phosphatase activation: tenofovir disoproxil fumarate → tenofovir diphosphate. Classic prodrug failure: clopidogrel in CYP2C19 PMs → inadequate platelet inhibition (FDA black box). Prodrug advantage: overcome poor solubility, irritation, instability, poor absorption.` },
     ]
   },
+
+{
+    id:`bb71`,
+    cat:`Life Sciences`,
+    title:`Intro to Cell Structure & Function`,
+    diff:`Easy`,
+    qs:[
+      { q:`What is the basic structural and functional unit of all living organisms?`, ch:[`Organ`,`Cell`,`Tissue`,`Organelle`], ans:1, exp:`The cell is the smallest unit that can carry out all the functions necessary for life, from single-celled bacteria to complex multicellular organisms.` },
+      { q:`Which characteristic distinguishes prokaryotic cells from eukaryotic cells?`, ch:[`Prokaryotic cells have a membrane-bound nucleus`,`Prokaryotic cells contain mitochondria`,`Prokaryotic cells lack a membrane-bound nucleus`,`Prokaryotic cells are always multicellular`], ans:2, exp:`Prokaryotes, such as bacteria, have their DNA located in the cytoplasm rather than enclosed within a nuclear membrane, unlike eukaryotic cells.` },
+      { q:`Which organelle stores a eukaryotic cell's genetic material (DNA)?`, ch:[`Nucleus`,`Mitochondrion`,`Ribosome`,`Golgi apparatus`], ans:0, exp:`The nucleus houses the cell's DNA and controls gene expression, acting as the cell's control center.` },
+      { q:`Which organelle is often called the 'powerhouse of the cell' because it generates most of the cell's ATP?`, ch:[`Chloroplast`,`Lysosome`,`Vacuole`,`Mitochondrion`], ans:3, exp:`Mitochondria carry out cellular respiration, converting the chemical energy in glucose into ATP that the cell can use.` },
+      { q:`Which cell structures are the sites where proteins are assembled from amino acids?`, ch:[`Lysosomes`,`Ribosomes`,`Peroxisomes`,`Centrioles`], ans:1, exp:`Ribosomes translate the genetic instructions carried by mRNA into chains of amino acids, building proteins.` },
+      { q:`Which structure provides rigidity and protection to plant cells but is not found in animal cells?`, ch:[`Cell membrane`,`Nuclear envelope`,`Cell wall`,`Cytoskeleton`], ans:2, exp:`The rigid, cellulose-based cell wall surrounds plant cells, giving them structural support and shape, a feature animal cells lack.` },
+      { q:`What is the main job of the Golgi apparatus?`, ch:[`Modify, sort, and package proteins for transport`,`Produce ATP for the cell`,`Store the cell's DNA`,`Break down old organelles`], ans:0, exp:`The Golgi apparatus acts like a shipping center, modifying proteins made by the ER and packaging them into vesicles for delivery inside or outside the cell.` },
+      { q:`Rough endoplasmic reticulum gets its 'rough' appearance from attached structures that also indicate its role in protein synthesis. What are these structures?`, ch:[`Mitochondria`,`Lysosomes`,`Chloroplasts`,`Ribosomes`], ans:3, exp:`Ribosomes studded on the rough ER's surface synthesize proteins that are then folded and processed within the ER.` },
+      { q:`Which organelle contains enzymes that break down waste materials and cellular debris?`, ch:[`Nucleolus`,`Lysosome`,`Vacuole`,`Cell wall`], ans:1, exp:`Lysosomes act as the cell's recycling and waste-disposal centers, using digestive enzymes to break down damaged organelles and unwanted material.` },
+      { q:`Which organelle captures light energy and uses it to produce sugars, and is found in plant cells but not animal cells?`, ch:[`Mitochondrion`,`Ribosome`,`Chloroplast`,`Golgi apparatus`], ans:2, exp:`Chloroplasts contain chlorophyll, which absorbs light energy that is used to convert carbon dioxide and water into glucose during photosynthesis.` },
+      { q:`What is the primary function of the cell membrane?`, ch:[`To regulate what substances enter and exit the cell`,`To produce energy for the cell`,`To store hereditary information`,`To synthesize proteins`], ans:0, exp:`The cell membrane is selectively permeable, controlling the passage of nutrients, waste, and other molecules into and out of the cell.` },
+      { q:`According to cell theory, which statement is accurate?`, ch:[`Only animal cells are considered true cells`,`Cells can only arise spontaneously from non-living matter`,`Plant and animal cells have identical structures`,`All living organisms are made of one or more cells, and new cells arise from existing cells`], ans:3, exp:`Cell theory establishes that the cell is the basic unit of life in all organisms and that cells reproduce by dividing from preexisting cells.` }
+    ]
+  },
+  {
+    id:`bb72`,
+    cat:`Life Sciences`,
+    title:`Basic Biomolecules: Carbohydrates, Lipids, Proteins & Nucleic Acids`,
+    diff:`Easy`,
+    qs:[
+      { q:`What is the monomer (building block) of carbohydrates?`, ch:[`Monosaccharide`,`Amino acid`,`Nucleotide`,`Fatty acid`], ans:0, exp:`Monosaccharides, such as glucose and fructose, are simple sugars that link together to form larger carbohydrates like starch and cellulose.` },
+      { q:`Which polysaccharide do plants use to store energy?`, ch:[`Cellulose`,`Glycogen`,`Chitin`,`Starch`], ans:3, exp:`Plants store excess glucose as starch, a polysaccharide that can be broken back down into glucose when energy is needed.` },
+      { q:`Which polysaccharide is used by animals to store energy, mainly in the liver and muscles?`, ch:[`Starch`,`Glycogen`,`Cellulose`,`Peptidoglycan`], ans:1, exp:`Glycogen is a highly branched polysaccharide that animals rapidly build and break down to store and release glucose as needed.` },
+      { q:`Which polysaccharide provides structural support in plant cell walls and cannot be digested by humans?`, ch:[`Starch`,`Glycogen`,`Cellulose`,`Sucrose`], ans:2, exp:`Cellulose forms tough fibers in plant cell walls; humans lack the enzyme to break its bonds, so it passes through our digestive system as dietary fiber.` },
+      { q:`What is the monomer that links together to form proteins?`, ch:[`Amino acids`,`Monosaccharides`,`Nucleotides`,`Glycerol molecules`], ans:0, exp:`Proteins are built from chains of amino acids, each containing an amino group, a carboxyl group, and a unique side chain.` },
+      { q:`What type of chemical bond links amino acids together in a protein chain?`, ch:[`Hydrogen bond`,`Ionic bond`,`Glycosidic bond`,`Peptide bond`], ans:3, exp:`A peptide bond forms between the carboxyl group of one amino acid and the amino group of the next, releasing a water molecule in the process.` },
+      { q:`Many proteins function as enzymes. What is the main role of an enzyme?`, ch:[`To store genetic information`,`To speed up chemical reactions by lowering activation energy`,`To provide long-term energy storage`,`To form the fluid portion of the cell membrane`], ans:1, exp:`Enzymes are biological catalysts that speed up reactions without being consumed, by lowering the amount of energy needed to start the reaction.` },
+      { q:`Triglycerides, a common type of lipid used for long-term energy storage, are made of which components?`, ch:[`Two amino acids and a phosphate group`,`A sugar and a nitrogenous base`,`Glycerol and three fatty acids`,`Two nucleotides joined together`], ans:2, exp:`A triglyceride consists of a glycerol backbone bonded to three fatty acid chains, forming a molecule that stores more energy per gram than carbohydrates.` },
+      { q:`Phospholipids, the main structural component of cell membranes, spontaneously form a bilayer in water because they have which property?`, ch:[`A hydrophilic head and hydrophobic tails`,`Only hydrophobic regions throughout`,`Only hydrophilic regions throughout`,`A positively charged core`], ans:0, exp:`Phospholipids have a water-attracting phosphate head and water-repelling fatty acid tails, causing them to spontaneously arrange into a bilayer in water.` },
+      { q:`What is the monomer of nucleic acids such as DNA and RNA?`, ch:[`Amino acid`,`Monosaccharide`,`Fatty acid`,`Nucleotide`], ans:3, exp:`Nucleotides, each made of a sugar, a phosphate group, and a nitrogenous base, link together to form the long strands of DNA and RNA.` },
+      { q:`Which of the following correctly identifies a key difference between DNA and RNA?`, ch:[`DNA contains uracil while RNA contains thymine`,`DNA contains the sugar deoxyribose while RNA contains ribose`,`DNA is single-stranded while RNA is double-stranded`,`DNA is found only in plant cells while RNA is found only in animal cells`], ans:1, exp:`DNA's sugar is deoxyribose, which lacks an oxygen atom present in RNA's ribose sugar; DNA also uses thymine instead of RNA's uracil.` },
+      { q:`What is the primary biological function of DNA?`, ch:[`To catalyze metabolic reactions`,`To provide immediate energy for cell activities`,`To store and transmit an organism's genetic information`,`To transport oxygen throughout the body`], ans:2, exp:`DNA encodes the instructions for building proteins and is passed from parent to offspring, making it the molecule responsible for heredity.` }
+    ]
+  },
+  {
+    id:`bb73`,
+    cat:`Life Sciences`,
+    title:`The Scientific Method & Biological Classification`,
+    diff:`Easy`,
+    qs:[
+      { q:`What is typically the first step of the scientific method?`, ch:[`Form a conclusion`,`Conduct an experiment`,`Make an observation and ask a question`,`Publish the results`], ans:2, exp:`Scientific inquiry begins with observing the natural world and asking a specific, testable question about what was observed.` },
+      { q:`What is a hypothesis?`, ch:[`A proven scientific fact`,`A testable, tentative explanation or prediction for an observation`,`A summary of all previous experiments on a topic`,`A law that has been mathematically confirmed`], ans:1, exp:`A hypothesis is an educated, testable guess that can be supported or refuted through experimentation; it is not yet an established fact.` },
+      { q:`In an experiment testing how fertilizer amount affects plant growth, what is the independent variable?`, ch:[`The height of the plants`,`The type of soil used`,`The temperature of the room`,`The amount of fertilizer applied`], ans:3, exp:`The independent variable is the factor the researcher deliberately changes or manipulates, in this case the amount of fertilizer given to each plant.` },
+      { q:`In the same fertilizer experiment, what is the dependent variable?`, ch:[`The height of the plants, measured as the outcome`,`The amount of fertilizer applied`,`The number of pots used`,`The brand of fertilizer chosen`], ans:0, exp:`The dependent variable is what the researcher measures to see how it responds to changes in the independent variable, here plant growth.` },
+      { q:`Why do researchers include a control group in an experiment?`, ch:[`To increase the number of trials`,`To introduce a second independent variable`,`To provide a baseline for comparison that isolates the effect of the variable being tested`,`To make the experiment take longer`], ans:2, exp:`A control group is not exposed to the experimental treatment, so comparing it to the test group shows whether the treatment actually caused the observed effect.` },
+      { q:`How does a scientific theory differ from a scientific law?`, ch:[`A theory is guaranteed to be true forever, while a law can be disproven`,`A theory explains why a phenomenon occurs, while a law describes a consistent pattern that is observed`,`A theory requires no supporting evidence, while a law does`,`A law is only an educated guess, while a theory is proven fact`], ans:1, exp:`Laws describe what happens in nature, often as a consistent pattern, while theories are well-supported explanations of why that pattern occurs, based on extensive evidence.` },
+      { q:`Which sequence correctly lists the taxonomic hierarchy from broadest to most specific?`, ch:[`Kingdom, Domain, Class, Phylum, Order, Family, Genus, Species`,`Species, Genus, Family, Order, Class, Phylum, Kingdom, Domain`,`Domain, Kingdom, Class, Phylum, Family, Order, Genus, Species`,`Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species`], ans:3, exp:`From broadest to most specific, the standard taxonomic hierarchy is Domain, Kingdom, Phylum, Class, Order, Family, Genus, Species.` },
+      { q:`What naming system does binomial nomenclature use to identify species?`, ch:[`A two-part name combining the genus and species`,`A single common name agreed upon internationally`,`A numerical code based on chromosome count`,`A name based only on physical appearance`], ans:0, exp:`Binomial nomenclature, developed by Carl Linnaeus, gives every species a unique two-part Latin name consisting of its genus followed by its specific epithet, such as Homo sapiens.` },
+      { q:`Which taxonomic rank represents the most specific, narrowly defined group of organisms?`, ch:[`Kingdom`,`Family`,`Species`,`Phylum`], ans:2, exp:`Species is the most specific taxonomic rank, generally referring to a group of organisms that can interbreed and produce fertile offspring.` },
+      { q:`What are the three domains used in modern taxonomy to classify all life?`, ch:[`Plantae, Animalia, and Fungi`,`Bacteria, Archaea, and Eukarya`,`Prokarya, Eukarya, and Protista`,`Monera, Fungi, and Plantae`], ans:1, exp:`The three-domain system groups all life into Bacteria, Archaea, and Eukarya based on fundamental differences in cell structure and molecular biology.` },
+      { q:`Which kingdom consists mainly of multicellular, heterotrophic organisms that lack cell walls and typically can move?`, ch:[`Plantae`,`Fungi`,`Protista`,`Animalia`], ans:3, exp:`Animalia includes multicellular organisms that obtain nutrients by consuming other organisms and generally lack the rigid cell walls found in plants and fungi.` },
+      { q:`Which kingdom includes multicellular, autotrophic organisms with cell walls made of cellulose?`, ch:[`Plantae`,`Animalia`,`Fungi`,`Archaea`], ans:0, exp:`Plantae consists of organisms like trees and flowers that produce their own food through photosynthesis and have cellulose-based cell walls for support.` }
+    ]
+  },
+  {
+    id:`bb74`,
+    cat:`Life Sciences`,
+    title:`Cell Membrane & Basic Transport`,
+    diff:`Easy`,
+    qs:[
+      { q:`The fluid mosaic model describes the cell membrane as being made of what?`, ch:[`A rigid, solid wall of protein`,`A single layer of cholesterol molecules`,`A static, unmoving layer of carbohydrates`,`A flexible phospholipid bilayer with proteins embedded and free to move within it`], ans:3, exp:`The fluid mosaic model describes the membrane as a dynamic structure in which phospholipids and proteins can shift and move laterally, like objects floating in a fluid.` },
+      { q:`What does it mean for the cell membrane to be 'selectively permeable'?`, ch:[`It allows some substances to cross while blocking others`,`It allows every substance to pass through freely`,`It blocks all substances from entering or leaving the cell`,`It only allows water to cross`], ans:0, exp:`Selective permeability lets the cell control its internal environment by permitting certain molecules, like small nonpolar ones, to cross easily while restricting others.` },
+      { q:`What is diffusion?`, ch:[`Movement of water only, from low solute concentration to high solute concentration`,`Movement of molecules using ATP energy against a concentration gradient`,`Movement of particles from an area of higher concentration to an area of lower concentration`,`Movement of large molecules by vesicle formation`], ans:2, exp:`Diffusion is the passive movement of particles from where they are more concentrated to where they are less concentrated, driven by random molecular motion, until equilibrium is reached.` },
+      { q:`What is osmosis?`, ch:[`The active transport of ions across a membrane`,`The diffusion of water across a selectively permeable membrane`,`The engulfing of large particles by the cell membrane`,`The movement of proteins through the Golgi apparatus`], ans:1, exp:`Osmosis is a special case of diffusion in which water moves across a selectively permeable membrane from an area of lower solute concentration to higher solute concentration.` },
+      { q:`If a cell is placed in a hypertonic solution, what happens to it?`, ch:[`It swells and may burst`,`It remains completely unchanged`,`It divides more rapidly`,`It loses water and shrinks`], ans:3, exp:`In a hypertonic solution, the solute concentration outside the cell is higher than inside, so water leaves the cell by osmosis, causing it to shrink.` },
+      { q:`If a cell is placed in a hypotonic solution, what happens to it?`, ch:[`It gains water and may swell or burst`,`It loses water and shrivels`,`It stays exactly the same size`,`It immediately stops all transport`], ans:0, exp:`In a hypotonic solution, the solute concentration is lower outside the cell than inside, so water enters the cell by osmosis, causing it to swell.` },
+      { q:`What happens to a cell placed in an isotonic solution?`, ch:[`The cell shrinks dramatically`,`The cell swells and bursts`,`There is no net movement of water in or out of the cell`,`All active transport stops permanently`], ans:2, exp:`In an isotonic solution, the solute concentration inside and outside the cell is equal, so water moves in and out at the same rate, resulting in no net change in cell size.` },
+      { q:`Facilitated diffusion differs from simple diffusion in that it...`, ch:[`Requires ATP to move molecules against their gradient`,`Uses specific membrane transport proteins to help molecules cross, but still moves molecules down their concentration gradient`,`Only occurs in plant cells`,`Involves the formation of vesicles`], ans:1, exp:`Facilitated diffusion is still passive and moves substances down their concentration gradient, but it relies on channel or carrier proteins to help larger or charged molecules cross the membrane.` },
+      { q:`Active transport is defined by which of the following?`, ch:[`Movement of substances down their concentration gradient without any energy input`,`Movement of water only`,`Formation of vesicles to engulf food particles`,`Movement of substances across a membrane against their concentration gradient, which requires energy input, usually from ATP`], ans:3, exp:`Unlike diffusion, active transport moves substances from low to high concentration, working against the natural gradient, so the cell must expend energy in the form of ATP.` },
+      { q:`What is endocytosis?`, ch:[`A process in which the cell membrane folds inward to engulf material, bringing it into the cell within a vesicle`,`A process in which vesicles release their contents outside the cell`,`The diffusion of gases across the membrane`,`The synthesis of new membrane phospholipids`], ans:0, exp:`During endocytosis, the cell membrane wraps around external material and pinches off to form a vesicle inside the cell, allowing the cell to take in large particles or fluids.` },
+      { q:`What is exocytosis?`, ch:[`The passive diffusion of ions into the cell`,`The shrinking of a cell in a hypertonic solution`,`A process in which a vesicle inside the cell fuses with the cell membrane, releasing its contents to the outside`,`The breakdown of the nuclear membrane during cell division`], ans:2, exp:`Exocytosis is essentially the reverse of endocytosis: an internal vesicle merges with the plasma membrane, expelling its contents such as hormones or waste products outside the cell.` },
+      { q:`The sodium-potassium pump, which moves sodium ions out of and potassium ions into a cell against their concentration gradients, is an example of which transport process?`, ch:[`Simple diffusion`,`Active transport`,`Osmosis`,`Facilitated diffusion`], ans:1, exp:`Because the sodium-potassium pump moves ions against their concentration gradients, it requires energy from ATP, making it a classic example of active transport.` }
+    ]
+  },
+  {
+    id:`bb75`,
+    cat:`Life Sciences`,
+    title:`Photosynthesis Basics`,
+    diff:`Easy`,
+    qs:[
+      { q:`Which equation correctly summarizes photosynthesis?`, ch:[`Glucose + oxygen -> carbon dioxide + water + energy`,`Carbon dioxide + water + light energy -> glucose + oxygen`,`Glucose -> carbon dioxide + water + ATP`,`Oxygen + water -> glucose + carbon dioxide`], ans:1, exp:`Photosynthesis converts carbon dioxide and water into glucose and oxygen, using light energy captured by chlorophyll; this is essentially the reverse of cellular respiration.` },
+      { q:`In which organelle does photosynthesis take place?`, ch:[`Mitochondrion`,`Nucleus`,`Ribosome`,`Chloroplast`], ans:3, exp:`Chloroplasts contain the pigments and enzymes needed to capture light energy and convert it into chemical energy stored in glucose.` },
+      { q:`Which pigment is primarily responsible for absorbing light energy during photosynthesis?`, ch:[`Chlorophyll`,`Melanin`,`Hemoglobin`,`Keratin`], ans:0, exp:`Chlorophyll absorbs mostly red and blue wavelengths of light while reflecting green light, which is why most plants appear green.` },
+      { q:`Why do most plants appear green to our eyes?`, ch:[`Chlorophyll absorbs green light and uses it for photosynthesis`,`Plant cell walls are naturally green`,`Chlorophyll reflects green light rather than absorbing it`,`Green is the only color of visible light`], ans:2, exp:`Chlorophyll absorbs red and blue light efficiently but reflects green wavelengths back to our eyes, giving chlorophyll-rich plant tissue its green color.` },
+      { q:`Where in the chloroplast do the light-dependent reactions of photosynthesis occur?`, ch:[`Stroma`,`Thylakoid membrane`,`Outer chloroplast membrane`,`Cytoplasm`], ans:1, exp:`The light-dependent reactions take place in the thylakoid membranes, where chlorophyll and other pigments capture light energy to produce ATP and NADPH.` },
+      { q:`Where does the Calvin cycle (light-independent reactions) take place within the chloroplast?`, ch:[`Thylakoid membrane`,`Outer membrane`,`Intermembrane space`,`Stroma`], ans:3, exp:`The Calvin cycle occurs in the stroma, the fluid-filled space surrounding the thylakoids, where carbon dioxide is fixed into sugar using ATP and NADPH.` },
+      { q:`What products of the light-dependent reactions are used to power the Calvin cycle?`, ch:[`ATP and NADPH`,`Glucose and oxygen`,`Carbon dioxide and water`,`Pyruvate and NADH`], ans:0, exp:`The light reactions generate energy-carrying molecules ATP and NADPH, which supply the energy and electrons needed to build sugar during the Calvin cycle.` },
+      { q:`What gas is released as a byproduct of photosynthesis?`, ch:[`Carbon dioxide`,`Nitrogen`,`Oxygen`,`Methane`], ans:2, exp:`During the light reactions, water molecules are split apart, releasing oxygen gas as a byproduct that is released into the atmosphere.` },
+      { q:`What gas do plants take in from the atmosphere to use in photosynthesis?`, ch:[`Oxygen`,`Carbon dioxide`,`Nitrogen`,`Hydrogen`], ans:1, exp:`Plants absorb carbon dioxide through small openings in their leaves and use its carbon atoms to build glucose during the Calvin cycle.` },
+      { q:`What are the small openings on the underside of leaves that allow gases like carbon dioxide and oxygen to enter and exit called?`, ch:[`Chloroplasts`,`Xylem`,`Guard cells`,`Stomata`], ans:3, exp:`Stomata are tiny pores, typically on the underside of leaves, that open and close to regulate gas exchange and water loss.` },
+      { q:`What is the main sugar product generated by the Calvin cycle?`, ch:[`Glucose`,`Sucrose`,`Cellulose`,`Starch`], ans:0, exp:`The Calvin cycle uses carbon dioxide, ATP, and NADPH to build small carbon compounds that cells combine to form glucose and other sugars.` },
+      { q:`Why is photosynthesis considered essential to most ecosystems?`, ch:[`It breaks down organic molecules to release energy for consumers`,`It removes all oxygen from the atmosphere`,`It allows producers to convert light energy into chemical energy that forms the base of most food chains`,`It only benefits the plant performing it and no other organisms`], ans:2, exp:`Photosynthetic organisms, called producers, transform light energy into chemical energy stored in glucose, which directly or indirectly feeds nearly every other organism in an ecosystem.` }
+    ]
+  },
+  {
+    id:`bb76`,
+    cat:`Life Sciences`,
+    title:`Cellular Respiration Basics`,
+    diff:`Medium`,
+    qs:[
+      { q:`What is the overall purpose of cellular respiration?`, ch:[`To build glucose from carbon dioxide and water using light energy`,`To copy a cell's DNA before division`,`To break down glucose and release its stored chemical energy in a usable form (ATP)`,`To transport oxygen throughout the bloodstream`], ans:2, exp:`Cellular respiration is the process by which cells break down glucose and other fuel molecules, capturing the released energy in ATP that powers cellular activities.` },
+      { q:`Which equation best summarizes overall cellular respiration?`, ch:[`Glucose + oxygen -> carbon dioxide + water + ATP`,`Carbon dioxide + water + light -> glucose + oxygen`,`ATP -> ADP + phosphate + light energy`,`Water + carbon dioxide -> oxygen + glucose`], ans:0, exp:`Cellular respiration breaks glucose and oxygen down into carbon dioxide and water, releasing the energy that was stored in glucose's chemical bonds as ATP.` },
+      { q:`Where in the cell does glycolysis, the first stage of cellular respiration, take place?`, ch:[`Inner mitochondrial membrane`,`Mitochondrial matrix`,`Nucleus`,`Cytoplasm (cytosol)`], ans:3, exp:`Glycolysis occurs in the cytoplasm, outside the mitochondria, and is the one stage of respiration common to both organisms that use oxygen and those that don't.` },
+      { q:`At a high level, what happens to glucose during glycolysis?`, ch:[`It is combined with oxygen to directly form carbon dioxide`,`It is split into two smaller three-carbon molecules called pyruvate, with a small net gain of ATP`,`It is converted directly into fat for storage`,`It is broken down into individual carbon atoms and released as gas`], ans:1, exp:`Glycolysis takes one six-carbon glucose molecule and splits it into two molecules of pyruvate, producing a small amount of ATP and NADH in the process.` },
+      { q:`Does glycolysis require oxygen to occur?`, ch:[`Yes, oxygen is required as the final step of glycolysis`,`Yes, without oxygen glycolysis cannot start`,`No, glycolysis can occur whether or not oxygen is present`,`No, glycolysis only occurs in plant cells`], ans:2, exp:`Glycolysis does not directly use oxygen, which is why it can proceed under both aerobic and anaerobic conditions; oxygen becomes essential in the later stages of aerobic respiration.` },
+      { q:`Where does the Krebs cycle (citric acid cycle) take place?`, ch:[`The mitochondrial matrix`,`The cytoplasm`,`The nucleus`,`The thylakoid membrane`], ans:0, exp:`The Krebs cycle occurs in the fluid-filled matrix inside the mitochondria, where molecules derived from pyruvate are further broken down.` },
+      { q:`At a conceptual level, what is the main role of the Krebs cycle?`, ch:[`To split glucose into pyruvate`,`To directly synthesize large amounts of ATP using oxygen as an electron acceptor`,`To capture light energy for later use`,`To further break down carbon compounds, releasing carbon dioxide and generating electron-carrying molecules (NADH and FADH2) for the next stage`], ans:3, exp:`The Krebs cycle doesn't produce much ATP directly; its main job is to strip electrons from carbon compounds and load them onto NADH and FADH2, which then feed the electron transport chain.` },
+      { q:`Where does the electron transport chain (ETC), the final stage of aerobic respiration, take place?`, ch:[`The cytoplasm`,`The inner mitochondrial membrane`,`The mitochondrial matrix`,`The nucleus`], ans:1, exp:`The electron transport chain is embedded in the inner mitochondrial membrane, where a series of protein complexes pass electrons along, ultimately powering ATP production.` },
+      { q:`What molecule serves as the final electron acceptor at the end of the electron transport chain?`, ch:[`Carbon dioxide`,`Glucose`,`Oxygen`,`NADH`], ans:2, exp:`Oxygen accepts electrons at the end of the electron transport chain, combining with them and hydrogen ions to form water; this is why aerobic respiration requires oxygen.` },
+      { q:`Which stage of cellular respiration produces the largest share of the cell's ATP?`, ch:[`The electron transport chain`,`Glycolysis`,`The Krebs cycle`,`Fermentation`], ans:0, exp:`While glycolysis and the Krebs cycle each produce only a small amount of ATP directly, the electron transport chain uses the electron carriers they generate to produce the majority of the cell's ATP.` },
+      { q:`What alternative pathway allows cells to regenerate a needed molecule (NAD+) and keep producing a small amount of ATP when oxygen is not available?`, ch:[`The Krebs cycle`,`The electron transport chain`,`Photosynthesis`,`Fermentation`], ans:3, exp:`When oxygen is scarce, cells can rely on fermentation, such as lactic acid or alcoholic fermentation, to regenerate NAD+ so that glycolysis can continue producing a limited supply of ATP.` },
+      { q:`What molecule is often referred to as the main 'energy currency' of the cell, produced throughout cellular respiration?`, ch:[`Glucose`,`ATP`,`NADH`,`Pyruvate`], ans:1, exp:`ATP stores energy in its chemical bonds that cells can quickly access to power processes like muscle contraction, active transport, and biosynthesis.` }
+    ]
+  },
+  {
+    id:`bb77`,
+    cat:`Life Sciences`,
+    title:`Mitosis vs Meiosis Basics`,
+    diff:`Easy`,
+    qs:[
+      { q:`What is the primary purpose of mitosis in multicellular organisms?`, ch:[`Growth, tissue repair, and asexual reproduction by producing genetically identical cells`,`Producing genetically unique sex cells for reproduction`,`Reducing the chromosome number by half`,`Creating four non-identical daughter cells`], ans:0, exp:`Mitosis produces new cells that are genetically identical to the parent cell, allowing organisms to grow, replace damaged tissue, and in some organisms reproduce asexually.` },
+      { q:`What is the main purpose of meiosis?`, ch:[`To repair damaged skin tissue`,`To produce two identical diploid daughter cells`,`To produce gametes (sex cells) with half the normal chromosome number`,`To duplicate the entire genome without dividing the cell`], ans:2, exp:`Meiosis is a specialized type of cell division that produces gametes with half the chromosome number of the parent cell, which is essential for sexual reproduction.` },
+      { q:`How many daughter cells does mitosis produce, and what is their genetic relationship to the parent cell?`, ch:[`Four cells, genetically different from the parent`,`Two cells, genetically identical to the parent and to each other`,`Two cells, each with half the chromosome number of the parent`,`Four cells, each identical to the parent`], ans:1, exp:`Mitosis results in two daughter cells, each a genetically identical, diploid copy of the original parent cell.` },
+      { q:`How many daughter cells does meiosis produce, and how do they compare genetically?`, ch:[`Two cells that are genetically identical`,`Two cells that are genetically different`,`One cell that is diploid`,`Four cells that are genetically different from one another and from the parent cell`], ans:3, exp:`Meiosis involves two rounds of division, ultimately producing four haploid daughter cells that are genetically distinct from each other due to processes like crossing over.` },
+      { q:`What does it mean for a cell to be diploid?`, ch:[`It contains two complete sets of chromosomes (2n), one from each parent`,`It contains only one complete set of chromosomes`,`It has no nucleus`,`It is a cell created by meiosis`], ans:0, exp:`Diploid cells, like most human body cells, contain two matching sets of chromosomes, one inherited from each parent.` },
+      { q:`What does it mean for a cell to be haploid?`, ch:[`It contains two complete sets of chromosomes`,`It cannot divide any further`,`It contains a single complete set of chromosomes (n)`,`It is always found in plant roots`], ans:2, exp:`Haploid cells, such as sperm and egg cells, contain only one set of chromosomes, half the number found in diploid body cells.` },
+      { q:`During which phase of cell division do chromosomes line up along the middle (equator) of the cell?`, ch:[`Prophase`,`Metaphase`,`Anaphase`,`Telophase`], ans:1, exp:`During metaphase, spindle fibers align the chromosomes along the cell's equatorial plane, ensuring each daughter cell will receive the correct number of chromosomes.` },
+      { q:`During which phase of division do sister chromatids separate and move toward opposite poles of the cell?`, ch:[`Prophase`,`Metaphase`,`Interphase`,`Anaphase`], ans:3, exp:`In anaphase, the centromeres split and spindle fibers pull the separated sister chromatids toward opposite ends of the cell.` },
+      { q:`During prophase I of meiosis, homologous chromosomes can exchange segments of DNA in a process that increases genetic variation. What is this process called?`, ch:[`Crossing over`,`Cytokinesis`,`Mitotic recombination`,`Chromosome duplication`], ans:0, exp:`Crossing over occurs when homologous chromosomes pair up and swap corresponding segments of DNA, creating new combinations of alleles and boosting genetic diversity in offspring.` },
+      { q:`What is cytokinesis?`, ch:[`The duplication of chromosomes before division`,`The pairing of homologous chromosomes`,`The division of the cytoplasm, which physically splits one cell into two separate daughter cells`,`The process that produces genetic mutations`], ans:2, exp:`Cytokinesis is the final step of cell division, in which the cytoplasm splits and the cell membrane pinches inward, in animal cells, to form two distinct daughter cells.` },
+      { q:`A typical human body (somatic) cell contains 46 chromosomes. How many chromosomes does a human gamete (sperm or egg) contain?`, ch:[`46`,`23`,`92`,`12`], ans:1, exp:`Because gametes are haploid, they contain half the chromosome number of body cells; in humans that means 23 chromosomes, so fertilization restores the full 46.` },
+      { q:`Which type of cell division is essential for sexual reproduction and contributes to genetic diversity among offspring?`, ch:[`Mitosis`,`Binary fission`,`Cytokinesis alone`,`Meiosis`], ans:3, exp:`Meiosis produces genetically varied haploid gametes, and when two gametes combine during fertilization, the resulting offspring has a unique combination of genes from both parents.` }
+    ]
+  },
+  {
+    id:`bb78`,
+    cat:`Life Sciences`,
+    title:`Intro to Ecology: Ecosystems & Food Webs`,
+    diff:`Easy`,
+    qs:[
+      { q:`What is an ecosystem?`, ch:[`A single species living in one location`,`Only the nonliving parts of an environment`,`A group of the same species that can interbreed`,`A community of different organisms interacting with each other and with their physical (nonliving) environment`], ans:3, exp:`An ecosystem includes both the living organisms, called biotic factors, in an area and the nonliving components, called abiotic factors, such as climate and soil, and the interactions between them.` },
+      { q:`Which of the following is an example of a biotic factor in an ecosystem?`, ch:[`Sunlight`,`Bacteria in the soil`,`Temperature`,`Rainfall`], ans:1, exp:`Biotic factors are the living or once-living components of an ecosystem, such as plants, animals, fungi, and bacteria, as opposed to abiotic, nonliving factors.` },
+      { q:`Which of the following is an example of an abiotic factor in an ecosystem?`, ch:[`Water availability`,`A population of deer`,`A colony of ants`,`A species of fungus`], ans:0, exp:`Abiotic factors are the nonliving physical and chemical parts of an environment, including water, temperature, sunlight, and soil composition.` },
+      { q:`What term describes organisms, such as plants and algae, that produce their own food using light energy?`, ch:[`Decomposers`,`Primary consumers`,`Producers`,`Secondary consumers`], ans:2, exp:`Producers, or autotrophs, use photosynthesis to convert light energy into chemical energy, forming the base of nearly every food chain and food web.` },
+      { q:`What are primary consumers?`, ch:[`Organisms that break down dead matter`,`Organisms that eat only other consumers`,`Organisms that make their own food`,`Herbivores that feed directly on producers`], ans:3, exp:`Primary consumers occupy the second trophic level, feeding directly on producers such as plants and algae to obtain energy.` },
+      { q:`What role do decomposers, such as fungi and many bacteria, play in an ecosystem?`, ch:[`They capture light energy to produce sugars`,`They break down dead organisms and waste, recycling nutrients back into the ecosystem`,`They occupy the top of every food chain`,`They convert carbon dioxide directly into oxygen`], ans:1, exp:`Decomposers break down dead organic material, returning essential nutrients like nitrogen and carbon to the soil so producers can use them again.` },
+      { q:`How does a food web differ from a simple food chain?`, ch:[`A food web shows the many interconnected feeding relationships among organisms, while a food chain shows a single linear path of energy flow`,`A food web only includes producers`,`A food chain shows more organisms than a food web`,`A food web only applies to aquatic ecosystems`], ans:0, exp:`Real ecosystems rarely have organisms that eat just one type of food, so a food web links multiple overlapping food chains to more accurately represent feeding relationships.` },
+      { q:`According to the general 'ten percent rule,' roughly how much energy is transferred from one trophic level to the next?`, ch:[`Nearly 100%`,`About 50%`,`About 10%`,`About 90%`], ans:2, exp:`On average, only about 10% of the energy stored in one trophic level is passed on to the next; the rest is lost mostly as heat through metabolic processes, which is why food chains rarely have more than four or five levels.` },
+      { q:`Which sequence correctly lists the levels of ecological organization from smallest to largest?`, ch:[`Ecosystem, community, population, biosphere`,`Community, population, biosphere, ecosystem`,`Biosphere, ecosystem, community, population`,`Population, community, ecosystem, biosphere`], ans:3, exp:`Ecologists organize life from the smallest scale, a population of one species, up to a community of interacting populations, then an ecosystem including the physical environment, and finally the entire biosphere.` },
+      { q:`What is a population, as used in ecology?`, ch:[`All the different species living in an area`,`A group of organisms of the same species living in the same area at the same time`,`All the ecosystems on Earth`,`The nonliving parts of an environment`], ans:1, exp:`A population consists of individuals of a single species that live in the same geographic area and can potentially interbreed.` },
+      { q:`What is an ecological community?`, ch:[`All the populations of different species that live and interact together in a given area`,`A single population of one species`,`The physical, nonliving environment only`,`The entire planet's living systems combined`], ans:0, exp:`A community includes every population of every species living in the same area, along with the interactions, such as predation and competition, that occur among them.` },
+      { q:`What is an organism's ecological niche?`, ch:[`The exact physical location where it lives`,`The total number of individuals of that species`,`The specific role an organism plays in its environment, including how it obtains resources and interacts with other species`,`A synonym for its taxonomic classification`], ans:2, exp:`A niche encompasses everything about how an organism 'makes its living,' including what it eats, where and when it is active, and how it interacts with other species, distinguishing it from habitat, which is simply where it lives.` }
+    ]
+  },
+{ id:`bb79`, cat:`Life Sciences`, title:`Mendelian Genetics & Punnett Squares`, diff:`Easy`, qs:[
+{ q:`In genetics, what term describes an organism that has two identical alleles for a given gene, such as TT or tt?`, ch:[`Heterozygous`,`Homozygous`,`Hybrid`,`Recessive`], ans:1, exp:`Homozygous means an organism carries two copies of the same allele for a trait. Heterozygous, by contrast, describes an organism with two different alleles, such as Tt.` },
+{ q:`If a tall pea plant with genotype Tt is crossed with another Tt plant, what fraction of the offspring are expected to be tall, assuming T is dominant?`, ch:[`1/4`,`1/2`,`3/4`,`4/4`], ans:2, exp:`A Tt x Tt cross produces a 1:2:1 genotype ratio of TT:Tt:tt. Since both TT and Tt show the dominant tall phenotype, 3 out of 4 offspring (3/4) are expected to be tall.` },
+{ q:`What is the difference between an organism's genotype and its phenotype?`, ch:[`Genotype is the physical appearance; phenotype is the genetic makeup`,`Genotype is the genetic makeup; phenotype is the observable trait produced by that genetic makeup`,`They are two names for the same thing`,`Genotype only applies to dominant traits`], ans:1, exp:`Genotype refers to the actual alleles an organism carries (like Tt), while phenotype is the physical trait that results, such as being tall. Two different genotypes, like TT and Tt, can produce the same phenotype.` },
+{ q:`Gregor Mendel's Law of Segregation states that:`, ch:[`Alleles for different genes assort independently of one another`,`The two alleles for a gene separate during gamete formation so each gamete carries only one allele`,`Dominant alleles always mask recessive alleles completely`,`Traits are always blended in offspring`], ans:1, exp:`The Law of Segregation explains that each parent has two alleles for a trait, but only one is passed to each gamete through meiosis. This is why offspring end up with one allele from each parent.` },
+{ q:`A monohybrid cross between two heterozygous parents (Aa x Aa) typically produces offspring in what phenotypic ratio?`, ch:[`1:1`,`2:1`,`3:1`,`9:3:3:1`], ans:2, exp:`Crossing two heterozygotes for a single gene produces a 1:2:1 genotype ratio (AA:Aa:aa), which translates into a 3:1 phenotypic ratio since both AA and Aa show the dominant trait.` },
+{ q:`A testcross is performed by crossing an organism of unknown genotype with an organism that is:`, ch:[`Heterozygous for the trait`,`Homozygous dominant for the trait`,`Homozygous recessive for the trait`,`A different species entirely`], ans:2, exp:`In a testcross, an individual showing the dominant phenotype but of unknown genotype is crossed with a homozygous recessive individual. The ratio of offspring phenotypes reveals whether the unknown parent was homozygous or heterozygous dominant.` },
+{ q:`In snapdragons, crossing a red-flowered plant (RR) with a white-flowered plant (WW) produces pink-flowered offspring (RW). This is an example of:`, ch:[`Codominance`,`Incomplete dominance`,`Multiple alleles`,`Polygenic inheritance`], ans:1, exp:`Incomplete dominance occurs when neither allele is fully dominant, so heterozygotes display a blended intermediate phenotype, like pink flowers resulting from red and white alleles.` },
+{ q:`Human ABO blood type AB, where both the A and B alleles are fully expressed in the same individual, illustrates which genetic phenomenon?`, ch:[`Incomplete dominance`,`Codominance`,`Sex-linkage`,`Mutation`], ans:1, exp:`Codominance occurs when both alleles are fully and simultaneously expressed rather than blending. A person with genotype IAIB expresses both A and B antigens on their red blood cells.` },
+{ q:`Which genotype notation correctly represents an organism that is homozygous recessive for a trait?`, ch:[`Bb`,`BB`,`bb`,`Bb x bb`], ans:2, exp:`Homozygous recessive means both alleles are the lowercase (recessive) form, written as bb. This organism will display the recessive phenotype since there is no dominant allele to mask it.` },
+{ q:`If a homozygous dominant plant (TT) is crossed with a homozygous recessive plant (tt), what will be true of all the offspring?`, ch:[`All will be homozygous dominant (TT)`,`All will be homozygous recessive (tt)`,`All will be heterozygous (Tt) and show the dominant phenotype`,`Half will be TT and half will be tt`], ans:2, exp:`Since the TT parent can only contribute a T allele and the tt parent can only contribute a t allele, every offspring will be Tt. Because T is dominant, all offspring will display the dominant phenotype.` },
+{ q:`A person who carries one recessive allele for a genetic disorder but does not show symptoms because they also carry a dominant normal allele is called a:`, ch:[`Mutant`,`Carrier`,`Hybrid`,`Homozygote`], ans:1, exp:`A carrier is heterozygous for a recessive condition, meaning they possess one copy of the disease allele but the dominant normal allele prevents the recessive trait from being expressed.` },
+{ q:`On a Punnett square, the boxes along the top and side represent:`, ch:[`The possible phenotypes of the offspring`,`The possible gametes (alleles) each parent can contribute`,`The environmental factors affecting the cross`,`The number of chromosomes in each parent`], ans:1, exp:`A Punnett square is set up by listing each parent's possible gametes along the top and side edges. The boxes inside are then filled in by combining one allele from each parent to predict offspring genotypes.` }
+]},
+{ id:`bb80`, cat:`Life Sciences`, title:`DNA, RNA & Protein Synthesis Basics`, diff:`Medium`, qs:[
+{ q:`In the DNA double helix, adenine always pairs with which base?`, ch:[`Guanine`,`Cytosine`,`Thymine`,`Uracil`], ans:2, exp:`DNA base pairing follows a strict rule: adenine (A) pairs with thymine (T) via two hydrogen bonds, and guanine (G) pairs with cytosine (C) via three hydrogen bonds. This complementary pairing is what allows DNA to be accurately copied.` },
+{ q:`Which of the following is a key structural difference between RNA and DNA?`, ch:[`RNA is double-stranded while DNA is single-stranded`,`RNA contains uracil instead of thymine and is typically single-stranded`,`RNA contains thymine instead of uracil`,`RNA does not contain a sugar-phosphate backbone`], ans:1, exp:`RNA differs from DNA in three main ways: it uses the sugar ribose instead of deoxyribose, it substitutes uracil for thymine, and it is usually single-stranded rather than a double helix.` },
+{ q:`Transcription is the process in which:`, ch:[`A protein is assembled from amino acids`,`DNA is copied into a complementary mRNA strand`,`mRNA is translated into a polypeptide chain`,`DNA replicates to form two identical DNA molecules`], ans:1, exp:`Transcription takes place in the nucleus, where an enzyme called RNA polymerase reads a DNA template strand and synthesizes a complementary messenger RNA (mRNA) molecule.` },
+{ q:`Translation is best described as the process where:`, ch:[`DNA unwinds in preparation for replication`,`mRNA is synthesized from a DNA template`,`The sequence of codons on mRNA is used by ribosomes to build a chain of amino acids`,`Ribosomal RNA is copied into transfer RNA`], ans:2, exp:`Translation occurs at the ribosome, where the mRNA's codon sequence directs which amino acids are joined together in order, ultimately forming a functional protein.` },
+{ q:`If a DNA template strand reads 3'-TAC GGA-5', what is the corresponding mRNA sequence produced during transcription?`, ch:[`5'-ATG CCT-3'`,`5'-AUG CCU-3'`,`5'-TAC GGA-3'`,`5'-UAC GGA-3'`], ans:1, exp:`mRNA is complementary to the DNA template strand, with uracil replacing thymine. Pairing T-A, A-U, C-G, G-C, G-C, A-U across the template gives the mRNA sequence 5'-AUG CCU-3'.` },
+{ q:`What is the primary function of transfer RNA (tRNA) during protein synthesis?`, ch:[`It carries the genetic code out of the nucleus`,`It forms the physical structure of the ribosome`,`It carries specific amino acids to the ribosome and matches its anticodon to the mRNA codon`,`It catalyzes the unwinding of the DNA double helix`], ans:2, exp:`Each tRNA molecule has an anticodon that base-pairs with a complementary codon on the mRNA, and it carries the amino acid that corresponds to that codon, ensuring amino acids are added in the correct order.` },
+{ q:`Ribosomes are the cellular structures primarily responsible for:`, ch:[`Copying DNA before cell division`,`Reading mRNA codons and assembling amino acids into proteins`,`Storing genetic information`,`Breaking down old proteins for recycling`], ans:1, exp:`Ribosomes are the site of translation, where they read the mRNA sequence three bases (one codon) at a time and link the corresponding amino acids together to build a polypeptide chain.` },
+{ q:`Which mRNA codon typically signals the start of translation and codes for the amino acid methionine?`, ch:[`UAA`,`UAG`,`AUG`,`UGA`], ans:2, exp:`AUG is the standard start codon in mRNA. It signals the ribosome where to begin translation and codes for the amino acid methionine, which becomes the first amino acid in most polypeptide chains.` },
+{ q:`What happens when a ribosome encounters a stop codon (such as UAA, UAG, or UGA) on an mRNA strand?`, ch:[`An extra amino acid is added to the chain`,`Translation halts and the completed polypeptide is released`,`Transcription of a new mRNA begins`,`The tRNA anticodon is permanently bound to the ribosome`], ans:1, exp:`Stop codons do not code for an amino acid. Instead, they signal the ribosome to terminate translation, releasing the finished polypeptide chain so it can fold into a functional protein.` },
+{ q:`Which sequence correctly describes the flow of genetic information according to the central dogma of molecular biology?`, ch:[`Protein to RNA to DNA`,`RNA to DNA to Protein`,`DNA to RNA to Protein`,`DNA to Protein to RNA`], ans:2, exp:`The central dogma describes the general flow of genetic information: DNA is transcribed into RNA, and RNA is then translated into protein. This describes how genetic instructions are ultimately expressed as functional molecules.` },
+{ q:`In eukaryotic cells, before an mRNA transcript leaves the nucleus, non-coding sections called introns are typically:`, ch:[`Duplicated and added to the DNA`,`Removed, while the remaining exons are joined together`,`Translated directly into protein`,`Converted into tRNA`], ans:1, exp:`Eukaryotic pre-mRNA undergoes processing in which introns (non-coding regions) are cut out and the remaining exons (coding regions) are spliced together to form the mature mRNA that is translated.` },
+{ q:`A change in a single nucleotide base within a gene's DNA sequence is known as a:`, ch:[`Point mutation`,`Chromosomal deletion`,`Gene duplication`,`Translocation`], ans:0, exp:`A point mutation is a change to a single nucleotide base, such as a substitution of one base for another. Depending on where it occurs, this can change the amino acid sequence of the resulting protein or have no effect at all.` }
+]},
+{ id:`bb81`, cat:`Life Sciences`, title:`Evolution & Natural Selection Basics`, diff:`Easy`, qs:[
+{ q:`Charles Darwin's theory of natural selection proposes that:`, ch:[`All individuals in a population reproduce at the same rate`,`Individuals with traits better suited to their environment tend to survive and reproduce more successfully`,`Organisms can acquire new traits during their lifetime and pass them to offspring`,`Species never change over long periods of time`], ans:1, exp:`Natural selection is the process by which individuals with heritable traits that improve survival and reproduction in a given environment tend to leave more offspring, gradually shifting the traits common in a population over generations.` },
+{ q:`The phrase "survival of the fittest" is best understood to mean that the organisms most likely to pass on their genes are those that are:`, ch:[`Physically the strongest members of the population`,`Best suited to reproduce successfully in their specific environment`,`The largest in body size`,`The fastest runners in the population`], ans:1, exp:`In evolutionary biology, "fitness" refers to reproductive success, not physical strength. An organism is "fit" if its traits help it survive and produce viable offspring in its particular environment.` },
+{ q:`An adaptation is best defined as:`, ch:[`Any change an organism makes during its lifetime to cope with stress`,`A heritable trait that increases an organism's chances of survival and reproduction in its environment`,`A random genetic change with no effect on survival`,`A behavior learned from parents through teaching`], ans:1, exp:`Adaptations are inherited traits, shaped by natural selection over many generations, that help organisms survive and reproduce in their specific environment, such as camouflage coloring or a specialized beak shape.` },
+{ q:`What is the ultimate original source of the genetic variation that natural selection acts upon?`, ch:[`Mutation`,`Learned behaviors`,`Migration alone`,`Identical reproduction`], ans:0, exp:`Mutations are random changes in DNA sequence that create new alleles, introducing the raw genetic variation within a population. Natural selection then acts on this existing variation, favoring alleles that improve survival and reproduction.` },
+{ q:`Speciation refers to the process by which:`, ch:[`A single species becomes extinct`,`Two or more populations become reproductively isolated and evolve into distinct species`,`An organism adapts to a new food source within its lifetime`,`A population's gene pool stays exactly the same over time`], ans:1, exp:`Speciation occurs when populations of the same species become separated, often geographically, and accumulate enough genetic differences over time that they can no longer successfully interbreed, resulting in new distinct species.` },
+{ q:`Bat wings and human arms have very different functions but share a similar underlying bone structure inherited from a common ancestor. These are examples of:`, ch:[`Analogous structures`,`Homologous structures`,`Vestigial structures`,`Convergent structures`], ans:1, exp:`Homologous structures share a similar internal structure due to common ancestry, even if they now serve different functions. This is strong evidence that different species evolved from a shared evolutionary ancestor.` },
+{ q:`Which type of evidence involves examining preserved remains and imprints of ancient organisms to study how species have changed over millions of years?`, ch:[`Comparative embryology`,`The fossil record`,`Molecular biology`,`Biogeography`], ans:1, exp:`The fossil record provides a physical timeline of past life, showing how organisms have changed over long periods and revealing transitional forms that connect ancestral species to their modern descendants.` },
+{ q:`Insect wings and bird wings both allow flight but evolved independently from different ancestral structures. This is an example of:`, ch:[`Homologous structures`,`Divergent evolution`,`Convergent evolution`,`Genetic drift`], ans:2, exp:`Convergent evolution occurs when unrelated species independently evolve similar features because they face similar environmental pressures, even though the structures did not come from a shared ancestor.` },
+{ q:`How does artificial selection differ from natural selection?`, ch:[`Artificial selection involves humans choosing which organisms breed based on desired traits, while natural selection is driven by the environment`,`Artificial selection cannot change a population's traits over generations`,`Natural selection only occurs in laboratory settings`,`There is no meaningful difference between the two processes`], ans:0, exp:`In artificial selection, humans intentionally breed organisms, such as crops or dogs, for particular desired traits. In natural selection, the environment itself determines which traits improve survival and reproduction.` },
+{ q:`For natural selection to occur within a population, which of the following conditions must be present?`, ch:[`Identical genes in every individual, no environmental pressure, and unlimited resources`,`Heritable variation among individuals, and differences in survival or reproduction related to that variation`,`A stable population size that never changes`,`Only asexual reproduction`], ans:1, exp:`Natural selection requires that individuals vary in heritable traits, and that this variation leads to differences in survival and reproductive success, so that advantageous traits become more common in future generations.` },
+{ q:`During the Industrial Revolution in England, dark-colored peppered moths became more common than light-colored ones in polluted areas because they were better camouflaged from predators on soot-darkened trees. This is a classic example of:`, ch:[`Genetic drift`,`Natural selection in action`,`Artificial selection`,`A vestigial trait`], ans:1, exp:`The peppered moth example shows natural selection directly: pollution darkened tree bark, so darker moths were better camouflaged from bird predators and survived to reproduce at higher rates, shifting the population's coloration over time.` },
+{ q:`The idea that all living species descended from earlier life forms that lived millions of years ago is known as the concept of:`, ch:[`Spontaneous generation`,`Common ancestry`,`Punctuated equilibrium`,`Genetic engineering`], ans:1, exp:`Common ancestry is the concept that all currently existing species share connections to earlier ancestral species, ultimately tracing back through an evolutionary tree to shared common ancestors.` }
+]},
+{ id:`bb82`, cat:`Life Sciences`, title:`Human Body Systems Overview: Circulatory & Respiratory`, diff:`Easy`, qs:[
+{ q:`How many chambers does the human heart have?`, ch:[`Two`,`Three`,`Four`,`Six`], ans:2, exp:`The human heart has four chambers: two upper chambers called atria and two lower chambers called ventricles. This four-chambered structure keeps oxygen-rich and oxygen-poor blood separated.` },
+{ q:`What is the main function of red blood cells?`, ch:[`Fighting infection`,`Carrying oxygen throughout the body`,`Clotting blood at wound sites`,`Producing antibodies`], ans:1, exp:`Red blood cells contain hemoglobin, a protein that binds oxygen in the lungs and releases it to body tissues, making oxygen transport their primary role in the circulatory system.` },
+{ q:`Pulmonary circulation refers to the pathway of blood that:`, ch:[`Travels between the heart and the lungs to pick up oxygen`,`Travels between the heart and the rest of the body`,`Flows only through the kidneys`,`Carries blood from the digestive system to the liver`], ans:0, exp:`Pulmonary circulation is the short loop that carries deoxygenated blood from the heart to the lungs, where it picks up oxygen and releases carbon dioxide, before returning oxygenated blood to the heart.` },
+{ q:`Gas exchange between the lungs and the bloodstream primarily takes place in tiny sac-like structures called:`, ch:[`Bronchi`,`Alveoli`,`The trachea`,`The larynx`], ans:1, exp:`Alveoli are tiny, thin-walled air sacs surrounded by capillaries. Their large surface area and thin walls allow oxygen to diffuse into the blood and carbon dioxide to diffuse out efficiently.` },
+{ q:`After blood returns to the heart from the body, in what general order does it flow through the heart on its way to being reoxygenated?`, ch:[`Right atrium, right ventricle, lungs, left atrium, left ventricle, body`,`Left atrium, left ventricle, lungs, right atrium, right ventricle, body`,`Right ventricle, right atrium, body, lungs`,`Left ventricle, right ventricle, lungs, body`], ans:0, exp:`Deoxygenated blood enters the right atrium, moves to the right ventricle, and is pumped to the lungs. Oxygenated blood then returns to the left atrium, moves to the left ventricle, and is pumped out to the rest of the body.` },
+{ q:`Which blood vessels generally carry blood away from the heart under high pressure?`, ch:[`Veins`,`Capillaries`,`Arteries`,`Lymph vessels`], ans:2, exp:`Arteries have thick, muscular walls built to withstand the high pressure of blood being pumped directly from the heart. Veins, by contrast, carry blood back toward the heart under lower pressure and often contain valves.` },
+{ q:`What is the primary role of the diaphragm in the respiratory system?`, ch:[`Filtering bacteria out of inhaled air`,`Producing mucus to trap dust particles`,`Contracting and relaxing to help draw air into and push air out of the lungs`,`Warming inhaled air before it reaches the lungs`], ans:2, exp:`The diaphragm is a dome-shaped muscle beneath the lungs. When it contracts, it flattens and increases chest cavity volume, drawing air into the lungs; when it relaxes, it helps push air back out.` },
+{ q:`A blood pressure reading is essentially a measurement of:`, ch:[`The number of red blood cells in a sample`,`The force of blood pushing against the walls of the arteries`,`The oxygen concentration in the blood`,`The rate at which the heart is beating`], ans:1, exp:`Blood pressure measures the force exerted by circulating blood against artery walls, typically recorded as two numbers representing pressure during heart contraction (systolic) and relaxation (diastolic).` },
+{ q:`Which type of blood cell is primarily responsible for defending the body against infection?`, ch:[`Red blood cells`,`Platelets`,`White blood cells`,`Plasma cells only (excluding lymphocytes)`], ans:2, exp:`White blood cells are the immune system's cellular defenders, identifying and destroying pathogens such as bacteria and viruses, unlike red blood cells, which mainly transport oxygen.` },
+{ q:`What is the primary function of the valves within the heart?`, ch:[`To produce the electrical signal that starts each heartbeat`,`To prevent backflow of blood, keeping it moving in one direction`,`To filter waste products out of the blood`,`To generate new blood cells`], ans:1, exp:`Heart valves open and close in coordination with the heart's contractions, acting like one-way doors that prevent blood from flowing backward between chambers or back into vessels leading into the heart.` },
+{ q:`Which structure serves as the main airway connecting the throat to the bronchi and lungs?`, ch:[`Esophagus`,`Trachea`,`Epiglottis`,`Diaphragm`], ans:1, exp:`The trachea, or windpipe, is a rigid tube reinforced with cartilage rings that carries air from the throat down toward the bronchi, which branch into each lung.` },
+{ q:`Platelets found in the blood are primarily responsible for:`, ch:[`Transporting oxygen`,`Fighting off viral infections`,`Helping blood clot at the site of an injury`,`Regulating body temperature`], ans:2, exp:`Platelets are small cell fragments that gather at the site of a blood vessel injury and help form clots, preventing excessive blood loss and beginning the wound-healing process.` }
+]},
+{ id:`bb83`, cat:`Life Sciences`, title:`Human Body Systems Overview: Digestive & Excretory`, diff:`Easy`, qs:[
+{ q:`What role does stomach acid primarily play in digestion?`, ch:[`It absorbs nutrients directly into the bloodstream`,`It breaks down food and activates enzymes like pepsin to begin protein digestion`,`It stores bile produced by the liver`,`It converts glucose into glycogen`], ans:1, exp:`The stomach secretes hydrochloric acid, which creates a highly acidic environment that kills many ingested microbes and activates the enzyme pepsin, allowing it to begin breaking down proteins.` },
+{ q:`Most nutrient absorption into the bloodstream occurs in which organ?`, ch:[`The stomach`,`The large intestine`,`The small intestine`,`The esophagus`], ans:2, exp:`The small intestine is lined with finger-like projections that greatly increase surface area, allowing the majority of digested nutrients, including carbohydrates, proteins, and fats, to be absorbed into the bloodstream.` },
+{ q:`One of the main functions of the large intestine is to:`, ch:[`Produce digestive enzymes for protein breakdown`,`Absorb the majority of water from remaining food material`,`Filter waste products from the blood`,`Store bile before it is used in digestion`], ans:1, exp:`As undigested material passes through the large intestine, water and some remaining electrolytes are reabsorbed into the body, which helps solidify waste into feces for elimination.` },
+{ q:`Which organ produces bile, a substance important for breaking down fats during digestion?`, ch:[`The pancreas`,`The gallbladder`,`The liver`,`The small intestine`], ans:2, exp:`The liver produces bile, which is then stored and concentrated in the gallbladder until it is released into the small intestine to help emulsify fats, making them easier for enzymes to digest.` },
+{ q:`What is the primary role of the kidneys in the excretory system?`, ch:[`Producing digestive enzymes`,`Filtering waste products and excess substances out of the blood to form urine`,`Storing urine until it is eliminated`,`Breaking down large food molecules`], ans:1, exp:`The kidneys continuously filter blood, removing metabolic wastes like urea along with excess water and salts, and concentrating them into urine while returning needed substances back into the bloodstream.` },
+{ q:`The nephron is best described as:`, ch:[`The muscular tube connecting the kidney to the bladder`,`The functional filtering unit within the kidney`,`A hormone that regulates blood pressure`,`The outer protective layer of the kidney`], ans:1, exp:`Nephrons are the microscopic structures within the kidney where blood filtration actually occurs. Each kidney contains roughly a million nephrons that work together to filter blood and produce urine.` },
+{ q:`Which sequence correctly lists the general order food travels through the digestive tract?`, ch:[`Mouth, esophagus, stomach, small intestine, large intestine`,`Mouth, stomach, esophagus, small intestine, large intestine`,`Mouth, small intestine, stomach, esophagus, large intestine`,`Esophagus, mouth, stomach, large intestine, small intestine`], ans:0, exp:`After being chewed in the mouth, food travels down the esophagus into the stomach for initial breakdown, then to the small intestine for nutrient absorption, and finally to the large intestine before waste elimination.` },
+{ q:`The pancreas contributes to digestion primarily by:`, ch:[`Storing excess glucose as fat`,`Producing digestive enzymes and releasing them into the small intestine`,`Absorbing water from digested food`,`Producing bile to emulsify fats`], ans:1, exp:`The pancreas secretes a variety of digestive enzymes into the small intestine that help break down carbohydrates, proteins, and fats. It also produces hormones like insulin that regulate blood sugar.` },
+{ q:`What is the primary function of the urinary bladder?`, ch:[`Filtering waste out of the blood`,`Producing urine`,`Temporarily storing urine before it is eliminated from the body`,`Reabsorbing nutrients from urine`], ans:2, exp:`The bladder is a muscular, expandable organ that stores urine produced by the kidneys until it is convenient to release it from the body through urination.` },
+{ q:`Villi, the tiny finger-like projections lining the small intestine, primarily function to:`, ch:[`Break large food particles into smaller pieces mechanically`,`Increase the surface area available for nutrient absorption`,`Neutralize stomach acid before it damages intestinal tissue`,`Produce hydrochloric acid`], ans:1, exp:`Villi (and the even smaller microvilli on their surface) dramatically increase the internal surface area of the small intestine, allowing far more efficient absorption of nutrients into the bloodstream.` },
+{ q:`Urea, a major waste product removed by the kidneys, is primarily formed from the breakdown of:`, ch:[`Excess glucose`,`Proteins`,`Dietary fats`,`Vitamins`], ans:1, exp:`When the body breaks down proteins for energy or other uses, the resulting nitrogen-containing waste is converted into urea, mainly in the liver, which is then filtered out of the blood by the kidneys and excreted in urine.` },
+{ q:`The enzyme amylase, found in saliva, begins the digestion of which type of nutrient?`, ch:[`Proteins`,`Fats`,`Carbohydrates`,`Vitamins`], ans:2, exp:`Salivary amylase starts breaking down starch, a complex carbohydrate, into smaller sugar molecules while food is still being chewed in the mouth, beginning the process of carbohydrate digestion.` }
+]},
+{ id:`bb84`, cat:`Life Sciences`, title:`Human Body Systems Overview: Nervous & Endocrine Basics`, diff:`Medium`, qs:[
+{ q:`In a typical neuron, which structures receive incoming signals from other neurons?`, ch:[`Axons`,`Dendrites`,`The myelin sheath`,`The nucleus`], ans:1, exp:`Dendrites are branch-like extensions of a neuron that receive chemical signals from neighboring neurons and convert them into electrical signals that travel toward the cell body.` },
+{ q:`At a synapse, communication between two neurons typically occurs through the release of:`, ch:[`Hormones directly into the bloodstream`,`Neurotransmitters into the small gap between neurons`,`Enzymes that digest the neuron membrane`,`Electrical current that jumps freely through the body`], ans:1, exp:`When an electrical signal reaches the end of an axon, it triggers the release of chemical messengers called neurotransmitters, which cross the synaptic gap and bind to receptors on the next neuron, continuing the signal.` },
+{ q:`Which best describes the difference between the central nervous system (CNS) and the peripheral nervous system (PNS)?`, ch:[`The CNS consists of the brain and spinal cord, while the PNS consists of the nerves that branch out to the rest of the body`,`The CNS controls only involuntary actions, while the PNS controls only voluntary actions`,`The PNS includes the brain, while the CNS includes only the spinal cord`,`There is no meaningful distinction between the two`], ans:0, exp:`The central nervous system, made up of the brain and spinal cord, serves as the body's main processing center, while the peripheral nervous system consists of nerves extending throughout the body that relay information to and from the CNS.` },
+{ q:`Which part of the brain is primarily responsible for coordinating balance and fine motor movement?`, ch:[`Cerebrum`,`Cerebellum`,`Medulla oblongata`,`Hypothalamus`], ans:1, exp:`The cerebellum, located at the back of the brain, plays a key role in coordinating voluntary muscle movements, maintaining posture, and balance, while the cerebrum handles higher-level thought and sensory processing.` },
+{ q:`A reflex arc, such as quickly pulling your hand away from a hot stove, is notable because it:`, ch:[`Requires conscious decision-making in the cerebrum before a response occurs`,`Bypasses the brain entirely by using signals processed in the spinal cord for a faster response`,`Only involves the endocrine system, not the nervous system`,`Takes longer than a normal voluntary response`], ans:1, exp:`Reflex arcs allow certain rapid, automatic responses to be processed directly through the spinal cord rather than waiting for signals to travel all the way to the brain and back, resulting in a much faster protective response.` },
+{ q:`A hormone is best defined as:`, ch:[`An electrical signal transmitted along a neuron`,`A chemical messenger released by glands that travels through the bloodstream to affect target cells or organs`,`A type of white blood cell`,`An enzyme that breaks down food in the stomach`], ans:1, exp:`Hormones are chemical signals produced by endocrine glands and released into the bloodstream. They travel throughout the body but only affect target cells that have the specific receptors needed to respond to them.` },
+{ q:`Which gland releases the hormone insulin to help regulate blood glucose levels?`, ch:[`Thyroid`,`Pancreas`,`Adrenal gland`,`Pituitary gland`], ans:1, exp:`The pancreas produces insulin, a hormone that lowers blood glucose levels by signaling cells to take up glucose from the bloodstream, helping to maintain stable blood sugar levels.` },
+{ q:`The pituitary gland is often referred to as the "master gland" because it:`, ch:[`Produces the largest amount of hormone of any gland`,`Releases hormones that regulate the activity of many other endocrine glands`,`Is the only gland required for survival`,`Directly controls muscle contraction throughout the body`], ans:1, exp:`The pituitary gland secretes hormones that stimulate and regulate the activity of several other endocrine glands, such as the thyroid and adrenal glands, effectively coordinating much of the body's hormonal activity.` },
+{ q:`The thyroid gland primarily produces hormones that regulate:`, ch:[`Blood clotting`,`The body's overall metabolic rate`,`Short-term memory formation`,`Immune cell production`], ans:1, exp:`Thyroid hormones influence how quickly cells throughout the body use energy, affecting overall metabolic rate, growth, and body temperature regulation.` },
+{ q:`During a "fight or flight" response, which glands release adrenaline (epinephrine) to prepare the body for quick action?`, ch:[`Thyroid glands`,`Pituitary glands`,`Adrenal glands`,`Pancreatic glands`], ans:2, exp:`The adrenal glands, located above the kidneys, release adrenaline in response to stress or danger, which rapidly increases heart rate, blood flow to muscles, and alertness to prepare the body for immediate action.` },
+{ q:`In hormone regulation, a negative feedback loop generally works by:`, ch:[`Continuously increasing hormone output regardless of the body's needs`,`Sensing when a hormone level or condition reaches a target, then reducing further hormone release to maintain balance`,`Only functioning during illness`,`Permanently shutting down a gland after one use`], ans:1, exp:`Negative feedback loops help maintain homeostasis. When a hormone's effect reaches an appropriate level, the body senses this and reduces further hormone secretion, preventing the levels from rising too high or too low.` },
+{ q:`A nerve impulse, or action potential, generally travels along a neuron in which direction?`, ch:[`From the axon terminal to the dendrites`,`From the dendrites and cell body, down the axon, toward the axon terminal`,`Randomly in either direction depending on the stimulus`,`Only within the cell body, never leaving the neuron`], ans:1, exp:`A nerve impulse typically begins when dendrites receive a stimulus, travels through the cell body, and then propagates down the axon toward the axon terminals, where it can be passed to the next neuron via neurotransmitters.` }
+]},
+{ id:`bb85`, cat:`Life Sciences`, title:`Immune System Basics`, diff:`Easy`, qs:[
+{ q:`What is the primary role of white blood cells in the body?`, ch:[`Transporting oxygen to tissues`,`Detecting and destroying pathogens such as bacteria and viruses`,`Forming blood clots at wound sites`,`Carrying nutrients absorbed from digestion`], ans:1, exp:`White blood cells, also called leukocytes, are the main cellular defenders of the immune system. Different types work together to identify, attack, and eliminate pathogens that enter the body.` },
+{ q:`What is the key difference between innate and adaptive immunity?`, ch:[`Innate immunity is a general, rapid defense present from birth, while adaptive immunity develops specific responses to particular pathogens over time`,`Adaptive immunity acts immediately, while innate immunity takes weeks to develop`,`Innate immunity only occurs in adults`,`Adaptive immunity cannot remember past infections`], ans:0, exp:`Innate immunity provides a fast, non-specific first line of defense against many pathogens, while adaptive immunity develops a targeted response to specific pathogens, which can take longer to mount but includes immune memory.` },
+{ q:`What is the primary function of antibodies produced by the immune system?`, ch:[`They directly digest bacterial cell walls`,`They bind to specific antigens, marking pathogens for destruction or neutralizing them`,`They regulate body temperature during a fever`,`They transport oxygen to infected tissues`], ans:1, exp:`Antibodies are Y-shaped proteins produced by B cells that recognize and bind to specific antigens on pathogens. This binding can neutralize the pathogen directly or flag it for destruction by other immune cells.` },
+{ q:`How do vaccines help protect the body against future infection?`, ch:[`They permanently destroy all pathogens present in the body at the time of vaccination`,`They expose the immune system to a harmless form or piece of a pathogen so it can develop memory cells for a faster future response`,`They replace the need for white blood cells entirely`,`They work only against bacterial infections, never viral ones`], ans:1, exp:`Vaccines introduce a weakened, inactivated, or partial form of a pathogen that triggers an immune response without causing disease. This allows the body to produce memory cells, enabling a much faster and stronger response if exposed to the real pathogen later.` },
+{ q:`Which of the following serves as the body's first line of defense against pathogens entering from the environment?`, ch:[`Antibodies`,`The skin and mucous membranes`,`B cells`,`T cells`], ans:1, exp:`The skin and mucous membranes act as a physical and chemical barrier that prevents most pathogens from ever entering the body, making them the first line of defense before any internal immune response is needed.` },
+{ q:`Lymphocytes are a category of white blood cell that includes which two major types central to adaptive immunity?`, ch:[`Red blood cells and platelets`,`B cells and T cells`,`Neurons and glial cells`,`Skin cells and mucous cells`], ans:1, exp:`B cells and T cells are the two main types of lymphocytes responsible for adaptive immunity. B cells primarily produce antibodies, while T cells can directly destroy infected cells or help coordinate the immune response.` },
+{ q:`In immunology, an antigen is best defined as:`, ch:[`A molecule, often found on a pathogen's surface, that triggers an immune response`,`A type of antibody produced only after vaccination`,`A protein that lowers body temperature`,`A cell that produces mucus`], ans:0, exp:`An antigen is any molecule, often a protein on the surface of a pathogen, that the immune system recognizes as foreign and responds to, typically by producing antibodies that specifically target it.` },
+{ q:`A fever that develops during an infection is best understood as:`, ch:[`A malfunction of the nervous system with no protective purpose`,`Part of the body's immune response that can help slow pathogen growth and enhance immune activity`,`Caused exclusively by dehydration`,`A sign that the immune system has failed`], ans:1, exp:`A fever is generally a regulated immune response in which the body raises its internal temperature, which can inhibit the growth of many pathogens and enhance the activity of certain immune cells.` },
+{ q:`After successfully fighting off an infection, some B cells and T cells remain in the body as memory cells. What is the main benefit of these memory cells?`, ch:[`They prevent all future infections of any kind`,`They allow the immune system to respond much faster and more effectively if the same pathogen is encountered again`,`They replace the need for the innate immune system`,`They cause the original infection to return periodically`], ans:1, exp:`Memory cells persist long after an infection clears and "remember" the specific antigen encountered. If the same pathogen invades again, these cells enable a much quicker and stronger immune response, often preventing illness altogether.` },
+{ q:`A pathogen is best defined as:`, ch:[`Any organism or agent, such as a bacterium or virus, that can cause disease`,`A type of antibody`,`A cell that produces hormones`,`A structure found only in the human body`], ans:0, exp:`Pathogens include disease-causing organisms and agents such as bacteria, viruses, fungi, and parasites. The immune system's primary job is to detect and eliminate these invaders before they cause significant harm.` },
+{ q:`Inflammation, marked by redness, swelling, and heat around an injury or infection, primarily occurs because:`, ch:[`Blood vessels constrict to limit blood flow to the area entirely`,`Increased blood flow and immune cell activity are directed to the affected area to fight infection and begin healing`,`The immune system has stopped functioning in that area`,`Muscle tissue is being permanently destroyed`], ans:1, exp:`Inflammation is a protective response in which blood vessels near an injury or infection widen and become more permeable, increasing blood flow and allowing immune cells to reach the affected area more easily to fight pathogens and begin repair.` },
+{ q:`An autoimmune disease occurs when:`, ch:[`The immune system fails to respond to any pathogens`,`The immune system mistakenly attacks the body's own healthy cells and tissues`,`A person is vaccinated too many times`,`White blood cells stop being produced entirely`], ans:1, exp:`In autoimmune diseases, the immune system loses the ability to distinguish the body's own cells from foreign invaders and mistakenly attacks healthy tissue, which can damage organs or other body systems over time.` }
+]},
+{ id:`bb86`, cat:`Life Sciences`, title:`Human Reproduction & Development Basics`, diff:`Easy`, qs:[
+{ q:`What is the primary function of the testes in the male reproductive system?`, ch:[`Producing sperm and the hormone testosterone`,`Storing sperm until ejaculation`,`Producing eggs`,`Regulating the menstrual cycle`], ans:0, exp:`The testes are the primary male reproductive organs, responsible for producing sperm cells through a process called spermatogenesis, as well as producing testosterone, the main male sex hormone.` },
+{ q:`What is the primary function of the ovaries in the female reproductive system?`, ch:[`Producing eggs and the hormones estrogen and progesterone`,`Providing a site for fertilization`,`Producing milk for nursing`,`Housing a developing fetus`], ans:0, exp:`The ovaries produce egg cells (ova) through a process called oogenesis and also secrete the hormones estrogen and progesterone, which regulate the menstrual cycle and support pregnancy.` },
+{ q:`Fertilization is best defined as the process in which:`, ch:[`An egg matures inside the ovary`,`A sperm cell fuses with an egg cell to form a zygote`,`The uterine lining thickens in preparation for pregnancy`,`A fetus develops fully formed organs`], ans:1, exp:`Fertilization occurs when a sperm cell successfully penetrates and fuses with an egg cell, combining their genetic material to form a single-celled zygote, which marks the beginning of a new individual's development.` },
+{ q:`Ovulation refers to the point in the menstrual cycle when:`, ch:[`The uterine lining is shed`,`A mature egg is released from the ovary`,`Testosterone levels peak`,`Implantation occurs in the uterus`], ans:1, exp:`Ovulation is the release of a mature egg from one of the ovaries, typically around the midpoint of the menstrual cycle. This is generally when fertilization is most likely to occur if sperm are present.` },
+{ q:`Immediately after fertilization, the single cell formed by the union of sperm and egg is called a:`, ch:[`Embryo`,`Fetus`,`Zygote`,`Placenta`], ans:2, exp:`The zygote is the very first cell of a new organism, formed the moment a sperm fertilizes an egg. It contains a full set of chromosomes and will begin dividing repeatedly as development proceeds.` },
+{ q:`During pregnancy, the placenta primarily functions to:`, ch:[`Produce sperm for future pregnancies`,`Exchange nutrients, gases, and waste products between the mother's blood and the developing fetus`,`Store the egg before fertilization`,`Trigger labor contractions exclusively`], ans:1, exp:`The placenta is an organ that develops during pregnancy and connects the fetus to the uterine wall, allowing oxygen and nutrients to pass from mother to fetus and waste products to pass from fetus to mother, without their blood directly mixing.` },
+{ q:`Compared to normal human body cells, which contain 46 chromosomes, how many chromosomes are found in a human sperm or egg cell?`, ch:[`46, the same as body cells`,`23, half the normal number`,`92, double the normal number`,`0, since gametes lack chromosomes`], ans:1, exp:`Sperm and egg cells are haploid, meaning they contain only 23 chromosomes, half the usual number found in body cells. When sperm and egg fuse during fertilization, the resulting zygote has the full 46 chromosomes.` },
+{ q:`In human prenatal development, at what point does a developing human generally transition from being called an "embryo" to a "fetus"?`, ch:[`At the moment of fertilization`,`After the first two weeks of development`,`Around the end of the eighth week, once major organ structures have begun to form`,`Only at the moment of birth`], ans:2, exp:`The term "embryo" is used during the earliest stage of development when major organs and structures are first forming, while "fetus" describes the developing human from roughly the ninth week of pregnancy onward, as it grows and matures.` },
+{ q:`The onset of puberty in both males and females is primarily triggered by:`, ch:[`A sudden decrease in overall hormone production`,`Increased production of sex hormones such as testosterone and estrogen`,`The complete development of the reproductive organs before birth`,`A decrease in growth hormone`], ans:1, exp:`Puberty begins when the body increases production of sex hormones, testosterone in males and estrogen in females, which drive the physical and reproductive changes associated with sexual maturation.` },
+{ q:`What is the main function of the umbilical cord during pregnancy?`, ch:[`It connects the fetus to the placenta, allowing nutrient and waste exchange`,`It produces hormones that trigger labor`,`It protects the fetus from physical impacts`,`It forms the outer boundary of the amniotic sac`], ans:0, exp:`The umbilical cord contains blood vessels that connect the developing fetus to the placenta, allowing nutrients and oxygen to flow to the fetus and waste products to be carried away.` },
+{ q:`A typical human pregnancy, from fertilization to birth, lasts approximately how long?`, ch:[`About 4 months`,`About 6 months`,`About 9 months`,`About 12 months`], ans:2, exp:`A full-term human pregnancy typically lasts about 9 months, or roughly 40 weeks from the start of the mother's last menstrual period, allowing time for the fertilized egg to develop into a fully formed baby.` },
+{ q:`What is the key biological difference between identical and fraternal twins?`, ch:[`Identical twins come from two separate fertilized eggs, while fraternal twins come from one egg that splits`,`Identical twins develop from a single fertilized egg that splits into two, while fraternal twins develop from two separate eggs fertilized by two separate sperm`,`Fraternal twins always share identical DNA, while identical twins do not`,`There is no genetic difference between the two types of twins`], ans:1, exp:`Identical twins form when a single fertilized egg splits early in development, resulting in two genetically identical individuals. Fraternal twins result from two separate eggs being fertilized by two different sperm, making them genetically no more similar than typical siblings.` }
+]},
+{ id:`bb87`, cat:`Life Sciences`, title:`Biodiversity & Classification of Living Things`, diff:`Easy`, qs:[
+{ q:`In the standard taxonomic hierarchy, which level is the broadest, containing the most organisms?`, ch:[`Species`,`Genus`,`Kingdom`,`Family`], ans:2, exp:`Taxonomic classification is organized from broadest to most specific: Kingdom, Phylum, Class, Order, Family, Genus, and Species. Kingdom is one of the broadest categories, grouping together a huge diversity of organisms, while species is the most specific and narrow.` },
+{ q:`Binomial nomenclature, the naming system used for classifying organisms, gives each species a scientific name consisting of:`, ch:[`A single word describing its habitat`,`Its genus and species names, such as Homo sapiens`,`A number assigned by scientists`,`Its common name translated into Latin`], ans:1, exp:`Binomial nomenclature assigns each species a two-part Latin name made up of its genus followed by its specific species epithet, such as Homo sapiens for humans, providing a standardized name recognized worldwide.` },
+{ q:`Which three domains are used in the broadest, most modern classification of all life?`, ch:[`Animalia, Plantae, Fungi`,`Bacteria, Archaea, and Eukarya`,`Vertebrates, Invertebrates, and Plants`,`Prokaryotes, Protists, and Animals`], ans:1, exp:`The domain system divides all life into three broad groups: Bacteria and Archaea, which are both prokaryotic (lacking a nucleus), and Eukarya, which includes all organisms with cells containing a true nucleus, such as animals, plants, fungi, and protists.` },
+{ q:`Within the domain Eukarya, which of the following is NOT typically recognized as one of the traditional kingdoms?`, ch:[`Animalia`,`Plantae`,`Fungi`,`Archaea`], ans:3, exp:`Archaea is actually its own domain, separate from Eukarya, rather than a kingdom within it. The traditional eukaryotic kingdoms include Animalia, Plantae, Fungi, and Protista.` },
+{ q:`In biology, a species is generally defined as a group of organisms that:`, ch:[`Live in the exact same geographic location`,`Can interbreed and produce fertile offspring under natural conditions`,`Share the same diet`,`Have identical physical appearances`], ans:1, exp:`The most widely used biological definition of a species is a group of organisms capable of interbreeding in nature and producing fertile offspring. This reproductive compatibility is what distinguishes one species from another.` },
+{ q:`Which of the following is the key distinguishing feature between vertebrates and invertebrates?`, ch:[`Vertebrates possess a backbone, or vertebral column, while invertebrates do not`,`Vertebrates live only on land, while invertebrates live only in water`,`Invertebrates are always larger than vertebrates`,`Vertebrates cannot reproduce sexually`], ans:0, exp:`Vertebrates are animals that have an internal backbone made of vertebrae, such as fish, birds, and mammals, while invertebrates, such as insects and worms, lack a backbone entirely.` },
+{ q:`Scientists classify organisms into groups primarily based on:`, ch:[`Random assignment for convenience`,`Shared physical, genetic, and evolutionary characteristics`,`Where an organism was first discovered`,`Alphabetical order of common names`], ans:1, exp:`Classification systems group organisms according to shared traits, including physical characteristics, genetic similarities, and evolutionary relationships, in order to reflect how closely related different species are to one another.` },
+{ q:`Biodiversity refers to:`, ch:[`The total number of individual organisms in a single species`,`The variety of life, including the number of different species, genetic variation, and diversity of ecosystems, in a given area`,`The rate at which new species are named by scientists`,`The size of an organism's habitat`], ans:1, exp:`Biodiversity encompasses the variety of life at multiple levels, including the number of different species present, the genetic diversity within those species, and the range of different ecosystems in a region.` },
+{ q:`What is the primary purpose of a dichotomous key in biology?`, ch:[`To measure the age of a fossil`,`To help identify an unknown organism by working through a series of paired characteristic choices`,`To calculate the population size of a species`,`To determine an organism's genetic sequence`], ans:1, exp:`A dichotomous key presents a series of paired statements or questions about an organism's characteristics. By repeatedly choosing between two options, a user can narrow down and ultimately identify the specific organism.` },
+{ q:`Which scientist is widely credited with developing the modern system of binomial nomenclature and hierarchical classification still used today?`, ch:[`Charles Darwin`,`Gregor Mendel`,`Carl Linnaeus`,`Louis Pasteur`], ans:2, exp:`Carl Linnaeus, an 18th-century Swedish botanist, developed the two-part naming system (binomial nomenclature) and the hierarchical classification structure that forms the foundation of modern taxonomy.` },
+{ q:`In taxonomic classification, a genus is best described as:`, ch:[`A group of closely related species that share many characteristics`,`The single broadest category encompassing all life`,`A synonym for an individual species`,`A term used only for classifying plants`], ans:0, exp:`A genus is a taxonomic rank that groups together closely related species sharing significant similarities, such as the genus Panthera, which includes lions, tigers, and leopards.` },
+{ q:`When a species goes extinct, what is the general impact on biodiversity within its ecosystem?`, ch:[`Biodiversity always increases because resources are freed up`,`Biodiversity is unaffected, since ecosystems remain unchanged`,`Biodiversity typically decreases, and the loss can disrupt food webs and other species that depended on it`,`Extinction only affects biodiversity in aquatic ecosystems`], ans:2, exp:`When a species becomes extinct, overall biodiversity in that ecosystem decreases, and other species that relied on it, whether as a food source, predator control, or pollinator, can be negatively affected, sometimes triggering further ecological disruption.` }
+]},
+{
+    id: `bb88`,
+    cat: `Life Sciences`,
+    title: `Ecosystems, Biomes & Energy Flow`,
+    diff: `Easy`,
+    qs: [
+      {
+        q: `What is the primary source of energy for nearly all ecosystems on Earth?`,
+        ch: [`Geothermal heat`, `The Sun`, `Wind`, `Ocean currents`],
+        ans: 1,
+        exp: `Nearly all energy in ecosystems originates from sunlight, which producers capture through photosynthesis and convert into chemical energy that flows through food webs.`
+      },
+      {
+        q: `Organisms that make their own food using sunlight or chemicals are called?`,
+        ch: [`Consumers`, `Decomposers`, `Producers`, `Predators`],
+        ans: 2,
+        exp: `Producers, such as plants and algae, use photosynthesis to convert sunlight into chemical energy, forming the base of most food chains.`
+      },
+      {
+        q: `According to the 10% rule, what happens to energy as it moves from one trophic level to the next?`,
+        ch: [`About 90% is transferred and 10% is lost`, `About 10% is transferred and 90% is lost as heat`, `All the energy is transferred`, `Energy transfer is always 50%`],
+        ans: 1,
+        exp: `Only roughly 10% of energy stored at one trophic level is passed to the next; the rest is lost mainly as heat through metabolic processes, which is why food chains rarely exceed four or five levels.`
+      },
+      {
+        q: `Which organisms break down dead plant and animal matter, recycling nutrients back into the ecosystem?`,
+        ch: [`Producers`, `Herbivores`, `Decomposers`, `Carnivores`],
+        ans: 2,
+        exp: `Decomposers like fungi and bacteria break down dead organic material, releasing nutrients back into the soil where producers can reuse them.`
+      },
+      {
+        q: `A biome characterized by very low precipitation, permafrost, and short growing seasons is the?`,
+        ch: [`Tropical rainforest`, `Tundra`, `Savanna`, `Temperate forest`],
+        ans: 1,
+        exp: `The tundra biome has extremely cold temperatures, low precipitation, and a permanently frozen subsoil layer called permafrost, limiting plant growth mostly to mosses, lichens, and small shrubs.`
+      },
+      {
+        q: `In a food web, an organism that eats only plants is called a?`,
+        ch: [`Carnivore`, `Omnivore`, `Herbivore`, `Decomposer`],
+        ans: 2,
+        exp: `Herbivores obtain their energy exclusively by consuming producers such as plants, placing them at the primary consumer level.`
+      },
+      {
+        q: `Which term describes the specific role an organism plays in its ecosystem, including its habitat and interactions with other species?`,
+        ch: [`Habitat`, `Niche`, `Biome`, `Population`],
+        ans: 1,
+        exp: `A niche encompasses everything about how an organism lives, including what it eats, where it lives, and how it interacts with other species, not just its physical location.`
+      },
+      {
+        q: `Which of the following best describes a biotic factor in an ecosystem?`,
+        ch: [`Sunlight`, `Temperature`, `Soil pH`, `Bacteria`],
+        ans: 3,
+        exp: `Biotic factors are the living components of an ecosystem, such as bacteria, plants, and animals, while abiotic factors are non-living, like sunlight, temperature, and soil pH.`
+      },
+      {
+        q: `Which biome is characterized by tall grasses, few trees, and moderate rainfall, and is often home to large grazing animals?`,
+        ch: [`Desert`, `Grassland`, `Taiga`, `Tundra`],
+        ans: 1,
+        exp: `Grasslands (including savannas and prairies) receive moderate rainfall that supports grasses but not enough to sustain dense forests, making them ideal for large herds of grazers.`
+      },
+      {
+        q: `An energy pyramid is typically shaped like a pyramid, becoming narrower at the top, because?`,
+        ch: [`Predators eat more than producers make`, `Usable energy decreases at each higher trophic level`, `Producers require less energy than consumers`, `Decomposers remove energy only from the top`],
+        ans: 1,
+        exp: `Because a large percentage of energy is lost as heat at each transfer between trophic levels, less energy is available to support organisms at higher levels, resulting in fewer top predators than producers.`
+      },
+      {
+        q: `Which of these could act as a limiting factor restricting population growth in an ecosystem?`,
+        ch: [`A scarce food supply`, `Abundant sunlight`, `Unlimited water`, `Excess available space`],
+        ans: 0,
+        exp: `A limiting factor is any resource or condition, such as food, water, or space, that restricts population growth when it becomes scarce, unlike abundant or unlimited resources.`
+      },
+      {
+        q: `What is the main difference between a food chain and a food web?`,
+        ch: [`A food chain includes decomposers while a food web does not`, `A food web shows multiple interconnected feeding relationships while a food chain shows one linear path`, `A food chain only occurs in aquatic ecosystems`, `There is no meaningful difference between them`],
+        ans: 1,
+        exp: `A food chain shows a single, linear sequence of who eats whom, while a food web connects many overlapping food chains to show the more realistic, complex feeding relationships within an ecosystem.`
+      }
+    ]
+  },
+  {
+    id: `bb89`,
+    cat: `Life Sciences`,
+    title: `Population Ecology & Carrying Capacity`,
+    diff: `Medium`,
+    qs: [
+      {
+        q: `What is "carrying capacity" in population ecology?`,
+        ch: [`The maximum population size an environment can sustain long-term`, `The total number of species in an ecosystem`, `The rate at which a population grows each year`, `The minimum population needed to avoid extinction`],
+        ans: 0,
+        exp: `Carrying capacity (K) is the maximum population size that an environment's resources, such as food, water, and space, can support indefinitely without degrading the habitat.`
+      },
+      {
+        q: `In logistic population growth, what happens to the growth rate as a population approaches carrying capacity?`,
+        ch: [`It increases sharply`, `It stays constant`, `It slows down and levels off`, `It becomes negative immediately`],
+        ans: 2,
+        exp: `In logistic growth, as resources become limited near carrying capacity, growth rate slows and the population size stabilizes, producing the characteristic S-shaped curve.`
+      },
+      {
+        q: `Which type of population growth produces a J-shaped curve, occurring when resources are unlimited?`,
+        ch: [`Logistic growth`, `Exponential growth`, `Zero growth`, `Declining growth`],
+        ans: 1,
+        exp: `Exponential growth occurs when a population has unlimited resources and grows at an ever-increasing rate, producing a J-shaped curve rather than leveling off.`
+      },
+      {
+        q: `A disease outbreak that affects a population regardless of its size is an example of a?`,
+        ch: [`Density-dependent limiting factor`, `Density-independent limiting factor`, `Biotic potential factor`, `Carrying capacity factor`],
+        ans: 1,
+        exp: `Density-independent factors, like natural disasters or extreme weather, affect a population's size regardless of how crowded it is, unlike density-dependent factors such as disease spread or competition, which intensify with higher density.`
+      },
+      {
+        q: `Species that produce many offspring with little parental care and mature quickly, thriving in unstable environments, are known as?`,
+        ch: [`K-selected species`, `r-selected species`, `Keystone species`, `Endemic species`],
+        ans: 1,
+        exp: `r-selected species, like insects and rodents, prioritize a high reproductive rate over parental investment, allowing them to rapidly colonize unstable or unpredictable environments.`
+      },
+      {
+        q: `Which of the following is a density-dependent limiting factor?`,
+        ch: [`A volcanic eruption`, `Competition for food among individuals`, `An early frost`, `A hurricane`],
+        ans: 1,
+        exp: `Density-dependent factors, such as competition for food, spread of disease, and predation, become more intense as population density increases, unlike density-independent factors like weather events.`
+      },
+      {
+        q: `In a predator-prey relationship, what typically happens to the predator population shortly after the prey population increases?`,
+        ch: [`The predator population decreases immediately`, `The predator population also increases due to more available food`, `The predator population stays exactly the same`, `The predator population goes extinct`],
+        ans: 1,
+        exp: `More prey generally means more food available, allowing the predator population to grow, though this growth typically lags slightly behind the rise in prey, creating cyclical boom-and-bust patterns over time.`
+      },
+      {
+        q: `What does a Type I survivorship curve indicate about a species?`,
+        ch: [`Most individuals die young`, `Death rates are constant across all ages`, `Most individuals survive to old age and die later in life`, `The species reproduces only once`],
+        ans: 2,
+        exp: `A Type I survivorship curve, typical of species like humans and large mammals, shows high survival through early and middle life with most deaths concentrated in old age.`
+      },
+      {
+        q: `If a population's birth rate exceeds its death rate and there is no migration, the population will?`,
+        ch: [`Decrease`, `Stay exactly the same`, `Increase`, `Immediately reach carrying capacity`],
+        ans: 2,
+        exp: `Population growth rate depends on births, deaths, immigration, and emigration; when births outnumber deaths and migration is balanced, the population size increases.`
+      },
+      {
+        q: `When a population significantly exceeds its environment's carrying capacity, it is said to have undergone?`,
+        ch: [`Overshoot`, `Stabilization`, `Biotic potential`, `Succession`],
+        ans: 0,
+        exp: `Overshoot occurs when a population temporarily grows beyond what its environment can sustainably support, often leading to a rapid population crash, or "die-off," as resources become depleted.`
+      },
+      {
+        q: `Which of the following would most likely increase a population's growth rate?`,
+        ch: [`Higher emigration rate`, `Higher death rate`, `Higher immigration rate`, `Lower birth rate`],
+        ans: 2,
+        exp: `Immigration adds individuals to a population, so a higher immigration rate directly contributes to a faster overall growth rate, alongside births, while emigration and deaths subtract from it.`
+      },
+      {
+        q: `Species that produce fewer offspring but invest significant time and energy in parental care, typically found in stable environments near carrying capacity, are called?`,
+        ch: [`r-selected species`, `K-selected species`, `Invasive species`, `Pioneer species`],
+        ans: 1,
+        exp: `K-selected species, such as elephants and humans, tend to have long lifespans, few offspring, and extensive parental care, strategies that succeed in stable environments close to carrying capacity.`
+      }
+    ]
+  },
+  {
+    id: `bb90`,
+    cat: `Life Sciences`,
+    title: `Human Impact on the Environment & Conservation`,
+    diff: `Easy`,
+    qs: [
+      {
+        q: `Which of the following is considered a renewable resource?`,
+        ch: [`Coal`, `Natural gas`, `Solar energy`, `Petroleum`],
+        ans: 2,
+        exp: `Renewable resources, like solar, wind, and hydroelectric energy, are naturally replenished on a human timescale, unlike fossil fuels such as coal, natural gas, and petroleum, which take millions of years to form.`
+      },
+      {
+        q: `What is the term for clearing large areas of forest, often for agriculture or development?`,
+        ch: [`Desertification`, `Deforestation`, `Eutrophication`, `Erosion`],
+        ans: 1,
+        exp: `Deforestation is the large-scale removal of trees and forests, which reduces habitat for wildlife, decreases carbon dioxide absorption, and can contribute to soil erosion.`
+      },
+      {
+        q: `Burning fossil fuels primarily contributes to climate change by releasing large amounts of which gas?`,
+        ch: [`Oxygen`, `Nitrogen`, `Carbon dioxide`, `Helium`],
+        ans: 2,
+        exp: `Burning fossil fuels releases carbon dioxide, a greenhouse gas that traps heat in the atmosphere and is a major driver of global climate change.`
+      },
+      {
+        q: `A species that is introduced to a new ecosystem, often outcompeting native species, is called a(n)?`,
+        ch: [`Endangered species`, `Invasive species`, `Keystone species`, `Indicator species`],
+        ans: 1,
+        exp: `Invasive species are non-native organisms introduced to an ecosystem, often intentionally or accidentally by humans, where they can spread rapidly and outcompete native species for resources.`
+      },
+      {
+        q: `Which practice helps conserve natural resources by reusing materials to make new products?`,
+        ch: [`Incineration`, `Recycling`, `Landfilling`, `Deforestation`],
+        ans: 1,
+        exp: `Recycling processes used materials like paper, glass, and metal into new products, reducing the need to extract raw resources and decreasing the amount of waste sent to landfills.`
+      },
+      {
+        q: `Overfishing is a major concern because it can lead to?`,
+        ch: [`Increased biodiversity in oceans`, `Collapse of fish populations and disrupted marine food webs`, `Higher populations of all marine species`, `No significant environmental impact`],
+        ans: 1,
+        exp: `Overfishing removes fish faster than populations can reproduce and replenish, which can collapse fish stocks and disrupt the balance of entire marine food webs.`
+      },
+      {
+        q: `What was the main cause of the thinning of the ozone layer observed in the late 20th century?`,
+        ch: [`Carbon dioxide emissions`, `Chlorofluorocarbons (CFCs)`, `Methane from livestock`, `Deforestation`],
+        ans: 1,
+        exp: `Chlorofluorocarbons (CFCs), once widely used in refrigerants and aerosol sprays, released chlorine atoms into the stratosphere that broke down ozone molecules, thinning the protective ozone layer.`
+      },
+      {
+        q: `Breaking a large, continuous habitat into smaller, isolated patches due to roads or development is called?`,
+        ch: [`Habitat fragmentation`, `Bioaccumulation`, `Succession`, `Eutrophication`],
+        ans: 0,
+        exp: `Habitat fragmentation divides large habitats into smaller, disconnected pieces, which can isolate populations, reduce genetic diversity, and make species more vulnerable to extinction.`
+      },
+      {
+        q: `Which of the following is the best example of a sustainable practice?`,
+        ch: [`Using resources faster than they can be replenished`, `Rotating crops to maintain soil fertility for future harvests`, `Clear-cutting entire forests without replanting`, `Dumping industrial waste into rivers`],
+        ans: 1,
+        exp: `Sustainable practices, like crop rotation, meet present needs without compromising the ability of future generations to meet their own needs by maintaining resource availability, such as soil fertility, over time.`
+      },
+      {
+        q: `Excess nutrients, such as fertilizer runoff, entering a lake and causing algal blooms is known as?`,
+        ch: [`Eutrophication`, `Desertification`, `Bioaccumulation`, `Acid rain`],
+        ans: 0,
+        exp: `Eutrophication occurs when excess nutrients like nitrogen and phosphorus, often from fertilizer runoff, enter a body of water, causing algal blooms that can deplete oxygen and harm aquatic life.`
+      },
+      {
+        q: `Setting aside protected areas like national parks is a conservation strategy primarily meant to?`,
+        ch: [`Increase resource extraction`, `Preserve habitats and biodiversity`, `Promote urban development`, `Encourage invasive species growth`],
+        ans: 1,
+        exp: `Protected areas such as national parks and wildlife refuges limit human development and resource extraction to preserve habitats, ecosystems, and the biodiversity they support.`
+      },
+      {
+        q: `Which term describes gases like carbon dioxide and methane that trap heat in Earth's atmosphere?`,
+        ch: [`Noble gases`, `Greenhouse gases`, `Inert gases`, `Ozone gases`],
+        ans: 1,
+        exp: `Greenhouse gases, including carbon dioxide, methane, and water vapor, absorb and re-emit infrared radiation, trapping heat in the atmosphere and warming the planet's surface.`
+      }
+    ]
+  },
+  {
+    id: `bb91`,
+    cat: `Life Sciences`,
+    title: `Nutrition Basics: Macronutrients & Micronutrients`,
+    diff: `Easy`,
+    qs: [
+      {
+        q: `Which of the following is classified as a macronutrient?`,
+        ch: [`Vitamin C`, `Iron`, `Carbohydrates`, `Calcium`],
+        ans: 2,
+        exp: `Macronutrients, carbohydrates, proteins, and fats, are needed in large amounts and provide the body with energy, while vitamins and minerals are micronutrients needed in much smaller amounts.`
+      },
+      {
+        q: `Which macronutrient is the body's primary and most quickly accessible source of energy?`,
+        ch: [`Protein`, `Fat`, `Carbohydrates`, `Water`],
+        ans: 2,
+        exp: `Carbohydrates are broken down into glucose, which cells use as their primary and fastest-available source of energy, especially for the brain and during physical activity.`
+      },
+      {
+        q: `Proteins are broken down into which building blocks during digestion?`,
+        ch: [`Fatty acids`, `Amino acids`, `Glucose molecules`, `Nucleotides`],
+        ans: 1,
+        exp: `Proteins are made of chains of amino acids, which are released during digestion and used by the body to build and repair tissues, make enzymes, and support immune function.`
+      },
+      {
+        q: `A prolonged deficiency in vitamin C can lead to which condition?`,
+        ch: [`Rickets`, `Scurvy`, `Night blindness`, `Goiter`],
+        ans: 1,
+        exp: `Vitamin C is essential for collagen production and immune function; a prolonged deficiency causes scurvy, characterized by bleeding gums, joint pain, and poor wound healing.`
+      },
+      {
+        q: `Which nutrient provides the most energy per gram?`,
+        ch: [`Carbohydrates`, `Protein`, `Fat`, `Fiber`],
+        ans: 2,
+        exp: `Fat provides about 9 calories per gram, more than double the roughly 4 calories per gram provided by carbohydrates or protein, making it the most energy-dense macronutrient.`
+      },
+      {
+        q: `Which of the following is considered a micronutrient?`,
+        ch: [`Fat`, `Vitamin D`, `Protein`, `Carbohydrates`],
+        ans: 1,
+        exp: `Micronutrients, including vitamins and minerals, are needed in small amounts but are essential for processes like bone health, immune function, and metabolism; vitamin D specifically helps the body absorb calcium.`
+      },
+      {
+        q: `Dietary fiber is important for digestive health primarily because it?`,
+        ch: [`Provides a concentrated source of calories`, `Helps regulate digestion and promotes bowel regularity`, `Is quickly absorbed into the bloodstream as sugar`, `Builds and repairs muscle tissue`],
+        ans: 1,
+        exp: `Dietary fiber, found in fruits, vegetables, and whole grains, is not digested by the body but adds bulk to stool and helps keep the digestive system moving regularly.`
+      },
+      {
+        q: `A deficiency in vitamin D can lead to which condition, especially in children?`,
+        ch: [`Scurvy`, `Anemia`, `Rickets`, `Goiter`],
+        ans: 2,
+        exp: `Vitamin D deficiency impairs the body's ability to absorb calcium, leading to weak or soft bones, a condition called rickets in children and osteomalacia in adults.`
+      },
+      {
+        q: `Which mineral is essential for building red blood cells and preventing anemia?`,
+        ch: [`Calcium`, `Iron`, `Potassium`, `Sodium`],
+        ans: 1,
+        exp: `Iron is a key component of hemoglobin, the protein in red blood cells that carries oxygen; insufficient iron intake can lead to iron-deficiency anemia, causing fatigue and weakness.`
+      },
+      {
+        q: `Which of the following best describes the role of water as an essential nutrient?`,
+        ch: [`It provides significant caloric energy`, `It regulates body temperature and transports nutrients`, `It is only needed during exercise`, `It is classified as a macronutrient like protein`],
+        ans: 1,
+        exp: `Water, though it contains no calories, is essential for regulating body temperature, transporting nutrients and waste, and supporting nearly every bodily function, which is why it is considered an essential nutrient.`
+      },
+      {
+        q: `A diet lacking sufficient iodine can lead to which condition?`,
+        ch: [`Goiter`, `Scurvy`, `Rickets`, `Night blindness`],
+        ans: 0,
+        exp: `Iodine is required to produce thyroid hormones; a deficiency can cause the thyroid gland to enlarge, a condition known as goiter.`
+      },
+      {
+        q: `Which vitamin deficiency is most closely associated with poor night vision?`,
+        ch: [`Vitamin A`, `Vitamin C`, `Vitamin D`, `Vitamin B12`],
+        ans: 0,
+        exp: `Vitamin A is needed to produce rhodopsin, a pigment in the retina that helps the eyes adjust to low light; a deficiency can impair night vision.`
+      }
+    ]
+  },
+  {
+    id: `bb92`,
+    cat: `Life Sciences`,
+    title: `Basic Public Health & Disease Prevention`,
+    diff: `Easy`,
+    qs: [
+      {
+        q: `What is the main purpose of a vaccine?`,
+        ch: [`To directly kill an existing infection`, `To train the immune system to recognize and fight a specific pathogen`, `To replace damaged cells`, `To provide the body with extra nutrients`],
+        ans: 1,
+        exp: `Vaccines expose the immune system to a harmless piece or weakened form of a pathogen, prompting it to produce antibodies so it can respond quickly if the real pathogen is encountered later.`
+      },
+      {
+        q: `Which of the following is a communicable (infectious) disease?`,
+        ch: [`Type 2 diabetes`, `Influenza`, `Heart disease`, `Asthma`],
+        ans: 1,
+        exp: `Communicable diseases, like influenza, are caused by pathogens and can spread from person to person, unlike noncommunicable diseases such as diabetes or heart disease, which cannot be transmitted between people.`
+      },
+      {
+        q: `Antibiotics are effective against which type of pathogen?`,
+        ch: [`Viruses`, `Bacteria`, `Prions`, `Most fungi`],
+        ans: 1,
+        exp: `Antibiotics work by targeting structures and processes specific to bacterial cells, such as their cell walls; they are not effective against viruses, which is why antibiotics cannot cure illnesses like the common cold or flu.`
+      },
+      {
+        q: `What is "herd immunity"?`,
+        ch: [`Immunity found only in farm animals`, `A situation where enough of a population is immune to a disease that it slows or stops the disease's spread`, `Immunity gained only from natural infection, never from vaccines`, `A type of immunity that lasts only a few days`],
+        ans: 1,
+        exp: `Herd immunity occurs when a large enough proportion of a population becomes immune to a disease, through vaccination or prior infection, making it harder for the disease to spread and indirectly protecting those who are not immune.`
+      },
+      {
+        q: `Which of the following practices is most effective at preventing the spread of many infectious diseases?`,
+        ch: [`Skipping meals`, `Regular handwashing with soap`, `Avoiding water intake`, `Sleeping less than four hours per night`],
+        ans: 1,
+        exp: `Regular handwashing with soap physically removes and breaks down many pathogens from the skin, making it one of the simplest and most effective ways to prevent the spread of infectious disease.`
+      },
+      {
+        q: `A disease that occurs over a wide geographic area, such as multiple countries or continents, at the same time is called a?`,
+        ch: [`Epidemic`, `Pandemic`, `Endemic disease`, `Outbreak`],
+        ans: 1,
+        exp: `A pandemic is an epidemic that has spread across multiple countries or continents, affecting a very large number of people, as opposed to an epidemic, which is generally more localized to a region or community.`
+      },
+      {
+        q: `Which of these is an example of a noncommunicable disease?`,
+        ch: [`Tuberculosis`, `Chickenpox`, `Type 2 diabetes`, `Strep throat`],
+        ans: 2,
+        exp: `Type 2 diabetes is a noncommunicable disease, meaning it is not caused by an infectious pathogen and cannot spread from person to person, unlike tuberculosis, chickenpox, and strep throat, which are caused by bacteria or viruses.`
+      },
+      {
+        q: `Malaria is caused by which type of pathogen?`,
+        ch: [`A virus`, `A bacterium`, `A parasite`, `A prion`],
+        ans: 2,
+        exp: `Malaria is caused by Plasmodium, a parasitic microorganism transmitted to humans through the bite of infected mosquitoes, distinguishing it from bacterial or viral diseases.`
+      },
+      {
+        q: `Why are antiviral medications generally different from antibiotics?`,
+        ch: [`Antivirals target processes specific to viruses, while antibiotics target bacteria`, `Antivirals and antibiotics work in exactly the same way`, `Antivirals only treat noncommunicable diseases`, `Antibiotics can cure any viral infection`],
+        ans: 0,
+        exp: `Antiviral drugs target structures or processes unique to viruses, such as their replication machinery, while antibiotics target bacterial structures like cell walls, which is why the two types of medication are not interchangeable.`
+      },
+      {
+        q: `Proper food handling and cooking meat to safe temperatures primarily helps prevent?`,
+        ch: [`Genetic disorders`, `Foodborne illness from pathogens like bacteria`, `Vitamin toxicity`, `Allergic reactions to all foods`],
+        ans: 1,
+        exp: `Cooking food to recommended temperatures and following safe food handling practices kills harmful bacteria, such as Salmonella and E. coli, that can cause foodborne illness.`
+      },
+      {
+        q: `Which of the following best describes the purpose of quarantine during a disease outbreak?`,
+        ch: [`To cure infected individuals immediately`, `To separate and restrict the movement of people who may have been exposed to a contagious disease to prevent its spread`, `To provide nutritional supplements to a population`, `To vaccinate an entire population at once`],
+        ans: 1,
+        exp: `Quarantine separates and restricts the movement of individuals who may have been exposed to a contagious disease, giving time to see if they become sick while limiting the chance the disease spreads further.`
+      },
+      {
+        q: `Which of the following is the best example of a primary prevention strategy in public health?`,
+        ch: [`Treating a disease after diagnosis`, `Vaccinating children before they are exposed to a disease`, `Performing surgery to remove a tumor`, `Prescribing medication to manage chronic pain`],
+        ans: 1,
+        exp: `Primary prevention aims to stop disease before it starts, such as through vaccination, whereas treating an existing condition falls under secondary or tertiary prevention.`
+      }
+    ]
+  },
+  {
+    id: `bb93`,
+    cat: `Life Sciences`,
+    title: `Water Cycle, Carbon Cycle & Nitrogen Cycle`,
+    diff: `Medium`,
+    qs: [
+      {
+        q: `In the water cycle, the process by which liquid water changes into water vapor is called?`,
+        ch: [`Condensation`, `Evaporation`, `Precipitation`, `Infiltration`],
+        ans: 1,
+        exp: `Evaporation is the process by which liquid water, heated by the sun, transforms into water vapor and rises into the atmosphere, forming a key step in the water cycle.`
+      },
+      {
+        q: `What is the term for water vapor turning back into liquid water droplets, forming clouds?`,
+        ch: [`Transpiration`, `Runoff`, `Condensation`, `Sublimation`],
+        ans: 2,
+        exp: `Condensation occurs when water vapor cools and changes back into liquid droplets, which combine in the atmosphere to form clouds, eventually leading to precipitation.`
+      },
+      {
+        q: `The release of water vapor from plant leaves into the atmosphere is called?`,
+        ch: [`Transpiration`, `Precipitation`, `Infiltration`, `Percolation`],
+        ans: 0,
+        exp: `Transpiration is the process by which water absorbed by plant roots evaporates from leaf surfaces into the atmosphere, contributing significantly to atmospheric water vapor.`
+      },
+      {
+        q: `Which process primarily returns carbon stored in plants and animals back to the atmosphere as carbon dioxide?`,
+        ch: [`Photosynthesis`, `Respiration`, `Condensation`, `Nitrogen fixation`],
+        ans: 1,
+        exp: `Cellular respiration, performed by both plants and animals, breaks down glucose for energy and releases carbon dioxide as a byproduct, returning carbon to the atmosphere.`
+      },
+      {
+        q: `Which process removes carbon dioxide from the atmosphere and stores it in plant tissue as glucose?`,
+        ch: [`Respiration`, `Decomposition`, `Photosynthesis`, `Combustion`],
+        ans: 2,
+        exp: `Photosynthesis allows plants to absorb atmospheric carbon dioxide and convert it, using sunlight, into glucose and oxygen, effectively removing carbon from the atmosphere and storing it in living tissue.`
+      },
+      {
+        q: `Burning fossil fuels affects the carbon cycle by?`,
+        ch: [`Removing carbon dioxide from the atmosphere`, `Releasing carbon that had been stored underground for millions of years back into the atmosphere`, `Converting carbon dioxide directly into oxygen`, `Having no measurable effect on atmospheric carbon`],
+        ans: 1,
+        exp: `Fossil fuels formed from ancient organic matter over millions of years; burning them releases that long-stored carbon into the atmosphere as carbon dioxide much faster than natural cycles would.`
+      },
+      {
+        q: `Nitrogen gas makes up about 78% of the atmosphere, but most organisms cannot use it directly. What process converts atmospheric nitrogen into a usable form for plants?`,
+        ch: [`Denitrification`, `Nitrogen fixation`, `Transpiration`, `Combustion`],
+        ans: 1,
+        exp: `Nitrogen fixation, carried out mainly by certain soil bacteria (often living in the roots of legumes), converts inert atmospheric nitrogen gas into ammonia or related compounds that plants can absorb and use.`
+      },
+      {
+        q: `Which organisms are primarily responsible for converting atmospheric nitrogen gas into a form usable by plants?`,
+        ch: [`Fungi in decaying wood`, `Nitrogen-fixing bacteria in soil and root nodules`, `Algae in the ocean`, `Insects in leaf litter`],
+        ans: 1,
+        exp: `Nitrogen-fixing bacteria, many of which live symbiotically in the root nodules of legume plants, convert atmospheric nitrogen gas into ammonia, making it accessible to plants for building proteins and nucleic acids.`
+      },
+      {
+        q: `Denitrification is the process by which?`,
+        ch: [`Nitrogen gas is converted into ammonia`, `Bacteria convert nitrates back into nitrogen gas, released into the atmosphere`, `Plants absorb nitrogen directly from the air`, `Animals excrete nitrogen as waste`],
+        ans: 1,
+        exp: `Denitrification is carried out by certain bacteria that convert nitrates in the soil back into nitrogen gas, which is then released into the atmosphere, completing the nitrogen cycle.`
+      },
+      {
+        q: `Which of the following is a major reservoir where most of Earth's water is stored?`,
+        ch: [`The atmosphere`, `Rivers`, `Oceans`, `Groundwater`],
+        ans: 2,
+        exp: `The vast majority of Earth's water, roughly 97%, is stored in the oceans as saltwater, making them by far the largest reservoir in the water cycle.`
+      },
+      {
+        q: `When rainwater soaks into the ground and moves downward into soil and rock layers, this process is called?`,
+        ch: [`Runoff`, `Infiltration`, `Sublimation`, `Evaporation`],
+        ans: 1,
+        exp: `Infiltration is the process by which precipitation seeps into the soil and moves downward, eventually replenishing groundwater supplies, as opposed to runoff, which flows over the land surface.`
+      },
+      {
+        q: `How are the carbon cycle and the greenhouse effect most directly connected?`,
+        ch: [`Carbon dioxide, a greenhouse gas, traps heat in the atmosphere, so increased carbon released by human activity intensifies warming`, `The carbon cycle prevents any greenhouse gases from forming`, `Carbon has no relationship to atmospheric temperature`, `Only nitrogen, not carbon, contributes to the greenhouse effect`],
+        ans: 0,
+        exp: `Carbon dioxide is a key greenhouse gas that traps heat in the atmosphere; as human activities like burning fossil fuels add more carbon dioxide to the atmosphere, they intensify the greenhouse effect and contribute to global warming.`
+      }
+    ]
+  },
+  {
+    id: `bb94`,
+    cat: `Life Sciences`,
+    title: `Climate & Weather Basics`,
+    diff: `Easy`,
+    qs: [
+      {
+        q: `What is the main difference between weather and climate?`,
+        ch: [`Weather and climate mean exactly the same thing`, `Weather describes short-term atmospheric conditions, while climate describes long-term average patterns in a region`, `Climate changes daily while weather stays constant for years`, `Weather only refers to temperature, while climate refers to precipitation`],
+        ans: 1,
+        exp: `Weather refers to short-term atmospheric conditions, like today's temperature or rainfall, while climate describes the long-term average weather patterns of a region over many years or decades.`
+      },
+      {
+        q: `Which layer of Earth's atmosphere is closest to the surface and is where most weather occurs?`,
+        ch: [`Stratosphere`, `Troposphere`, `Mesosphere`, `Thermosphere`],
+        ans: 1,
+        exp: `The troposphere is the lowest layer of the atmosphere, extending from Earth's surface up several miles, and it is where nearly all weather phenomena, such as clouds and storms, occur.`
+      },
+      {
+        q: `Earth's seasons are primarily caused by?`,
+        ch: [`Changes in the distance between Earth and the Sun`, `The tilt of Earth's axis as it orbits the Sun`, `Variations in the Sun's brightness throughout the year`, `Ocean currents shifting direction`],
+        ans: 1,
+        exp: `Earth's axis is tilted about 23.5 degrees, so different hemispheres receive more or less direct sunlight at different points in Earth's orbit around the Sun, creating the seasons.`
+      },
+      {
+        q: `A boundary where two air masses of different temperatures and densities meet is called a?`,
+        ch: [`Front`, `Jet stream`, `Isobar`, `Trade wind`],
+        ans: 0,
+        exp: `A front is the boundary between two air masses with different temperature and humidity characteristics; the interaction at fronts often produces significant changes in weather, including precipitation.`
+      },
+      {
+        q: `Which greenhouse gas has increased most significantly due to human activities like burning fossil fuels, driving human-caused climate change?`,
+        ch: [`Oxygen`, `Nitrogen`, `Carbon dioxide`, `Argon`],
+        ans: 2,
+        exp: `While water vapor is the most abundant greenhouse gas overall, carbon dioxide is the greenhouse gas most significantly increased by human activities like burning fossil fuels, making it a primary driver of human-caused climate change.`
+      },
+      {
+        q: `Humidity refers to?`,
+        ch: [`The speed of wind in an area`, `The amount of water vapor present in the air`, `The air pressure at sea level`, `The temperature of ocean water`],
+        ans: 1,
+        exp: `Humidity measures the amount of water vapor present in the air; high humidity often makes conditions feel warmer and stickier because it slows the evaporation of sweat from skin.`
+      },
+      {
+        q: `Which type of front typically brings a rapid, often intense burst of precipitation followed by clearing skies?`,
+        ch: [`Warm front`, `Cold front`, `Stationary front`, `Occluded front`],
+        ans: 1,
+        exp: `A cold front occurs when a cold air mass advances and forces warmer air upward quickly, often producing brief but intense storms, unlike the more gradual, prolonged precipitation typical of warm fronts.`
+      },
+      {
+        q: `A region's climate zone (such as tropical, temperate, or polar) is mainly determined by?`,
+        ch: [`The day of the week`, `Its latitude and resulting average temperature and precipitation patterns`, `The color of the local soil`, `The number of rivers nearby`],
+        ans: 1,
+        exp: `Climate zones are largely determined by latitude, which affects how directly sunlight hits a region, leading to characteristic long-term patterns of temperature and precipitation, such as the warm, wet conditions near the equator versus the cold, dry conditions near the poles.`
+      },
+      {
+        q: `El Nino is best described as?`,
+        ch: [`A permanent increase in global temperature`, `A periodic warming of surface waters in the central and eastern Pacific Ocean that affects global weather patterns`, `A type of hurricane found only in the Atlantic`, `A yearly, predictable snowstorm`],
+        ans: 1,
+        exp: `El Nino is a recurring climate pattern involving periodic warming of ocean surface temperatures in the central and eastern Pacific, which can shift global weather patterns, including rainfall and storm tracks, for months at a time.`
+      },
+      {
+        q: `Which instrument is commonly used to measure atmospheric pressure?`,
+        ch: [`Thermometer`, `Anemometer`, `Barometer`, `Hygrometer`],
+        ans: 2,
+        exp: `A barometer measures atmospheric pressure; changes in pressure, such as a drop before a storm, often signal upcoming shifts in weather.`
+      },
+      {
+        q: `Prevailing winds that consistently blow in a predictable direction across large regions of the globe are known as?`,
+        ch: [`Local breezes`, `Global wind patterns (such as trade winds)`, `Random gusts`, `Tornadoes`],
+        ans: 1,
+        exp: `Global wind patterns, like the trade winds and westerlies, are large-scale, consistent wind systems driven by the uneven heating of Earth's surface and the planet's rotation, and they influence regional climates.`
+      },
+      {
+        q: `Which of the following would most likely be classified as "climate" rather than "weather"?`,
+        ch: [`It is raining outside right now`, `Tomorrow will be sunny with a high of 75 degrees`, `This region typically has hot, dry summers and mild, wet winters`, `There was a thunderstorm this afternoon`],
+        ans: 2,
+        exp: `Describing typical, long-term seasonal patterns for a region reflects climate, whereas statements about today's or tomorrow's specific conditions describe weather.`
+      }
+    ]
+  },
+  {
+    id: `bb95`,
+    cat: `Life Sciences`,
+    title: `Genetics in Everyday Life: Heredity & Genetic Disorders Overview`,
+    diff: `Medium`,
+    qs: [
+      {
+        q: `What is the relationship between DNA, genes, and chromosomes?`,
+        ch: [`Chromosomes are made of genes, which are made of proteins`, `DNA is coiled into structures called chromosomes, and genes are specific segments of DNA that code for traits`, `Genes are made of chromosomes, which are made of DNA`, `DNA, genes, and chromosomes are all the same thing`],
+        ans: 1,
+        exp: `DNA is a long molecule that is tightly coiled and packaged into structures called chromosomes; specific segments of that DNA, called genes, contain the instructions for producing particular traits or proteins.`
+      },
+      {
+        q: `In genetics, an organism's physical or observable characteristics are referred to as its?`,
+        ch: [`Genotype`, `Phenotype`, `Allele`, `Genome`],
+        ans: 1,
+        exp: `Phenotype refers to an organism's observable traits, such as eye color or height, which result from the interaction between its genotype (genetic makeup) and environmental factors.`
+      },
+      {
+        q: `If a dominant allele is represented by "B" and a recessive allele by "b," an organism with the genotype "Bb" is described as?`,
+        ch: [`Homozygous dominant`, `Homozygous recessive`, `Heterozygous`, `Codominant`],
+        ans: 2,
+        exp: `Heterozygous describes a genotype with two different alleles for a gene, such as Bb, one dominant and one recessive, as opposed to homozygous genotypes (BB or bb), which have two identical alleles.`
+      },
+      {
+        q: `A Punnett square is primarily used to?`,
+        ch: [`Measure the physical size of a chromosome`, `Predict the possible genotype and phenotype combinations of offspring from a genetic cross`, `Determine the exact age of an organism`, `Calculate the number of chromosomes in a cell`],
+        ans: 1,
+        exp: `A Punnett square is a diagram that combines possible alleles from two parents to predict the probability of different genotype and phenotype outcomes in their offspring.`
+      },
+      {
+        q: `Cystic fibrosis is inherited as a recessive genetic disorder. For a child to have cystic fibrosis, they generally must?`,
+        ch: [`Inherit the recessive allele from only one parent`, `Inherit the recessive allele from both parents`, `Inherit a dominant allele from both parents`, `Have no copies of the gene at all`],
+        ans: 1,
+        exp: `Because cystic fibrosis is caused by a recessive allele, an individual must inherit two copies of the recessive allele, one from each parent, to actually have the disorder; a person with just one copy is typically an unaffected carrier.`
+      },
+      {
+        q: `Which genetic disorder is caused by an extra copy of chromosome 21?`,
+        ch: [`Cystic fibrosis`, `Sickle cell anemia`, `Down syndrome`, `Color blindness`],
+        ans: 2,
+        exp: `Down syndrome results from trisomy 21, meaning an individual has three copies of chromosome 21 instead of the usual two, which affects physical development and cognitive function.`
+      },
+      {
+        q: `Red-green color blindness is more common in males than females because it is?`,
+        ch: [`An autosomal dominant trait`, `An X-linked recessive trait`, `Caused entirely by environmental factors`, `Not actually genetic at all`],
+        ans: 1,
+        exp: `Red-green color blindness is caused by a recessive allele located on the X chromosome; because males have only one X chromosome, a single recessive allele is enough to cause the trait, while females need two copies (one on each X chromosome).`
+      },
+      {
+        q: `A change in the DNA sequence of an organism is called a?`,
+        ch: [`Mutation`, `Mitosis`, `Meiosis`, `Phenotype`],
+        ans: 0,
+        exp: `A mutation is any change in an organism's DNA sequence; mutations can be harmless, harmful, or occasionally beneficial, and they are a fundamental source of genetic variation.`
+      },
+      {
+        q: `Sickle cell anemia is caused by a mutation affecting which protein?`,
+        ch: [`Insulin`, `Hemoglobin`, `Collagen`, `Keratin`],
+        ans: 1,
+        exp: `Sickle cell anemia results from a mutation in the gene that codes for hemoglobin, the protein in red blood cells that carries oxygen, causing the cells to form a rigid, sickle shape that can block blood flow.`
+      },
+      {
+        q: `Identical twins develop when?`,
+        ch: [`Two separate eggs are fertilized by two separate sperm`, `A single fertilized egg splits into two separate embryos`, `One egg is fertilized by two sperm cells`, `A mother releases eggs from two different menstrual cycles`],
+        ans: 1,
+        exp: `Identical (monozygotic) twins form when a single fertilized egg splits into two separate embryos early in development, giving them nearly identical genetic material, unlike fraternal twins, which develop from two separately fertilized eggs.`
+      },
+      {
+        q: `If both parents are carriers (heterozygous) for a recessive genetic disorder, what is the probability that their child will be affected by the disorder?`,
+        ch: [`0%`, `25%`, `50%`, `100%`],
+        ans: 1,
+        exp: `When two heterozygous carriers (Aa x Aa) have a child, a Punnett square shows a 25% chance of the child being homozygous recessive (aa) and thus affected, a 50% chance of being a carrier, and a 25% chance of being homozygous dominant.`
+      },
+      {
+        q: `Which of the following best describes the difference between genotype and phenotype?`,
+        ch: [`Genotype is the observable trait, while phenotype is the genetic code`, `Genotype is the genetic makeup of an organism, while phenotype is the observable expression of that genetic makeup`, `Genotype and phenotype are unrelated concepts`, `Phenotype determines genotype, not the other way around`],
+        ans: 1,
+        exp: `Genotype refers to the actual genetic information an organism carries, while phenotype is how that genetic information is physically or observably expressed, often influenced by environmental factors as well.`
+      }
+    ]
+  },
+  {
+    id: `bb96`,
+    cat: `Life Sciences`,
+    title: `Endocrine Hormone Response Directionality`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `How does parathyroid hormone (PTH) release affect blood calcium levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `PTH is secreted by the parathyroid glands in response to low blood calcium. It increases blood calcium levels by stimulating bone resorption (osteoclast activity), enhancing renal calcium reabsorption, and increasing intestinal calcium absorption via vitamin D activation.`
+      },
+      {
+        q: `How does insulin release affect blood glucose levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Insulin is released by pancreatic beta cells in response to high blood glucose. It decreases blood glucose levels by promoting glucose uptake into muscle and adipose tissues via GLUT4 translocation and by stimulating glycogenesis.`
+      },
+      {
+        q: `How does calcitonin release affect blood calcium levels?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Calcitonin is secreted by the thyroid's parafollicular cells (C-cells) in response to high blood calcium. It decreases blood calcium levels primarily by inhibiting osteoclast activity and promoting renal excretion of calcium.`
+      },
+      {
+        q: `In a patient with Type 1 Diabetes, how does glucagon release change after a high-carbohydrate meal?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `In Type 1 Diabetes, the lack of paracrine insulin signaling (which normally suppresses glucagon) causes glucagon levels to paradoxically increase or remain elevated even after a high-carbohydrate meal, contributing to hyperglycemia.`
+      },
+      {
+        q: `How does antidiuretic hormone (ADH) release affect urine volume?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `ADH (vasopressin) is secreted in response to high plasma osmolarity or low blood volume. It decreases urine volume by inducing aquaporin-2 channel insertion in the renal collecting duct, promoting water reabsorption.`
+      },
+      {
+        q: `How does aldosterone release affect blood pressure?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `Aldosterone is a mineralocorticoid released from the adrenal cortex. It increases blood pressure by promoting renal sodium and water reabsorption in the distal tubule and collecting duct, expanding blood volume.`
+      },
+      {
+        q: `How does thyroid-stimulating hormone (TSH) release affect thyroid hormone production?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `TSH is released by the anterior pituitary and binds to receptors on thyroid follicular cells, which increases the production and release of thyroid hormones (T3 and T4).`
+      },
+      {
+        q: `How does high cortisol level in Cushing's syndrome affect muscle mass over time?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `Chronic high levels of cortisol in Cushing's syndrome lead to muscle wasting (decreased muscle mass) because cortisol is a catabolic hormone that promotes protein breakdown in skeletal muscle to supply amino acids for gluconeogenesis.`
+      },
+      {
+        q: `In healthy individuals, how does a high blood calcium level affect PTH secretion?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 1,
+        exp: `High blood calcium binds to calcium-sensing receptors (CaSR) on parathyroid cells, triggering intracellular signaling that decreases PTH secretion through negative feedback.`
+      },
+      {
+        q: `How does epinephrine release affect heart rate?`,
+        ch: [`Increases`, `Decreases`, `No Change`, `Becomes zero`],
+        ans: 0,
+        exp: `Epinephrine is released by the adrenal medulla during sympathetic activation. It binds to beta-1 adrenergic receptors on the heart, which increases heart rate (positive chronotropy) and contractility.`
+      }
+    ]
+  },
+  {
+    id: `bb97`,
+    cat: `Life Sciences`,
+    title: `Autonomic Nervous System Actions`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which branch of the autonomic nervous system is responsible for dilating the pupils (mydriasis)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sympathetic activation dilates the pupils (mydriasis) by contracting the pupillary dilator (radial) muscle of the iris, allowing more light to enter for better distance vision in fight-or-flight situations.`
+      },
+      {
+        q: `Which branch of the autonomic nervous system is responsible for slowing down the heart rate (bradycardia)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Parasympathetic activation slows the heart rate (negative chronotropy) via the vagus nerve (CN X), which releases acetylcholine acting on M2 muscarinic receptors at the sinoatrial node.`
+      },
+      {
+        q: `Which branch of the autonomic nervous system is responsible for stimulating digestion and saliva flow?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Parasympathetic activation governs the 'rest-and-digest' state, stimulating gastrointestinal secretions, saliva flow, and intestinal motility to facilitate digestion.`
+      },
+      {
+        q: `Which branch is activated during a 'fight-or-flight' response to a perceived threat?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `The sympathetic nervous system coordinates the 'fight-or-flight' response, preparing the body for intense physical activity by raising heart rate, dilating airways, and releasing glucose.`
+      },
+      {
+        q: `Which branch is responsible for constricting the bronchioles to normal resting state?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic system constricts bronchiolar smooth muscle via muscarinic receptors when high-airflow demand is no longer needed, returning airways to their baseline resting diameter.`
+      },
+      {
+        q: `Which branch stimulates glucose release from the liver into the blood?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sympathetic activation stimulates hepatic glycogenolysis and gluconeogenesis, increasing blood glucose levels to supply working skeletal muscles with energy.`
+      },
+      {
+        q: `Which branch is responsible for stimulating urination by contracting the detrusor muscle?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `Micturition (urination) is promoted by the parasympathetic system, which contracts the detrusor muscle of the bladder wall and relaxes the internal urethral sphincter.`
+      },
+      {
+        q: `Which branch promotes sweating (diaphoresis) across the body?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 0,
+        exp: `Sweating is mediated by the sympathetic nervous system. Uniquely, the sympathetic fibers innervating sweat glands are cholinergic, releasing acetylcholine rather than norepinephrine.`
+      },
+      {
+        q: `Which branch is predominantly active during restful sleep (rest-and-digest)?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic nervous system dominates during periods of rest, sleep, and recovery, conserving energy and promoting maintenance activities.`
+      },
+      {
+        q: `Which branch is responsible for increasing gastrointestinal motility?`,
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ans: 1,
+        exp: `The parasympathetic system increases GI motility and relaxes sphincters to move food through the digestive tract, whereas the sympathetic system inhibits these processes.`
+      }
+    ]
+  },
+  {
+    id: `bb98`,
+    cat: `Life Sciences`,
+    title: `Genetic Inheritance Patterns`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `What is the most likely inheritance pattern for Cystic Fibrosis, where two unaffected carrier parents have a 25% chance of having an affected child?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `Cystic Fibrosis is an autosomal recessive disorder caused by mutations in the CFTR gene. It requires two copies of the mutated gene to display the phenotype; heterozygotes are unaffected carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Huntington's Disease, where having only one copy of the mutated gene is sufficient to cause the neurodegenerative disorder?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Huntington's Disease is an autosomal dominant condition caused by a CAG trinucleotide repeat expansion in the HTT gene. Having a single mutant allele causes the disease, and there are no silent carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Hemophilia A, which primarily affects males who inherit the mutation from their carrier mothers?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `Hemophilia A is an X-linked recessive bleeding disorder. Males (XY) are hemizygous and express the disease with one mutant X chromosome, whereas females (XX) are typically unaffected carriers.`
+      },
+      {
+        q: `What is the inheritance pattern for Sickle Cell Anemia, which requires both parents to pass on the mutated hemoglobin gene for the full disease to manifest?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `Sickle Cell Anemia is an autosomal recessive blood disorder. Inheriting one copy of the mutation causes sickle cell trait (usually asymptomatic), while two copies cause the full disease.`
+      },
+      {
+        q: `What is the inheritance pattern for Red-Green Color Blindness, a condition that is much more common in males than in females?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `Red-green color blindness is an X-linked recessive trait. It is far more common in males because they have only one X chromosome; females must inherit two copies to be affected.`
+      },
+      {
+        q: `What is the inheritance pattern for Duchenne Muscular Dystrophy, a progressive muscle wasting disease affecting almost exclusively boys?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 3,
+        exp: `DMD is an X-linked recessive disorder caused by a lack of functional dystrophin protein. It primarily affects males; affected females are extremely rare.`
+      },
+      {
+        q: `What is the inheritance pattern for Achondroplasia (a common form of dwarfism), where a single copy of the mutated FGFR3 gene causes the phenotype?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Achondroplasia is inherited in an autosomal dominant fashion, though a high percentage of cases arise from de novo mutations. Homozygosity is typically lethal.`
+      },
+      {
+        q: `What is the inheritance pattern for Phenylketonuria (PKU), a metabolic disorder requiring a strict diet low in phenylalanine from birth?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 1,
+        exp: `PKU is an autosomal recessive metabolic disorder. Both alleles of the phenylalanine hydroxylase (PAH) gene must be defective to cause the enzyme deficiency.`
+      },
+      {
+        q: `What is the inheritance pattern for Alport Syndrome (when caused by mutations in the COL4A5 gene), which presents with kidney disease, hearing loss, and eye abnormalities and is passed from an affected father to all of his daughters but none of his sons?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 2,
+        exp: `COL4A5-related Alport Syndrome is X-linked dominant. An affected father passes his single mutant X chromosome to all of his daughters (making them affected) but none of his sons (who receive his Y chromosome).`
+      },
+      {
+        q: `What is the inheritance pattern for Marfan Syndrome, a connective tissue disorder characterized by tall stature and risk of aortic aneurysm, where an affected parent has a 50% chance of passing it to any child?`,
+        ch: [`Autosomal Dominant`, `Autosomal Recessive`, `X-Linked Dominant`, `X-Linked Recessive`],
+        ans: 0,
+        exp: `Marfan Syndrome is an autosomal dominant disorder caused by mutations in the FBN1 gene on chromosome 15, which codes for the connective tissue protein fibrillin-1.`
+      }
+    ]
+  },
+  {
+    id: `bb99`,
+    cat: `Life Sciences`,
+    title: `Cellular Organelle Functions`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `Which organelle is the site of the Citric Acid Cycle and oxidative phosphorylation?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Mitochondria house the enzymes for the Citric Acid Cycle (TCA cycle) in their matrix and the complexes of the electron transport chain in their inner membrane.`
+      },
+      {
+        q: `Which organelle contains hydrolytic enzymes that break down cellular waste and macromolecules?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `Lysosomes are acidic organelles containing hydrolases that digest extracellular materials (via endocytosis/phagocytosis) and intracellular debris (via autophagy).`
+      },
+      {
+        q: `Which organelle has ribosomes attached to its surface and is the primary site of secretory protein synthesis?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 3,
+        exp: `The Rough ER is studded with ribosomes, which translate proteins destined for membranes, lysosomes, or extracellular secretion directly into its lumen.`
+      },
+      {
+        q: `Which organelle modifies, sorts, and packages proteins coming from the endoplasmic reticulum?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 2,
+        exp: `The Golgi Apparatus processes proteins by adding or modifying carbohydrate chains (glycosylation) and packages them into vesicles for delivery.`
+      },
+      {
+        q: `In which organelle does the beta-oxidation of medium-chain fatty acids primarily occur?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Beta-oxidation of short- and medium-chain fatty acids occurs within the mitochondrial matrix, converting them to acetyl-CoA to feed the TCA cycle.`
+      },
+      {
+        q: `Which organelle is responsible for Tay-Sachs disease when its hexosaminidase A enzyme is deficient?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `Tay-Sachs is a lysosomal storage disease. Deficiency of hexosaminidase A leads to the accumulation of GM2 ganglioside lipids within lysosomes, particularly in neurons.`
+      },
+      {
+        q: `Which organelle adds mannose-6-phosphate tags to proteins destined for the lysosome?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 2,
+        exp: `The cis-Golgi network phosphorylates mannose residues on specific glycoproteins, creating the mannose-6-phosphate (M6P) tag that routes them to lysosomes.`
+      },
+      {
+        q: `Where are disulfide bonds first formed and monitored during protein folding?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 3,
+        exp: `Disulfide bond formation is catalyzed by protein disulfide isomerase (PDI) within the oxidizing environment of the Rough ER lumen.`
+      },
+      {
+        q: `Which organelle contains its own circular DNA and reproduces independently of the cell cycle?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 0,
+        exp: `Mitochondria contain their own circular genome (mtDNA) and replicate via binary fission, reflecting their evolutionary origin as endosymbiotic alpha-proteobacteria.`
+      },
+      {
+        q: `Which organelle undergoes autophagic fusion to degrade damaged cellular structures?`,
+        ch: [`Mitochondria`, `Lysosome`, `Golgi Apparatus`, `Rough Endoplasmic Reticulum`],
+        ans: 1,
+        exp: `During autophagy, double-membraned autophagosomes engulf damaged organelles and then fuse with lysosomes, where acid hydrolases digest the cargo.`
+      }
+    ]
+  },
+  {
+    id: `bb100`,
+    cat: `Life Sciences`,
+    title: `Biomolecule Classifications`,
+    diff: `Medium`,
+    sameChoices: true,
+    qs: [
+      {
+        q: `To which class of biomolecules does Glycogen belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 0,
+        exp: `Glycogen is a highly branched polysaccharide composed of glucose monomers, functioning as the primary carbohydrate energy storage in animals.`
+      },
+      {
+        q: `To which class of biomolecules does Cholesterol belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Cholesterol is a sterol (a type of lipid) characterized by a four-ring hydrocarbon structure, acting as a cell membrane component and steroid hormone precursor.`
+      },
+      {
+        q: `To which class of biomolecules does Insulin belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Insulin is a peptide hormone, which is a class of protein consisting of 51 amino acids arranged in two polypeptide chains linked by disulfide bonds.`
+      },
+      {
+        q: `To which class of biomolecules does messenger RNA (mRNA) belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 3,
+        exp: `mRNA is a single-stranded nucleic acid composed of ribonucleotide monomers that carries genetic instructions from DNA to the ribosome.`
+      },
+      {
+        q: `To which class of biomolecules does Cellulose belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 0,
+        exp: `Cellulose is a linear carbohydrate polysaccharide made of beta-glucose units, providing structural strength to plant cell walls.`
+      },
+      {
+        q: `To which class of biomolecules does Collagen belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Collagen is an abundant structural protein in animals, featuring a unique triple-helix conformation rich in glycine and proline.`
+      },
+      {
+        q: `To which class of biomolecules does a Triglyceride belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Triglycerides are lipids formed from one glycerol molecule esterified to three fatty acids, serving as the main form of energy storage in adipose tissue.`
+      },
+      {
+        q: `To which class of biomolecules does DNA belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 3,
+        exp: `DNA (deoxyribonucleic acid) is a double-stranded nucleic acid consisting of deoxyribonucleotide polymers, which stores hereditary information.`
+      },
+      {
+        q: `To which class of biomolecules does Amylase belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 2,
+        exp: `Amylase is a digestive enzyme (a catalytic protein) that breaks down starch into smaller maltose sugars.`
+      },
+      {
+        q: `To which class of biomolecules does Sphingomyelin belong?`,
+        ch: [`Carbohydrate`, `Lipid`, `Protein`, `Nucleic Acid`],
+        ans: 1,
+        exp: `Sphingomyelin is a sphingolipid found in animal cell membranes, particularly enriched in the myelin sheath surrounding nerve cell axons.`
+      }
+    ]
+  }
 ];

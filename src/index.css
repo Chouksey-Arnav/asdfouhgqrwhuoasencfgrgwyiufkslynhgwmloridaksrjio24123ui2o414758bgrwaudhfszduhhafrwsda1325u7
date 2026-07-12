@@ -37,3 +37,8 @@ body::before {
   z-index: 0;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.9s linear infinite; }
+
+.mb-group .mb-copy { opacity: 0; }
+.mb-group:hover .mb-copy { opacity: 1; }
+.mb-copy:hover { border-color: rgba(255,255,255,0.24) !important; color: #eef2ff !important; }
