@@ -1056,34 +1056,45 @@ export default function App({ account, onAccountChange }) {
 
   // ── DB Init ──────────────────────────────────────────────────────────────────
   useEffect(()=>{
+    async function loadFromDb(){
+      // Must run before getStreak() so a bridged (freeze-covered) gap is
+      // already reflected in the streak calculation below.
+      await DB.checkAndApplyStreakFreeze();
+      const [u,pw,qs,qh,decks,deckMeta,cp,ach,str,rev,freezes,cos] = await Promise.all([
+        DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
+        DB.getFlashDecks(), DB.getDeckCreatedAtMap(), DB.getCatPerf(),
+        DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(),
+        DB.getStreakFreezeCount(), DB.getCosmetics(),
+      ]);
+      if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
+      setPathway_(pw||{});
+      setQScores_(qs||{});
+      setQHistory(qh||[]);
+      // Merge built-in decks with custom decks from DB
+      const allDecks={};
+      // Custom decks override built-in if same name
+      Object.entries(decks||{}).forEach(([name,cards])=>{allDecks[name]=cards;});
+      setCDecks_(allDecks);
+      setDeckCreatedAt(deckMeta||{});
+      setCatPerf_(cp||{});
+      setAchiev_(ach||new Set());
+      setStreak(str||0);
+      setTotalReviews(rev||0);
+      setStreakFreezes(freezes||0);
+      setCosmetics(cos||new Set());
+      await DB.recordStudyToday();
+    }
     async function init(){
       try{
-        // Must run before getStreak() so a bridged (freeze-covered) gap is
-        // already reflected in the streak calculation below.
-        await DB.checkAndApplyStreakFreeze();
-        const [u,pw,qs,qh,decks,deckMeta,cp,ach,str,rev,freezes,cos] = await Promise.all([
-          DB.getUser(), DB.getPathway(), DB.getQuizScores(), DB.getQuizHistory(),
-          DB.getFlashDecks(), DB.getDeckCreatedAtMap(), DB.getCatPerf(),
-          DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(),
-          DB.getStreakFreezeCount(), DB.getCosmetics(),
+        // Guard against IndexedDB/Dexie hanging forever (e.g. a blocked schema
+        // upgrade because another tab still has the DB open at an older
+        // version). Without this timeout, a hung promise here never resolves
+        // or rejects, so setDbReady(true) is never reached and the app is
+        // stuck on the loading screen indefinitely.
+        await Promise.race([
+          loadFromDb(),
+          new Promise((_,reject)=>setTimeout(()=>reject(new Error('DB init timed out')),8000)),
         ]);
-        if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
-        setPathway_(pw||{});
-        setQScores_(qs||{});
-        setQHistory(qh||[]);
-        // Merge built-in decks with custom decks from DB
-        const allDecks={};
-        // Custom decks override built-in if same name
-        Object.entries(decks||{}).forEach(([name,cards])=>{allDecks[name]=cards;});
-        setCDecks_(allDecks);
-        setDeckCreatedAt(deckMeta||{});
-        setCatPerf_(cp||{});
-        setAchiev_(ach||new Set());
-        setStreak(str||0);
-        setTotalReviews(rev||0);
-        setStreakFreezes(freezes||0);
-        setCosmetics(cos||new Set());
-        await DB.recordStudyToday();
       }catch(e){console.error('DB init error:',e);}
       setDbReady(true);
     }

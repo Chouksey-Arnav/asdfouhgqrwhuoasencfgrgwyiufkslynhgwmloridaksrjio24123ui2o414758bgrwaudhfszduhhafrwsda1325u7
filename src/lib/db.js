@@ -8,6 +8,16 @@ import Dexie from 'dexie';
 
 const db = new Dexie('MedSchoolPrep');
 
+// If another tab still holds an older-schema connection open, Dexie's
+// version-upgrade transaction blocks indefinitely instead of erroring —
+// surface it and release the stale connection so the app doesn't hang.
+db.on('blocked', () => {
+  console.warn('MedSchoolPrep DB upgrade blocked by another open tab');
+});
+db.on('versionchange', () => {
+  db.close();
+});
+
 db.version(1).stores({
   user:          '++id, name, specialty',
   lessons:       'lessonId, completedAt',
