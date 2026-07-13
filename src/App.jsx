@@ -27,6 +27,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP } from './data/constants';
+import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMetabrainPickPrompt } from './lib/recommend';
 import { scorePathways } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
@@ -43,6 +44,7 @@ import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, 
 import { awardXP, BONUS_COPY } from './lib/rewards';
 import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
+import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
@@ -530,6 +532,229 @@ function VideoModal({ytId,title,url,onClose,m=false}){
     </motion.div>
   );
 }
+// ── Lesson Video (inline, non-modal — embedded as one step of LessonPlayer) ──
+// Same YouTube IFrame Player API technique as VideoModal (real embed + error
+// detection), but rendered inline in a wizard step instead of a popup, and
+// tracking watch progress so the quiz step can gate on it actually finishing.
+function LessonVideoInline({ytId,title,onWatched,watched=false}){
+  const frameId=useRef(`ytlp-${ytId}-${Math.random().toString(36).slice(2)}`).current;
+  const playerRef=useRef(null);
+  const watchedRef=useRef(watched);
+  const [status,setStatus]=useState('loading'); // loading | ready | error | timeout
+
+  useEffect(()=>{
+    let cancelled=false;
+    let poll=null;
+    const timeout=setTimeout(()=>setStatus(s=>s==='loading'?'timeout':s),9000);
+    loadYouTubeIframeAPI().then(YT=>{
+      if(cancelled)return;
+      playerRef.current=new YT.Player(frameId,{
+        events:{
+          onReady:()=>{if(!cancelled)setStatus('ready');},
+          onStateChange:(e)=>{
+            if(cancelled)return;
+            if(e.data===YT.PlayerState.ENDED&&!watchedRef.current){watchedRef.current=true;onWatched();}
+            if(e.data===YT.PlayerState.PLAYING&&!poll){
+              poll=setInterval(()=>{
+                try{
+                  const p=playerRef.current;
+                  const dur=p?.getDuration?.();
+                  const cur=p?.getCurrentTime?.();
+                  if(dur>0&&cur/dur>=0.9&&!watchedRef.current){watchedRef.current=true;onWatched();}
+                }catch{/* player not ready yet */}
+              },2000);
+            }
+          },
+          onError:(e)=>{
+            if(cancelled)return;
+            setStatus('error');
+            playerRef.current={...playerRef.current,_errMsg:YT_ERROR_MESSAGES[e?.data]||'This video failed to load.'};
+          },
+        },
+      });
+    });
+    return ()=>{cancelled=true;clearTimeout(timeout);if(poll)clearInterval(poll);try{playerRef.current?.destroy?.();}catch{}};
+  },[frameId]);
+
+  const broken=status==='error'||status==='timeout';
+  return(
+    <div>
+      <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:14,overflow:'hidden',border:`1px solid ${C.b1}`,background:C.s1}}>
+        <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+        {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
+          <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
+        </div>}
+        {broken&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:12,padding:20,textAlign:'center'}}>
+          <AlertTriangle size={24} color="#f87171"/>
+          <div style={{fontSize:12.5,color:C.t2,maxWidth:320,lineHeight:1.6}}>{status==='timeout'?"This video is taking too long to respond — it may be temporarily unavailable.":(playerRef.current?._errMsg||'This video failed to load.')}</div>
+          <div style={R({gap:8})}>
+            <a href={`https://www.youtube.com/watch?v=${ytId}`} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11.5}),display:'inline-flex',alignItems:'center',gap:5}}>Watch on YouTube<ExternalLink size={11}/></a>
+            {!watched&&<button style={btnSm(C.s3,{color:C.t2,fontSize:11.5})} onClick={()=>{watchedRef.current=true;onWatched();}}>Continue anyway</button>}
+          </div>
+        </div>}
+      </div>
+      {!broken&&<div style={{fontSize:11,color:C.t3,marginTop:8,textAlign:'center'}}>{watched?'Watched — you can continue.':'Watch to the end to unlock the verification quiz.'}</div>}
+    </div>
+  );
+}
+
+// ── Lesson Player (immersive, mobile-first, full-app-takeover lesson flow) ──
+// Overview -> Article -> Video -> Quiz -> Complete. Replaces the old
+// "Study opens an external tab / modal, Verify is a separate button" flow —
+// every step happens inside one continuous, swipeable-feeling wizard so a
+// pathway lesson never bounces the student out of the app. The Quiz step
+// hands off to the app's existing aQuiz/QuizEngine fullscreen gate (reusing
+// openVerifyQuiz/finishQuiz as-is) rather than duplicating quiz logic here.
+function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false}){
+  const content = LESSON_CONTENT[lesson.id];
+  const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
+  const hasArticle = !!content?.article;
+  const hasVideo = !!videoId;
+  const isVerified = !!pathwayEntry?.verified;
+  const stepOrder = ['overview', hasArticle&&'article', hasVideo&&'video', 'quiz', 'complete'].filter(Boolean);
+  const curIdx = Math.max(0,stepOrder.indexOf(step));
+  const articleScrollRef = useRef(null);
+
+  function goNext(){
+    const idx=stepOrder.indexOf(step);
+    if(idx<stepOrder.length-1)onStep(stepOrder[idx+1]);
+  }
+  function goBack(){
+    const idx=stepOrder.indexOf(step);
+    if(idx>0)onStep(stepOrder[idx-1]);
+  }
+  function handleArticleScroll(e){
+    const el=e.target;
+    if(!articleRead&&el.scrollHeight-el.scrollTop-el.clientHeight<48)onArticleRead();
+  }
+
+  const canContinueArticle = !hasArticle || articleRead;
+  const canContinueVideo = !hasVideo || videoWatched;
+
+  return(
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'100vh',background:C.bg,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
+      {/* Header — progress dots + close */}
+      <div style={{position:'sticky',top:0,zIndex:20,background:`${C.bg}f2`,backdropFilter:'blur(12px)',borderBottom:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px'}}>
+        <div style={{display:'flex',alignItems:'center',gap:12,maxWidth:720,margin:'0 auto',width:'100%'}}>
+          <button onClick={onClose} aria-label="Close lesson" style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:40,height:40,minWidth:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:10,flexShrink:0}}><X size={18}/></button>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:m?12:13,fontWeight:700,color:C.t1,fontFamily:C.FD,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lesson.title}</div>
+            <div style={{fontSize:10,color:C.t3,marginTop:1}}>{unit.title}{pathwayLabel?` · ${pathwayLabel}`:''}</div>
+          </div>
+          <div style={{display:'flex',gap:5,flexShrink:0}}>
+            {stepOrder.map((s,i)=>(
+              <span key={s} style={{width:i===curIdx?18:7,height:7,borderRadius:4,background:i<curIdx||isVerified?C.green:i===curIdx?accent:C.s4,transition:'all .25s'}}/>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{flex:1,overflowY:step==='article'?undefined:'auto'}}>
+        <div style={{maxWidth:720,margin:'0 auto',padding:m?'20px 16px 100px':'32px 24px 110px',width:'100%',boxSizing:'border-box'}}>
+
+          {step==='overview'&&(
+            <div style={CC({gap:18})}>
+              <div style={{width:56,height:56,borderRadius:16,background:`${accent}18`,border:`1px solid ${accent}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><BookOpen size={24} color={accent}/></div>
+              <h2 style={{fontSize:m?21:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{lesson.title}</h2>
+              <div style={R({gap:14,flexWrap:'wrap'})}>
+                {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{content.article.readMins||5} min read</span>}
+                {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Play size={10}/>Video</span>}
+                <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ShieldCheck size={11}/>Verified quiz</span>
+              </div>
+              {lesson.objectives?.length>0&&(
+                <div style={glass2({padding:16})}>
+                  <div style={{fontSize:9.5,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>What you'll learn</div>
+                  <div style={CC({gap:8})}>
+                    {lesson.objectives.map((o,i)=>(
+                      <div key={i} style={{fontSize:13,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.5}}><span style={{color:accent,flexShrink:0,marginTop:1}}>–</span>{o}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {!hasArticle&&lesson.url&&(
+                <div style={{...glass2({padding:14,background:C.amberDim,border:`1px solid ${C.amber}25`})}}>
+                  <div style={{fontSize:12,color:C.t2,lineHeight:1.6}}>This lesson's full in-house article hasn't been migrated off its original source yet — you'll see the reference material and a dedicated verification quiz below.</div>
+                </div>
+              )}
+              {isVerified&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:6,alignSelf:'flex-start'}}><ShieldCheck size={12}/>Already verified{pathwayEntry?.quizScore!=null?` · ${pathwayEntry.quizScore}%`:''}</div>}
+            </div>
+          )}
+
+          {step==='article'&&hasArticle&&(
+            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(100vh - 210px)':'calc(100vh - 230px)',overflowY:'auto',paddingRight:4}}>
+              <div style={CC({gap:22})}>
+                {content.article.sections.map((sec,i)=>(
+                  <div key={i}>
+                    <h3 style={{fontSize:m?15:17,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{sec.heading}</h3>
+                    <p style={{fontSize:m?13.5:14.5,color:C.t2,lineHeight:1.75,margin:0}}>{sec.body}</p>
+                  </div>
+                ))}
+                {content.article.keyTakeaways?.length>0&&(
+                  <div style={{...glass2({padding:16,background:`${accent}0a`,border:`1px solid ${accent}25`})}}>
+                    <div style={{fontSize:9.5,fontWeight:700,color:accent,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>Key takeaways</div>
+                    <div style={CC({gap:8})}>
+                      {content.article.keyTakeaways.map((t,i)=>(
+                        <div key={i} style={{fontSize:12.5,color:C.t2,display:'flex',gap:8,alignItems:'flex-start',lineHeight:1.55}}><Check size={13} color={accent} style={{flexShrink:0,marginTop:2}}/>{t}</div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div style={{height:1}}/>
+                {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0'}}>Scroll to the end to continue</div>}
+              </div>
+            </div>
+          )}
+
+          {step==='video'&&hasVideo&&(
+            <div style={CC({gap:14})}>
+              <LessonVideoInline ytId={videoId} title={content?.video?.title||lesson.title} watched={videoWatched} onWatched={onVideoWatched}/>
+              {content?.video?.channel&&<div style={{fontSize:11,color:C.t3,textAlign:'center'}}>via {content.video.channel}</div>}
+            </div>
+          )}
+
+          {step==='quiz'&&(
+            <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:20})}>
+              <div style={{width:64,height:64,borderRadius:18,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><ShieldCheck size={28} color={C.green}/></div>
+              <h3 style={{fontSize:m?18:21,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Ready to verify this lesson?</h3>
+              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>Pass the quiz at 70% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery.</p>
+              {pathwayEntry?.quizScore!=null&&!isVerified&&<div style={{...pill(C.roseDim,C.rose,{fontSize:11})}}>Last attempt: {pathwayEntry.quizScore}% — try again below</div>}
+              <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'13px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try Again':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
+            </div>
+          )}
+
+          {step==='complete'&&(
+            <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:24})}>
+              <div style={{width:72,height:72,borderRadius:20,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 0 30px ${C.green}30`}}><ShieldCheck size={32} color={C.green}/></div>
+              <h3 style={{fontSize:m?20:24,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Lesson verified{pathwayEntry?.quizScore!=null?` — ${pathwayEntry.quizScore}%`:''}</h3>
+              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>"{lesson.title}" is locked in for good. {hasNextLesson?'Keep the momentum going with the next one.':'That was the last lesson in this unit — nice work.'}</p>
+              <div style={R({gap:10,justifyContent:'center',flexWrap:'wrap'})}>
+                {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:`linear-gradient(135deg,${accent},${accent}cc)`,{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
+                <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:6}} onClick={onClose}>Back to Pathway</button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* Footer nav — big, thumb-reachable tap targets */}
+      {step!=='quiz'&&step!=='complete'&&(
+        <div style={{position:'sticky',bottom:0,background:`${C.bg}f5`,backdropFilter:'blur(12px)',borderTop:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px',paddingBottom:m?'calc(12px + env(safe-area-inset-bottom))':16}}>
+          <div style={{display:'flex',gap:10,maxWidth:720,margin:'0 auto'}}>
+            <button onClick={goBack} disabled={curIdx===0} style={{...btnG({flex:'0 0 auto',padding:'14px 18px',fontSize:13,opacity:curIdx===0?.4:1,minHeight:48}),display:'inline-flex',alignItems:'center',gap:6}}><ChevronLeft size={16}/>Back</button>
+            <motion.button whileHover={{scale:1.01}} whileTap={{scale:.98}} onClick={goNext}
+              disabled={(step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo)}
+              style={{...btn(accent===C.blue?C.blueGrad:`linear-gradient(135deg,${accent},${accent}cc)`,{flex:1,padding:'14px 18px',fontSize:14,minHeight:48,opacity:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?.45:1,cursor:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?'not-allowed':'pointer'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              {step==='overview'?'Begin':'Continue'}<ChevronRight size={16}/>
+            </motion.button>
+          </div>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 // ── Quiz Engine ───────────────────────────────────────────────────────────────
 function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}){
   const scoreRef=useRef(0);
@@ -879,6 +1104,7 @@ export default function App({ account, onAccountChange }) {
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
+  const [comebackGap, setComebackGap] = useState(null); // days since last study day (returning-user nudge), null = n/a
   const [streakFreezes, setStreakFreezes] = useState(0);
   const [cosmetics, setCosmetics] = useState(new Set());
   const [chest, setChest] = useState(null); // { title, eyebrow, xp, cosmetic }
@@ -900,6 +1126,11 @@ export default function App({ account, onAccountChange }) {
   const [tab,   setTab]   = useState('home');
   const [uname, setUname] = useState(''); // onboarding input
   const [vidM,  setVM]    = useState(null);
+  // ── Lesson Player state (immersive Overview->Article->Video->Quiz->Complete) ─
+  const [activeLesson, setActiveLesson] = useState(null); // { lesson, unit } while the player is open
+  const [lessonStep, setLessonStep] = useState('overview');
+  const [articleRead, setArticleRead] = useState(false);
+  const [videoWatched, setVideoWatched] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
@@ -1082,6 +1313,20 @@ export default function App({ account, onAccountChange }) {
       setTotalReviews(rev||0);
       setStreakFreezes(freezes||0);
       setCosmetics(cos||new Set());
+      // Compute the gap since the last study day BEFORE recordStudyToday() stamps
+      // today, so a returning user's actual absence is visible (once today is
+      // recorded, "days since last study day" would trivially read as 0).
+      if(u){
+        const priorDays=(await DB.getStudyDays()).slice().sort();
+        if(priorDays.length){
+          const todayStr=new Date().toISOString().split('T')[0];
+          const lastDay=priorDays[priorDays.length-1];
+          if(lastDay!==todayStr){
+            const gapDays=Math.round((new Date(todayStr)-new Date(lastDay))/86400000);
+            if(gapDays>=2)setComebackGap(gapDays);
+          }
+        }
+      }
       await DB.recordStudyToday();
     }
     async function init(){
@@ -1157,7 +1402,6 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
-  const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:{completedAt:Date.now(),verified:false,studying:false}})); DB.setLessonDone(lessonId).catch(console.error); },[]);
   // A lesson only counts toward mastery/unlock-gating once it's actually verified (curated quiz
   // passed) — for lessons with no quizIds yet (pathways not migrated to the new model this pass),
   // presence in `pathway` is still enough, matching the original self-report behavior.
@@ -1290,27 +1534,6 @@ export default function App({ account, onAccountChange }) {
     return prev.lessons.every(l=>isLessonComplete(l,pathway[l.id]))?'available':'locked';
   };
 
-  function doneLesson(lesson){
-    if(pathway[lesson.id])return;
-    saveLesson(lesson.id);
-    const { finalXP, tier } = awardXP(25);
-    const newUser={...user,xp:(user?.xp||0)+finalXP};
-    saveUser(newUser);
-    play('xp');
-    if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
-    else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
-    else celebrateXP();
-    toast.success(`${BONUS_COPY[tier](finalXP)} — ${lesson.title}`, { icon:<BookOpen size={16}/>, duration: tier==='jackpot'?4000:2500 });
-    // Check unit mastery
-    const units=curPath?.units||[];
-    const unit=units.find(u=>u.lessons.some(l=>l.id===lesson.id));
-    if(unit){
-      const allDone=unit.lessons.every(l=>l.id===lesson.id?true:isLessonComplete(l,pathway[l.id]));
-      if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}`,{duration:4000});}
-    }
-    checkAndUnlockAchievements({...user,xp:(user?.xp||0)+finalXP},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
-  }
-
   function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
   function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
@@ -1335,7 +1558,7 @@ export default function App({ account, onAccountChange }) {
           const granted=await DB.grantStreakFreeze();
           if(granted){
             setStreakFreezes(await DB.getStreakFreezeCount());
-            toast(`Streak Freeze earned — one skipped day won't break your streak.`,{icon:<Snowflake size={14} color={C.blueL}/>,duration:4500});
+            toast(pickNudge('streak_freeze_earned'),{icon:<Snowflake size={14} color={C.blueL}/>,duration:4500});
           }
         }
         showAchievementToast(achievement);
@@ -1351,7 +1574,7 @@ export default function App({ account, onAccountChange }) {
     if(curLvl>prevLvlRef.current){
       celebrateLevelUp();
       play('levelUp');
-      toast.success(`Level ${curLvl} reached — ${mastery}% mastery in ${curPath?.label}.`,{duration:4000,icon:<Trophy size={16}/>});
+      toast.success(pickNudge('level_up',{level:curLvl,tier:getLevelInfo(user.xp||0).tier}),{duration:4000,icon:<Trophy size={16}/>});
     }
     prevLvlRef.current=curLvl;
   },[user?.xp]);
@@ -1395,9 +1618,44 @@ export default function App({ account, onAccountChange }) {
       if(days.includes(todayKey))return; // already studied today
       localStorage.setItem(nudgeKey,'1');
       streakNudgeRef.current=true;
-      toast(`Your ${streak}-day streak is waiting — one quiz keeps it alive.`,{icon:<Flame size={14} color={C.amberL}/>,duration:5000});
+      toast(pickNudge('streak_at_risk',{streak}),{icon:<Flame size={14} color={C.amberL}/>,duration:5000});
     })();
   },[dbReady,user,streak]);
+
+  // ── Streak milestone / personal-best nudges — fires once per session, compares
+  // against a cross-session localStorage baseline so it only celebrates a genuine
+  // new milestone/record rather than re-firing every time the app is reopened at
+  // an already-reached streak length (see level-up checker above for the pattern
+  // this avoids: comparing only against an in-session ref default).
+  const streakCheckedRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||streakCheckedRef.current)return;
+    streakCheckedRef.current=true;
+    const lastKnown=parseInt(localStorage.getItem('lastKnownStreak')||'0',10);
+    const best=parseInt(localStorage.getItem('bestStreakEver')||'0',10);
+    if(streak>lastKnown&&streak>0){
+      const milestones=[3,7,14,30,50,100];
+      if(milestones.includes(streak)){
+        toast.success(pickNudge(`streak_day_${streak}`,{streak}),{icon:<Flame size={16} color={C.amberL}/>,duration:4000});
+      } else if(streak>best&&streak>2){
+        toast.success(pickNudge('personal_best_streak',{streak}),{icon:<Trophy size={16}/>,duration:3500});
+      }
+    }
+    if(streak>best)localStorage.setItem('bestStreakEver',String(streak));
+    localStorage.setItem('lastKnownStreak',String(streak));
+  },[dbReady,streak]);
+
+  // ── Comeback nudge — fires once per session for a returning user who had a
+  // multi-day gap since their last study day (computed in loadFromDb before
+  // recordStudyToday() runs, so it reflects the gap, not "0 days" post-record).
+  const comebackCheckedRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||comebackCheckedRef.current||comebackGap==null)return;
+    comebackCheckedRef.current=true;
+    if(comebackGap===2)toast(pickNudge('comeback_short'),{icon:<Coffee size={14}/>,duration:4500});
+    else if(comebackGap>=3&&comebackGap<=6)toast(pickNudge('comeback_medium'),{icon:<Coffee size={14}/>,duration:4500});
+    else if(comebackGap>=7)toast(pickNudge('comeback_long'),{icon:<Coffee size={14}/>,duration:5000});
+  },[dbReady,comebackGap]);
 
   // ── AI (Metabrain, powered by Groq) ────────────────────────────────────────────
   async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'deep') {
@@ -1573,21 +1831,43 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       toast(`Streak broken at ${sessionStats.streak} — back at it.`, { icon: <RefreshCw size={14}/>, duration: 1800 });
     }
     setSessionStats(s => ({ ...s, reviewed: s.reviewed + 1, [label.toLowerCase()]: s[label.toLowerCase()] + 1, streak: nextCombo, bestStreak: nextBest, xp: s.xp + xpGain }));
+    if(cIdx===deckCards.length-1)setTimeout(()=>toast.success(pickNudge('flashcard_session_complete'),{icon:<Layers3 size={16}/>,duration:3200}),300);
     setCIdx(i=>Math.min(deckCards.length-1,i+1));
     setFlip(false);
   }
 
-  // ── Lesson verification (Study → Verify flow) ──────────────────────────────
+  // ── Lesson Player (Overview → Article → Video → Quiz → Complete) ────────────
   const VERIFY_PASS_PCT=70;
-  async function startStudyLesson(lesson){
-    if(pathway[lesson.id]?.verified)return;
+  function getNextLesson(lesson){
+    const flat=(curPath?.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
+    const idx=flat.findIndex(x=>x.lesson.id===lesson.id);
+    return (idx===-1||idx===flat.length-1)?null:flat[idx+1];
+  }
+  function openLesson(lesson,unit){
+    const already=pathway[lesson.id];
+    const isResuming=!!already?.studying&&!already?.verified;
     DB.startLessonStudy(lesson.id).catch(console.error);
     logEvent('lesson_video_watched',lesson.id);
-    setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),studying:true,studyStartedAt:Date.now()}}));
-    const ytId=extractYouTubeId(lesson.url);
-    if(ytId) setVM({ytId,title:lesson.title,url:lesson.url});
-    else window.open(lesson.url,'_blank','noopener,noreferrer');
+    if(!already?.verified)setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),studying:true,studyStartedAt:Date.now()}}));
+    setActiveLesson({lesson,unit});
+    setArticleRead(!!already?.verified);
+    setVideoWatched(!!already?.verified);
+    setLessonStep(already?.verified?'complete':'overview');
+    if(!already?.verified){
+      const hour=new Date().getHours(),day=new Date().getDay();
+      const scenario=isResuming?'session_resume':(day===0||day===6)?'weekend_session':hour<10?'morning_session':hour>=20?'evening_session':'lesson_started';
+      toast(pickNudge(scenario,{lesson:lesson.title}),{icon:<BookOpen size={16}/>,duration:2600});
+    }
   }
+  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); }
+  // Once the active lesson's quiz is passed (verified flips true in `pathway`), jump the
+  // player to the Complete step — this is what lets the Quiz step hand off to the app-level
+  // aQuiz/QuizEngine fullscreen gate and have control cleanly return to LessonPlayer afterward
+  // instead of duplicating quiz-scoring logic inside the player itself.
+  useEffect(()=>{
+    if(!activeLesson)return;
+    if(pathway[activeLesson.lesson.id]?.verified&&lessonStep!=='complete')setLessonStep('complete');
+  },[pathway,activeLesson,lessonStep]);
   function openVerifyQuiz(lesson,unit){
     const quiz=ALL_QUIZZES.find(q=>lesson.quizIds?.includes(q.id));
     if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
@@ -1614,16 +1894,30 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
         else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
         else celebrateXP();
-        toast.success(`Verified: ${lesson.title} (${pct}%)`,{icon:<ShieldCheck size={16}/>,duration:3000});
+        toast.success(pickNudge(pct>=90?'lesson_verified_high':'lesson_verified',{lesson:lesson.title,pct}),{icon:<ShieldCheck size={16}/>,duration:3000});
         const allVerified=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]?.verified);
         if(allVerified){
           await DB.verifyUnit(eSpec,unit.id,aQuiz.id,pct);
           logEvent('unit_verified',unit.id);
           setTimeout(()=>celebrateMastery(),400);
-          toast.success(`Unit verified: ${unit.title}`,{duration:4000});
+          toast.success(pickNudge('unit_verified',{unit:unit.title}),{duration:4000});
+        }
+        // Pathway-wide milestone nudge (25/50/75/100%) — computed off this
+        // pathway's own lessons (not the global cross-pathway `mastery`), and
+        // fired at most once per threshold per pathway via a localStorage flag.
+        const pathLessons=(curPath?.units||[]).flatMap(u=>u.lessons);
+        const pathDoneCount=pathLessons.filter(l=>l.id===lesson.id?true:isLessonComplete(l,pathway[l.id])).length;
+        const pathPct=pathLessons.length?Math.round((pathDoneCount/pathLessons.length)*100):0;
+        const milestone=[100,75,50,25].find(m=>pathPct>=m);
+        if(milestone){
+          const flagKey=`pathwayMilestone:${eSpec}:${milestone}`;
+          if(!localStorage.getItem(flagKey)){
+            localStorage.setItem(flagKey,'1');
+            toast.success(pickNudge(`pathway_${milestone}`,{pathway:curPath?.label}),{duration:4500,icon:<Milestone size={16}/>});
+          }
         }
       } else {
-        toast(`${pct}% — you need ${VERIFY_PASS_PCT}% to verify this lesson. Review it and try again.`,{icon:<RefreshCw size={14}/>,duration:4000});
+        toast(pickNudge(pct>=65?'quiz_close_miss':'quiz_fail',{lesson:lesson.title,pct}),{icon:<RefreshCw size={14}/>,duration:4000});
       }
       setVerifyCtx(null);
       setAQ(null);
@@ -1638,6 +1932,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     if(quizTier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(quizTier==='big'||quizTier==='bonus'){celebrateBonusXP();}
     toast.success(`${pct}% · ${BONUS_COPY[quizTier](xpGain)}`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:quizTier==='jackpot'?4000:3000});
+    if(pct===100)setTimeout(()=>toast.success(pickNudge('perfect_quiz',{lesson:aQuiz.title}),{icon:<Star size={16}/>,duration:3500}),350);
     const newQCount=qTaken+1;
     checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
@@ -2112,7 +2407,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 {unit.lessons.map((lesson)=>{
                   const state=lessonState(lesson,ui,units);
                   const isDone=state==='done';const isVerified=state==='verified';const isStudying=state==='studying';
-                  const avail=state==='available';const hasQuiz=lesson.quizIds?.length>0;
+                  const avail=state==='available';
                   return(
                     <div key={lesson.id} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1}),display:'flex',flexDirection:'column',gap:8}}>
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -2122,12 +2417,11 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                           <div style={R({gap:6,marginTop:1})}>
                             <span style={{fontSize:11,color:C.t3}}>{lesson.src}</span>
                             {isVerified&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}><ShieldCheck size={9} style={{marginRight:3}}/>Verified{pathway[lesson.id]?.quizScore!=null?` (${pathway[lesson.id].quizScore}%)`:''}</span>}
-                            {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — take the check below</span>}
+                            {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — continue when ready</span>}
                           </div>
                         </div>
-                        {(avail||isStudying)&&<button onClick={()=>startStudyLesson(lesson)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>{extractYouTubeId(lesson.url)?<Play size={11}/>:<ExternalLink size={11}/>}Study</button>}
-                        {(avail||isStudying)&&hasQuiz&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openVerifyQuiz(lesson,unit)}><ShieldCheck size={12}/>Verify</motion.button>}
-                        {avail&&!hasQuiz&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>doneLesson(lesson)}><Check size={12}/>Done</motion.button>}
+                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${accent},${accent}cc)`,{fontSize:11,boxShadow:`0 2px 8px ${accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{isStudying?'Continue':'Start Lesson'}</motion.button>}
+                        {isVerified&&<button onClick={()=>openLesson(lesson,unit)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
                         {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
                         {state==='locked'&&<Lock size={12} color={C.t4}/>}
                       </div>
@@ -3764,8 +4058,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       const specialty = (obInterest&&obInterest!=='unsure') ? obInterest : 'exploring';
       const u={ name:uname.trim(), specialty, gradeStage:obGrade, xp:0, streak:1, lastActive:Date.now() };
       saveUser(u);
-      if(!obInterest||obInterest==='unsure'){ goPrep('diagnostic'); toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`); }
-      else { goPrep('pathway'); toast.success(`Welcome, ${uname.trim()}! Your ${PATHS[specialty]?.label} pathway is ready.`); }
+      if(!obInterest||obInterest==='unsure'){ goPrep('diagnostic'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
+      else { goPrep('pathway'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
     },1550);
     return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);};
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -3797,9 +4091,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <div style={glass({padding:32})}>
               <span style={lbl()}>Your first name</span>
               <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
-                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`);}}}/>
+                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));}}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
-                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(`Welcome, ${uname.trim()}! Let's find your pathway.`);}}>
+                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));}}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
@@ -3827,6 +4121,29 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </div>
           </div>
         </div>
+      </ErrorBoundary>
+    );
+  }
+
+  // ═══ ACTIVE LESSON FULLSCREEN (immersive Overview→Article→Video→Quiz→Complete) ═══
+  if(activeLesson){
+    const {lesson,unit}=activeLesson;
+    const nextInfo=getNextLesson(lesson);
+    return(
+      <ErrorBoundary>
+        <Toaster position="top-right"/>
+        <LessonPlayer
+          lesson={lesson} unit={unit} pathwayLabel={curPath?.label}
+          pathwayEntry={pathway[lesson.id]}
+          step={lessonStep} onStep={setLessonStep}
+          articleRead={articleRead} onArticleRead={()=>setArticleRead(true)}
+          videoWatched={videoWatched} onVideoWatched={()=>setVideoWatched(true)}
+          onClose={closeLesson}
+          onStartQuiz={()=>openVerifyQuiz(lesson,unit)}
+          onNextLesson={()=>{ if(nextInfo)openLesson(nextInfo.lesson,nextInfo.unit); }}
+          hasNextLesson={!!nextInfo}
+          accent={curPath?.accent||C.blue} m={isMobile}
+        />
       </ErrorBoundary>
     );
   }

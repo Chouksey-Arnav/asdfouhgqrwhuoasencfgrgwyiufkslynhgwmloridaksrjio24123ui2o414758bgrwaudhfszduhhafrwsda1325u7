@@ -32,19 +32,28 @@ export const PATHS = {
     bestFor:['You know you want to help people through medicine or health science, but not which role yet','You want to keep your options wide across clinical, research, and allied-health careers','You\'d rather build broad strength than specialize before you\'ve tested the field'],
     units:[
       { id:'ex1', title:'Life Sciences Foundations', quizCat:'Life Sciences', lessons:[
-        { id:'ex1l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy' },
-        { id:'ex1l2', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'ex1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'ex1l1', title:'Biology Fundamentals', url:'https://www.youtube.com/watch?v=tZE_fQFK8EY', src:'YouTube', quizIds:['ex1l1q'],
+          objectives:['Cell theory and the prokaryotic vs. eukaryotic distinction','How photosynthesis and cellular respiration move energy through living systems','DNA as the molecule that encodes and passes down hereditary information'] },
+        { id:'ex1l2', title:'AP Biology Review', url:'https://www.youtube.com/watch?v=8kK2zwjRV0M', src:'YouTube', quizIds:['ex1l2q'],
+          objectives:['How DNA replication actually works (semi-conservative copying)','Dominant vs. recessive alleles and reading a Punnett square','Why mutations are the raw material evolution and individual variation both depend on'] },
+        { id:'ex1l3', title:'Human Physiology Overview', url:'https://www.youtube.com/watch?v=uBGl2BujkPQ', src:'YouTube', quizIds:['ex1l3q'],
+          objectives:['The anatomy vs. physiology distinction','Homeostasis and negative feedback loops','A tour of the major organ systems and how they work together'] },
       ]},
       { id:'ex2', title:'Physical Sciences Foundations', quizCat:'Physical Sciences', lessons:[
-        { id:'ex2l1', title:'Chemistry Fundamentals', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'ex2l2', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
-        { id:'ex2l3', title:'Statistics & Data Basics', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
+        { id:'ex2l1', title:'Chemistry Fundamentals', url:'https://www.youtube.com/watch?v=FSyAehMdpyI', src:'YouTube', quizIds:['ex2l1q'],
+          objectives:['Atomic structure and periodic trends','Ionic vs. covalent bonding, and why water\'s polarity matters biologically','What a balanced chemical equation and chemical equilibrium actually mean'] },
+        { id:'ex2l2', title:'Physics Fundamentals', url:'https://www.youtube.com/watch?v=ZM8ECpBuQYE', src:'YouTube', quizIds:['ex2l2q'],
+          objectives:['Speed, velocity, and acceleration','Newton\'s three laws of motion','Where physics shows up directly in the body — blood flow, imaging, biomechanics'] },
+        { id:'ex2l3', title:'Statistics & Data Basics', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube', quizIds:['ex2l3q'],
+          objectives:['Mean, median, mode, and when each is the better summary of data','What "statistically significant" does (and doesn\'t) tell you','Why correlation never proves causation'] },
       ]},
       { id:'ex3', title:'Exploring Health Careers', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ex3l1', title:'Intro to Psychology', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', src:'YouTube' },
-        { id:'ex3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ex3l3', title:'What Pre-Health Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ex3l1', title:'Intro to Psychology', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', src:'YouTube', quizIds:['ex3l1q'],
+          objectives:['The major psychological perspectives (biological, cognitive, behavioral, humanistic)','Why psychology matters in every health career, not just mental health','How modern psychology frames the nature vs. nurture question'] },
+        { id:'ex3l2', title:'Shadowing & Clinical Exposure 101', src:'Original Article', quizIds:['ex3l2q'],
+          objectives:['How to realistically arrange a shadowing opportunity as a high schooler','What to actually pay attention to during a shadowing day','Confidentiality and professionalism — what you can and can\'t discuss afterward'] },
+        { id:'ex3l3', title:'What Pre-Health Programs Look For', src:'Original Article', quizIds:['ex3l3q'],
+          objectives:['Why "pre-health" is a shared foundation, not a single locked-in career choice','What admissions readers actually screen for at this stage','Why staying undeclared a little longer can be a smart strategy'] },
       ]},
     ]
   },
@@ -88,11 +97,11 @@ export const PATHS = {
           quizIds:['cp76','cp05'] },
       ]},
       { id:'phy3', title:'The Physician Path', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'phy3l1', title:'Doctor-Patient Communication & Ethics', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy',
+        { id:'phy3l1', title:'Doctor-Patient Communication & Ethics', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'],
           objectives:['The core medical ethics principles: autonomy, beneficence, non-maleficence, justice','Why active listening and clear, jargon-free communication matter in care','What informed consent actually requires from a physician'] },
-        { id:'phy3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy',
+        { id:'phy3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'],
           objectives:['How to find and request a shadowing opportunity as a high schooler','What to observe and note during a shadowing day (log it in Portfolio → Clinical Hours)','Basic clinical/HIPAA etiquette — what you can and can\'t discuss afterward'] },
-        { id:'phy3l3', title:'What Medical Schools Actually Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy',
+        { id:'phy3l3', title:'What Medical Schools Actually Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatMedSchoolq'],
           objectives:['The realistic timeline: undergrad → MCAT → medical school → residency','Why sustained, real clinical exposure matters more than a long activity list','How GPA, science coursework, and shadowing/volunteering fit together now'] },
       ]},
     ]
@@ -115,19 +124,19 @@ export const PATHS = {
     bestFor:['You want constant, direct contact with patients over a career, not occasional','You like hands-on work as much as you like understanding why it works','You\'d rather be deeply embedded in a care team than working solo'],
     units:[
       { id:'nur1', title:'Anatomy & Physiology Foundations', quizCat:'Life Sciences', lessons:[
-        { id:'nur1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
-        { id:'nur1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube' },
-        { id:'nur1l3', title:'The Respiratory System', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', src:'YouTube' },
+        { id:'nur1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube', quizIds:['bb82'] },
+        { id:'nur1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube', quizIds:['bb84'] },
+        { id:'nur1l3', title:'The Respiratory System', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', src:'YouTube', quizIds:['bb82'] },
       ]},
       { id:'nur2', title:'Chemistry & Math for Nursing', quizCat:'Life Sciences', lessons:[
-        { id:'nur2l1', title:'General Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'nur2l2', title:'Statistics for Dosage & Data', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'nur2l3', title:'Algebra Review for Calculations', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy' },
+        { id:'nur2l1', title:'General Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp72'] },
+        { id:'nur2l2', title:'Statistics for Dosage & Data', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['ps14'] },
+        { id:'nur2l3', title:'Algebra Review for Calculations', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy', quizIds:['cp87'] },
       ]},
       { id:'nur3', title:'Patient Care & Communication', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'nur3l1', title:'Psychology of Patient Care', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
-        { id:'nur3l2', title:'Hospital & Clinical Volunteering 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'nur3l3', title:'What Nursing Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'nur3l1', title:'Psychology of Patient Care', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'] },
+        { id:'nur3l2', title:'Hospital & Clinical Volunteering 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['volunteer101q'] },
+        { id:'nur3l3', title:'What Nursing Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatNursingq'] },
       ]},
     ]
   },
@@ -149,19 +158,19 @@ export const PATHS = {
     bestFor:['You want hands-on diagnostic and treatment work without years of solo-authority training first','You like being part of a physician-led care team, not working in isolation','You want a faster path into direct patient care than the MD/DO route'],
     units:[
       { id:'pa1', title:'Biology & Physiology Core', quizCat:'Life Sciences', lessons:[
-        { id:'pa1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'pa1l2', title:'Human Physiology Systems', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
-        { id:'pa1l3', title:'Immune System & Homeostasis', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube' },
+        { id:'pa1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy', quizIds:['bb71'] },
+        { id:'pa1l2', title:'Human Physiology Systems', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy', quizIds:['bb83'] },
+        { id:'pa1l3', title:'Immune System & Homeostasis', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube', quizIds:['bb85'] },
       ]},
       { id:'pa2', title:'Chemistry Foundations', quizCat:'Physical Sciences', lessons:[
-        { id:'pa2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'pa2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
-        { id:'pa2l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
+        { id:'pa2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp72'] },
+        { id:'pa2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy', quizIds:['cp75'] },
+        { id:'pa2l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube', quizIds:['cp40'] },
       ]},
       { id:'pa3', title:'The PA Path', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'pa3l1', title:'Team-Based Clinical Care & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
-        { id:'pa3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'pa3l3', title:'What PA Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'pa3l1', title:'Team-Based Clinical Care & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'] },
+        { id:'pa3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'] },
+        { id:'pa3l3', title:'What PA Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatPAq'] },
       ]},
     ]
   },
@@ -183,19 +192,19 @@ export const PATHS = {
     bestFor:['You like precision — getting a calculation or interaction exactly right matters to you','You\'re drawn to chemistry more than any other science class','You want your work to matter to patients without constant direct patient contact'],
     units:[
       { id:'ph1', title:'Chemistry for Pharmacy', quizCat:'Physical Sciences', lessons:[
-        { id:'ph1l1', title:'Organic Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'ph1l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
-        { id:'ph1l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
+        { id:'ph1l1', title:'Organic Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp13'] },
+        { id:'ph1l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy', quizIds:['cp75'] },
+        { id:'ph1l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube', quizIds:['cp40'] },
       ]},
       { id:'ph2', title:'Biology & the Human Body', quizCat:'Life Sciences', lessons:[
-        { id:'ph2l1', title:'Cell Biology & Metabolism (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'ph2l2', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
-        { id:'ph2l3', title:'Protein Synthesis & Drug Targets', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube' },
+        { id:'ph2l1', title:'Cell Biology & Metabolism (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy', quizIds:['bb71'] },
+        { id:'ph2l2', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy', quizIds:['bb82'] },
+        { id:'ph2l3', title:'Protein Synthesis & Drug Targets', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube', quizIds:['bb80'] },
       ]},
       { id:'ph3', title:'Exploring Pharmacy', quizCat:'Physical Sciences', lessons:[
-        { id:'ph3l1', title:'Math & Statistics for Dosing', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'ph3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ph3l3', title:'What Pharmacy Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ph3l1', title:'Math & Statistics for Dosing', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['ps14'] },
+        { id:'ph3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'] },
+        { id:'ph3l3', title:'What Pharmacy Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatPharmacyq'] },
       ]},
     ]
   },
@@ -217,19 +226,19 @@ export const PATHS = {
     bestFor:['You like precise, hands-on work more than fast-paced acute-care chaos','You could see yourself running your own practice one day','You want steady, scheduled patient relationships rather than unpredictable shifts'],
     units:[
       { id:'de1', title:'Biology & Oral Anatomy', quizCat:'Life Sciences', lessons:[
-        { id:'de1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
-        { id:'de1l2', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'de1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'de1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube', quizIds:['bb82'] },
+        { id:'de1l2', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy', quizIds:['bb71'] },
+        { id:'de1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy', quizIds:['bb83'] },
       ]},
       { id:'de2', title:'Chemistry & Materials', quizCat:'Physical Sciences', lessons:[
-        { id:'de2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy' },
-        { id:'de2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
-        { id:'de2l3', title:'Acid-Base Chemistry (Enamel & pH)', url:'https://www.youtube.com/watch?v=eB1qG5EEDk0', src:'YouTube' },
+        { id:'de2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp72'] },
+        { id:'de2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy', quizIds:['cp75'] },
+        { id:'de2l3', title:'Acid-Base Chemistry (Enamel & pH)', url:'https://www.youtube.com/watch?v=eB1qG5EEDk0', src:'YouTube', quizIds:['cp76'] },
       ]},
       { id:'de3', title:'The Dental Path', quizCat:'Life Sciences', lessons:[
-        { id:'de3l1', title:'Patient Communication & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
-        { id:'de3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'de3l3', title:'What Dental Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'de3l1', title:'Patient Communication & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'] },
+        { id:'de3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'] },
+        { id:'de3l3', title:'What Dental Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatDentalq'] },
       ]},
     ]
   },
@@ -251,19 +260,19 @@ export const PATHS = {
     bestFor:['You\'re more energized by why something happens than by treating it directly','You\'d rather spend months on one careful question than see many patients a day','You want your impact to scale beyond the people you personally meet'],
     units:[
       { id:'br1', title:'Biology & Genetics Deep Dive', quizCat:'Life Sciences', lessons:[
-        { id:'br1l1', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy' },
-        { id:'br1l2', title:'DNA Replication', url:'https://www.youtube.com/watch?v=Qqe4thU-os8', src:'YouTube' },
-        { id:'br1l3', title:'Transcription & Translation', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube' },
+        { id:'br1l1', title:'AP Biology Review', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy', quizIds:['bb71'] },
+        { id:'br1l2', title:'DNA Replication', url:'https://www.youtube.com/watch?v=Qqe4thU-os8', src:'YouTube', quizIds:['bb28'] },
+        { id:'br1l3', title:'Transcription & Translation', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', src:'YouTube', quizIds:['bb29'] },
       ]},
       { id:'br2', title:'Chemistry & Lab Foundations', quizCat:'Physical Sciences', lessons:[
-        { id:'br2l1', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy' },
-        { id:'br2l2', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube' },
-        { id:'br2l3', title:'Gibbs Free Energy & Thermodynamics', url:'https://www.youtube.com/watch?v=Tj-w1W_pZ8M', src:'YouTube' },
+        { id:'br2l1', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy', quizIds:['cp75'] },
+        { id:'br2l2', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube', quizIds:['cp40'] },
+        { id:'br2l3', title:'Gibbs Free Energy & Thermodynamics', url:'https://www.youtube.com/watch?v=Tj-w1W_pZ8M', src:'YouTube', quizIds:['cp02'] },
       ]},
       { id:'br3', title:'Research Methods & the Scientific Process', quizCat:'Life Sciences', lessons:[
-        { id:'br3l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'br3l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube' },
-        { id:'br3l3', title:'PubMed Research Database', url:'https://pubmed.ncbi.nlm.nih.gov/', src:'PubMed' },
+        { id:'br3l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['cp93'] },
+        { id:'br3l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube', quizIds:['ps32'] },
+        { id:'br3l3', title:'PubMed Research Database', url:'https://pubmed.ncbi.nlm.nih.gov/', src:'PubMed', quizIds:['pubmedq'] },
       ]},
     ]
   },
@@ -285,19 +294,19 @@ export const PATHS = {
     bestFor:['You want hands-on work built around a long-term relationship, not a single procedure','You\'re drawn to how the body moves as much as how it heals','You get real satisfaction from someone\'s slow, visible progress'],
     units:[
       { id:'pt1', title:'Anatomy & Movement', quizCat:'Life Sciences', lessons:[
-        { id:'pt1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube' },
-        { id:'pt1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube' },
-        { id:'pt1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy' },
+        { id:'pt1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube', quizIds:['bb82'] },
+        { id:'pt1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube', quizIds:['bb84'] },
+        { id:'pt1l3', title:'Human Physiology Overview', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy', quizIds:['bb83'] },
       ]},
       { id:'pt2', title:'Physics of the Body', quizCat:'Life Sciences', lessons:[
-        { id:'pt2l1', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy' },
-        { id:'pt2l2', title:'Kinematics — Motion & Forces', url:'https://www.youtube.com/watch?v=xZMwK2HwJ7c', src:'YouTube' },
-        { id:'pt2l3', title:'Fluids at Rest (Circulation & Pressure)', url:'https://www.youtube.com/watch?v=b5SqYoO4VXI', src:'YouTube' },
+        { id:'pt2l1', title:'Physics Fundamentals', url:'https://www.khanacademy.org/science/physics', src:'Khan Academy', quizIds:['cp79'] },
+        { id:'pt2l2', title:'Kinematics — Motion & Forces', url:'https://www.youtube.com/watch?v=xZMwK2HwJ7c', src:'YouTube', quizIds:['cp06'] },
+        { id:'pt2l3', title:'Fluids at Rest (Circulation & Pressure)', url:'https://www.youtube.com/watch?v=b5SqYoO4VXI', src:'YouTube', quizIds:['cp03'] },
       ]},
       { id:'pt3', title:'The PT/OT Path', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'pt3l1', title:'Psychology of Rehab & Motivation', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy' },
-        { id:'pt3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'pt3l3', title:'What PT/OT Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'pt3l1', title:'Psychology of Rehab & Motivation', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps08'] },
+        { id:'pt3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'] },
+        { id:'pt3l3', title:'What PT/OT Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatPTOTq'] },
       ]},
     ]
   },
@@ -319,19 +328,19 @@ export const PATHS = {
     bestFor:['You think in populations and systems, not just individual cases','You\'re drawn to prevention over treatment','You want your work to touch thousands of people even if you never meet most of them'],
     units:[
       { id:'pu1', title:'Life Sciences for Public Health', quizCat:'Life Sciences', lessons:[
-        { id:'pu1l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy' },
-        { id:'pu1l2', title:'Immune System & Disease Spread', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube' },
-        { id:'pu1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube' },
+        { id:'pu1l1', title:'Biology Fundamentals', url:'https://www.khanacademy.org/science/biology', src:'Khan Academy', quizIds:['bb71'] },
+        { id:'pu1l2', title:'Immune System & Disease Spread', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube', quizIds:['bb85'] },
+        { id:'pu1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube', quizIds:['whatPublicHealthq'] },
       ]},
       { id:'pu2', title:'Data & Epidemiology', quizCat:'Life Sciences', lessons:[
-        { id:'pu2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'pu2l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube' },
-        { id:'pu2l3', title:'What Is Statistics?', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube' },
+        { id:'pu2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['cp94'] },
+        { id:'pu2l2', title:'Sampling Methods & Bias', url:'https://www.youtube.com/watch?v=Rf-fIpB4D50', src:'YouTube', quizIds:['ps32'] },
+        { id:'pu2l3', title:'What Is Statistics?', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube', quizIds:['cp93'] },
       ]},
       { id:'pu3', title:'Health Policy & Communities', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'pu3l1', title:'Sociology & Society', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMJ-AfB_7J1538YKWkZAnGA', src:'YouTube' },
-        { id:'pu3l2', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy' },
-        { id:'pu3l3', title:'Community Health Volunteering', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'pu3l1', title:'Sociology & Society', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMJ-AfB_7J1538YKWkZAnGA', src:'YouTube', quizIds:['ps79'] },
+        { id:'pu3l2', title:'Government & Civics', url:'https://www.khanacademy.org/humanities/us-government-and-civics', src:'Khan Academy', quizIds:['ps88'] },
+        { id:'pu3l3', title:'Community Health Volunteering', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['volunteer101q'] },
       ]},
     ]
   },
@@ -353,19 +362,19 @@ export const PATHS = {
     bestFor:['You\'re energized by fixing systems and processes more than treating patients directly','You want medicine\'s mission and impact without a clinical role','You like leading teams and owning outcomes at an organizational level'],
     units:[
       { id:'ha1', title:'Economics & Healthcare Systems', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ha1l1', title:'Microeconomics', url:'https://www.khanacademy.org/economics-finance-domain/microeconomics', src:'Khan Academy' },
-        { id:'ha1l2', title:'Macroeconomics', url:'https://www.khanacademy.org/economics-finance-domain/macroeconomics', src:'Khan Academy' },
-        { id:'ha1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube' },
+        { id:'ha1l1', title:'Microeconomics', url:'https://www.khanacademy.org/economics-finance-domain/microeconomics', src:'Khan Academy', quizIds:['ps113'] },
+        { id:'ha1l2', title:'Macroeconomics', url:'https://www.khanacademy.org/economics-finance-domain/macroeconomics', src:'Khan Academy', quizIds:['ps114'] },
+        { id:'ha1l3', title:'What Is Public Health?', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube', quizIds:['whatPublicHealthq'] },
       ]},
       { id:'ha2', title:'Data & Statistics for Operations', quizCat:'Physical Sciences', lessons:[
-        { id:'ha2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'ha2l2', title:'Reading Charts & Data Sets', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy' },
-        { id:'ha2l3', title:'Personal Finance Basics', url:'https://www.khanacademy.org/college-careers-more/personal-finance', src:'Khan Academy' },
+        { id:'ha2l1', title:'Statistics & Probability', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['cp93'] },
+        { id:'ha2l2', title:'Reading Charts & Data Sets', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['cp95'] },
+        { id:'ha2l3', title:'Personal Finance Basics', url:'https://www.khanacademy.org/college-careers-more/personal-finance', src:'Khan Academy', quizIds:['ps115'] },
       ]},
       { id:'ha3', title:'Leadership & the Business of Healthcare', quizCat:'Behavioral & Social Sciences', lessons:[
-        { id:'ha3l1', title:'Public Speaking Fundamentals', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ha3l2', title:'Teamwork & Group Projects', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
-        { id:'ha3l3', title:'What Health Administration Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy' },
+        { id:'ha3l1', title:'Public Speaking Fundamentals', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['publicspeakingq'] },
+        { id:'ha3l2', title:'Teamwork & Group Projects', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['teamworkq'] },
+        { id:'ha3l3', title:'What Health Administration Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatHealthAdminq'] },
       ]},
     ]
   },
