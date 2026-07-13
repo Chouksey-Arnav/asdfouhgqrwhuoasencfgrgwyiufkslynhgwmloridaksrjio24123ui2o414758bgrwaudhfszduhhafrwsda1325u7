@@ -2,12 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, UserCheck, Users } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
-import * as DB from '../lib/db';
+import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 
 const STATUSES = ['Planning to ask', 'Asked', 'Confirmed', 'Submitted'];
 const STATUS_COLORS = { 'Planning to ask':C.t3, 'Asked':C.amberL, 'Confirmed':C.blueL, 'Submitted':C.greenL };
 const RELATIONSHIPS = ['Teacher', 'Counselor', 'Coach', 'Employer/Supervisor', 'Physician/Health Professional Shadowed', 'Research Mentor', 'Other'];
 
+// Supabase-backed (see supabase/migrations/0001_portfolio_credibility_expansion.sql) — this
+// used to be local-only Dexie data; it now syncs cross-device like the rest of Portfolio.
 export default function RecommendersPanel({ accent = C.blue, onChange }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +21,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setEntries(await DB.getRecommenders()); }
+    try { setEntries(await listItems('recommenders')); }
     catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   }, []);
@@ -29,8 +31,11 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
     e?.preventDefault();
     if (!name.trim()) { toast.error('Recommender name is required.'); return; }
     try {
-      const id = await DB.addRecommender({ name: name.trim(), relationship, type, status: STATUSES[0], dueDate, notes: notes.trim() });
-      setEntries(prev => [{ id, name: name.trim(), relationship, type, status: STATUSES[0], dueDate, notes: notes.trim() }, ...prev]);
+      const row = await createItem('recommenders', {
+        name: name.trim(), relationship, type, status: STATUSES[0],
+        due_date: dueDate || null, notes: notes.trim() || null,
+      });
+      setEntries(prev => [row, ...prev]);
       setName(''); setDueDate(''); setNotes('');
       toast.success(`Added ${name.trim()}`);
       onChange?.();
@@ -41,12 +46,12 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
     const idx = STATUSES.indexOf(entry.status);
     const status = STATUSES[(idx + 1) % STATUSES.length];
     setEntries(prev => prev.map(e => e.id === entry.id ? { ...e, status } : e));
-    try { await DB.updateRecommender(entry.id, { status }); } catch (err) { toast.error(err.message); }
+    try { await updateItem('recommenders', entry.id, { status }); } catch (err) { toast.error(err.message); }
   }
 
   async function removeEntry(id) {
     setEntries(prev => prev.filter(e => e.id !== id));
-    try { await DB.deleteRecommender(id); onChange?.(); } catch (err) { toast.error(err.message); }
+    try { await deleteItem('recommenders', id); onChange?.(); } catch (err) { toast.error(err.message); }
   }
 
   const individuals = entries.filter(e => e.type === 'individual');
@@ -103,7 +108,7 @@ function Section({ title, items, accent, onCycle, onRemove }) {
           <div style={{width:34,height:34,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><UserCheck size={15} color={accent}/></div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{e.name}</div>
-            <div style={{fontSize:11,color:C.t3,marginTop:2}}>{e.relationship}{e.dueDate?` · due ${new Date(e.dueDate+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}`:''}</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:2}}>{e.relationship}{e.due_date?` · due ${new Date(e.due_date+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}`:''}</div>
             {e.notes && <div style={{fontSize:11,color:C.t2,marginTop:4}}>{e.notes}</div>}
           </div>
           <div style={{...R({gap:6}),flexShrink:0}}>
