@@ -125,14 +125,119 @@ const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Ve
 // Quiz performance % → predicted SAT score (400–1600)
 const scoreToSection = p => Math.round(400+(Math.max(0,Math.min(100,p))/100)*1200);
 
-function scoreSchool(s,gpa,sat,lead,ec,vol,st){
-  let sc=100;const gN=parseFloat(gpa)||0,sN=parseInt(sat)||0,gd=gN-s.gpa,sd=sN-s.sat;
-  if(gd>=0)sc+=15;else if(gd>=-0.1)sc-=5;else if(gd>=-0.2)sc-=15;else if(gd>=-0.3)sc-=25;else sc-=40;
-  if(sd>=0)sc+=15;else if(sd>=-40)sc-=5;else if(sd>=-80)sc-=15;else if(sd>=-120)sc-=25;else sc-=40;
-  sc+=Math.min((parseInt(lead)||0)*3,10);const c=parseInt(ec)||0;sc+=c>=500?10:c>=200?6:c>=100?3:0;
-  const v=parseInt(vol)||0;sc+=v>=200?5:v>=100?3:0;
-  if(s.type==='Public'&&st&&s.state===st)sc+=10;
-  return{...s,tier:sc>=110?'Likely':sc>=92?'Target':sc>=72?'Reach':'Stretch',score:sc};
+function scoreSchool(s, gpa, sat, lead, ec, vol, st, specialty = 'exploring', rigor = '2', clinicalHours = 0) {
+  let sc = 100;
+  const gN = parseFloat(gpa) || 0;
+  const sN = parseInt(sat) || 0;
+  const gd = gN - (s.gpa || 3.5);
+  const sd = sN - (s.sat || 1200);
+
+  // GPA Weighting
+  if (gd >= 0) sc += 15;
+  else if (gd >= -0.1) sc -= 5;
+  else if (gd >= -0.2) sc -= 15;
+  else if (gd >= -0.3) sc -= 25;
+  else sc -= 40;
+
+  // SAT Weighting
+  if (sd >= 0) sc += 15;
+  else if (sd >= -40) sc -= 5;
+  else if (sd >= -80) sc -= 15;
+  else if (sd >= -120) sc -= 25;
+  else sc -= 40;
+
+  // Rigor Weighting (Science Course Rigor)
+  const rN = parseInt(rigor) || 0;
+  if (rN >= 8) sc += 10;
+  else if (rN >= 5) sc += 6;
+  else if (rN >= 3) sc += 3;
+
+  // Leadership Experience Score
+  sc += Math.min((parseInt(lead) || 0) * 4, 12);
+
+  // Extracurricular Hours Score
+  const cHours = parseInt(ec) || 0;
+  sc += cHours >= 400 ? 10 : cHours >= 200 ? 6 : cHours >= 100 ? 3 : 0;
+
+  // Volunteer Hours Score
+  const v = parseInt(vol) || 0;
+  sc += v >= 200 ? 8 : v >= 100 ? 5 : v >= 50 ? 2 : 0;
+
+  // Clinical Hours Score (Highly valued in pre-health pathways)
+  const clin = parseInt(clinicalHours) || 0;
+  if (clin >= 150) sc += 12;
+  else if (clin >= 80) sc += 8;
+  else if (clin >= 40) sc += 4;
+  else if (clin >= 20) sc += 2;
+
+  // In-state Public Tuition Advantage & Admissions Preference
+  if (s.type === 'Public' && st && s.state === st) sc += 15;
+
+  // Pre-Med Committee Boost
+  if (s.hasPreMedCommittee) sc += 5;
+
+  // BS/MD Direct Medical Track Interest
+  if (s.bsmd) sc += 5;
+
+  // Specialty Match Bonuses
+  if (s.specialtyStrong === 'Pre-Med' && (specialty === 'physician' || specialty === 'physicianAssistant')) {
+    sc += 10;
+  } else if (s.specialtyStrong === 'Nursing' && specialty === 'nursing') {
+    sc += 10;
+  } else if (s.specialtyStrong === 'Pharmacy' && specialty === 'pharmacy') {
+    sc += 10;
+  } else if (s.specialtyStrong === 'Dentistry' && specialty === 'dentistry') {
+    sc += 10;
+  } else if (s.specialtyStrong === 'Research' && specialty === 'biomedResearch') {
+    sc += 10;
+  }
+
+  // Determine Tier
+  const tier = sc >= 115 ? 'Likely' : sc >= 95 ? 'Target' : sc >= 75 ? 'Reach' : 'Stretch';
+
+  // Customized reasons for why this fits the student
+  let reasons = [];
+  if (gN >= s.gpa) {
+    reasons.push(`Your GPA is above the average admitted GPA of ${s.gpa}.`);
+  }
+  if (sN >= s.sat) {
+    reasons.push(`Your test score meets or exceeds their mid-50% SAT threshold.`);
+  }
+  if (s.type === 'Public' && st === s.state) {
+    reasons.push(`You have the in-state tuition and admission rate advantage.`);
+  }
+  if (s.bsmd) {
+    reasons.push(`Offers an exceptional direct BS/MD or BS/DO pathway for high schoolers.`);
+  }
+  if (s.hasPreMedCommittee) {
+    reasons.push(`An active Pre-Med Committee is available to write composite LORs.`);
+  }
+  if (s.specialtyStrong === 'Pre-Med' && (specialty === 'physician' || specialty === 'physicianAssistant')) {
+    reasons.push(`Renowned for world-class pre-med advising and med school placements.`);
+  }
+  if (s.specialtyStrong && s.specialtyStrong.toLowerCase() === specialty.toLowerCase()) {
+    reasons.push(`Provides elite, top-tier clinical and professional training specifically in ${specialty}.`);
+  }
+  if (s.clinicalProximity === 'Excellent') {
+    reasons.push(`Excellent proximity to medical centers, offering superior shadowing/volunteer access.`);
+  }
+  if (clin >= 80) {
+    reasons.push(`Your extensive clinical exposure (${clin} hrs) stands out strongly.`);
+  }
+  if (rN >= 5) {
+    reasons.push(`Your rigorous curriculum (${rN} advanced classes) demonstrates academic strength.`);
+  }
+
+  const whyMatch = reasons.length > 0 ? reasons.slice(0, 3).join(' ') : `A solid choice with a pre-health program rank of ${s.preHealthRank || 3}/5.`;
+
+  return {
+    ...s,
+    tier,
+    score: sc,
+    whyMatch,
+    academicIndex: Math.min(100, Math.round(((gN / 4.0) * 50) + ((sN / 1600) * 40) + ((rN / 10) * 10))),
+    experienceIndex: Math.min(100, Math.round((Math.min(100, clin) * 0.4) + (Math.min(200, v) / 200 * 30) + (Math.min(500, cHours) / 500 * 20) + (Math.min(5, parseInt(lead) || 0) / 5 * 10)))
+  };
 }
 
 // Boiled down from 17 flat destinations to 4: Home + three pillars. Prep and
@@ -845,9 +950,76 @@ export default function App({ account, onAccountChange }) {
 
   // ── Calc ────────────────────────────────────────────────────────────────────
   const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
+  const [cRigor,setCRigor]=useState('2'); // Rigor state: count of AP/IB science & math classes
+  const [selRegion,setSelRegion]=useState('All');
+  const [selBsmd,setSelBsmd]=useState('All');
+  const [selCommittee,setSelCommittee]=useState('All');
+  const [selClinicalProx,setSelClinicalProx]=useState('All');
+  const [selStateFilter,setSelStateFilter]=useState('All');
+  const [calcSort,setCalcSort]=useState('score'); // 'score' | 'accept' | 'name'
+
   const [customSchools,setCustomSchools]=useState([]);
   const [showAddSchool,setShowAddSchool]=useState(false);
   const [csName,setCsName]=useState('');const [csGPA,setCsGPA]=useState('');const [csSAT,setCsSAT]=useState('');const [csAccept,setCsAccept]=useState('');const [csState,setCsState]=useState('');const [csType,setCsType]=useState('Public');
+
+  // ACT to SAT Conversion
+  const actToSat = (act) => {
+    const map = {
+      36: 1600, 35: 1540, 34: 1500, 33: 1460, 32: 1430, 31: 1400, 30: 1370,
+      29: 1340, 28: 1310, 27: 1280, 26: 1240, 25: 1210, 24: 1180, 23: 1140,
+      22: 1110, 21: 1080, 20: 1040, 19: 1010, 18: 970, 17: 930, 16: 890,
+      15: 850, 14: 810, 13: 770, 12: 710, 11: 630, 10: 560, 9: 480
+    };
+    return map[act] || (act < 9 ? 400 : 1000);
+  };
+
+  const syncWithPortfolio = async () => {
+    try {
+      const tid = toast.loading('Syncing with your Portfolio...');
+      // Fetch latest test scores
+      const scores = await listItems('test_scores');
+      const actualScores = (scores || []).filter(s => !s.is_target);
+      if (actualScores.length > 0) {
+        const sorted = actualScores.sort((a,b) => b.test_date.localeCompare(a.test_date));
+        const latestScore = sorted[0];
+        if (latestScore.test_type === 'SAT') {
+          setCSAT(String(latestScore.composite));
+        } else if (latestScore.test_type === 'ACT') {
+          const satEquiv = actToSat(latestScore.composite);
+          setCSAT(String(satEquiv));
+          toast.success(`Converted ACT composite ${latestScore.composite} to SAT equivalent ${satEquiv}!`);
+        }
+      }
+
+      // Sync cumulative GPA
+      if (portGpa && portGpa.length > 0) {
+        const sortedGpas = [...portGpa].sort((a,b) => new Date(b.created_at || b.addedAt || 0) - new Date(a.created_at || a.addedAt || 0));
+        setCGPA(String(sortedGpas[0].gpa));
+      }
+
+      // Sync hours from activities
+      const volH = Math.round(portActivities.filter(a => a.activity_type === 'Volunteering').reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0) * (parseFloat(a.weeks_per_year) || 0), 0));
+      setCV(String(volH));
+
+      // EC hours (excluding Volunteering, Leadership, Clinical)
+      const ecH = Math.round(portActivities.filter(a => !['Volunteering', 'Clinical/Shadowing', 'Patient Care (paid)', 'Leadership'].includes(a.activity_type)).reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0) * (parseFloat(a.weeks_per_year) || 0), 0));
+      setCEC(String(ecH));
+
+      // Leadership positions count
+      const leadCount = portActivities.filter(a => a.activity_type === 'Leadership').length;
+      setCLead(String(leadCount));
+
+      // Rigor (count AP/IB courses selected in settings)
+      const apCount = (user?.courses || []).filter(c => c.toLowerCase().includes('ap') || c.toLowerCase().includes('ib')).length;
+      setCRigor(String(Math.max(apCount, 2)));
+
+      toast.dismiss(tid);
+      toast.success('Successfully synced profile from your Portfolio!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Sync failed: ' + err.message);
+    }
+  };
 
   // ── Settings ────────────────────────────────────────────────────────────────
   const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
@@ -1379,7 +1551,71 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   const fLib    = useMemo(()=>{ return fuseSearch(libFuse,lSrch)||ELIB; },[lSrch]).filter(r=>lCat==='All'||r.cat===lCat);
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
-  const calcR   = useMemo(()=>hasCalc?[...SCHOOL_DATA,...customSchools].filter(s=>sType==='All'||s.type===sType).map(s=>scoreSchool(s,cGPA,cSAT,cLead,cEC,cVol,cSt)).sort((a,b)=>b.score-a.score):[],[cGPA,cSAT,cLead,cEC,cVol,cSt,sType,hasCalc,customSchools]);
+  const calcR   = useMemo(()=>{
+    if (!hasCalc) return [];
+
+    // 1. Get raw schools and map scoreSchool with all personalized parameters
+    let processed = [...SCHOOL_DATA, ...customSchools]
+      .map(s => scoreSchool(s, cGPA, cSAT, cLead, cEC, cVol, cSt, eSpec, cRigor, clinicalHoursTotal));
+
+    // 2. Filter
+    processed = processed.filter(s => {
+      const matchType = sType === 'All' || s.type === sType;
+      const matchRegion = selRegion === 'All' || s.region === selRegion;
+      const matchBsmd = selBsmd === 'All' || (selBsmd === 'Yes' && s.bsmd) || (selBsmd === 'No' && !s.bsmd);
+      const matchCommittee = selCommittee === 'All' || (selCommittee === 'Yes' && s.hasPreMedCommittee) || (selCommittee === 'No' && !s.hasPreMedCommittee);
+      const matchClinicalProx = selClinicalProx === 'All' || s.clinicalProximity === selClinicalProx;
+      const matchState = selStateFilter === 'All' || s.state === selStateFilter;
+      return matchType && matchRegion && matchBsmd && matchCommittee && matchClinicalProx && matchState;
+    });
+
+    // 3. Sort
+    if (calcSort === 'score') {
+      processed.sort((a, b) => b.score - a.score);
+    } else if (calcSort === 'accept') {
+      processed.sort((a, b) => (a.accept || 100) - (b.accept || 100));
+    } else if (calcSort === 'name') {
+      processed.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return processed;
+  }, [cGPA, cSAT, cLead, cEC, cVol, cSt, sType, hasCalc, customSchools, eSpec, cRigor, clinicalHoursTotal, selRegion, selBsmd, selCommittee, selClinicalProx, selStateFilter, calcSort]);
+
+  // Compute overall summary stats for matches
+  const calculatedStats = useMemo(() => {
+    if (calcR.length === 0) return null;
+    let sumAcademic = 0, sumExperience = 0;
+    calcR.forEach(s => {
+      sumAcademic += s.academicIndex || 0;
+      sumExperience += s.experienceIndex || 0;
+    });
+    const avgAcademic = Math.round(sumAcademic / calcR.length);
+    const avgExperience = Math.round(sumExperience / calcR.length);
+
+    let pathwayAdvice = '';
+    if (curPath?.label) {
+      pathwayAdvice = `Focused on your ${curPath.label} track. `;
+    }
+    if (parseInt(cVol) || 0 < 60) {
+      pathwayAdvice += "Consider taking on more volunteer hours to strengthen your experience index. ";
+    }
+    if (clinicalHoursTotal < 40) {
+      pathwayAdvice += "Adding hospital/clinical shadowing hours will heavily boost your chancing at selective health programs. ";
+    }
+    if (parseFloat(cGPA) < 3.7) {
+      pathwayAdvice += "Aim to take more advanced math & science classes (AP/IB) to show curriculum rigor and offset a lower GPA. ";
+    } else {
+      pathwayAdvice += "Your outstanding academic parameters align excellently with premium target schools! ";
+    }
+
+    return { avgAcademic, avgExperience, pathwayAdvice };
+  }, [calcR, cVol, clinicalHoursTotal, cGPA, curPath]);
+
+  // Unique states found in SCHOOL_DATA for filtering
+  const distinctStates = useMemo(() => {
+    const states = new Set(SCHOOL_DATA.map(s => s.state).filter(Boolean));
+    return Array.from(states).sort();
+  }, []);
 
   function addCustomSchool(){
     if(!csName.trim())return;
@@ -2537,13 +2773,32 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tCalc(){
     return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Admissions Calculator</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College List Builder</h2></div>
+        <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
+          <div>
+            <div style={lbl()}>Admissions Calculator</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Personalized College List & Match Index</h2>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={syncWithPortfolio}
+            style={{ ...btn(`linear-gradient(135deg, ${C.amber}, ${C.orange})`, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px ${C.orange}35` }}
+          >
+            <Sparkles size={14}/> Sync with Portfolio
+          </motion.button>
+        </div>
+
+        {/* Profile Card */}
         <div style={glass()}>
-          <SL>Your Profile</SL>
+          <div style={R({ justifyContent: 'space-between', marginBottom: 16 })}>
+            <SL extra={{ margin: 0 }}>Your Academic & Pre-Health Profile</SL>
+            <span style={pill(C.blueDim, C.blueL, { fontSize: 10 })}>Calculates dynamic admission index</span>
+          </div>
           <div style={G(2,14,{},isMobile)}>
             {[
               {l:'Cumulative GPA',p:'3.75',t:'number',step:'0.01',min:'2',max:'4',v:cGPA,s:setCGPA},
-              {l:'SAT Score (400–1600)',p:'1350',t:'number',min:'400',max:'1600',v:cSAT,s:setCSAT},
+              {l:'SAT Score (or ACT converted)',p:'1350',t:'number',min:'400',max:'1600',v:cSAT,s:setCSAT},
+              {l:'Science Course Rigor (AP/IB)',p:'2',t:'number',min:'0',v:cRigor,s:setCRigor},
               {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
               {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
               {l:'Volunteer Hours',p:'100',t:'number',min:'0',v:cVol,s:setCV},
@@ -2560,14 +2815,109 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 {US_STATES.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
               </select>
             </div>
-          </div>
-          <div style={R({gap:8,marginTop:16})}>
-            <span style={{fontSize:12,color:C.t2,fontWeight:500}}>School type:</span>
-            {['All','Public','Private'].map(t=>(
-              <motion.button key={t} whileHover={{scale:1.04}} whileTap={{scale:.96}} style={btnSm(sType===t?C.blueGrad:C.s4,{color:sType===t?'#fff':C.t2,border:sType===t?'none':`1px solid ${C.b1}`})} onClick={()=>setST(t)}>{t}</motion.button>
-            ))}
+            <div style={CC({gap:4})}>
+              <span style={lbl()}>Logged Clinical Hours (View Only)</span>
+              <div style={inp({ background: 'rgba(255,255,255,0.02)', color: C.t3, border: `1px dashed ${C.b1}`, display: 'flex', alignItems: 'center' })}>
+                {clinicalHoursTotal} hrs total
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Insights Panel */}
+        {calculatedStats && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={glass({ background: `linear-gradient(135deg, ${C.s1}, ${C.s0})`, border: `1px solid ${C.b2}`, padding: 22 })}>
+            <SL>Personalized Admissions Insights</SL>
+            <div style={G(3, 14, { marginBottom: 14 }, isMobile)}>
+              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.blueL, fontFamily: C.FM }}>{calculatedStats.avgAcademic}%</div>
+                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Academic Match Index</div>
+              </div>
+              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.greenL, fontFamily: C.FM }}>{calculatedStats.avgExperience}%</div>
+                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Experience Fit Index</div>
+              </div>
+              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: C.amberL, fontFamily: C.FM }}>{curPath?.label ? curPath.label.split(' ')[0] : 'Pre-Health'}</div>
+                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Matching Pathway</div>
+              </div>
+            </div>
+            <div style={R({ gap: 10, alignItems: 'flex-start' })}>
+              <Brain size={16} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }}/>
+              <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{calculatedStats.pathwayAdvice}</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Filters and Sorting Panel */}
+        {hasCalc && (
+          <div style={glass({ padding: 18 })}>
+            <SL>Advanced Matching Filters & Sorting</SL>
+            <div style={G(isMobile ? 2 : 3, 12, { marginBottom: 14 }, false)}>
+              <div>
+                <span style={lbl()}>Geographic Region</span>
+                <select style={inp()} value={selRegion} onChange={e=>setSelRegion(e.target.value)}>
+                  <option value="All">All Regions</option>
+                  <option value="Northeast">Northeast</option>
+                  <option value="South">South</option>
+                  <option value="Midwest">Midwest</option>
+                  <option value="West">West</option>
+                </select>
+              </div>
+              <div>
+                <span style={lbl()}>Direct BS/MD Path</span>
+                <select style={inp()} value={selBsmd} onChange={e=>setSelBsmd(e.target.value)}>
+                  <option value="All">Show All Schools</option>
+                  <option value="Yes">Offers BS/MD Direct</option>
+                  <option value="No">No BS/MD Direct</option>
+                </select>
+              </div>
+              <div>
+                <span style={lbl()}>Pre-Med Committee Advisory</span>
+                <select style={inp()} value={selCommittee} onChange={e=>setSelCommittee(e.target.value)}>
+                  <option value="All">Show All Schools</option>
+                  <option value="Yes">Has Pre-Med Committee</option>
+                  <option value="No">No Pre-Med Committee</option>
+                </select>
+              </div>
+              <div>
+                <span style={lbl()}>Clinical Proximity</span>
+                <select style={inp()} value={selClinicalProx} onChange={e=>setSelClinicalProx(e.target.value)}>
+                  <option value="All">Show All Proximities</option>
+                  <option value="Excellent">Excellent Access</option>
+                  <option value="Good">Good Access</option>
+                  <option value="Fair">Fair Access</option>
+                </select>
+              </div>
+              <div>
+                <span style={lbl()}>State Location</span>
+                <select style={inp()} value={selStateFilter} onChange={e=>setSelStateFilter(e.target.value)}>
+                  <option value="All">All States</option>
+                  {distinctStates.map(stCode => (
+                    <option key={stCode} value={stCode}>{stCode}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <span style={lbl()}>School Type</span>
+                <select style={inp()} value={sType} onChange={e=>setST(e.target.value)}>
+                  <option value="All">All Types</option>
+                  <option value="Public">Public Universities</option>
+                  <option value="Private">Private Universities</option>
+                </select>
+              </div>
+            </div>
+            <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
+              <div style={R({ gap: 6 })}>
+                <span style={{ fontSize: 11, color: C.t3 }}>Sort by:</span>
+                {[['score', 'Match Score'], ['accept', 'Acceptance Rate'], ['name', 'Alphabetical']].map(([key, label]) => (
+                  <button key={key} style={btnSm(calcSort===key ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={()=>setCalcSort(key)}>{label}</button>
+                ))}
+              </div>
+              <button style={btnG({ fontSize: 11, padding: '5px 12px' })} onClick={()=>{setST('All');setSelRegion('All');setSelBsmd('All');setSelCommittee('All');setSelClinicalProx('All');setSelStateFilter('All');setCalcSort('score');}}>Reset Filters</button>
+            </div>
+          </div>
+        )}
 
         {/* Add a custom school not in the built-in list */}
         <div style={glass({padding:18})}>
@@ -2622,17 +2972,45 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <div style={R({marginBottom:12})}>
                 <div style={{width:10,height:10,borderRadius:'50%',background:col,boxShadow:`0 0 8px ${col}70`}}/>
                 <span style={{fontSize:13,fontWeight:700,color:col,fontFamily:C.FD}}>{tier}</span>
-                <span style={{fontSize:12,color:C.t3}}>({schools.length} schools)</span>
+                <span style={{fontSize:12,color:C.t3}}>({schools.length} schools matched)</span>
               </div>
-              <div style={CC({gap:6})}>
+              <div style={CC({gap:10})}>
                 {schools.map((s,i)=>(
-                  <motion.div key={i} initial={{opacity:0,x:-5}} animate={{opacity:1,x:0}} transition={{delay:i*.02}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
-                    <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}55)`,flexShrink:0,boxShadow:`0 0 8px ${col}30`}}/>
-                    <div style={{flex:1,minWidth:0}}>
-                      <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.name}</div>
-                      <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>GPA {s.gpa} · SAT {s.sat} · {s.accept}% acceptance · {s.type} · {s.state}</div>
+                  <motion.div key={i} initial={{opacity:0,x:-5}} animate={{opacity:1,x:0}} transition={{delay:i*.015}} whileHover={{ y: -2, borderColor: `${col}40` }} style={{...glass({padding:18, transition: 'all .15s'}), borderLeft:`4px solid ${col}`}}>
+                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={R({gap:8, flexWrap: 'wrap'})}>
+                          <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{s.name}</div>
+                          {s.bsmd && <span style={pill(C.violetDim, C.violetL, { fontSize: 9 })}>Direct BS/MD</span>}
+                          {s.hasPreMedCommittee && <span style={pill(C.cyanDim, C.cyan, { fontSize: 9 })}>Pre-Med Comm.</span>}
+                          <span style={pill(`${col}18`,col,{fontSize:10})}>{s.tier}</span>
+                        </div>
+                        <div style={{fontSize:11.5,color:C.t2,marginTop:6,fontFamily:C.FB}}>
+                          GPA req: <strong style={{color:C.t1}}>{s.gpa}</strong> &nbsp;·&nbsp; SAT req: <strong style={{color:C.t1}}>{s.sat}</strong> &nbsp;·&nbsp; Acceptance: <strong style={{color:C.t1}}>{s.accept}%</strong> &nbsp;·&nbsp; {s.type} ({s.state}) &nbsp;·&nbsp; Region: <strong style={{color:C.t1}}>{s.region || 'N/A'}</strong>
+                        </div>
+                        {s.whyMatch && (
+                          <div style={{...R({gap:6, alignItems: 'flex-start'}), marginTop:10, background: 'rgba(255,255,255,0.015)', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.b1}` }}>
+                            <Brain size={12} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }}/>
+                            <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{s.whyMatch}</span>
+                          </div>
+                        )}
+                        <div style={{...R({gap: 6, flexWrap: 'wrap'}), marginTop: 8}}>
+                          <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>Pre-Health Advising: {s.preHealthRank || 3}/5</span>
+                          <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>Clinical Proximity: {s.clinicalProximity || 'Good'}</span>
+                          {s.specialtyStrong && <span style={pill(`${C.blue}12`, C.blueL, { fontSize: 9.5 })}>Strongest in: {s.specialtyStrong}</span>}
+                        </div>
+                      </div>
+                      <div style={{ ...R({gap:12}), alignSelf: isMobile ? 'flex-end' : 'center', flexShrink: 0 }}>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: C.blueL, fontFamily: C.FM }}>{s.academicIndex}%</div>
+                          <div style={{ fontSize: 8, color: C.t3, textTransform: 'uppercase' }}>Academic</div>
+                        </div>
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: C.greenL, fontFamily: C.FM }}>{s.experienceIndex}%</div>
+                          <div style={{ fontSize: 8, color: C.t3, textTransform: 'uppercase' }}>Experience</div>
+                        </div>
+                      </div>
                     </div>
-                    <span style={pill(`${col}18`,col,{fontSize:11,flexShrink:0})}>{s.tier}</span>
                   </motion.div>
                 ))}
               </div>
