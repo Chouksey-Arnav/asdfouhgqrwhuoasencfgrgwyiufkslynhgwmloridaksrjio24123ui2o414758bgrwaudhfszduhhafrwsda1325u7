@@ -13,8 +13,16 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
+  touch-action: manipulation;
 }
 #root { display: flex; height: 100vh; overflow: hidden; }
+
+/* iOS Safari auto-zooms the viewport when a focused input's computed font-size is under 16px.
+   Force every form field to 16px on small screens so tapping a field never triggers that zoom
+   (the viewport meta's user-scalable=no stops pinch-zoom, but not this focus-triggered zoom). */
+@media (max-width: 768px) {
+  input, select, textarea { font-size: 16px !important; }
+}
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }

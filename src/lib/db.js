@@ -68,6 +68,22 @@ db.version(7).stores({
   deckMeta: 'name, createdAt',
 });
 
+// v8: `clinicalHours`/`recommenders` moved to the Supabase-backed resources (clinical_hours,
+// recommenders via api/data/[resource].js) so Portfolio's credibility fields (verification
+// status, evidence links) apply consistently everywhere instead of only on Supabase-backed
+// panels. Unlike the v4 portfolio/gpaEntries move, we do NOT null out the old stores here —
+// migrateLocalPortfolioLogs() in dataApi.js reads any existing rows out of them at runtime
+// (once, gated by a migration flag) and clears them with a plain .clear() after a successful
+// upload, which is safer than deleting the object store mid-version-upgrade.
+// Also adds: `unitMastery` (quiz-verified pathway unit completions) and `studyEvents` (local-only
+// engagement log — lesson video opens, quiz attempts, unit verifications — that powers the new
+// Verified Progress view and is the seed schema for the future profiling plan in
+// docs/PROFILING_PLAN.md; never transmitted anywhere).
+db.version(8).stores({
+  unitMastery: '++id, pathwayKey, unitId, verifiedAt',
+  studyEvents: '++id, type, refId, ts',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -79,12 +95,32 @@ export async function saveUser(u) {
 }
 
 // ── Pathway ───────────────────────────────────────────────────────────────────
+// Rows carry `verified`/`quizScore`/`studying` alongside the original `completedAt` so lessons
+// that have a curated verification quiz (constants.js `quizIds`) can be told apart from the
+// old self-report-only lessons — every existing `pathway[lesson.id]` truthy check in App.jsx
+// still works unchanged since the returned value is always a truthy object once a row exists.
 export async function getPathway() {
   const rows = await db.lessons.toArray();
-  return Object.fromEntries(rows.map(r => [r.lessonId, r.completedAt]));
+  return Object.fromEntries(rows.map(r => [r.lessonId, {
+    completedAt: r.completedAt || null, verified: !!r.verified, quizScore: r.quizScore ?? null,
+    studying: !!r.studying, studyStartedAt: r.studyStartedAt || null,
+  }]));
 }
 export async function setLessonDone(lessonId) {
-  await db.lessons.put({ lessonId, completedAt: Date.now() });
+  await db.lessons.put({ lessonId, completedAt: Date.now(), verified: false, studying: false });
+}
+// Called when a student opens a lesson's video/resource — marks it "in progress" without
+// counting toward mastery, so credibility isn't granted just for opening a link.
+export async function startLessonStudy(lessonId) {
+  const existing = await db.lessons.get(lessonId);
+  if (existing?.verified) return;
+  await db.lessons.put({ lessonId, completedAt: existing?.completedAt || null, verified: false, studying: true, studyStartedAt: Date.now() });
+}
+// Called when a student passes a lesson's curated verification quiz — this is the only path
+// that sets `verified: true`, which is what unit-unlock gating and the Progress tab's Verified
+// Progress view actually check.
+export async function verifyLesson(lessonId, quizScore) {
+  await db.lessons.put({ lessonId, completedAt: Date.now(), verified: true, quizScore, studying: false });
 }
 export async function resetPathway() {
   await db.lessons.clear();
@@ -298,6 +334,34 @@ export async function deleteRecommender(id) {
   await db.recommenders.delete(id);
 }
 
+// Used only by dataApi.migrateLocalPortfolioLogs() once local rows are confirmed uploaded to
+// the Supabase-backed clinical_hours/recommenders resources — see db.js v8 comment above.
+export async function clearClinicalHoursLocal() { await db.clinicalHours.clear(); }
+export async function clearRecommendersLocal() { await db.recommenders.clear(); }
+
+// ── Unit Mastery (quiz-verified pathway completion) ──────────────────────────
+export async function getUnitMastery(pathwayKey) {
+  const rows = await db.unitMastery.where('pathwayKey').equals(pathwayKey).toArray();
+  return Object.fromEntries(rows.map(r => [r.unitId, r]));
+}
+export async function getAllUnitMastery() {
+  return db.unitMastery.toArray();
+}
+export async function verifyUnit(pathwayKey, unitId, quizId, score) {
+  const existing = await db.unitMastery.where({ pathwayKey, unitId }).first();
+  const row = { pathwayKey, unitId, quizId, score, verifiedAt: Date.now() };
+  if (existing) await db.unitMastery.update(existing.id, row);
+  else await db.unitMastery.add(row);
+}
+
+// ── Local study-event log (Part C profiling groundwork; never transmitted) ───
+export async function logStudyEvent(type, refId) {
+  await db.studyEvents.add({ type, refId, ts: Date.now() });
+}
+export async function getStudyEvents(type) {
+  return type ? db.studyEvents.where('type').equals(type).toArray() : db.studyEvents.toArray();
+}
+
 // ── Interview Practice Sessions (Standard/MMI/CASPer) ─────────────────────────
 export async function getInterviewSessions() {
   return db.interviewSessions.orderBy('completedAt').reverse().toArray();
@@ -314,9 +378,8 @@ export async function exportAllData() {
     quizScores: await db.quizScores.toArray(),
     achievements: await db.achievements.toArray(),
     studyDays: await db.studyDays.toArray(),
-    clinicalHours: await db.clinicalHours.toArray(),
-    recommenders: await db.recommenders.toArray(),
     interviewSessions: await db.interviewSessions.toArray(),
+    unitMastery: await db.unitMastery.toArray(),
     exportDate: new Date().toISOString(),
     version: '3.0',
   };
@@ -335,6 +398,6 @@ export async function clearAllData() {
     db.achievements.clear(), db.studyDays.clear(), db.cardReviews.clear(),
     db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
-    db.deckMeta.clear(),
+    db.deckMeta.clear(), db.unitMastery.clear(), db.studyEvents.clear(),
   ]);
 }

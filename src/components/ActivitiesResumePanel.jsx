@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Award, ClipboardCopy, FileDown, TrendingUp } from 'lucide-react';
+import { Plus, Trash2, Award, ClipboardCopy, FileDown, TrendingUp, ShieldCheck, ShieldQuestion } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
@@ -11,10 +11,13 @@ const GRADE_LEVELS = ['9','10','11','12','Post-graduate'];
 const STATUSES = ['ongoing','completed'];
 
 function emptyActivity() {
-  return { activity_type: ACT_TYPES[0], position: '', organization: '', description: '', impact: '', status: 'ongoing', hours_per_week: '', weeks_per_year: '', grade_levels: [] };
+  return { activity_type: ACT_TYPES[0], position: '', organization: '', description: '', impact: '', status: 'ongoing', hours_per_week: '', weeks_per_year: '', grade_levels: [], evidence_url: '', skills_tags: '', leadership_role: false };
 }
 function emptyGpa() {
   return { term: '', gpa: '', weighted: false, course_rigor: '' };
+}
+function emptyAward() {
+  return { title: '', grade_level: '', level: '', issuing_organization: '', category: '', certificate_url: '' };
 }
 
 export default function ActivitiesResumePanel({ accent = C.blue, onResumeExported }) {
@@ -23,7 +26,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   const [gpaEntries, setGpaEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(emptyActivity());
-  const [awardDraft, setAwardDraft] = useState({ title: '', grade_level: '', level: '' });
+  const [awardDraft, setAwardDraft] = useState(emptyAward());
   const [gpaDraft, setGpaDraft] = useState(emptyGpa());
 
   const load = useCallback(async () => {
@@ -46,6 +49,8 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
         hours_per_week: Number(draft.hours_per_week) || 0,
         weeks_per_year: Number(draft.weeks_per_year) || 0,
         sort_order: activities.length,
+        evidence_url: draft.evidence_url.trim() || null,
+        skills_tags: draft.skills_tags.split(',').map(s=>s.trim()).filter(Boolean),
       });
       setActivities(prev => [...prev, row]);
       setDraft(emptyActivity());
@@ -61,9 +66,13 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   async function addAward() {
     if (!awardDraft.title.trim()) return;
     try {
-      const row = await createItem('awards', { ...awardDraft, sort_order: awards.length });
+      const row = await createItem('awards', {
+        ...awardDraft, sort_order: awards.length,
+        issuing_organization: awardDraft.issuing_organization.trim() || null,
+        certificate_url: awardDraft.certificate_url.trim() || null,
+      });
       setAwards(prev => [...prev, row]);
-      setAwardDraft({ title: '', grade_level: '', level: '' });
+      setAwardDraft(emptyAward());
       toast.success('Award added');
     } catch (err) { toast.error(err.message); }
   }
@@ -244,6 +253,13 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
             ))}
           </div>
         </div>
+        <div style={G(2,10,{marginTop:10},true)}>
+          <div><label style={lbl()}>Skills gained (comma-separated, optional)</label><input style={inp()} value={draft.skills_tags} onChange={e=>setDraft({...draft,skills_tags:e.target.value})} placeholder="e.g. public speaking, triage, teamwork" /></div>
+          <div><label style={lbl()}>Evidence link (optional)</label><input style={inp()} value={draft.evidence_url} onChange={e=>setDraft({...draft,evidence_url:e.target.value})} placeholder="Certificate, article, photo…" /></div>
+        </div>
+        <div style={{marginTop:10}}>
+          <button type="button" style={btnSm(draft.leadership_role?accent:'rgba(255,255,255,0.06)',{color:'#fff'})} onClick={()=>setDraft({...draft,leadership_role:!draft.leadership_role})}>{draft.leadership_role?'Leadership role ✓':'Mark as a leadership role'}</button>
+        </div>
         <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:14}} onClick={addActivity}><Plus size={14}/>Add Activity</button>
       </div>
 
@@ -255,10 +271,14 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
                 <div style={{fontSize:13,fontWeight:700,color:C.t1}}>
                   {a.position} <span style={{color:C.t3,fontWeight:400}}>· {a.activity_type}{a.organization?` · ${a.organization}`:''}</span>
                   <span style={{...pill(a.status==='ongoing'?C.greenDim:C.blueDim,a.status==='ongoing'?C.greenL:C.blueL,{fontSize:9,marginLeft:8}),textTransform:'capitalize'}}>{a.status}</span>
+                  {a.leadership_role && <span style={pill(`${accent}20`,accent,{fontSize:9,marginLeft:6})}>Leadership</span>}
+                  <VerificationBadge status={a.verification_status} />
                 </div>
                 {a.description && <div style={{fontSize:12,color:C.t2,marginTop:3}}>{a.description}</div>}
                 {a.impact && <div style={{fontSize:12,color:accent,marginTop:3,fontWeight:600}}>{a.impact}</div>}
                 <div style={{fontSize:11,color:C.t3,marginTop:4}}>{a.hours_per_week} hrs/wk · {a.weeks_per_year} wks/yr · Grades {(a.grade_levels||[]).join(', ')||'—'}</div>
+                {(a.skills_tags||[]).length>0 && <div style={{marginTop:6,display:'flex',gap:5,flexWrap:'wrap'}}>{a.skills_tags.map(s=><span key={s} style={pill('rgba(255,255,255,0.06)',C.t2,{fontSize:9})}>{s}</span>)}</div>}
+                {a.evidence_url && <a href={a.evidence_url} target="_blank" rel="noreferrer" style={{fontSize:11,color:accent,marginTop:4,display:'inline-block'}}>View evidence →</a>}
               </div>
               <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeActivity(a.id)}><Trash2 size={12}/></button>
             </div>
@@ -279,6 +299,10 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
             <option>School</option><option>State/Regional</option><option>National</option><option>International</option>
           </select>
         </div>
+        <div style={G(2,10,{marginTop:10},true)}>
+          <input style={inp()} placeholder="Issuing organization (optional)" value={awardDraft.issuing_organization} onChange={e=>setAwardDraft({...awardDraft,issuing_organization:e.target.value})} />
+          <input style={inp()} placeholder="Certificate link (optional)" value={awardDraft.certificate_url} onChange={e=>setAwardDraft({...awardDraft,certificate_url:e.target.value})} />
+        </div>
         <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:14}} onClick={addAward}><Plus size={14}/>Add Award</button>
       </div>
 
@@ -289,8 +313,10 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
               <Award size={14} color={accent}/>
               <div style={{flex:1}}>
                 <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{a.title}</span>
-                <span style={{fontSize:11,color:C.t3,marginLeft:8}}>{[a.level,a.grade_level&&`Grade ${a.grade_level}`].filter(Boolean).join(' · ')}</span>
+                <span style={{fontSize:11,color:C.t3,marginLeft:8}}>{[a.level,a.grade_level&&`Grade ${a.grade_level}`,a.issuing_organization].filter(Boolean).join(' · ')}</span>
+                {a.certificate_url && <a href={a.certificate_url} target="_blank" rel="noreferrer" style={{fontSize:11,color:accent,marginLeft:8}}>View certificate →</a>}
               </div>
+              <VerificationBadge status={a.verification_status} />
               <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeAward(a.id)}><Trash2 size={12}/></button>
             </div>
           ))}
@@ -298,4 +324,10 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       )}
     </div>
   );
+}
+
+function VerificationBadge({ status }) {
+  if (status === 'verified') return <span style={pill(C.greenDim,C.greenL,{fontSize:9,marginLeft:6})}><ShieldCheck size={9} style={{marginRight:3}}/>Verified</span>;
+  if (status === 'pending') return <span style={pill(C.amberDim,C.amberL,{fontSize:9,marginLeft:6})}><ShieldQuestion size={9} style={{marginRight:3}}/>Pending</span>;
+  return null; // self_reported is the default state — no badge needed for the common case
 }

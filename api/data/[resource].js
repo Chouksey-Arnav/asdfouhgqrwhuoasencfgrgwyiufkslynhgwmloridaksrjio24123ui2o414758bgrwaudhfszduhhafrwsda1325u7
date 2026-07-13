@@ -15,6 +15,11 @@ const RESOURCES = new Set([
   'activities',
   'awards',
   'gpa_entries',
+  'research_experience',
+  'skills_certifications',
+  'clinical_hours',
+  'recommenders',
+  'portfolio_evidence',
 ]);
 
 // Columns a client may write per resource (id, user_id, created_at are server-controlled).
@@ -26,10 +31,24 @@ const WRITABLE = {
   essay_versions: ['essay_id', 'content', 'word_count'],
   test_scores: ['test_type', 'test_date', 'composite', 'section_scores', 'is_target'],
   scholarships: ['name', 'amount', 'deadline', 'status', 'notes'],
-  activities: ['activity_type', 'position', 'organization', 'description', 'impact', 'status', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'sort_order'],
-  awards: ['title', 'grade_level', 'level', 'sort_order'],
+  activities: ['activity_type', 'position', 'organization', 'description', 'impact', 'status', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'sort_order', 'evidence_url', 'verification_status', 'verifier_name', 'verifier_email', 'verifier_relationship', 'skills_tags', 'leadership_role'],
+  awards: ['title', 'grade_level', 'level', 'sort_order', 'issuing_organization', 'category', 'certificate_url', 'verification_status'],
   gpa_entries: ['term', 'gpa', 'weighted', 'course_rigor'],
+  research_experience: ['title', 'mentor_name', 'institution', 'description', 'publication_url', 'hours', 'status', 'sort_order'],
+  skills_certifications: ['name', 'issuing_body', 'earned_date', 'expiry_date', 'certificate_url'],
+  clinical_hours: ['site_name', 'site_type', 'supervisor_name', 'supervisor_email', 'hours', 'entry_date', 'notes', 'verification_status', 'verified_at'],
+  recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status'],
+  portfolio_evidence: ['entity_type', 'entity_id', 'url', 'label'],
 };
+
+// Resources whose rows get an `updated_at` bump on PATCH (only tables that actually have that
+// column — see the migration file for which ones do).
+const TOUCHES_UPDATED_AT = new Set([
+  'colleges', 'essays', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders',
+]);
+
+// entity_type -> table, for validating portfolio_evidence's polymorphic entity_id ownership.
+const EVIDENCE_ENTITY_TABLES = new Set(['activities', 'awards', 'research_experience', 'clinical_hours']);
 
 function pick(body, keys) {
   const out = {};
@@ -47,6 +66,16 @@ const FK_OWNERSHIP = {
 };
 
 async function assertOwnedForeignKeys(supabase, resource, row, userId) {
+  // portfolio_evidence's foreign key target depends on its own entity_type field, so it can't
+  // use the static FK_OWNERSHIP map — validate it against whichever table entity_type names.
+  if (resource === 'portfolio_evidence') {
+    const entityType = row.entity_type;
+    const entityId = row.entity_id;
+    if (entityId == null) return true;
+    if (!EVIDENCE_ENTITY_TABLES.has(entityType)) return false;
+    const { data } = await supabase.from(entityType).select('id').eq('id', entityId).eq('user_id', userId).maybeSingle();
+    return !!data;
+  }
   const rules = FK_OWNERSHIP[resource];
   if (!rules) return true;
   for (const [column, targetTable] of Object.entries(rules)) {
@@ -109,7 +138,7 @@ export default async function handler(req, res) {
       if (!(await assertOwnedForeignKeys(supabase, resource, updates, user.id))) {
         return res.status(403).json({ error: 'Referenced record not found.' });
       }
-      if (resource === 'colleges' || resource === 'essays') updates.updated_at = new Date().toISOString();
+      if (TOUCHES_UPDATED_AT.has(resource)) updates.updated_at = new Date().toISOString();
       const { data, error } = await table.update(updates).eq('id', id).eq('user_id', user.id).select('*').single();
       if (error) throw error;
       return res.status(200).json({ data });

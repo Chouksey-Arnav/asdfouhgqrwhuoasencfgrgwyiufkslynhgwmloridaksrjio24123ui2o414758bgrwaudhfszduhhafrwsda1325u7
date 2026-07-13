@@ -18,7 +18,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw,
+  Copy, RotateCcw, BadgeCheck,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck };
@@ -35,12 +35,14 @@ import InterviewPrepPanel from './components/InterviewPrepPanel';
 
 import * as DB from './lib/db';
 import * as AuthAPI from './lib/authApi';
-import { listItems, createItem } from './lib/dataApi';
+import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
 import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
 import { awardXP, BONUS_COPY } from './lib/rewards';
+import { getCached, setCached, dailyKey } from './lib/aiCache';
+import { logEvent } from './lib/eventLog';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
@@ -56,6 +58,8 @@ import ActivitiesResumePanel from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
+import ResearchExperiencePanel from './components/ResearchExperiencePanel';
+import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
@@ -161,11 +165,19 @@ const PORTFOLIO_SUBNAV = [
   {id:'deadlines',ic:CalendarDays,label:'Deadlines'},
   {id:'aid',ic:Handshake,label:'Financial Aid'},
   {id:'resume',ic:Award,label:'Activities & Resume'},
+  {id:'research',ic:FlaskConical,label:'Research'},
+  {id:'skills',ic:BadgeCheck,label:'Skills & Certs'},
   {id:'clinical',ic:Stethoscope,label:'Clinical Hours'},
   {id:'recommenders',ic:UserCheck,label:'Recommenders'},
   {id:'interview',ic:Mic,label:'Interview Prep'},
   {id:'scores',ic:TrendingUp,label:'Test Scores'},
   {id:'calc',ic:Calculator,label:'Admissions Calc'},
+];
+const PROGRESS_SUBNAV = [
+  {id:'overview',ic:LineChart,label:'Overview'},
+  {id:'verified',ic:ShieldCheck,label:'Verified Progress'},
+  {id:'performance',ic:TrendingUp,label:'Performance'},
+  {id:'achievements',ic:Trophy,label:'Achievements'},
 ];
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
@@ -278,9 +290,15 @@ function Bar({pct=0,color=C.blue,h=4,glow=false}){
 
 // ── Dot (mastery status) ──────────────────────────────────────────────────────
 function Dot({state='locked'}){
-  const cfg={done:{bg:C.green,Ic:Check,c:'#fff',sz:12},available:{bg:'transparent',Ic:Circle,c:C.blueL,brd:C.blueL,sz:8},locked:{bg:'transparent',Ic:Lock,c:C.t4,brd:C.t4,sz:10}};
+  const cfg={
+    verified:{bg:C.green,Ic:ShieldCheck,c:'#fff',sz:12},
+    done:{bg:C.green,Ic:Check,c:'#fff',sz:12},
+    studying:{bg:'transparent',Ic:BookOpen,c:C.amberL,brd:C.amberL,sz:10},
+    available:{bg:'transparent',Ic:Circle,c:C.blueL,brd:C.blueL,sz:8},
+    locked:{bg:'transparent',Ic:Lock,c:C.t4,brd:C.t4,sz:10},
+  };
   const d=cfg[state]||cfg.locked;
-  return<span style={{width:22,height:22,borderRadius:'50%',background:d.bg,border:`1.5px solid ${d.brd||C.green}`,display:'inline-flex',alignItems:'center',justifyContent:'center',color:d.c,flexShrink:0,boxShadow:state==='done'?`0 0 8px ${C.green}60`:undefined}}><d.Ic size={d.sz} strokeWidth={state==='available'?0:2.5} fill={state==='available'?d.c:'none'}/></span>;
+  return<span style={{width:22,height:22,borderRadius:'50%',background:d.bg,border:`1.5px solid ${d.brd||C.green}`,display:'inline-flex',alignItems:'center',justifyContent:'center',color:d.c,flexShrink:0,boxShadow:(state==='done'||state==='verified')?`0 0 8px ${C.green}60`:undefined}}><d.Ic size={d.sz} strokeWidth={state==='available'||state==='studying'?0:2.5} fill={state==='available'||state==='studying'?d.c:'none'}/></span>;
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
@@ -325,6 +343,11 @@ function PageHeader({icon,color=C.blue,eyebrow,title,sub,right,m=false}){
 // a plain <iframe> never fires a DOM error for that. We load the API once, attach a
 // player to our iframe, and surface real onError codes as a graceful fallback UI
 // instead of a silently broken embed.
+function extractYouTubeId(url){
+  if(!url)return null;
+  const m=String(url).match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{6,})/);
+  return m?m[1]:null;
+}
 let ytApiPromise=null;
 function loadYouTubeIframeAPI(){
   if(window.YT&&window.YT.Player)return Promise.resolve(window.YT);
@@ -788,6 +811,7 @@ export default function App({ account, onAccountChange }) {
   // which absorbed view is active, switched via the SubNav pill bar.
   const [prepView, setPrepView] = useState('pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
   const [portfolioView, setPortfolioView] = useState('overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
+  const [progressView, setProgressView] = useState('overview'); // overview|verified|performance|achievements
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
 
@@ -821,6 +845,9 @@ export default function App({ account, onAccountChange }) {
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
   const [aQuiz,setAQ]=useState(null);const [qSrch,setQSrch]=useState('');const [qCat,setQC]=useState('All');const [qDiff,setQD]=useState('All');const [qSort,setQSort]=useState('default');
+  // Set when a quiz is launched from a pathway lesson's "Verify" button (rather than the Quiz
+  // Library) so finishQuiz() knows to grade it as a verification attempt instead of a plain quiz.
+  const [verifyCtx,setVerifyCtx]=useState(null); // { lesson, unit }
 
   // ── AI Coach ────────────────────────────────────────────────────────────────
   const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
@@ -896,6 +923,7 @@ export default function App({ account, onAccountChange }) {
     if(tab!=='portfolio'||portLoaded)return;
     (async()=>{
       try{
+        await migrateLocalPortfolioLogs();
         const [a,w,g]=await Promise.all([listItems('activities'),listItems('awards'),listItems('gpa_entries')]);
         setPortActivities(a||[]);
         setPortAwards(w||[]);
@@ -914,7 +942,7 @@ export default function App({ account, onAccountChange }) {
         setAppCounts(c=>({...c,colleges:cols?.length||0,essays:ess?.length||0}));
       }catch(e){/* non-critical — achievement counts, fail silently */}
       try{
-        const [hours,recs,sessions]=await Promise.all([DB.getClinicalHours(),DB.getRecommenders(),DB.getInterviewSessions()]);
+        const [hours,recs,sessions]=await Promise.all([listItems('clinical_hours'),listItems('recommenders'),DB.getInterviewSessions()]);
         setClinicalHoursEntries(hours||[]);
         setClinicalHoursTotal((hours||[]).reduce((s,h)=>s+(h.hours||0),0));
         setRecommendersCount((recs||[]).length);
@@ -946,7 +974,15 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
-  const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:Date.now()})); DB.setLessonDone(lessonId).catch(console.error); },[]);
+  const saveLesson = useCallback((lessonId)=>{ setPathway_(pw=>({...pw,[lessonId]:{completedAt:Date.now(),verified:false,studying:false}})); DB.setLessonDone(lessonId).catch(console.error); },[]);
+  // A lesson only counts toward mastery/unlock-gating once it's actually verified (curated quiz
+  // passed) — for lessons with no quizIds yet (pathways not migrated to the new model this pass),
+  // presence in `pathway` is still enough, matching the original self-report behavior.
+  const isLessonComplete = useCallback((lesson,entry)=>{
+    if(!entry)return false;
+    if(lesson.quizIds?.length)return !!entry.verified;
+    return true;
+  },[]);
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
   const saveDeck = useCallback(async(name,cards)=>{
     setCDecks_(d=>({...d,[name]:cards}));
@@ -999,7 +1035,7 @@ export default function App({ account, onAccountChange }) {
   const curPath = PATHS[eSpec]||PATHS['exploring'];
   const accent  = curPath?.accent||C.blue;
   const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
-  const doneL   = allL.filter(l=>pathway[l.id]).length;
+  const doneL   = allL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
   const levelInfo = getLevelInfo(user?.xp||0);
   const lvl     = levelInfo.level;
@@ -1026,9 +1062,9 @@ export default function App({ account, onAccountChange }) {
 
   // Next lesson to resume (first not-done lesson in current pathway, in order)
   const nextLesson = useMemo(()=>{
-    for(const u of (curPath?.units||[])){ for(const l of (u.lessons||[])){ if(!pathway[l.id]) return {...l,unitTitle:u.title}; } }
+    for(const u of (curPath?.units||[])){ for(const l of (u.lessons||[])){ if(!isLessonComplete(l,pathway[l.id])) return {...l,unitTitle:u.title}; } }
     return null;
-  },[curPath,pathway]);
+  },[curPath,pathway,isLessonComplete]);
 
   // Metabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
@@ -1043,14 +1079,33 @@ export default function App({ account, onAccountChange }) {
   // Optional one-line Metabrain (Groq) narration of the #1 pick — the ranking
   // above is fully deterministic and never depends on this; it's cosmetic.
   const askMetabrainAboutPick = useCallback(async(pick)=>{
+    // Cached per quiz per day — this narration is cosmetic and identical for a given pick
+    // within a day, so repeat views/clicks shouldn't re-hit Groq.
+    const cacheKey = dailyKey('pickNarration', pick?.quiz?.id||'');
+    const cached = getCached(cacheKey);
+    if(cached) return cached;
     const prompt = getMetabrainPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
     if(!prompt) return null;
-    return callGroqAI('You are Metabrain, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'fast');
+    const text = await callGroqAI('You are Metabrain, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'fast');
+    setCached(cacheKey, text);
+    return text;
   },[user?.name,curPath]);
 
   // ── Pathway helpers ──────────────────────────────────────────────────────────
-  const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>pathway[l.id]).length/unit.lessons.length*100):0;
-  const lessonState = (lesson,ui,units)=>{if(pathway[lesson.id])return'done';if(ui===0)return'available';const prev=units[ui-1];if(!prev)return'available';return prev.lessons.every(l=>pathway[l.id])?'available':'locked';};
+  const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length/unit.lessons.length*100):0;
+  // States: 'verified' (quiz passed), 'done' (legacy self-report, no curated quiz on this lesson),
+  // 'studying' (opened but not yet verified — does NOT unlock the next unit), 'available', 'locked'.
+  const lessonState = (lesson,ui,units)=>{
+    const entry=pathway[lesson.id];
+    if(entry){
+      if(lesson.quizIds?.length)return entry.verified?'verified':'studying';
+      return'done';
+    }
+    if(ui===0)return'available';
+    const prev=units[ui-1];
+    if(!prev)return'available';
+    return prev.lessons.every(l=>isLessonComplete(l,pathway[l.id]))?'available':'locked';
+  };
 
   function doneLesson(lesson){
     if(pathway[lesson.id])return;
@@ -1067,7 +1122,7 @@ export default function App({ account, onAccountChange }) {
     const units=curPath?.units||[];
     const unit=units.find(u=>u.lessons.some(l=>l.id===lesson.id));
     if(unit){
-      const allDone=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]);
+      const allDone=unit.lessons.every(l=>l.id===lesson.id?true:isLessonComplete(l,pathway[l.id]));
       if(allDone){setTimeout(()=>celebrateMastery(),400);toast.success(`Unit mastered: ${unit.title}`,{duration:4000});}
     }
     checkAndUnlockAchievements({...user,xp:(user?.xp||0)+finalXP},Object.keys(qScores).length,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount);
@@ -1220,9 +1275,15 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     setCLoad(false);
   }
 
+  const lastSendAtRef = useRef(0);
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
     if(coachRequestsRemaining<=0){toast.error(`Your daily Metabrain quota has been reached. Try again tomorrow.`);return;}
+    // Small cooldown (independent of cLoad, which only covers the in-flight request) so a fast
+    // double-tap on send can't fire two nearly-identical Groq calls back to back.
+    const now=Date.now();
+    if(now-lastSendAtRef.current<3000){toast('Give Metabrain a moment before sending again.',{icon:'⏳'});return;}
+    lastSendAtRef.current=now;
     const um={role:'user',content:message};const next=[...msgs,um];
     setMsgs(next);setCi('');
     const newCount=aiChatCount+1;setAiChatCount(newCount);saveUser({...user,aiChatCount:newCount});bumpWeeklyCoachCount(getIsoWeekKey());
@@ -1333,10 +1394,59 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     setFlip(false);
   }
 
+  // ── Lesson verification (Study → Verify flow) ──────────────────────────────
+  const VERIFY_PASS_PCT=70;
+  async function startStudyLesson(lesson){
+    if(pathway[lesson.id]?.verified)return;
+    DB.startLessonStudy(lesson.id).catch(console.error);
+    logEvent('lesson_video_watched',lesson.id);
+    setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),studying:true,studyStartedAt:Date.now()}}));
+    const ytId=extractYouTubeId(lesson.url);
+    if(ytId) setVM({ytId,title:lesson.title,url:lesson.url});
+    else window.open(lesson.url,'_blank','noopener,noreferrer');
+  }
+  function openVerifyQuiz(lesson,unit){
+    const quiz=ALL_QUIZZES.find(q=>lesson.quizIds?.includes(q.id));
+    if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
+    logEvent('quiz_attempt',lesson.id);
+    setVerifyCtx({lesson,unit});
+    setAQ(quiz);
+    play('click');
+  }
+
   // ── Quiz finish ───────────────────────────────────────────────────────────────
   async function finishQuiz(score,total){
-    if(qScores[aQuiz.id]!==undefined){setAQ(null);return;}
     const pct=total>0?Math.round((score/total)*100):0;
+    if(verifyCtx){
+      const {lesson,unit}=verifyCtx;
+      const passed=pct>=VERIFY_PASS_PCT;
+      if(passed){
+        await DB.verifyLesson(lesson.id,pct);
+        logEvent('unit_lesson_verified',lesson.id);
+        setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
+        const { finalXP, tier } = awardXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
+        const newUser={...user,xp:(user?.xp||0)+finalXP};
+        saveUser(newUser);
+        play('xp');
+        if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
+        else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
+        else celebrateXP();
+        toast.success(`Verified: ${lesson.title} (${pct}%)`,{icon:<ShieldCheck size={16}/>,duration:3000});
+        const allVerified=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]?.verified);
+        if(allVerified){
+          await DB.verifyUnit(eSpec,unit.id,aQuiz.id,pct);
+          logEvent('unit_verified',unit.id);
+          setTimeout(()=>celebrateMastery(),400);
+          toast.success(`Unit verified: ${unit.title}`,{duration:4000});
+        }
+      } else {
+        toast(`${pct}% — you need ${VERIFY_PASS_PCT}% to verify this lesson. Review it and try again.`,{icon:<RefreshCw size={14}/>,duration:4000});
+      }
+      setVerifyCtx(null);
+      setAQ(null);
+      return;
+    }
+    if(qScores[aQuiz.id]!==undefined){setAQ(null);return;}
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
     const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
@@ -1753,18 +1863,35 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               </div>
               <div style={CC({gap:8})}>
                 {unit.lessons.map((lesson)=>{
-                  const state=lessonState(lesson,ui,units);const isDone=state==='done';const avail=state==='available';
+                  const state=lessonState(lesson,ui,units);
+                  const isDone=state==='done';const isVerified=state==='verified';const isStudying=state==='studying';
+                  const avail=state==='available';const hasQuiz=lesson.quizIds?.length>0;
                   return(
-                    <div key={lesson.id} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1}),display:'flex',alignItems:'center',gap:12}}>
-                      <Dot state={state}/>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:isDone?700:400,color:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
-                        <div style={{fontSize:11,color:C.t3,marginTop:1}}>{lesson.src}</div>
+                    <div key={lesson.id} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1}),display:'flex',flexDirection:'column',gap:8}}>
+                      <div style={{display:'flex',alignItems:'center',gap:12}}>
+                        <Dot state={state}/>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:13,fontWeight:(isDone||isVerified)?700:400,color:isVerified?C.green:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
+                          <div style={R({gap:6,marginTop:1})}>
+                            <span style={{fontSize:11,color:C.t3}}>{lesson.src}</span>
+                            {isVerified&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}><ShieldCheck size={9} style={{marginRight:3}}/>Verified{pathway[lesson.id]?.quizScore!=null?` (${pathway[lesson.id].quizScore}%)`:''}</span>}
+                            {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — take the check below</span>}
+                          </div>
+                        </div>
+                        {(avail||isStudying)&&<button onClick={()=>startStudyLesson(lesson)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>{extractYouTubeId(lesson.url)?<Play size={11}/>:<ExternalLink size={11}/>}Study</button>}
+                        {(avail||isStudying)&&hasQuiz&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openVerifyQuiz(lesson,unit)}><ShieldCheck size={12}/>Verify</motion.button>}
+                        {avail&&!hasQuiz&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>doneLesson(lesson)}><Check size={12}/>Done</motion.button>}
+                        {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
+                        {state==='locked'&&<Lock size={12} color={C.t4}/>}
                       </div>
-                      {avail&&<a href={lesson.url} target="_blank" rel="noreferrer" style={{...btnSm(C.s4,{color:C.t2,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Study<ExternalLink size={11}/></a>}
-                      {avail&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${C.green},#059669)`,{fontSize:11,boxShadow:`0 2px 8px ${C.green}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>doneLesson(lesson)}><Check size={12}/>Done</motion.button>}
-                      {isDone&&<Check size={14} color={C.green} strokeWidth={3}/>}
-                      {state==='locked'&&<Lock size={12} color={C.t4}/>}
+                      {lesson.objectives?.length>0&&(avail||isStudying)&&(
+                        <div style={{marginLeft:34,display:'flex',flexDirection:'column',gap:3}}>
+                          <div style={{fontSize:9.5,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginBottom:2}}>What to actually do</div>
+                          {lesson.objectives.map((o,oi)=>(
+                            <div key={oi} style={{fontSize:11.5,color:C.t2,display:'flex',gap:6,alignItems:'flex-start'}}><span style={{color:accent,flexShrink:0}}>–</span>{o}</div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -2756,10 +2883,34 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       }],
     };
 
-    return(
-      <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Progress</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Progress</h2></div>
+    // ── Verified Progress data (credibility view) ─────────────────────────────
+    const unitMasteryList=(curPath?.units||[]).map(unit=>{
+      const lessonStates=unit.lessons.map(l=>{
+        const entry=pathway[l.id];
+        const hasQuiz=l.quizIds?.length>0;
+        let status='not_started';
+        if(entry){
+          if(hasQuiz) status=entry.verified?'verified':'studying';
+          else status='legacy_done';
+        }
+        return{lesson:l,status,hasQuiz};
+      });
+      const anyQuizGated=lessonStates.some(l=>l.hasQuiz);
+      const allVerified=lessonStates.every(l=>l.status==='verified'||l.status==='legacy_done');
+      return{unit,lessonStates,anyQuizGated,allVerified};
+    });
+    const verifiedUnitCount=unitMasteryList.filter(u=>u.anyQuizGated&&u.allVerified).length;
+    const quizGatedUnitCount=unitMasteryList.filter(u=>u.anyQuizGated).length;
 
+    return(
+      <div>
+        <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
+          sub="Readiness, credibility, and performance across your pathway." m={isMobile}/>
+        <div style={{marginTop:18}}>
+          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile}/>
+        </div>
+        <div style={{...CC({gap:22}),marginTop:18}}>
+        {progressView==='overview'&&<>
         {/* Application-strength readiness gauge */}
         <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
           <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
@@ -2854,6 +3005,56 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <Stat label="Study Streak" value={`${streak}d`} icon={<Flame size={16}/>} color={C.orange} m={isMobile}/>
         </div>
 
+        {/* Profiling roadmap — transparent about what's NOT tracked yet */}
+        <details style={{...glass2({padding:14}),cursor:'pointer'}}>
+          <summary style={{fontSize:12,fontWeight:700,color:C.t2,display:'flex',alignItems:'center',gap:8,listStyle:'none'}}>
+            <Brain size={13} color={C.t3}/>Deeper profiling — coming soon
+          </summary>
+          <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,marginTop:10,marginBottom:0}}>
+            Right now, Progress only reflects what's stored on this device or account — quiz scores, verified lessons, and Portfolio entries. No behavioral tracking or analytics pipeline runs today. A phased profiling system is planned: first, richer local study-pattern insights (already seeding data via lesson study/verify events); later, optional opt-in sync for cross-device history; eventually, anonymized cohort benchmarking. See <code>docs/PROFILING_PLAN.md</code> in the repo for the full design.
+          </p>
+        </details>
+        </>}
+
+        {progressView==='verified'&&<>
+        {/* Verified Progress — credibility view */}
+        <div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}}>
+          <div style={R({gap:16,flexWrap:'wrap'})}>
+            <div style={{width:52,height:52,borderRadius:16,background:C.greenDim,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><ShieldCheck size={24} color={C.greenL}/></div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Credibility Score</div>
+              <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,marginTop:2}}>{verifiedUnitCount} of {quizGatedUnitCount||unitMasteryList.length} units verified</div>
+              <div style={{fontSize:11.5,color:C.t2,marginTop:4,lineHeight:1.5}}>{quizGatedUnitCount>0?'Verified units required passing a curated quiz for every lesson — not just opening a link.':'This pathway hasn\'t been migrated to quiz-verified lessons yet — progress below is self-reported.'}</div>
+            </div>
+          </div>
+        </div>
+        {unitMasteryList.map(({unit,lessonStates,anyQuizGated,allVerified})=>(
+          <div key={unit.id} style={glass({padding:18})}>
+            <div style={R({justifyContent:'space-between',marginBottom:14})}>
+              <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
+              {anyQuizGated
+                ?(allVerified?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}><ShieldCheck size={10} style={{marginRight:4}}/>Verified</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>In progress</span>)
+                :<span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>Legacy self-reported</span>}
+            </div>
+            <div style={CC({gap:8})}>
+              {lessonStates.map(({lesson,status,hasQuiz})=>(
+                <div key={lesson.id} style={{...glass2({padding:'10px 14px'}),display:'flex',alignItems:'center',gap:10}}>
+                  {status==='verified'&&<ShieldCheck size={14} color={C.green}/>}
+                  {status==='legacy_done'&&<Check size={14} color={C.green}/>}
+                  {status==='studying'&&<BookOpen size={14} color={C.amberL}/>}
+                  {status==='not_started'&&<Circle size={10} color={C.t4}/>}
+                  <span style={{flex:1,fontSize:12.5,color:C.t2}}>{lesson.title}</span>
+                  {hasQuiz
+                    ?<span style={pill(status==='verified'?C.greenDim:'rgba(255,255,255,0.06)',status==='verified'?C.greenL:C.t3,{fontSize:9})}>{status==='verified'?'Quiz passed':'Not yet verified'}</span>
+                    :<span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:9})}>Self-reported</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+        </>}
+
+        {progressView==='performance'&&<>
         {/* Predicted SAT */}
         {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
           <SL extra={{marginBottom:12}}>Predicted SAT Score</SL>
@@ -2983,7 +3184,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
           <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Metabrain conversations" m={isMobile}/>
         </div>
+        </>}
 
+        {progressView==='achievements'&&<>
         {/* Achievements */}
         {(()=>{
           const progressFor={
@@ -3016,6 +3219,8 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </div>
           );
         })()}
+        </>}
+        </div>
       </div>
     );
   }
@@ -3257,8 +3462,10 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     scores:()=><ScoreTrackerPanel accent={accent}/>,
     aid:()=><FinancialAidPanel accent={accent}/>,
     resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await DB.getClinicalHours();setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
-    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await DB.getRecommenders();setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    research:()=><ResearchExperiencePanel accent={accent}/>,
+    skills:()=><SkillsCertificationsPanel accent={accent}/>,
+    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
     interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){

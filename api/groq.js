@@ -3,15 +3,53 @@
 // Powers "Metabrain" — routes deep tutoring/coaching to a larger model and
 // lightweight/quick tasks to a smaller, faster model to keep free-tier usage sustainable.
 //
-// Daily rate limit: 1200 requests per IP per day (well under Groq free-tier caps)
-// Per-minute limit: 20 requests per minute per IP
+// Daily rate limit: 300 requests per IP per day (well under Groq free-tier caps)
+// Per-minute limit: 8 requests per minute per IP
+// Plus a short in-memory response cache (see responseCache below) so repeated prompt shapes
+// (e.g. the daily quiz-recommendation narration) don't re-hit Groq at all.
 
 const dailyMap = new Map(); // ip -> { count, resetAt }
 const minuteMap = new Map(); // ip -> { count, resetAt }
-const DAILY_LIMIT = 1200;
-const MINUTE_LIMIT = 20;
+// Lowered from 1200/day and 20/min — the free-tier Groq key is shared across every user of the
+// app, so these caps were far looser than actual usage warranted. Combined with the response
+// cache below and the client-side caching in src/lib/aiCache.js, this keeps real Groq calls to
+// only the requests that actually need a fresh answer.
+const DAILY_LIMIT = 300;
+const MINUTE_LIMIT = 8;
 const DAILY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
+
+// ── Response cache ────────────────────────────────────────────────────────────
+// Many calls into this endpoint are near-identical across users/sessions (e.g. the quiz-
+// recommendation narration, or an interview-prep rubric explanation) — cache by a hash of
+// {tier, system prompt, last user message} so a repeat of the same prompt shape within the TTL
+// is served for free instead of re-hitting Groq.
+const responseCache = new Map(); // hash -> { content, model, expiresAt }
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 500;
+
+function hashKey(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
+function getCachedResponse(key) {
+  const entry = responseCache.get(key);
+  if (!entry) return null;
+  if (Date.now() > entry.expiresAt) { responseCache.delete(key); return null; }
+  return entry;
+}
+
+function setCachedResponse(key, content, model) {
+  if (responseCache.size >= CACHE_MAX_ENTRIES) {
+    responseCache.delete(responseCache.keys().next().value); // evict oldest
+  }
+  responseCache.set(key, { content, model, expiresAt: Date.now() + CACHE_TTL_MS });
+}
 
 // Model routing: 'deep' for tasks that benefit from stronger reasoning (still a
 // cheap model — llama-3.3-70b-versatile was ~10x pricier for marginal gains on
@@ -68,9 +106,9 @@ function sanitizeMessages(messages) {
     .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
     .map(m => ({
       role: ['user', 'assistant'].includes(m.role) ? m.role : 'user',
-      content: String(m.content).slice(0, 4000),
+      content: String(m.content).slice(0, 2500),
     }))
-    .slice(-20); // keep last 20 messages only
+    .slice(-10); // keep last 10 messages only — trimmed from 20 to cut token cost per call
 }
 
 export default async function handler(req, res) {
@@ -120,7 +158,7 @@ export default async function handler(req, res) {
   // ── Build messages array (OpenAI-compatible format) ────────────────────────
   const groqMessages = [];
   const systemPrompt = system
-    ? String(system).slice(0, 2000)
+    ? String(system).slice(0, 1200)
     : 'You are Metabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
@@ -128,11 +166,29 @@ export default async function handler(req, res) {
     const cleaned = sanitizeMessages(rawMessages);
     if (cleaned) groqMessages.push(...cleaned);
   } else if (message) {
-    groqMessages.push({ role: 'user', content: String(message).slice(0, 4000) });
+    groqMessages.push({ role: 'user', content: String(message).slice(0, 2500) });
   }
 
   if (groqMessages.length <= 1) {
     return res.status(400).json({ error: 'No valid messages to send.' });
+  }
+
+  // ── Cache lookup ────────────────────────────────────────────────────────────
+  // Keyed on the exact prompt shape actually sent to Groq (post-sanitization), so a repeat of
+  // the same tier/system/last-message combo — from this user or any other — is served from
+  // cache without touching the daily/minute limits or the Groq API at all.
+  const lastUserMsg = [...groqMessages].reverse().find(m => m.role === 'user')?.content || '';
+  const cacheKey = hashKey(`${tier}|${systemPrompt}|${lastUserMsg}`);
+  const cached = getCachedResponse(cacheKey);
+  if (cached) {
+    return res.status(200).json({
+      content: cached.content,
+      model_used: cached.model,
+      requestsUsedToday: getRequestsUsedToday(ip),
+      requestsRemaining: Math.max(0, DAILY_LIMIT - getRequestsUsedToday(ip)),
+      dailyLimit: DAILY_LIMIT,
+      cached: true,
+    });
   }
 
   // ── Check daily request limit ──────────────────────────────────────────────
@@ -216,6 +272,7 @@ export default async function handler(req, res) {
     }
 
     addRequestToday(ip);
+    setCachedResponse(cacheKey, content, data?.model || model);
     const requestsUsedToday = getRequestsUsedToday(ip);
     const requestsRemaining = Math.max(0, DAILY_LIMIT - requestsUsedToday);
 
