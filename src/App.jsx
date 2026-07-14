@@ -658,7 +658,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
               <div style={{width:56,height:56,borderRadius:16,background:`${accent}18`,border:`1px solid ${accent}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><BookOpen size={24} color={accent}/></div>
               <h2 style={{fontSize:m?21:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{lesson.title}</h2>
               <div style={R({gap:14,flexWrap:'wrap'})}>
-                {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{content.article.readMins||5} min read</span>}
+                {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{content.readMins||5} min read</span>}
                 {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Play size={10}/>Video</span>}
                 <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ShieldCheck size={11}/>Verified quiz</span>
               </div>
