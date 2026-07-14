@@ -109,7 +109,7 @@ export const PATHS = {
   nursing: {
     label:'Nursing (RN/BSN)', accent:'#ec4899', accent2:'#f472b6', glow:'rgba(236,72,153,0.35)',
     gradient:'linear-gradient(135deg,#ec4899 0%,#be185d 100%)',
-    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:0.9, handsOn:0.8, acuity:0.5, autonomy:-0.2, directCare:0.9 },
     benchmarks:{ shadowingHours:30, clinicalHours:120, volunteerHours:100, leadershipHours:40 },
     tagline:'For students who want to be the person a patient actually sees the most.',
@@ -177,7 +177,7 @@ export const PATHS = {
   pharmacy: {
     label:'Pharmacy (PharmD)', accent:'#8b5cf6', accent2:'#a78bfa', glow:'rgba(139,92,246,0.35)',
     gradient:'linear-gradient(135deg,#8b5cf6 0%,#6d28d9 100%)',
-    quizCats:['Life Sciences','Physical Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:0.0, handsOn:0.2, acuity:-0.1, autonomy:0.3, directCare:0.1 },
     benchmarks:{ shadowingHours:25, clinicalHours:60, volunteerHours:60, leadershipHours:40 },
     tagline:'For students who want the chemistry of how treatment actually works.',
@@ -211,7 +211,7 @@ export const PATHS = {
   dentistry: {
     label:'Dentistry (DDS/DMD)', accent:'#14b8a6', accent2:'#2dd4bf', glow:'rgba(20,184,166,0.35)',
     gradient:'linear-gradient(135deg,#14b8a6 0%,#0f766e 100%)',
-    quizCats:['Life Sciences','Physical Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:0.5, handsOn:0.9, acuity:0.0, autonomy:0.7, directCare:0.7 },
     benchmarks:{ shadowingHours:30, clinicalHours:60, volunteerHours:60, leadershipHours:40 },
     tagline:'For students who want precise, hands-on procedural work with their own patients.',
@@ -245,7 +245,7 @@ export const PATHS = {
   biomedResearch: {
     label:'Biomedical & Clinical Research', accent:'#f59e0b', accent2:'#fbbf24', glow:'rgba(245,158,11,0.35)',
     gradient:'linear-gradient(135deg,#f59e0b 0%,#b45309 100%)',
-    quizCats:['Life Sciences','Physical Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:-0.7, handsOn:0.1, acuity:-0.5, autonomy:0.5, directCare:-0.8 },
     benchmarks:{ shadowingHours:10, clinicalHours:20, volunteerHours:40, leadershipHours:30 },
     tagline:'For students who\'d rather find the treatment than deliver it.',
@@ -279,7 +279,7 @@ export const PATHS = {
   physicalOccupTherapy: {
     label:'Physical & Occupational Therapy', accent:'#84cc16', accent2:'#a3e635', glow:'rgba(132,204,22,0.35)',
     gradient:'linear-gradient(135deg,#84cc16 0%,#4d7c0f 100%)',
-    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:0.6, handsOn:0.9, acuity:-0.3, autonomy:0.2, directCare:0.7 },
     benchmarks:{ shadowingHours:40, clinicalHours:100, volunteerHours:60, leadershipHours:30 },
     tagline:'For students who want to help someone get their life back, one session at a time.',
@@ -313,7 +313,7 @@ export const PATHS = {
   publicHealth: {
     label:'Public Health', accent:'#10b981', accent2:'#34d399', glow:'rgba(16,185,129,0.35)',
     gradient:'linear-gradient(135deg,#10b981 0%,#047857 100%)',
-    quizCats:['Life Sciences','Behavioral & Social Sciences'],
+    quizCats:['Life Sciences','Physical Sciences','Behavioral & Social Sciences'],
     idealVector:{ peopleFacing:-0.2, handsOn:-0.5, acuity:-0.7, autonomy:0.4, directCare:-0.85 },
     benchmarks:{ shadowingHours:15, clinicalHours:30, volunteerHours:100, leadershipHours:60 },
     tagline:'For students who want to treat a community, not one patient at a time.',
