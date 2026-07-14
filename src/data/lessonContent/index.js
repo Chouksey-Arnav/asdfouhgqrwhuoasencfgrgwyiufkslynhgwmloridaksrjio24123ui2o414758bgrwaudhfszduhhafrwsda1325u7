@@ -14,6 +14,7 @@ import { DENTISTRY_CONTENT } from './dentistry.js';
 import { BIOMED_RESEARCH_CONTENT } from './biomedResearch.js';
 import { PHYSICAL_OCCUP_THERAPY_CONTENT } from './physicalOccupTherapy.js';
 import { PUBLIC_HEALTH_CONTENT } from './publicHealth.js';
+import { HEALTH_ADMIN_CONTENT } from './healthAdmin.js';
 
 export const LESSON_CONTENT = {
   ...EXPLORING_CONTENT,
@@ -25,4 +26,5 @@ export const LESSON_CONTENT = {
   ...BIOMED_RESEARCH_CONTENT,
   ...PHYSICAL_OCCUP_THERAPY_CONTENT,
   ...PUBLIC_HEALTH_CONTENT,
+  ...HEALTH_ADMIN_CONTENT,
 };
