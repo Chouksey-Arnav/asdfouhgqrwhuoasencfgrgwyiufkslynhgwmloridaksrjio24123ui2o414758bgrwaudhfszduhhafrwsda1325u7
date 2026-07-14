@@ -115,4 +115,41 @@ export const ELIB = [
   { cat:'Admissions & Planning', title:'College Essay Guy', url:'https://www.collegeessayguy.com/', type:'Article', free:true, desc:'Highly popular resources, guides, and templates for crafting a compelling Common App personal statement and supplemental essays.' },
   { cat:'Admissions & Planning', title:'How to Write a High School Resume — College Board', url:'https://bigfuture.collegeboard.org/plan-for-college/college-prep/high-school-resume', type:'Article', free:true, desc:'Step-by-step instructions on structuring and writing your first academic and extracurricular resume for college applications.' },
   { cat:'Admissions & Planning', title:'The College Essay — Crash Course Literature #204', url:'https://www.youtube.com/watch?v=I2u659M_j50', type:'YouTube', free:true, ytId:'I2u659M_j50', desc:'An engaging video analysis of what makes a personal statement work, focusing on narrative structure and personal voice.' },
+
+  // ── EVEN MORE NEW EXPANSION RESOURCES ──────────────────────────────────────
+  // ── Life Sciences (4 New Resources) ────────────────────────────────────────
+  { cat:'Life Sciences', title:'Cellular Respiration — Amoeba Sisters', url:'https://www.youtube.com/watch?v=4Eo7JtRA7lg', type:'YouTube', free:true, ytId:'4Eo7JtRA7lg', desc:'An introductory overview of cellular respiration, ATP production, glycolysis, and the mitochondria at an AP Biology level.' },
+  { cat:'Life Sciences', title:'Meiosis — Amoeba Sisters', url:'https://www.youtube.com/watch?v=toWK0fIyFlY', type:'YouTube', free:true, ytId:'toWK0fIyFlY', desc:'An engaging animation breaking down meiosis, crossing over, and chromosome reduction in gametes.' },
+  { cat:'Life Sciences', title:'HHMI BioInteractive', url:'https://www.biointeractive.org/', type:'Course', free:true, desc:'Free high-quality science education resources, virtual labs, and interactive modules for biology students.' },
+  { cat:'Life Sciences', title:'National Center for Biotechnology Information (NCBI) Bookshelf', url:'https://www.ncbi.nlm.nih.gov/books/', type:'Book', free:true, desc:'Free online access to books and documents in life sciences and healthcare — great for AP Bio reading.' },
+
+  // ── Physical Sciences (4 New Resources) ────────────────────────────────────
+  { cat:'Physical Sciences', title:'Introduction to Organic Chemistry — The Organic Chemistry Tutor', url:'https://www.youtube.com/watch?v=U3ALMy-4Sj4', type:'YouTube', free:true, ytId:'U3ALMy-4Sj4', desc:'A gentle introduction to organic chemistry, covering hybridization, functional groups, and basic structures.' },
+  { cat:'Physical Sciences', title:'Ideal Gas Law — Crash Course Chemistry #12', url:'https://www.youtube.com/watch?v=BxUS1K7xu30', type:'YouTube', free:true, ytId:'BxUS1K7xu30', desc:'A fast-paced guide to gases, pressure, volume, temperature, and the derivation and use of PV=nRT.' },
+  { cat:'Physical Sciences', title:'Chemguide', url:'https://www.chemguide.co.uk/', type:'Article', free:true, desc:'An exceptionally clear UK-based resource explaining AP-level chemistry concepts simply and thoroughly.' },
+  { cat:'Physical Sciences', title:'The Physics Classroom', url:'https://www.physicsclassroom.com/', type:'Course', free:true, desc:'An online, interactive physics tutorial and practice suite designed for high school physics students.' },
+
+  // ── Behavioral & Social Sciences (4 New Resources) ────────────────────────
+  { cat:'Behavioral & Social Sciences', title:'Social Influence — Crash Course Psychology #38', url:'https://www.youtube.com/watch?v=UGxGDdQnC1Y', type:'YouTube', free:true, ytId:'UGxGDdQnC1Y', desc:'Explores conformity, obedience, group behavior, and famous social psychology experiments like Milgram.' },
+  { cat:'Behavioral & Social Sciences', title:'Social Thinking — Crash Course Psychology #37', url:'https://www.youtube.com/watch?v=h6HLdv0T5y8', type:'YouTube', free:true, ytId:'h6HLdv0T5y8', desc:'An introduction to attribution theory, cognitive dissonance, and the fundamental attribution error.' },
+  { cat:'Behavioral & Social Sciences', title:'Simply Psychology', url:'https://www.simplypsychology.org/', type:'Article', free:true, desc:'A comprehensive, accessible guide to major psychology theories, study notes, and research summaries.' },
+  { cat:'Behavioral & Social Sciences', title:'The Social Science Research Council (SSRC)', url:'https://www.ssrc.org/', type:'Community', free:true, desc:'An international organization dedicated to advancing social science research with resources on public affairs and policy.' },
+
+  // ── Research Methods (4 New Resources) ─────────────────────────────────────
+  { cat:'Research Methods', title:'Controlled Experiments — Khan Academy', url:'https://www.youtube.com/watch?v=1FAnm72vNqY', type:'YouTube', free:true, ytId:'1FAnm72vNqY', desc:'Explains control groups, experimental groups, independent and dependent variables, and scientific design.' },
+  { cat:'Research Methods', title:'Designing an Experiment — Crash Course Statistics #7', url:'https://www.youtube.com/watch?v=H7tSgN-eD3Y', type:'YouTube', free:true, ytId:'H7tSgN-eD3Y', desc:'Covers factorials, completely randomized block designs, matched pairs, and confounding variables in research.' },
+  { cat:'Research Methods', title:'ResearchGate', url:'https://www.researchgate.net/', type:'Community', free:true, desc:'A professional network for scientists and researchers where students can read papers and follow ongoing studies.' },
+  { cat:'Research Methods', title:'An Introduction to Scientific Research Methods', url:'https://www.nature.com/scitable/topic/scientific-method-and-planning-experiments-14078993/', type:'Article', free:true, desc:'Nature Scitable Guide to setting up hypotheses, experimental design, and analyzing scientific data.' },
+
+  // ── Test Prep (4 New Resources) ────────────────────────────────────────────
+  { cat:'Test Prep', title:'How to Study for the SAT — SupertutorTV', url:'https://www.youtube.com/watch?v=2T9B7o-hlyw', type:'YouTube', free:true, ytId:'2T9B7o-hlyw', desc:'Tips and strategies for organizing a study schedule, choosing resources, and improving speed on the SAT.' },
+  { cat:'Test Prep', title:'ACT English Prep — SupertutorTV', url:'https://www.youtube.com/watch?v=XzWj9R7fAnc', type:'YouTube', free:true, ytId:'XzWj9R7fAnc', desc:'High-yield grammar rules, sentence structure strategies, and tips for scoring high on the ACT English section.' },
+  { cat:'Test Prep', title:'Albert.io AP & SAT Prep', url:'https://www.albert.io/', type:'Course', free:false, desc:'A comprehensive interactive prep platform with thousands of practice questions for AP courses and SAT/ACT.' },
+  { cat:'Test Prep', title:'College Board Bluebook App', url:'https://bluebook.collegeboard.org/', type:'App', free:true, desc:'The official digital testing application for the digital SAT, featuring adaptive practice exams.' },
+
+  // ── Admissions & Planning (4 New Resources) ────────────────────────────────
+  { cat:'Admissions & Planning', title:'The Truth About College Admissions — SupertutorTV', url:'https://www.youtube.com/watch?v=vV1p8_b23g4', type:'YouTube', free:true, ytId:'vV1p8_b23g4', desc:'Explains what admissions officers look for in high school transcripts, essays, and extracurricular portfolios.' },
+  { cat:'Admissions & Planning', title:'How to Fill Out the Common App — SupertutorTV', url:'https://www.youtube.com/watch?v=AitR8y90vP8', type:'YouTube', free:true, ytId:'AitR8y90vP8', desc:'A step-by-step walkthrough of the Common Application interface, filling out family info, and reporting test scores.' },
+  { cat:'Admissions & Planning', title:'The Princeton Review College Search', url:'https://www.princetonreview.com/college-education', type:'Course', free:false, desc:'Detailed guides on finding colleges, college rankings, financial planning advice, and academic course prep.' },
+  { cat:'Admissions & Planning', title:'MyIntuition Quick College Cost Estimator', url:'https://myintuition.org/', type:'App', free:true, desc:'A simple financial aid estimator tool that calculates your expected family contribution for dozens of top US colleges.' },
 ];
