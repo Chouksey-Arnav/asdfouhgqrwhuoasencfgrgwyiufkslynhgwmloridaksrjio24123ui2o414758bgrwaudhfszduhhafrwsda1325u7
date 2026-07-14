@@ -25,10 +25,28 @@ export const ACHIEVEMENTS = {
   clinical_hours_50:{ key:'clinical_hours_50', name:'Boots on the Ground', desc:'Log 50 clinical or shadowing hours', icon:'Stethoscope', xp:150 },
   recommender_added:{ key:'recommender_added', name:'Lining It Up', desc:'Add your first recommender', icon:'UserCheck', xp:75 },
   mmi_practiced:{ key:'mmi_practiced', name:'Format Familiar', desc:'Try an MMI or CASPer practice scenario', icon:'Sparkles', xp:75 },
+
+  // Pathway completion — one per PATHS key (src/data/constants.js), unlocked when every
+  // lesson across every unit in that pathway is quiz-verified. Checked via `pathwayCompletions`
+  // below, a Set of pathway keys the caller has determined are fully complete.
+  path_exploring_complete:            { key:'path_exploring_complete',            name:'Exploring Pre-Health Track Complete', desc:'Verify every lesson in the Exploring Pre-Health pathway', icon:'ShieldCheck', xp:400 },
+  path_physician_complete:            { key:'path_physician_complete',            name:'Physician Track Complete',            desc:'Verify every lesson in the Physician (MD/DO) pathway',    icon:'ShieldCheck', xp:400 },
+  path_nursing_complete:              { key:'path_nursing_complete',              name:'Nursing Track Complete',              desc:'Verify every lesson in the Nursing pathway',              icon:'ShieldCheck', xp:400 },
+  path_physicianAssistant_complete:   { key:'path_physicianAssistant_complete',   name:'PA Track Complete',                   desc:'Verify every lesson in the Physician Assistant pathway',  icon:'ShieldCheck', xp:400 },
+  path_pharmacy_complete:             { key:'path_pharmacy_complete',             name:'Pharmacy Track Complete',             desc:'Verify every lesson in the Pharmacy pathway',             icon:'ShieldCheck', xp:400 },
+  path_dentistry_complete:            { key:'path_dentistry_complete',            name:'Dentistry Track Complete',            desc:'Verify every lesson in the Dentistry pathway',            icon:'ShieldCheck', xp:400 },
+  path_biomedResearch_complete:       { key:'path_biomedResearch_complete',       name:'Research Track Complete',             desc:'Verify every lesson in the Biomedical & Clinical Research pathway', icon:'ShieldCheck', xp:400 },
+  path_physicalOccupTherapy_complete: { key:'path_physicalOccupTherapy_complete', name:'PT/OT Track Complete',                desc:'Verify every lesson in the Physical & Occupational Therapy pathway', icon:'ShieldCheck', xp:400 },
+  path_publicHealth_complete:         { key:'path_publicHealth_complete',         name:'Public Health Track Complete',        desc:'Verify every lesson in the Public Health pathway',        icon:'ShieldCheck', xp:400 },
+  path_healthAdmin_complete:          { key:'path_healthAdmin_complete',          name:'Health Administration Track Complete',desc:'Verify every lesson in the Health Administration pathway',icon:'ShieldCheck', xp:400 },
 };
 
+// Keys PATHWAY_COMPLETIONS checks against — kept in sync with PATHS in src/data/constants.js
+// by listing the same 10 keys (avoiding a cross-import from constants.js into this file).
+const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
+
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
@@ -53,6 +71,10 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('clinical_hours_50', clinicalHours >= 50);
   check('recommender_added', recommenders >= 1);
   check('mmi_practiced', mmiCasperSessions >= 1);
+
+  for (const key of PATHWAY_KEYS) {
+    check(`path_${key}_complete`, pathwayCompletions.has(key));
+  }
 
   return toUnlock;
 }
