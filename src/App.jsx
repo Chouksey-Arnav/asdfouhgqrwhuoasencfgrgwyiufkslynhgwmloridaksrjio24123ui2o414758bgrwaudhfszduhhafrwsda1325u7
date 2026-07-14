@@ -1121,6 +1121,7 @@ export default function App({ account, onAccountChange }) {
   const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
   const [questTick, setQuestTick] = useState(0);
+  const [pathwayGoal, setPathwayGoalState] = useState(null); // { pathwayKey, startedAt, targetWeeks } | null
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [tab,   setTab]   = useState('home');
@@ -1361,6 +1362,29 @@ export default function App({ account, onAccountChange }) {
     })();
   },[tab,portLoaded]);
 
+  // ── Pathway pacing goal (loaded per active pathway) ───────────────────────────
+  useEffect(()=>{
+    if(!user)return;
+    const key=user.specialty||'exploring';
+    DB.getPathwayGoal(key).then(g=>setPathwayGoalState(g||null)).catch(()=>setPathwayGoalState(null));
+  },[user?.specialty]);
+  async function setPathwayPaceGoal(weeks){
+    const key=user?.specialty||'exploring';
+    await DB.setPathwayGoal(key,weeks);
+    setPathwayGoalState(await DB.getPathwayGoal(key));
+    toast.success(`Pace goal set — ${weeks} week${weeks===1?'':'s'} to finish ${PATHS[key]?.label||'this pathway'}.`,{icon:<Target size={16}/>});
+  }
+  const [goalPromptDismissed,setGoalPromptDismissed]=useState(false);
+  useEffect(()=>{
+    const key=user?.specialty||'exploring';
+    setGoalPromptDismissed(!!localStorage.getItem(`pathwayGoalDismissed:${key}`));
+  },[user?.specialty]);
+  function dismissPathwayPaceGoal(){
+    const key=user?.specialty||'exploring';
+    localStorage.setItem(`pathwayGoalDismissed:${key}`,'1');
+    setGoalPromptDismissed(true);
+  }
+
   // ── Lightweight Applications-side counts, for the achievement/reward loop ────
   useEffect(()=>{
     if(!user||!['portfolio','progress'].includes(tab))return;
@@ -1464,6 +1488,11 @@ export default function App({ account, onAccountChange }) {
   const allL    = Object.values(PATHS).flatMap(p=>(p.units||[]).flatMap(u=>u.lessons||[]));
   const doneL   = allL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
+  // Current-pathway-only lesson count (distinct from the cross-pathway `allL`/`doneL`/`mastery`
+  // above), for the pacing goal indicator — a goal is "3 of 9 lessons in Nursing," not a share
+  // of all 90 lessons across every pathway.
+  const curPathAllL  = (curPath?.units||[]).flatMap(u=>u.lessons||[]);
+  const curPathDoneL = curPathAllL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const levelInfo = getLevelInfo(user?.xp||0);
   const lvl     = levelInfo.level;
   const xpIn    = levelInfo.xpIntoLevel;
@@ -2395,6 +2424,48 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:0}}>{curPath.overview}</p>
         </div>}
         <Bar pct={mastery} color={accent} h={5} glow/>
+        {(()=>{
+          const totalLessons=curPathAllL.length;
+          const pathComplete=totalLessons>0&&curPathDoneL>=totalLessons;
+          if(pathComplete)return null;
+          const hasRealGoal=!!(pathwayGoal&&pathwayGoal.targetWeeks);
+          if(!hasRealGoal){
+            if(goalPromptDismissed)return null;
+            return(
+              <div style={{...glass2({padding:'14px 18px',background:'rgba(255,255,255,0.03)'})}}>
+                <div style={R({gap:10,marginBottom:10})}>
+                  <Target size={15} color={accent}/>
+                  <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Set a pace goal for {curPath?.label}?</div>
+                </div>
+                <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,margin:'0 0 12px'}}>Pick a target so you can see whether you're on track to finish — {totalLessons} lessons total.</p>
+                <div style={R({gap:8,flexWrap:'wrap'})}>
+                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(2)}>2 weeks</button>
+                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(4)}>4 weeks</button>
+                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(8)}>8 weeks</button>
+                  <button style={btnSm('transparent',{color:C.t3})} onClick={dismissPathwayPaceGoal}>No goal</button>
+                </div>
+              </div>
+            );
+          }
+          const elapsedWeeks=Math.max(0,(Date.now()-pathwayGoal.startedAt)/(7*24*60*60*1000));
+          const expectedByNow=Math.min(totalLessons,Math.round((elapsedWeeks/pathwayGoal.targetWeeks)*totalLessons));
+          const diff=curPathDoneL-expectedByNow;
+          const status=diff>0?{label:'Ahead of pace',color:C.green,colorL:C.greenL,dim:C.greenDim}
+                      :diff===0?{label:'On pace',color:C.green,colorL:C.greenL,dim:C.greenDim}
+                      :{label:`${Math.abs(diff)} lesson${Math.abs(diff)===1?'':'s'} behind — catch up this week`,color:C.amber,colorL:C.amberL,dim:C.amberDim};
+          return(
+            <div style={{...glass2({padding:'14px 18px',background:'rgba(255,255,255,0.03)'})}}>
+              <div style={R({gap:10})}>
+                <CalendarDays size={15} color={status.color}/>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>{pathwayGoal.targetWeeks}-week pace goal</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:2}}>{curPathDoneL}/{totalLessons} lessons verified · week {Math.min(pathwayGoal.targetWeeks,Math.ceil(elapsedWeeks)||1)} of {pathwayGoal.targetWeeks}</div>
+                </div>
+                <span style={pill(status.dim,status.colorL,{fontSize:10.5,fontWeight:700})}>{status.label}</span>
+              </div>
+            </div>
+          );
+        })()}
         {units.map((unit,ui)=>{
           const p=unitM(unit);const done=p===100;
           return(
