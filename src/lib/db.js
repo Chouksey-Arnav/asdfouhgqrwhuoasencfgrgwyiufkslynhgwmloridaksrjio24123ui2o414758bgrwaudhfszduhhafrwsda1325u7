@@ -94,6 +94,15 @@ db.version(8).stores({
   studyEvents: '++id, type, refId, ts',
 });
 
+// v9: per-pathway pacing goals — a student can optionally set a target number
+// of weeks to finish their current pathway's 9 lessons, and the Verified
+// Progress view shows an on-pace/behind-pace indicator computed from
+// `unitMastery`/`lessons` timestamps against that target. Purely local
+// accountability tooling, same as streaks/checkins; never transmitted.
+db.version(9).stores({
+  pathwayGoals: 'pathwayKey, startedAt, targetWeeks',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -364,6 +373,20 @@ export async function verifyUnit(pathwayKey, unitId, quizId, score) {
   else await db.unitMastery.add(row);
 }
 
+// ── Pathway Pacing Goals ──────────────────────────────────────────────────────
+// One row per pathway a student has set a goal for (a student can only be actively
+// enrolled in one pathway at a time via specialty, but a prior pathway's goal row
+// is left alone rather than deleted if they switch, so switching back restores it).
+export async function getPathwayGoal(pathwayKey) {
+  return db.pathwayGoals.get(pathwayKey);
+}
+export async function setPathwayGoal(pathwayKey, targetWeeks) {
+  await db.pathwayGoals.put({ pathwayKey, startedAt: Date.now(), targetWeeks });
+}
+export async function clearPathwayGoal(pathwayKey) {
+  await db.pathwayGoals.delete(pathwayKey);
+}
+
 // ── Local study-event log (Part C profiling groundwork; never transmitted) ───
 export async function logStudyEvent(type, refId) {
   await db.studyEvents.add({ type, refId, ts: Date.now() });
@@ -390,6 +413,7 @@ export async function exportAllData() {
     studyDays: await db.studyDays.toArray(),
     interviewSessions: await db.interviewSessions.toArray(),
     unitMastery: await db.unitMastery.toArray(),
+    pathwayGoals: await db.pathwayGoals.toArray(),
     exportDate: new Date().toISOString(),
     version: '3.0',
   };
@@ -409,5 +433,6 @@ export async function clearAllData() {
     db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
     db.deckMeta.clear(), db.unitMastery.clear(), db.studyEvents.clear(),
+    db.pathwayGoals.clear(),
   ]);
 }
