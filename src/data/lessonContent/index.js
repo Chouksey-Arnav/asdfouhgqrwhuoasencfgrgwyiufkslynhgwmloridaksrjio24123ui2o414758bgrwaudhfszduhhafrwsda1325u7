@@ -9,10 +9,12 @@ import { EXPLORING_CONTENT } from './exploring.js';
 import { PHYSICIAN_CONTENT } from './physician.js';
 import { NURSING_CONTENT } from './nursing.js';
 import { PHYSICIAN_ASSISTANT_CONTENT } from './physicianAssistant.js';
+import { PHARMACY_CONTENT } from './pharmacy.js';
 
 export const LESSON_CONTENT = {
   ...EXPLORING_CONTENT,
   ...PHYSICIAN_CONTENT,
   ...NURSING_CONTENT,
   ...PHYSICIAN_ASSISTANT_CONTENT,
+  ...PHARMACY_CONTENT,
 };
