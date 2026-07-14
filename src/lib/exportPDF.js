@@ -251,6 +251,82 @@ export function exportPortfolioResume(studentName, activities, awards, gpaEntrie
   doc.save(`portfolio-resume-${Date.now()}.pdf`);
 }
 
+export function exportPathwayCertificate(pathwayLabel, stats={}) {
+  const { studentName='Student', totalLessons=0, completedLessons=0, avgScore=null, completedAt=Date.now() } = stats;
+  const doc  = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
+  const W = 297, H = 210;
+  const date = new Date(completedAt).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  // Background + decorative border
+  doc.setFillColor(...DARK);
+  doc.rect(0, 0, W, H, 'F');
+  doc.setDrawColor(...BLUE);
+  doc.setLineWidth(1.2);
+  doc.rect(8, 8, W-16, H-16);
+  doc.setDrawColor(...GREEN);
+  doc.setLineWidth(0.4);
+  doc.rect(12, 12, W-24, H-24);
+
+  doc.setTextColor(...LIGHT);
+  doc.setFontSize(11);
+  doc.setFont('helvetica','normal');
+  doc.text('MedSchoolPrep', W/2, 28, { align:'center' });
+
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(13);
+  doc.setFont('helvetica','normal');
+  doc.text('CERTIFICATE OF COMPLETION', W/2, 42, { align:'center' });
+
+  doc.setDrawColor(...BLUE);
+  doc.setLineWidth(0.4);
+  doc.line(W/2-40, 47, W/2+40, 47);
+
+  doc.setFontSize(10);
+  doc.setTextColor(...LIGHT);
+  doc.text('This certifies that', W/2, 62, { align:'center' });
+
+  doc.setFontSize(26);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...WHITE);
+  doc.text(studentName, W/2, 76, { align:'center' });
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica','normal');
+  doc.setTextColor(...LIGHT);
+  doc.text('has completed every verified lesson in the', W/2, 90, { align:'center' });
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...GREEN);
+  doc.text(`${pathwayLabel} Pathway`, W/2, 102, { align:'center' });
+
+  // Stats row
+  const statY = 122;
+  doc.setFillColor(15, 24, 40);
+  doc.roundedRect(W/2-90, statY, 180, 20, 2, 2, 'F');
+  doc.setFontSize(9);
+  doc.setTextColor(...LIGHT);
+  doc.setFont('helvetica','normal');
+  doc.text('LESSONS VERIFIED', W/2-60, statY+8, { align:'center' });
+  doc.text('AVERAGE QUIZ SCORE', W/2, statY+8, { align:'center' });
+  doc.text('DATE COMPLETED', W/2+60, statY+8, { align:'center' });
+  doc.setFontSize(13);
+  doc.setFont('helvetica','bold');
+  doc.setTextColor(...WHITE);
+  doc.text(`${completedLessons}/${totalLessons}`, W/2-60, statY+16, { align:'center' });
+  doc.text(avgScore!=null?`${avgScore}%`:'—', W/2, statY+16, { align:'center' });
+  doc.setFontSize(10);
+  doc.text(date, W/2+60, statY+16, { align:'center' });
+
+  doc.setFontSize(8);
+  doc.setTextColor(...LIGHT);
+  doc.setFont('helvetica','normal');
+  doc.text('Based on locally verified lesson quizzes · Not an accredited academic credential', W/2, 168, { align:'center' });
+  doc.text(`Generated ${new Date().toLocaleDateString()}`, W/2, 174, { align:'center' });
+
+  doc.save(`${pathwayLabel.replace(/\s+/g,'-')}-certificate-${Date.now()}.pdf`);
+}
+
 export function exportFlashDeck(deckName, cards) {
   const doc = new jsPDF({ unit:'mm', format:'a4' });
   let y = header(doc, `Flashcard Deck: ${deckName}`, `${cards.length} cards · ${new Date().toLocaleDateString()}`);

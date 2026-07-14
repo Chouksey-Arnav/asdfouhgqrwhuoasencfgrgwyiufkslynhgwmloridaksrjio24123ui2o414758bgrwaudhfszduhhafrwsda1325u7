@@ -48,7 +48,7 @@ import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
-import { exportQuizResult, exportSchoolList, exportFlashDeck } from './lib/exportPDF';
+import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements } from './lib/achievements';
 import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
@@ -2427,7 +2427,24 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {(()=>{
           const totalLessons=curPathAllL.length;
           const pathComplete=totalLessons>0&&curPathDoneL>=totalLessons;
-          if(pathComplete)return null;
+          if(pathComplete){
+            const scores=curPathAllL.map(l=>pathway[l.id]?.quizScore).filter(s=>s!=null);
+            const avgScore=scores.length?Math.round(scores.reduce((a,b)=>a+b,0)/scores.length):null;
+            const completedTimes=curPathAllL.map(l=>pathway[l.id]?.completedAt).filter(Boolean);
+            const lastCompletedAt=completedTimes.length?Math.max(...completedTimes):Date.now();
+            return(
+              <div style={{...glass2({padding:'14px 18px',background:C.greenDim,border:`1px solid ${C.green}40`})}}>
+                <div style={R({gap:10})}>
+                  <ShieldCheck size={16} color={C.green}/>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Pathway complete!</div>
+                    <div style={{fontSize:11,color:C.t3,marginTop:2}}>Every lesson in {curPath?.label} is verified.</div>
+                  </div>
+                  <button style={{...btnSm(`${C.green}22`,{color:C.greenL,border:`1px solid ${C.green}40`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportPathwayCertificate(curPath?.label||'Pathway',{studentName:user?.name||'Student',totalLessons,completedLessons:curPathDoneL,avgScore,completedAt:lastCompletedAt})}><FileDown size={13}/>Download Certificate</button>
+                </div>
+              </div>
+            );
+          }
           const hasRealGoal=!!(pathwayGoal&&pathwayGoal.targetWeeks);
           if(!hasRealGoal){
             if(goalPromptDismissed)return null;
