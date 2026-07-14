@@ -12,6 +12,7 @@ import { PHYSICIAN_ASSISTANT_CONTENT } from './physicianAssistant.js';
 import { PHARMACY_CONTENT } from './pharmacy.js';
 import { DENTISTRY_CONTENT } from './dentistry.js';
 import { BIOMED_RESEARCH_CONTENT } from './biomedResearch.js';
+import { PHYSICAL_OCCUP_THERAPY_CONTENT } from './physicalOccupTherapy.js';
 
 export const LESSON_CONTENT = {
   ...EXPLORING_CONTENT,
@@ -21,4 +22,5 @@ export const LESSON_CONTENT = {
   ...PHARMACY_CONTENT,
   ...DENTISTRY_CONTENT,
   ...BIOMED_RESEARCH_CONTENT,
+  ...PHYSICAL_OCCUP_THERAPY_CONTENT,
 };
