@@ -21,7 +21,7 @@ import {
   Copy, RotateCcw, BadgeCheck,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
 const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
@@ -1546,6 +1546,7 @@ export default function App({ account, onAccountChange }) {
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
+      pathwayCompletions: extra.pathwayCompletions??new Set(),
       unlocked,
     });
     for(const achievement of toUnlock){
@@ -1914,6 +1915,12 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           if(!localStorage.getItem(flagKey)){
             localStorage.setItem(flagKey,'1');
             toast.success(pickNudge(`pathway_${milestone}`,{pathway:curPath?.label}),{duration:4500,icon:<Milestone size={16}/>});
+          }
+          // Pathway-completion badge — checkAndUnlockAchievements/DB.unlockAchievement are
+          // both idempotent (already-unlocked keys are skipped), so it's safe to call this
+          // every time 100% is reached rather than gating it behind the nudge's one-time flag.
+          if(milestone===100){
+            checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{pathwayCompletions:new Set([eSpec])});
           }
         }
       } else {
