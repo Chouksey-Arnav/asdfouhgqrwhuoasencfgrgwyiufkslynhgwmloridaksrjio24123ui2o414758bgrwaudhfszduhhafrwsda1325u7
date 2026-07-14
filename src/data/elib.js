@@ -55,7 +55,7 @@ export const ELIB = [
   { cat:'Research Methods', title:'StatQuest with Josh Starmer', url:'https://www.youtube.com/c/joshstarmer', type:'Article', free:true, desc:'Excellent YouTube channel explaining statistics and machine learning concepts clearly and intuitively.' },
   { cat:'Physical Sciences', title:'Chemistry LibreTexts', url:'https://chem.libretexts.org/', type:'Article', free:true, desc:'Open-access chemistry textbook covering general, organic, and biochemistry. Comprehensive and free.' },
 
-  // ── 30 YOUTUBE VIDEOS ──────────────────────────────────────────────────────
+  // ── ORIGINAL YOUTUBE VIDEOS ────────────────────────────────────────────────
   { cat:'Life Sciences', title:'DNA Replication (Updated)', url:'https://www.youtube.com/watch?v=Qqe4thU-os8', type:'YouTube', free:true, ytId:'Qqe4thU-os8', desc:'Semiconservative replication, leading/lagging strands, enzymes, and proofreading mechanisms.' },
   { cat:'Life Sciences', title:'Transcription and Translation', url:'https://www.youtube.com/watch?v=bKIpDtJdK8Q', type:'YouTube', free:true, ytId:'bKIpDtJdK8Q', desc:'Gene expression from DNA to protein — transcription machinery, ribosomes, and translation steps.' },
   { cat:'Life Sciences', title:'Immune System Part 1 — Crash Course A&P', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', type:'YouTube', free:true, ytId:'GIJK3dwCWCw', desc:'Innate and adaptive immunity, immune cells, antigens, antibodies, and complement system.' },
@@ -72,7 +72,7 @@ export const ELIB = [
   { cat:'Physical Sciences', title:'Alpha, Beta, and Gamma Decay — Nuclear Physics', url:'https://www.youtube.com/watch?v=cwXCILesK-k', type:'YouTube', free:true, ytId:'cwXCILesK-k', desc:'Radioactive decay types, half-life calculations, nuclear stability, and radiation in medicine.' },
   { cat:'Physical Sciences', title:'Mental Math Strategies for Timed Tests', url:'https://www.youtube.com/watch?v=8l-6n1v30Yg', type:'YouTube', free:true, ytId:'8l-6n1v30Yg', desc:'Essential no-calculator math strategies: estimation, scientific notation, logarithms, and unit analysis.' },
 
-  // ── 11 MORE YOUTUBE VIDEOS — filling Behavioral & Social Sciences, Research Methods, Test Prep & Admissions ──
+  // ── ORIGINAL YOUTUBE VIDEOS (ADDITIONAL) ───────────────────────────────────
   { cat:'Life Sciences', title:'The Nervous System, Part 1 — Crash Course A&P', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', type:'YouTube', free:true, ytId:'qPix_X-9t7E', desc:'Neuron structure, glial cells, and how the nervous system is organized into central and peripheral divisions.' },
   { cat:'Life Sciences', title:'Respiratory System, Part 1 — Crash Course A&P', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', type:'YouTube', free:true, ytId:'bHZsvBdUC2I', desc:'Airway anatomy, the mechanics of ventilation, and gas exchange across the alveolar membrane.' },
   { cat:'Behavioral & Social Sciences', title:'Intro to Psychology — Crash Course Psychology #1', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', type:'YouTube', free:true, ytId:'vo4pMVb0R6M', desc:'What psychology is, its historical roots, and the major perspectives that shape the field today.' },
@@ -84,4 +84,35 @@ export const ELIB = [
   { cat:'Research Methods', title:'Sociology Research Methods — Crash Course Sociology #4', url:'https://www.youtube.com/watch?v=QwhK-iEyXYA', type:'YouTube', free:true, ytId:'QwhK-iEyXYA', desc:'Forming hypotheses, surveys vs. experiments vs. observation, and research ethics oversight (IRBs).' },
   { cat:'Test Prep', title:'Taking Notes — Crash Course Study Skills #1', url:'https://www.youtube.com/watch?v=E7CwqNHn_Ns', type:'YouTube', free:true, ytId:'E7CwqNHn_Ns', desc:'The Cornell note-taking method — a practical system for organizing study notes for any subject.' },
   { cat:'Admissions & Planning', title:'What Is Public Health? — Crash Course Public Health #1', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', type:'YouTube', free:true, ytId:'5aww-Bpgkf4', desc:'Prevention-focused medicine at the population level — essential context for understanding health systems careers.' },
+
+  // ── NEW EXPANSION RESOURCES ────────────────────────────────────────────────
+  // ── Life Sciences (3 New Resources) ────────────────────────────────────────
+  { cat:'Life Sciences', title:'BioMan Biology', url:'https://biomanbio.com/', type:'App', free:true, desc:'Fun and educational biology games, virtual labs, and quizzes covering cells, genetics, ecology, and evolution.' },
+  { cat:'Life Sciences', title:'Crash Course Ecology', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtNDTKZkV_GiIYXpV9w4WxbX', type:'Article', free:true, desc:'12-episode series covering ecological hierarchy, ecosystem dynamics, population ecology, and human impacts on the biosphere.' },
+  { cat:'Life Sciences', title:'Mendelian Genetics — Amoeba Sisters', url:'https://www.youtube.com/watch?v=wy7gp5MTzeg', type:'YouTube', free:true, ytId:'wy7gp5MTzeg', desc:'An entry-level guide to monohybrid crosses, genotypes, phenotypes, and Gregor Mendel\'s laws of inheritance.' },
+
+  // ── Physical Sciences (3 New Resources) ────────────────────────────────────
+  { cat:'Physical Sciences', title:'PhET Interactive Simulations — Physics & Chemistry', url:'https://phet.colorado.edu/', type:'App', free:true, desc:'Free, interactive, research-based science simulations from CU Boulder covering mechanics, waves, atoms, and chemical reactions.' },
+  { cat:'Physical Sciences', title:'Introduction to Newton\'s Laws of Motion — Crash Course Physics #5', url:'https://www.youtube.com/watch?v=kKKM8Y-g7lk', type:'YouTube', free:true, ytId:'kKKM8Y-g7lk', desc:'An intuitive breakdown of inertia, force, acceleration, and action-reaction pairs with real-world examples.' },
+  { cat:'Physical Sciences', title:'Bozeman Science — AP Chemistry', url:'https://www.youtube.com/playlist?list=PLllVwaZQkS2op2kDuFifhStNSqi99PAxk', type:'Article', free:true, desc:'An exceptionally clear video playlist covering the major big ideas in the AP Chemistry curriculum.' },
+
+  // ── Behavioral & Social Sciences (3 New Resources) ────────────────────────
+  { cat:'Behavioral & Social Sciences', title:'Sapolsky\'s Stanford Human Behavioral Biology', url:'https://www.youtube.com/playlist?list=PL848F619861A14581', type:'Course', free:true, desc:'A premier, accessible Stanford course introducing the biological and environmental influences on human behavior.' },
+  { cat:'Behavioral & Social Sciences', title:'Cognitive Psychology Intro — Crash Course Psychology #11', url:'https://www.youtube.com/watch?v=R-sVnK7AnMY', type:'YouTube', free:true, ytId:'R-sVnK7AnMY', desc:'Explores how we think, solve problems, make decisions, and the cognitive biases that influence our daily choices.' },
+  { cat:'Behavioral & Social Sciences', title:'American Psychological Association (APA) Student Center', url:'https://www.apa.org/education-career/guide/student', type:'Article', free:true, desc:'Official guides, career paths, and study resources for high school and undergraduate psychology students.' },
+
+  // ── Research Methods (3 New Resources) ─────────────────────────────────────
+  { cat:'Research Methods', title:'Science Buddies Guide to Scientific Method', url:'https://www.sciencebuddies.org/science-fair-projects/science-fair/steps-of-the-scientific-method', type:'Article', free:true, desc:'Step-by-step guide to formulating a hypothesis, designing controlled experiments, and presenting science fair projects.' },
+  { cat:'Research Methods', title:'Correlation vs. Causation — Khan Academy', url:'https://www.youtube.com/watch?v=ROpbdO-gRUo', type:'YouTube', free:true, ytId:'ROpbdO-gRUo', desc:'A vital statistical lesson explaining why strong correlation does not imply direct causation, with clear examples.' },
+  { cat:'Research Methods', title:'Bozeman Science — Scientific Method', url:'https://www.youtube.com/watch?v=GKGtkyTx68o', type:'YouTube', free:true, ytId:'GKGtkyTx68o', desc:'Explains the core principles of scientific inquiry, including variables, controls, hypothesis testing, and theory development.' },
+
+  // ── Test Prep (3 New Resources) ────────────────────────────────────────────
+  { cat:'Test Prep', title:'SupertutorTV (YouTube)', url:'https://www.youtube.com/c/SupertutorTV', type:'Article', free:true, desc:'An excellent YouTube channel focused on SAT/ACT strategy, study routines, and college essay writing advice.' },
+  { cat:'Test Prep', title:'How to Manage Test Anxiety — Crash Course Study Skills #8', url:'https://www.youtube.com/watch?v=Hj7mY2S_uH0', type:'YouTube', free:true, ytId:'Hj7mY2S_uH0', desc:'Practical tips and psychological strategies for identifying, managing, and overcoming high-stakes exam anxiety.' },
+  { cat:'Test Prep', title:'Khan Academy Digital SAT Prep', url:'https://www.khanacademy.org/test-prep/digital-sat', type:'Course', free:true, desc:'Free official practice for the new Digital SAT, featuring adaptive practice modules and instructional materials.' },
+
+  // ── Admissions & Planning (3 New Resources) ────────────────────────────────
+  { cat:'Admissions & Planning', title:'College Essay Guy', url:'https://www.collegeessayguy.com/', type:'Article', free:true, desc:'Highly popular resources, guides, and templates for crafting a compelling Common App personal statement and supplemental essays.' },
+  { cat:'Admissions & Planning', title:'How to Write a High School Resume — College Board', url:'https://bigfuture.collegeboard.org/plan-for-college/college-prep/high-school-resume', type:'Article', free:true, desc:'Step-by-step instructions on structuring and writing your first academic and extracurricular resume for college applications.' },
+  { cat:'Admissions & Planning', title:'The College Essay — Crash Course Literature #204', url:'https://www.youtube.com/watch?v=I2u659M_j50', type:'YouTube', free:true, ytId:'I2u659M_j50', desc:'An engaging video analysis of what makes a personal statement work, focusing on narrative structure and personal voice.' },
 ];
