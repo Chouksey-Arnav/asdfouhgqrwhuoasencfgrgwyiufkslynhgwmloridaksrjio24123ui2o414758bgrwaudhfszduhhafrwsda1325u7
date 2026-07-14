@@ -11,6 +11,7 @@ import { NURSING_CONTENT } from './nursing.js';
 import { PHYSICIAN_ASSISTANT_CONTENT } from './physicianAssistant.js';
 import { PHARMACY_CONTENT } from './pharmacy.js';
 import { DENTISTRY_CONTENT } from './dentistry.js';
+import { BIOMED_RESEARCH_CONTENT } from './biomedResearch.js';
 
 export const LESSON_CONTENT = {
   ...EXPLORING_CONTENT,
@@ -19,4 +20,5 @@ export const LESSON_CONTENT = {
   ...PHYSICIAN_ASSISTANT_CONTENT,
   ...PHARMACY_CONTENT,
   ...DENTISTRY_CONTENT,
+  ...BIOMED_RESEARCH_CONTENT,
 };
