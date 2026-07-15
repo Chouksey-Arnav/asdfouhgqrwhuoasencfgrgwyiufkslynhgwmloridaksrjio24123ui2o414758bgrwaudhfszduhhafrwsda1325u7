@@ -38,8 +38,11 @@ export async function getNextCheckinDay() {
   return 1;
 }
 
+/** Records today's check-in. Returns false if today was already claimed
+ *  (e.g. a second chest queued after a reload race) so the caller can skip
+ *  granting the reward a second time. */
 export async function claimCheckin(day) {
-  await DB.recordCheckin(todayStr(), day);
+  return DB.recordCheckin(todayStr(), day);
 }
 
 export function getCheckinReward(day) {
