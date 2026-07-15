@@ -1634,7 +1634,8 @@ export default function App({ account, onAccountChange }) {
         xp: reward.xp,
         cosmetic,
         onOpen: async ()=>{
-          await claimCheckin(day);
+          const claimed = await claimCheckin(day);
+          if(!claimed)return; // today's check-in was already recorded (e.g. reload race) — don't double-grant
           saveUser({ ...user, xp: (user.xp||0) + reward.xp });
           play('xp');
           if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
@@ -4719,7 +4720,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         onOpen={()=>{ chest?.onOpen?.(); }}
         onClose={closeChest}
       />
-      <div style={{display:'flex',flexDirection:isMobile?'column':'row',height:'100vh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
+      <div style={{display:'flex',flexDirection:isMobile?'column':'row',height:'100dvh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
@@ -4787,7 +4788,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
         <main style={{flex:1,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${accent}50,${C.cyan}20,transparent)`,zIndex:5}}/>}
-          <div style={{maxWidth:960,margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 30px 70px'}}>
+          <div style={{maxWidth:isMobile?'none':'min(1440px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
             <AnimatePresence mode="wait">
               <motion.div key={tab} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.22}}>
                 {(tRenders[tab]||tHome)()}

@@ -15,7 +15,7 @@ body {
   overflow: hidden;
   touch-action: manipulation;
 }
-#root { display: flex; height: 100vh; overflow: hidden; }
+#root { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
 
 /* iOS Safari auto-zooms the viewport when a focused input's computed font-size is under 16px.
    Force every form field to 16px on small screens so tapping a field never triggers that zoom
