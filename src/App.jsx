@@ -15,6 +15,7 @@ import {
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
+  Bookmark,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
@@ -1201,7 +1202,12 @@ export default function App({ account, onAccountChange }) {
   const [genCountInput,setGenCountInput]=useState('20'); // raw text of the count field, so typing isn't clobbered mid-edit
 
   // ── Library ─────────────────────────────────────────────────────────────────
-  const [lSrch,setLS]=useState('');const [lCat,setLC]=useState('All');
+  const [lSrch,setLS]=useState('');
+  const [lCat,setLC]=useState('All');
+  const [lType,setLType]=useState('All');
+  const [lFreeOnly,setLFreeOnly]=useState(false);
+  const [lSort,setLSort]=useState('default');
+  const [lSubTab,setLSubTab]=useState('all'); // all | saved | completed
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
   const [cF,setCF]=useState('All');
@@ -2000,7 +2006,44 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     if(qSort==='score')arr.sort((a,b)=>{const av=qScores[a.id],bv=qScores[b.id];if(av===undefined&&bv===undefined)return 0;if(av===undefined)return 1;if(bv===undefined)return -1;return av-bv;});
     return arr;
   },[qSrch,qCat,qDiff,qSort,qScores]);
-  const fLib    = useMemo(()=>{ return fuseSearch(libFuse,lSrch)||ELIB; },[lSrch]).filter(r=>lCat==='All'||r.cat===lCat);
+  const fLib = useMemo(() => {
+    let result = fuseSearch(libFuse, lSrch) || ELIB;
+
+    // Category filter
+    if (lCat !== 'All') {
+      result = result.filter(r => r.cat === lCat);
+    }
+
+    // Type filter
+    if (lType !== 'All') {
+      result = result.filter(r => r.type === lType);
+    }
+
+    // Cost/Access filter
+    if (lFreeOnly) {
+      result = result.filter(r => r.free);
+    }
+
+    // Sub-tab filter (All, Saved, Completed)
+    if (user) {
+      if (lSubTab === 'saved') {
+        const bms = user.bookmarks || [];
+        result = result.filter(r => bms.includes(r.title));
+      } else if (lSubTab === 'completed') {
+        const studied = user.studied || [];
+        result = result.filter(r => studied.includes(r.title));
+      }
+    }
+
+    // Sorting logic
+    if (lSort === 'alpha') {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (lSort === 'alpha-desc') {
+      result = [...result].sort((a, b) => b.title.localeCompare(a.title));
+    }
+
+    return result;
+  }, [libFuse, lSrch, lCat, lType, lFreeOnly, lSubTab, lSort, user]);
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
   const calcR   = useMemo(()=>{
@@ -3042,11 +3085,109 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tLib(){
     const yt=fLib.filter(r=>r.type==='YouTube');const reg=fLib.filter(r=>r.type!=='YouTube');
     const tc={Article:C.blue,Book:C.amber,Course:C.violet,App:C.green,Community:'#ec4899',Podcast:C.cyan};
+
+    // Tracking actions
+    function toggleBookmark(title) {
+      if (!user) return;
+      const bms = user.bookmarks || [];
+      const updated = bms.includes(title) ? bms.filter(t => t !== title) : [...bms, title];
+      saveUser({ ...user, bookmarks: updated });
+      if (bms.includes(title)) {
+        toast.success(`Removed "${title}" from saved resources`);
+      } else {
+        toast.success(`Saved "${title}" to library`, { icon: '⭐' });
+      }
+    }
+
+    function toggleStudied(title) {
+      if (!user) return;
+      const studied = user.studied || [];
+      const isDone = studied.includes(title);
+      let updated;
+      if (isDone) {
+        updated = studied.filter(t => t !== title);
+        saveUser({ ...user, studied: updated });
+        toast.success(`Marked "${title}" as in progress`);
+      } else {
+        updated = [...studied, title];
+        const xpGain = 15;
+        const newXp = (user.xp || 0) + xpGain;
+        saveUser({ ...user, xp: newXp, studied: updated });
+        toast.success(`Completed! +15 XP earned`, { icon: '🎉' });
+      }
+    }
+
+    const savedCount = (user?.bookmarks || []).length;
+    const completedCount = (user?.studied || []).length;
+    const pct = Math.round((completedCount / ELIB.length) * 100) || 0;
+
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
-          <div><div style={lbl()}>E-Library</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{ELIB.length} Resources</h2></div>
+        {/* Progress Tracker Card Header */}
+        <div style={{...glass({padding:20, background: `linear-gradient(135deg, ${C.blueDim}, transparent)`, border: `1px solid rgba(45, 127, 255, 0.15)`}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
+          <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${C.b1}`}}>
+            <BookOpen size={24} color={pct > 0 ? C.blueL : C.t3} />
+            {pct > 0 && <span style={{position: 'absolute', bottom: -4, right: -4, ...pill(C.green, '#fff', {fontSize: 9, padding: '2px 6px', borderRadius: 4})}}>{pct}%</span>}
+          </div>
+          <div style={{flex: 1, minWidth: 200}}>
+            <div style={{fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase'}}>My Study Journey</div>
+            <div style={{fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 2}}>E-Library Workspace</div>
+            {/* Progress Bar */}
+            <div style={{marginTop: 10, width: '100%', height: 6, borderRadius: 3, background: C.s4, overflow: 'hidden', position: 'relative'}}>
+              <motion.div initial={{width: 0}} animate={{width: `${pct}%`}} transition={{duration: 0.6}} style={{position: 'absolute', left: 0, top: 0, height: '100%', background: C.blueGrad}} />
+            </div>
+          </div>
+          <div style={{display: 'flex', gap: 16, flexWrap: 'wrap'}}>
+            <div style={{textAlign: 'center', minWidth: 70}}>
+              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.t1}}>{ELIB.length}</div>
+              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Total</div>
+            </div>
+            <div style={{textAlign: 'center', minWidth: 70}}>
+              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.amberL}}>{savedCount}</div>
+              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Saved</div>
+            </div>
+            <div style={{textAlign: 'center', minWidth: 70}}>
+              <div style={{fontSize: 18, fontWeight: 800, fontFamily: C.FM, color: C.greenL}}>{completedCount}</div>
+              <div style={{fontSize: 9, color: C.t3, textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 2}}>Studied</div>
+            </div>
+          </div>
         </div>
+
+        {/* E-Library Inner Sub-Tabs */}
+        <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 10, gap: 10, flexWrap: 'wrap'})}>
+          {[
+            { id: 'all', label: 'All Resources', icon: BookOpen },
+            { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark },
+            { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck }
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = lSubTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setLSubTab(tab.id)}
+                style={{
+                  ...btnSm(active ? C.blueDim : 'transparent', {
+                    color: active ? C.blueL : C.t2,
+                    border: active ? `1px solid ${C.blue}30` : '1px solid transparent',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 16px',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    borderRadius: 8
+                  })
+                }}
+              >
+                <Icon size={14} />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Row 1 Filter: Search and Category */}
         <div style={R({flexWrap:'wrap',gap:10})}>
           <div style={{flex:1,minWidth:200,position:'relative'}}>
             <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
@@ -3054,12 +3195,85 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
           <select style={inp({width:'auto'})} value={lCat} onChange={e=>setLC(e.target.value)}>{LIB_CATS.map(c=><option key={c}>{c}</option>)}</select>
         </div>
+
+        {/* Row 2 Filter: Resource Type, Cost, Sort Order */}
+        <div style={R({flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', borderTop: `1px solid ${C.b0}`, paddingTop: 10})}>
+          <div style={R({flexWrap: 'wrap', gap: 8})}>
+            {/* Type filter */}
+            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lType} onChange={e => setLType(e.target.value)}>
+              <option value="All">All Types</option>
+              <option value="YouTube">YouTube Videos</option>
+              <option value="Article">Articles & Guides</option>
+              <option value="Book">Books</option>
+              <option value="Course">Courses</option>
+              <option value="App">Apps & Tools</option>
+              <option value="Podcast">Podcasts</option>
+              <option value="Community">Communities</option>
+            </select>
+
+            {/* Cost filter */}
+            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lFreeOnly ? 'free' : 'all'} onChange={e => setLFreeOnly(e.target.value === 'free')}>
+              <option value="all">All Budgets</option>
+              <option value="free">Free Resources Only</option>
+            </select>
+
+            {/* Sort order */}
+            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lSort} onChange={e => setLSort(e.target.value)}>
+              <option value="default">Sort: Recommended</option>
+              <option value="alpha">Sort: Alphabetical (A-Z)</option>
+              <option value="alpha-desc">Sort: Alphabetical (Z-A)</option>
+            </select>
+          </div>
+
+          {(lSrch || lCat !== 'All' || lType !== 'All' || lFreeOnly || lSort !== 'default' || lSubTab !== 'all') && (
+            <button
+              onClick={() => {
+                setLS('');
+                setLC('All');
+                setLType('All');
+                setLFreeOnly(false);
+                setLSort('default');
+                setLSubTab('all');
+              }}
+              style={btnSm('transparent', {color: C.roseL, borderColor: `${C.rose}40`, fontSize: 11})}
+            >
+              Clear All Filters
+            </button>
+          )}
+        </div>
+
+        {/* Video Resources Section */}
         {yt.length>0&&<div>
           <SL>Video Resources ({yt.length})</SL>
           <div style={G(2,14,{},isMobile)}>
             {yt.map((r,i)=>(
-              <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',cursor:'pointer'})}>
-                <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden'}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}>
+              <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',position:'relative'})}>
+                {/* Floating Bookmark Star Button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); toggleBookmark(r.title); }}
+                  style={{
+                    position: 'absolute',
+                    top: 10,
+                    left: 10,
+                    zIndex: 10,
+                    width: 28,
+                    height: 28,
+                    borderRadius: '50%',
+                    background: 'rgba(4,6,11,0.7)',
+                    border: '1.5px solid rgba(255,255,255,0.25)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: user?.bookmarks?.includes(r.title) ? C.amberL : '#fff',
+                    transition: 'all 0.15s'
+                  }}
+                  title={user?.bookmarks?.includes(r.title) ? "Unsave resource" : "Save resource"}
+                >
+                  <Star size={14} fill={user?.bookmarks?.includes(r.title) ? "currentColor" : "none"} />
+                </button>
+
+                <div style={{position:'relative',paddingBottom:'52%',background:C.s2,overflow:'hidden',cursor:'pointer'}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}>
                   <img src={`https://img.youtube.com/vi/${r.ytId}/mqdefault.jpg`} alt={r.title} loading="lazy" style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',transition:'transform .4s'}} onError={e=>{e.target.style.display='none';}} onMouseEnter={e=>e.target.style.transform='scale(1.05)'} onMouseLeave={e=>e.target.style.transform='scale(1)'}/>
                   <div style={{position:'absolute',inset:0,background:'linear-gradient(to top,rgba(4,6,11,0.85) 0%,transparent 55%)'}}/>
                   <div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -3072,33 +3286,99 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between'})}>
                     <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
-                    <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
+                    <div style={R({gap:8})}>
+                      {/* Studied checkbox / check pill */}
+                      <button
+                        onClick={() => toggleStudied(r.title)}
+                        style={{
+                          ...btnSm(user?.studied?.includes(r.title) ? `${C.green}18` : 'transparent', {
+                            color: user?.studied?.includes(r.title) ? C.greenL : C.t3,
+                            borderColor: user?.studied?.includes(r.title) ? `${C.green}40` : `${C.b2}`,
+                            fontSize: 10,
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          })
+                        }}
+                      >
+                        <BadgeCheck size={11} fill={user?.studied?.includes(r.title) ? "currentColor" : "none"} />
+                        {user?.studied?.includes(r.title) ? 'Studied' : 'Mark Studied'}
+                      </button>
+                      <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>}
+
+        {/* Text/Interactive Resources Section */}
         {reg.length>0&&<div>
           {yt.length>0&&<SL>Articles, Books & Courses ({reg.length})</SL>}
           <div style={G(2,12,{},isMobile)}>
-            {reg.map((r,i)=>{const col=tc[r.type]||C.t2;return(
-              <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s'})}>
-                <div style={R({justifyContent:'space-between',marginBottom:12})}>
-                  <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
-                  <div style={R({gap:6})}>
-                    {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
-                    <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
+            {reg.map((r,i)=>{
+              const col=tc[r.type]||C.t2;
+              const isSaved = user?.bookmarks?.includes(r.title);
+              const isStudied = user?.studied?.includes(r.title);
+              return(
+                <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s',position:'relative'})}>
+                  <div style={R({justifyContent:'space-between',marginBottom:12})}>
+                    <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
+                    <div style={R({gap:6})}>
+                      {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
+                      <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
+
+                      {/* Floating save bookmark */}
+                      <button
+                        onClick={() => toggleBookmark(r.title)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 2,
+                          cursor: 'pointer',
+                          color: isSaved ? C.amberL : C.t3,
+                          transition: 'color 0.15s',
+                          marginLeft: 4,
+                          display: 'inline-flex',
+                          alignItems: 'center'
+                        }}
+                        title={isSaved ? "Unsave resource" : "Save resource"}
+                      >
+                        <Star size={14} fill={isSaved ? "currentColor" : "none"} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
-                <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
-                <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
-              </motion.div>
-            );})}
+                  <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                  <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
+                  <div style={R({justifyContent:'space-between'})}>
+                    <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
+
+                    {/* Studied checkbox / check pill */}
+                    <button
+                      onClick={() => toggleStudied(r.title)}
+                      style={{
+                        ...btnSm(isStudied ? `${C.green}18` : 'transparent', {
+                          color: isStudied ? C.greenL : C.t3,
+                          borderColor: isStudied ? `${C.green}40` : `${C.b2}`,
+                          fontSize: 10,
+                          padding: '4px 8px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 4
+                        })
+                      }}
+                    >
+                      <BadgeCheck size={11} fill={isStudied ? "currentColor" : "none"} />
+                      {isStudied ? 'Studied' : 'Mark Studied'}
+                    </button>
+                  </div>
+                </motion.div>
+              );})}
           </div>
         </div>}
-        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');}}/>}
+        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');setLType('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}/>}
       </div>
     );
   }
