@@ -1205,9 +1205,11 @@ export default function App({ account, onAccountChange }) {
   const [lSrch,setLS]=useState('');
   const [lCat,setLC]=useState('All');
   const [lType,setLType]=useState('All');
+  const [lDiff,setLDiff]=useState('All'); // All | Introductory | AP / Intermediate | Undergrad / Advanced
   const [lFreeOnly,setLFreeOnly]=useState(false);
   const [lSort,setLSort]=useState('default');
   const [lSubTab,setLSubTab]=useState('all'); // all | saved | completed
+  const [openNotes,setOpenNotes]=useState({});
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
   const [cF,setCF]=useState('All');
@@ -2008,6 +2010,21 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   },[qSrch,qCat,qDiff,qSort,qScores]);
   const fLib = useMemo(() => {
     let result = fuseSearch(libFuse, lSrch) || ELIB;
+    if (lSrch && lSrch.trim()) {
+      const q = lSrch.toLowerCase();
+      // Collect any items that have matching personal notes but weren't returned by fuzzy search
+      const noteMatches = ELIB.filter(r => {
+        const note = user?.resourceNotes?.[r.title];
+        return note && note.toLowerCase().includes(q);
+      });
+      // Merge and preserve order/uniqueness
+      const seen = new Set(result.map(r => r.title));
+      noteMatches.forEach(r => {
+        if (!seen.has(r.title)) {
+          result.push(r);
+        }
+      });
+    }
 
     // Category filter
     if (lCat !== 'All') {
@@ -2017,6 +2034,11 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     // Type filter
     if (lType !== 'All') {
       result = result.filter(r => r.type === lType);
+    }
+
+    // Difficulty filter
+    if (lDiff !== 'All') {
+      result = result.filter(r => r.difficulty === lDiff);
     }
 
     // Cost/Access filter
@@ -2043,7 +2065,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     }
 
     return result;
-  }, [libFuse, lSrch, lCat, lType, lFreeOnly, lSubTab, lSort, user]);
+  }, [libFuse, lSrch, lCat, lType, lDiff, lFreeOnly, lSubTab, lSort, user]);
   const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
   const calcR   = useMemo(()=>{
@@ -3211,6 +3233,14 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <option value="Community">Communities</option>
             </select>
 
+            {/* Prep Level / Difficulty filter */}
+            <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lDiff} onChange={e => setLDiff(e.target.value)}>
+              <option value="All">All Prep Levels</option>
+              <option value="Introductory">Introductory</option>
+              <option value="AP / Intermediate">AP / Intermediate</option>
+              <option value="Undergrad / Advanced">Undergrad / Advanced</option>
+            </select>
+
             {/* Cost filter */}
             <select style={inp({width: 'auto', padding: '6px 12px', fontSize: 11})} value={lFreeOnly ? 'free' : 'all'} onChange={e => setLFreeOnly(e.target.value === 'free')}>
               <option value="all">All Budgets</option>
@@ -3225,12 +3255,13 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </select>
           </div>
 
-          {(lSrch || lCat !== 'All' || lType !== 'All' || lFreeOnly || lSort !== 'default' || lSubTab !== 'all') && (
+          {(lSrch || lCat !== 'All' || lType !== 'All' || lDiff !== 'All' || lFreeOnly || lSort !== 'default' || lSubTab !== 'all') && (
             <button
               onClick={() => {
                 setLS('');
                 setLC('All');
                 setLType('All');
+                setLDiff('All');
                 setLFreeOnly(false);
                 setLSort('default');
                 setLSubTab('all');
@@ -3246,7 +3277,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         {yt.length>0&&<div>
           <SL>Video Resources ({yt.length})</SL>
           <div style={G(2,14,{},isMobile)}>
-            {yt.map((r,i)=>(
+            {yt.map((r,i)=>{
+              const hasNotes = !!user?.resourceNotes?.[r.title];
+              return (
               <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',position:'relative'})}>
                 {/* Floating Bookmark Star Button */}
                 <button
@@ -3282,10 +3315,16 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                   <span style={pill('rgba(239,68,68,0.85)','white',{position:'absolute',top:10,right:10,fontSize:10,borderRadius:5})}>YouTube</span>
                 </div>
                 <div style={{padding:'14px 18px'}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,marginBottom:5,fontFamily:C.FD}}>{r.title}</div>
+                  <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 5})}>
+                    <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
+                  </div>
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
-                  <div style={R({justifyContent:'space-between'})}>
-                    <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
+                  <div style={R({justifyContent:'space-between', flexWrap: 'wrap', gap: 8})}>
+                    <div style={R({gap:6})}>
+                      <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
+                      <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
+                    </div>
                     <div style={R({gap:8})}>
                       {/* Studied checkbox / check pill */}
                       <button
@@ -3305,12 +3344,62 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                         <BadgeCheck size={11} fill={user?.studied?.includes(r.title) ? "currentColor" : "none"} />
                         {user?.studied?.includes(r.title) ? 'Studied' : 'Mark Studied'}
                       </button>
+
+                      {/* Notes Toggle Button */}
+                      <button
+                        onClick={() => setOpenNotes(prev => ({ ...prev, [r.title]: !prev[r.title] }))}
+                        style={{
+                          ...btnSm(openNotes[r.title] ? C.violetDim : 'transparent', {
+                            color: openNotes[r.title] ? C.violetL : C.t3,
+                            borderColor: openNotes[r.title] ? `${C.violet}40` : `${C.b2}`,
+                            fontSize: 10,
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          })
+                        }}
+                      >
+                        <ScrollText size={11} />
+                        {openNotes[r.title] ? 'Hide Notes' : 'Notes'}
+                      </button>
+
                       <button style={{...btnSm('rgba(239,68,68,0.15)',{color:'#f87171',border:'1px solid rgba(239,68,68,0.3)',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>setVM({ytId:r.ytId,title:r.title,url:r.url})}><Play size={11} fill="currentColor"/>Watch</button>
                     </div>
                   </div>
+                  {openNotes[r.title] && (
+                    <div style={{
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTop: `1px dashed ${C.b1}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8
+                    }}>
+                      <div style={lbl({marginBottom:0})}>My Personal Study Notes</div>
+                      <textarea
+                        style={inp({
+                          minHeight: 80,
+                          resize: 'vertical',
+                          fontSize: 12,
+                          lineHeight: 1.5,
+                          background: 'rgba(255,255,255,0.02)',
+                          fontFamily: C.FB
+                        })}
+                        placeholder="Write your key takeaways, formulas, or concepts from this resource here..."
+                        value={user?.resourceNotes?.[r.title] || ''}
+                        onChange={e => {
+                          const notesVal = e.target.value;
+                          const nextNotes = { ...(user.resourceNotes || {}), [r.title]: notesVal };
+                          saveUser({ ...user, resourceNotes: nextNotes });
+                        }}
+                      />
+                      <div style={{fontSize: 10, color: C.t3, textAlign: 'right'}}>Auto-saved to your study profile</div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
-            ))}
+            )})}
           </div>
         </div>}
 
@@ -3322,6 +3411,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               const col=tc[r.type]||C.t2;
               const isSaved = user?.bookmarks?.includes(r.title);
               const isStudied = user?.studied?.includes(r.title);
+              const hasNotes = !!user?.resourceNotes?.[r.title];
               return(
                 <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s',position:'relative'})}>
                   <div style={R({justifyContent:'space-between',marginBottom:12})}>
@@ -3329,6 +3419,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                     <div style={R({gap:6})}>
                       {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
                       <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
+                      <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
 
                       {/* Floating save bookmark */}
                       <button
@@ -3350,35 +3441,89 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                       </button>
                     </div>
                   </div>
-                  <div style={{fontSize:14,fontWeight:700,color:C.t1,marginBottom:6,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                  <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6})}>
+                    <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{r.title}</div>
+                    {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
+                  </div>
                   <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
-                  <div style={R({justifyContent:'space-between'})}>
+                  <div style={R({justifyContent:'space-between', flexWrap: 'wrap', gap: 8})}>
                     <a href={r.url} target="_blank" rel="noreferrer" style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}30`,textDecoration:'none',fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>Open<ExternalLink size={11}/></a>
 
-                    {/* Studied checkbox / check pill */}
-                    <button
-                      onClick={() => toggleStudied(r.title)}
-                      style={{
-                        ...btnSm(isStudied ? `${C.green}18` : 'transparent', {
-                          color: isStudied ? C.greenL : C.t3,
-                          borderColor: isStudied ? `${C.green}40` : `${C.b2}`,
-                          fontSize: 10,
-                          padding: '4px 8px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4
-                        })
-                      }}
-                    >
-                      <BadgeCheck size={11} fill={isStudied ? "currentColor" : "none"} />
-                      {isStudied ? 'Studied' : 'Mark Studied'}
-                    </button>
+                    <div style={R({gap:8})}>
+                      {/* Studied checkbox / check pill */}
+                      <button
+                        onClick={() => toggleStudied(r.title)}
+                        style={{
+                          ...btnSm(isStudied ? `${C.green}18` : 'transparent', {
+                            color: isStudied ? C.greenL : C.t3,
+                            borderColor: isStudied ? `${C.green}40` : `${C.b2}`,
+                            fontSize: 10,
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          })
+                        }}
+                      >
+                        <BadgeCheck size={11} fill={isStudied ? "currentColor" : "none"} />
+                        {isStudied ? 'Studied' : 'Mark Studied'}
+                      </button>
+
+                      {/* Notes Toggle Button */}
+                      <button
+                        onClick={() => setOpenNotes(prev => ({ ...prev, [r.title]: !prev[r.title] }))}
+                        style={{
+                          ...btnSm(openNotes[r.title] ? C.violetDim : 'transparent', {
+                            color: openNotes[r.title] ? C.violetL : C.t3,
+                            borderColor: openNotes[r.title] ? `${C.violet}40` : `${C.b2}`,
+                            fontSize: 10,
+                            padding: '4px 8px',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4
+                          })
+                        }}
+                      >
+                        <ScrollText size={11} />
+                        {openNotes[r.title] ? 'Hide Notes' : 'Notes'}
+                      </button>
+                    </div>
                   </div>
+                  {openNotes[r.title] && (
+                    <div style={{
+                      marginTop: 12,
+                      paddingTop: 12,
+                      borderTop: `1px dashed ${C.b1}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 8
+                    }}>
+                      <div style={lbl({marginBottom:0})}>My Personal Study Notes</div>
+                      <textarea
+                        style={inp({
+                          minHeight: 80,
+                          resize: 'vertical',
+                          fontSize: 12,
+                          lineHeight: 1.5,
+                          background: 'rgba(255,255,255,0.02)',
+                          fontFamily: C.FB
+                        })}
+                        placeholder="Write your key takeaways, formulas, or concepts from this resource here..."
+                        value={user?.resourceNotes?.[r.title] || ''}
+                        onChange={e => {
+                          const notesVal = e.target.value;
+                          const nextNotes = { ...(user.resourceNotes || {}), [r.title]: notesVal };
+                          saveUser({ ...user, resourceNotes: nextNotes });
+                        }}
+                      />
+                      <div style={{fontSize: 10, color: C.t3, textAlign: 'right'}}>Auto-saved to your study profile</div>
+                    </div>
+                  )}
                 </motion.div>
               );})}
           </div>
         </div>}
-        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');setLType('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}/>}
+        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}/>}
       </div>
     );
   }
