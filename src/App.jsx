@@ -2047,7 +2047,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       result = result.filter(r => r.free);
     }
 
-    // Sub-tab filter (All, Saved, Completed)
+    // Sub-tab filter (All, Saved, Completed, Notes)
     if (user) {
       if (lSubTab === 'saved') {
         const bms = user.bookmarks || [];
@@ -2055,6 +2055,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       } else if (lSubTab === 'completed') {
         const studied = user.studied || [];
         result = result.filter(r => studied.includes(r.title));
+      } else if (lSubTab === 'notes') {
+        const notesObj = user.resourceNotes || {};
+        result = result.filter(r => notesObj[r.title] && notesObj[r.title].trim());
       }
     }
 
@@ -3140,8 +3143,62 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       }
     }
 
+    function exportAllNotes() {
+      if (!user?.resourceNotes) {
+        toast.error("No study notes found to export.");
+        return;
+      }
+      const noteKeys = Object.keys(user.resourceNotes).filter(k => user.resourceNotes[k]?.trim());
+      if (noteKeys.length === 0) {
+        toast.error("No study notes found to export.");
+        return;
+      }
+
+      let md = `# MedSchoolPrep — My Study Notes Library\n`;
+      md += `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}\n`;
+      md += `Pre-Med Student: ${user.name || 'Aspiring Physician'}\n`;
+      md += `Active Pathway: ${curPath?.label || 'General Pre-Health'}\n`;
+      md += `Total Notes Logged: ${noteKeys.length} resources\n`;
+      md += `========================================================================\n\n`;
+
+      // Group by category
+      const notesByCat = {};
+      ELIB.forEach(r => {
+        const note = user.resourceNotes[r.title];
+        if (note && note.trim()) {
+          if (!notesByCat[r.cat]) notesByCat[r.cat] = [];
+          notesByCat[r.cat].push({ r, note });
+        }
+      });
+
+      Object.keys(notesByCat).sort().forEach(cat => {
+        md += `📂 CATEGORY: ${cat.toUpperCase()}\n`;
+        md += `------------------------------------------------------------------------\n\n`;
+        notesByCat[cat].forEach(({ r, note }) => {
+          md += `### 📄 ${r.title}\n`;
+          md += `- **Type**: ${r.type} (${r.difficulty})\n`;
+          md += `- **Resource Link**: ${r.url}\n`;
+          md += `- **Quick Description**: ${r.desc}\n\n`;
+          md += `📝 **My Study Notes & Key Takeaways**:\n`;
+          md += `${note.trim()}\n\n`;
+          md += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        });
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${(user.name || 'my').toLowerCase().replace(/\s+/g, '-')}-study-notes.md`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Successfully exported study notes to Markdown file!", { icon: '📝' });
+    }
+
     const savedCount = (user?.bookmarks || []).length;
     const completedCount = (user?.studied || []).length;
+    const notesCount = Object.keys(user?.resourceNotes || {}).filter(k => user.resourceNotes[k]?.trim()).length;
     const pct = Math.round((completedCount / ELIB.length) * 100) || 0;
 
     return(
@@ -3177,37 +3234,63 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </div>
 
         {/* E-Library Inner Sub-Tabs */}
-        <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 10, gap: 10, flexWrap: 'wrap'})}>
-          {[
-            { id: 'all', label: 'All Resources', icon: BookOpen },
-            { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark },
-            { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck }
-          ].map(tab => {
-            const Icon = tab.icon;
-            const active = lSubTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setLSubTab(tab.id)}
-                style={{
-                  ...btnSm(active ? C.blueDim : 'transparent', {
-                    color: active ? C.blueL : C.t2,
-                    border: active ? `1px solid ${C.blue}30` : '1px solid transparent',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 6,
-                    padding: '8px 16px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    borderRadius: 8
-                  })
-                }}
-              >
-                <Icon size={14} />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 10, gap: 10, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'})}>
+          <div style={R({gap: 10, flexWrap: 'wrap'})}>
+            {[
+              { id: 'all', label: 'All Resources', icon: BookOpen },
+              { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark },
+              { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck },
+              { id: 'notes', label: `My Notes (${notesCount})`, icon: ScrollText }
+            ].map(tab => {
+              const Icon = tab.icon;
+              const active = lSubTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setLSubTab(tab.id)}
+                  style={{
+                    ...btnSm(active ? C.blueDim : 'transparent', {
+                      color: active ? C.blueL : C.t2,
+                      border: active ? `1px solid ${C.blue}30` : '1px solid transparent',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '8px 16px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      borderRadius: 8
+                    })
+                  }}
+                >
+                  <Icon size={14} />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {notesCount > 0 && (
+            <button
+              onClick={exportAllNotes}
+              style={{
+                ...btnSm(C.violetDim, {
+                  color: C.violetL,
+                  borderColor: `${C.violet}40`,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '8px 16px',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  borderRadius: 8
+                })
+              }}
+              title="Download all your custom notes as a beautifully formatted Markdown file"
+            >
+              <FileDown size={14} />
+              Export Notes (.md)
+            </button>
+          )}
         </div>
 
         {/* Row 1 Filter: Search and Category */}
@@ -3273,6 +3356,51 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </button>
           )}
         </div>
+
+        {/* Dynamic Coaching Tip Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: -5 }}
+          animate={{ opacity: 1, y: 0 }}
+          key={lCat}
+          style={{
+            ...glass({
+              padding: '14px 18px',
+              background: `linear-gradient(135deg, ${C.blueDim}80, rgba(147, 51, 234, 0.04))`,
+              border: `1px dashed rgba(45, 127, 255, 0.25)`
+            }),
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
+          }}
+        >
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: `${C.blueDim}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            border: `1.5px solid rgba(45, 127, 255, 0.2)`
+          }}>
+            <Lightbulb size={16} color={C.blueL} />
+          </div>
+          <div>
+            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>METABRAIN COACHING INSIGHT</div>
+            <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 2}}>
+              {
+                lCat === 'Life Sciences' ? "In Life Sciences, focus on active recall. Rather than re-reading chapters, use our Flashcards workspace or sketch pathways from memory. Use BioMan Biology or HHMI for interactive visual reinforcement." :
+                lCat === 'Physical Sciences' ? "In Physical Sciences, problem-solving is king. After reading about laws or formulas, work through practice problems from MIT OCW or watch walkthroughs by The Organic Chemistry Tutor." :
+                lCat === 'Behavioral & Social Sciences' ? "Behavioral sciences connect biology to society. Many medical colleges seek candidates with deep cultural competence. Yale's Science of Well-Being is a fantastic, stress-busting primer." :
+                lCat === 'Research Methods' ? "Clinical and basic science research is a major pre-med differentiator. Explore Science Journal for Kids or the NIH archive to learn how real scientific hypotheses are formulated and tested." :
+                lCat === 'Test Prep' ? "Consistency beats cramming. Use Anki for spaced repetition and take advantage of official, free Khan Academy Digital SAT/ACT materials. Tackling 10-15 questions daily yields huge score gains!" :
+                lCat === 'Admissions & Planning' ? "Medical school admissions committee members look for holistic preparation. Study the AAMC Core Competencies to see how your extracurriculars, clinical hours, and volunteering align with entering student expectations." :
+                "Welcome to your resource library! High-achieving pre-health students build strong habits early. Try bookmarking 3-4 key resources and setting a personal weekly goal to study at least one."
+              }
+            </div>
+          </div>
+        </motion.div>
 
         {/* Video Resources Section */}
         {yt.length>0&&<div>
@@ -3524,7 +3652,27 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               );})}
           </div>
         </div>}
-        {fLib.length===0&&<EmptyState icon={BookOpen} accent={accent} title="No resources match" body="Try a different search term or category filter." actionLabel="Clear Filters" onAction={()=>{setLS('');setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}/>}
+        {fLib.length===0&& (
+          lSubTab === 'notes' ? (
+            <EmptyState
+              icon={ScrollText}
+              accent={C.violet}
+              title="No Study Notes Yet"
+              body="You haven't written any custom study notes. Click 'Notes' on any resource card to write key formulas, concepts, or takeaways!"
+              actionLabel="Browse All Resources"
+              onAction={() => setLSubTab('all')}
+            />
+          ) : (
+            <EmptyState
+              icon={BookOpen}
+              accent={accent}
+              title="No resources match"
+              body="Try a different search term or category filter."
+              actionLabel="Clear Filters"
+              onAction={()=>{setLS('');setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');}}
+            />
+          )
+        )}
       </div>
     );
   }
