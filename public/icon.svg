@@ -1,17 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2d7fff"/>
-      <stop offset="1" stop-color="#1a4fd6"/>
+      <stop offset="0" stop-color="#274873"/>
+      <stop offset="1" stop-color="#13233b"/>
     </linearGradient>
-    <linearGradient id="mark" x1="0" y1="100" x2="100" y2="0" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#eaf2ff"/>
-      <stop offset="1" stop-color="#ffffff"/>
+    <linearGradient id="gold" x1="50" y1="18" x2="50" y2="90" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#e3c47c"/>
+      <stop offset="1" stop-color="#b3894a"/>
     </linearGradient>
   </defs>
   <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-  <!-- ascending path: three rising steps resolving into a peak/checkmark, admissions-neutral growth motif -->
-  <path d="M20 66 L38 66 L38 50 L54 50 L54 34 L64 34" fill="none" stroke="url(#mark)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity="0.55"/>
-  <path d="M20 72 L37 55 L50 64 L80 30" fill="none" stroke="url(#mark)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M64 30 L80 30 L80 46" fill="none" stroke="url(#mark)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- crest / shield -->
+  <path d="M50 21 L75 30.5 V54 C75 71 64.5 82 50 87 C35.5 82 25 71 25 54 V30.5 Z"
+        fill="#ffffff" fill-opacity="0.06" stroke="url(#gold)" stroke-width="3.4" stroke-linejoin="round"/>
+  <!-- open book -->
+  <path d="M50 47 V71 C46 67.5 41 65.5 34.5 65.5 V44 C41 44 46 45.5 50 47 Z"
+        fill="#f4ecd8" fill-opacity="0.92"/>
+  <path d="M50 47 V71 C54 67.5 59 65.5 65.5 65.5 V44 C59 44 54 45.5 50 47 Z"
+        fill="#f4ecd8" fill-opacity="0.75"/>
+  <path d="M50 47 V71" stroke="#13233b" stroke-width="1.1"/>
+  <!-- cross at the crest peak -->
+  <rect x="46.6" y="27" width="6.8" height="17" rx="1.2" fill="url(#gold)"/>
+  <rect x="41.5" y="32.1" width="17" height="6.8" rx="1.2" fill="url(#gold)"/>
 </svg>
