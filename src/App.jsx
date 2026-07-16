@@ -4599,7 +4599,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <div style={{position:'absolute',bottom:'-10%',left:'-5%',width:'35vw',height:'35vw',borderRadius:'50%',background:`radial-gradient(circle,rgba(6,182,212,0.07),transparent 65%)`,pointerEvents:'none'}}/>
           <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
             <div style={{textAlign:'center',marginBottom:36}}>
-              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(45,127,255,0.25),0 0 80px rgba(45,127,255,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
+              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(201,162,74,0.25),0 0 80px rgba(201,162,74,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
               <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
               <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and a personalized path into medicine — for high schoolers heading toward a health career.</p>
             </div>
