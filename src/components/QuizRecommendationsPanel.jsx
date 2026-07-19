@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2 } from 'lucide-react';
+import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Zap } from 'lucide-react';
 import { C, glass, glass2, btn, pill } from '../lib/theme';
 import { rankLabel } from '../lib/recommend';
 
@@ -99,6 +99,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMetabra
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
               <span style={pill(`${C.amber}20`, C.amberL, { fontSize: 10, fontWeight: 800 })}>{rankLabel(1).toUpperCase()}</span>
               <span style={pill(`${topColor}18`, topColor, { fontSize: 10 })}>{top.quiz.diff}</span>
+              <span style={{ ...pill(C.violetDim, C.violetL, { fontSize: 9.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}><Zap size={9} />Bonus XP</span>
               <span style={{ fontSize: 11, color: C.t3 }}>{top.quiz.cat}</span>
             </div>
             <div style={{ fontSize: compact ? 15 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4, lineHeight: 1.3 }}>{top.quiz.title}</div>
@@ -151,6 +152,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMetabra
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.quiz.title}</span>
                     <span style={pill(`${dc}18`, dc, { fontSize: 9 })}>{p.quiz.diff}</span>
+                    <span style={{ ...pill(C.violetDim, C.violetL, { fontSize: 9, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}><Zap size={8} />Bonus XP</span>
                   </div>
                   <div style={{ fontSize: 11, color: C.t3 }}>{p.reason}</div>
                 </div>

@@ -71,3 +71,9 @@ export function celebrateJackpot() {
 export function celebrateChestOpen() {
   confetti({ particleCount: 70, spread: 75, origin: { y: 0.55 }, colors: MULTI, scalar: 1, ticks: 200 });
 }
+
+/** Metabrain pick bonus — violet-tinted burst for finishing a currently-recommended quiz. */
+export function celebrateMetabrainPick() {
+  const VIOLET = ['#8b5cf6', '#a78bfa', '#c4b5fd'];
+  confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 }, colors: VIOLET, scalar: 1, ticks: 180 });
+}

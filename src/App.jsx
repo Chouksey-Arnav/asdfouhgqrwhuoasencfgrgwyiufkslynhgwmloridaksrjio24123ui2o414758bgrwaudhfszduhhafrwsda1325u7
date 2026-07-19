@@ -41,7 +41,7 @@ import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi'
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
 import { play, setSFX } from './lib/sounds';
-import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
+import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot, celebrateMetabrainPick } from './lib/celebrate';
 import { awardXP, BONUS_COPY } from './lib/rewards';
 import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
@@ -1572,9 +1572,12 @@ export default function App({ account, onAccountChange }) {
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
   const rankedQuizzes = useMemo(()=>rankQuizzes({
     quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
-    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:6,
+    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:9,
   }),[qScores,catAverages,courseCats,curPath]);
   const topPick = rankedQuizzes[0];
+  // Quick lookup so any quiz card/finish-handler can tell "is this currently one of
+  // Metabrain's ranked picks?" without re-scanning the ranked array every render.
+  const rankedQuizRankById = useMemo(()=>Object.fromEntries(rankedQuizzes.map(p=>[p.quiz.id,p.rank])),[rankedQuizzes]);
 
   // Optional one-line Metabrain (Groq) narration of the #1 pick — the ranking
   // above is fully deterministic and never depends on this; it's cosmetic.
@@ -2008,12 +2011,24 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
     const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
-    const newUser={...user,xp:(user?.xp||0)+xpGain};
+    // Metabrain follow-through bonus — a flat, deterministic top-up (separate from the
+    // variable-ratio roll above) for finishing a quiz that was one of Metabrain's ranked
+    // picks *before* you started it. Rewards trusting the recommendation, not luck.
+    const wasMetabrainPick = rankedQuizRankById[aQuiz.id] !== undefined;
+    const METABRAIN_BONUS_XP = 8;
+    const totalXPGain = xpGain + (wasMetabrainPick ? METABRAIN_BONUS_XP : 0);
+    const newUser={...user,xp:(user?.xp||0)+totalXPGain};
     saveUser(newUser);
     if(quizTier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(quizTier==='big'||quizTier==='bonus'){celebrateBonusXP();}
     toast.success(`${pct}% · ${BONUS_COPY[quizTier](xpGain)}`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:quizTier==='jackpot'?4000:3000});
-    if(pct===100)setTimeout(()=>toast.success(pickNudge('perfect_quiz',{lesson:aQuiz.title}),{icon:<Star size={16}/>,duration:3500}),350);
+    if(wasMetabrainPick){
+      setTimeout(()=>{
+        celebrateMetabrainPick();
+        toast.success(`+${METABRAIN_BONUS_XP} XP ✨ Metabrain pick bonus — you followed rank #${rankedQuizRankById[aQuiz.id]}!`,{icon:<Brain size={16}/>,duration:3200});
+      },250);
+    }
+    if(pct===100)setTimeout(()=>toast.success(pickNudge('perfect_quiz',{lesson:aQuiz.title}),{icon:<Star size={16}/>,duration:3500}),wasMetabrainPick?600:350);
     const newQCount=qTaken+1;
     checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
@@ -2728,8 +2743,10 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         <div style={G(2,14,{},isMobile)}>
           {fQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;
+            const brainRank=rankedQuizRankById[q.id];
             return(
-              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden'}),transition:'box-shadow .2s'}}>
+              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden',position:'relative'}),transition:'box-shadow .2s',border:brainRank?`1px solid ${C.violet}35`:glass().border}}>
+                {brainRank&&<div style={{position:'absolute',top:12,right:12,zIndex:1,display:'inline-flex',alignItems:'center',gap:4,padding:'3px 9px',borderRadius:20,background:'rgba(139,92,246,0.16)',border:`1px solid ${C.violet}40`,backdropFilter:'blur(6px)'}}><Brain size={10} color={C.violetL}/><span style={{fontSize:9.5,fontWeight:800,color:C.violetL,letterSpacing:'.03em'}}>METABRAIN #{brainRank}</span></div>}
                 {taken&&<div style={{height:3,background:`linear-gradient(90deg,${scc},${scc}88)`}}/>}
                 <div style={{padding:22}}>
                   <div style={R({marginBottom:14,flexWrap:'wrap'})}>
