@@ -1451,6 +1451,25 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
+  // First-time onboarding: creates the local (per-device) profile immediately so the app feels
+  // instant, and separately pushes name/onboardingComplete to the Supabase-backed account —
+  // fire-and-forget, since local state is already the source of truth for this render.
+  const completeOnboarding = useCallback(()=>{
+    const name=uname.trim();
+    if(!name)return;
+    saveUser({ name, specialty:'exploring', xp:0, streak:1, lastActive:Date.now() });
+    AuthAPI.updateMe({ name, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
+    goPrep('diagnostic');
+    toast.success(pickNudge('welcome_new_user',{name}));
+    setTimeout(startTour,900);
+  },[uname,saveUser,goPrep,onAccountChange,startTour]);
+  // Cross-device: if this device has no local profile yet but the signed-in account already
+  // finished onboarding elsewhere, rebuild the local profile from the account instead of asking
+  // for their name again.
+  useEffect(()=>{
+    if(!dbReady||user||!account?.onboardingComplete||!account?.name)return;
+    saveUser({ name:account.name, specialty:'exploring', gradeStage:account.gradeLevel||null, xp:0, streak:1, lastActive:Date.now() });
+  },[dbReady,user,account,saveUser]);
   // A lesson only counts toward mastery/unlock-gating once it's actually verified (curated quiz
   // passed) — for lessons with no quizIds yet (pathways not migrated to the new model this pass),
   // presence in `pathway` is still enough, matching the original self-report behavior.
@@ -4785,9 +4804,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <div style={glass({padding:32})}>
               <span style={lbl()}>Your first name</span>
               <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
-                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));setTimeout(startTour,900);}}}/>
+                onKeyDown={e=>{if(e.key==='Enter')completeOnboarding();}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
-                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));setTimeout(startTour,900);}}>
+                onClick={completeOnboarding}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
