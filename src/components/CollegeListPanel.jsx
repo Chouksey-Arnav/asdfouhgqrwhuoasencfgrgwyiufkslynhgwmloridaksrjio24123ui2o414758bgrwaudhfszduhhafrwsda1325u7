@@ -59,17 +59,28 @@ export default function CollegeListPanel({ accent = C.blue }) {
 
   async function addCollege() {
     if (!newName.trim()) return;
+    // The college row and its checklist are created in two separate steps below on purpose: if
+    // the college create fails, nothing happened and it's safe to just show the error. But if
+    // the college succeeds and only the checklist fails, the college already exists server-side
+    // — reflecting that in the UI immediately (instead of only after the checklist too) stops a
+    // retry from creating a second, duplicate row for the same school.
+    let college;
     try {
-      const college = await createItem('colleges', { name: newName.trim(), category: newCategory, status: 'researching' });
+      college = await createItem('colleges', { name: newName.trim(), category: newCategory, status: 'researching' });
+    } catch (err) {
+      toast.error(err.message);
+      return;
+    }
+    setColleges(prev => [...prev, college]);
+    setNewName('');
+    toast.success(`${college.name} added to your list`);
+    try {
       const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
         createItem('college_checklist_items', { college_id: college.id, label, sort_order: i })
       ));
-      setColleges(prev => [...prev, college]);
       setChecklists(prev => ({ ...prev, [college.id]: items }));
-      setNewName('');
-      toast.success(`${college.name} added to your list`);
     } catch (err) {
-      toast.error(err.message);
+      toast.error(`Added ${college.name}, but its default checklist failed to load: ${err.message}`);
     }
   }
 
@@ -79,6 +90,7 @@ export default function CollegeListPanel({ accent = C.blue }) {
   }
 
   async function removeCollege(id) {
+    if (!window.confirm('Remove this school from your list? This also deletes its checklist.')) return;
     setColleges(prev => prev.filter(c => c.id !== id));
     try { await deleteItem('colleges', id); } catch (err) { toast.error(err.message); }
   }

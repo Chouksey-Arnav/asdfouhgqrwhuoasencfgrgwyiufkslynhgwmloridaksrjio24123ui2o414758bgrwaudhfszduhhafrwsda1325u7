@@ -43,6 +43,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
 
   async function addActivity() {
     if (!draft.position.trim()) return;
+    if (Number(draft.hours_per_week) < 0 || Number(draft.weeks_per_year) < 0) { toast.error("Hours/weeks can't be negative."); return; }
     try {
       const row = await createItem('activities', {
         ...draft,
@@ -59,6 +60,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   }
 
   async function removeActivity(id) {
+    if (!window.confirm('Delete this activity?')) return;
     setActivities(prev => prev.filter(a => a.id !== id));
     try { await deleteItem('activities', id); } catch (err) { toast.error(err.message); }
   }
@@ -78,12 +80,15 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   }
 
   async function removeAward(id) {
+    if (!window.confirm('Delete this award?')) return;
     setAwards(prev => prev.filter(a => a.id !== id));
     try { await deleteItem('awards', id); } catch (err) { toast.error(err.message); }
   }
 
   async function addGpaEntry() {
     if (!gpaDraft.term.trim() || !gpaDraft.gpa) return;
+    const gpaNum = Number(gpaDraft.gpa);
+    if (gpaNum < 0 || gpaNum > 4.3) { toast.error('GPA must be between 0 and 4.3.'); return; }
     try {
       const row = await createItem('gpa_entries', { ...gpaDraft, gpa: Number(gpaDraft.gpa) });
       setGpaEntries(prev => [...prev, row]);
@@ -93,6 +98,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   }
 
   async function removeGpaEntry(id) {
+    if (!window.confirm('Delete this GPA entry?')) return;
     setGpaEntries(prev => prev.filter(g => g.id !== id));
     try { await deleteItem('gpa_entries', id); } catch (err) { toast.error(err.message); }
   }
@@ -242,8 +248,8 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
           <textarea style={{...inp(),minHeight:44,resize:'vertical'}} value={draft.impact} onChange={e=>setDraft({...draft,impact:e.target.value})} placeholder="e.g. Grew membership from 12 to 40 students" />
         </div>
         <div style={G(2,10,{marginTop:10},true)}>
-          <div><label style={lbl()}>Hours / week</label><input type="number" style={inp()} value={draft.hours_per_week} onChange={e=>setDraft({...draft,hours_per_week:e.target.value})} /></div>
-          <div><label style={lbl()}>Weeks / year</label><input type="number" style={inp()} value={draft.weeks_per_year} onChange={e=>setDraft({...draft,weeks_per_year:e.target.value})} /></div>
+          <div><label style={lbl()}>Hours / week</label><input type="number" min="0" style={inp()} value={draft.hours_per_week} onChange={e=>setDraft({...draft,hours_per_week:e.target.value})} /></div>
+          <div><label style={lbl()}>Weeks / year</label><input type="number" min="0" style={inp()} value={draft.weeks_per_year} onChange={e=>setDraft({...draft,weeks_per_year:e.target.value})} /></div>
         </div>
         <div style={{marginTop:10}}>
           <label style={lbl()}>Grade levels involved</label>

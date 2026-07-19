@@ -415,7 +415,7 @@ export const SCENARIOS = {
     `A short session today is an easy way to get back on track.`,
   ]},
 
-  // ── Welcoming-back (4 scenarios) ────────────────────────────────────────────
+  // ── Welcoming-back (3 scenarios), plus first-time welcome below ────────────
   comeback_short: { tone: 'welcome', cores: [
     `Good to see you back after a day off. Right back into it.`,
     `One day away, no big deal. Let's pick up where you left off.`,
@@ -443,7 +443,10 @@ export const SCENARIOS = {
     `Welcome back. Start with one easy lesson today and let the momentum rebuild.`,
     `It's been a stretch since your last session — glad you're picking it back up.`,
   ]},
-  welcome_new_user: { tone: 'welcome', cores: [
+  // Shares the 'kickoff' tag pool (not 'welcome') deliberately — the 'welcome' tags are all
+  // written for someone *returning* after a gap ("whatever kept you away", "glad you're back"),
+  // which is wrong for a user who has never been here before.
+  welcome_new_user: { tone: 'kickoff', cores: [
     `Welcome to MedSchoolPrep, {name}. Let's find the pathway that actually fits you.`,
     `Glad you're here, {name}. Everything from here builds toward a real, verified pathway.`,
     `Welcome aboard, {name}. Take the diagnostic and let's get your pathway started.`,

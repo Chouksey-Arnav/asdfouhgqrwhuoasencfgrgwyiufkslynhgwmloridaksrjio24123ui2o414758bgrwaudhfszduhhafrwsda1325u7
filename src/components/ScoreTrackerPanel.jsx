@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Line } from 'react-chartjs-2';
 import { Plus, Trash2, Target, Sparkles, Brain, Trophy, Zap, TrendingUp, CheckCircle2, ChevronRight } from 'lucide-react';
@@ -17,7 +18,22 @@ const ACT_SECTIONS = [
   { key: 'science', label: 'Science', max: 36, placeholder: 'e.g. 31' }
 ];
 
+function SL({ children, extra = {} }) { return <div style={{fontSize:11,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:14,...extra}}>{children}</div>; }
+
+function useMediaQuery(query) {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    setMatches(m.matches);
+    const l = (e) => setMatches(e.matches);
+    m.addEventListener('change', l);
+    return () => m.removeEventListener('change', l);
+  }, [query]);
+  return matches;
+}
+
 export default function ScoreTrackerPanel({ accent = C.blue }) {
+  const isMobile = useMediaQuery('(max-width: 768px)');
   const [scores, setScores] = useState([]);
   const [loading, setLoading] = useState(true);
   const [testType, setTestType] = useState('SAT');
@@ -68,6 +84,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
   }
 
   async function removeScore(id) {
+    if (!window.confirm('Delete this test score entry?')) return;
     setScores(prev => prev.filter(s => s.id !== id));
     try {
       await deleteItem('test_scores', id);

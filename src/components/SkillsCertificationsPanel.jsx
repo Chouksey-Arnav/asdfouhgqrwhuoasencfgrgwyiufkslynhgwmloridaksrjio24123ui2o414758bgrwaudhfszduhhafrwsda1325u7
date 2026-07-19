@@ -40,6 +40,7 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
   }
 
   async function removeEntry(id) {
+    if (!window.confirm('Delete this certification?')) return;
     setEntries(prev => prev.filter(e => e.id !== id));
     try { await deleteItem('skills_certifications', id); } catch (err) { toast.error(err.message); }
   }

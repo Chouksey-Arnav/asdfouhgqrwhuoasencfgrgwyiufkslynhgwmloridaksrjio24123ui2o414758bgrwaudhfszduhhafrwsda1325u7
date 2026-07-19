@@ -49,6 +49,7 @@ export default function ClinicalHoursPanel({ accent = C.blue, onLogged }) {
   }
 
   async function removeEntry(id) {
+    if (!window.confirm('Delete this logged hours entry?')) return;
     setEntries(prev => prev.filter(e => e.id !== id));
     try { await deleteItem('clinical_hours', id); } catch (err) { toast.error(err.message); }
   }

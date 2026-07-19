@@ -50,6 +50,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
   }
 
   async function removeEntry(id) {
+    if (!window.confirm('Remove this recommender?')) return;
     setEntries(prev => prev.filter(e => e.id !== id));
     try { await deleteItem('recommenders', id); onChange?.(); } catch (err) { toast.error(err.message); }
   }

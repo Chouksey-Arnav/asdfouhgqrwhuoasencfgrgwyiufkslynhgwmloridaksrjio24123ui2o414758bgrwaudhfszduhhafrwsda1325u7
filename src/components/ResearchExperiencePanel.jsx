@@ -45,6 +45,7 @@ export default function ResearchExperiencePanel({ accent = C.blue }) {
   }
 
   async function removeEntry(id) {
+    if (!window.confirm('Delete this research experience?')) return;
     setEntries(prev => prev.filter(e => e.id !== id));
     try { await deleteItem('research_experience', id); } catch (err) { toast.error(err.message); }
   }

@@ -44,9 +44,40 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
     }).catch(() => {});
   }, [selected?.id]);
 
+  // Everything else in this panel (title, status, prompt, word limit) autosaves on blur — the
+  // Draft textarea shouldn't be the one field that silently discards work if the student switches
+  // essays or navigates away before hitting "Save Version". This is a plain autosave of the
+  // current content (not a version-history checkpoint, which stays an explicit user action).
+  useEffect(() => {
+    if (!selected || draft === (selected.content || '')) return;
+    const id = selected.id;
+    const t = setTimeout(() => {
+      updateItem('essays', id, { content: draft })
+        .then(() => setEssayLocal(id, { content: draft }))
+        .catch(err => toast.error(err.message));
+    }, 1200);
+    return () => clearTimeout(t);
+  }, [draft, selected]);
+
+  // Flushes any unsaved draft immediately (not waiting for the debounce above) before switching
+  // to a different essay, so a quick click right after typing can't race the autosave and lose it.
+  async function flushDraft() {
+    if (!selected || draft === (selected.content || '')) return;
+    try {
+      await updateItem('essays', selected.id, { content: draft });
+      setEssayLocal(selected.id, { content: draft });
+    } catch (err) { toast.error(err.message); }
+  }
+
+  async function selectEssay(essay) {
+    await flushDraft();
+    setSelected(essay);
+  }
+
   async function addEssay() {
     if (!newTitle.trim()) return;
     try {
+      await flushDraft();
       const essay = await createItem('essays', { title: newTitle.trim(), word_limit: 650, status: 'not_started', content: '' });
       setEssays(prev => [...prev, essay]);
       setNewTitle('');
@@ -56,6 +87,7 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   }
 
   async function removeEssay(id) {
+    if (!window.confirm('Delete this essay and its draft? This cannot be undone.')) return;
     setEssays(prev => prev.filter(e => e.id !== id));
     if (selected?.id === id) setSelected(null);
     try { await deleteItem('essays', id); } catch (err) { toast.error(err.message); }
@@ -111,7 +143,7 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
           {essays.map(essay => {
             const st = STATUSES.find(s => s.id === essay.status) || STATUSES[0];
             return (
-              <div key={essay.id} onClick={()=>setSelected(essay)} style={{...glass2({padding:12,cursor:'pointer',border:selected?.id===essay.id?`1px solid ${accent}60`:undefined})}}>
+              <div key={essay.id} onClick={()=>selectEssay(essay)} style={{...glass2({padding:12,cursor:'pointer',border:selected?.id===essay.id?`1px solid ${accent}60`:undefined})}}>
                 <div style={R({gap:8,justifyContent:'space-between'})}>
                   <span style={{fontSize:13,fontWeight:700,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{essay.title}</span>
                   <button style={btnSm(C.roseDim,{color:C.rose,padding:'3px 8px'})} onClick={e=>{e.stopPropagation();removeEssay(essay.id);}}><Trash2 size={11}/></button>
@@ -145,9 +177,9 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
               </div>
               <div>
                 <label style={lbl()}>Word limit</label>
-                <input type="number" style={inp()} value={selected.word_limit}
-                  onChange={e=>setEssayLocal(selected.id,{word_limit:Number(e.target.value)||650})}
-                  onBlur={e=>updateItem('essays', selected.id, { word_limit: Number(e.target.value)||650 }).catch(err=>toast.error(err.message))} />
+                <input type="number" min="1" style={inp()} value={selected.word_limit}
+                  onChange={e=>setEssayLocal(selected.id,{word_limit:Math.max(1,Number(e.target.value)||650)})}
+                  onBlur={e=>updateItem('essays', selected.id, { word_limit: Math.max(1,Number(e.target.value)||650) }).catch(err=>toast.error(err.message))} />
               </div>
             </div>
             <div style={{marginTop:12}}>

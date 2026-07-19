@@ -113,6 +113,14 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMetabra
                   </div>
                 </motion.div>
               )}
+              {brainNote?.rank === 1 && brainNote.text === null && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+                  <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: C.roseDim, border: `1px solid ${C.rose}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <Brain size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 2 }} />
+                    <span style={{ fontSize: 12, color: C.t2 }}>Metabrain couldn't explain this pick right now — try again in a moment.</span>
+                  </div>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch', minWidth: 140 }}>

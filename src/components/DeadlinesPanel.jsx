@@ -99,6 +99,7 @@ export default function DeadlinesPanel({ accent = C.blue }) {
   }
 
   async function removeDeadline(id) {
+    if (!window.confirm('Remove this deadline?')) return;
     setDeadlines(prev => prev.filter(d => d.id !== id));
     try { await deleteItem('deadlines', id); } catch (err) { toast.error(err.message); }
   }
