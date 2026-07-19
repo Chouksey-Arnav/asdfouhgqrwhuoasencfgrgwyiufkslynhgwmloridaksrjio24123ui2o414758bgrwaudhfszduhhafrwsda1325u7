@@ -1154,21 +1154,72 @@ export default function App({ account, onAccountChange }) {
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
 
-  // ── Post-onboarding product tour — a spotlight walkthrough of the four main ──
-  // tabs plus the ⌘K quick-switcher, offered right after a new account is created.
+  // ── Post-onboarding product tour — a guided walkthrough offered right after ──
+  // a new account is created. Opens with a welcome slide, walks the four main
+  // tabs (calling out the two or three most differentiated tools inside Prep
+  // and Portfolio rather than every sub-item), and closes with a send-off that
+  // drops the student straight into their pathway. `onSkip` (X / Escape, any
+  // step) marks the tour done quietly; `onFinish` (clicking through to the very
+  // last step) additionally celebrates and navigates — see completeTour below.
   const [tourActive, setTourActive] = useState(false);
   const startTour = useCallback(()=>setTourActive(true), []);
-  const finishTour = useCallback(()=>{
+  const markTourDone = useCallback(()=>{
     setTourActive(false);
     setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
   }, []);
+  const finishTour = useCallback(()=>{ markTourDone(); }, [markTourDone]);
+  const completeTour = useCallback(()=>{
+    markTourDone();
+    celebrateMastery();
+    goPrep('pathway');
+  }, [markTourDone, goPrep]);
   const TOUR_STEPS = useMemo(()=>[
-    { target:'nav-home', title:'Home', body:"Your daily dashboard — streak, XP, next lesson, and a snapshot of your current pathway.", onEnter:()=>setTab('home') },
-    { target:'nav-prep', title:'Prep', body:"SAT/ACT diagnostic, your pathway lessons, the quiz library, flashcards, AI Coach, and the E-Library all live here.", onEnter:()=>setTab('prep') },
-    { target:'nav-portfolio', title:'Portfolio', body:"Build your application here: college list, essays, deadlines, activities, research, recommenders, and more.", onEnter:()=>setTab('portfolio') },
-    { target:'nav-progress', title:'Progress', body:"See verified lesson completion, performance by category, and the achievements you've unlocked.", onEnter:()=>setTab('progress') },
-    { target:'cmdk', title:'Quick Jump', body:"Press ⌘K (or Ctrl+K) anytime to jump straight to any section — no clicking through menus.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[]);
+    { chapter:'Welcome', icon:Sparkles,
+      title:'Welcome to MedSchoolPrep',
+      body:"A quick tour of where everything lives — Home, Prep, Portfolio, Progress, and a couple of power tools along the way. About a minute.",
+      ctaLabel:"Let's go", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+    { target:'nav-home', chapter:'Home', icon:Home,
+      title:'Home',
+      body:"Your daily dashboard — streak, XP, level, and quick links back into whatever lesson or deck you left off.",
+      onEnter:()=>setTab('home') },
+    { target:'nav-prep', chapter:'Prep', icon:Compass,
+      title:'Prep',
+      body:"Six study tools live under this one tab: a pathway diagnostic, your personalized lesson pathway, a quiz library, spaced-repetition flashcards, an AI coach, and a resource library.",
+      onEnter:()=>goPrep('diagnostic') },
+    { target:'prep-flashcards', chapter:'Prep', icon:Layers3,
+      title:'FSRS Flashcards',
+      badge:'Same algorithm Anki uses',
+      body:"Review timing adapts to how well you actually know each card, instead of a fixed schedule — so you spend time where it counts.",
+      onEnter:()=>goPrep('flashcards') },
+    { target:'prep-coach', chapter:'Prep', icon:MessageCircle,
+      title:'Metabrain, your AI Coach',
+      body:"Ask it to explain a concept, quiz you on the spot, or build a study plan — it knows your pathway and course load.",
+      onEnter:()=>goPrep('coach') },
+    { target:'nav-portfolio', chapter:'Portfolio', icon:Building2,
+      title:'Portfolio',
+      body:"Everything for your application in one place: college list, essays, deadlines, financial aid, activities, research, clinical hours, recommenders, interview prep, test scores, and an admissions calculator.",
+      onEnter:()=>goPortfolio('overview') },
+    { target:'port-colleges', chapter:'Portfolio', icon:GraduationCap,
+      title:'College List',
+      body:"Schools sorted into Reach, Target, and Likely tiers based on your GPA, test scores, and course rigor.",
+      onEnter:()=>goPortfolio('colleges') },
+    { target:'port-deadlines', chapter:'Portfolio', icon:CalendarDays,
+      title:'Deadlines',
+      body:"Every application deadline in one countdown view, so nothing sneaks up on you.",
+      onEnter:()=>goPortfolio('deadlines') },
+    { target:'nav-progress', chapter:'Progress', icon:LineChart,
+      title:'Progress',
+      body:"Verified Progress tracks what you've actually proven (not just opened), Performance breaks down accuracy by category, and Achievements shows what you've unlocked.",
+      onEnter:()=>setTab('progress') },
+    { target:'cmdk', chapter:'Power tip', icon:Search,
+      title:'Quick Jump',
+      body:"Press ⌘K (or Ctrl+K) anytime to jump straight to any section — no clicking through menus.",
+      onEnter:()=>{setTab('home');setCmdOpen(false);} },
+    { chapter:'All set', icon:PartyPopper,
+      title:"You're all set",
+      body:"Replay this tour anytime from Account & Settings → Help. For now — let's get into it.",
+      ctaLabel:'Start studying' },
+  ],[goPrep,goPortfolio]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
@@ -4848,7 +4899,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tPrep(){
     return(
       <div>
-        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile}/>
+        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile} tourPrefix="prep"/>
         {(prepRenders[prepView]||tPath)()}
       </div>
     );
@@ -4871,7 +4922,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile}/>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile} tourPrefix="port"/>
         {(portfolioRenders[portfolioView]||tPort)()}
       </div>
     );
@@ -5040,7 +5091,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
         </AnimatePresence>
 
         {/* ══ POST-ONBOARDING PRODUCT TOUR ═════════════════════════════════════ */}
-        {tourActive && <AppTour steps={TOUR_STEPS} onFinish={finishTour} onSkip={finishTour}/>}
+        {tourActive && <AppTour steps={TOUR_STEPS} accent={accent} onFinish={completeTour} onSkip={finishTour}/>}
       </div>
     </ErrorBoundary>
   );
