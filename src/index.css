@@ -17,6 +17,11 @@ body {
 }
 #root { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
 
+/* The marketing landing page is a normal scrolling document, unlike the fixed-viewport
+   app shell above — toggled on while AuthGate shows LandingPage instead of the app/sign-in card. */
+body.msp-landing-active { overflow: auto; }
+body.msp-landing-active #root { display: block; height: auto; min-height: 100vh; overflow: visible; }
+
 /* iOS Safari auto-zooms the viewport when a focused input's computed font-size is under 16px.
    Force every form field to 16px on small screens so tapping a field never triggers that zoom
    (the viewport meta's user-scalable=no stops pinch-zoom, but not this focus-triggered zoom). */
