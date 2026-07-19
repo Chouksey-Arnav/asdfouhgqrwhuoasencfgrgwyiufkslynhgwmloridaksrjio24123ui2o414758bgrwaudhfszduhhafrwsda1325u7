@@ -1,15 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Mail, ShieldCheck, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, ShieldCheck, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { C, glass, btn, inp, lbl, R, CC } from '../lib/theme';
 import { getToken, setToken, clearToken, sendOtp, verifyOtp, fetchMe } from '../lib/authApi';
+import LandingPage from './LandingPage';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
   const [user, setUser] = useState(null);
+  const [view, setView] = useState('landing'); // landing | signin (while signedOut)
   const [step, setStep] = useState('email'); // email | code
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -76,9 +78,16 @@ export default function AuthGate({ children }) {
     return children({ user, setUser });
   }
 
+  if (view === 'landing') {
+    return <LandingPage onGetStarted={() => setView('signin')} />;
+  }
+
   return (
     <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,padding:20}}>
       <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({width:'100%',maxWidth:380,padding:32})}}>
+        <button onClick={()=>setView('landing')} style={{display:'flex',alignItems:'center',gap:6,background:'none',border:'none',cursor:'pointer',color:C.t3,fontSize:12,fontFamily:C.FB,padding:0,marginBottom:18}}>
+          <ArrowLeft size={13} /> Back to home
+        </button>
         <div style={R({gap:10,marginBottom:22})}>
           <div style={{width:34,height:34,borderRadius:9,overflow:'hidden'}}><img src="/icon.svg" width={34} height={34} alt="" /></div>
           <div>
