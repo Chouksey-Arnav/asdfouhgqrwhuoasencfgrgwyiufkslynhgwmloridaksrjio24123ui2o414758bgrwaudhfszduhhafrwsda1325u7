@@ -66,6 +66,7 @@ import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
+import AppTour from './components/AppTour';
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 
@@ -1152,6 +1153,22 @@ export default function App({ account, onAccountChange }) {
   const [progressView, setProgressView] = useState('overview'); // overview|verified|performance|achievements
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
+
+  // ── Post-onboarding product tour — a spotlight walkthrough of the four main ──
+  // tabs plus the ⌘K quick-switcher, offered right after a new account is created.
+  const [tourActive, setTourActive] = useState(false);
+  const startTour = useCallback(()=>setTourActive(true), []);
+  const finishTour = useCallback(()=>{
+    setTourActive(false);
+    setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
+  }, []);
+  const TOUR_STEPS = useMemo(()=>[
+    { target:'nav-home', title:'Home', body:"Your daily dashboard — streak, XP, next lesson, and a snapshot of your current pathway.", onEnter:()=>setTab('home') },
+    { target:'nav-prep', title:'Prep', body:"SAT/ACT diagnostic, your pathway lessons, the quiz library, flashcards, AI Coach, and the E-Library all live here.", onEnter:()=>setTab('prep') },
+    { target:'nav-portfolio', title:'Portfolio', body:"Build your application here: college list, essays, deadlines, activities, research, recommenders, and more.", onEnter:()=>setTab('portfolio') },
+    { target:'nav-progress', title:'Progress', body:"See verified lesson completion, performance by category, and the achievements you've unlocked.", onEnter:()=>setTab('progress') },
+    { target:'cmdk', title:'Quick Jump', body:"Press ⌘K (or Ctrl+K) anytime to jump straight to any section — no clicking through menus.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+  ],[]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
@@ -4628,6 +4645,13 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           </div>
         </div>
 
+        {/* Help */}
+        <div style={glass({padding:18})}>
+          <SL>Help</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the guided tour of Home, Prep, Portfolio, Progress, and the ⌘K quick-switcher.</p>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setShowAccountMenu(false);setTimeout(startTour,250);}}><Compass size={14}/>Replay App Tour</button>
+        </div>
+
         {/* Specialty path */}
         <div style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
@@ -4729,6 +4753,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
       saveUser(u);
       if(!obInterest||obInterest==='unsure'){ goPrep('diagnostic'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
       else { goPrep('pathway'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
+      setTimeout(startTour,900);
     },1550);
     return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);};
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -4760,9 +4785,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             <div style={glass({padding:32})}>
               <span style={lbl()}>Your first name</span>
               <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
-                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));}}}/>
+                onKeyDown={e=>{if(e.key==='Enter'&&uname.trim()){const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));setTimeout(startTour,900);}}}/>
               <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
-                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));}}>
+                onClick={()=>{if(!uname.trim())return;const u={name:uname.trim(),specialty:'exploring',xp:0,streak:1,lastActive:Date.now()};saveUser(u);goPrep('diagnostic');toast.success(pickNudge('welcome_new_user',{name:uname.trim()}));setTimeout(startTour,900);}}>
                 Get Started<ArrowRight size={16}/>
               </motion.button>
               <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
@@ -4878,7 +4903,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
               <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
             </div>
             <div style={R({gap:10})}>
-              <button onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
+              <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
@@ -4901,7 +4926,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 </div>
               </div>
             </div>
-            <button onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
+            <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
               <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
             </button>
             <div onClick={()=>setShowAccountMenu(true)} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer'}}>
@@ -4923,7 +4948,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
                 const active=tab===n.id;
                 const badge=n.id==='prep'&&dueCards>0?dueCards:null;
                 return(
-                  <motion.div key={n.id} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
+                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
                     <n.ic size={17} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
                   </motion.div>
@@ -4951,7 +4976,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             {NAV.map(n=>{
               const badge=n.id==='prep'&&dueCards>0?dueCards:null;
               return(
-                <div key={n.id} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:70}}>
+                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:70}}>
                   <n.ic size={20} color={tab===n.id?accent:C.t3}/>
                   <span style={{fontSize:10,fontWeight:600}}>{n.label}</span>
                   {badge&&<span style={{position:'absolute',top:-4,right:14,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
@@ -5013,6 +5038,9 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ══ POST-ONBOARDING PRODUCT TOUR ═════════════════════════════════════ */}
+        {tourActive && <AppTour steps={TOUR_STEPS} onFinish={finishTour} onSkip={finishTour}/>}
       </div>
     </ErrorBoundary>
   );
