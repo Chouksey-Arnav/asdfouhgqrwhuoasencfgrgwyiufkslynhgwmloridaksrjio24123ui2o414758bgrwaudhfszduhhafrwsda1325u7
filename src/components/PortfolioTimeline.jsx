@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { CalendarDays, TrendingUp, Stethoscope, UserCheck } from 'lucide-react';
 import { C, glass, glass2, lbl, R, CC, pill } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
-import * as DB from '../lib/db';
 
 const KIND_META = {
   deadline:    { icon: CalendarDays, color: C.rose,   label: 'Deadline' },
@@ -20,14 +19,14 @@ export default function PortfolioTimeline({ accent = C.blue }) {
         const [deadlines, scores, clinical, recommenders] = await Promise.all([
           listItems('deadlines').catch(() => []),
           listItems('test_scores').catch(() => []),
-          DB.getClinicalHours().catch(() => []),
-          DB.getRecommenders().catch(() => []),
+          listItems('clinical_hours').catch(() => []),
+          listItems('recommenders').catch(() => []),
         ]);
         const merged = [
           ...(deadlines || []).map(d => ({ date: d.due_date, kind: 'deadline', title: d.title })),
           ...(scores || []).filter(s => !s.is_target).map(s => ({ date: s.test_date, kind: 'test', title: `${s.test_type} — ${s.composite}` })),
-          ...(clinical || []).map(c => ({ date: c.entryDate, kind: 'clinical', title: `${c.siteName} · ${c.hours}h logged` })),
-          ...(recommenders || []).filter(r => r.dueDate).map(r => ({ date: r.dueDate, kind: 'recommender', title: `${r.name} letter due` })),
+          ...(clinical || []).map(c => ({ date: c.entry_date, kind: 'clinical', title: `${c.site_name} · ${c.hours}h logged` })),
+          ...(recommenders || []).filter(r => r.due_date).map(r => ({ date: r.due_date, kind: 'recommender', title: `${r.name} letter due` })),
         ].filter(e => e.date);
         setEvents(merged.sort((a, b) => a.date.localeCompare(b.date)));
       } catch { setEvents([]); }

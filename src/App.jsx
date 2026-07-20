@@ -1143,6 +1143,9 @@ export default function App({ account, onAccountChange }) {
   const [obGrade, setObGrade] = useState(null);
   const [obInterest, setObInterest] = useState(null); // pathway key or 'unsure'
   const [obBuildIdx, setObBuildIdx] = useState(0); // 0-2, which "building your plan" line is checked
+  // True for the rest of this session once completeOnboarding() runs — lets Home greet a
+  // genuinely first-time user with "Welcome" instead of the default "Welcome back".
+  const [justOnboarded, setJustOnboarded] = useState(false);
   const [sGrade, setSGrade] = useState(''); // settings: grade-stage editor
 
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
@@ -1162,6 +1165,16 @@ export default function App({ account, onAccountChange }) {
     setTourActive(false);
     setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
   }, []);
+  // completeOnboarding() routes brand-new users straight into the Pathway Diagnostic — the
+  // tour's first step forces tab back to Home, so auto-starting it on a blind timer would yank
+  // the user out of the diagnostic they just launched into. Defer it with this flag instead,
+  // and only actually start the tour once they naturally land on Home themselves.
+  const tourPendingRef = useRef(false);
+  useEffect(()=>{
+    if(!tourPendingRef.current||tourActive||tab!=='home')return;
+    tourPendingRef.current=false;
+    startTour();
+  },[tab,tourActive,startTour]);
   const TOUR_STEPS = useMemo(()=>[
     { target:'nav-home', title:'Home', body:"Your daily dashboard — streak, XP, next lesson, and a snapshot of your current pathway.", onEnter:()=>setTab('home') },
     { target:'nav-prep', title:'Prep', body:"SAT/ACT diagnostic, your pathway lessons, the quiz library, flashcards, AI Coach, and the E-Library all live here.", onEnter:()=>setTab('prep') },
@@ -1314,6 +1327,14 @@ export default function App({ account, onAccountChange }) {
   // ── DB Init ──────────────────────────────────────────────────────────────────
   useEffect(()=>{
     async function loadFromDb(){
+      // If this device's local profile belongs to a different signed-in account (shared
+      // family/school computer, or someone else's earlier session), wipe it before loading —
+      // otherwise the newly signed-in account would silently inherit a stranger's name, XP,
+      // streak, and pathway progress instead of its own clean slate or account-backed rebuild.
+      const priorLocalUser = await DB.getUser();
+      if(priorLocalUser?.email && account?.email && priorLocalUser.email!==account.email){
+        await DB.clearAllData();
+      }
       // Must run before getStreak() so a bridged (freeze-covered) gap is
       // already reflected in the streak calculation below.
       await DB.checkAndApplyStreakFreeze();
@@ -1323,6 +1344,9 @@ export default function App({ account, onAccountChange }) {
         DB.getAchievements(), DB.getStreak(), DB.getTotalCardReviews(),
         DB.getStreakFreezeCount(), DB.getCosmetics(),
       ]);
+      // Backfill the account email onto older local profiles that predate this device/account
+      // binding, so a mismatch on this device can actually be detected on a future sign-in.
+      if(u&&!u.email&&account?.email){ u.email=account.email; DB.saveUser(u).catch(()=>{}); }
       if(u){setUser_(u);setAiChatCount(u.aiChatCount||0);setInterviewCount(u.interviewCount||0);}
       setPathway_(pw||{});
       setQScores_(qs||{});
@@ -1370,6 +1394,11 @@ export default function App({ account, onAccountChange }) {
       setDbReady(true);
     }
     init();
+    // Deliberately mount-only: `account` is read for its value at the moment this device's
+    // local profile is loaded (to detect a different account signing in on this device), not
+    // watched for changes — AuthGate remounts App fresh on every sign-in, so this always sees
+    // the right account regardless.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   // ── Portfolio (Supabase-backed: activities, awards, GPA history) ─────────────
@@ -1457,18 +1486,19 @@ export default function App({ account, onAccountChange }) {
   const completeOnboarding = useCallback(()=>{
     const name=uname.trim();
     if(!name)return;
-    saveUser({ name, specialty:'exploring', xp:0, streak:1, lastActive:Date.now() });
+    saveUser({ name, specialty:'exploring', xp:0, streak:1, lastActive:Date.now(), email:account?.email });
     AuthAPI.updateMe({ name, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
     goPrep('diagnostic');
     toast.success(pickNudge('welcome_new_user',{name}));
-    setTimeout(startTour,900);
-  },[uname,saveUser,goPrep,onAccountChange,startTour]);
+    tourPendingRef.current=true;
+    setJustOnboarded(true);
+  },[uname,saveUser,goPrep,onAccountChange,account]);
   // Cross-device: if this device has no local profile yet but the signed-in account already
   // finished onboarding elsewhere, rebuild the local profile from the account instead of asking
   // for their name again.
   useEffect(()=>{
     if(!dbReady||user||!account?.onboardingComplete||!account?.name)return;
-    saveUser({ name:account.name, specialty:'exploring', gradeStage:account.gradeLevel||null, xp:0, streak:1, lastActive:Date.now() });
+    saveUser({ name:account.name, specialty:'exploring', gradeStage:account.gradeLevel||null, xp:0, streak:1, lastActive:Date.now(), email:account.email });
   },[dbReady,user,account,saveUser]);
   // A lesson only counts toward mastery/unlock-gating once it's actually verified (curated quiz
   // passed) — for lessons with no quizIds yet (pathways not migrated to the new model this pass),
@@ -1661,12 +1691,12 @@ export default function App({ account, onAccountChange }) {
     (async()=>{
       const already = await getTodayCheckinStatus();
       if(already)return;
-      const day = await getNextCheckinDay();
+      const [day,everChecked] = await Promise.all([getNextCheckinDay(),DB.hasAnyCheckin()]);
       const reward = getCheckinReward(day);
       const cosmetic = reward.chest ? rollCosmetic(cosmetics) : null;
       openChest({
         title: `Day ${day} Check-in`,
-        eyebrow: 'Welcome back',
+        eyebrow: everChecked ? 'Welcome back' : 'Welcome',
         xp: reward.xp,
         cosmetic,
         onOpen: async ()=>{
@@ -2238,7 +2268,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
           <div style={{position:'relative',...R({gap:18,alignItems:'flex-start'})}}>
             <div style={{width:52,height:52,borderRadius:15,background:`${accent}1c`,border:`1.5px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 0 24px ${curPath?.glow||`${accent}25`}`}}><HomeIcon size={24} color={accent}/></div>
             <div>
-              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>Welcome back</div>
+              <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.12em',textTransform:'uppercase',marginBottom:10}}>{justOnboarded?'Welcome':'Welcome back'}</div>
               <h1 style={{fontSize:30,fontWeight:800,color:C.t1,margin:'0 0 12px',letterSpacing:'-.03em',fontFamily:C.FD,lineHeight:1.15}}>{user.name}</h1>
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
@@ -4636,7 +4666,7 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
             </div>
           </div>
           <div style={CC({gap:4,marginBottom:14})}><span style={lbl()}>Display Name</span><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn()} onClick={()=>{if(!sName.trim())return;saveUser({...user,name:sName.trim()});setSN('');toast.success('Name updated');}}>Save Name</button>
+          <button style={btn()} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
         </div>
 
         {/* Exam date */}

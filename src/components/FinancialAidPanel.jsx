@@ -46,6 +46,7 @@ export default function FinancialAidPanel({ accent = C.blue }) {
   async function addScholarship(e) {
     e.preventDefault();
     if (!name.trim()) return;
+    if (amount && Number(amount) < 0) { toast.error('Amount can\'t be negative.'); return; }
     try {
       const row = await createItem('scholarships', { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' });
       setScholarships(prev => [...prev, row]);
@@ -60,6 +61,7 @@ export default function FinancialAidPanel({ accent = C.blue }) {
   }
 
   async function removeRow(id) {
+    if (!window.confirm('Remove this scholarship?')) return;
     setScholarships(prev => prev.filter(s => s.id !== id));
     try { await deleteItem('scholarships', id); } catch (err) { toast.error(err.message); }
   }
@@ -109,7 +111,7 @@ export default function FinancialAidPanel({ accent = C.blue }) {
         <div style={lbl()}>Add a scholarship</div>
         <form onSubmit={addScholarship} style={R({gap:10,flexWrap:'wrap'})}>
           <input style={inp({flex:1,minWidth:160})} placeholder="Scholarship name" value={name} onChange={e=>setName(e.target.value)} />
-          <input type="number" style={inp({width:120})} placeholder="Amount ($)" value={amount} onChange={e=>setAmount(e.target.value)} />
+          <input type="number" min="0" style={inp({width:120})} placeholder="Amount ($)" value={amount} onChange={e=>setAmount(e.target.value)} />
           <input type="date" style={inp({width:'auto'})} value={deadline} onChange={e=>setDeadline(e.target.value)} />
           <button type="submit" style={btn(accent!==C.blue?accent:C.blueGrad)}><Plus size={14}/>Add</button>
         </form>

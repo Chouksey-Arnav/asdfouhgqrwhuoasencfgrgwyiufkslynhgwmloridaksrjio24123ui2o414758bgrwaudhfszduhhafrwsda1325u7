@@ -311,6 +311,12 @@ export async function getCheckin(date) {
 export async function recordCheckin(date, day) {
   try { await db.checkins.add({ date, day }); return true; } catch { return false; }
 }
+// Whether the user has ever claimed/seen a check-in before — distinguishes a
+// genuinely first-ever chest (day 1, "Welcome") from a cycle restarting at
+// day 1 after a long absence ("Welcome back").
+export async function hasAnyCheckin() {
+  return (await db.checkins.count()) > 0;
+}
 
 // ── Cosmetics (chest-reveal unlocks) ─────────────────────────────────────────
 export async function getCosmetics() {
