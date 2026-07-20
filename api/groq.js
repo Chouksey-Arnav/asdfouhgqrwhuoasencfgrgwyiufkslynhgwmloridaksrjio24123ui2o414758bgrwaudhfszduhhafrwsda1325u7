@@ -157,8 +157,14 @@ export default async function handler(req, res) {
 
   // ── Build messages array (OpenAI-compatible format) ────────────────────────
   const groqMessages = [];
+  // Cap raised from 1200 → 4000: Metabrain's system prompt (see
+  // src/lib/studentProfile.js buildCoachSystemPrompt) now folds in a
+  // student's onboarding goal/obstacles/study habits alongside live
+  // Prep/Portfolio signals, which runs meaningfully longer than the old
+  // generic prompt. Still capped well below Groq's context window so a
+  // pathological client payload can't blow up per-request token cost.
   const systemPrompt = system
-    ? String(system).slice(0, 1200)
+    ? String(system).slice(0, 4000)
     : 'You are Metabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
