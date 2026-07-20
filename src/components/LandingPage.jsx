@@ -107,7 +107,8 @@ const FAQS = [
 
 // ── Page ─────────────────────────────────────────────────────────────────
 
-export default function LandingPage({ onGetStarted }) {
+export default function LandingPage({ onGetStarted, onLogin }) {
+  const handleSignIn = onLogin || onGetStarted;
   useEffect(() => {
     document.body.classList.add('msp-landing-active');
     const prevScrollBehavior = document.documentElement.style.scrollBehavior;
@@ -146,7 +147,7 @@ export default function LandingPage({ onGetStarted }) {
               <a className="msp-nav-link" href="#faq" style={{ color: '#94a3c0' }}>FAQ</a>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <button onClick={onGetStarted} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: '#94a3c0', fontFamily: 'inherit' }}>Sign in</button>
+              <button onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13.5px', fontWeight: 600, color: '#94a3c0', fontFamily: 'inherit' }}>Log in</button>
               <button className="msp-nav-cta" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: 'linear-gradient(135deg,#2d7fff,#1d5fd9)', color: '#fff', fontSize: '13.5px', fontWeight: 700, boxShadow: '0 0 0 1px rgba(45,127,255,0.3),0 10px 26px -12px rgba(45,127,255,0.8)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Get started free
                 <ArrowRight size={14} />
@@ -182,7 +183,7 @@ export default function LandingPage({ onGetStarted }) {
               See the 10 pathways
             </a>
           </div>
-          <p style={{ marginTop: 16, fontSize: 13, color: '#506080' }}>Sign in with just your email — a 6-digit code, no password to forget.</p>
+          <p style={{ marginTop: 16, fontSize: 13, color: '#506080' }}>Free forever. Sign up in under a minute — just an email code and a password.</p>
         </header>
 
         {/* APP PREVIEW */}
@@ -501,8 +502,8 @@ export default function LandingPage({ onGetStarted }) {
                 <p style={{ marginTop: 8, fontSize: '12.5px', lineHeight: 1.6, color: '#94a3c0' }}>Nothing competing for your attention while you study.</p>
               </div>
               <div style={cardBase}>
-                <div style={{ fontWeight: 700, fontSize: '14.5px', color: '#eef2ff' }}>Sign in with email</div>
-                <p style={{ marginTop: 8, fontSize: '12.5px', lineHeight: 1.6, color: '#94a3c0' }}>A 6-digit code sent to your inbox — no password to forget.</p>
+                <div style={{ fontWeight: 700, fontSize: '14.5px', color: '#eef2ff' }}>Verified sign-up</div>
+                <p style={{ marginTop: 8, fontSize: '12.5px', lineHeight: 1.6, color: '#94a3c0' }}>Confirm your email with a 6-digit code, then set your own password.</p>
               </div>
               <div style={cardBase}>
                 <div style={{ fontWeight: 700, fontSize: '14.5px', color: '#eef2ff' }}>Your notes stay yours</div>
@@ -559,7 +560,7 @@ export default function LandingPage({ onGetStarted }) {
               <a href="#learn" style={{ color: '#94a3c0' }}>Prep</a>
               <a href="#portfolio" style={{ color: '#94a3c0' }}>Portfolio</a>
               <a href="#faq" style={{ color: '#94a3c0' }}>FAQ</a>
-              <button onClick={onGetStarted} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3c0', fontSize: 13, fontFamily: 'inherit', padding: 0 }}>Sign in</button>
+              <button onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3c0', fontSize: 13, fontFamily: 'inherit', padding: 0 }}>Log in</button>
             </div>
             <p style={{ fontSize: '11.5px', color: '#506080', margin: 0 }}>Free forever · Built for high schoolers</p>
           </div>
