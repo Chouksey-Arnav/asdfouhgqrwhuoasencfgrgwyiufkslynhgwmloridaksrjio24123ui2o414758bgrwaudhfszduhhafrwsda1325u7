@@ -55,3 +55,17 @@ body::before {
 .mb-group .mb-copy { opacity: 0; }
 .mb-group:hover .mb-copy { opacity: 1; }
 .mb-copy:hover { border-color: rgba(255,255,255,0.24) !important; color: #eef2ff !important; }
+
+/* Auth screens (sign in / sign up / forgot password): split-screen brand panel + form.
+   The brand panel collapses below 900px so the form gets the full (small) viewport,
+   and the form column scrolls independently so multi-step content never gets clipped
+   by 100dvh on short/rotated phone screens. */
+.msp-auth-shell { min-height: 100dvh; width: 100%; max-width: 1560px; margin: 0 auto; display: flex; }
+.msp-auth-brand { flex: 1 1 44%; max-width: 640px; }
+.msp-auth-form-col { flex: 1 1 56%; min-width: 0; overflow-y: auto; }
+@media (max-width: 900px) {
+  .msp-auth-brand { display: none !important; }
+  .msp-auth-form-col { flex: 1 1 100%; }
+}
+.msp-otp-box:focus { border-color: rgba(45,127,255,0.6) !important; box-shadow: 0 0 0 3px rgba(45,127,255,0.15) !important; }
+.msp-auth-link { background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; }

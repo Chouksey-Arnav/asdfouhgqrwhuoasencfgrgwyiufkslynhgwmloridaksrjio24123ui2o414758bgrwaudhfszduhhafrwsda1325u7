@@ -1,17 +1,7 @@
 // /api/auth/me — returns the current user for a session token, or updates profile fields.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { getUserFromRequest } from '../_lib/session.js';
-
-function serialize(user) {
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    gradeLevel: user.grade_level,
-    testTrack: user.test_track,
-    onboardingComplete: user.onboarding_complete,
-  };
-}
+import { serializeUser as serialize } from '../_lib/serializeUser.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

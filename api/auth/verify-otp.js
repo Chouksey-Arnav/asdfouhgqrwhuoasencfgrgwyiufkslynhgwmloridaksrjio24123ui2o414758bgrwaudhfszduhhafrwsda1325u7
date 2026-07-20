@@ -1,11 +1,15 @@
-// /api/auth/verify-otp — checks the emailed code, creates/finds the user,
-// and issues a session token stored in Supabase.
+// /api/auth/verify-otp — checks the emailed code for a given purpose and, on success,
+// issues a short-lived verification token (an email_verifications row). Verifying a
+// code never creates an account or session by itself — the caller still has to spend
+// that token at api/auth/complete-signup (purpose 'signup') or api/auth/reset-password
+// (purpose 'password_reset'), which is where a password actually gets set.
 import crypto from 'crypto';
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_ATTEMPTS = 5;
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const PURPOSES = ['signup', 'password_reset'];
+const VERIFICATION_TTL_MS = 15 * 60 * 1000;
 
 function hashCode(code) {
   return crypto.createHash('sha256').update(code).digest('hex');
@@ -27,6 +31,7 @@ export default async function handler(req, res) {
 
   const email = String(body?.email || '').trim().toLowerCase();
   const code = String(body?.code || '').trim();
+  const purpose = PURPOSES.includes(body?.purpose) ? body.purpose : 'signup';
   if (!EMAIL_RE.test(email) || !/^\d{6}$/.test(code)) {
     return res.status(400).json({ error: 'Enter the 6-digit code sent to your email.' });
   }
@@ -38,6 +43,7 @@ export default async function handler(req, res) {
       .from('otp_codes')
       .select('id, expires_at')
       .eq('email', email)
+      .eq('purpose', purpose)
       .eq('consumed', false)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -85,41 +91,14 @@ export default async function handler(req, res) {
 
     await supabase.from('otp_codes').update({ consumed: true }).eq('id', afterIncrement.id);
 
-    let { data: user, error: userErr } = await supabase
-      .from('app_users')
-      .select('*')
-      .eq('email', email)
-      .maybeSingle();
-    if (userErr) throw userErr;
-
-    if (!user) {
-      const { data: created, error: createErr } = await supabase
-        .from('app_users')
-        .insert({ email })
-        .select('*')
-        .single();
-      if (createErr) throw createErr;
-      user = created;
-    }
-
-    const { data: session, error: sessErr } = await supabase
-      .from('sessions')
-      .insert({ user_id: user.id, expires_at: new Date(Date.now() + SESSION_TTL_MS).toISOString() })
-      .select('*')
+    const { data: verification, error: verErr } = await supabase
+      .from('email_verifications')
+      .insert({ email, purpose, expires_at: new Date(Date.now() + VERIFICATION_TTL_MS).toISOString() })
+      .select('id')
       .single();
-    if (sessErr) throw sessErr;
+    if (verErr) throw verErr;
 
-    return res.status(200).json({
-      token: session.id,
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        gradeLevel: user.grade_level,
-        testTrack: user.test_track,
-        onboardingComplete: user.onboarding_complete,
-      },
-    });
+    return res.status(200).json({ verified: true, verificationToken: verification.id });
   } catch (err) {
     console.error('verify-otp error:', err);
     return res.status(500).json({ error: 'Could not verify code. Please try again.' });
