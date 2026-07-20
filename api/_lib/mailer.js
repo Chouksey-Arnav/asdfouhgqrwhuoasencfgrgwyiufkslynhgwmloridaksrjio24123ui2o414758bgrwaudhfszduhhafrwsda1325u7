@@ -1,4 +1,6 @@
-// Shared Nodemailer transport for serverless functions.
+// Shared Nodemailer transport for serverless functions, configured for Brevo's
+// SMTP relay (smtp-relay.brevo.com). Any standard SMTP provider works too —
+// only the SMTP_* env vars need to change.
 import nodemailer from 'nodemailer';
 
 let transporter = null;
@@ -7,7 +9,7 @@ export function getTransporter() {
   if (transporter) return transporter;
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
-    throw new Error('SMTP not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.');
+    throw new Error('SMTP not configured. Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS (Brevo SMTP credentials).');
   }
   transporter = nodemailer.createTransport({
     host: SMTP_HOST,
@@ -18,11 +20,14 @@ export function getTransporter() {
   return transporter;
 }
 
-export async function sendOtpEmail(to, code) {
+export async function sendMail({ to, subject, html, text }) {
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
   const transport = getTransporter();
-  await transport.sendMail({
-    from: `MedSchoolPrep <${from}>`,
+  await transport.sendMail({ from: `MedSchoolPrep <${from}>`, to, subject, html, text });
+}
+
+export async function sendOtpEmail(to, code) {
+  await sendMail({
     to,
     subject: `${code} is your MedSchoolPrep verification code`,
     html: `
