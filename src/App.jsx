@@ -67,7 +67,6 @@ import PortfolioTimeline from './components/PortfolioTimeline';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
-import Onboarding from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 
@@ -1128,6 +1127,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── UI state ────────────────────────────────────────────────────────────────
   const [tab,   setTab]   = useState('home');
+  const [uname, setUname] = useState(''); // onboarding input
   const [vidM,  setVM]    = useState(null);
   // ── Lesson Player state (immersive Overview->Article->Video->Quiz->Complete) ─
   const [activeLesson, setActiveLesson] = useState(null); // { lesson, unit } while the player is open
@@ -1138,6 +1138,11 @@ export default function App({ account, onAccountChange }) {
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
+  // ── Onboarding (multi-step, one question per screen) ─────────────────────────
+  const [obStep, setObStep] = useState(0); // 0 welcome · 1 name · 2 grade · 3 interest · 4 building
+  const [obGrade, setObGrade] = useState(null);
+  const [obInterest, setObInterest] = useState(null); // pathway key or 'unsure'
+  const [obBuildIdx, setObBuildIdx] = useState(0); // 0-2, which "building your plan" line is checked
   // True for the rest of this session once completeOnboarding() runs — lets Home greet a
   // genuinely first-time user with "Welcome" instead of the default "Welcome back".
   const [justOnboarded, setJustOnboarded] = useState(false);
@@ -1475,30 +1480,19 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
-  // Runs once the full ~30-screen onboarding flow (src/components/onboarding/Onboarding.jsx)
-  // finishes. Creates the local (per-device) profile immediately so the app feels instant, and
-  // separately pushes name/grade/testTrack/onboardingComplete to the Supabase-backed account —
-  // fire-and-forget, since local state is already the source of truth for this render. Also
-  // seeds a target test score row so the Portfolio score tracker picks up the goal the user
-  // just set. Which pillar a brand-new user lands in depends on the goal they chose during
-  // onboarding — "explore" sends them to the pathway diagnostic, "application" to Portfolio,
-  // and "boost score" (the default) straight into practice quizzes.
-  const completeOnboarding = useCallback((profile)=>{
-    const name=(profile.name||'').trim();
+  // First-time onboarding: creates the local (per-device) profile immediately so the app feels
+  // instant, and separately pushes name/onboardingComplete to the Supabase-backed account —
+  // fire-and-forget, since local state is already the source of truth for this render.
+  const completeOnboarding = useCallback(()=>{
+    const name=uname.trim();
     if(!name)return;
-    const gradeStage = GRADE_STAGES[profile.gradeIdx]?.key || null;
-    saveUser({ name, specialty:'exploring', gradeStage, xp:0, streak:1, lastActive:Date.now(), email:account?.email });
-    AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
-    if(profile.targetScore){
-      createItem('test_scores',{ test_type:profile.testTrack==='ACT'?'ACT':'SAT', test_date:new Date().toISOString().slice(0,10), composite:profile.targetScore, section_scores:{}, is_target:true }).catch(()=>{});
-    }
-    if(profile.goal==='explore_pathway') goPrep('diagnostic');
-    else if(profile.goal==='build_application') goPortfolio('overview');
-    else goPrep('quizzes');
+    saveUser({ name, specialty:'exploring', xp:0, streak:1, lastActive:Date.now(), email:account?.email });
+    AuthAPI.updateMe({ name, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
+    goPrep('diagnostic');
     toast.success(pickNudge('welcome_new_user',{name}));
     tourPendingRef.current=true;
     setJustOnboarded(true);
-  },[saveUser,goPrep,goPortfolio,onAccountChange,account]);
+  },[uname,saveUser,goPrep,onAccountChange,account]);
   // Cross-device: if this device has no local profile yet but the signed-in account already
   // finished onboarding elsewhere, rebuild the local profile from the account instead of asking
   // for their name again.
@@ -4794,14 +4788,61 @@ Be concise, warm, and encouraging — celebrate effort and progress, not just re
     );
   }
 
+  // ── Onboarding "building your plan" transition — ticks off a short checklist ──
+  // then creates the account. Lives up here (not inside the JSX below) because
+  // hooks must run unconditionally on every render, before the early returns.
+  useEffect(()=>{
+    if(obStep!==4)return;
+    setObBuildIdx(0);
+    const t1=setTimeout(()=>setObBuildIdx(1),500);
+    const t2=setTimeout(()=>setObBuildIdx(2),1000);
+    const t3=setTimeout(()=>{
+      const specialty = (obInterest&&obInterest!=='unsure') ? obInterest : 'exploring';
+      const u={ name:uname.trim(), specialty, gradeStage:obGrade, xp:0, streak:1, lastActive:Date.now() };
+      saveUser(u);
+      if(!obInterest||obInterest==='unsure'){ goPrep('diagnostic'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
+      else { goPrep('pathway'); toast.success(pickNudge('welcome_new_user',{name:uname.trim()})); }
+      setTimeout(startTour,900);
+    },1550);
+    return ()=>{clearTimeout(t1);clearTimeout(t2);clearTimeout(t3);};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[obStep]);
+
   // ═══ ONBOARDING ════════════════════════════════════════════════════════════════
   if(!dbReady) return <LoadingScreen/>;
 
   if(!user){
     return(
       <ErrorBoundary>
-        <Toaster position="bottom-right"/>
-        <Onboarding account={account} onComplete={completeOnboarding}/>
+        <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,padding:20,fontFamily:C.FB,position:'relative',overflow:'hidden'}}>
+          <Toaster position="bottom-right"/>
+          {/* Background orbs */}
+          <div style={{position:'absolute',top:'-15%',right:'-5%',width:'45vw',height:'45vw',borderRadius:'50%',background:`radial-gradient(circle,rgba(45,127,255,0.1),transparent 65%)`,pointerEvents:'none'}}/>
+          <div style={{position:'absolute',bottom:'-10%',left:'-5%',width:'35vw',height:'35vw',borderRadius:'50%',background:`radial-gradient(circle,rgba(6,182,212,0.07),transparent 65%)`,pointerEvents:'none'}}/>
+          <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:.6,ease:[.16,1,.3,1]}} style={{width:'100%',maxWidth:460,position:'relative',zIndex:1}}>
+            <div style={{textAlign:'center',marginBottom:36}}>
+              <motion.div initial={{scale:.8,rotate:-10}} animate={{scale:1,rotate:0}} transition={{delay:.2,type:'spring',stiffness:200}} style={{width:72,height:72,borderRadius:20,overflow:'hidden',margin:'0 auto 22px',boxShadow:`0 0 40px rgba(201,162,74,0.25),0 0 80px rgba(201,162,74,0.1)`}}><img src="/icon.svg" width={72} height={72} alt="" style={{display:'block'}}/></motion.div>
+              <h1 style={{fontSize:36,fontWeight:800,color:C.t1,margin:'0 0 10px',letterSpacing:'-.04em',fontFamily:C.FD}}>MedSchoolPrep</h1>
+              <p style={{fontSize:14,color:C.t2,lineHeight:1.7,maxWidth:340,margin:'0 auto'}}>SAT/ACT prep and a personalized path into medicine — for high schoolers heading toward a health career.</p>
+            </div>
+            {/* Feature pills */}
+            <div style={{display:'flex',flexWrap:'wrap',gap:8,justifyContent:'center',marginBottom:32}}>
+              {['Pathway Diagnostic','SAT/ACT Practice','FSRS Flashcards','AI Coach','Application Portfolio','Progress Analytics'].map(f=>(
+                <span key={f} style={pill(C.s2,C.t2,{border:`1px solid ${C.b1}`,fontSize:11})}>{f}</span>
+              ))}
+            </div>
+            <div style={glass({padding:32})}>
+              <span style={lbl()}>Your first name</span>
+              <input style={{...inp({fontSize:15,padding:'13px 18px',marginBottom:16})}} placeholder="e.g., Alex" value={uname} onChange={e=>setUname(e.target.value)} autoFocus
+                onKeyDown={e=>{if(e.key==='Enter')completeOnboarding();}}/>
+              <motion.button whileHover={{scale:1.02,boxShadow:`0 8px 30px rgba(45,127,255,0.5)`}} whileTap={{scale:.97}} style={{...btn(C.blueGrad),width:'100%',padding:'14px',fontSize:15,boxShadow:`0 6px 24px rgba(45,127,255,0.4)`}}
+                onClick={completeOnboarding}>
+                Get Started<ArrowRight size={16}/>
+              </motion.button>
+              <p style={{textAlign:'center',fontSize:12,color:C.t3,marginTop:16,lineHeight:1.6}}>Signed in as {account?.email} · Progress syncs to your account</p>
+            </div>
+          </motion.div>
+        </div>
       </ErrorBoundary>
     );
   }
