@@ -50,12 +50,16 @@ const STUDY_HOURS_OPTIONS = [
   { value: '6-14', label: '6-14 hrs / week', sublabel: 'Building real momentum', dots: 2 },
   { value: '15+', label: '15+ hrs / week', sublabel: 'Highly dedicated', dots: 3 },
 ];
-const GOAL_OPTIONS = [
+// Exported (not just used here) so src/lib/studentProfile.js can turn a
+// student's saved onboarding values back into human-readable labels for the
+// Metabrain system prompt and the dashboard's onboarding recap card, instead
+// of duplicating this copy in a second place that could drift out of sync.
+export const GOAL_OPTIONS = [
   { value: 'boost_score', label: 'Boost my SAT/ACT score' },
   { value: 'build_application', label: 'Build a standout application' },
   { value: 'explore_pathway', label: 'Explore if medicine is right for me' },
 ];
-const STUDY_METHOD_OPTIONS = [
+export const STUDY_METHOD_OPTIONS = [
   { value: 'none', label: 'No structured method yet' },
   { value: 'khan', label: 'Khan Academy' },
   { value: 'princeton', label: 'The Princeton Review' },
@@ -63,7 +67,7 @@ const STUDY_METHOD_OPTIONS = [
   { value: 'school', label: 'School curriculum only' },
   { value: 'tutor', label: 'Tutor or mentor' },
 ];
-const OBSTACLE_OPTIONS = [
+export const OBSTACLE_OPTIONS = [
   { value: 'what_to_study', label: 'Not knowing what to study' },
   { value: 'guidance', label: 'Lack of guidance or mentorship' },
   { value: 'busy', label: 'Busy schedule' },
@@ -71,7 +75,7 @@ const OBSTACLE_OPTIONS = [
   { value: 'motivation', label: 'Losing motivation' },
   { value: 'no_plan', label: 'No structured plan' },
 ];
-const ACCOMPLISH_OPTIONS = [
+export const ACCOMPLISH_OPTIONS = [
   { value: 'score', label: 'Boost my SAT/ACT score' },
   { value: 'application', label: 'Build a competitive application' },
   { value: 'explore', label: 'Explore if medicine is right for me' },
@@ -89,9 +93,34 @@ const DEFAULT_ANSWERS = {
   addBack: true, rollover: true, rating: 0, referralCode: '', name: '',
 };
 
+// Onboarding is a ~30-screen flow — closing the tab or losing a connection
+// partway through used to throw away every answer already given, forcing a
+// full restart. Progress is now mirrored to localStorage on every change and
+// rehydrated on mount (keyed per account so switching users doesn't leak a
+// stranger's answers), so "foolproof" also means "can't lose your progress."
+function draftKey(account) { return `onboardingDraft:${account?.email || 'anon'}`; }
+function loadDraft(account) {
+  try {
+    const raw = localStorage.getItem(draftKey(account));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    return parsed;
+  } catch { return null; }
+}
+function saveDraft(account, stepIdx, answers) {
+  try { localStorage.setItem(draftKey(account), JSON.stringify({ stepIdx, answers })); } catch { /* storage full/unavailable — non-critical */ }
+}
+function clearDraft(account) {
+  try { localStorage.removeItem(draftKey(account)); } catch { /* ignore */ }
+}
+
 export default function Onboarding({ account, onComplete }) {
-  const [stepIdx, setStepIdx] = useState(0);
-  const [answers, setAnswers] = useState(DEFAULT_ANSWERS);
+  const draft = useMemo(() => loadDraft(account), [account]);
+  const [stepIdx, setStepIdx] = useState(() => Math.min(draft?.stepIdx ?? 0, STEPS.length - 1));
+  const [answers, setAnswers] = useState(() => (draft?.answers ? { ...DEFAULT_ANSWERS, ...draft.answers } : DEFAULT_ANSWERS));
+
+  React.useEffect(() => { saveDraft(account, stepIdx, answers); }, [account, stepIdx, answers]);
 
   const stepKey = STEPS[stepIdx];
   const next = () => setStepIdx(i => Math.min(STEPS.length - 1, i + 1));
@@ -107,6 +136,7 @@ export default function Onboarding({ account, onComplete }) {
   }, [stepKey]);
 
   function finish(extra = {}) {
+    clearDraft(account);
     onComplete({ ...answers, ...extra });
   }
 

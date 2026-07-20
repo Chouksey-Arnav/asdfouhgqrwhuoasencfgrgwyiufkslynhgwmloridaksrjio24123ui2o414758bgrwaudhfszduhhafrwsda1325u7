@@ -103,6 +103,16 @@ db.version(9).stores({
   pathwayGoals: 'pathwayKey, startedAt, targetWeeks',
 });
 
+// v10: Metabrain 2.0 multi-chat — conversations used to live only in a single
+// in-memory `msgs` array (reset on every reload). Now every conversation is a
+// row in `coachThreads` (title, timestamps) with its messages in
+// `coachMessages`, so a student can keep several parallel chats (e.g. one for
+// SAT Math, one for essay brainstorming) that persist across sessions.
+db.version(10).stores({
+  coachThreads:  '++id, updatedAt',
+  coachMessages: '++id, threadId, ts',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -409,6 +419,37 @@ export async function addInterviewSession(entry) {
   return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
 }
 
+// ── Metabrain 2.0 Chat Threads ────────────────────────────────────────────────
+// A student can run as many parallel Metabrain conversations as they want —
+// each is its own row here plus a run of rows in coachMessages, so switching
+// threads is just a different IndexedDB query, and nothing is lost on reload.
+export async function getCoachThreads() {
+  return db.coachThreads.orderBy('updatedAt').reverse().toArray();
+}
+export async function createCoachThread(title = 'New chat') {
+  const now = Date.now();
+  const id = await db.coachThreads.add({ title, createdAt: now, updatedAt: now });
+  return { id, title, createdAt: now, updatedAt: now };
+}
+export async function renameCoachThread(id, title) {
+  await db.coachThreads.update(id, { title });
+}
+export async function touchCoachThread(id) {
+  await db.coachThreads.update(id, { updatedAt: Date.now() });
+}
+export async function deleteCoachThread(id) {
+  await db.coachMessages.where('threadId').equals(id).delete();
+  await db.coachThreads.delete(id);
+}
+export async function getCoachMessages(threadId) {
+  return db.coachMessages.where('threadId').equals(threadId).sortBy('ts');
+}
+export async function addCoachMessage(threadId, role, content) {
+  const ts = Date.now();
+  const id = await db.coachMessages.add({ threadId, role, content, ts });
+  await touchCoachThread(threadId);
+  return { id, threadId, role, content, ts };
+}
 // ── Full export ────────────────────────────────────────────────────────────────
 export async function exportAllData() {
   const data = {
@@ -439,6 +480,6 @@ export async function clearAllData() {
     db.clinicalHours.clear(), db.recommenders.clear(), db.interviewSessions.clear(),
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
     db.deckMeta.clear(), db.unitMastery.clear(), db.studyEvents.clear(),
-    db.pathwayGoals.clear(),
+    db.pathwayGoals.clear(), db.coachThreads.clear(), db.coachMessages.clear(),
   ]);
 }
