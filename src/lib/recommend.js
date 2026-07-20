@@ -76,13 +76,16 @@ export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = n
 
   scored.sort((a, b) => b.score - a.score);
 
-  // Diversity pass — cap 2 per category among the top picks so the list isn't
-  // one-note, unless the untaken pool genuinely has nothing else left.
+  // Diversity pass — cap per category among the top picks so the list isn't
+  // one-note, unless the untaken pool genuinely has nothing else left. Cap
+  // scales with `count` so a longer list (e.g. the full 10-pick panel) still
+  // spreads across all 3 categories instead of capping at 2 regardless of size.
+  const perCatCap = Math.max(2, Math.ceil(count / 3));
   const picked = [];
   const usedCats = new Map();
   const pool = [...scored];
   while (picked.length < count && pool.length) {
-    let idx = pool.findIndex(c => (usedCats.get(c.quiz.cat) || 0) < 2);
+    let idx = pool.findIndex(c => (usedCats.get(c.quiz.cat) || 0) < perCatCap);
     if (idx === -1) idx = 0;
     const chosen = pool.splice(idx, 1)[0];
     usedCats.set(chosen.quiz.cat, (usedCats.get(chosen.quiz.cat) || 0) + 1);

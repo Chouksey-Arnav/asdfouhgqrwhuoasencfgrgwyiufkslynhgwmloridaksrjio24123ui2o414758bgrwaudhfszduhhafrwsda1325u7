@@ -1608,7 +1608,7 @@ export default function App({ account, onAccountChange }) {
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
   const rankedQuizzes = useMemo(()=>rankQuizzes({
     quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
-    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:6,
+    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:10,
   }),[qScores,catAverages,courseCats,curPath]);
   const topPick = rankedQuizzes[0];
 
