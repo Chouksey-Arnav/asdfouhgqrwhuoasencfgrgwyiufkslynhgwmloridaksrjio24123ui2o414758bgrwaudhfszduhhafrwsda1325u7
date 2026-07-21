@@ -27,7 +27,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getIatraPickPrompt } from './lib/recommend';
 import { scorePathways } from './lib/diagnosticEngine';
@@ -1336,6 +1336,8 @@ export default function App({ account, onAccountChange }) {
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [gStage,setGStage]=useState(0);const [gShake,setGShake]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
   const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
+  const [deckCategory,setDeckCategory]=useState('all'); // 'all' | one of DECK_CATEGORY_ORDER
+  const [deckSubcat,setDeckSubcat]=useState('all'); // 'all' | a subcategory within deckCategory
   const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
@@ -3408,7 +3410,17 @@ export default function App({ account, onAccountChange }) {
 
     const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
     const searched=searchDecks(deckFuse,allDecksList,dSrch)||allDecksList;
-    const filteredDecks=searched.filter(deck=>{
+    // Section decks into SAT / Science / Social Studies / Study Skills / My Decks (each with its
+    // own subsections, e.g. SAT > Math vs. SAT > Reading & Writing) instead of one flat list —
+    // see DECK_CATEGORIES in constants.js.
+    const subcatsForCategory=deckCategory==='all'?[]:[...new Set(allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===deckCategory).map(d=>getDeckCategory(d.name,d.builtin).subcategory))];
+    const categorized=searched.filter(deck=>{
+      if(deckCategory==='all')return true;
+      const info=getDeckCategory(deck.name,deck.builtin);
+      if(info.category!==deckCategory)return false;
+      return deckSubcat==='all'||info.subcategory===deckSubcat;
+    });
+    const filteredDecks=categorized.filter(deck=>{
       if(deckFilter==='all')return true;
       const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
       if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
@@ -3432,6 +3444,28 @@ export default function App({ account, onAccountChange }) {
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
+        </div>
+
+        {/* Category / subsection pills — SAT > Math vs. SAT > Reading & Writing, Science >
+            Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
+        <div style={CC({gap:8})}>
+          <div style={R({gap:6,flexWrap:'wrap'})}>
+            <button style={btnSm(deckCategory==='all'?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</button>
+            {DECK_CATEGORY_ORDER.map(cat=>{
+              const active=deckCategory===cat;
+              const count=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).length;
+              if(!count)return null;
+              return <button key={cat} style={btnSm(active?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:active?'#fff':C.t2,border:`1px solid ${active?'transparent':C.b1}`})} onClick={()=>{setDeckCategory(cat);setDeckSubcat('all');}}>{cat}<span style={{opacity:.7,marginLeft:4}}>{count}</span></button>;
+            })}
+          </div>
+          {deckCategory!=='all'&&subcatsForCategory.length>1&&(
+            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:6,flexWrap:'wrap',paddingLeft:14,borderLeft:`2px solid ${C.b1}`})}>
+              <button style={btnSm(deckSubcat==='all'?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat==='all'?accent:C.t3,border:`1px solid ${deckSubcat==='all'?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat('all')}>All {deckCategory}</button>
+              {subcatsForCategory.map(sub=>(
+                <button key={sub} style={btnSm(deckSubcat===sub?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat===sub?accent:C.t3,border:`1px solid ${deckSubcat===sub?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat(sub)}>{sub}</button>
+              ))}
+            </motion.div>
+          )}
         </div>
 
         <div style={R({flexWrap:'wrap',gap:10})}>
@@ -5379,7 +5413,7 @@ export default function App({ account, onAccountChange }) {
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portfolioAccent}/>,
     deadlines:()=><DeadlinesPanel accent={portfolioAccent}/>,
-    colleges:()=><CollegeListPanel accent={portfolioAccent}/>,
+    colleges:()=><CollegeListPanel accent={portfolioAccent} studentSAT={user?.onboardingCurrentScore||null}/>,
     essays:()=><EssayWorkspacePanel accent={portfolioAccent}/>,
     scores:()=><ScoreTrackerPanel accent={portfolioAccent}/>,
     aid:()=><FinancialAidPanel accent={portfolioAccent}/>,

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Plus, Trash2, ChevronDown, ChevronUp, School, Check } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
+import CollegeAutocomplete from './CollegeAutocomplete';
 
 const CATEGORIES = [
   { id: 'reach', label: 'Reach', color: C.rose },
@@ -32,13 +33,14 @@ function SectionLabel({ children }) {
   return <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>{children}</div>;
 }
 
-export default function CollegeListPanel({ accent = C.blue }) {
+export default function CollegeListPanel({ accent = C.blue, studentSAT = null }) {
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('target');
+  const [categoryTouched, setCategoryTouched] = useState(false); // true once the student picks a category manually, so an autocomplete pick afterward doesn't overwrite their choice
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -73,6 +75,7 @@ export default function CollegeListPanel({ accent = C.blue }) {
     }
     setColleges(prev => [...prev, college]);
     setNewName('');
+    setCategoryTouched(false);
     toast.success(`${college.name} added to your list`);
     try {
       const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
@@ -126,12 +129,25 @@ export default function CollegeListPanel({ accent = C.blue }) {
       <div style={glass({padding:18})}>
         <SectionLabel>Add a school</SectionLabel>
         <div style={R({gap:10,flexWrap:'wrap'})}>
-          <input style={inp({flex:1,minWidth:180})} placeholder="School name" value={newName} onChange={e=>setNewName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCollege()} />
-          <select style={inp({width:'auto'})} value={newCategory} onChange={e=>setNewCategory(e.target.value)}>
+          <CollegeAutocomplete
+            value={newName}
+            onChange={setNewName}
+            onSelectSchool={(school)=>{
+              // Suggest Reach/Target/Safety from how this school's average SAT compares to the
+              // student's own (from onboarding) — a helpful default, not a hard override, so it
+              // only applies if the student hasn't already picked a category by hand this round.
+              if(categoryTouched || !studentSAT || school.sat==null) return;
+              const delta=school.sat-studentSAT;
+              setNewCategory(delta>60?'reach':delta<-60?'safety':'target');
+            }}
+            onKeyDown={e=>e.key==='Enter'&&addCollege()}
+          />
+          <select style={inp({width:'auto'})} value={newCategory} onChange={e=>{setNewCategory(e.target.value);setCategoryTouched(true);}}>
             {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
           </select>
           <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addCollege}><Plus size={14}/>Add</button>
         </div>
+        {studentSAT && <p style={{fontSize:11,color:C.t3,marginTop:10,lineHeight:1.5}}>Pick a school from the dropdown and we'll suggest Reach/Target/Safety based on your SAT from onboarding ({studentSAT}) — you can always change it.</p>}
       </div>
 
       {loading ? (
