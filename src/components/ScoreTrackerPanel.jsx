@@ -318,7 +318,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
   return (
     <div style={CC({gap:22})}>
       <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
-        <div>
+        <div data-tour="portfolio-deep-scores">
           <div style={lbl()}>Test Prep</div>
           <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>SAT / ACT Score Tracker</h2>
         </div>

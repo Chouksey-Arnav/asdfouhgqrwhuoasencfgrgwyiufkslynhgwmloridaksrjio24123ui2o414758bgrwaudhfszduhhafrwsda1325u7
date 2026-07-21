@@ -99,7 +99,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
 
   return (
     <div style={CC({ gap: 22 })}>
-      <div>
+      <div data-tour="portfolio-deep-interview">
         <div style={lbl()}>Interview Prep</div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>Mock Interview Practice</h2>
         <p style={{ fontSize: 13, color: C.t3, marginTop: 6, lineHeight: 1.6 }}>Practice answering real college-admissions-style questions and get instant, encouraging feedback. Not medical or graduate school prep — just building your confidence for the interviews you'll actually have.</p>

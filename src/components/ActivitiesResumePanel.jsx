@@ -162,7 +162,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   return (
     <div style={CC({gap:22})}>
       <div style={R({justifyContent:'space-between',flexWrap:'wrap'})}>
-        <div>
+        <div data-tour="portfolio-deep-resume">
           <div style={lbl()}>Applications</div>
           <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Resume Builder</h2>
         </div>

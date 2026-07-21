@@ -108,7 +108,7 @@ export default function DeadlinesPanel({ accent = C.blue }) {
 
   return (
     <div style={CC({gap:22})}>
-      <div>
+      <div data-tour="portfolio-deep-deadlines">
         <div style={lbl()}>Applications</div>
         <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Deadlines</h2>
       </div>
