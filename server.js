@@ -12,6 +12,9 @@ import { fileURLToPath } from 'url';
 
 import sendOtp from './api/auth/send-otp.js';
 import verifyOtp from './api/auth/verify-otp.js';
+import completeSignup from './api/auth/complete-signup.js';
+import login from './api/auth/login.js';
+import resetPassword from './api/auth/reset-password.js';
 import me from './api/auth/me.js';
 import logout from './api/auth/logout.js';
 import dataResource from './api/data/[resource].js';
@@ -25,6 +28,9 @@ app.use(express.json({ limit: '1mb' }));
 
 app.all('/api/auth/send-otp', sendOtp);
 app.all('/api/auth/verify-otp', verifyOtp);
+app.all('/api/auth/complete-signup', completeSignup);
+app.all('/api/auth/login', login);
+app.all('/api/auth/reset-password', resetPassword);
 app.all('/api/auth/me', me);
 app.all('/api/auth/logout', logout);
 app.all('/api/send-email', sendEmail);
