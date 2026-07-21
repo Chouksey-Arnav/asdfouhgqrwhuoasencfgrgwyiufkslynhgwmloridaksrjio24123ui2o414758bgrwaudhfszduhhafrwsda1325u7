@@ -464,6 +464,13 @@ export async function deleteCoachThread(id) {
   await db.coachThreads.delete(id);
   pushDirty();
 }
+// Scoped alternative to a full account wipe — clears every Iatra conversation without touching
+// XP, streak, quiz scores, flashcards, or pathway progress.
+export async function clearAllCoachThreads() {
+  await db.coachMessages.clear();
+  await db.coachThreads.clear();
+  pushDirty();
+}
 export async function getCoachMessages(threadId) {
   return db.coachMessages.where('threadId').equals(threadId).sortBy('ts');
 }

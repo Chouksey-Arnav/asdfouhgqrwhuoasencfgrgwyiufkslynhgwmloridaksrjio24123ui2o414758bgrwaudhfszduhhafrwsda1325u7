@@ -26,6 +26,20 @@ export const ACHIEVEMENTS = {
   recommender_added:{ key:'recommender_added', name:'Lining It Up', desc:'Add your first recommender', icon:'UserCheck', xp:75 },
   mmi_practiced:{ key:'mmi_practiced', name:'Format Familiar', desc:'Try an MMI or CASPer practice scenario', icon:'Sparkles', xp:75 },
 
+  // Fills in milestone gaps in the original set (e.g. nothing between 7- and
+  // 30-day streaks, or between 10 quizzes and mastery-based achievements) so
+  // long-term users keep hitting new badges instead of going quiet after the
+  // first week or two.
+  quiz_50:      { key:'quiz_50',      name:'Quiz Machine',     desc:'Complete 50 quizzes',              icon:'Layers', xp:250 },
+  perfect_5:    { key:'perfect_5',    name:'Perfectionist',    desc:'Score 100% on 5 different quizzes', icon:'Star', xp:200 },
+  cards_500:    { key:'cards_500',    name:'Flashcard Marathoner', desc:'Review 500 flashcards',        icon:'Layers3', xp:300 },
+  streak_14:    { key:'streak_14',    name:'Two-Week Habit',   desc:'Study 14 days in a row',           icon:'Flame', xp:175 },
+  streak_100:   { key:'streak_100',   name:'Streak Legend',    desc:'Study 100 days in a row',          icon:'Crown', xp:750 },
+  course_complete:{ key:'course_complete', name:'Course Complete', desc:'Master 100% of your pathway',  icon:'GraduationCap', xp:500 },
+  level_20:     { key:'level_20',     name:'Elite Scholar',    desc:'Reach Level 20',                   icon:'Crown', xp:400 },
+  ai_user_25:   { key:'ai_user_25',   name:'Iatra Regular',    desc:'Use Iatra AI Coach 25 times',      icon:'MessageCircle', xp:150 },
+  path_explorer:{ key:'path_explorer',name:'Track Explorer',  desc:'Fully complete 3 different pathways', icon:'Compass', xp:600 },
+
   // Pathway completion — one per PATHS key (src/data/constants.js), unlocked when every
   // lesson across every unit in that pathway is quiz-verified. Checked via `pathwayCompletions`
   // below, a Set of pathway keys the caller has determined are fully complete.
@@ -43,7 +57,10 @@ export const ACHIEVEMENTS = {
 
 // Keys PATHWAY_COMPLETIONS checks against — kept in sync with PATHS in src/data/constants.js
 // by listing the same 10 keys (avoiding a cross-import from constants.js into this file).
-const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
+// Exported so callers can derive a cumulative pathwayCompletions Set from already-unlocked
+// path_${key}_complete achievements (see App.jsx's checkAndUnlockAchievements) instead of only
+// ever passing the single pathway that just completed.
+export const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
 
 /** Check which new achievements should be unlocked given current state */
 export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), unlocked }) {
@@ -71,6 +88,16 @@ export function checkAchievements({ level, quizCount, perfectScores, streak, car
   check('clinical_hours_50', clinicalHours >= 50);
   check('recommender_added', recommenders >= 1);
   check('mmi_practiced', mmiCasperSessions >= 1);
+
+  check('quiz_50',      quizCount >= 50);
+  check('perfect_5',    perfectScores >= 5);
+  check('cards_500',    cardReviews >= 500);
+  check('streak_14',    streak >= 14);
+  check('streak_100',   streak >= 100);
+  check('course_complete', mastery >= 100);
+  check('level_20',     level >= 20);
+  check('ai_user_25',   aiChats >= 25);
+  check('path_explorer', pathwayCompletions.size >= 3);
 
   for (const key of PATHWAY_KEYS) {
     check(`path_${key}_complete`, pathwayCompletions.has(key));

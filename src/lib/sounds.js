@@ -44,6 +44,14 @@ export const SFX = {
   chest:    () => { tone(330, 0.12, 'triangle', 0.07); setTimeout(() => tone(660, 0.25, 'sine', 0.1), 110); },
 };
 
-let sfxEnabled = true;
-export const setSFX = (v) => { sfxEnabled = v; };
+// Persisted across reloads — previously this reset to "on" every page load regardless of what
+// the student picked in Settings, since only the in-memory flag was ever updated, never read
+// back on init.
+function loadSFXPref() {
+  try { const v = localStorage.getItem('sfxEnabled'); return v === null ? true : v === 'true'; }
+  catch { return true; }
+}
+let sfxEnabled = loadSFXPref();
+export const setSFX = (v) => { sfxEnabled = v; try { localStorage.setItem('sfxEnabled', String(v)); } catch { /* storage unavailable */ } };
+export const isSFXEnabled = () => sfxEnabled;
 export const play  = (name) => { if (sfxEnabled && SFX[name]) SFX[name](); };

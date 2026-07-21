@@ -5,7 +5,7 @@
 // against the student's answers, instead of picking a single max-count winner
 // off a hardcoded fan-out table.
 // ─────────────────────────────────────────────────────────────────────────────
-import { DIAG_AXES, DIAG_QS, PATHS } from '../data/constants';
+import { DIAG_AXES, DIAG_AXIS_LABELS, DIAG_QS, PATHS } from '../data/constants';
 
 function cosineSimilarity(a, b) {
   let dot = 0, magA = 0, magB = 0;
@@ -42,8 +42,43 @@ export function scorePathways(answers, { questions = DIAG_QS, paths = PATHS } = 
   const scored = Object.entries(paths).map(([key, p]) => {
     const axisScore = cosineSimilarity(vector, p.idealVector || {});
     const bonusScore = (bonus[key] || 0) / maxBonus;
-    return { key, score: axisScore * 0.7 + bonusScore * 0.3 };
+    return { key, score: axisScore * 0.7 + bonusScore * 0.3, axisScore, bonusVotes: bonus[key] || 0 };
   }).sort((a, b) => b.score - a.score);
 
-  return { vector, top: scored[0]?.key || 'exploring', ranked: scored.map(s => s.key) };
+  return { vector, bonus, scored, top: scored[0]?.key || 'exploring', ranked: scored.map(s => s.key) };
+}
+
+// Turns the raw scoring math into a short, human-readable "why this path" explanation —
+// surfacing the actual decision logic instead of leaving the recommendation as a black box.
+// Picks the axes this path cares about most (|idealVector| >= 0.3) where the student's own
+// vector agrees most strongly with that path's ideal direction, framed using each axis's
+// plain-language "A vs. B" label.
+export function explainMatch(vector, topKey, { paths = PATHS, scored = null } = {}) {
+  const path = paths[topKey];
+  if (!path) return { reasons: [], confidence: null };
+  const ideal = path.idealVector || {};
+  const reasons = DIAG_AXES
+    .map(axis => ({ axis, v: vector[axis] || 0, want: ideal[axis] || 0 }))
+    .filter(c => Math.abs(c.want) >= 0.3 && Math.abs(c.v) >= 0.15)
+    .map(c => ({ ...c, alignment: c.v * c.want }))
+    .filter(c => c.alignment > 0) // only axes where the student's lean actually agrees with this path
+    .sort((a, b) => b.alignment - a.alignment)
+    .slice(0, 3)
+    .map(c => {
+      const [posLabel, negLabel] = (DIAG_AXIS_LABELS[c.axis] || '').split(' vs. ');
+      return { axis: c.axis, leaning: (c.v >= 0 ? posLabel : negLabel)?.trim() };
+    });
+
+  let confidence = null;
+  if (scored?.length) {
+    const topScore = scored[0]?.score ?? 0;
+    const runnerUpScore = scored[1]?.score ?? topScore;
+    const gap = topScore - runnerUpScore;
+    confidence = {
+      pct: Math.round(Math.max(0, Math.min(1, (topScore + 1) / 2)) * 100),
+      isClear: gap > 0.12,
+      runnerUp: scored[1]?.key || null,
+    };
+  }
+  return { reasons, confidence };
 }

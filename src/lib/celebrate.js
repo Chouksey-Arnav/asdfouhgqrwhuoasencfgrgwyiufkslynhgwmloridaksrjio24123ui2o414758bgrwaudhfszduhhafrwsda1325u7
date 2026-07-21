@@ -8,13 +8,26 @@ const GREEN  = ['#10b981','#34d399','#6ee7b7'];
 const GOLD   = ['#f59e0b','#fbbf24','#fcd34d'];
 const MULTI  = [...BLUE,...GREEN,...GOLD,'#8b5cf6','#f43f5e'];
 
+// Gated centrally (rather than at every call site) so a single Settings toggle can turn off
+// confetti for students who find it distracting/motion-sensitive, without touching the ~10
+// call sites that trigger these bursts throughout the app.
+function loadConfettiPref() {
+  try { const v = localStorage.getItem('confettiEnabled'); return v === null ? true : v === 'true'; }
+  catch { return true; }
+}
+let confettiEnabled = loadConfettiPref();
+export const setConfettiEnabled = (v) => { confettiEnabled = v; try { localStorage.setItem('confettiEnabled', String(v)); } catch { /* storage unavailable */ } };
+export const isConfettiEnabled = () => confettiEnabled;
+
 /** Burst for completing a lesson (+XP) */
 export function celebrateXP() {
+  if (!confettiEnabled) return;
   confetti({ particleCount: 35, spread: 55, origin: { y: 0.7 }, colors: BLUE, scalar: 0.8, ticks: 100 });
 }
 
 /** Big burst for leveling up */
 export function celebrateLevelUp() {
+  if (!confettiEnabled) return;
   const opts = { spread: 80, origin: { y: 0.5 }, colors: MULTI, scalar: 1.1 };
   confetti({ ...opts, particleCount: 80, angle: 60 });
   setTimeout(() => confetti({ ...opts, particleCount: 80, angle: 120 }), 150);
@@ -22,6 +35,7 @@ export function celebrateLevelUp() {
 
 /** Cannon for perfect quiz score (100%) */
 export function celebratePerfect() {
+  if (!confettiEnabled) return;
   const end = Date.now() + 2200;
   const fire = () => {
     confetti({ particleCount: 5, angle: 60, spread: 50, origin: { x: 0 }, colors: GREEN, ticks: 200 });
@@ -33,16 +47,19 @@ export function celebratePerfect() {
 
 /** Star burst for unlocking an achievement */
 export function celebrateAchievement() {
+  if (!confettiEnabled) return;
   confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, colors: MULTI, shapes: ['star'], scalar: 1.2, ticks: 200 });
 }
 
 /** Subtle rain for unit mastery */
 export function celebrateMastery() {
+  if (!confettiEnabled) return;
   confetti({ particleCount: 60, spread: 90, origin: { y: 0.3 }, colors: GREEN, gravity: 0.8, ticks: 250 });
 }
 
 /** Streak milestone (7 day, 30 day) */
 export function celebrateStreak() {
+  if (!confettiEnabled) return;
   const fire = (angle, origin) =>
     confetti({ particleCount: 50, angle, spread: 60, origin, colors: ['#f59e0b','#fbbf24','#f97316'], ticks: 200 });
   fire(60,  { x: 0,   y: 0.6 });
@@ -52,11 +69,13 @@ export function celebrateStreak() {
 
 /** Variable-reward bonus tier — bigger and gold-tinted vs. a plain XP burst. */
 export function celebrateBonusXP() {
+  if (!confettiEnabled) return;
   confetti({ particleCount: 55, spread: 65, origin: { y: 0.65 }, colors: GOLD, scalar: 1, ticks: 150 });
 }
 
 /** Jackpot tier (2% roll) — the rarest, most visually distinct moment in the app. */
 export function celebrateJackpot() {
+  if (!confettiEnabled) return;
   const end = Date.now() + 1600;
   const fire = () => {
     confetti({ particleCount: 8, angle: 60, spread: 70, origin: { x: 0, y: 0.6 }, colors: MULTI, scalar: 1.1, ticks: 250 });
@@ -69,5 +88,6 @@ export function celebrateJackpot() {
 
 /** Chest unwrap moment — a quick, tight burst timed to the reveal, not the tap. */
 export function celebrateChestOpen() {
+  if (!confettiEnabled) return;
   confetti({ particleCount: 70, spread: 75, origin: { y: 0.55 }, colors: MULTI, scalar: 1, ticks: 200 });
 }

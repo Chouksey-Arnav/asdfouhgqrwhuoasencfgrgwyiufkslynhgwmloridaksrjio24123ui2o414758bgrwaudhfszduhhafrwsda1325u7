@@ -19,10 +19,10 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
 const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
@@ -30,7 +30,7 @@ import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getIatraPickPrompt } from './lib/recommend';
-import { scorePathways } from './lib/diagnosticEngine';
+import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueCardsBadge, dueCardsSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
@@ -42,8 +42,8 @@ import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
-import { play, setSFX } from './lib/sounds';
-import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
+import { play, setSFX, isSFXEnabled } from './lib/sounds';
+import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot, setConfettiEnabled, isConfettiEnabled } from './lib/celebrate';
 import { awardXP, BONUS_COPY } from './lib/rewards';
 import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
@@ -52,7 +52,7 @@ import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinRewar
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
-import { ACHIEVEMENTS, checkAchievements } from './lib/achievements';
+import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
@@ -1283,12 +1283,17 @@ export default function App({ account, onAccountChange }) {
     ...NAV.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
     ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
-  ],[goPrep,goPortfolio]);
+    ...PROGRESS_SUBNAV.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
+  ],[goPrep,goPortfolio,goProgress]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
     if(!q) return COMMANDS;
     return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
   },[COMMANDS,cmdQ]);
+  // Keyboard-navigable highlight index — arrow keys + Enter, not mouse-only,
+  // since that's the whole point of a command palette for a fast typist.
+  const [cmdActiveIdx,setCmdActiveIdx]=useState(0);
+  useEffect(()=>{ setCmdActiveIdx(0); },[cmdQ,cmdOpen]);
   useEffect(()=>{
     function onKey(e){
       if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); setCmdOpen(o=>!o); }
@@ -1299,9 +1304,14 @@ export default function App({ account, onAccountChange }) {
   },[]);
   useEffect(()=>{ if(!cmdOpen) setCmdQ(''); },[cmdOpen]);
   const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
+  const onCmdInputKeyDown=useCallback((e)=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setCmdActiveIdx(i=>Math.max(i-1,0)); }
+    else if(e.key==='Enter'){ e.preventDefault(); const cmd=filteredCmds[cmdActiveIdx]; if(cmd)runCommand(cmd); }
+  },[filteredCmds,cmdActiveIdx,runCommand]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
-  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
+  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);const [dWhy,setDWhy]=useState(null);
   const [dIntro,setDIntro]=useState(true); // show pathway overview + manual selection before the diagnostic quiz starts
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
@@ -1433,7 +1443,7 @@ export default function App({ account, onAccountChange }) {
   };
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
+  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);const [sExamDate,setSExamDate]=useState('');
   // Settings > "Your Goals" — lets a student revisit/update what onboarding collected (goal,
   // obstacles, study method, things they want to accomplish) instead of it being locked in at
   // signup forever. Buffers are only seeded from `user` when the Edit button is clicked (tSettings()).
@@ -1561,6 +1571,18 @@ export default function App({ account, onAccountChange }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
+  // ── Sync status (for the "Synced just now" indicator in Settings) ───────────
+  const [syncStatus,setSyncStatus]=useState(()=>ProgressSync.getSyncStatus());
+  useEffect(()=>ProgressSync.subscribeSyncStatus(setSyncStatus),[]);
+  // Forces the "Xm ago" label in Settings to keep advancing even when no new
+  // sync event has fired — only ticks while Settings is actually open.
+  const [,setSyncTick]=useState(0);
+  useEffect(()=>{
+    if(tab!=='settings')return;
+    const id=setInterval(()=>setSyncTick(t=>t+1),15000);
+    return()=>clearInterval(id);
+  },[tab]);
+
   // ── Portfolio (Supabase-backed: activities, awards, GPA history) ─────────────
   useEffect(()=>{
     if(tab!=='portfolio'||portLoaded)return;
@@ -1672,6 +1694,11 @@ export default function App({ account, onAccountChange }) {
     else if(profile.goal==='build_application') goPortfolio('overview');
     else goPrep('quizzes');
     toast.success(pickNudge('welcome_new_user',{name}));
+    // The handoff from the ~30-screen onboarding flow into the real app used to be completely
+    // flat — no different from any other page load — despite being the single biggest payoff
+    // moment in the whole flow. One-time burst, not looped, so it reads as a landing moment.
+    play('achieve');
+    celebrateAchievement();
     tourPendingRef.current=true;
     setJustOnboarded(true);
   },[saveUser,goPrep,goPortfolio,onAccountChange,account]);
@@ -1782,13 +1809,44 @@ export default function App({ account, onAccountChange }) {
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
   const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
 
+  // A built-in deck's cards get a progressed (FSRS-scheduled) copy saved into cDecks under the
+  // same name the first time it's actually reviewed — see rateCard() below, which persists
+  // built-in deck progress the same way it always has for custom decks. Before that first
+  // review, FLASH_DECKS' pristine static copy is all there is. Centralizing this lookup (instead
+  // of repeating the ternary at every call site) also guarantees allCards/allDecksList never
+  // double-count a built-in deck that's been studied once its progressed copy exists in cDecks.
+  const builtinDeckNames = useMemo(()=>new Set(Object.keys(FLASH_DECKS)),[]);
+  const cardsForDeck = useCallback((name,builtin)=>{
+    if(builtin) return cDecks[name]||FLASH_DECKS[name]||[];
+    return cDecks[name]||[];
+  },[cDecks]);
+
   // FSRS due count (across built-in and custom decks)
-  const allCards = useMemo(()=>[...Object.values(FLASH_DECKS).flat(),...Object.values(cDecks).flat()],[cDecks]);
+  const allCards = useMemo(()=>[
+    ...Object.keys(FLASH_DECKS).flatMap(n=>cardsForDeck(n,true)),
+    ...Object.entries(cDecks).filter(([n])=>!builtinDeckNames.has(n)).flatMap(([,c])=>c),
+  ],[cDecks,builtinDeckNames,cardsForDeck]);
   const dueCards = useMemo(()=>getDueCards(allCards).length,[allCards]);
   const avgRetention = useMemo(()=>{
     const rets = allCards.map(c=>getRetainability(c)).filter(r=>r!==null);
     return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;
   },[allCards]);
+
+  // Per-category quiz performance + the "what to do next" insight callouts built from it — lifted
+  // to component scope (previously computed only inside tProgress()) so Portfolio can surface the
+  // same gap-to-action callouts Progress already shows, instead of being two disconnected views
+  // of the same underlying data.
+  const catStats = useMemo(()=>cats3.map(cat=>{
+    const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
+    const taken=cQ.filter(q=>qScores[q.id]!==undefined);
+    const avg=taken.length?Math.round(taken.reduce((s,q)=>s+qScores[q.id],0)/taken.length):null;
+    return{cat,avg,taken:taken.length,total:cQ.length,predicted:avg!==null?scoreToSection(avg):null};
+  }),[qScores]);
+  const benchmarks = curPath?.benchmarks||{};
+  const insights = useMemo(()=>buildInsights({
+    catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
+    recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
+  }),[catStats,curPath,mastery,clinicalHoursTotal,benchmarks,recommendersCount,appCounts,streak,dueCards]);
 
   // Next lesson to resume (first not-done lesson in current pathway, in order)
   const nextLesson = useMemo(()=>{
@@ -1845,6 +1903,7 @@ export default function App({ account, onAccountChange }) {
     // snapshot the next device pulls. Best-effort — an offline sign-out still clears locally.
     try{ await ProgressSync.flushNow(); }catch(err){ console.error('Pre-signout sync flush failed:',err); }
     DB.setSyncEnabled(false);
+    ProgressSync.resetSyncStatus();
     await DB.clearAllData();
     clearViewState();
     setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
@@ -1854,12 +1913,20 @@ export default function App({ account, onAccountChange }) {
   // ── Achievement checker ──────────────────────────────────────────────────────
   const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC,extra={})=>{
     const unlocked = await DB.getAchievements();
+    // Every call site only ever passes the single pathway that just completed (if any) —
+    // derive the account's true cumulative history from already-unlocked path_*_complete
+    // badges instead, so multi-pathway achievements (path_explorer) actually accumulate across
+    // separate pathway completions instead of only ever seeing a 0-or-1-element set.
+    const pathwayCompletions = new Set([
+      ...PATHWAY_KEYS.filter(k=>unlocked.has(`path_${k}_complete`)),
+      ...(extra.pathwayCompletions||[]),
+    ]);
     const toUnlock = checkAchievements({
       level:u?getLevelInfo(u.xp||0).level:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC,
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
-      pathwayCompletions: extra.pathwayCompletions??new Set(),
+      pathwayCompletions,
       unlocked,
     });
     for(const achievement of toUnlock){
@@ -2122,6 +2189,13 @@ export default function App({ account, onAccountChange }) {
     try{ await DB.deleteCoachThread(id); }catch(err){console.error('Failed to delete chat thread',err);toast.error('Could not delete that chat.');}
   }
 
+  async function clearAllChats(){
+    if(!coachThreads.length){ toast('No Iatra conversations to clear.'); return; }
+    if(!window.confirm(`Delete all ${coachThreads.length} Iatra conversation${coachThreads.length===1?'':'s'}? This cannot be undone — your XP, streak, and study progress are unaffected.`))return;
+    setCoachThreads([]);setActiveThreadId(null);setMsgs([]);
+    try{ await DB.clearAllCoachThreads(); toast.success('Iatra chat history cleared.'); }catch(err){console.error('Failed to clear chat history',err);toast.error('Could not clear chat history.');}
+  }
+
   function copyMsg(text,i){
     navigator.clipboard?.writeText(text).then(()=>{
       setCopiedIdx(i);
@@ -2182,11 +2256,18 @@ export default function App({ account, onAccountChange }) {
   async function rateCard(label){
     if(!currentCard||!activeDeck)return;
     const updated=scheduleCard(currentCard,label);
-    const deckName=activeDeck.name;
-    const allDeckCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
+    // Smart Mix pulls due cards from several decks into one session, so a card's real home
+    // deck (where the FSRS update actually needs to be written back) isn't necessarily
+    // activeDeck itself — see the _srcDeck/_srcBuiltin tags added when building that pool below.
+    const deckName=activeDeck.smartMix?currentCard._srcDeck:activeDeck.name;
+    const deckIsBuiltin=activeDeck.smartMix?currentCard._srcBuiltin:activeDeck.builtin;
+    const allDeckCards=[...cardsForDeck(deckName,deckIsBuiltin)];
     const idx=allDeckCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
     if(idx>=0)allDeckCards[idx]=updated;
-    if(!activeDeck.builtin)await saveDeck(deckName,allDeckCards);
+    // Persisted for built-in decks too now, not just custom ones — otherwise every review of a
+    // shipped deck's cards would silently reset the moment the page reloads, defeating spaced
+    // repetition for the majority of decks in the library.
+    await saveDeck(deckName,allDeckCards);
     await DB.recordCardReview(currentCard.id||cIdx);
     const newTotal=totalReviews+1;setTotalReviews(newTotal);
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
@@ -2331,9 +2412,10 @@ export default function App({ account, onAccountChange }) {
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
   function finalizeDiag(answers){
-    const { top, ranked } = scorePathways(answers);
+    const { top, ranked, vector, scored } = scorePathways(answers);
     setDR(top);
     setDCats(ranked.filter(k=>k!==top).slice(0,2)); // top 2 alternates, shown as "you might also fit"
+    setDWhy(explainMatch(vector, top, { scored })); // reasoning behind the match, not just the label
     setDD(true);
     saveUser({...user,diagnosticResult:top});
   }
@@ -2493,14 +2575,19 @@ export default function App({ account, onAccountChange }) {
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
+    // cDecks can now hold a progressed copy of a built-in deck (saved the first time it's
+    // studied — see rateCard) under that deck's own name, so exclude those from "custom" or
+    // they'd show up twice: once correctly as built-in (with real progress), once again here
+    // mislabeled as a user-created deck.
     const customSorted = Object.entries(cDecks)
+      .filter(([n])=>!builtinDeckNames.has(n))
       .map(([n,c])=>({name:n,cards:c,builtin:false}))
       .sort((a,b)=>(deckCreatedAt[b.name]||0)-(deckCreatedAt[a.name]||0));
     return [
       ...customSorted,
-      ...Object.entries(FLASH_DECKS).map(([n,c])=>({name:n,cards:c,builtin:true})),
+      ...Object.keys(FLASH_DECKS).map(n=>({name:n,cards:cardsForDeck(n,true),builtin:true})),
     ];
-  },[cDecks,deckCreatedAt]);
+  },[cDecks,deckCreatedAt,builtinDeckNames,cardsForDeck]);
   const deckFuse = useMemo(()=>buildDeckSearch(allDecksList),[allDecksList]);
   const newestDeckName = useMemo(()=>{
     const entries = Object.entries(deckCreatedAt);
@@ -2510,12 +2597,19 @@ export default function App({ account, onAccountChange }) {
   const [dSrchLive,setDSrchLive] = useState('');
   useEffect(()=>{ const t=setTimeout(()=>setDS2(dSrchLive),120); return()=>clearTimeout(t); },[dSrchLive]);
 
-  // Active deck cards (sorted for study)
+  // Active deck cards (sorted for study). Smart Mix is a virtual "deck" that pools every due
+  // card across every real deck into one cross-category session instead of picking a single
+  // deck first — each card is tagged with where it actually lives so rateCard() can write its
+  // FSRS update back to the right place.
   const deckCards = useMemo(()=>{
     if(!activeDeck)return[];
-    const cards=activeDeck.builtin?FLASH_DECKS[activeDeck.name]||(cDecks[activeDeck.name]||[]):cDecks[activeDeck.name]||[];
+    if(activeDeck.smartMix){
+      const pool=allDecksList.flatMap(d=>getDueCards(d.cards).map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
+      return sortForStudy(pool);
+    }
+    const cards=cardsForDeck(activeDeck.name,activeDeck.builtin);
     return studyMode==='due'?sortForStudy(getDueCards(cards)):cards;
-  },[activeDeck,cDecks,studyMode]);
+  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck]);
 
   const currentCard = deckCards[cIdx];
 
@@ -2752,6 +2846,32 @@ export default function App({ account, onAccountChange }) {
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
+
+        {/* Why this path — the actual decision logic (5-axis work-style vector + scenario
+            votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
+        <div style={glass({padding:18})}>
+          <SL>Why {path?.label}</SL>
+          {dWhy?.reasons?.length>0?(
+            <div style={CC({gap:10})}>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:0}}>Your answers leaned toward:</p>
+              <div style={R({gap:8,flexWrap:'wrap'})}>
+                {dWhy.reasons.map(r=>(
+                  <span key={r.axis} style={{...pill(`${path?.accent||accent}18`,path?.accent||accent,{fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}}><Check size={11}/>{r.leaning}</span>
+                ))}
+              </div>
+              {dWhy.confidence&&(
+                <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,margin:'4px 0 0'}}>
+                  {dWhy.confidence.isClear
+                    ?`A clear match — ${path?.label} scored well ahead of every other pathway on your answers.`
+                    :`A closer call — ${PATHS[dWhy.confidence.runnerUp]?.label||'another pathway'} was also a strong fit, so it's worth reading through that one too before committing.`}
+                </p>
+              )}
+            </div>
+          ):(
+            <p style={{fontSize:12.5,color:C.t3,lineHeight:1.6,margin:0}}>{dRes==='exploring'?`${path?.label} is the broad, exploratory track — a solid pick when your answers didn't strongly lean toward one specialty yet, or if you're still deciding.`:`Your answers didn't lean strongly in one direction, but ${path?.label} still came out as your best overall match.`} Any of the pathways below sequence the same core SAT/ACT prep either way, so it's easy to switch later.</p>
+          )}
+        </div>
+
         <div style={{...glass({padding:14}),display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.02)'}}>
           <Milestone size={14} color={C.t3}/>
           <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
@@ -3108,7 +3228,26 @@ export default function App({ account, onAccountChange }) {
   }
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
-  const COACH_ICONS = { FlaskConical, Compass };
+  const COACH_ICONS = { FlaskConical, Compass, Sparkles };
+  // Builds a "For You Right Now" group from the same profile signals already
+  // fed into buildCoachSystemPrompt (weakest category, exam countdown, due
+  // cards, stated goal) so the starter prompts a student actually sees are
+  // grounded in their real data instead of the same three generic examples
+  // every account was shown before.
+  const personalizedQuickPrompts=useCallback(()=>{
+    const personal=[];
+    const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+    if(weakIdx)personal.push(`I'm scoring lowest in ${cats3[weakIdx.i]} (${weakIdx.v}%) — walk me through how to approach it`);
+    if(user?.examDate){
+      const days=Math.ceil((new Date(user.examDate)-new Date())/86400000);
+      if(days>=0)personal.push(`I have ${days} day${days===1?'':'s'} until my test — what should I focus on right now?`);
+    }
+    if(dueCards>0)personal.push(`Quiz me out loud on my ${dueCards} due flashcard${dueCards===1?'':'s'} instead of the review screen`);
+    const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
+    if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
+    if(!personal.length)return QUICK_P_GROUPS;
+    return [{label:'For You Right Now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
+  },[secAvgs,cats3,user,dueCards]);
   function TypingDots(){
     return(
       <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 2px'}}>
@@ -3259,13 +3398,15 @@ export default function App({ account, onAccountChange }) {
                 <div style={{fontSize:13,color:C.t3,lineHeight:1.6}}>Ask me to explain a concept, build a study plan, or work through a tough problem. I know where you stand in {curPath?.label||'your pathway'} and can tailor answers to it. Pick a prompt below or just start typing.</div>
               </div>
             </div>
-            {QUICK_P_GROUPS.map(group=>{const GIc=COACH_ICONS[group.icon];return(
+            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For You Right Now';return(
               <div key={group.label} style={{marginBottom:18}}>
-                <div style={{...R({gap:6}),marginBottom:10}}><GIc size={12} color={C.t3}/><span style={lbl({marginBottom:0})}>{group.label}</span></div>
+                <div style={{...R({gap:6}),marginBottom:10}}>
+                  <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
+                </div>
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:10}}>
                   {group.prompts.map((p,i)=>(
-                    <motion.button key={i} whileHover={{y:-2,borderColor:`${accent}50`,background:'rgba(255,255,255,0.045)'}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'12px 14px',borderRadius:12,border:`1px solid ${C.b1}`,background:'rgba(255,255,255,0.025)',color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                    <motion.button key={i} whileHover={{y:-2,borderColor:`${personal?C.amber:accent}50`,background:'rgba(255,255,255,0.045)'}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
+                      style={{textAlign:'left',padding:'12px 14px',borderRadius:12,border:`1px solid ${personal?C.amber+'30':C.b1}`,background:personal?C.amberDim:'rgba(255,255,255,0.025)',color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
@@ -3339,8 +3480,8 @@ export default function App({ account, onAccountChange }) {
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
-            <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?"You've cleared every due card across every deck — nice.":studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {sessionTotal>0&&(<>
               <div style={{...G(4,10,{},isMobile),marginBottom:14,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
@@ -3354,19 +3495,22 @@ export default function App({ account, onAccountChange }) {
               </div>
             </>)}
             <div style={R({justifyContent:'center',gap:10})}>
-              {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
-              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>
+              {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+              {activeDeck.smartMix
+                ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
+                :<button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>}
             </div>
           </motion.div>
         </div>
       );}
-      const dueCount=getDueCards(activeDeck.builtin?(FLASH_DECKS[activeDeck.name]||[]):(cDecks[activeDeck.name]||[])).length;
+      const dueCount=activeDeck.smartMix?deckCards.length:getDueCards(cardsForDeck(activeDeck.name,activeDeck.builtin)).length;
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
             <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={R({justifyContent:'center',gap:8})}>
+                {activeDeck.smartMix&&<Sparkles size={13} color={C.amberL}/>}
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
                 <AnimatePresence>
                   {sessionStats.streak>=3&&(
@@ -3377,11 +3521,13 @@ export default function App({ account, onAccountChange }) {
                   )}
                 </AnimatePresence>
               </div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}</div>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>
+                {cIdx+1} / {deckCards.length}{activeDeck.smartMix&&currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:!activeDeck.smartMix?` · ${dueCount} due`:''}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
+              </div>
             </div>
             <div style={R({gap:6})}>
-              <button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>
-              <button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
@@ -3421,7 +3567,7 @@ export default function App({ account, onAccountChange }) {
       );
     }
 
-    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
+    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).filter(n=>!builtinDeckNames.has(n)).length;
     const searched=searchDecks(deckFuse,allDecksList,dSrch)||allDecksList;
     // Section decks into SAT / Science / Social Studies / Study Skills / My Decks (each with its
     // own subsections, e.g. SAT > Math vs. SAT > Reading & Writing) instead of one flat list —
@@ -3435,12 +3581,20 @@ export default function App({ account, onAccountChange }) {
     });
     const filteredDecks=categorized.filter(deck=>{
       if(deckFilter==='all')return true;
-      const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
-      if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
+      if(deckFilter==='due')return getDueCards(deck.cards).length>0;
       if(deckFilter==='custom')return !deck.builtin;
       if(deckFilter==='builtin')return deck.builtin;
       return true;
     });
+    // Per-subject mastery — retention % rolled up by DECK_CATEGORY_ORDER instead of just one
+    // library-wide average, so a student can see e.g. "SAT Math 91% vs. Study Skills 54%"
+    // rather than a single blended number that hides which subject actually needs more work.
+    const categoryMastery=DECK_CATEGORY_ORDER.map(cat=>{
+      const cardsInCat=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).flatMap(d=>d.cards);
+      if(!cardsInCat.length)return null;
+      const rets=cardsInCat.map(c=>getRetainability(c)).filter(r=>r!==null);
+      return{cat,total:cardsInCat.length,due:getDueCards(cardsInCat).length,avgRet:rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null};
+    }).filter(Boolean);
 
     return(
       <div style={CC({gap:22})}>
@@ -3458,6 +3612,42 @@ export default function App({ account, onAccountChange }) {
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
         </div>
+
+        {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
+            instead of having to pick a single deck first and switch decks once it runs dry. */}
+        {dueCards>0&&(
+          <motion.div whileHover={{y:-2}} style={{...glass({padding:18}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
+            onClick={()=>{setAD({name:'Smart Mix',builtin:true,smartMix:true});setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
+            <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Sparkles size={20} color={C.amberL}/></div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review all {dueCards} due card{dueCards===1?'':'s'} across every deck in one session — no need to pick a deck first.</div>
+            </div>
+            <span style={{...btn(`linear-gradient(135deg,${C.amber},${C.amber}cc)`,{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
+          </motion.div>
+        )}
+
+        {/* Mastery by subject — retention % rolled up per DECK_CATEGORY_ORDER group instead of
+            one blended library-wide number, so it's obvious which subject needs more review. */}
+        {categoryMastery.length>1&&(
+          <div style={glass({padding:18})}>
+            <SL extra={{marginBottom:14}}>Mastery by Subject</SL>
+            <div style={G(2,10,{},isMobile)}>
+              {categoryMastery.map(({cat,total,due,avgRet})=>(
+                <div key={cat} style={glass2({padding:'12px 14px'})}>
+                  <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{cat}</span>
+                    <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{avgRet!==null?`${avgRet}%`:'—'}</span>
+                  </div>
+                  {avgRet!==null
+                    ?<Bar pct={avgRet} color={avgRet>=80?C.green:avgRet>=50?C.amber:C.rose} h={5}/>
+                    :<div style={{fontSize:10.5,color:C.t4}}>Not studied yet — {total} card{total===1?'':'s'} waiting</div>}
+                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:C.t3,marginTop:5}}>{due} due now</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Category / subsection pills — SAT > Math vs. SAT > Reading & Writing, Science >
             Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
@@ -3556,9 +3746,8 @@ export default function App({ account, onAccountChange }) {
 
         <div style={G(3,12,{},isMobile)}>
           {filteredDecks.map((deck,i)=>{
-            const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
-            const dc=getDueCards(deckCardsAll).length;
-            const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
+            const dc=getDueCards(deck.cards).length;
+            const deckRet=(()=>{const rets=deck.cards.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
@@ -4183,7 +4372,6 @@ export default function App({ account, onAccountChange }) {
     const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
     const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
     const PIcon=PATH_ICONS[eSpec]||Compass;
-    const benchmarks=curPath?.benchmarks||{};
     const strength=computeApplicationStrength({
       mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
       recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
@@ -4217,6 +4405,22 @@ export default function App({ account, onAccountChange }) {
             ))}
           </div>
         </div>
+
+        {/* Same insight callouts Progress shows — surfaced here too so Portfolio is a place to
+            act on a gap (jump straight into Prep or the right Portfolio sub-view), not just a
+            second, disconnected place to look at the same numbers. */}
+        {insights.length>0&&<div style={CC({gap:8})}>
+          {insights.slice(0,3).map((ins,i)=>{
+            const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
+            return(
+              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
+                <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
+                {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
+              </div>
+            );
+          })}
+        </div>}
 
         {/* Cross-app snapshot — pulls every feature area into one view so Portfolio reads as the hub, not just a resume tracker */}
         <div style={glass({padding:18})}>
@@ -4372,9 +4576,20 @@ export default function App({ account, onAccountChange }) {
             <span style={pill(C.blueDim, C.blueL, { fontSize: 10 })}>Calculates dynamic admission index</span>
           </div>
           <div style={G(2,14,{},isMobile)}>
+            <div style={CC({gap:4})}>
+              <span style={lbl()}>Cumulative GPA</span>
+              <input type="number" step="0.01" min="2" max="4" style={inp()} placeholder="3.75" value={cGPA} onChange={e=>setCGPA(e.target.value)}/>
+            </div>
+            <div style={CC({gap:4})}>
+              <div style={R({justifyContent:'space-between',alignItems:'flex-end'})}>
+                <span style={lbl({marginBottom:0})}>SAT Score (or ACT converted)</span>
+                {/* Pulls the score Prep already predicted from real quiz performance instead of
+                    making the student re-derive/retype a number the app can already estimate. */}
+                {predSAT&&!cSAT&&<button style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`,fontSize:10}),whiteSpace:'nowrap'}} onClick={()=>setCSAT(String(predSAT))}>Use predicted: {predSAT}</button>}
+              </div>
+              <input type="number" min="400" max="1600" style={inp()} placeholder="1350" value={cSAT} onChange={e=>setCSAT(e.target.value)}/>
+            </div>
             {[
-              {l:'Cumulative GPA',p:'3.75',t:'number',step:'0.01',min:'2',max:'4',v:cGPA,s:setCGPA},
-              {l:'SAT Score (or ACT converted)',p:'1350',t:'number',min:'400',max:'1600',v:cSAT,s:setCSAT},
               {l:'Science Course Rigor (AP/IB)',p:'2',t:'number',min:'0',v:cRigor,s:setCRigor},
               {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
               {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
@@ -4626,13 +4841,6 @@ export default function App({ account, onAccountChange }) {
         },
       });
     }
-    const catStats=cats3.map((cat,i)=>{
-      const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
-      const taken=cQ.filter(q=>qScores[q.id]!==undefined);
-      const avg=taken.length?Math.round(taken.reduce((s,q)=>s+qScores[q.id],0)/taken.length):null;
-      return{cat,avg,taken:taken.length,total:cQ.length,predicted:avg!==null?scoreToSection(avg):null};
-    });
-
     // Chart configs
     const radarData={
       labels:cats3.map(c=>c.split('/')[0]),
@@ -4685,16 +4893,11 @@ export default function App({ account, onAccountChange }) {
     const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
     const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
-    const benchmarks=curPath?.benchmarks||{};
     const strength=computeApplicationStrength({
       mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
       recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
     });
     const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
-    const insights=buildInsights({
-      catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
-      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
-    });
     const diagPath=user?.diagnosticResult?PATHS[user.diagnosticResult]:null;
     // Clinical hour trend — cumulative by month
     const hoursByMonth={};
@@ -5105,6 +5308,20 @@ export default function App({ account, onAccountChange }) {
         {children}
       </div>
     );
+    // Relative-time label for the sync badge below — deliberately coarse
+    // (no seconds-level ticking) since "just now" vs "2m ago" is all a
+    // student needs to trust that cross-device sync is actually working.
+    const syncTimeLabel=(ts)=>{
+      if(!ts)return null;
+      const s=Math.max(0,Math.round((Date.now()-ts)/1000));
+      if(s<10)return'just now';
+      if(s<60)return`${s}s ago`;
+      const m=Math.round(s/60);
+      if(m<60)return`${m}m ago`;
+      const h=Math.round(m/60);
+      if(h<24)return`${h}h ago`;
+      return`${Math.round(h/24)}d ago`;
+    };
     return(
       <div style={CC({gap:30})}>
         {/* Hero */}
@@ -5281,12 +5498,27 @@ export default function App({ account, onAccountChange }) {
               <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
             </div>
           </div>
+          <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Celebration Effects</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Confetti bursts for level-ups, streaks, and achievements</div>
+            </div>
+            <div onClick={()=>{const v=!confettiOn;setConfettiOn(v);setConfettiEnabled(v);}} style={{width:44,height:24,borderRadius:12,background:confettiOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${confettiOn?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:confettiOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
         </div>
 
         <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
+        </div>
+
+        <div style={glass({padding:18})}>
+          <SL>Iatra Chat History</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Clear every saved Iatra conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
+          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
         </div>
 
         <div style={glass({padding:18})}>
@@ -5306,7 +5538,16 @@ export default function App({ account, onAccountChange }) {
         <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          {/* Makes the otherwise-invisible cross-device sync machinery (progressSync.js)
+              visible and checkable, instead of the student just having to trust it works. */}
+          <div style={{...R({gap:8}),marginBottom:14,padding:'8px 12px',borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,width:'fit-content'}}>
+            {syncStatus.state==='syncing'&&<><RefreshCw size={13} color={C.blueL} style={{animation:'spin 1s linear infinite'}}/><span style={{fontSize:12,color:C.blueL,fontWeight:600}}>Syncing…</span></>}
+            {syncStatus.state==='pending'&&<><Clock size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Changes pending sync…</span></>}
+            {syncStatus.state==='synced'&&<><Cloud size={13} color={C.greenL}/><span style={{fontSize:12,color:C.greenL,fontWeight:600}}>Synced{syncTimeLabel(syncStatus.lastSyncedAt)?` ${syncTimeLabel(syncStatus.lastSyncedAt)}`:''}</span></>}
+            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.rose}/><span style={{fontSize:12,color:C.rose}} title={syncStatus.error||''}>Sync couldn't reach the server — your progress is still saved on this device</span></>}
+            {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
+          </div>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
@@ -5557,22 +5798,26 @@ export default function App({ account, onAccountChange }) {
                 onClick={e=>e.stopPropagation()}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
-                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
                   <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>
                   {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
-                  {['Jump to','Prep','Portfolio'].map(group=>{
+                  {['Jump to','Prep','Portfolio','Progress'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(
                       <div key={group} style={{marginBottom:6}}>
                         <div style={{fontSize:9.5,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'8px 10px 4px'}}>{group}</div>
-                        {items.map(cmd=>(
-                          <motion.div key={cmd.id} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13}}>
-                            <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span><ChevronRight size={13} color={C.t4}/>
-                          </motion.div>
-                        ))}
+                        {items.map(cmd=>{
+                          const idx=filteredCmds.indexOf(cmd);
+                          const active=idx===cmdActiveIdx;
+                          return(
+                            <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
+                              <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span>{active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     );
                   })}
