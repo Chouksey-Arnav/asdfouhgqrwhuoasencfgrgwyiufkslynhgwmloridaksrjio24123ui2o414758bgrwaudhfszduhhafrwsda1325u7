@@ -57,7 +57,10 @@ export const ACHIEVEMENTS = {
 
 // Keys PATHWAY_COMPLETIONS checks against — kept in sync with PATHS in src/data/constants.js
 // by listing the same 10 keys (avoiding a cross-import from constants.js into this file).
-const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
+// Exported so callers can derive a cumulative pathwayCompletions Set from already-unlocked
+// path_${key}_complete achievements (see App.jsx's checkAndUnlockAchievements) instead of only
+// ever passing the single pathway that just completed.
+export const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
 
 /** Check which new achievements should be unlocked given current state */
 export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), unlocked }) {

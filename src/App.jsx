@@ -52,7 +52,7 @@ import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinRewar
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
-import { ACHIEVEMENTS, checkAchievements } from './lib/achievements';
+import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
@@ -1913,12 +1913,20 @@ export default function App({ account, onAccountChange }) {
   // ── Achievement checker ──────────────────────────────────────────────────────
   const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC,extra={})=>{
     const unlocked = await DB.getAchievements();
+    // Every call site only ever passes the single pathway that just completed (if any) —
+    // derive the account's true cumulative history from already-unlocked path_*_complete
+    // badges instead, so multi-pathway achievements (path_explorer) actually accumulate across
+    // separate pathway completions instead of only ever seeing a 0-or-1-element set.
+    const pathwayCompletions = new Set([
+      ...PATHWAY_KEYS.filter(k=>unlocked.has(`path_${k}_complete`)),
+      ...(extra.pathwayCompletions||[]),
+    ]);
     const toUnlock = checkAchievements({
       level:u?getLevelInfo(u.xp||0).level:1, quizCount:qCount, perfectScores:perfect, streak:str, cardReviews:reviews, mastery:mast, aiChats:aiC,
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
-      pathwayCompletions: extra.pathwayCompletions??new Set(),
+      pathwayCompletions,
       unlocked,
     });
     for(const achievement of toUnlock){
