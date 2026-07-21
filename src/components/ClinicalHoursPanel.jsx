@@ -61,7 +61,7 @@ export default function ClinicalHoursPanel({ accent = C.blue, onLogged }) {
   return (
     <div style={CC({gap:22})}>
       <div style={R()}>
-        <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Clinical & Shadowing Hours</h2></div>
+        <div data-tour="portfolio-deep-clinical"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Clinical & Shadowing Hours</h2></div>
         <div style={{marginLeft:'auto',...R({gap:6})}}>
           <span style={pill(C.blueDim,C.blueL)}>{totalHours.toLocaleString()} total hours</span>
           {verifiedHours>0 && <span style={pill(C.greenDim,C.greenL)}><ShieldCheck size={10} style={{marginRight:4}}/>{verifiedHours}h verified</span>}

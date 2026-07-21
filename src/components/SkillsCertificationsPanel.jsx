@@ -50,7 +50,7 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
   return (
     <div style={CC({gap:22})}>
       <div style={R()}>
-        <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Skills & Certifications</h2></div>
+        <div data-tour="portfolio-deep-skills"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Skills & Certifications</h2></div>
         <div style={{marginLeft:'auto'}}><span style={pill(C.blueDim,C.blueL)}>{entries.length} tracked</span></div>
       </div>
       <p style={{fontSize:13,color:C.t2,lineHeight:1.6,marginTop:-14}}>CPR/BLS, EMT, lifeguard, lab safety — anything with a real certificate and an expiration date. These are concrete, checkable credentials rather than self-described skills.</p>

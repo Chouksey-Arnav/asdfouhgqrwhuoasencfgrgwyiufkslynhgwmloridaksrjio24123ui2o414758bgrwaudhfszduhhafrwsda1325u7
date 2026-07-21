@@ -1175,9 +1175,12 @@ export default function App({ account, onAccountChange }) {
     startTour();
   },[tab,tourActive,startTour]);
   // Full-depth product tour — every pillar, every absorbed sub-view inside Prep/Portfolio/
-  // Progress, and Settings, so a brand-new student sees the entire app (not just the four
-  // top-level tabs) before they're left to explore on their own. `section`/`color` drive the
-  // section pill + spotlight ring color in AppTour so a ~30-step tour still reads as five
+  // Progress, and every Settings section, so a brand-new student sees the entire app (not
+  // just the top-level tabs) before they're left to explore on their own. Each sub-view gets
+  // TWO steps back to back: one on its nav pill, one on the actual content anchor inside that
+  // page (data-tour="…-deep-…") — the second step is what exercises AppTour's scroll-into-view
+  // behavior, since those anchors can sit well below the fold on a long page. `section`/`color`
+  // drive the section pill + spotlight ring color so a 60+ step tour still reads as five
   // distinct chapters instead of one undifferentiated scroll.
   const TOUR_STEPS = useMemo(()=>[
     // ── Home ──────────────────────────────────────────────────────────────────
@@ -1186,38 +1189,71 @@ export default function App({ account, onAccountChange }) {
     // ── Prep ──────────────────────────────────────────────────────────────────
     { target:'nav-prep', section:'Prep', color:C.violet, title:'Prep — everything academic', body:"SAT/ACT diagnostic, your personalized pathway, the quiz library, flashcards, the AI Coach, and the E-Library all live under this one tab, switched with the pill bar just below it.", onEnter:()=>setTab('prep') },
     { target:'prep-sub-diagnostic', section:'Prep', color:C.violet, title:'Diagnostic', body:"A short adaptive diagnostic figures out your strengths and gaps by category, then recommends the pathway that matches where you're actually starting from.", onEnter:()=>goPrep('diagnostic') },
+    { target:'prep-deep-diagnostic', section:'Prep', color:C.violet, title:'Take it, or pick manually', body:"Hit \"Start Diagnostic\" for a personalized recommendation, or skip straight to a pathway yourself in the grid below — you can always retake the diagnostic or switch pathways later from Settings.", onEnter:()=>goPrep('diagnostic') },
     { target:'prep-sub-pathway', section:'Prep', color:C.violet, title:'Pathway', body:"Your structured, unit-by-unit curriculum. Each lesson has an overview, article, video, and a verification quiz — complete them in order to level up and unlock the next unit.", onEnter:()=>goPrep('pathway') },
+    { target:'prep-deep-pathway', section:'Prep', color:C.violet, title:'Track mastery unit by unit', body:"The mastery ring and lesson counter here update live as you complete lessons — scroll down and each unit expands into its individual lessons, with a lock icon until the unit before it is done.", onEnter:()=>goPrep('pathway') },
     { target:'prep-sub-quizzes', section:'Prep', color:C.violet, title:'Quiz Library', body:"Hundreds of practice questions you can filter by category, difficulty, and topic — use it for free practice outside the structured pathway, any time.", onEnter:()=>goPrep('quizzes') },
+    { target:'prep-deep-quizzes', section:'Prep', color:C.violet, title:'Filter by category and difficulty', body:"These stat tiles show your total quizzes and questions at a glance — scroll down to the search bar and filters to narrow by category, difficulty, or the courses you added in Settings.", onEnter:()=>goPrep('quizzes') },
     { target:'prep-sub-flashcards', section:'Prep', color:C.violet, title:'Flashcards', body:"Spaced-repetition decks scheduled with FSRS (the same algorithm behind Anki). Generate your own cards straight from your notes, or study the built-in decks when cards come due.", onEnter:()=>goPrep('flashcards') },
+    { target:'prep-deep-flashcards', section:'Prep', color:C.violet, title:'Generate a deck from your notes', body:"Tap \"New Deck\" to turn your own notes into flashcards offline — no account or API call needed — or scroll down to study any built-in deck with cards due today.", onEnter:()=>goPrep('flashcards') },
     { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Metabrain 2.0 — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Metabrain disappears on reload.", onEnter:()=>goPrep('coach') },
     { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
+    { target:'prep-deep-library', section:'Prep', color:C.violet, title:'Bookmark, take notes, export', body:"This card tracks your reading progress across the whole library. Bookmark resources for later, jot notes as you go, then export everything you've written as one study document.", onEnter:()=>goPrep('library') },
 
     // ── Portfolio ─────────────────────────────────────────────────────────────
     { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Portfolio — building your application', body:"Everything that goes into an actual med-school-track application lives here: your college list, essays, deadlines, activities, and more — all in one place so nothing falls through the cracks.", onEnter:()=>setTab('portfolio') },
     { target:'portfolio-sub-overview', section:'Portfolio', color:C.green, title:'Overview', body:"A single glance at where your application stands — what's done, what's next, and which deadlines are approaching.", onEnter:()=>goPortfolio('overview') },
+    { target:'portfolio-deep-overview', section:'Portfolio', color:C.green, title:'One score for your whole application', body:"This readiness gauge blends academics, clinical exposure, application progress, and activities into a single number — scroll down for the category breakdown behind it and your logged activities.", onEnter:()=>goPortfolio('overview') },
     { target:'portfolio-sub-timeline', section:'Portfolio', color:C.green, title:'Timeline', body:"A chronological view of every milestone across your whole application journey, from freshman year prep through submission.", onEnter:()=>goPortfolio('timeline') },
+    { target:'portfolio-deep-timeline', section:'Portfolio', color:C.green, title:'Upcoming and past, in one feed', body:"Deadlines, test dates, clinical hours, and recommender due dates are merged into one chronological feed here, split into Upcoming and Past.", onEnter:()=>goPortfolio('timeline') },
     { target:'portfolio-sub-colleges', section:'Portfolio', color:C.green, title:'College List', body:"Build and organize your target schools — reach, match, and safety — with the stats you need to compare them side by side.", onEnter:()=>goPortfolio('colleges') },
+    { target:'portfolio-deep-colleges', section:'Portfolio', color:C.green, title:'Add schools, track every deadline', body:"Scroll down to add a school with its GPA/SAT requirements and acceptance rate, then set its EA/ED, RD, and financial-aid deadlines right on the same card.", onEnter:()=>goPortfolio('colleges') },
     { target:'portfolio-sub-essays', section:'Portfolio', color:C.green, title:'Essays', body:"Draft, revise, and track every supplemental and personal statement essay in one workspace, with version history so you never lose a rewrite.", onEnter:()=>goPortfolio('essays') },
+    { target:'portfolio-deep-essays', section:'Portfolio', color:C.green, title:'Draft, link to a school, track word count', body:"Scroll down to start a new essay draft — link it to a school from your college list and set a word limit so you know exactly how much room you have left.", onEnter:()=>goPortfolio('essays') },
     { target:'portfolio-sub-deadlines', section:'Portfolio', color:C.green, title:'Deadlines', body:"Every application, scholarship, and testing deadline in one calendar — including AP/IB exam dates if you've flagged yourself as an AP/IB student in Settings.", onEnter:()=>goPortfolio('deadlines') },
+    { target:'portfolio-deep-deadlines', section:'Portfolio', color:C.green, title:'Never miss a due date', body:"Scroll down to add any deadline — application, scholarship, or exam — and it surfaces automatically on your Home dashboard as it approaches.", onEnter:()=>goPortfolio('deadlines') },
     { target:'portfolio-sub-aid', section:'Portfolio', color:C.green, title:'Financial Aid', body:"Track FAFSA, CSS Profile, and scholarship applications alongside the aid packages you receive, so cost comparisons are easy when decisions come in.", onEnter:()=>goPortfolio('aid') },
+    { target:'portfolio-deep-aid', section:'Portfolio', color:C.green, title:'FAFSA, CSS Profile, and scholarships', body:"Track your FAFSA and CSS Profile status up top, then scroll down to log every scholarship you apply for and the aid packages that come back.", onEnter:()=>goPortfolio('aid') },
     { target:'portfolio-sub-resume', section:'Portfolio', color:C.green, title:'Activities & Resume', body:"Log every extracurricular, job, and leadership role with hours and impact, then export a polished resume/activities list with one click.", onEnter:()=>goPortfolio('resume') },
+    { target:'portfolio-deep-resume', section:'Portfolio', color:C.green, title:'Log activities, export a resume', body:"Scroll down to log GPA history and every activity with hours per week — once you've added a few, the export button here turns them into a polished, ready-to-submit resume.", onEnter:()=>goPortfolio('resume') },
     { target:'portfolio-sub-research', section:'Portfolio', color:C.green, title:'Research', body:"Track research experience — labs, projects, publications, and presentations — the kind of depth admissions committees and future pre-med programs look for.", onEnter:()=>goPortfolio('research') },
+    { target:'portfolio-deep-research', section:'Portfolio', color:C.green, title:'Labs, projects, publications', body:"Scroll down to log a research project with the lab, PI, and your role — publications and presentations get their own fields so they stand out separately.", onEnter:()=>goPortfolio('research') },
     { target:'portfolio-sub-skills', section:'Portfolio', color:C.green, title:'Skills & Certs', body:"Certifications and skills worth listing — CPR/BLS, shadowing competencies, language proficiency, and more — organized so they're ready to cite in essays and interviews.", onEnter:()=>goPortfolio('skills') },
+    { target:'portfolio-deep-skills', section:'Portfolio', color:C.green, title:'CPR/BLS, languages, and more', body:"Scroll down to log any certification with its issue and expiration date — handy for tracking renewals like CPR/BLS before they lapse.", onEnter:()=>goPortfolio('skills') },
     { target:'portfolio-sub-clinical', section:'Portfolio', color:C.green, title:'Clinical Hours', body:"Log shadowing and patient-care hours as you accumulate them — a running total that matters for almost every med-school-track pathway.", onEnter:()=>goPortfolio('clinical') },
+    { target:'portfolio-deep-clinical', section:'Portfolio', color:C.green, title:'Log every shadowing shift', body:"Scroll down to log a site, supervisor, and hours for each shadowing day or patient-care shift — supervisor contact lets an entry eventually be marked verified instead of self-reported.", onEnter:()=>goPortfolio('clinical') },
     { target:'portfolio-sub-recommenders', section:'Portfolio', color:C.green, title:'Recommenders', body:"Keep track of who you're asking for letters of recommendation, what you've given them, and the status of each request.", onEnter:()=>goPortfolio('recommenders') },
+    { target:'portfolio-deep-recommenders', section:'Portfolio', color:C.green, title:'Track every letter request', body:"Scroll down to add a recommender with their due date and request status, so nothing slips through as deadlines get close.", onEnter:()=>goPortfolio('recommenders') },
     { target:'portfolio-sub-interview', section:'Portfolio', color:C.green, title:'Interview Prep', body:"Practice with realistic interview formats — including MMI and CASPer-style scenarios — and get feedback on how you'd respond.", onEnter:()=>goPortfolio('interview') },
+    { target:'portfolio-deep-interview', section:'Portfolio', color:C.green, title:'Practice real interview formats', body:"Scroll down to pick a format — traditional, MMI, or CASPer-style — and start a mock session with feedback on your answers.", onEnter:()=>goPortfolio('interview') },
     { target:'portfolio-sub-scores', section:'Portfolio', color:C.green, title:'Test Scores', body:"Log every SAT/ACT attempt and set a target score — this feeds straight into the Admissions Calculator and your Home dashboard's countdown.", onEnter:()=>goPortfolio('scores') },
+    { target:'portfolio-deep-scores', section:'Portfolio', color:C.green, title:'Log scores, set a target', body:"Scroll down for the section-by-section breakdown of your latest score and to log a new attempt — your target score here drives the countdown gap shown on Home.", onEnter:()=>goPortfolio('scores') },
     { target:'portfolio-sub-calc', section:'Portfolio', color:C.green, title:'Admissions Calculator', body:"Estimate your competitiveness at specific schools using your GPA, test scores, rigor, and activities — sync it straight from your Portfolio with one button.", onEnter:()=>goPortfolio('calc') },
+    { target:'portfolio-deep-calc', section:'Portfolio', color:C.green, title:'Sync your real data, one click', body:"Hit \"Sync with Portfolio\" to pull your latest GPA, test scores, and activity hours in automatically instead of retyping them here.", onEnter:()=>goPortfolio('calc') },
 
     // ── Progress ──────────────────────────────────────────────────────────────
     { target:'nav-progress', section:'Progress', color:C.cyan, title:'Progress — proof of the work', body:"A full picture of everything you've actually verified, mastered, and unlocked — separate from Home's daily snapshot, this is the long-run record.", onEnter:()=>setTab('progress') },
     { target:'progress-sub-overview', section:'Progress', color:C.cyan, title:'Overview', body:"Your big-picture stats: total XP, level, streak history, and how your onboarding goals are tracking over time.", onEnter:()=>goProgress('overview') },
+    { target:'progress-deep-overview', section:'Progress', color:C.cyan, title:'The same readiness gauge, tracked over time', body:"This is the same application-strength gauge from your Portfolio overview — watch it here as a running measure of how ready you are, updated every time you log something new.", onEnter:()=>goProgress('overview') },
     { target:'progress-sub-verified', section:'Progress', color:C.cyan, title:'Verified Progress', body:"Lesson completion only counts here once you've passed its verification quiz — this is the trustworthy record of what you actually know, not just clicked through.", onEnter:()=>goProgress('verified') },
+    { target:'progress-deep-verified', section:'Progress', color:C.cyan, title:'A credibility score, not just a checklist', body:"Scroll down and every unit lists each lesson's verification state individually — a lesson only counts as verified once its quiz is actually passed.", onEnter:()=>goProgress('verified') },
     { target:'progress-sub-performance', section:'Progress', color:C.cyan, title:'Performance', body:"Your accuracy broken down by category and topic, so you can see exactly where to focus your next study session.", onEnter:()=>goProgress('performance') },
+    { target:'progress-deep-performance', section:'Progress', color:C.cyan, title:'Radar chart + course mastery', body:"The radar chart maps your accuracy by section, and the donut chart next to it shows overall course mastery — both update as you complete more quizzes.", onEnter:()=>goProgress('performance') },
     { target:'progress-sub-achievements', section:'Progress', color:C.cyan, title:'Achievements', body:"Badges and milestones you unlock for streaks, mastery, and consistency — a running record of what you've earned along the way.", onEnter:()=>goProgress('achievements') },
+    { target:'progress-deep-achievements', section:'Progress', color:C.cyan, title:'Every badge, and how close you are', body:"Locked badges here still show your live progress toward unlocking them — hover or tap any badge to see exactly what it takes.", onEnter:()=>goProgress('achievements') },
 
     // ── Settings ──────────────────────────────────────────────────────────────
     { target:'nav-settings', section:'Settings', color:C.amber, title:'Settings — your account, your rules', body:"Your profile, goals, test date, sound preferences, study track, course load, data export, and account controls all live here now — its own tab, not buried in a menu.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-profile', section:'Settings', color:C.amber, title:'Profile', body:"Your display name, level, current pathway, and streak — update your name here any time.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Metabrain's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-examdate', section:'Settings', color:C.amber, title:'Test Day', body:"Set your test date here to see a live countdown and pacing guidance on Home.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-preferences', section:'Settings', color:C.amber, title:'Preferences', body:"Toggle sound effects for correct answers, level-ups, and achievements on or off.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-studytrack', section:'Settings', color:C.amber, title:'Study Track', body:"Switch your pathway here at any time — see full details on any track before committing, without retaking the diagnostic.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-courseload', section:'Settings', color:C.amber, title:'Current Course Load', body:"Tell us what you're taking so the AI Coach and Quiz Library can point you to material that's actually relevant to your classes.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-backup', section:'Settings', color:C.amber, title:'Data & Backup', body:"Export everything you've logged as a JSON file — useful for backup, or for moving to a new device.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-account', section:'Settings', color:C.amber, title:'Account', body:"See which email you're signed in with — your Portfolio data syncs to this account across devices.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-danger', section:'Settings', color:C.amber, title:'Danger Zone', body:"Resetting progress or clearing local data is permanent — these controls exist, but use them deliberately.", onEnter:()=>setTab('settings') },
 
     // ── Quick Jump ────────────────────────────────────────────────────────────
     { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump (⌘K)', body:"Press ⌘K (or Ctrl+K) anytime, from anywhere in the app, to jump straight to any tab or sub-view — no clicking through menus. That's the whole tour — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
@@ -2657,7 +2693,7 @@ export default function App({ account, onAccountChange }) {
           <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
             <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic — real questions about how you think and what pulls you in, not just "pick your favorite subject" — for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.</p>
           </div>
-          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+          <motion.div data-tour="prep-deep-diagnostic" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
             <div style={{flex:1,minWidth:220}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
@@ -2711,7 +2747,7 @@ export default function App({ account, onAccountChange }) {
     const units=curPath?.units||[];
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
+        <div data-tour="prep-deep-pathway" style={R()}>
           <div><div style={lbl()}>Learning Pathway</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
             {curPath?.tagline&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{curPath.tagline}</div>}
           </div>
@@ -2864,7 +2900,7 @@ export default function App({ account, onAccountChange }) {
     const clearFilters = ()=>{setQSrch('');setQC('All');setQD('All');setQSort('default');};
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
+        <div data-tour="prep-deep-quizzes" style={R()}>
           <div><div style={lbl()}>Quiz Library</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Practice Quizzes</h2></div>
         </div>
         {/* Stat tiles */}
@@ -3044,7 +3080,7 @@ export default function App({ account, onAccountChange }) {
         </AnimatePresence>
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div style={{paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0}}>
+        <div data-tour="prep-deep-coach" style={{paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0}}>
           <div style={{display:'flex',flexDirection:isMobile?'column':'row',justifyContent:'space-between',alignItems:isMobile?'flex-start':'flex-start',gap:isMobile?10:12}}>
             <div style={R({gap:isMobile?10:12,alignItems:'flex-start'})}>
               {isMobile&&(
@@ -3277,7 +3313,7 @@ export default function App({ account, onAccountChange }) {
 
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
+        <div data-tour="prep-deep-flashcards" style={R()}>
           <div><div style={lbl()}>Flashcards</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             <button style={{...btn(C.blueGrad,{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
@@ -3510,7 +3546,7 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={CC({gap:22})}>
         {/* Progress Tracker Card Header */}
-        <div style={{...glass({padding:20, background: `linear-gradient(135deg, ${C.blueDim}, transparent)`, border: `1px solid rgba(45, 127, 255, 0.15)`}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
+        <div data-tour="prep-deep-library" style={{...glass({padding:20, background: `linear-gradient(135deg, ${C.blueDim}, transparent)`, border: `1px solid rgba(45, 127, 255, 0.15)`}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
           <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${C.b1}`}}>
             <BookOpen size={24} color={pct > 0 ? C.blueL : C.t3} />
             {pct > 0 && <span style={{position: 'absolute', bottom: -4, right: -4, ...pill(C.green, '#fff', {fontSize: 9, padding: '2px 6px', borderRadius: 4})}}>{pct}%</span>}
@@ -4002,7 +4038,7 @@ export default function App({ account, onAccountChange }) {
 
     return(
       <div style={CC({gap:22})}>
-        <div style={R()}>
+        <div data-tour="portfolio-deep-overview" style={R()}>
           <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Application Overview</h2></div>
           <div style={{marginLeft:'auto',...R({gap:8})}}>
             <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
@@ -4180,7 +4216,7 @@ export default function App({ account, onAccountChange }) {
   function tCalc(){
     return(
       <div style={CC({gap:22})}>
-        <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
+        <div data-tour="portfolio-deep-calc" style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
           <div>
             <div style={lbl()}>Admissions Calculator</div>
             <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Personalized College List & Match Index</h2>
@@ -4570,7 +4606,7 @@ export default function App({ account, onAccountChange }) {
         <div style={{...CC({gap:22}),marginTop:18}}>
         {progressView==='overview'&&<>
         {/* Application-strength readiness gauge */}
-        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
+        <div data-tour="progress-deep-overview" style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
           <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
           <div style={{flex:1,minWidth:200}}>
             <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
@@ -4700,7 +4736,7 @@ export default function App({ account, onAccountChange }) {
 
         {progressView==='verified'&&<>
         {/* Verified Progress — credibility view */}
-        <div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}}>
+        <div data-tour="progress-deep-verified" style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}}>
           <div style={R({gap:16,flexWrap:'wrap'})}>
             <div style={{width:52,height:52,borderRadius:16,background:C.greenDim,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><ShieldCheck size={24} color={C.greenL}/></div>
             <div style={{flex:1,minWidth:200}}>
@@ -4760,7 +4796,7 @@ export default function App({ account, onAccountChange }) {
         </div>}
 
         {/* Charts row */}
-        <div style={G(2,14,{},isMobile)}>
+        <div data-tour="progress-deep-performance" style={G(2,14,{},isMobile)}>
           {/* Radar chart */}
           <div style={glass({padding:20})}>
             <SL>Section Performance</SL>
@@ -4880,7 +4916,7 @@ export default function App({ account, onAccountChange }) {
             clinical_hours_50:[clinicalHoursTotal,50], recommender_added:[recommendersCount,1], mmi_practiced:[mmiCasperCount,1],
           };
           return(
-        <div style={glass({padding:18})}>
+        <div data-tour="progress-deep-achievements" style={glass({padding:18})}>
           <SL>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
           <div style={G(4,10,{},isMobile)}>
             {Object.values(ACHIEVEMENTS).map(a=>{
@@ -4914,7 +4950,7 @@ export default function App({ account, onAccountChange }) {
         <div><div style={lbl()}>Settings</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Account & Preferences</h2></div>
 
         {/* Profile */}
-        <div style={glass()}>
+        <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Profile</SL>
           <div style={{...R({gap:14,marginBottom:18})}}>
             <div style={{width:52,height:52,borderRadius:14,background:`linear-gradient(135deg,${accent}50,${accent}25)`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:22,color:'#fff',boxShadow:`0 6px 20px ${accent}30`}}>
@@ -4936,7 +4972,7 @@ export default function App({ account, onAccountChange }) {
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
             forever. Feeds Metabrain's system prompt (src/lib/studentProfile.js) and the Progress
             overview recap card, so updating this here actually changes those. */}
-        <div style={glass()}>
+        <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Your Goals</SL>
             {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
@@ -5009,7 +5045,7 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Exam date */}
-        <div style={glass({padding:18})}>
+        <div data-tour="settings-deep-examdate" style={glass({padding:18})}>
           <SL>Test Day</SL>
           <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
@@ -5020,7 +5056,7 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Sound toggle */}
-        <div style={glass({padding:18})}>
+        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
           <SL>Preferences</SL>
           <div style={R({justifyContent:'space-between'})}>
             <div>
@@ -5041,7 +5077,7 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Specialty path */}
-        <div style={glass()}>
+        <div data-tour="settings-deep-studytrack" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Study Track</SL>
             <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
@@ -5061,7 +5097,7 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Course load */}
-        <div style={glass()}>
+        <div data-tour="settings-deep-courseload" style={glass()}>
           <SL>Current Course Load</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Tell us what you're taking so the AI Coach and Quiz Library can point you to relevant material.</p>
           {COURSE_GROUPS.map(g=>(
@@ -5092,21 +5128,21 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Export / Backup */}
-        <div style={glass({padding:18})}>
+        <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
         {/* Account */}
-        <div style={glass({padding:18})}>
+        <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your college list, essays, deadlines, and test scores sync to this account.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
         {/* Danger zone */}
-        <div style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
+        <div data-tour="settings-deep-danger" style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>

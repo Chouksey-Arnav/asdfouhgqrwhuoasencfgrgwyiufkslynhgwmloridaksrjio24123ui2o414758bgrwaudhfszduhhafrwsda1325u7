@@ -61,7 +61,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
   return (
     <div style={CC({gap:22})}>
       <div style={R()}>
-        <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Letters of Recommendation</h2></div>
+        <div data-tour="portfolio-deep-recommenders"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Letters of Recommendation</h2></div>
         <div style={{marginLeft:'auto'}}><span style={pill(C.blueDim,C.blueL)}>{entries.length} tracked</span></div>
       </div>
       <p style={{fontSize:13,color:C.t2,lineHeight:1.6,marginTop:-14}}>Track who you're asking for a letter — a teacher, counselor, coach, or someone you shadowed — plus your school's pre-health committee letter if it has one.</p>

@@ -41,7 +41,7 @@ export default function PortfolioTimeline({ accent = C.blue }) {
 
   if (events.length === 0) {
     return (
-      <div style={glass({ padding: 22, textAlign: 'center' })}>
+      <div data-tour="portfolio-deep-timeline" style={glass({ padding: 22, textAlign: 'center' })}>
         <CalendarDays size={20} color={C.t3} style={{ marginBottom: 8 }} />
         <div style={{ fontSize: 13, color: C.t2 }}>Your timeline will fill in as you add deadlines, test dates, clinical hours, and recommenders.</div>
       </div>
@@ -50,15 +50,15 @@ export default function PortfolioTimeline({ accent = C.blue }) {
 
   return (
     <div style={CC({ gap: 18 })}>
-      {upcoming.length > 0 && <TimelineGroup title="Upcoming" items={upcoming} />}
-      {past.length > 0 && <TimelineGroup title="Past" items={past} dim />}
+      {upcoming.length > 0 && <TimelineGroup title="Upcoming" items={upcoming} tourTag="portfolio-deep-timeline" />}
+      {past.length > 0 && <TimelineGroup title="Past" items={past} dim tourTag={upcoming.length > 0 ? undefined : 'portfolio-deep-timeline'} />}
     </div>
   );
 }
 
-function TimelineGroup({ title, items, dim = false }) {
+function TimelineGroup({ title, items, dim = false, tourTag }) {
   return (
-    <div style={glass({ padding: 18 })}>
+    <div data-tour={tourTag} style={glass({ padding: 18 })}>
       <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 14 }}>{title}</div>
       <div style={CC({ gap: 8 })}>
         {items.map((e, i) => {

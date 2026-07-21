@@ -53,7 +53,7 @@ export default function ResearchExperiencePanel({ accent = C.blue }) {
   return (
     <div style={CC({gap:22})}>
       <div style={R()}>
-        <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Research Experience</h2></div>
+        <div data-tour="portfolio-deep-research"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Research Experience</h2></div>
         <div style={{marginLeft:'auto'}}><span style={pill(C.blueDim,C.blueL)}>{entries.length} logged</span></div>
       </div>
       <p style={{fontSize:13,color:C.t2,lineHeight:1.6,marginTop:-14}}>Track lab work, independent projects, or mentored research — link a publication or poster if you have one; it's one of the strongest signals an application can show.</p>
