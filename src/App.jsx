@@ -1827,6 +1827,22 @@ export default function App({ account, onAccountChange }) {
     return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;
   },[allCards]);
 
+  // Per-category quiz performance + the "what to do next" insight callouts built from it — lifted
+  // to component scope (previously computed only inside tProgress()) so Portfolio can surface the
+  // same gap-to-action callouts Progress already shows, instead of being two disconnected views
+  // of the same underlying data.
+  const catStats = useMemo(()=>cats3.map(cat=>{
+    const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
+    const taken=cQ.filter(q=>qScores[q.id]!==undefined);
+    const avg=taken.length?Math.round(taken.reduce((s,q)=>s+qScores[q.id],0)/taken.length):null;
+    return{cat,avg,taken:taken.length,total:cQ.length,predicted:avg!==null?scoreToSection(avg):null};
+  }),[qScores]);
+  const benchmarks = curPath?.benchmarks||{};
+  const insights = useMemo(()=>buildInsights({
+    catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
+    recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
+  }),[catStats,curPath,mastery,clinicalHoursTotal,benchmarks,recommendersCount,appCounts,streak,dueCards]);
+
   // Next lesson to resume (first not-done lesson in current pathway, in order)
   const nextLesson = useMemo(()=>{
     for(const u of (curPath?.units||[])){ for(const l of (u.lessons||[])){ if(!isLessonComplete(l,pathway[l.id])) return {...l,unitTitle:u.title}; } }
@@ -4336,7 +4352,6 @@ export default function App({ account, onAccountChange }) {
     const latestGpa=portGpa.length?portGpa[portGpa.length-1].gpa:null;
     const ongoingCount=portActivities.filter(a=>a.status==='ongoing').length;
     const PIcon=PATH_ICONS[eSpec]||Compass;
-    const benchmarks=curPath?.benchmarks||{};
     const strength=computeApplicationStrength({
       mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
       recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
@@ -4370,6 +4385,22 @@ export default function App({ account, onAccountChange }) {
             ))}
           </div>
         </div>
+
+        {/* Same insight callouts Progress shows — surfaced here too so Portfolio is a place to
+            act on a gap (jump straight into Prep or the right Portfolio sub-view), not just a
+            second, disconnected place to look at the same numbers. */}
+        {insights.length>0&&<div style={CC({gap:8})}>
+          {insights.slice(0,3).map((ins,i)=>{
+            const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
+            return(
+              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
+                <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
+                {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
+              </div>
+            );
+          })}
+        </div>}
 
         {/* Cross-app snapshot — pulls every feature area into one view so Portfolio reads as the hub, not just a resume tracker */}
         <div style={glass({padding:18})}>
@@ -4525,9 +4556,20 @@ export default function App({ account, onAccountChange }) {
             <span style={pill(C.blueDim, C.blueL, { fontSize: 10 })}>Calculates dynamic admission index</span>
           </div>
           <div style={G(2,14,{},isMobile)}>
+            <div style={CC({gap:4})}>
+              <span style={lbl()}>Cumulative GPA</span>
+              <input type="number" step="0.01" min="2" max="4" style={inp()} placeholder="3.75" value={cGPA} onChange={e=>setCGPA(e.target.value)}/>
+            </div>
+            <div style={CC({gap:4})}>
+              <div style={R({justifyContent:'space-between',alignItems:'flex-end'})}>
+                <span style={lbl({marginBottom:0})}>SAT Score (or ACT converted)</span>
+                {/* Pulls the score Prep already predicted from real quiz performance instead of
+                    making the student re-derive/retype a number the app can already estimate. */}
+                {predSAT&&!cSAT&&<button style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`,fontSize:10}),whiteSpace:'nowrap'}} onClick={()=>setCSAT(String(predSAT))}>Use predicted: {predSAT}</button>}
+              </div>
+              <input type="number" min="400" max="1600" style={inp()} placeholder="1350" value={cSAT} onChange={e=>setCSAT(e.target.value)}/>
+            </div>
             {[
-              {l:'Cumulative GPA',p:'3.75',t:'number',step:'0.01',min:'2',max:'4',v:cGPA,s:setCGPA},
-              {l:'SAT Score (or ACT converted)',p:'1350',t:'number',min:'400',max:'1600',v:cSAT,s:setCSAT},
               {l:'Science Course Rigor (AP/IB)',p:'2',t:'number',min:'0',v:cRigor,s:setCRigor},
               {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
               {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
@@ -4779,13 +4821,6 @@ export default function App({ account, onAccountChange }) {
         },
       });
     }
-    const catStats=cats3.map((cat,i)=>{
-      const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
-      const taken=cQ.filter(q=>qScores[q.id]!==undefined);
-      const avg=taken.length?Math.round(taken.reduce((s,q)=>s+qScores[q.id],0)/taken.length):null;
-      return{cat,avg,taken:taken.length,total:cQ.length,predicted:avg!==null?scoreToSection(avg):null};
-    });
-
     // Chart configs
     const radarData={
       labels:cats3.map(c=>c.split('/')[0]),
@@ -4838,16 +4873,11 @@ export default function App({ account, onAccountChange }) {
     const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
     const volH=Math.round(portActivities.filter(a=>a.activity_type==='Volunteering').reduce((s,a)=>s+annualH(a),0));
-    const benchmarks=curPath?.benchmarks||{};
     const strength=computeApplicationStrength({
       mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal, volunteerHours:volH, leadershipHours:leadH,
       recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, benchmarks,
     });
     const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
-    const insights=buildInsights({
-      catStats, pathwayLabel:curPath?.label, mastery, clinicalHours:clinicalHoursTotal, benchmarks,
-      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak, dueCards,
-    });
     const diagPath=user?.diagnosticResult?PATHS[user.diagnosticResult]:null;
     // Clinical hour trend — cumulative by month
     const hoursByMonth={};
