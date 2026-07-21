@@ -1804,8 +1804,23 @@ export default function App({ account, onAccountChange }) {
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
   const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
 
+  // A built-in deck's cards get a progressed (FSRS-scheduled) copy saved into cDecks under the
+  // same name the first time it's actually reviewed — see rateCard() below, which persists
+  // built-in deck progress the same way it always has for custom decks. Before that first
+  // review, FLASH_DECKS' pristine static copy is all there is. Centralizing this lookup (instead
+  // of repeating the ternary at every call site) also guarantees allCards/allDecksList never
+  // double-count a built-in deck that's been studied once its progressed copy exists in cDecks.
+  const builtinDeckNames = useMemo(()=>new Set(Object.keys(FLASH_DECKS)),[]);
+  const cardsForDeck = useCallback((name,builtin)=>{
+    if(builtin) return cDecks[name]||FLASH_DECKS[name]||[];
+    return cDecks[name]||[];
+  },[cDecks]);
+
   // FSRS due count (across built-in and custom decks)
-  const allCards = useMemo(()=>[...Object.values(FLASH_DECKS).flat(),...Object.values(cDecks).flat()],[cDecks]);
+  const allCards = useMemo(()=>[
+    ...Object.keys(FLASH_DECKS).flatMap(n=>cardsForDeck(n,true)),
+    ...Object.entries(cDecks).filter(([n])=>!builtinDeckNames.has(n)).flatMap(([,c])=>c),
+  ],[cDecks,builtinDeckNames,cardsForDeck]);
   const dueCards = useMemo(()=>getDueCards(allCards).length,[allCards]);
   const avgRetention = useMemo(()=>{
     const rets = allCards.map(c=>getRetainability(c)).filter(r=>r!==null);
@@ -2205,11 +2220,18 @@ export default function App({ account, onAccountChange }) {
   async function rateCard(label){
     if(!currentCard||!activeDeck)return;
     const updated=scheduleCard(currentCard,label);
-    const deckName=activeDeck.name;
-    const allDeckCards=activeDeck.builtin?[...(FLASH_DECKS[deckName]||[])]:[...(cDecks[deckName]||[])];
+    // Smart Mix pulls due cards from several decks into one session, so a card's real home
+    // deck (where the FSRS update actually needs to be written back) isn't necessarily
+    // activeDeck itself — see the _srcDeck/_srcBuiltin tags added when building that pool below.
+    const deckName=activeDeck.smartMix?currentCard._srcDeck:activeDeck.name;
+    const deckIsBuiltin=activeDeck.smartMix?currentCard._srcBuiltin:activeDeck.builtin;
+    const allDeckCards=[...cardsForDeck(deckName,deckIsBuiltin)];
     const idx=allDeckCards.findIndex(c=>c.front===currentCard.front&&c.back===currentCard.back);
     if(idx>=0)allDeckCards[idx]=updated;
-    if(!activeDeck.builtin)await saveDeck(deckName,allDeckCards);
+    // Persisted for built-in decks too now, not just custom ones — otherwise every review of a
+    // shipped deck's cards would silently reset the moment the page reloads, defeating spaced
+    // repetition for the majority of decks in the library.
+    await saveDeck(deckName,allDeckCards);
     await DB.recordCardReview(currentCard.id||cIdx);
     const newTotal=totalReviews+1;setTotalReviews(newTotal);
     checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,newTotal,mastery,aiChatCount);
@@ -2516,14 +2538,19 @@ export default function App({ account, onAccountChange }) {
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
+    // cDecks can now hold a progressed copy of a built-in deck (saved the first time it's
+    // studied — see rateCard) under that deck's own name, so exclude those from "custom" or
+    // they'd show up twice: once correctly as built-in (with real progress), once again here
+    // mislabeled as a user-created deck.
     const customSorted = Object.entries(cDecks)
+      .filter(([n])=>!builtinDeckNames.has(n))
       .map(([n,c])=>({name:n,cards:c,builtin:false}))
       .sort((a,b)=>(deckCreatedAt[b.name]||0)-(deckCreatedAt[a.name]||0));
     return [
       ...customSorted,
-      ...Object.entries(FLASH_DECKS).map(([n,c])=>({name:n,cards:c,builtin:true})),
+      ...Object.keys(FLASH_DECKS).map(n=>({name:n,cards:cardsForDeck(n,true),builtin:true})),
     ];
-  },[cDecks,deckCreatedAt]);
+  },[cDecks,deckCreatedAt,builtinDeckNames,cardsForDeck]);
   const deckFuse = useMemo(()=>buildDeckSearch(allDecksList),[allDecksList]);
   const newestDeckName = useMemo(()=>{
     const entries = Object.entries(deckCreatedAt);
@@ -2533,12 +2560,19 @@ export default function App({ account, onAccountChange }) {
   const [dSrchLive,setDSrchLive] = useState('');
   useEffect(()=>{ const t=setTimeout(()=>setDS2(dSrchLive),120); return()=>clearTimeout(t); },[dSrchLive]);
 
-  // Active deck cards (sorted for study)
+  // Active deck cards (sorted for study). Smart Mix is a virtual "deck" that pools every due
+  // card across every real deck into one cross-category session instead of picking a single
+  // deck first — each card is tagged with where it actually lives so rateCard() can write its
+  // FSRS update back to the right place.
   const deckCards = useMemo(()=>{
     if(!activeDeck)return[];
-    const cards=activeDeck.builtin?FLASH_DECKS[activeDeck.name]||(cDecks[activeDeck.name]||[]):cDecks[activeDeck.name]||[];
+    if(activeDeck.smartMix){
+      const pool=allDecksList.flatMap(d=>getDueCards(d.cards).map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
+      return sortForStudy(pool);
+    }
+    const cards=cardsForDeck(activeDeck.name,activeDeck.builtin);
     return studyMode==='due'?sortForStudy(getDueCards(cards)):cards;
-  },[activeDeck,cDecks,studyMode]);
+  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck]);
 
   const currentCard = deckCards[cIdx];
 
@@ -3383,8 +3417,8 @@ export default function App({ account, onAccountChange }) {
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
-            <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?"You've cleared every due card across every deck — nice.":studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {sessionTotal>0&&(<>
               <div style={{...G(4,10,{},isMobile),marginBottom:14,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
@@ -3398,19 +3432,22 @@ export default function App({ account, onAccountChange }) {
               </div>
             </>)}
             <div style={R({justifyContent:'center',gap:10})}>
-              {studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
-              <button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>
+              {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+              {activeDeck.smartMix
+                ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
+                :<button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>}
             </div>
           </motion.div>
         </div>
       );}
-      const dueCount=getDueCards(activeDeck.builtin?(FLASH_DECKS[activeDeck.name]||[]):(cDecks[activeDeck.name]||[])).length;
+      const dueCount=activeDeck.smartMix?deckCards.length:getDueCards(cardsForDeck(activeDeck.name,activeDeck.builtin)).length;
       return(
         <div style={CC({gap:16})}>
           <div style={R()}>
             <button style={{...btnG({padding:'7px 16px',fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}><ChevronLeft size={14}/>All Decks</button>
             <div style={{flex:1,textAlign:'center'}}>
               <div style={R({justifyContent:'center',gap:8})}>
+                {activeDeck.smartMix&&<Sparkles size={13} color={C.amberL}/>}
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{activeDeck.name}</div>
                 <AnimatePresence>
                   {sessionStats.streak>=3&&(
@@ -3421,11 +3458,13 @@ export default function App({ account, onAccountChange }) {
                   )}
                 </AnimatePresence>
               </div>
-              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>{cIdx+1} / {deckCards.length} · {dueCount} due{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}</div>
+              <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>
+                {cIdx+1} / {deckCards.length}{activeDeck.smartMix&&currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:!activeDeck.smartMix?` · ${dueCount} due`:''}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
+              </div>
             </div>
             <div style={R({gap:6})}>
-              <button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>
-              <button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
@@ -3465,7 +3504,7 @@ export default function App({ account, onAccountChange }) {
       );
     }
 
-    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
+    const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).filter(n=>!builtinDeckNames.has(n)).length;
     const searched=searchDecks(deckFuse,allDecksList,dSrch)||allDecksList;
     // Section decks into SAT / Science / Social Studies / Study Skills / My Decks (each with its
     // own subsections, e.g. SAT > Math vs. SAT > Reading & Writing) instead of one flat list —
@@ -3479,12 +3518,20 @@ export default function App({ account, onAccountChange }) {
     });
     const filteredDecks=categorized.filter(deck=>{
       if(deckFilter==='all')return true;
-      const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
-      if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
+      if(deckFilter==='due')return getDueCards(deck.cards).length>0;
       if(deckFilter==='custom')return !deck.builtin;
       if(deckFilter==='builtin')return deck.builtin;
       return true;
     });
+    // Per-subject mastery — retention % rolled up by DECK_CATEGORY_ORDER instead of just one
+    // library-wide average, so a student can see e.g. "SAT Math 91% vs. Study Skills 54%"
+    // rather than a single blended number that hides which subject actually needs more work.
+    const categoryMastery=DECK_CATEGORY_ORDER.map(cat=>{
+      const cardsInCat=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).flatMap(d=>d.cards);
+      if(!cardsInCat.length)return null;
+      const rets=cardsInCat.map(c=>getRetainability(c)).filter(r=>r!==null);
+      return{cat,total:cardsInCat.length,due:getDueCards(cardsInCat).length,avgRet:rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null};
+    }).filter(Boolean);
 
     return(
       <div style={CC({gap:22})}>
@@ -3502,6 +3549,42 @@ export default function App({ account, onAccountChange }) {
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
         </div>
+
+        {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
+            instead of having to pick a single deck first and switch decks once it runs dry. */}
+        {dueCards>0&&(
+          <motion.div whileHover={{y:-2}} style={{...glass({padding:18}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
+            onClick={()=>{setAD({name:'Smart Mix',builtin:true,smartMix:true});setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
+            <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Sparkles size={20} color={C.amberL}/></div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review all {dueCards} due card{dueCards===1?'':'s'} across every deck in one session — no need to pick a deck first.</div>
+            </div>
+            <span style={{...btn(`linear-gradient(135deg,${C.amber},${C.amber}cc)`,{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
+          </motion.div>
+        )}
+
+        {/* Mastery by subject — retention % rolled up per DECK_CATEGORY_ORDER group instead of
+            one blended library-wide number, so it's obvious which subject needs more review. */}
+        {categoryMastery.length>1&&(
+          <div style={glass({padding:18})}>
+            <SL extra={{marginBottom:14}}>Mastery by Subject</SL>
+            <div style={G(2,10,{},isMobile)}>
+              {categoryMastery.map(({cat,total,due,avgRet})=>(
+                <div key={cat} style={glass2({padding:'12px 14px'})}>
+                  <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{cat}</span>
+                    <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{avgRet!==null?`${avgRet}%`:'—'}</span>
+                  </div>
+                  {avgRet!==null
+                    ?<Bar pct={avgRet} color={avgRet>=80?C.green:avgRet>=50?C.amber:C.rose} h={5}/>
+                    :<div style={{fontSize:10.5,color:C.t4}}>Not studied yet — {total} card{total===1?'':'s'} waiting</div>}
+                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:C.t3,marginTop:5}}>{due} due now</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Category / subsection pills — SAT > Math vs. SAT > Reading & Writing, Science >
             Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
@@ -3600,9 +3683,8 @@ export default function App({ account, onAccountChange }) {
 
         <div style={G(3,12,{},isMobile)}>
           {filteredDecks.map((deck,i)=>{
-            const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
-            const dc=getDueCards(deckCardsAll).length;
-            const deckRet=(()=>{const rets=deckCardsAll.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
+            const dc=getDueCards(deck.cards).length;
+            const deckRet=(()=>{const rets=deck.cards.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
