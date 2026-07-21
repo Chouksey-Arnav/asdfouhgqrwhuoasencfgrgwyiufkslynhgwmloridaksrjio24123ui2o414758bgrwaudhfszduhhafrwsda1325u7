@@ -11,6 +11,25 @@ let pushTimer = null;
 let pushing = false;
 let pushAgainAfter = false;
 
+// ── Sync status pub-sub ─────────────────────────────────────────────────────
+// Lightweight status broadcast so the UI (Settings' "Synced just now" line)
+// can reflect what's actually happening instead of the sync layer being a
+// black box. Not persisted — resets to 'idle' on every fresh page load,
+// which is fine since a pull/push cycle always runs again on init.
+let syncStatus = { state: 'idle', lastSyncedAt: null, error: null };
+const statusListeners = new Set();
+function setStatus(patch) {
+  syncStatus = { ...syncStatus, ...patch };
+  statusListeners.forEach((fn) => { try { fn(syncStatus); } catch { /* listener's problem */ } });
+}
+export function getSyncStatus() { return syncStatus; }
+export function resetSyncStatus() { setStatus({ state: 'idle', lastSyncedAt: null, error: null }); }
+export function subscribeSyncStatus(fn) {
+  statusListeners.add(fn);
+  fn(syncStatus);
+  return () => statusListeners.delete(fn);
+}
+
 async function req(path, options = {}) {
   const token = getToken();
   if (!token) throw new Error('Not signed in.');
@@ -26,8 +45,15 @@ async function req(path, options = {}) {
 // Fetches this account's latest snapshot, or null if it has never synced before (brand new
 // account, or a pre-sync-feature account that hasn't pushed yet).
 export async function pullSnapshot() {
-  const { data } = await req('/progress-sync', { method: 'GET' });
-  return data || null;
+  setStatus({ state: 'syncing', error: null });
+  try {
+    const { data } = await req('/progress-sync', { method: 'GET' });
+    setStatus({ state: 'synced', lastSyncedAt: Date.now(), error: null });
+    return data || null;
+  } catch (err) {
+    setStatus({ state: 'error', error: err.message || 'Sync failed.' });
+    throw err;
+  }
 }
 
 // Pushes the current local state immediately. Coalesces overlapping calls (if a push is already
@@ -36,6 +62,7 @@ export async function pullSnapshot() {
 export async function flushNow(opts = {}) {
   if (pushing) { pushAgainAfter = true; return; }
   pushing = true;
+  setStatus({ state: 'syncing', error: null });
   try {
     const snapshot = await DB.buildSyncSnapshot();
     await req('/progress-sync', {
@@ -43,6 +70,10 @@ export async function flushNow(opts = {}) {
       body: JSON.stringify({ data: snapshot }),
       keepalive: !!opts.keepalive,
     });
+    setStatus({ state: 'synced', lastSyncedAt: Date.now(), error: null });
+  } catch (err) {
+    setStatus({ state: 'error', error: err.message || 'Sync failed.' });
+    throw err;
   } finally {
     pushing = false;
     if (pushAgainAfter) {
@@ -56,6 +87,7 @@ export async function flushNow(opts = {}) {
 // synced table. Debounced so a burst of writes (e.g. finishing a 20-card review session)
 // collapses into a single network call a few seconds after things go quiet.
 export function scheduleSyncPush() {
+  setStatus({ state: 'pending', error: null });
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => { flushNow().catch(() => {}); }, PUSH_DEBOUNCE_MS);
 }

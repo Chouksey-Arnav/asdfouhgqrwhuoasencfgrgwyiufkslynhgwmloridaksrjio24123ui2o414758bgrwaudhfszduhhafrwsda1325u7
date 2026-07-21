@@ -19,7 +19,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
@@ -1283,12 +1283,17 @@ export default function App({ account, onAccountChange }) {
     ...NAV.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
     ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
-  ],[goPrep,goPortfolio]);
+    ...PROGRESS_SUBNAV.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
+  ],[goPrep,goPortfolio,goProgress]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
     if(!q) return COMMANDS;
     return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
   },[COMMANDS,cmdQ]);
+  // Keyboard-navigable highlight index — arrow keys + Enter, not mouse-only,
+  // since that's the whole point of a command palette for a fast typist.
+  const [cmdActiveIdx,setCmdActiveIdx]=useState(0);
+  useEffect(()=>{ setCmdActiveIdx(0); },[cmdQ,cmdOpen]);
   useEffect(()=>{
     function onKey(e){
       if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){ e.preventDefault(); setCmdOpen(o=>!o); }
@@ -1299,6 +1304,11 @@ export default function App({ account, onAccountChange }) {
   },[]);
   useEffect(()=>{ if(!cmdOpen) setCmdQ(''); },[cmdOpen]);
   const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
+  const onCmdInputKeyDown=useCallback((e)=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setCmdActiveIdx(i=>Math.max(i-1,0)); }
+    else if(e.key==='Enter'){ e.preventDefault(); const cmd=filteredCmds[cmdActiveIdx]; if(cmd)runCommand(cmd); }
+  },[filteredCmds,cmdActiveIdx,runCommand]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
@@ -1560,6 +1570,18 @@ export default function App({ account, onAccountChange }) {
     // the right account regardless.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
+  // ── Sync status (for the "Synced just now" indicator in Settings) ───────────
+  const [syncStatus,setSyncStatus]=useState(()=>ProgressSync.getSyncStatus());
+  useEffect(()=>ProgressSync.subscribeSyncStatus(setSyncStatus),[]);
+  // Forces the "Xm ago" label in Settings to keep advancing even when no new
+  // sync event has fired — only ticks while Settings is actually open.
+  const [,setSyncTick]=useState(0);
+  useEffect(()=>{
+    if(tab!=='settings')return;
+    const id=setInterval(()=>setSyncTick(t=>t+1),15000);
+    return()=>clearInterval(id);
+  },[tab]);
 
   // ── Portfolio (Supabase-backed: activities, awards, GPA history) ─────────────
   useEffect(()=>{
@@ -1845,6 +1867,7 @@ export default function App({ account, onAccountChange }) {
     // snapshot the next device pulls. Best-effort — an offline sign-out still clears locally.
     try{ await ProgressSync.flushNow(); }catch(err){ console.error('Pre-signout sync flush failed:',err); }
     DB.setSyncEnabled(false);
+    ProgressSync.resetSyncStatus();
     await DB.clearAllData();
     clearViewState();
     setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
@@ -5105,6 +5128,20 @@ export default function App({ account, onAccountChange }) {
         {children}
       </div>
     );
+    // Relative-time label for the sync badge below — deliberately coarse
+    // (no seconds-level ticking) since "just now" vs "2m ago" is all a
+    // student needs to trust that cross-device sync is actually working.
+    const syncTimeLabel=(ts)=>{
+      if(!ts)return null;
+      const s=Math.max(0,Math.round((Date.now()-ts)/1000));
+      if(s<10)return'just now';
+      if(s<60)return`${s}s ago`;
+      const m=Math.round(s/60);
+      if(m<60)return`${m}m ago`;
+      const h=Math.round(m/60);
+      if(h<24)return`${h}h ago`;
+      return`${Math.round(h/24)}d ago`;
+    };
     return(
       <div style={CC({gap:30})}>
         {/* Hero */}
@@ -5306,7 +5343,16 @@ export default function App({ account, onAccountChange }) {
         <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          {/* Makes the otherwise-invisible cross-device sync machinery (progressSync.js)
+              visible and checkable, instead of the student just having to trust it works. */}
+          <div style={{...R({gap:8}),marginBottom:14,padding:'8px 12px',borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,width:'fit-content'}}>
+            {syncStatus.state==='syncing'&&<><RefreshCw size={13} color={C.blueL} style={{animation:'spin 1s linear infinite'}}/><span style={{fontSize:12,color:C.blueL,fontWeight:600}}>Syncing…</span></>}
+            {syncStatus.state==='pending'&&<><Clock size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Changes pending sync…</span></>}
+            {syncStatus.state==='synced'&&<><Cloud size={13} color={C.greenL}/><span style={{fontSize:12,color:C.greenL,fontWeight:600}}>Synced{syncTimeLabel(syncStatus.lastSyncedAt)?` ${syncTimeLabel(syncStatus.lastSyncedAt)}`:''}</span></>}
+            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.rose}/><span style={{fontSize:12,color:C.rose}} title={syncStatus.error||''}>Sync couldn't reach the server — your progress is still saved on this device</span></>}
+            {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
+          </div>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
@@ -5557,22 +5603,26 @@ export default function App({ account, onAccountChange }) {
                 onClick={e=>e.stopPropagation()}>
                 <div style={{display:'flex',alignItems:'center',gap:10,padding:'14px 16px',borderBottom:`1px solid ${C.b1}`}}>
                   <Search size={16} color={C.t3}/>
-                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
+                  <input autoFocus value={cmdQ} onChange={e=>setCmdQ(e.target.value)} onKeyDown={onCmdInputKeyDown} placeholder="Jump to Prep, Portfolio, Progress…" style={{flex:1,background:'none',border:'none',outline:'none',color:C.t1,fontSize:14,fontFamily:C.FB}}/>
                   <span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM})}}>ESC</span>
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>
                   {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
-                  {['Jump to','Prep','Portfolio'].map(group=>{
+                  {['Jump to','Prep','Portfolio','Progress'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(
                       <div key={group} style={{marginBottom:6}}>
                         <div style={{fontSize:9.5,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',padding:'8px 10px 4px'}}>{group}</div>
-                        {items.map(cmd=>(
-                          <motion.div key={cmd.id} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13}}>
-                            <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span><ChevronRight size={13} color={C.t4}/>
-                          </motion.div>
-                        ))}
+                        {items.map(cmd=>{
+                          const idx=filteredCmds.indexOf(cmd);
+                          const active=idx===cmdActiveIdx;
+                          return(
+                            <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
+                              <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span>{active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     );
                   })}
