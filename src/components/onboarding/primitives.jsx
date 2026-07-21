@@ -63,7 +63,7 @@ export function TextLink({ children, onClick }) {
 
 export function OptionRow({ selected, onClick, icon, label, sublabel, dots }) {
   return (
-    <motion.button whileTap={{ scale: 0.985 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
       style={{
         width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
         borderRadius: 14, cursor: 'pointer', marginBottom: 10,
@@ -88,7 +88,7 @@ export function OptionRow({ selected, onClick, icon, label, sublabel, dots }) {
 
 export function IconOptionRow({ selected, onClick, iconBg, icon, label }) {
   return (
-    <motion.button whileTap={{ scale: 0.985 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
       style={{
         width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '13px 16px',
         borderRadius: 13, cursor: 'pointer', marginBottom: 8,
@@ -104,7 +104,7 @@ export function IconOptionRow({ selected, onClick, iconBg, icon, label }) {
 
 export function CheckRow({ checked, onClick, label, sublabel }) {
   return (
-    <motion.button whileTap={{ scale: 0.985 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
       style={{
         width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '15px 16px',
         borderRadius: 13, cursor: 'pointer', marginBottom: 9,

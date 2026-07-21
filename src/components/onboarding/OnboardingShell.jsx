@@ -20,7 +20,7 @@ export default function OnboardingShell({ stepKey, progress, onBack, showBack = 
           ) : <div style={{ width: 34, flexShrink: 0 }} />}
           {showProgress ? (
             <div style={{ flex: 1, height: 6, borderRadius: 3, background: C.s2, overflow: 'hidden' }}>
-              <motion.div animate={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%` }} transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }} style={{ height: '100%', borderRadius: 3, background: C.blueGrad }} />
+              <motion.div animate={{ width: `${Math.max(0, Math.min(1, progress)) * 100}%` }} transition={{ type: 'spring', stiffness: 260, damping: 30 }} style={{ height: '100%', borderRadius: 3, background: C.blueGrad, boxShadow: `0 0 10px ${C.blue}70` }} />
             </div>
           ) : <div style={{ flex: 1 }} />}
         </div>
@@ -28,7 +28,7 @@ export default function OnboardingShell({ stepKey, progress, onBack, showBack = 
 
       <div style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', maxWidth: 460, margin: '0 auto', width: '100%', padding: '10px 24px 12px', boxSizing: 'border-box' }}>
         <AnimatePresence mode="wait">
-          <motion.div key={stepKey} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          <motion.div key={stepKey} initial={{ opacity: 0, x: 22, scale: 0.96 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -22, scale: 0.97 }} transition={{ type: 'spring', stiffness: 320, damping: 28, opacity: { duration: 0.2 } }}
             style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
             {children}
           </motion.div>
