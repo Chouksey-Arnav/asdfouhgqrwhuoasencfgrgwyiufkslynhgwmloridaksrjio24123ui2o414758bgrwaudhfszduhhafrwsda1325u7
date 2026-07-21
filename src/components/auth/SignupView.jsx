@@ -105,14 +105,14 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
               </div>
               <FieldError>{error}</FieldError>
               {existingAccount && (
-                <button type="button" onClick={onGoLogin} style={{ ...btn(C.blueGrad, { width: '100%' }) }}>Log in instead <ArrowRight size={14} /></button>
+                <button type="button" onClick={() => onGoLogin(email.trim())} style={{ ...btn(C.blueGrad, { width: '100%' }) }}>Log in instead <ArrowRight size={14} /></button>
               )}
               <button type="submit" disabled={busy} style={btn(C.blueGrad, { width: '100%', opacity: busy ? 0.7 : 1 })}>
                 {busy ? 'Sending…' : <>Continue <ArrowRight size={14} /></>}
               </button>
               <div style={{ textAlign: 'center', fontSize: 12.5, color: C.t3 }}>
                 Already have an account?{' '}
-                <button type="button" onClick={onGoLogin} className="msp-auth-link" style={{ color: C.blueL, fontWeight: 600 }}>Log in</button>
+                <button type="button" onClick={() => onGoLogin(email.trim())} className="msp-auth-link" style={{ color: C.blueL, fontWeight: 600 }}>Log in</button>
               </div>
             </div>
           </motion.form>

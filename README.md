@@ -38,7 +38,8 @@ service role server-side and enforces per-user ownership itself.
 ### Optional environment variables
 
 ```
-GROQ_API_KEY=...   # "Metabrain" AI tutoring/coaching (api/groq.js)
+GROQ_API_KEY=...    # Iatra AI tutoring/coaching (api/groq.js)
+GROQ_API_KEY_2=...  # optional 2nd Groq account — see GROQ_SETUP.md "Two accounts, maximized usage"
 ```
 
 ### Running the production server locally

@@ -25,9 +25,6 @@ import { GeneratingStep } from './steps/GeneratingStep';
 import { PlanReadyStep } from './steps/PlanReadyStep';
 import { PlanSummaryStep } from './steps/PlanSummaryStep';
 import { SaveProgressStep } from './steps/SaveProgressStep';
-import { PaywallStep } from './steps/PaywallStep';
-import { SpinWheelStep } from './steps/SpinWheelStep';
-import { OneTimeOfferStep } from './steps/OneTimeOfferStep';
 import { PlusCircle, Repeat } from 'lucide-react';
 import { C } from './primitives';
 
@@ -36,13 +33,11 @@ const STEPS = [
   'proof1', 'gradeScore', 'birthdate', 'goal', 'targetScore', 'realistic',
   'speed', 'proof2', 'obstacles', 'studyMethod', 'accomplish', 'proof3',
   'thankYou', 'calendar', 'toggleAddBack', 'toggleRollover', 'rating', 'notifications',
-  'referral', 'generating', 'planReady', 'planSummary', 'saveProgress', 'paywall',
-  // bonus downsell branch — only reached if the paywall CTA is declined
-  'spinWheel', 'oneTimeOffer',
+  'referral', 'generating', 'planReady', 'planSummary', 'saveProgress',
 ];
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
 const PROGRESS_START = STEPS.indexOf('gender');
-const PROGRESS_END = STEPS.indexOf('paywall');
+const PROGRESS_END = STEPS.indexOf('saveProgress');
 
 const GENDER_OPTIONS = [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }];
 const STUDY_HOURS_OPTIONS = [
@@ -52,7 +47,7 @@ const STUDY_HOURS_OPTIONS = [
 ];
 // Exported (not just used here) so src/lib/studentProfile.js can turn a
 // student's saved onboarding values back into human-readable labels for the
-// Metabrain system prompt and the dashboard's onboarding recap card, instead
+// Iatra system prompt and the dashboard's onboarding recap card, instead
 // of duplicating this copy in a second place that could drift out of sync.
 export const GOAL_OPTIONS = [
   { value: 'boost_score', label: 'Boost my SAT/ACT score' },
@@ -140,10 +135,6 @@ export default function Onboarding({ account, onComplete }) {
     onComplete({ ...answers, ...extra });
   }
 
-  function goToBonusOrFinish() {
-    setStepIdx(STEPS.indexOf('spinWheel'));
-  }
-
   const showBack = !NO_CHROME.has(stepKey) && stepIdx > 0;
   const showProgress = !NO_CHROME.has(stepKey);
 
@@ -212,13 +203,7 @@ export default function Onboarding({ account, onComplete }) {
     case 'planSummary':
       content = <PlanSummaryStep profile={answers} onNext={next} />; break;
     case 'saveProgress':
-      content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={next} />; break;
-    case 'paywall':
-      content = <PaywallStep onAccept={() => finish({ premium: true })} onDecline={goToBonusOrFinish} />; break;
-    case 'spinWheel':
-      content = <SpinWheelStep onNext={next} />; break;
-    case 'oneTimeOffer':
-      content = <OneTimeOfferStep onAccept={() => finish({ premium: true })} onDecline={() => finish({ premium: false })} />; break;
+      content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={() => finish()} />; break;
     default:
       content = null;
   }

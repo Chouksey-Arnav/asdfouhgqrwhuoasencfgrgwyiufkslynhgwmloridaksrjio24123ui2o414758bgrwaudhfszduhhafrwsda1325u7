@@ -71,7 +71,7 @@ export default function AuthGate({ children }) {
         <SignupView
           initialEmail={prefillEmail}
           onBack={() => goTo('landing')}
-          onGoLogin={() => goTo('login', prefillEmail)}
+          onGoLogin={(email) => goTo('login', email || prefillEmail)}
           onAuthed={handleAuthed}
         />
       )}

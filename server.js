@@ -18,6 +18,7 @@ import resetPassword from './api/auth/reset-password.js';
 import me from './api/auth/me.js';
 import logout from './api/auth/logout.js';
 import dataResource from './api/data/[resource].js';
+import progressSync from './api/progress-sync.js';
 import groq from './api/groq.js';
 import sendEmail from './api/send-email.js';
 
@@ -35,6 +36,7 @@ app.all('/api/auth/me', me);
 app.all('/api/auth/logout', logout);
 app.all('/api/send-email', sendEmail);
 app.all('/api/groq', groq);
+app.all('/api/progress-sync', progressSync);
 
 // The Vercel handler reads the resource name off req.query.resource (from
 // its [resource].js filename); Express puts route params on req.params, so

@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Metabrain Quiz Recommendations — deterministic ranking engine
+// Iatra Quiz Recommendations — deterministic ranking engine
 // Scores every not-yet-taken quiz against the student's real performance data
 // (category averages, enrolled courses, pathway) and returns a ranked list:
 // #1 pick first, #2 next, etc. No network call required — this runs instantly
 // client-side so the "Recommended For You" panel never waits on an API. The
-// Metabrain AI coach (Groq/Llama) can optionally narrate the #1 pick — see
-// getMetabrainPickPrompt() below — but ranking itself never depends on it.
+// Iatra AI coach (Groq/Llama) can optionally narrate the #1 pick — see
+// getIatraPickPrompt() below — but ranking itself never depends on it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DIFF_WEIGHT = { Easy: 1, Medium: 0.86, Hard: 0.55, Expert: 0.35 };
@@ -108,10 +108,10 @@ export function rankLabel(rank) {
   return RANK_LABELS[rank] || `#${rank}`;
 }
 
-// Builds the prompt for an optional Metabrain (Groq) one-liner about the #1
+// Builds the prompt for an optional Iatra (Groq) one-liner about the #1
 // pick — purely cosmetic narration on top of the deterministic ranking above,
 // never required for the ranking to work.
-export function getMetabrainPickPrompt({ pick, studentName, pathwayLabel }) {
+export function getIatraPickPrompt({ pick, studentName, pathwayLabel }) {
   if (!pick) return null;
   return `In one encouraging sentence (max 25 words), tell ${studentName || 'the student'} why "${pick.quiz.title}" (${pick.quiz.cat}, ${pick.quiz.diff}) is their #1 recommended quiz right now. Context: ${pick.reason} They're on the ${pathwayLabel || 'college prep'} pathway. Be specific and motivating, not generic. No markdown, just one sentence.`;
 }
