@@ -4276,12 +4276,11 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
-        {/* Summary stats */}
-        <div style={G(5,14,{},isMobile)}>
+        {/* Summary stats — just the two numbers not already covered by the benchmark bars right
+            below (Leadership/Research/Volunteer hours used to be shown twice: as a bare number
+            here AND as a val/target progress bar below — trimmed to avoid the duplication). */}
+        <div style={G(2,14,{},isMobile)}>
           <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub={`Rec: ${benchmarks.leadershipHours||100}+`} m={isMobile}/>
-          <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
-          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub={`Rec: ${benchmarks.volunteerHours||150}+`} m={isMobile}/>
           <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
@@ -4301,26 +4300,6 @@ export default function App({ account, onAccountChange }) {
               </div>
               <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
             </div>
-          ))}
-        </div>
-
-        {/* Quick links to the rest of the application system */}
-        <div style={G(4,10,{},isMobile)}>
-          {[
-            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',pillar:'portfolio',view:'resume',icon:Award,col:C.violet},
-            {label:'Clinical Hours',sub:'Log shadowing & clinical time',pillar:'portfolio',view:'clinical',icon:Stethoscope,col:accent},
-            {label:'Recommenders',sub:'Track letters of recommendation',pillar:'portfolio',view:'recommenders',icon:UserCheck,col:C.violetL},
-            {label:'Timeline',sub:'Everything, chronologically',pillar:'portfolio',view:'timeline',icon:Milestone,col:C.roseL},
-            {label:'Test Scores',sub:'SAT/ACT history & trend',pillar:'portfolio',view:'scores',icon:TrendingUp,col:C.green},
-            {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',pillar:'portfolio',view:'aid',icon:Handshake,col:C.cyan},
-            {label:'Study Pathway',sub:'Your track, units & lessons',pillar:'prep',view:'pathway',icon:Route,col:C.blue},
-            {label:'E-Library',sub:'Curated readings & videos',pillar:'prep',view:'library',icon:BookOpen,col:C.orange},
-          ].map(l=>(
-            <motion.div key={l.view} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>l.pillar==='prep'?goPrep(l.view):goPortfolio(l.view)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
-              <l.icon size={16} color={l.col}/>
-              <div style={{fontSize:12.5,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:8}}>{l.label}</div>
-              <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{l.sub}</div>
-            </motion.div>
           ))}
         </div>
 
