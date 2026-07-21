@@ -5,7 +5,7 @@ import { C } from '../../lib/theme';
 // Pill/segmented sub-navigation bar used inside the Prep and Portfolio shells
 // so several absorbed features can live under one top-level tab and switch
 // between each other without leaving the page.
-export default function SubNav({ items, active, onChange, accent = C.blue, m = false }) {
+export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix }) {
   return (
     <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginBottom: 18, WebkitOverflowScrolling: 'touch' }}>
       {items.map(it => {
@@ -13,6 +13,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
         return (
           <motion.button
             key={it.id}
+            data-tour={tourPrefix ? `${tourPrefix}-${it.id}` : undefined}
             whileHover={{ y: -1 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onChange(it.id)}

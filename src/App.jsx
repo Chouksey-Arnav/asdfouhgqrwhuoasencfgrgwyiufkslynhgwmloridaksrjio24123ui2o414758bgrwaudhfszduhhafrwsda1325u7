@@ -259,6 +259,7 @@ const NAV = [
   {id:'prep',ic:Compass,label:'Prep'},
   {id:'portfolio',ic:Building2,label:'Portfolio'},
   {id:'progress',ic:LineChart,label:'Progress'},
+  {id:'settings',ic:Settings,label:'Settings'},
 ];
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic'},
@@ -1135,7 +1136,6 @@ export default function App({ account, onAccountChange }) {
   const [lessonStep, setLessonStep] = useState('overview');
   const [articleRead, setArticleRead] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
-  const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
@@ -1152,9 +1152,12 @@ export default function App({ account, onAccountChange }) {
   const [progressView, setProgressView] = useState('overview'); // overview|verified|performance|achievements
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
+  const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
 
-  // ── Post-onboarding product tour — a spotlight walkthrough of the four main ──
-  // tabs plus the ⌘K quick-switcher, offered right after a new account is created.
+  // ── Post-onboarding product tour — a full-depth spotlight walkthrough covering ──
+  // every pillar (Home/Prep/Portfolio/Progress/Settings), every absorbed sub-view
+  // inside Prep/Portfolio/Progress, and the ⌘K quick-switcher — offered right
+  // after a new account is created (see completeOnboarding()).
   const [tourActive, setTourActive] = useState(false);
   const startTour = useCallback(()=>setTourActive(true), []);
   const finishTour = useCallback(()=>{
@@ -1171,13 +1174,54 @@ export default function App({ account, onAccountChange }) {
     tourPendingRef.current=false;
     startTour();
   },[tab,tourActive,startTour]);
+  // Full-depth product tour — every pillar, every absorbed sub-view inside Prep/Portfolio/
+  // Progress, and Settings, so a brand-new student sees the entire app (not just the four
+  // top-level tabs) before they're left to explore on their own. `section`/`color` drive the
+  // section pill + spotlight ring color in AppTour so a ~30-step tour still reads as five
+  // distinct chapters instead of one undifferentiated scroll.
   const TOUR_STEPS = useMemo(()=>[
-    { target:'nav-home', title:'Home', body:"Your daily dashboard — streak, XP, next lesson, and a snapshot of your current pathway.", onEnter:()=>setTab('home') },
-    { target:'nav-prep', title:'Prep', body:"SAT/ACT diagnostic, your pathway lessons, the quiz library, flashcards, AI Coach, and the E-Library all live here.", onEnter:()=>setTab('prep') },
-    { target:'nav-portfolio', title:'Portfolio', body:"Build your application here: college list, essays, deadlines, activities, research, recommenders, and more.", onEnter:()=>setTab('portfolio') },
-    { target:'nav-progress', title:'Progress', body:"See verified lesson completion, performance by category, and the achievements you've unlocked.", onEnter:()=>setTab('progress') },
-    { target:'cmdk', title:'Quick Jump', body:"Press ⌘K (or Ctrl+K) anytime to jump straight to any section — no clicking through menus.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[]);
+    // ── Home ──────────────────────────────────────────────────────────────────
+    { target:'nav-home', section:'Home', color:C.blue, title:'Home — your daily dashboard', body:"Streak, XP, level, today's next lesson, and a live snapshot of your current pathway all land here first — this is where every study session should start.", onEnter:()=>setTab('home') },
+
+    // ── Prep ──────────────────────────────────────────────────────────────────
+    { target:'nav-prep', section:'Prep', color:C.violet, title:'Prep — everything academic', body:"SAT/ACT diagnostic, your personalized pathway, the quiz library, flashcards, the AI Coach, and the E-Library all live under this one tab, switched with the pill bar just below it.", onEnter:()=>setTab('prep') },
+    { target:'prep-sub-diagnostic', section:'Prep', color:C.violet, title:'Diagnostic', body:"A short adaptive diagnostic figures out your strengths and gaps by category, then recommends the pathway that matches where you're actually starting from.", onEnter:()=>goPrep('diagnostic') },
+    { target:'prep-sub-pathway', section:'Prep', color:C.violet, title:'Pathway', body:"Your structured, unit-by-unit curriculum. Each lesson has an overview, article, video, and a verification quiz — complete them in order to level up and unlock the next unit.", onEnter:()=>goPrep('pathway') },
+    { target:'prep-sub-quizzes', section:'Prep', color:C.violet, title:'Quiz Library', body:"Hundreds of practice questions you can filter by category, difficulty, and topic — use it for free practice outside the structured pathway, any time.", onEnter:()=>goPrep('quizzes') },
+    { target:'prep-sub-flashcards', section:'Prep', color:C.violet, title:'Flashcards', body:"Spaced-repetition decks scheduled with FSRS (the same algorithm behind Anki). Generate your own cards straight from your notes, or study the built-in decks when cards come due.", onEnter:()=>goPrep('flashcards') },
+    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Metabrain 2.0 — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
+    { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
+
+    // ── Portfolio ─────────────────────────────────────────────────────────────
+    { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Portfolio — building your application', body:"Everything that goes into an actual med-school-track application lives here: your college list, essays, deadlines, activities, and more — all in one place so nothing falls through the cracks.", onEnter:()=>setTab('portfolio') },
+    { target:'portfolio-sub-overview', section:'Portfolio', color:C.green, title:'Overview', body:"A single glance at where your application stands — what's done, what's next, and which deadlines are approaching.", onEnter:()=>goPortfolio('overview') },
+    { target:'portfolio-sub-timeline', section:'Portfolio', color:C.green, title:'Timeline', body:"A chronological view of every milestone across your whole application journey, from freshman year prep through submission.", onEnter:()=>goPortfolio('timeline') },
+    { target:'portfolio-sub-colleges', section:'Portfolio', color:C.green, title:'College List', body:"Build and organize your target schools — reach, match, and safety — with the stats you need to compare them side by side.", onEnter:()=>goPortfolio('colleges') },
+    { target:'portfolio-sub-essays', section:'Portfolio', color:C.green, title:'Essays', body:"Draft, revise, and track every supplemental and personal statement essay in one workspace, with version history so you never lose a rewrite.", onEnter:()=>goPortfolio('essays') },
+    { target:'portfolio-sub-deadlines', section:'Portfolio', color:C.green, title:'Deadlines', body:"Every application, scholarship, and testing deadline in one calendar — including AP/IB exam dates if you've flagged yourself as an AP/IB student in Settings.", onEnter:()=>goPortfolio('deadlines') },
+    { target:'portfolio-sub-aid', section:'Portfolio', color:C.green, title:'Financial Aid', body:"Track FAFSA, CSS Profile, and scholarship applications alongside the aid packages you receive, so cost comparisons are easy when decisions come in.", onEnter:()=>goPortfolio('aid') },
+    { target:'portfolio-sub-resume', section:'Portfolio', color:C.green, title:'Activities & Resume', body:"Log every extracurricular, job, and leadership role with hours and impact, then export a polished resume/activities list with one click.", onEnter:()=>goPortfolio('resume') },
+    { target:'portfolio-sub-research', section:'Portfolio', color:C.green, title:'Research', body:"Track research experience — labs, projects, publications, and presentations — the kind of depth admissions committees and future pre-med programs look for.", onEnter:()=>goPortfolio('research') },
+    { target:'portfolio-sub-skills', section:'Portfolio', color:C.green, title:'Skills & Certs', body:"Certifications and skills worth listing — CPR/BLS, shadowing competencies, language proficiency, and more — organized so they're ready to cite in essays and interviews.", onEnter:()=>goPortfolio('skills') },
+    { target:'portfolio-sub-clinical', section:'Portfolio', color:C.green, title:'Clinical Hours', body:"Log shadowing and patient-care hours as you accumulate them — a running total that matters for almost every med-school-track pathway.", onEnter:()=>goPortfolio('clinical') },
+    { target:'portfolio-sub-recommenders', section:'Portfolio', color:C.green, title:'Recommenders', body:"Keep track of who you're asking for letters of recommendation, what you've given them, and the status of each request.", onEnter:()=>goPortfolio('recommenders') },
+    { target:'portfolio-sub-interview', section:'Portfolio', color:C.green, title:'Interview Prep', body:"Practice with realistic interview formats — including MMI and CASPer-style scenarios — and get feedback on how you'd respond.", onEnter:()=>goPortfolio('interview') },
+    { target:'portfolio-sub-scores', section:'Portfolio', color:C.green, title:'Test Scores', body:"Log every SAT/ACT attempt and set a target score — this feeds straight into the Admissions Calculator and your Home dashboard's countdown.", onEnter:()=>goPortfolio('scores') },
+    { target:'portfolio-sub-calc', section:'Portfolio', color:C.green, title:'Admissions Calculator', body:"Estimate your competitiveness at specific schools using your GPA, test scores, rigor, and activities — sync it straight from your Portfolio with one button.", onEnter:()=>goPortfolio('calc') },
+
+    // ── Progress ──────────────────────────────────────────────────────────────
+    { target:'nav-progress', section:'Progress', color:C.cyan, title:'Progress — proof of the work', body:"A full picture of everything you've actually verified, mastered, and unlocked — separate from Home's daily snapshot, this is the long-run record.", onEnter:()=>setTab('progress') },
+    { target:'progress-sub-overview', section:'Progress', color:C.cyan, title:'Overview', body:"Your big-picture stats: total XP, level, streak history, and how your onboarding goals are tracking over time.", onEnter:()=>goProgress('overview') },
+    { target:'progress-sub-verified', section:'Progress', color:C.cyan, title:'Verified Progress', body:"Lesson completion only counts here once you've passed its verification quiz — this is the trustworthy record of what you actually know, not just clicked through.", onEnter:()=>goProgress('verified') },
+    { target:'progress-sub-performance', section:'Progress', color:C.cyan, title:'Performance', body:"Your accuracy broken down by category and topic, so you can see exactly where to focus your next study session.", onEnter:()=>goProgress('performance') },
+    { target:'progress-sub-achievements', section:'Progress', color:C.cyan, title:'Achievements', body:"Badges and milestones you unlock for streaks, mastery, and consistency — a running record of what you've earned along the way.", onEnter:()=>goProgress('achievements') },
+
+    // ── Settings ──────────────────────────────────────────────────────────────
+    { target:'nav-settings', section:'Settings', color:C.amber, title:'Settings — your account, your rules', body:"Your profile, goals, test date, sound preferences, study track, course load, data export, and account controls all live here now — its own tab, not buried in a menu.", onEnter:()=>setTab('settings') },
+
+    // ── Quick Jump ────────────────────────────────────────────────────────────
+    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump (⌘K)', body:"Press ⌘K (or Ctrl+K) anytime, from anywhere in the app, to jump straight to any tab or sub-view — no clicking through menus. That's the whole tour — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+  ],[goPrep,goPortfolio,goProgress]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
@@ -4521,7 +4565,7 @@ export default function App({ account, onAccountChange }) {
         <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
           sub="Readiness, credibility, and performance across your pathway." m={isMobile}/>
         <div style={{marginTop:18}}>
-          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile}/>
+          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub"/>
         </div>
         <div style={{...CC({gap:22}),marginTop:18}}>
         {progressView==='overview'&&<>
@@ -4557,7 +4601,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:12.5,color:C.t3,lineHeight:1.5}}>You haven't set a goal yet — Metabrain coaches better when it knows what you're working toward.</div>
             )}
           </div>
-          <button style={btnSm('rgba(255,255,255,0.06)',{fontSize:10.5,flexShrink:0})} onClick={()=>setShowAccountMenu(true)}>Edit</button>
+          <button style={btnSm('rgba(255,255,255,0.06)',{fontSize:10.5,flexShrink:0})} onClick={()=>setTab('settings')}>Edit</button>
         </div>
 
         {/* Insight callouts */}
@@ -4992,8 +5036,8 @@ export default function App({ account, onAccountChange }) {
         {/* Help */}
         <div style={glass({padding:18})}>
           <SL>Help</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the guided tour of Home, Prep, Portfolio, Progress, and the ⌘K quick-switcher.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setShowAccountMenu(false);setTimeout(startTour,250);}}><Compass size={14}/>Replay App Tour</button>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
         </div>
 
         {/* Specialty path */}
@@ -5145,7 +5189,7 @@ export default function App({ account, onAccountChange }) {
   function tPrep(){
     return(
       <div>
-        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile}/>
+        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile} tourPrefix="prep-sub"/>
         {(prepRenders[prepView]||tPath)()}
       </div>
     );
@@ -5168,12 +5212,12 @@ export default function App({ account, onAccountChange }) {
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile}/>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile} tourPrefix="portfolio-sub"/>
         {(portfolioRenders[portfolioView]||tPort)()}
       </div>
     );
   }
-  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, progress:tAnalytics };
+  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, progress:tAnalytics, settings:tSettings };
 
   return(
     <ErrorBoundary>
@@ -5205,7 +5249,7 @@ export default function App({ account, onAccountChange }) {
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
               </div>
-              <div onClick={() => setShowAccountMenu(true)} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:'#fff',cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
+              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:'#fff',cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
             </div>
           </header>
         )}
@@ -5226,7 +5270,7 @@ export default function App({ account, onAccountChange }) {
             <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
               <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
             </button>
-            <div onClick={()=>setShowAccountMenu(true)} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer'}}>
+            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${accent}12`:undefined}}>
               <div style={R({gap:11,marginBottom:12})}>
                 <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
                   {user.name[0].toUpperCase()}
@@ -5282,25 +5326,6 @@ export default function App({ account, onAccountChange }) {
             })}
           </nav>
         )}
-
-        {/* ══ ACCOUNT MENU (Settings — reached via avatar tap, not the main nav) ══ */}
-        <AnimatePresence>
-          {showAccountMenu && (
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setShowAccountMenu(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.8)',zIndex:400,display:'flex',alignItems:isMobile?'flex-end':'center',justifyContent:'center'}}>
-              <motion.div
-                initial={isMobile?{y:'100%'}:{opacity:0,scale:.96}} animate={isMobile?{y:0}:{opacity:1,scale:1}} exit={isMobile?{y:'100%'}:{opacity:0,scale:.96}}
-                transition={isMobile?{type:'spring',damping:25,stiffness:200}:{duration:.18}}
-                style={{width:isMobile?'100%':'min(640px,92vw)',maxHeight:isMobile?'86vh':'86vh',overflowY:'auto',background:C.s1,borderRadius:isMobile?'24px 24px 0 0':16,padding:isMobile?'22px 16px 40px':'26px 26px 30px',border:isMobile?undefined:`1px solid ${C.b1}`,boxShadow:'0 20px 60px rgba(0,0,0,0.6)'}}
-                onClick={e=>e.stopPropagation()}>
-                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
-                  <h3 style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Account & Settings</h3>
-                  <button onClick={()=>setShowAccountMenu(false)} style={{background:C.s3,border:'none',borderRadius:'50%',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',color:C.t1,cursor:'pointer'}}><X size={18}/></button>
-                </div>
-                {tSettings()}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* ══ QUICK-SWITCH COMMAND PALETTE (⌘K) ═══════════════════════════════════ */}
         <AnimatePresence>
