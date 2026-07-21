@@ -1154,8402 +1154,4658 @@ export const ELIB = [
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Cell Membrane Structure and Function",
-    "url": "https://www.ascendprep.edu/modules/cell-membrane-structure-and-function-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on cell membrane structure and function. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Cell Membrane Structure and Function",
-    "url": "https://www.ascendprep.edu/guides/cell-membrane-structure-and-function-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Introduction to Anatomy & Physiology (#1)",
+    "url": "https://www.youtube.com/watch?v=uBGl2BujkPQ",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down cell membrane structure and function with diagrams and examples."
+    "desc": "A friendly introduction to the basics of human anatomy and physiology, including homeostasis and the organization of the human body.",
+    "ytId": "uBGl2BujkPQ"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Cell Membrane Structure and Function",
-    "url": "https://www.youtube.com/watch?v=ytLCELL00XX",
+    "title": "Crash Course Anatomy & Physiology - Tissues, Part 1 (#2)",
+    "url": "https://www.youtube.com/watch?v=i5O_v4B76R0",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCELL00XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cell membrane structure and function."
+    "desc": "Learn about the four main types of tissue: epithelial, connective, muscle, and nervous tissue, and their roles in the body.",
+    "ytId": "i5O_v4B76R0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Passive and Active Transport",
-    "url": "https://www.ascendprep.edu/modules/passive-and-active-transport-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Tissues, Part 2 - Epithelial Tissue (#3)",
+    "url": "https://www.youtube.com/watch?v=lUe_RI_m-Vg",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on passive and active transport. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Explore epithelial tissue in depth, learning about its cellular structure, classification, and biological functions.",
+    "ytId": "lUe_RI_m-Vg"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Passive and Active Transport",
-    "url": "https://www.ascendprep.edu/guides/passive-and-active-transport-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Tissues, Part 3 - Connective Tissue (#4)",
+    "url": "https://www.youtube.com/watch?v=F87_48v-W3U",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down passive and active transport with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "A closer look at connective tissue: from loose connective tissue to dense bone and blood, exploring its supportive functions.",
+    "ytId": "F87_48v-W3U"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Passive and Active Transport",
-    "url": "https://www.youtube.com/watch?v=ytLPASS01XX",
+    "title": "Crash Course Anatomy & Physiology - Tissues, Part 4 - Muscle & Nervous (#5)",
+    "url": "https://www.youtube.com/watch?v=yX8O-G4NfN0",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPASS01XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of passive and active transport."
+    "difficulty": "Introductory",
+    "desc": "An overview of muscle and nervous tissues, highlighting skeletal, cardiac, and smooth muscle types and neuron structure.",
+    "ytId": "yX8O-G4NfN0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Cellular Respiration and Glycolysis Basics",
-    "url": "https://www.ascendprep.edu/modules/cellular-respiration-and-glycolysis-basics-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Integumentary System, Part 1 (#6)",
+    "url": "https://www.youtube.com/watch?v=Orumw-Py_24",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on cellular respiration and glycolysis basics. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Understand the layers of skin\u2014the epidermis, dermis, and hypodermis\u2014and their physical and immunological functions.",
+    "ytId": "Orumw-Py_24"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Cellular Respiration and Glycolysis Basics",
-    "url": "https://www.ascendprep.edu/guides/cellular-respiration-and-glycolysis-basics-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Integumentary System, Part 2 - Hair & Nails (#7)",
+    "url": "https://www.youtube.com/watch?v=rTX8AptvF9Y",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down cellular respiration and glycolysis basics with diagrams and examples."
+    "desc": "Explore the structures of the skin, including sweat glands, sebaceous glands, hair follicles, and nails.",
+    "ytId": "rTX8AptvF9Y"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Cellular Respiration and Glycolysis Basics",
-    "url": "https://www.youtube.com/watch?v=ytLCELL02XX",
+    "title": "Crash Course Anatomy & Physiology - Skeletal System, Part 1 - Bone Structure (#8)",
+    "url": "https://www.youtube.com/watch?v=rDGqkMH3j0Y",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCELL02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cellular respiration and glycolysis basics."
+    "difficulty": "Introductory",
+    "desc": "Learn about the structure of bone tissue, including compact and spongy bone, osteons, osteocytes, and osteoblasts.",
+    "ytId": "rDGqkMH3j0Y"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Photosynthesis and Light Reactions",
-    "url": "https://www.ascendprep.edu/modules/photosynthesis-and-light-reactions-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Skeletal System, Part 2 - Bone Growth (#9)",
+    "url": "https://www.youtube.com/watch?v=wSg08n9E_2g",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on photosynthesis and light reactions. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "An investigation of bone growth, bone remodeling, and calcium homeostasis, essential for skeletal strength.",
+    "ytId": "wSg08n9E_2g"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Photosynthesis and Light Reactions",
-    "url": "https://www.ascendprep.edu/guides/photosynthesis-and-light-reactions-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Joints & Skeletal Movement (#10)",
+    "url": "https://www.youtube.com/watch?v=DLxYDoN634c",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down photosynthesis and light reactions with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Explore joint classification: fibrous, cartilaginous, and synovial joints, and how they facilitate complex body movements.",
+    "ytId": "DLxYDoN634c"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Photosynthesis and Light Reactions",
-    "url": "https://www.youtube.com/watch?v=ytLPHOT03XX",
+    "title": "Crash Course Anatomy & Physiology - Muscles, Part 1 - Muscle Cells (#11)",
+    "url": "https://www.youtube.com/watch?v=Ktv-CaOt6UQ",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPHOT03XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of photosynthesis and light reactions."
+    "desc": "Analyze muscle cells, sarcomere structure, and the sliding filament model of muscle contraction at the cellular level.",
+    "ytId": "Ktv-CaOt6UQ"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Mitosis and the Cell Cycle",
-    "url": "https://www.ascendprep.edu/modules/mitosis-and-the-cell-cycle-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Muscles, Part 2 - Muscle Contraction (#12)",
+    "url": "https://www.youtube.com/watch?v=jqy0i1KXUO4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on mitosis and the cell cycle. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Investigate motor units, muscle twitch, motor recruitment, and how muscles generate mechanical force.",
+    "ytId": "jqy0i1KXUO4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Mitosis and the Cell Cycle",
-    "url": "https://www.ascendprep.edu/guides/mitosis-and-the-cell-cycle-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Nervous System, Part 2 - Action Potential (#14)",
+    "url": "https://www.youtube.com/watch?v=x4PPZCLnVkA",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down mitosis and the cell cycle with diagrams and examples."
+    "desc": "A clear breakdown of action potentials: resting membrane potential, depolarization, repolarization, and signal propagation.",
+    "ytId": "x4PPZCLnVkA"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Mitosis and the Cell Cycle",
-    "url": "https://www.youtube.com/watch?v=ytLMITO04XX",
+    "title": "Crash Course Anatomy & Physiology - Nervous System, Part 3 - Synapses (#15)",
+    "url": "https://www.youtube.com/watch?v=71pCilo8up4",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMITO04XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of mitosis and the cell cycle."
+    "difficulty": "Introductory",
+    "desc": "Explore synapses, neurotransmitters, and how signals cross the synaptic cleft to communicate between neurons.",
+    "ytId": "71pCilo8up4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Meiosis and Gametogenesis",
-    "url": "https://www.ascendprep.edu/modules/meiosis-and-gametogenesis-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Central Nervous System Anatomy (#16)",
+    "url": "https://www.youtube.com/watch?v=q8NtmDrb_qo",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on meiosis and gametogenesis. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Understand the anatomy of the brain and spinal cord, including cerebral hemispheres, cerebellum, and brainstem.",
+    "ytId": "q8NtmDrb_qo"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Meiosis and Gametogenesis",
-    "url": "https://www.ascendprep.edu/guides/meiosis-and-gametogenesis-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Peripheral Nervous System Anatomy (#17)",
+    "url": "https://www.youtube.com/watch?v=QY9NTVh-Awo",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down meiosis and gametogenesis with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Explore sensory and motor divisions of the peripheral nervous system, spinal nerves, and cranial nerves.",
+    "ytId": "QY9NTVh-Awo"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Meiosis and Gametogenesis",
-    "url": "https://www.youtube.com/watch?v=ytLMEIO05XX",
+    "title": "Crash Course Anatomy & Physiology - Autonomic Nervous System Anatomy (#18)",
+    "url": "https://www.youtube.com/watch?v=7Sh8M8_08XU",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMEIO05XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of meiosis and gametogenesis."
+    "difficulty": "Introductory",
+    "desc": "Learn how the autonomic nervous system unconsciously regulates bodily functions like digestion and heart rate.",
+    "ytId": "7Sh8M8_08XU"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Mendelian Genetics and Punnett Squares",
-    "url": "https://www.ascendprep.edu/modules/mendelian-genetics-and-punnett-squares-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Sympathetic Nervous System Physiology (#19)",
+    "url": "https://www.youtube.com/watch?v=0IDgBlCH6Z8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on mendelian genetics and punnett squares. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The physiology of the 'fight or flight' response, examining epinephrine and noradrenergic signaling mechanisms.",
+    "ytId": "0IDgBlCH6Z8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Mendelian Genetics and Punnett Squares",
-    "url": "https://www.ascendprep.edu/guides/mendelian-genetics-and-punnett-squares-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Parasympathetic Nervous System Physiology (#20)",
+    "url": "https://www.youtube.com/watch?v=qqU-Vjq_X_A",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down mendelian genetics and punnett squares with diagrams and examples."
+    "desc": "The physiology of the 'rest and digest' response, examining cholinergic signaling and body preservation.",
+    "ytId": "qqU-Vjq_X_A"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Mendelian Genetics and Punnett Squares",
-    "url": "https://www.youtube.com/watch?v=ytLMEND06XX",
+    "title": "Crash Course Anatomy & Physiology - Sensory Receptors Physiology (#21)",
+    "url": "https://www.youtube.com/watch?v=5vY_76C_zBw",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMEND06XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of mendelian genetics and punnett squares."
+    "desc": "Learn how sensory receptors translate physical stimuli (light, sound, pressure) into electrical neural signals.",
+    "ytId": "5vY_76C_zBw"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Non-Mendelian Inheritance Patterns",
-    "url": "https://www.ascendprep.edu/modules/non-mendelian-inheritance-patterns-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Taste & Smell Physiology (#22)",
+    "url": "https://www.youtube.com/watch?v=mFm3yA1nslE",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on non-mendelian inheritance patterns. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "An overview of gustation and olfaction, including chemoreceptor action and pathway routing to the brain.",
+    "ytId": "mFm3yA1nslE"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Non-Mendelian Inheritance Patterns",
-    "url": "https://www.ascendprep.edu/guides/non-mendelian-inheritance-patterns-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Vision Physiology (#23)",
+    "url": "https://www.youtube.com/watch?v=o0DYP-u1GZg",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down non-mendelian inheritance patterns with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Understand eye anatomy, photoreceptors (rods and cones), and how the brain processes complex visual signals.",
+    "ytId": "o0DYP-u1GZg"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Non-Mendelian Inheritance Patterns",
-    "url": "https://www.youtube.com/watch?v=ytLNON-07XX",
+    "title": "Crash Course Anatomy & Physiology - Hearing & Balance Physiology (#24)",
+    "url": "https://www.youtube.com/watch?v=Ie2j7-8vY6M",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLNON-07XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of non-mendelian inheritance patterns."
+    "difficulty": "Introductory",
+    "desc": "Explore ear anatomy, the organ of Corti, mechanoreceptors, and the physiology of auditory and equilibrium pathways.",
+    "ytId": "Ie2j7-8vY6M"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: DNA Structure and Double Helix Discovery",
-    "url": "https://www.ascendprep.edu/modules/dna-structure-and-double-helix-discovery-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Endocrine System, Part 1 - Glands & Hormones (#25)",
+    "url": "https://www.youtube.com/watch?v=eWHH9je2zG4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on dna structure and double helix discovery. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Introduction to endocrine glands, lipid-soluble and water-soluble hormones, and general cellular mechanisms.",
+    "ytId": "eWHH9je2zG4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to DNA Structure and Double Helix Discovery",
-    "url": "https://www.ascendprep.edu/guides/dna-structure-and-double-helix-discovery-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Endocrine System, Part 2 - Feedback Loops (#26)",
+    "url": "https://www.youtube.com/watch?v=SCV_m91mN-Q",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down dna structure and double helix discovery with diagrams and examples."
+    "desc": "Investigate the hypothalamic-pituitary-adrenal (HPA) axis, thyroid feedback loops, and pancreas blood sugar control.",
+    "ytId": "SCV_m91mN-Q"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: DNA Structure and Double Helix Discovery",
-    "url": "https://www.youtube.com/watch?v=ytLDNA-08XX",
+    "title": "Crash Course Anatomy & Physiology - Cardiovascular System, Part 1 - Heart Anatomy (#27)",
+    "url": "https://www.youtube.com/watch?v=JVjDYA4_WOk",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLDNA-08XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of dna structure and double helix discovery."
+    "difficulty": "Introductory",
+    "desc": "Anatomy of the heart: chambers, valves, double circulation, and systemic vs pulmonary pathways.",
+    "ytId": "JVjDYA4_WOk"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: DNA Replication Mechanisms",
-    "url": "https://www.ascendprep.edu/modules/dna-replication-mechanisms-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Cardiovascular System, Part 2 - Heart Physiology (#28)",
+    "url": "https://www.youtube.com/watch?v=FLBMwcvOaEo",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on dna replication mechanisms. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Cardiac cycle, electrical conduction system (SA/AV node), and ECG/EKG wave interpretations.",
+    "ytId": "FLBMwcvOaEo"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to DNA Replication Mechanisms",
-    "url": "https://www.ascendprep.edu/guides/dna-replication-mechanisms-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Cardiovascular System, Part 3 - Blood Vessels (#29)",
+    "url": "https://www.youtube.com/watch?v=X9_bYjH4p7M",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down dna replication mechanisms with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Arteries, veins, capillaries, blood pressure regulation, and vascular resistance dynamics.",
+    "ytId": "X9_bYjH4p7M"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: DNA Replication Mechanisms",
-    "url": "https://www.youtube.com/watch?v=ytLDNA-09XX",
+    "title": "Crash Course Anatomy & Physiology - Blood Physiology (#30)",
+    "url": "https://www.youtube.com/watch?v=9-Xo_pNSj_g",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLDNA-09XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of dna replication mechanisms."
+    "desc": "Composition of blood: red and white blood cells, platelets, plasma proteins, and blood typing (ABO/Rh).",
+    "ytId": "9-Xo_pNSj_g"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: RNA Transcription and Processing",
-    "url": "https://www.ascendprep.edu/modules/rna-transcription-and-processing-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Respiratory System, Part 2 - Gas Exchange (#32)",
+    "url": "https://www.youtube.com/watch?v=A5dBV-S7_Z0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on rna transcription and processing. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Physiology of alveolar gas exchange, oxygen-hemoglobin dissociation curves, and carbon dioxide transport.",
+    "ytId": "A5dBV-S7_Z0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to RNA Transcription and Processing",
-    "url": "https://www.ascendprep.edu/guides/rna-transcription-and-processing-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Digestive System, Part 1 Anatomy (#33)",
+    "url": "https://www.youtube.com/watch?v=yIoTRGZ8MrM",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down rna transcription and processing with diagrams and examples."
+    "desc": "Overview of digestion, mechanical vs chemical breakdown, and organs of the alimentary canal.",
+    "ytId": "yIoTRGZ8MrM"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: RNA Transcription and Processing",
-    "url": "https://www.youtube.com/watch?v=ytLRNA-10XX",
+    "title": "Crash Course Anatomy & Physiology - Digestive System, Part 2 - Stomach & Small Intestines (#34)",
+    "url": "https://www.youtube.com/watch?v=j0L963G-9Y8",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLRNA-10XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of rna transcription and processing."
+    "difficulty": "Introductory",
+    "desc": "The roles of stomach acid, digestive enzymes, bile, and small intestinal absorption mechanisms.",
+    "ytId": "j0L963G-9Y8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Protein Translation and Ribosomes",
-    "url": "https://www.ascendprep.edu/modules/protein-translation-and-ribosomes-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Digestive System, Part 3 - Liver & Pancreas (#35)",
+    "url": "https://www.youtube.com/watch?v=g_e-O6SAtR0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on protein translation and ribosomes. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Functions of accessory organs: liver metabolism, bile production, and pancreatic endocrine/exocrine functions.",
+    "ytId": "g_e-O6SAtR0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Protein Translation and Ribosomes",
-    "url": "https://www.ascendprep.edu/guides/protein-translation-and-ribosomes-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Digestive System, Part 4 - Large Intestine (#36)",
+    "url": "https://www.youtube.com/watch?v=6v_77_2p3_U",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down protein translation and ribosomes with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Large intestine water absorption, gut microbiome, defecation reflex, and waste excretion.",
+    "ytId": "6v_77_2p3_U"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Protein Translation and Ribosomes",
-    "url": "https://www.youtube.com/watch?v=ytLPROT11XX",
+    "title": "Crash Course Anatomy & Physiology - Urinary System, Part 1 - Kidneys (#37)",
+    "url": "https://www.youtube.com/watch?v=l128tW1H5a8",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPROT11XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of protein translation and ribosomes."
+    "difficulty": "Introductory",
+    "desc": "Kidney anatomy, the structure of the nephron, and the mechanisms of filtration, reabsorption, and secretion.",
+    "ytId": "l128tW1H5a8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Gene Mutation Types and Effects",
-    "url": "https://www.ascendprep.edu/modules/gene-mutation-types-and-effects-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Urinary System, Part 2 - Nephron & Water Balance (#38)",
+    "url": "https://www.youtube.com/watch?v=_58066Z68N0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on gene mutation types and effects. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Hormonal regulation of water and electrolyte balance: ADH, aldosterone, and the renin-angiotensin system.",
+    "ytId": "_58066Z68N0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Gene Mutation Types and Effects",
-    "url": "https://www.ascendprep.edu/guides/gene-mutation-types-and-effects-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Immune System, Part 2 - Adaptive Immunity (#40)",
+    "url": "https://www.youtube.com/watch?v=2DFN4IBz3Z4",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down gene mutation types and effects with diagrams and examples."
+    "desc": "An overview of adaptive immunity: B and T lymphocytes, antigen presentation, and antibody-mediated responses.",
+    "ytId": "2DFN4IBz3Z4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Gene Mutation Types and Effects",
-    "url": "https://www.youtube.com/watch?v=ytLGENE12XX",
+    "title": "Crash Course Anatomy & Physiology - Immune System, Part 3 - Immunological Memory (#41)",
+    "url": "https://www.youtube.com/watch?v=rd2cf5hYmXg",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLGENE12XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of gene mutation types and effects."
+    "desc": "The mechanism of immunological memory, vaccine science, and active vs passive immunization.",
+    "ytId": "rd2cf5hYmXg"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Bacterial Genetics and Operons",
-    "url": "https://www.ascendprep.edu/modules/bacterial-genetics-and-operons-practice",
-    "type": "Course",
+    "title": "Crash Course Anatomy & Physiology - Reproductive System, Part 1 - Male Reproductive (#42)",
+    "url": "https://www.youtube.com/watch?v=RFV6L_P27e4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on bacterial genetics and operons. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Anatomy of the male reproductive system, spermatogenesis, and hormonal regulation of testosterone.",
+    "ytId": "RFV6L_P27e4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Bacterial Genetics and Operons",
-    "url": "https://www.ascendprep.edu/guides/bacterial-genetics-and-operons-handbook",
-    "type": "Article",
+    "title": "Crash Course Anatomy & Physiology - Reproductive System, Part 2 - Female Reproductive (#43)",
+    "url": "https://www.youtube.com/watch?v=_77gX-m7z_8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down bacterial genetics and operons with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Anatomy of the female reproductive system, oogenesis, ovarian cycle, and the uterine/menstrual cycle.",
+    "ytId": "_77gX-m7z_8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Bacterial Genetics and Operons",
-    "url": "https://www.youtube.com/watch?v=ytLBACT13XX",
+    "title": "Crash Course Anatomy & Physiology - Reproductive System, Part 3 - Fertilization (#44)",
+    "url": "https://www.youtube.com/watch?v=j7_g7p68N80",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLBACT13XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of bacterial genetics and operons."
+    "difficulty": "Introductory",
+    "desc": "The physiology of fertilization, cleavage, blastocyst formation, implantation, and early embryonic development.",
+    "ytId": "j7_g7p68N80"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Biotechnology and Gel Electrophoresis",
-    "url": "https://www.ascendprep.edu/modules/biotechnology-and-gel-electrophoresis-practice",
-    "type": "App",
+    "title": "Crash Course Anatomy & Physiology - Reproductive System, Part 4 - Pregnancy & Development (#45)",
+    "url": "https://www.youtube.com/watch?v=_p_v-VbXW_8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on biotechnology and gel electrophoresis. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Pregnancy physiology, placental endocrine functions, embryonic development, and labor hormones.",
+    "ytId": "_p_v-VbXW_8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Biotechnology and Gel Electrophoresis",
-    "url": "https://www.ascendprep.edu/guides/biotechnology-and-gel-electrophoresis-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Carbon... SO SIMPLE (#1)",
+    "url": "https://www.youtube.com/watch?v=QnQe0xW_JY4",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down biotechnology and gel electrophoresis with diagrams and examples."
+    "desc": "Explore covalent, ionic, and hydrogen bonds, carbon's molecular properties, and the octet rule of chemistry.",
+    "ytId": "QnQe0xW_JY4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Biotechnology and Gel Electrophoresis",
-    "url": "https://www.youtube.com/watch?v=ytLBIOT14XX",
+    "title": "Crash Course Biology - Water - Liquid Awesome (#2)",
+    "url": "https://www.youtube.com/watch?v=HVT3Y3_gHGg",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLBIOT14XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of biotechnology and gel electrophoresis."
+    "difficulty": "Introductory",
+    "desc": "Water's chemical polarity, hydrogen bonding, cohesion, adhesion, heat capacity, and biological importance.",
+    "ytId": "HVT3Y3_gHGg"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: PCR and DNA Sequencing Methods",
-    "url": "https://www.ascendprep.edu/modules/pcr-and-dna-sequencing-methods-practice",
-    "type": "Course",
+    "title": "Crash Course Biology - What Biologists Do (#3)",
+    "url": "https://www.youtube.com/watch?v=rgZhDoPgzK8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on pcr and dna sequencing methods. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Understand how biological inquiry works, model organisms, and scientific observations in the field.",
+    "ytId": "rgZhDoPgzK8"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to PCR and DNA Sequencing Methods",
-    "url": "https://www.ascendprep.edu/guides/pcr-and-dna-sequencing-methods-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Eukaryotes & Cellular Evolution (#4)",
+    "url": "https://www.youtube.com/watch?v=1ASTD07uM-0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down pcr and dna sequencing methods with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "The organelles of eukaryotic cells, including the nucleus, mitochondria, endoplasmic reticulum, and golgi apparatus.",
+    "ytId": "1ASTD07uM-0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: PCR and DNA Sequencing Methods",
-    "url": "https://www.youtube.com/watch?v=ytLPCR-15XX",
+    "title": "Crash Course Biology - Cell Membranes & Transport (#5)",
+    "url": "https://www.youtube.com/watch?v=dPKvHrD1eS4",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPCR-15XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of pcr and dna sequencing methods."
+    "desc": "Understand active transport, passive diffusion, facilitated diffusion, and cell membrane selective permeability.",
+    "ytId": "dPKvHrD1eS4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: CRISPR-Cas9 Gene Editing Intro",
-    "url": "https://www.ascendprep.edu/modules/crispr-cas9-gene-editing-intro-practice",
-    "type": "App",
+    "title": "Crash Course Biology - Plant Cells structure & function (#6)",
+    "url": "https://www.youtube.com/watch?v=9UvlqAVCoqY",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on crispr-cas9 gene editing intro. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Cell walls, chloroplasts, plastids, and large central vacuoles in plant cell physiology.",
+    "ytId": "9UvlqAVCoqY"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to CRISPR-Cas9 Gene Editing Intro",
-    "url": "https://www.ascendprep.edu/guides/crispr-cas9-gene-editing-intro-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Photosynthesis mechanisms (#7)",
+    "url": "https://www.youtube.com/watch?v=g78utcLQrJ4",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down crispr-cas9 gene editing intro with diagrams and examples."
+    "desc": "Light reactions, Calvin cycle, chlorophyll absorption, and energy transformation in chloroplasts.",
+    "ytId": "g78utcLQrJ4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: CRISPR-Cas9 Gene Editing Intro",
-    "url": "https://www.youtube.com/watch?v=ytLCRIS16XX",
+    "title": "Crash Course Biology - Cellular Respiration pathways (#8)",
+    "url": "https://www.youtube.com/watch?v=00jbG_cfGuQ",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCRIS16XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of crispr-cas9 gene editing intro."
+    "difficulty": "Introductory",
+    "desc": "Glycolysis, Krebs cycle, and electron transport chain mechanics from an introductory standpoint.",
+    "ytId": "00jbG_cfGuQ"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Darwinian Evolution and Natural Selection",
-    "url": "https://www.ascendprep.edu/modules/darwinian-evolution-and-natural-selection-practice",
-    "type": "Course",
+    "title": "Crash Course Biology - Mitosis & Cell Division (#9)",
+    "url": "https://www.youtube.com/watch?v=L0k-enzoeOM",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on darwinian evolution and natural selection. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The phases of mitosis (prophase, metaphase, anaphase, telophase) and cytokinesis in the cell cycle.",
+    "ytId": "L0k-enzoeOM"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Darwinian Evolution and Natural Selection",
-    "url": "https://www.ascendprep.edu/guides/darwinian-evolution-and-natural-selection-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Meiosis & Sex Cells (#10)",
+    "url": "https://www.youtube.com/watch?v=qCLmR9-YY7o",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down darwinian evolution and natural selection with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Meiotic cell division, crossing over, genetic recombination, and the formation of haploid gametes.",
+    "ytId": "qCLmR9-YY7o"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Darwinian Evolution and Natural Selection",
-    "url": "https://www.youtube.com/watch?v=ytLDARW17XX",
+    "title": "Crash Course Biology - DNA Structure & Replication (#11)",
+    "url": "https://www.youtube.com/watch?v=8kK2zwjRV0M",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLDARW17XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of darwinian evolution and natural selection."
+    "difficulty": "Introductory",
+    "desc": "The double helix structure of DNA, nucleotide pairings, and semiconservative replication enzymes.",
+    "ytId": "8kK2zwjRV0M"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Evidence of Evolution and Fossil Record",
-    "url": "https://www.ascendprep.edu/modules/evidence-of-evolution-and-fossil-record-practice",
-    "type": "App",
+    "title": "Crash Course Biology - RNA Transcription (#12)",
+    "url": "https://www.youtube.com/watch?v=itsb2SqR-R0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on evidence of evolution and fossil record. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "RNA polymerase, transcription factors, mRNA synthesis, introns, exons, and splicing mechanisms.",
+    "ytId": "itsb2SqR-R0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Evidence of Evolution and Fossil Record",
-    "url": "https://www.ascendprep.edu/guides/evidence-of-evolution-and-fossil-record-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Heredity & Punnett Squares (#14)",
+    "url": "https://www.youtube.com/watch?v=CezGYhx_y_A",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down evidence of evolution and fossil record with diagrams and examples."
+    "desc": "Mendelian genetics, dominant and recessive alleles, genotypes, phenotypes, and pedigree charts.",
+    "ytId": "CezGYhx_y_A"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Evidence of Evolution and Fossil Record",
-    "url": "https://www.youtube.com/watch?v=ytLEVID18XX",
+    "title": "Crash Course Biology - Natural Selection & Adaptation (#15)",
+    "url": "https://www.youtube.com/watch?v=aTftyFboC_M",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLEVID18XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of evidence of evolution and fossil record."
+    "desc": "Charles Darwin, reproductive success, selective pressures, and evolutionary adaptations in populations.",
+    "ytId": "aTftyFboC_M"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Microevolution and Hardy-Weinberg Equilibrium",
-    "url": "https://www.ascendprep.edu/modules/microevolution-and-hardy-weinberg-equilibrium-practice",
-    "type": "Course",
+    "title": "Crash Course Biology - Speciation - Origin of Species (#16)",
+    "url": "https://www.youtube.com/watch?v=2oKlKmDRLaM",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on microevolution and hardy-weinberg equilibrium. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Allopatric and sympatric speciation, reproductive isolation barriers, and species definitions.",
+    "ytId": "2oKlKmDRLaM"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Microevolution and Hardy-Weinberg Equilibrium",
-    "url": "https://www.ascendprep.edu/guides/microevolution-and-hardy-weinberg-equilibrium-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Evolutionary Evidence & Fossils (#17)",
+    "url": "https://www.youtube.com/watch?v=iX9p-bW7_G0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down microevolution and hardy-weinberg equilibrium with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Fossil records, homologous structures, embryology, and molecular biology evidence supporting evolution.",
+    "ytId": "iX9p-bW7_G0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Microevolution and Hardy-Weinberg Equilibrium",
-    "url": "https://www.youtube.com/watch?v=ytLMICR19XX",
+    "title": "Crash Course Biology - Evolutionary Relationships & Trees (#18)",
+    "url": "https://www.youtube.com/watch?v=MnyLQLOfd_A",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMICR19XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of microevolution and hardy-weinberg equilibrium."
+    "difficulty": "Introductory",
+    "desc": "Phylogenetic trees, cladistics, shared ancestral characters, and biological system mapping.",
+    "ytId": "MnyLQLOfd_A"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Macroevolution and Speciation",
-    "url": "https://www.ascendprep.edu/modules/macroevolution-and-speciation-practice",
-    "type": "App",
+    "title": "Crash Course Biology - Taxonomy & Filing System (#19)",
+    "url": "https://www.youtube.com/watch?v=F38BmgPcZ_I",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on macroevolution and speciation. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Linnaean taxonomy system, domain, kingdom, phylum, class, order, family, genus, and species.",
+    "ytId": "F38BmgPcZ_I"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Macroevolution and Speciation",
-    "url": "https://www.ascendprep.edu/guides/macroevolution-and-speciation-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Bacteria & Archaea (#20)",
+    "url": "https://www.youtube.com/watch?v=vAR47-g6Y_4",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down macroevolution and speciation with diagrams and examples."
+    "desc": "An overview of prokaryotes: bacterial cell structures, gram staining, and extreme-living archaea.",
+    "ytId": "vAR47-g6Y_4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Macroevolution and Speciation",
-    "url": "https://www.youtube.com/watch?v=ytLMACR20XX",
+    "title": "Crash Course Biology - Protists and microscopic life (#21)",
+    "url": "https://www.youtube.com/watch?v=0-6dzU4gOJo",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMACR20XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of macroevolution and speciation."
+    "difficulty": "Introductory",
+    "desc": "Eukaryotic single-celled organisms, amoebas, paramecia, algae, and protozoan diversity.",
+    "ytId": "0-6dzU4gOJo"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Phylogenetic Trees and Cladograms",
-    "url": "https://www.ascendprep.edu/modules/phylogenetic-trees-and-cladograms-practice",
-    "type": "Course",
+    "title": "Crash Course Biology - Fungi biological roles (#22)",
+    "url": "https://www.youtube.com/watch?v=m4DUZhnNo4s",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on phylogenetic trees and cladograms. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Mycelium, hyphae, decomposers, mycorrhizal relationships, and fungal reproduction.",
+    "ytId": "m4DUZhnNo4s"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Phylogenetic Trees and Cladograms",
-    "url": "https://www.ascendprep.edu/guides/phylogenetic-trees-and-cladograms-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Vascular Plants structure (#24)",
+    "url": "https://www.youtube.com/watch?v=X4L3p_Bv-W0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down phylogenetic trees and cladograms with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Xylem, phloem, roots, stems, leaves, transpiration, and plant nutritional transport systems.",
+    "ytId": "X4L3p_Bv-W0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Phylogenetic Trees and Cladograms",
-    "url": "https://www.youtube.com/watch?v=ytLPHYL21XX",
+    "title": "Crash Course Biology - Animal Behavior & Ethology (#29)",
+    "url": "https://www.youtube.com/watch?v=6hREvK9b9A4",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPHYL21XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of phylogenetic trees and cladograms."
+    "desc": "Innate vs learned behaviors, classical conditioning, operant conditioning, and behavioral ecology.",
+    "ytId": "6hREvK9b9A4"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Animal Behavior and Ethology",
-    "url": "https://www.ascendprep.edu/modules/animal-behavior-and-ethology-practice",
-    "type": "App",
+    "title": "Crash Course Biology - Circulatory System Evolution (#27)",
+    "url": "https://www.youtube.com/watch?v=9fxm85Fy4sQ",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on animal behavior and ethology. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Compare single and double circulation systems across different animal phyla and the human heart.",
+    "ytId": "9fxm85Fy4sQ"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Animal Behavior and Ethology",
-    "url": "https://www.ascendprep.edu/guides/animal-behavior-and-ethology-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Excretory System & Osmoregulation (#29)",
+    "url": "https://www.youtube.com/watch?v=WtrYotjYvtU",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down animal behavior and ethology with diagrams and examples."
+    "desc": "The biology of nitrogenous waste removal, filtration, and water regulation across animal phyla.",
+    "ytId": "WtrYotjYvtU"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Animal Behavior and Ethology",
-    "url": "https://www.youtube.com/watch?v=ytLANIM22XX",
+    "title": "Crash Course Biology - Mitosis vs Meiosis Differences (#38)",
+    "url": "https://www.youtube.com/watch?v=IQJ4G_Y8Rpw",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLANIM22XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of animal behavior and ethology."
+    "difficulty": "Introductory",
+    "desc": "Contrast chromosomal behavior, ploidy levels, and somatic vs germline origins between mitosis and meiosis.",
+    "ytId": "IQJ4G_Y8Rpw"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Population Ecology and Growth Curves",
-    "url": "https://www.ascendprep.edu/modules/population-ecology-and-growth-curves-practice",
-    "type": "Course",
+    "title": "Crash Course Biology - Homeostasis & Body Temperature (#39)",
+    "url": "https://www.youtube.com/watch?v=6ulXau2HyHg",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on population ecology and growth curves. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Endotherms vs ectotherms, thermoregulation feedback loops, and biological adaptations to heat extremes.",
+    "ytId": "6ulXau2HyHg"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Population Ecology and Growth Curves",
-    "url": "https://www.ascendprep.edu/guides/population-ecology-and-growth-curves-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Biomolecules & Organic Chemistry (#40)",
+    "url": "https://www.youtube.com/watch?v=YO244P1e9QM",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down population ecology and growth curves with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Monomers, polymers, carbohydrates, lipids, proteins, and nucleic acids in cellular biochemistry.",
+    "ytId": "YO244P1e9QM"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Population Ecology and Growth Curves",
-    "url": "https://www.youtube.com/watch?v=ytLPOPU23XX",
+    "title": "Crash Course Biology - Enzymes & Biological Catalysts (#41)",
+    "url": "https://www.youtube.com/watch?v=qgVFkRn8fG0",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPOPU23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of population ecology and growth curves."
+    "difficulty": "Introductory",
+    "desc": "Enzyme structure, active site, activation energy, competitive and non-competitive inhibition.",
+    "ytId": "qgVFkRn8fG0"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Community Ecology and Symbiosis",
-    "url": "https://www.ascendprep.edu/modules/community-ecology-and-symbiosis-practice",
-    "type": "App",
+    "title": "Crash Course Biology - Passive vs Active Transport Cell (#42)",
+    "url": "https://www.youtube.com/watch?v=Ptmlvtei8hw",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on community ecology and symbiosis. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Distinguish osmosis, simple diffusion, facilitated diffusion, and active carrier-mediated protein pumps.",
+    "ytId": "Ptmlvtei8hw"
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Community Ecology and Symbiosis",
-    "url": "https://www.ascendprep.edu/guides/community-ecology-and-symbiosis-handbook",
-    "type": "Article",
+    "title": "Crash Course Biology - Dihybrid Crosses & Linked Genes (#46)",
+    "url": "https://www.youtube.com/watch?v=8m6hH_L7t_o",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down community ecology and symbiosis with diagrams and examples."
+    "desc": "Law of independent assortment, dihybrid Punnett squares, linked genes, and recombination frequencies.",
+    "ytId": "8m6hH_L7t_o"
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Community Ecology and Symbiosis",
-    "url": "https://www.youtube.com/watch?v=ytLCOMM24XX",
+    "title": "Crash Course Biology - Pedigrees & Inherited Diseases (#47)",
+    "url": "https://www.youtube.com/watch?v=h29gDnyY9_g",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCOMM24XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of community ecology and symbiosis."
+    "desc": "Analyzing pedigree charts for autosomal dominant, autosomal recessive, and sex-linked genetic traits.",
+    "ytId": "h29gDnyY9_g"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Ecosystem Dynamics and Energy Flow",
-    "url": "https://www.ascendprep.edu/modules/ecosystem-dynamics-and-energy-flow-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - The Nucleus & Atomic History (#1)",
+    "url": "https://www.youtube.com/watch?v=FSyAehMdpyI",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on ecosystem dynamics and energy flow. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Explore the structure of the atomic nucleus, subatomic particles, isotopes, and atomic mass.",
+    "ytId": "FSyAehMdpyI"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Ecosystem Dynamics and Energy Flow",
-    "url": "https://www.ascendprep.edu/guides/ecosystem-dynamics-and-energy-flow-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Unit Conversion & Sig Figs (#2)",
+    "url": "https://www.youtube.com/watch?v=hQpQ0hxVNTg",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down ecosystem dynamics and energy flow with diagrams and examples."
+    "desc": "Scientific notation, the metric system, dimensional analysis, and rules for significant figures in calculations.",
+    "ytId": "hQpQ0hxVNTg"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Ecosystem Dynamics and Energy Flow",
-    "url": "https://www.youtube.com/watch?v=ytLECOS25XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - The Creation of Chemistry (#3)",
+    "url": "https://www.youtube.com/watch?v=Q1YqgPAtz20",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLECOS25XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ecosystem dynamics and energy flow."
+    "desc": "The history of chemistry, Antoine Lavoisier, the law of conservation of mass, and early atomic theory.",
+    "ytId": "Q1YqgPAtz20"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Biogeochemical Cycles (Carbon, Nitrogen)",
-    "url": "https://www.ascendprep.edu/modules/biogeochemical-cycles-carbon-nitrogen-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Periodic Table & Groups (#4)",
+    "url": "https://www.youtube.com/watch?v=0RRVV4Diomg",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on biogeochemical cycles (carbon, nitrogen). Features exercises and self-assessments."
+    "desc": "Dmitri Mendeleev, periodic law, periods, groups, alkali metals, alkaline earth metals, transition metals, and halogens.",
+    "ytId": "0RRVV4Diomg"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Biogeochemical Cycles (Carbon, Nitrogen)",
-    "url": "https://www.ascendprep.edu/guides/biogeochemical-cycles-carbon-nitrogen-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - The Electron & Orbitals (#5)",
+    "url": "https://www.youtube.com/watch?v=rcKilE9CyiA",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down biogeochemical cycles (carbon, nitrogen) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Electron configurations, energy levels, valence electrons, orbitals (s, p, d, f), and quantum numbers.",
+    "ytId": "rcKilE9CyiA"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Biogeochemical Cycles (Carbon, Nitrogen)",
-    "url": "https://www.youtube.com/watch?v=ytLBIOG26XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Stoichiometry & Mole Ratio (#6)",
+    "url": "https://www.youtube.com/watch?v=UL1jmJaUkaQ",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLBIOG26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of biogeochemical cycles (carbon, nitrogen)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Learn how to balance chemical equations and use stoichiometric mole ratios to compute reactant/product amounts.",
+    "ytId": "UL1jmJaUkaQ"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Biodiversity and Conservation Biology",
-    "url": "https://www.ascendprep.edu/modules/biodiversity-and-conservation-biology-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Water & Solution Chemistry (#7)",
+    "url": "https://www.youtube.com/watch?v=ANi709MYnWg",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on biodiversity and conservation biology. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "The chemical nature of water as a universal solvent, solvation, solubility rules, and concentration.",
+    "ytId": "ANi709MYnWg"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Biodiversity and Conservation Biology",
-    "url": "https://www.ascendprep.edu/guides/biodiversity-and-conservation-biology-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Precipitation Reactions (#9)",
+    "url": "https://www.youtube.com/watch?v=A3tTLapn-7I",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down biodiversity and conservation biology with diagrams and examples."
+    "desc": "A study of double replacement reactions, net ionic equations, insoluble salts, and precipitation reactions.",
+    "ytId": "A3tTLapn-7I"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Biodiversity and Conservation Biology",
-    "url": "https://www.youtube.com/watch?v=ytLBIOD27XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Redox Reactions & Oxidation (#10)",
+    "url": "https://www.youtube.com/watch?v=lQ6FBA1HM3s",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLBIOD27XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of biodiversity and conservation biology."
+    "difficulty": "AP / Intermediate",
+    "desc": "Understand oxidation numbers, oxidizing agents, reducing agents, and balancing simple redox reactions.",
+    "ytId": "lQ6FBA1HM3s"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Human Circulatory System AP Bio",
-    "url": "https://www.ascendprep.edu/modules/human-circulatory-system-ap-bio-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - How to Pass Chemistry (#11)",
+    "url": "https://www.youtube.com/watch?v=bcaUvI_TntY",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on human circulatory system ap bio. Features exercises and self-assessments."
+    "desc": "Excellent study strategies, conceptual models, and practice routines specifically for passing introductory chemistry.",
+    "ytId": "bcaUvI_TntY"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Human Circulatory System AP Bio",
-    "url": "https://www.ascendprep.edu/guides/human-circulatory-system-ap-bio-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - The Mole Concept (#12)",
+    "url": "https://www.youtube.com/watch?v=AsqEkF7hcII",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down human circulatory system ap bio with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Avogadro's number, molar mass, converting between mass and moles, and empirical/molecular formulas.",
+    "ytId": "AsqEkF7hcII"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Human Circulatory System AP Bio",
-    "url": "https://www.youtube.com/watch?v=ytLHUMA28XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Calorimetry & Heat Transfer (#13)",
+    "url": "https://www.youtube.com/watch?v=JuWtYpbeS8g",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLHUMA28XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of human circulatory system ap bio."
+    "desc": "Measuring heat transfer, specific heat capacity equations, calorimeter design, and thermodynamic calculations.",
+    "ytId": "JuWtYpbeS8g"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Human Respiratory System AP Bio",
-    "url": "https://www.ascendprep.edu/modules/human-respiratory-system-ap-bio-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Enthalpy & Bond Energy (#14)",
+    "url": "https://www.youtube.com/watch?v=SV7U4maV168",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on human respiratory system ap bio. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Exothermic and endothermic reactions, enthalpy changes, and computing reaction heat using bond energies.",
+    "ytId": "SV7U4maV168"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Human Respiratory System AP Bio",
-    "url": "https://www.ascendprep.edu/guides/human-respiratory-system-ap-bio-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Hess's Law and Reaction Heat (#15)",
+    "url": "https://www.youtube.com/watch?v=iETpE7815-Y",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down human respiratory system ap bio with diagrams and examples."
+    "desc": "State functions, Hess's Law of constant heat summation, and combining chemical equations to calculate total enthalpy.",
+    "ytId": "iETpE7815-Y"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Human Respiratory System AP Bio",
-    "url": "https://www.youtube.com/watch?v=ytLHUMA29XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Thermodynamics & Spontaneity (#16)",
+    "url": "https://www.youtube.com/watch?v=wG6_NisOlBM",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLHUMA29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of human respiratory system ap bio."
-  },
-  {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Nervous System and Action Potentials",
-    "url": "https://www.ascendprep.edu/modules/nervous-system-and-action-potentials-practice",
-    "type": "App",
-    "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on nervous system and action potentials. Features exercises and self-assessments."
+    "desc": "Entropy, enthalpy, Gibbs Free Energy calculations, and predicting thermodynamic spontaneity.",
+    "ytId": "wG6_NisOlBM"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Nervous System and Action Potentials",
-    "url": "https://www.ascendprep.edu/guides/nervous-system-and-action-potentials-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Gases and Pressure (#17)",
+    "url": "https://www.youtube.com/watch?v=BY9V6Vp9_3w",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down nervous system and action potentials with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "The kinetic molecular theory of gases, units of atmospheric pressure, and general gas behavior.",
+    "ytId": "BY9V6Vp9_3w"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Nervous System and Action Potentials",
-    "url": "https://www.youtube.com/watch?v=ytLNERV30XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Gas Laws: Boyle, Charles, Avogadro (#18)",
+    "url": "https://www.youtube.com/watch?v=39gG4-E8-U0",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLNERV30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of nervous system and action potentials."
+    "difficulty": "AP / Intermediate",
+    "desc": "Mathematical relationships between gas pressure, volume, temperature, and moles under constant conditions.",
+    "ytId": "39gG4-E8-U0"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Endocrine System and Hormone Feedback",
-    "url": "https://www.ascendprep.edu/modules/endocrine-system-and-hormone-feedback-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Ideal Gas Law Applications (#19)",
+    "url": "https://www.youtube.com/watch?v=TqzH_O3p_U4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on endocrine system and hormone feedback. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Using PV=nRT for gas calculations, gas density, stoichiometry of gaseous reactions, and molar volume.",
+    "ytId": "TqzH_O3p_U4"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Endocrine System and Hormone Feedback",
-    "url": "https://www.ascendprep.edu/guides/endocrine-system-and-hormone-feedback-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Partial Pressures & Dalton's Law (#20)",
+    "url": "https://www.youtube.com/watch?v=7mZl9S6S-18",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down endocrine system and hormone feedback with diagrams and examples."
+    "desc": "Dalton's law of partial pressures, mole fraction, and gas collection over water experimental techniques.",
+    "ytId": "7mZl9S6S-18"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Endocrine System and Hormone Feedback",
-    "url": "https://www.youtube.com/watch?v=ytLENDO31XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Atomic Hook-Ups - Chemical Bonding (#22)",
+    "url": "https://www.youtube.com/watch?v=QXT4OVM4vXI",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLENDO31XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of endocrine system and hormone feedback."
+    "desc": "The nature of ionic, covalent, and metallic bonds, octet rules, and Lewis dot structures.",
+    "ytId": "QXT4OVM4vXI"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Immune System and Antibody Responses",
-    "url": "https://www.ascendprep.edu/modules/immune-system-and-antibody-responses-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Polar & Nonpolar Molecules (#23)",
+    "url": "https://www.youtube.com/watch?v=PVL24_ryx6E",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on immune system and antibody responses. Features exercises and self-assessments."
+    "desc": "Electronegativity differences, dipole moments, polar covalent bonds, and overall molecular polarity.",
+    "ytId": "PVL24_ryx6E"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Immune System and Antibody Responses",
-    "url": "https://www.ascendprep.edu/guides/immune-system-and-antibody-responses-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Bonding Models & VSEPR (#24)",
+    "url": "https://www.youtube.com/watch?v=A_A5Zp-Z_YI",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down immune system and antibody responses with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Predicting molecular geometry using Valence Shell Electron Pair Repulsion theory and orbital hybridization.",
+    "ytId": "A_A5Zp-Z_YI"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Immune System and Antibody Responses",
-    "url": "https://www.youtube.com/watch?v=ytLIMMU32XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Liquids & Intermolecular Forces (#25)",
+    "url": "https://www.youtube.com/watch?v=0oNWeuA9-8w",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLIMMU32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of immune system and antibody responses."
+    "difficulty": "AP / Intermediate",
+    "desc": "London dispersion forces, dipole-dipole attractions, hydrogen bonding, viscosity, and surface tension.",
+    "ytId": "0oNWeuA9-8w"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Digestive System and Nutrient Absorption",
-    "url": "https://www.ascendprep.edu/modules/digestive-system-and-nutrient-absorption-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Buffers & Henderson-Hasselbalch (#33)",
+    "url": "https://www.youtube.com/watch?v=YX8O-G4NfN0",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on digestive system and nutrient absorption. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "How buffer solutions resist pH changes, conjugate acid-base pairs, and buffer capacity calculations.",
+    "ytId": "YX8O-G4NfN0"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Digestive System and Nutrient Absorption",
-    "url": "https://www.ascendprep.edu/guides/digestive-system-and-nutrient-absorption-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Chemistry - Kinetics & Collision Theory (#34)",
+    "url": "https://www.youtube.com/watch?v=7qOFtL3VEBc",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down digestive system and nutrient absorption with diagrams and examples."
+    "desc": "Factors affecting reaction rates, activation energy, catalyst mechanisms, and transition state theory.",
+    "ytId": "7qOFtL3VEBc"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Digestive System and Nutrient Absorption",
-    "url": "https://www.youtube.com/watch?v=ytLDIGE33XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Motion in a Straight Line (#1)",
+    "url": "https://www.youtube.com/watch?v=vxrIm5iREP8",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLDIGE33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of digestive system and nutrient absorption."
+    "difficulty": "AP / Intermediate",
+    "desc": "Displacement, average velocity, instantaneous velocity, uniform acceleration, and basic 1D kinematics equations.",
+    "ytId": "vxrIm5iREP8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Musculoskeletal System and Muscle Contraction",
-    "url": "https://www.ascendprep.edu/modules/musculoskeletal-system-and-muscle-contraction-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Derivatives in Physics (#2)",
+    "url": "https://www.youtube.com/watch?v=ZSTT-b_0L_Q",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on musculoskeletal system and muscle contraction. Features exercises and self-assessments."
+    "desc": "How calculus derivatives help us understand instantaneous rate of change, velocity, and acceleration.",
+    "ytId": "ZSTT-b_0L_Q"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Musculoskeletal System and Muscle Contraction",
-    "url": "https://www.ascendprep.edu/guides/musculoskeletal-system-and-muscle-contraction-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Integrals & Kinematics (#3)",
+    "url": "https://www.youtube.com/watch?v=96bT_Yd2_O8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down musculoskeletal system and muscle contraction with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Using calculus integration to determine displacement and velocity from acceleration-time curves.",
+    "ytId": "96bT_Yd2_O8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Musculoskeletal System and Muscle Contraction",
-    "url": "https://www.youtube.com/watch?v=ytLMUSC34XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Vectors and 2D Motion (#4)",
+    "url": "https://www.youtube.com/watch?v=w3BhzYI6zXU",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLMUSC34XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of musculoskeletal system and muscle contraction."
+    "desc": "Vector addition, vector resolution into components, and 2D kinematics including projectile motion.",
+    "ytId": "w3BhzYI6zXU"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Integumentary and Excretory Systems Intro",
-    "url": "https://www.ascendprep.edu/modules/integumentary-and-excretory-systems-intro-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Friction & Air Resistance (#6)",
+    "url": "https://www.youtube.com/watch?v=fo_pmp5rtzo",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on integumentary and excretory systems intro. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "The physics of static friction, kinetic friction, coefficients of friction, and terminal velocity.",
+    "ytId": "fo_pmp5rtzo"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Integumentary and Excretory Systems Intro",
-    "url": "https://www.ascendprep.edu/guides/integumentary-and-excretory-systems-intro-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Uniform Circular Motion (#7)",
+    "url": "https://www.youtube.com/watch?v=bpFK2_1N55Y",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down integumentary and excretory systems intro with diagrams and examples."
+    "desc": "Centripetal acceleration, centripetal force equations, and the physics of rotating systems.",
+    "ytId": "bpFK2_1N55Y"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Integumentary and Excretory Systems Intro",
-    "url": "https://www.youtube.com/watch?v=ytLINTE35XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Newton's Law of Gravitation (#8)",
+    "url": "https://www.youtube.com/watch?v=7y-q9WvHshE",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLINTE35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of integumentary and excretory systems intro."
+    "difficulty": "AP / Intermediate",
+    "desc": "The universal law of gravitation, gravitational field strength, orbital velocity, and Kepler's Laws.",
+    "ytId": "7y-q9WvHshE"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Plant Structure, Growth, and Nutrition",
-    "url": "https://www.ascendprep.edu/modules/plant-structure-growth-and-nutrition-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Work, Energy, and Power (#9)",
+    "url": "https://www.youtube.com/watch?v=w4QFJb9yWdw",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on plant structure, growth, and nutrition. Features exercises and self-assessments."
+    "desc": "Work done by constant forces, kinetic energy, potential energy, conservative forces, and mechanical power.",
+    "ytId": "w4QFJb9yWdw"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Plant Structure, Growth, and Nutrition",
-    "url": "https://www.ascendprep.edu/guides/plant-structure-growth-and-nutrition-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Conservation of Energy (#10)",
+    "url": "https://www.youtube.com/watch?v=Tz7_Sg8bXp8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down plant structure, growth, and nutrition with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "The law of conservation of mechanical energy, non-conservative forces, thermal losses, and energy systems.",
+    "ytId": "Tz7_Sg8bXp8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Plant Structure, Growth, and Nutrition",
-    "url": "https://www.youtube.com/watch?v=ytLPLAN36XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Linear Momentum and Impulse (#11)",
+    "url": "https://www.youtube.com/watch?v=m4U-v4M_zFw",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPLAN36XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of plant structure, growth, and nutrition."
+    "difficulty": "AP / Intermediate",
+    "desc": "Linear momentum, impulse-momentum theorem, and force-time relationship in impacts.",
+    "ytId": "m4U-v4M_zFw"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Plant Reproduction and Angiosperms",
-    "url": "https://www.ascendprep.edu/modules/plant-reproduction-and-angiosperms-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Collisions & Momentum Conservation (#12)",
+    "url": "https://www.youtube.com/watch?v=97b-8O9oN7k",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on plant reproduction and angiosperms. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Analyzing elastic and inelastic collisions in 1D and 2D systems under momentum conservation laws.",
+    "ytId": "97b-8O9oN7k"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Plant Reproduction and Angiosperms",
-    "url": "https://www.ascendprep.edu/guides/plant-reproduction-and-angiosperms-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Rotational Motion & Inertia (#13)",
+    "url": "https://www.youtube.com/watch?v=5y-V_87V_0o",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down plant reproduction and angiosperms with diagrams and examples."
+    "desc": "Angular displacement, angular velocity, angular acceleration, and rotational kinetic energy.",
+    "ytId": "5y-V_87V_0o"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Plant Reproduction and Angiosperms",
-    "url": "https://www.youtube.com/watch?v=ytLPLAN37XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Torque & Angular Acceleration (#14)",
+    "url": "https://www.youtube.com/watch?v=oYm-Sg08n9E",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPLAN37XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of plant reproduction and angiosperms."
+    "desc": "Torque, rotational inertia (moment of inertia), Newton's second law for rotation, and rolling motion.",
+    "ytId": "oYm-Sg08n9E"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Plant Responses to Environmental Signals",
-    "url": "https://www.ascendprep.edu/modules/plant-responses-to-environmental-signals-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Conservation of Angular Momentum (#15)",
+    "url": "https://www.youtube.com/watch?v=9U_8O9oN7ki",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on plant responses to environmental signals. Features exercises and self-assessments."
+    "desc": "Angular momentum, rotational collisions, and how changing rotational inertia changes angular speed.",
+    "ytId": "9U_8O9oN7ki"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Plant Responses to Environmental Signals",
-    "url": "https://www.ascendprep.edu/guides/plant-responses-to-environmental-signals-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Fluids at Rest & Density (#16)",
+    "url": "https://www.youtube.com/watch?v=b5SqYuWT4-4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down plant responses to environmental signals with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Fluid statics: density, hydrostatic pressure, Pascal's principle, and Archimedes' principle of buoyancy.",
+    "ytId": "b5SqYuWT4-4"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Plant Responses to Environmental Signals",
-    "url": "https://www.youtube.com/watch?v=ytLPLAN38XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Thermodynamics & Heat (#18)",
+    "url": "https://www.youtube.com/watch?v=y-9o8NTVh-A",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPLAN38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of plant responses to environmental signals."
+    "difficulty": "AP / Intermediate",
+    "desc": "Temperature scales, thermal expansion, heat transfer mechanisms (conduction, convection, radiation), and specific heat.",
+    "ytId": "y-9o8NTVh-A"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Viruses and Viral Replication Cycles",
-    "url": "https://www.ascendprep.edu/modules/viruses-and-viral-replication-cycles-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - First Law of Thermodynamics (#19)",
+    "url": "https://www.youtube.com/watch?v=8mNTVh-Awo4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on viruses and viral replication cycles. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Internal energy, heat, thermodynamic work, PV diagrams, and isobaric/isochoric/isothermal processes.",
+    "ytId": "8mNTVh-Awo4"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Viruses and Viral Replication Cycles",
-    "url": "https://www.ascendprep.edu/guides/viruses-and-viral-replication-cycles-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - Simple Harmonic Motion (#21)",
+    "url": "https://www.youtube.com/watch?v=77-y_zB_0X8",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down viruses and viral replication cycles with diagrams and examples."
+    "desc": "Oscillatory systems, Hooke's law, spring-mass oscillators, simple pendulums, and sinusoidal displacement.",
+    "ytId": "77-y_zB_0X8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Viruses and Viral Replication Cycles",
-    "url": "https://www.youtube.com/watch?v=ytLVIRU39XX",
+    "cat": "Physical Sciences",
+    "title": "Crash Course Physics - AC Circuits & Transformers (#33)",
+    "url": "https://www.youtube.com/watch?v=UPzDFtS73BY",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLVIRU39XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of viruses and viral replication cycles."
+    "difficulty": "AP / Intermediate",
+    "desc": "Alternating current, root-mean-square (RMS) values, inductive and capacitive reactance, impedance, and transformers.",
+    "ytId": "UPzDFtS73BY"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Prions, Viroids, and Subviral Agents",
-    "url": "https://www.ascendprep.edu/modules/prions-viroids-and-subviral-agents-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Psychology - Psychology Research Methods (#2)",
+    "url": "https://www.youtube.com/watch?v=hFV7yVTb3_G",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on prions, viroids, and subviral agents. Features exercises and self-assessments."
+    "desc": "The scientific method in psychology: surveys, case studies, naturalistic observation, correlation, and randomized experiments.",
+    "ytId": "hFV7yVTb3_G"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Prions, Viroids, and Subviral Agents",
-    "url": "https://www.ascendprep.edu/guides/prions-viroids-and-subviral-agents-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Psychology - Cognition & Thinking Skills (#15)",
+    "url": "https://www.youtube.com/watch?v=7q8CgAqwj2w",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down prions, viroids, and subviral agents with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Problem-solving strategies, algorithms, heuristics, confirmation bias, fixation, and cognitive framing effects.",
+    "ytId": "7q8CgAqwj2w"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Prions, Viroids, and Subviral Agents",
-    "url": "https://www.youtube.com/watch?v=ytLPRIO40XX",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Psychology - Power of Motivation & Drives (#17)",
+    "url": "https://www.youtube.com/watch?v=9hdSLiHaJz8",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLPRIO40XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of prions, viroids, and subviral agents."
+    "desc": "Instinct theory, drive-reduction theory, arousal theory, Maslow's hierarchy of needs, and intrinsic motivation.",
+    "ytId": "9hdSLiHaJz8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Introduction to Bioinformatics",
-    "url": "https://www.ascendprep.edu/modules/introduction-to-bioinformatics-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Psychology - Monkeys and Morality (#19)",
+    "url": "https://www.youtube.com/watch?v=YcQg1EshfIE",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on introduction to bioinformatics. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Explore famous experiments on human attachment, stranger anxiety, parenting models, and Kohlberg's theory of moral development.",
+    "ytId": "YcQg1EshfIE"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Introduction to Bioinformatics",
-    "url": "https://www.ascendprep.edu/guides/introduction-to-bioinformatics-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Sociology - Sociological Perspectives & Theory (#2)",
+    "url": "https://www.youtube.com/watch?v=lrk4oY7UxpQ",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down introduction to bioinformatics with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Structural functionalism, social conflict theory, and symbolic interactionism in sociological analysis.",
+    "ytId": "lrk4oY7UxpQ"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Introduction to Bioinformatics",
-    "url": "https://www.youtube.com/watch?v=ytLINTR41XX",
+    "cat": "Behavioral & Social Sciences",
+    "title": "Crash Course Sociology - Politics: Authority & Power Systems (#20)",
+    "url": "https://www.youtube.com/watch?v=TCs_hyI15R8",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLINTR41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introduction to bioinformatics."
+    "difficulty": "Introductory",
+    "desc": "The sociological approach to politics, different types of authority (traditional, rational-legal, charismatic), and theories of power.",
+    "ytId": "TCs_hyI15R8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Cell Communication and Signal Transduction",
-    "url": "https://www.ascendprep.edu/modules/cell-communication-and-signal-transduction-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "Crash Course Statistics - Z-Scores and Percentiles (#18)",
+    "url": "https://www.youtube.com/watch?v=uAxyI_XfqXk",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on cell communication and signal transduction. Features exercises and self-assessments."
+    "desc": "How to standardize data using z-scores, convert to percentiles, and compare different normal distributions.",
+    "ytId": "uAxyI_XfqXk"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Cell Communication and Signal Transduction",
-    "url": "https://www.ascendprep.edu/guides/cell-communication-and-signal-transduction-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Reading Assignments (#2)",
+    "url": "https://www.youtube.com/watch?v=WAIUkjsZ5xQ",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down cell communication and signal transduction with diagrams and examples."
+    "desc": "How to actively read textbooks, scan chapters, take reading notes, and improve comprehension in less time.",
+    "ytId": "WAIUkjsZ5xQ"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Cell Communication and Signal Transduction",
-    "url": "https://www.youtube.com/watch?v=ytLCELL42XX",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Memory Strategies (#3)",
+    "url": "https://www.youtube.com/watch?v=SZbdK9e9bxs",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCELL42XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cell communication and signal transduction."
+    "desc": "The science of memory: spaced repetition, active recall, mnemonics, and the dual-coding theory of learning.",
+    "ytId": "SZbdK9e9bxs"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Apoptosis and Programmed Cell Death",
-    "url": "https://www.ascendprep.edu/modules/apoptosis-and-programmed-cell-death-practice",
-    "type": "Course",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Planning & Organization (#4)",
+    "url": "https://www.youtube.com/watch?v=0AKAuRby7n8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on apoptosis and programmed cell death. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "How to design a planner system, manage deadlines, and build a consistent daily academic routine.",
+    "ytId": "0AKAuRby7n8"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Apoptosis and Programmed Cell Death",
-    "url": "https://www.ascendprep.edu/guides/apoptosis-and-programmed-cell-death-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Focus & Concentration (#5)",
+    "url": "https://www.youtube.com/watch?v=L_2JaFnkZ4o",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down apoptosis and programmed cell death with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Optimizing study workspaces, minimizing digital distractions, and using the Pomodoro technique to build deep focus.",
+    "ytId": "L_2JaFnkZ4o"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Apoptosis and Programmed Cell Death",
-    "url": "https://www.youtube.com/watch?v=ytLAPOP43XX",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Overcoming Procrastination (#6)",
+    "url": "https://www.youtube.com/watch?v=x2y_SLOvOvw",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLAPOP43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of apoptosis and programmed cell death."
+    "difficulty": "Introductory",
+    "desc": "The psychological roots of procrastination and practical strategies (the 5-minute rule, micro-goals) to overcome it.",
+    "ytId": "x2y_SLOvOvw"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Stem Cells and Cellular Differentiation",
-    "url": "https://www.ascendprep.edu/modules/stem-cells-and-cellular-differentiation-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Writing Papers & Essays (#9)",
+    "url": "https://www.youtube.com/watch?v=KlgR1q3UQZE",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on stem cells and cellular differentiation. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Brainstorming, outlining, writing high-impact thesis statements, drafting body paragraphs, and revising academic papers.",
+    "ytId": "KlgR1q3UQZE"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Stem Cells and Cellular Differentiation",
-    "url": "https://www.ascendprep.edu/guides/stem-cells-and-cellular-differentiation-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Crash Course Study Skills - Exercise, Sleep & Study (#10)",
+    "url": "https://www.youtube.com/watch?v=SQONLdb1gow",
+    "type": "YouTube",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down stem cells and cellular differentiation with diagrams and examples."
+    "desc": "The physical foundations of learning: how aerobic exercise, sleep hygiene, and nutrition directly impact brain plasticity.",
+    "ytId": "SQONLdb1gow"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Stem Cells and Cellular Differentiation",
-    "url": "https://www.youtube.com/watch?v=ytLSTEM44XX",
+    "cat": "Admissions & Planning",
+    "title": "Crash Course Public Health - How Your Biology Affects Your Health (#2)",
+    "url": "https://www.youtube.com/watch?v=SzsifG0UvTM",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLSTEM44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of stem cells and cellular differentiation."
+    "difficulty": "Introductory",
+    "desc": "Explore the biological determinants of health, including genetics, epigenetics, and biological pathways.",
+    "ytId": "SzsifG0UvTM"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Interactive Practice: Cancer Biology and Oncogenes Intro",
-    "url": "https://www.ascendprep.edu/modules/cancer-biology-and-oncogenes-intro-practice",
-    "type": "Course",
+    "cat": "Admissions & Planning",
+    "title": "Crash Course Public Health - How the Environment Affects Your Health (#3)",
+    "url": "https://www.youtube.com/watch?v=g3vf0I_j9kk",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on cancer biology and oncogenes intro. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Environmental health, pollution, neighborhoods, environmental justice, and climate impacts.",
+    "ytId": "g3vf0I_j9kk"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Cancer Biology and Oncogenes Intro",
-    "url": "https://www.ascendprep.edu/guides/cancer-biology-and-oncogenes-intro-handbook",
-    "type": "Article",
+    "cat": "Admissions & Planning",
+    "title": "Crash Course Public Health - How Behaviors Affect Your Health (#5)",
+    "url": "https://www.youtube.com/watch?v=_luU3I03JwE",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down cancer biology and oncogenes intro with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "The role of personal behaviors, habits, risk factors, and behavioral interventions in population health.",
+    "ytId": "_luU3I03JwE"
   },
   {
-    "cat": "Life Sciences",
-    "title": "Video Crash Course: Cancer Biology and Oncogenes Intro",
-    "url": "https://www.youtube.com/watch?v=ytLCANC45XX",
+    "cat": "Admissions & Planning",
+    "title": "Crash Course Public Health - Infectious Diseases & Epidemics (#7)",
+    "url": "https://www.youtube.com/watch?v=Z08sh4PN8Lc",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytLCANC45XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cancer biology and oncogenes intro."
+    "desc": "Pathogens, transmission dynamics, herd immunity, and major historical epidemics.",
+    "ytId": "Z08sh4PN8Lc"
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Metabolic Pathways and Enzyme Regulation",
-    "url": "https://www.ascendprep.edu/modules/metabolic-pathways-and-enzyme-regulation-practice",
-    "type": "App",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on metabolic pathways and enzyme regulation. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Metabolic Pathways and Enzyme Regulation",
-    "url": "https://www.ascendprep.edu/guides/metabolic-pathways-and-enzyme-regulation-handbook",
-    "type": "Article",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down metabolic pathways and enzyme regulation with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Metabolic Pathways and Enzyme Regulation",
-    "url": "https://www.youtube.com/watch?v=ytLMETA46XX",
-    "type": "YouTube",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytLMETA46XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of metabolic pathways and enzyme regulation."
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Lipid Structure and Cellular Functions",
-    "url": "https://www.ascendprep.edu/modules/lipid-structure-and-cellular-functions-practice",
-    "type": "Course",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on lipid structure and cellular functions. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Lipid Structure and Cellular Functions",
-    "url": "https://www.ascendprep.edu/guides/lipid-structure-and-cellular-functions-handbook",
-    "type": "Article",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down lipid structure and cellular functions with diagrams and examples."
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Lipid Structure and Cellular Functions",
-    "url": "https://www.youtube.com/watch?v=ytLLIPI47XX",
-    "type": "YouTube",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytLLIPI47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of lipid structure and cellular functions."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Protein Folding and Chaperone Proteins",
-    "url": "https://www.ascendprep.edu/modules/protein-folding-and-chaperone-proteins-practice",
-    "type": "App",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on protein folding and chaperone proteins. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Protein Folding and Chaperone Proteins",
-    "url": "https://www.ascendprep.edu/guides/protein-folding-and-chaperone-proteins-handbook",
-    "type": "Article",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down protein folding and chaperone proteins with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Protein Folding and Chaperone Proteins",
-    "url": "https://www.youtube.com/watch?v=ytLPROT48XX",
-    "type": "YouTube",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytLPROT48XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of protein folding and chaperone proteins."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Interactive Practice: Introductory Marine Biology and Marine Ecosystems",
-    "url": "https://www.ascendprep.edu/modules/introductory-marine-biology-and-marine-ecosystems-practice",
-    "type": "Course",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on introductory marine biology and marine ecosystems. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Comprehensive Guide to Introductory Marine Biology and Marine Ecosystems",
-    "url": "https://www.ascendprep.edu/guides/introductory-marine-biology-and-marine-ecosystems-handbook",
-    "type": "Article",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down introductory marine biology and marine ecosystems with diagrams and examples."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Life Sciences",
-    "title": "Video Crash Course: Introductory Marine Biology and Marine Ecosystems",
-    "url": "https://www.youtube.com/watch?v=ytLINTR49XX",
-    "type": "YouTube",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytLINTR49XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introductory marine biology and marine ecosystems."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Dimensional Analysis and Metric System",
-    "url": "https://www.ascendprep.edu/modules/dimensional-analysis-and-metric-system-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on dimensional analysis and metric system. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Dimensional Analysis and Metric System",
-    "url": "https://www.ascendprep.edu/guides/dimensional-analysis-and-metric-system-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down dimensional analysis and metric system with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Dimensional Analysis and Metric System",
-    "url": "https://www.youtube.com/watch?v=ytPDIME00XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPDIME00XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of dimensional analysis and metric system."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Kinematics in One Dimension (Position, Velocity)",
-    "url": "https://www.ascendprep.edu/modules/kinematics-in-one-dimension-position-velocity-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on kinematics in one dimension (position, velocity). Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Kinematics in One Dimension (Position, Velocity)",
-    "url": "https://www.ascendprep.edu/guides/kinematics-in-one-dimension-position-velocity-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down kinematics in one dimension (position, velocity) with diagrams and examples."
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Kinematics in One Dimension (Position, Velocity)",
-    "url": "https://www.youtube.com/watch?v=ytPKINE01XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPKINE01XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of kinematics in one dimension (position, velocity)."
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Kinematics in Two Dimensions (Projectile Motion)",
-    "url": "https://www.ascendprep.edu/modules/kinematics-in-two-dimensions-projectile-motion-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on kinematics in two dimensions (projectile motion). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Kinematics in Two Dimensions (Projectile Motion)",
-    "url": "https://www.ascendprep.edu/guides/kinematics-in-two-dimensions-projectile-motion-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down kinematics in two dimensions (projectile motion) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Kinematics in Two Dimensions (Projectile Motion)",
-    "url": "https://www.youtube.com/watch?v=ytPKINE02XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPKINE02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of kinematics in two dimensions (projectile motion)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Newton's First and Second Laws of Motion",
-    "url": "https://www.ascendprep.edu/modules/newton-s-first-and-second-laws-of-motion-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 22 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/22-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on newton's first and second laws of motion. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 22 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Newton's First and Second Laws of Motion",
-    "url": "https://www.ascendprep.edu/guides/newton-s-first-and-second-laws-of-motion-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 23 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/23-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down newton's first and second laws of motion with diagrams and examples."
+    "desc": "Comprehensive Chapter 23 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Newton's First and Second Laws of Motion",
-    "url": "https://www.youtube.com/watch?v=ytPNEWT03XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 24 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/24-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPNEWT03XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of newton's first and second laws of motion."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 24 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Newton's Third Law (Action and Reaction)",
-    "url": "https://www.ascendprep.edu/modules/newton-s-third-law-action-and-reaction-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 25 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/25-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on newton's third law (action and reaction). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 25 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Newton's Third Law (Action and Reaction)",
-    "url": "https://www.ascendprep.edu/guides/newton-s-third-law-action-and-reaction-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 26 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/26-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down newton's third law (action and reaction) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 26 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Newton's Third Law (Action and Reaction)",
-    "url": "https://www.youtube.com/watch?v=ytPNEWT04XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 27 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/27-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPNEWT04XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of newton's third law (action and reaction)."
+    "desc": "Comprehensive Chapter 27 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Friction, Drag, and Air Resistance",
-    "url": "https://www.ascendprep.edu/modules/friction-drag-and-air-resistance-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Anatomy & Physiology 2e - Chapter 28 Reading",
+    "url": "https://openstax.org/books/anatomy-and-physiology-2e/pages/28-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on friction, drag, and air resistance. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 28 reading from the free, peer-reviewed OpenStax Anatomy & Physiology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Friction, Drag, and Air Resistance",
-    "url": "https://www.ascendprep.edu/guides/friction-drag-and-air-resistance-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down friction, drag, and air resistance with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Friction, Drag, and Air Resistance",
-    "url": "https://www.youtube.com/watch?v=ytPFRIC05XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPFRIC05XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of friction, drag, and air resistance."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Circular Motion and Centripetal Force",
-    "url": "https://www.ascendprep.edu/modules/circular-motion-and-centripetal-force-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on circular motion and centripetal force. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Circular Motion and Centripetal Force",
-    "url": "https://www.ascendprep.edu/guides/circular-motion-and-centripetal-force-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down circular motion and centripetal force with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Circular Motion and Centripetal Force",
-    "url": "https://www.youtube.com/watch?v=ytPCIRC06XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPCIRC06XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of circular motion and centripetal force."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Work, Kinetic Energy, and Potential Energy",
-    "url": "https://www.ascendprep.edu/modules/work-kinetic-energy-and-potential-energy-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on work, kinetic energy, and potential energy. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Work, Kinetic Energy, and Potential Energy",
-    "url": "https://www.ascendprep.edu/guides/work-kinetic-energy-and-potential-energy-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down work, kinetic energy, and potential energy with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Work, Kinetic Energy, and Potential Energy",
-    "url": "https://www.youtube.com/watch?v=ytPWORK07XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPWORK07XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of work, kinetic energy, and potential energy."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Conservation of Mechanical Energy",
-    "url": "https://www.ascendprep.edu/modules/conservation-of-mechanical-energy-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on conservation of mechanical energy. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Conservation of Mechanical Energy",
-    "url": "https://www.ascendprep.edu/guides/conservation-of-mechanical-energy-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down conservation of mechanical energy with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Conservation of Mechanical Energy",
-    "url": "https://www.youtube.com/watch?v=ytPCONS08XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPCONS08XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of conservation of mechanical energy."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Linear Momentum and Impulse",
-    "url": "https://www.ascendprep.edu/modules/linear-momentum-and-impulse-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on linear momentum and impulse. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Linear Momentum and Impulse",
-    "url": "https://www.ascendprep.edu/guides/linear-momentum-and-impulse-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down linear momentum and impulse with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Linear Momentum and Impulse",
-    "url": "https://www.youtube.com/watch?v=ytPLINE09XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPLINE09XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of linear momentum and impulse."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Elastic and Inelastic Collisions",
-    "url": "https://www.ascendprep.edu/modules/elastic-and-inelastic-collisions-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on elastic and inelastic collisions. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Elastic and Inelastic Collisions",
-    "url": "https://www.ascendprep.edu/guides/elastic-and-inelastic-collisions-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down elastic and inelastic collisions with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Elastic and Inelastic Collisions",
-    "url": "https://www.youtube.com/watch?v=ytPELAS10XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPELAS10XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of elastic and inelastic collisions."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Rotational Kinematics and Torque",
-    "url": "https://www.ascendprep.edu/modules/rotational-kinematics-and-torque-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on rotational kinematics and torque. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Rotational Kinematics and Torque",
-    "url": "https://www.ascendprep.edu/guides/rotational-kinematics-and-torque-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down rotational kinematics and torque with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Rotational Kinematics and Torque",
-    "url": "https://www.youtube.com/watch?v=ytPROTA11XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPROTA11XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of rotational kinematics and torque."
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Static Equilibrium and Elasticity",
-    "url": "https://www.ascendprep.edu/modules/static-equilibrium-and-elasticity-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on static equilibrium and elasticity. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Static Equilibrium and Elasticity",
-    "url": "https://www.ascendprep.edu/guides/static-equilibrium-and-elasticity-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 22 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/22-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down static equilibrium and elasticity with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 22 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Static Equilibrium and Elasticity",
-    "url": "https://www.youtube.com/watch?v=ytPSTAT12XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 23 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/23-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSTAT12XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of static equilibrium and elasticity."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 23 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Newton's Law of Universal Gravitation",
-    "url": "https://www.ascendprep.edu/modules/newton-s-law-of-universal-gravitation-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 24 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/24-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on newton's law of universal gravitation. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 24 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Newton's Law of Universal Gravitation",
-    "url": "https://www.ascendprep.edu/guides/newton-s-law-of-universal-gravitation-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 25 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/25-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down newton's law of universal gravitation with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 25 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Newton's Law of Universal Gravitation",
-    "url": "https://www.youtube.com/watch?v=ytPNEWT13XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 26 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/26-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPNEWT13XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of newton's law of universal gravitation."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 26 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Kepler's Laws of Planetary Motion",
-    "url": "https://www.ascendprep.edu/modules/kepler-s-laws-of-planetary-motion-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 27 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/27-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on kepler's laws of planetary motion. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 27 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Kepler's Laws of Planetary Motion",
-    "url": "https://www.ascendprep.edu/guides/kepler-s-laws-of-planetary-motion-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 28 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/28-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down kepler's laws of planetary motion with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 28 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Kepler's Laws of Planetary Motion",
-    "url": "https://www.youtube.com/watch?v=ytPKEPL14XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 29 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/29-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPKEPL14XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of kepler's laws of planetary motion."
+    "desc": "Comprehensive Chapter 29 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Simple Harmonic Motion and Pendulums",
-    "url": "https://www.ascendprep.edu/modules/simple-harmonic-motion-and-pendulums-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 30 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/30-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on simple harmonic motion and pendulums. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 30 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Simple Harmonic Motion and Pendulums",
-    "url": "https://www.ascendprep.edu/guides/simple-harmonic-motion-and-pendulums-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 31 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/31-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down simple harmonic motion and pendulums with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 31 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Simple Harmonic Motion and Pendulums",
-    "url": "https://www.youtube.com/watch?v=ytPSIMP15XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 32 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/32-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSIMP15XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of simple harmonic motion and pendulums."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 32 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Wave Properties (Frequency, Amplitude, Phase)",
-    "url": "https://www.ascendprep.edu/modules/wave-properties-frequency-amplitude-phase-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 33 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/33-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on wave properties (frequency, amplitude, phase). Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 33 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Wave Properties (Frequency, Amplitude, Phase)",
-    "url": "https://www.ascendprep.edu/guides/wave-properties-frequency-amplitude-phase-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 34 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/34-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down wave properties (frequency, amplitude, phase) with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 34 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Wave Properties (Frequency, Amplitude, Phase)",
-    "url": "https://www.youtube.com/watch?v=ytPWAVE16XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 35 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/35-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPWAVE16XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of wave properties (frequency, amplitude, phase)."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 35 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Sound Waves and Standing Waves in Pipes",
-    "url": "https://www.ascendprep.edu/modules/sound-waves-and-standing-waves-in-pipes-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 36 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/36-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sound waves and standing waves in pipes. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 36 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Sound Waves and Standing Waves in Pipes",
-    "url": "https://www.ascendprep.edu/guides/sound-waves-and-standing-waves-in-pipes-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 37 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/37-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sound waves and standing waves in pipes with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 37 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Sound Waves and Standing Waves in Pipes",
-    "url": "https://www.youtube.com/watch?v=ytPSOUN17XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 38 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/38-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSOUN17XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sound waves and standing waves in pipes."
+    "desc": "Comprehensive Chapter 38 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Electrostatics, Coulomb's Law, and Electric Fields",
-    "url": "https://www.ascendprep.edu/modules/electrostatics-coulomb-s-law-and-electric-fields-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 39 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/39-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on electrostatics, coulomb's law, and electric fields. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 39 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Electrostatics, Coulomb's Law, and Electric Fields",
-    "url": "https://www.ascendprep.edu/guides/electrostatics-coulomb-s-law-and-electric-fields-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 40 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/40-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down electrostatics, coulomb's law, and electric fields with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 40 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Electrostatics, Coulomb's Law, and Electric Fields",
-    "url": "https://www.youtube.com/watch?v=ytPELEC18XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 41 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/41-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPELEC18XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of electrostatics, coulomb's law, and electric fields."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 41 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Electric Potential and Potential Energy",
-    "url": "https://www.ascendprep.edu/modules/electric-potential-and-potential-energy-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 42 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/42-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on electric potential and potential energy. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 42 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Electric Potential and Potential Energy",
-    "url": "https://www.ascendprep.edu/guides/electric-potential-and-potential-energy-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 43 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/43-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down electric potential and potential energy with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 43 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Electric Potential and Potential Energy",
-    "url": "https://www.youtube.com/watch?v=ytPELEC19XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 44 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/44-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPELEC19XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of electric potential and potential energy."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 44 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Capacitance and Dielectric Materials",
-    "url": "https://www.ascendprep.edu/modules/capacitance-and-dielectric-materials-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 45 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/45-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on capacitance and dielectric materials. Features exercises and self-assessments."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 45 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Capacitance and Dielectric Materials",
-    "url": "https://www.ascendprep.edu/guides/capacitance-and-dielectric-materials-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 46 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/46-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down capacitance and dielectric materials with diagrams and examples."
+    "difficulty": "Undergrad / Advanced",
+    "desc": "Comprehensive Chapter 46 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Capacitance and Dielectric Materials",
-    "url": "https://www.youtube.com/watch?v=ytPCAPA20XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Biology 2e - Chapter 47 Reading",
+    "url": "https://openstax.org/books/biology-2e/pages/47-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPCAPA20XX",
     "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of capacitance and dielectric materials."
+    "desc": "Comprehensive Chapter 47 reading from the free, peer-reviewed OpenStax Biology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Direct Current (DC) Circuits and Ohm's Law",
-    "url": "https://www.ascendprep.edu/modules/direct-current-dc-circuits-and-ohm-s-law-practice",
-    "type": "Course",
+    "title": "OpenStax Chemistry 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on direct current (dc) circuits and ohm's law. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Direct Current (DC) Circuits and Ohm's Law",
-    "url": "https://www.ascendprep.edu/guides/direct-current-dc-circuits-and-ohm-s-law-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down direct current (dc) circuits and ohm's law with diagrams and examples."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Direct Current (DC) Circuits and Ohm's Law",
-    "url": "https://www.youtube.com/watch?v=ytPDIRE21XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPDIRE21XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of direct current (dc) circuits and ohm's law."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Magnetic Fields and Electromagnetic Induction",
-    "url": "https://www.ascendprep.edu/modules/magnetic-fields-and-electromagnetic-induction-practice",
-    "type": "App",
+    "title": "OpenStax Chemistry 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on magnetic fields and electromagnetic induction. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Magnetic Fields and Electromagnetic Induction",
-    "url": "https://www.ascendprep.edu/guides/magnetic-fields-and-electromagnetic-induction-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down magnetic fields and electromagnetic induction with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Magnetic Fields and Electromagnetic Induction",
-    "url": "https://www.youtube.com/watch?v=ytPMAGN22XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPMAGN22XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of magnetic fields and electromagnetic induction."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Electromagnetic Waves and Light Spectrum",
-    "url": "https://www.ascendprep.edu/modules/electromagnetic-waves-and-light-spectrum-practice",
-    "type": "Course",
+    "title": "OpenStax Chemistry 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on electromagnetic waves and light spectrum. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Electromagnetic Waves and Light Spectrum",
-    "url": "https://www.ascendprep.edu/guides/electromagnetic-waves-and-light-spectrum-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down electromagnetic waves and light spectrum with diagrams and examples."
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Electromagnetic Waves and Light Spectrum",
-    "url": "https://www.youtube.com/watch?v=ytPELEC23XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPELEC23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of electromagnetic waves and light spectrum."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Geometric Optics (Reflection and Refraction)",
-    "url": "https://www.ascendprep.edu/modules/geometric-optics-reflection-and-refraction-practice",
-    "type": "App",
+    "title": "OpenStax Chemistry 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on geometric optics (reflection and refraction). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Geometric Optics (Reflection and Refraction)",
-    "url": "https://www.ascendprep.edu/guides/geometric-optics-reflection-and-refraction-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down geometric optics (reflection and refraction) with diagrams and examples."
-  },
-  {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Geometric Optics (Reflection and Refraction)",
-    "url": "https://www.youtube.com/watch?v=ytPGEOM24XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPGEOM24XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of geometric optics (reflection and refraction)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Interference and Diffraction of Light",
-    "url": "https://www.ascendprep.edu/modules/interference-and-diffraction-of-light-practice",
-    "type": "Course",
+    "title": "OpenStax Chemistry 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on interference and diffraction of light. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Interference and Diffraction of Light",
-    "url": "https://www.ascendprep.edu/guides/interference-and-diffraction-of-light-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down interference and diffraction of light with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Interference and Diffraction of Light",
-    "url": "https://www.youtube.com/watch?v=ytPINTE25XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPINTE25XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of interference and diffraction of light."
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Introductory Thermodynamics and Ideal Gases",
-    "url": "https://www.ascendprep.edu/modules/introductory-thermodynamics-and-ideal-gases-practice",
-    "type": "App",
+    "title": "OpenStax Chemistry 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on introductory thermodynamics and ideal gases. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Introductory Thermodynamics and Ideal Gases",
-    "url": "https://www.ascendprep.edu/guides/introductory-thermodynamics-and-ideal-gases-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down introductory thermodynamics and ideal gases with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Introductory Thermodynamics and Ideal Gases",
-    "url": "https://www.youtube.com/watch?v=ytPINTR26XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPINTR26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introductory thermodynamics and ideal gases."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Heat Transfer (Conduction, Convection, Radiation)",
-    "url": "https://www.ascendprep.edu/modules/heat-transfer-conduction-convection-radiation-practice",
-    "type": "Course",
+    "title": "OpenStax Chemistry 2e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on heat transfer (conduction, convection, radiation). Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Heat Transfer (Conduction, Convection, Radiation)",
-    "url": "https://www.ascendprep.edu/guides/heat-transfer-conduction-convection-radiation-handbook",
-    "type": "Article",
+    "title": "OpenStax Chemistry 2e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down heat transfer (conduction, convection, radiation) with diagrams and examples."
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Heat Transfer (Conduction, Convection, Radiation)",
-    "url": "https://www.youtube.com/watch?v=ytPHEAT27XX",
-    "type": "YouTube",
+    "title": "OpenStax Chemistry 2e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPHEAT27XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of heat transfer (conduction, convection, radiation)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: First and Second Laws of Thermodynamics",
-    "url": "https://www.ascendprep.edu/modules/first-and-second-laws-of-thermodynamics-practice",
-    "type": "App",
+    "title": "OpenStax Chemistry 2e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/chemistry-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on first and second laws of thermodynamics. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Chemistry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to First and Second Laws of Thermodynamics",
-    "url": "https://www.ascendprep.edu/guides/first-and-second-laws-of-thermodynamics-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 1 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down first and second laws of thermodynamics with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: First and Second Laws of Thermodynamics",
-    "url": "https://www.youtube.com/watch?v=ytPFIRS28XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 2 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPFIRS28XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of first and second laws of thermodynamics."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Atomic Structure, Isotopes, and Ions",
-    "url": "https://www.ascendprep.edu/modules/atomic-structure-isotopes-and-ions-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 3 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on atomic structure, isotopes, and ions. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Atomic Structure, Isotopes, and Ions",
-    "url": "https://www.ascendprep.edu/guides/atomic-structure-isotopes-and-ions-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 4 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down atomic structure, isotopes, and ions with diagrams and examples."
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Atomic Structure, Isotopes, and Ions",
-    "url": "https://www.youtube.com/watch?v=ytPATOM29XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 5 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPATOM29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of atomic structure, isotopes, and ions."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Quantum Numbers and Electron Configurations",
-    "url": "https://www.ascendprep.edu/modules/quantum-numbers-and-electron-configurations-practice",
-    "type": "App",
+    "title": "OpenStax College Physics - Chapter 6 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on quantum numbers and electron configurations. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Quantum Numbers and Electron Configurations",
-    "url": "https://www.ascendprep.edu/guides/quantum-numbers-and-electron-configurations-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 7 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down quantum numbers and electron configurations with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Quantum Numbers and Electron Configurations",
-    "url": "https://www.youtube.com/watch?v=ytPQUAN30XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 8 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPQUAN30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of quantum numbers and electron configurations."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Periodic Table Trends (Electronegativity, Radius)",
-    "url": "https://www.ascendprep.edu/modules/periodic-table-trends-electronegativity-radius-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 9 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on periodic table trends (electronegativity, radius). Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Periodic Table Trends (Electronegativity, Radius)",
-    "url": "https://www.ascendprep.edu/guides/periodic-table-trends-electronegativity-radius-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 10 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down periodic table trends (electronegativity, radius) with diagrams and examples."
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Periodic Table Trends (Electronegativity, Radius)",
-    "url": "https://www.youtube.com/watch?v=ytPPERI31XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 11 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPPERI31XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of periodic table trends (electronegativity, radius)."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Ionic, Covalent, and Metallic Bonding",
-    "url": "https://www.ascendprep.edu/modules/ionic-covalent-and-metallic-bonding-practice",
-    "type": "App",
+    "title": "OpenStax College Physics - Chapter 12 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on ionic, covalent, and metallic bonding. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Ionic, Covalent, and Metallic Bonding",
-    "url": "https://www.ascendprep.edu/guides/ionic-covalent-and-metallic-bonding-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 13 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down ionic, covalent, and metallic bonding with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Ionic, Covalent, and Metallic Bonding",
-    "url": "https://www.youtube.com/watch?v=ytPIONI32XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 14 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPIONI32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ionic, covalent, and metallic bonding."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Molecular Geometry and VSEPR Theory",
-    "url": "https://www.ascendprep.edu/modules/molecular-geometry-and-vsepr-theory-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 15 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on molecular geometry and vsepr theory. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Molecular Geometry and VSEPR Theory",
-    "url": "https://www.ascendprep.edu/guides/molecular-geometry-and-vsepr-theory-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 16 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down molecular geometry and vsepr theory with diagrams and examples."
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Molecular Geometry and VSEPR Theory",
-    "url": "https://www.youtube.com/watch?v=ytPMOLE33XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 17 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPMOLE33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of molecular geometry and vsepr theory."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Stoichiometry and Balancing Reactions",
-    "url": "https://www.ascendprep.edu/modules/stoichiometry-and-balancing-reactions-practice",
-    "type": "App",
+    "title": "OpenStax College Physics - Chapter 18 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on stoichiometry and balancing reactions. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Stoichiometry and Balancing Reactions",
-    "url": "https://www.ascendprep.edu/guides/stoichiometry-and-balancing-reactions-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 19 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down stoichiometry and balancing reactions with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Stoichiometry and Balancing Reactions",
-    "url": "https://www.youtube.com/watch?v=ytPSTOI34XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 20 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSTOI34XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of stoichiometry and balancing reactions."
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Limiting Reactants and Percent Yield",
-    "url": "https://www.ascendprep.edu/modules/limiting-reactants-and-percent-yield-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 21 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on limiting reactants and percent yield. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Limiting Reactants and Percent Yield",
-    "url": "https://www.ascendprep.edu/guides/limiting-reactants-and-percent-yield-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 22 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/22-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down limiting reactants and percent yield with diagrams and examples."
+    "desc": "Comprehensive Chapter 22 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Limiting Reactants and Percent Yield",
-    "url": "https://www.youtube.com/watch?v=ytPLIMI35XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 23 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/23-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPLIMI35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of limiting reactants and percent yield."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 23 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Gas Laws (Boyle, Charles, Avogadro)",
-    "url": "https://www.ascendprep.edu/modules/gas-laws-boyle-charles-avogadro-practice",
-    "type": "App",
+    "title": "OpenStax College Physics - Chapter 24 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/24-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on gas laws (boyle, charles, avogadro). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 24 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Gas Laws (Boyle, Charles, Avogadro)",
-    "url": "https://www.ascendprep.edu/guides/gas-laws-boyle-charles-avogadro-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 25 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/25-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down gas laws (boyle, charles, avogadro) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 25 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Gas Laws (Boyle, Charles, Avogadro)",
-    "url": "https://www.youtube.com/watch?v=ytPGAS-36XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 26 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/26-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPGAS-36XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of gas laws (boyle, charles, avogadro)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 26 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Intermolecular Forces (Dipole-Dipole, London)",
-    "url": "https://www.ascendprep.edu/modules/intermolecular-forces-dipole-dipole-london-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 27 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/27-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on intermolecular forces (dipole-dipole, london). Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 27 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Intermolecular Forces (Dipole-Dipole, London)",
-    "url": "https://www.ascendprep.edu/guides/intermolecular-forces-dipole-dipole-london-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 28 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/28-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down intermolecular forces (dipole-dipole, london) with diagrams and examples."
+    "desc": "Comprehensive Chapter 28 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Intermolecular Forces (Dipole-Dipole, London)",
-    "url": "https://www.youtube.com/watch?v=ytPINTE37XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 29 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/29-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPINTE37XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of intermolecular forces (dipole-dipole, london)."
+    "desc": "Comprehensive Chapter 29 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Solubility and Concentration Units (Molarity)",
-    "url": "https://www.ascendprep.edu/modules/solubility-and-concentration-units-molarity-practice",
-    "type": "App",
+    "title": "OpenStax College Physics - Chapter 30 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/30-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on solubility and concentration units (molarity). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 30 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Solubility and Concentration Units (Molarity)",
-    "url": "https://www.ascendprep.edu/guides/solubility-and-concentration-units-molarity-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 31 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/31-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down solubility and concentration units (molarity) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 31 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Video Crash Course: Solubility and Concentration Units (Molarity)",
-    "url": "https://www.youtube.com/watch?v=ytPSOLU38XX",
-    "type": "YouTube",
+    "title": "OpenStax College Physics - Chapter 32 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/32-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSOLU38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of solubility and concentration units (molarity)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 32 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Interactive Practice: Chemical Kinetics and Rate Laws",
-    "url": "https://www.ascendprep.edu/modules/chemical-kinetics-and-rate-laws-practice",
-    "type": "Course",
+    "title": "OpenStax College Physics - Chapter 33 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/33-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on chemical kinetics and rate laws. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 33 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Chemical Kinetics and Rate Laws",
-    "url": "https://www.ascendprep.edu/guides/chemical-kinetics-and-rate-laws-handbook",
-    "type": "Article",
+    "title": "OpenStax College Physics - Chapter 34 Reading",
+    "url": "https://openstax.org/books/college-physics-2e/pages/34-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down chemical kinetics and rate laws with diagrams and examples."
+    "desc": "Comprehensive Chapter 34 reading from the free, peer-reviewed OpenStax College Physics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Chemical Kinetics and Rate Laws",
-    "url": "https://www.youtube.com/watch?v=ytPCHEM39XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPCHEM39XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of chemical kinetics and rate laws."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Activation Energy and Catalysis",
-    "url": "https://www.ascendprep.edu/modules/activation-energy-and-catalysis-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on activation energy and catalysis. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Activation Energy and Catalysis",
-    "url": "https://www.ascendprep.edu/guides/activation-energy-and-catalysis-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down activation energy and catalysis with diagrams and examples."
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Activation Energy and Catalysis",
-    "url": "https://www.youtube.com/watch?v=ytPACTI40XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPACTI40XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of activation energy and catalysis."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Chemical Equilibrium and Keq",
-    "url": "https://www.ascendprep.edu/modules/chemical-equilibrium-and-keq-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on chemical equilibrium and keq. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Chemical Equilibrium and Keq",
-    "url": "https://www.ascendprep.edu/guides/chemical-equilibrium-and-keq-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down chemical equilibrium and keq with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Chemical Equilibrium and Keq",
-    "url": "https://www.youtube.com/watch?v=ytPCHEM41XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPCHEM41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of chemical equilibrium and keq."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Le Chatelier's Principle Application",
-    "url": "https://www.ascendprep.edu/modules/le-chatelier-s-principle-application-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on le chatelier's principle application. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Le Chatelier's Principle Application",
-    "url": "https://www.ascendprep.edu/guides/le-chatelier-s-principle-application-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down le chatelier's principle application with diagrams and examples."
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Le Chatelier's Principle Application",
-    "url": "https://www.youtube.com/watch?v=ytPLE-C42XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPLE-C42XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of le chatelier's principle application."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Acids, Bases, and pH Scale Basics",
-    "url": "https://www.ascendprep.edu/modules/acids-bases-and-ph-scale-basics-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on acids, bases, and ph scale basics. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Acids, Bases, and pH Scale Basics",
-    "url": "https://www.ascendprep.edu/guides/acids-bases-and-ph-scale-basics-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down acids, bases, and ph scale basics with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Acids, Bases, and pH Scale Basics",
-    "url": "https://www.youtube.com/watch?v=ytPACID43XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPACID43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of acids, bases, and ph scale basics."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Strong vs Weak Acids and Buffers",
-    "url": "https://www.ascendprep.edu/modules/strong-vs-weak-acids-and-buffers-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on strong vs weak acids and buffers. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Strong vs Weak Acids and Buffers",
-    "url": "https://www.ascendprep.edu/guides/strong-vs-weak-acids-and-buffers-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Psychology 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/psychology-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down strong vs weak acids and buffers with diagrams and examples."
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Psychology 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Strong vs Weak Acids and Buffers",
-    "url": "https://www.youtube.com/watch?v=ytPSTRO44XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSTRO44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of strong vs weak acids and buffers."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Solubility Product Constant (Ksp)",
-    "url": "https://www.ascendprep.edu/modules/solubility-product-constant-ksp-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on solubility product constant (ksp). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Solubility Product Constant (Ksp)",
-    "url": "https://www.ascendprep.edu/guides/solubility-product-constant-ksp-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down solubility product constant (ksp) with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Solubility Product Constant (Ksp)",
-    "url": "https://www.youtube.com/watch?v=ytPSOLU45XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPSOLU45XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of solubility product constant (ksp)."
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Electrochemistry Basics (Voltaic Cells)",
-    "url": "https://www.ascendprep.edu/modules/electrochemistry-basics-voltaic-cells-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on electrochemistry basics (voltaic cells). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Electrochemistry Basics (Voltaic Cells)",
-    "url": "https://www.ascendprep.edu/guides/electrochemistry-basics-voltaic-cells-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down electrochemistry basics (voltaic cells) with diagrams and examples."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Electrochemistry Basics (Voltaic Cells)",
-    "url": "https://www.youtube.com/watch?v=ytPELEC46XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPELEC46XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of electrochemistry basics (voltaic cells)."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Nuclear Chemistry, Alpha, Beta, Gamma Decay",
-    "url": "https://www.ascendprep.edu/modules/nuclear-chemistry-alpha-beta-gamma-decay-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on nuclear chemistry, alpha, beta, gamma decay. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Nuclear Chemistry, Alpha, Beta, Gamma Decay",
-    "url": "https://www.ascendprep.edu/guides/nuclear-chemistry-alpha-beta-gamma-decay-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down nuclear chemistry, alpha, beta, gamma decay with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Nuclear Chemistry, Alpha, Beta, Gamma Decay",
-    "url": "https://www.youtube.com/watch?v=ytPNUCL47XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPNUCL47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of nuclear chemistry, alpha, beta, gamma decay."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Introduction to Organic Functional Groups",
-    "url": "https://www.ascendprep.edu/modules/introduction-to-organic-functional-groups-practice",
-    "type": "App",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on introduction to organic functional groups. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Introduction to Organic Functional Groups",
-    "url": "https://www.ascendprep.edu/guides/introduction-to-organic-functional-groups-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down introduction to organic functional groups with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Introduction to Organic Functional Groups",
-    "url": "https://www.youtube.com/watch?v=ytPINTR48XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPINTR48XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introduction to organic functional groups."
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Interactive Practice: Intro to Biochemistry and Biological Polymers",
-    "url": "https://www.ascendprep.edu/modules/intro-to-biochemistry-and-biological-polymers-practice",
-    "type": "Course",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on intro to biochemistry and biological polymers. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Comprehensive Guide to Intro to Biochemistry and Biological Polymers",
-    "url": "https://www.ascendprep.edu/guides/intro-to-biochemistry-and-biological-polymers-handbook",
-    "type": "Article",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down intro to biochemistry and biological polymers with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "Video Crash Course: Intro to Biochemistry and Biological Polymers",
-    "url": "https://www.youtube.com/watch?v=ytPINTR49XX",
-    "type": "YouTube",
+    "cat": "Behavioral & Social Sciences",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytPINTR49XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of intro to biochemistry and biological polymers."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: History and Scope of Psychology",
-    "url": "https://www.ascendprep.edu/modules/history-and-scope-of-psychology-practice",
-    "type": "App",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/18-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on history and scope of psychology. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to History and Scope of Psychology",
-    "url": "https://www.ascendprep.edu/guides/history-and-scope-of-psychology-handbook",
-    "type": "Article",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/19-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down history and scope of psychology with diagrams and examples."
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: History and Scope of Psychology",
-    "url": "https://www.youtube.com/watch?v=ytBHIST00XX",
-    "type": "YouTube",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBHIST00XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of history and scope of psychology."
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
     "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: The Scientific Method in Psychology",
-    "url": "https://www.ascendprep.edu/modules/the-scientific-method-in-psychology-practice",
-    "type": "Course",
+    "title": "OpenStax Introduction to Sociology 3e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/introduction-sociology-3e/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on the scientific method in psychology. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Introduction to Sociology 3e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to The Scientific Method in Psychology",
-    "url": "https://www.ascendprep.edu/guides/the-scientific-method-in-psychology-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 1 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down the scientific method in psychology with diagrams and examples."
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: The Scientific Method in Psychology",
-    "url": "https://www.youtube.com/watch?v=ytBTHE-01XX",
-    "type": "YouTube",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 2 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBTHE-01XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of the scientific method in psychology."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Biological Bases of Behavior and Neurons",
-    "url": "https://www.ascendprep.edu/modules/biological-bases-of-behavior-and-neurons-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 3 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on biological bases of behavior and neurons. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Biological Bases of Behavior and Neurons",
-    "url": "https://www.ascendprep.edu/guides/biological-bases-of-behavior-and-neurons-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 4 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down biological bases of behavior and neurons with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Biological Bases of Behavior and Neurons",
-    "url": "https://www.youtube.com/watch?v=ytBBIOL02XX",
-    "type": "YouTube",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 5 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBBIOL02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of biological bases of behavior and neurons."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Sensation vs. Perception Mechanisms",
-    "url": "https://www.ascendprep.edu/modules/sensation-vs-perception-mechanisms-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 6 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sensation vs. perception mechanisms. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Sensation vs. Perception Mechanisms",
-    "url": "https://www.ascendprep.edu/guides/sensation-vs-perception-mechanisms-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 7 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sensation vs. perception mechanisms with diagrams and examples."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Sensation vs. Perception Mechanisms",
-    "url": "https://www.youtube.com/watch?v=ytBSENS03XX",
-    "type": "YouTube",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 8 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBSENS03XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sensation vs. perception mechanisms."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Vision, Audition, and Other Senses",
-    "url": "https://www.ascendprep.edu/modules/vision-audition-and-other-senses-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 9 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on vision, audition, and other senses. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Vision, Audition, and Other Senses",
-    "url": "https://www.ascendprep.edu/guides/vision-audition-and-other-senses-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 10 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down vision, audition, and other senses with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Vision, Audition, and Other Senses",
-    "url": "https://www.youtube.com/watch?v=ytBVISI04XX",
-    "type": "YouTube",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 11 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBVISI04XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of vision, audition, and other senses."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: States of Consciousness and Sleep Cycles",
-    "url": "https://www.ascendprep.edu/modules/states-of-consciousness-and-sleep-cycles-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 12 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on states of consciousness and sleep cycles. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to States of Consciousness and Sleep Cycles",
-    "url": "https://www.ascendprep.edu/guides/states-of-consciousness-and-sleep-cycles-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "OpenStax Introductory Statistics - Chapter 13 Reading",
+    "url": "https://openstax.org/books/introductory-statistics-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down states of consciousness and sleep cycles with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Introductory Statistics textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: States of Consciousness and Sleep Cycles",
-    "url": "https://www.youtube.com/watch?v=ytBSTAT05XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 1 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBSTAT05XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of states of consciousness and sleep cycles."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Classical Conditioning (Pavlov's Experiments)",
-    "url": "https://www.ascendprep.edu/modules/classical-conditioning-pavlov-s-experiments-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 2 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/2-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on classical conditioning (pavlov's experiments). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Classical Conditioning (Pavlov's Experiments)",
-    "url": "https://www.ascendprep.edu/guides/classical-conditioning-pavlov-s-experiments-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 3 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down classical conditioning (pavlov's experiments) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Classical Conditioning (Pavlov's Experiments)",
-    "url": "https://www.youtube.com/watch?v=ytBCLAS06XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 4 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBCLAS06XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of classical conditioning (pavlov's experiments)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Operant Conditioning (Skinner's Reinforcement)",
-    "url": "https://www.ascendprep.edu/modules/operant-conditioning-skinner-s-reinforcement-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 5 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on operant conditioning (skinner's reinforcement). Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Operant Conditioning (Skinner's Reinforcement)",
-    "url": "https://www.ascendprep.edu/guides/operant-conditioning-skinner-s-reinforcement-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 6 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/6-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down operant conditioning (skinner's reinforcement) with diagrams and examples."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Operant Conditioning (Skinner's Reinforcement)",
-    "url": "https://www.youtube.com/watch?v=ytBOPER07XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 7 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBOPER07XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of operant conditioning (skinner's reinforcement)."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Observational Learning and Bandura's Doll",
-    "url": "https://www.ascendprep.edu/modules/observational-learning-and-bandura-s-doll-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 8 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/8-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on observational learning and bandura's doll. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Observational Learning and Bandura's Doll",
-    "url": "https://www.ascendprep.edu/guides/observational-learning-and-bandura-s-doll-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 9 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down observational learning and bandura's doll with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Observational Learning and Bandura's Doll",
-    "url": "https://www.youtube.com/watch?v=ytBOBSE08XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 10 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBOBSE08XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of observational learning and bandura's doll."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Memory Encoding, Storage, and Retrieval",
-    "url": "https://www.ascendprep.edu/modules/memory-encoding-storage-and-retrieval-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 11 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on memory encoding, storage, and retrieval. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Memory Encoding, Storage, and Retrieval",
-    "url": "https://www.ascendprep.edu/guides/memory-encoding-storage-and-retrieval-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 12 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/12-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down memory encoding, storage, and retrieval with diagrams and examples."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Memory Encoding, Storage, and Retrieval",
-    "url": "https://www.youtube.com/watch?v=ytBMEMO09XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 13 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/13-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBMEMO09XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of memory encoding, storage, and retrieval."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Forgetting Theories and Interference",
-    "url": "https://www.ascendprep.edu/modules/forgetting-theories-and-interference-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 14 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/14-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on forgetting theories and interference. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Forgetting Theories and Interference",
-    "url": "https://www.ascendprep.edu/guides/forgetting-theories-and-interference-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 15 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down forgetting theories and interference with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Forgetting Theories and Interference",
-    "url": "https://www.youtube.com/watch?v=ytBFORG10XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 16 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBFORG10XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of forgetting theories and interference."
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Cognitive Development and Piaget's Stages",
-    "url": "https://www.ascendprep.edu/modules/cognitive-development-and-piaget-s-stages-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 17 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on cognitive development and piaget's stages. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Cognitive Development and Piaget's Stages",
-    "url": "https://www.ascendprep.edu/guides/cognitive-development-and-piaget-s-stages-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 18 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/18-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down cognitive development and piaget's stages with diagrams and examples."
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Cognitive Development and Piaget's Stages",
-    "url": "https://www.youtube.com/watch?v=ytBCOGN11XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 19 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/19-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBCOGN11XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cognitive development and piaget's stages."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Development and Erikson's Stages",
-    "url": "https://www.ascendprep.edu/modules/social-development-and-erikson-s-stages-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 20 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/20-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on social development and erikson's stages. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Development and Erikson's Stages",
-    "url": "https://www.ascendprep.edu/guides/social-development-and-erikson-s-stages-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 21 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down social development and erikson's stages with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Development and Erikson's Stages",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI12XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 22 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/22-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBSOCI12XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social development and erikson's stages."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 22 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Moral Development and Kohlberg's Theory",
-    "url": "https://www.ascendprep.edu/modules/moral-development-and-kohlberg-s-theory-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 23 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/23-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on moral development and kohlberg's theory. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 23 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Moral Development and Kohlberg's Theory",
-    "url": "https://www.ascendprep.edu/guides/moral-development-and-kohlberg-s-theory-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 24 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/24-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down moral development and kohlberg's theory with diagrams and examples."
+    "desc": "Comprehensive Chapter 24 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Moral Development and Kohlberg's Theory",
-    "url": "https://www.youtube.com/watch?v=ytBMORA13XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 25 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/25-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBMORA13XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of moral development and kohlberg's theory."
+    "desc": "Comprehensive Chapter 25 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Intelligence Theories (Spearman, Gardner)",
-    "url": "https://www.ascendprep.edu/modules/intelligence-theories-spearman-gardner-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Microbiology - Chapter 26 Reading",
+    "url": "https://openstax.org/books/microbiology/pages/26-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on intelligence theories (spearman, gardner). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 26 reading from the free, peer-reviewed OpenStax Microbiology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Intelligence Theories (Spearman, Gardner)",
-    "url": "https://www.ascendprep.edu/guides/intelligence-theories-spearman-gardner-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 1 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/1-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down intelligence theories (spearman, gardner) with diagrams and examples."
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Intelligence Theories (Spearman, Gardner)",
-    "url": "https://www.youtube.com/watch?v=ytBINTE14XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 2 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBINTE14XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of intelligence theories (spearman, gardner)."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Motivation, Drives, and Maslow's Hierarchy",
-    "url": "https://www.ascendprep.edu/modules/motivation-drives-and-maslow-s-hierarchy-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 3 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on motivation, drives, and maslow's hierarchy. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Motivation, Drives, and Maslow's Hierarchy",
-    "url": "https://www.ascendprep.edu/guides/motivation-drives-and-maslow-s-hierarchy-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 4 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down motivation, drives, and maslow's hierarchy with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Motivation, Drives, and Maslow's Hierarchy",
-    "url": "https://www.youtube.com/watch?v=ytBMOTI15XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 5 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBMOTI15XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of motivation, drives, and maslow's hierarchy."
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Human Emotion and Stress Management",
-    "url": "https://www.ascendprep.edu/modules/human-emotion-and-stress-management-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 6 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on human emotion and stress management. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Human Emotion and Stress Management",
-    "url": "https://www.ascendprep.edu/guides/human-emotion-and-stress-management-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 7 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down human emotion and stress management with diagrams and examples."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Human Emotion and Stress Management",
-    "url": "https://www.youtube.com/watch?v=ytBHUMA16XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 8 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBHUMA16XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of human emotion and stress management."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Personality Theories (Freudian, Humanistic)",
-    "url": "https://www.ascendprep.edu/modules/personality-theories-freudian-humanistic-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 9 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on personality theories (freudian, humanistic). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Personality Theories (Freudian, Humanistic)",
-    "url": "https://www.ascendprep.edu/guides/personality-theories-freudian-humanistic-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 10 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down personality theories (freudian, humanistic) with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Personality Theories (Freudian, Humanistic)",
-    "url": "https://www.youtube.com/watch?v=ytBPERS17XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 11 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBPERS17XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of personality theories (freudian, humanistic)."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Psychological Disorders and DSM-5 Overview",
-    "url": "https://www.ascendprep.edu/modules/psychological-disorders-and-dsm-5-overview-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 12 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on psychological disorders and dsm-5 overview. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Psychological Disorders and DSM-5 Overview",
-    "url": "https://www.ascendprep.edu/guides/psychological-disorders-and-dsm-5-overview-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 13 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down psychological disorders and dsm-5 overview with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Psychological Disorders and DSM-5 Overview",
-    "url": "https://www.youtube.com/watch?v=ytBPSYC18XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 14 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBPSYC18XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of psychological disorders and dsm-5 overview."
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Major Depressive and Anxiety Disorders",
-    "url": "https://www.ascendprep.edu/modules/major-depressive-and-anxiety-disorders-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 15 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on major depressive and anxiety disorders. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Major Depressive and Anxiety Disorders",
-    "url": "https://www.ascendprep.edu/guides/major-depressive-and-anxiety-disorders-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 16 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down major depressive and anxiety disorders with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Major Depressive and Anxiety Disorders",
-    "url": "https://www.youtube.com/watch?v=ytBMAJO19XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 17 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBMAJO19XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of major depressive and anxiety disorders."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Schizophrenia and Personality Disorders",
-    "url": "https://www.ascendprep.edu/modules/schizophrenia-and-personality-disorders-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 18 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/18-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on schizophrenia and personality disorders. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Schizophrenia and Personality Disorders",
-    "url": "https://www.ascendprep.edu/guides/schizophrenia-and-personality-disorders-handbook",
-    "type": "Article",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 19 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/19-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down schizophrenia and personality disorders with diagrams and examples."
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Schizophrenia and Personality Disorders",
-    "url": "https://www.youtube.com/watch?v=ytBSCHI20XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 20 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBSCHI20XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of schizophrenia and personality disorders."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Treatment Modalities and Psychotherapy",
-    "url": "https://www.ascendprep.edu/modules/treatment-modalities-and-psychotherapy-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "OpenStax Concepts of Biology - Chapter 21 Reading",
+    "url": "https://openstax.org/books/concepts-biology/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on treatment modalities and psychotherapy. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Concepts of Biology textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Treatment Modalities and Psychotherapy",
-    "url": "https://www.ascendprep.edu/guides/treatment-modalities-and-psychotherapy-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down treatment modalities and psychotherapy with diagrams and examples."
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Treatment Modalities and Psychotherapy",
-    "url": "https://www.youtube.com/watch?v=ytBTREA21XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBTREA21XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of treatment modalities and psychotherapy."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Cognition and Attribution Theory",
-    "url": "https://www.ascendprep.edu/modules/social-cognition-and-attribution-theory-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on social cognition and attribution theory. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Cognition and Attribution Theory",
-    "url": "https://www.ascendprep.edu/guides/social-cognition-and-attribution-theory-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down social cognition and attribution theory with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Cognition and Attribution Theory",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI22XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBSOCI22XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social cognition and attribution theory."
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Attitudes, Conformity, and Obedience",
-    "url": "https://www.ascendprep.edu/modules/attitudes-conformity-and-obedience-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on attitudes, conformity, and obedience. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Attitudes, Conformity, and Obedience",
-    "url": "https://www.ascendprep.edu/guides/attitudes-conformity-and-obedience-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down attitudes, conformity, and obedience with diagrams and examples."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Attitudes, Conformity, and Obedience",
-    "url": "https://www.youtube.com/watch?v=ytBATTI23XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytBATTI23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of attitudes, conformity, and obedience."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Group Behavior (Facilitation, Loafing)",
-    "url": "https://www.ascendprep.edu/modules/group-behavior-facilitation-loafing-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on group behavior (facilitation, loafing). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Group Behavior (Facilitation, Loafing)",
-    "url": "https://www.ascendprep.edu/guides/group-behavior-facilitation-loafing-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down group behavior (facilitation, loafing) with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Group Behavior (Facilitation, Loafing)",
-    "url": "https://www.youtube.com/watch?v=ytBGROU24XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBGROU24XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of group behavior (facilitation, loafing)."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Prejudice, Stereotypes, and Discrimination",
-    "url": "https://www.ascendprep.edu/modules/prejudice-stereotypes-and-discrimination-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on prejudice, stereotypes, and discrimination. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Prejudice, Stereotypes, and Discrimination",
-    "url": "https://www.ascendprep.edu/guides/prejudice-stereotypes-and-discrimination-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down prejudice, stereotypes, and discrimination with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Prejudice, Stereotypes, and Discrimination",
-    "url": "https://www.youtube.com/watch?v=ytBPREJ25XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBPREJ25XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of prejudice, stereotypes, and discrimination."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Altruism, Aggression, and Attraction",
-    "url": "https://www.ascendprep.edu/modules/altruism-aggression-and-attraction-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on altruism, aggression, and attraction. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Altruism, Aggression, and Attraction",
-    "url": "https://www.ascendprep.edu/guides/altruism-aggression-and-attraction-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down altruism, aggression, and attraction with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Altruism, Aggression, and Attraction",
-    "url": "https://www.youtube.com/watch?v=ytBALTR26XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBALTR26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of altruism, aggression, and attraction."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Sociological Perspectives (Functionalism, Conflict)",
-    "url": "https://www.ascendprep.edu/modules/sociological-perspectives-functionalism-conflict-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sociological perspectives (functionalism, conflict). Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Sociological Perspectives (Functionalism, Conflict)",
-    "url": "https://www.ascendprep.edu/guides/sociological-perspectives-functionalism-conflict-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sociological perspectives (functionalism, conflict) with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Sociological Perspectives (Functionalism, Conflict)",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI27XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI27XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sociological perspectives (functionalism, conflict)."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Culture, Norms, Values, and Subcultures",
-    "url": "https://www.ascendprep.edu/modules/culture-norms-values-and-subcultures-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on culture, norms, values, and subcultures. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Culture, Norms, Values, and Subcultures",
-    "url": "https://www.ascendprep.edu/guides/culture-norms-values-and-subcultures-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down culture, norms, values, and subcultures with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Culture, Norms, Values, and Subcultures",
-    "url": "https://www.youtube.com/watch?v=ytBCULT28XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBCULT28XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of culture, norms, values, and subcultures."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Socialization and Agents of Socialization",
-    "url": "https://www.ascendprep.edu/modules/socialization-and-agents-of-socialization-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on socialization and agents of socialization. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Socialization and Agents of Socialization",
-    "url": "https://www.ascendprep.edu/guides/socialization-and-agents-of-socialization-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down socialization and agents of socialization with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Socialization and Agents of Socialization",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI29XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of socialization and agents of socialization."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Structure, Roles, and Statuses",
-    "url": "https://www.ascendprep.edu/modules/social-structure-roles-and-statuses-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on social structure, roles, and statuses. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Structure, Roles, and Statuses",
-    "url": "https://www.ascendprep.edu/guides/social-structure-roles-and-statuses-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down social structure, roles, and statuses with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Structure, Roles, and Statuses",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI30XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social structure, roles, and statuses."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Groups, Networks, and Bureaucracies",
-    "url": "https://www.ascendprep.edu/modules/groups-networks-and-bureaucracies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on groups, networks, and bureaucracies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Groups, Networks, and Bureaucracies",
-    "url": "https://www.ascendprep.edu/guides/groups-networks-and-bureaucracies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down groups, networks, and bureaucracies with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Groups, Networks, and Bureaucracies",
-    "url": "https://www.youtube.com/watch?v=ytBGROU31XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBGROU31XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of groups, networks, and bureaucracies."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Deviance, Crime, and Social Control",
-    "url": "https://www.ascendprep.edu/modules/deviance-crime-and-social-control-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on deviance, crime, and social control. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Deviance, Crime, and Social Control",
-    "url": "https://www.ascendprep.edu/guides/deviance-crime-and-social-control-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down deviance, crime, and social control with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Deviance, Crime, and Social Control",
-    "url": "https://www.youtube.com/watch?v=ytBDEVI32XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBDEVI32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of deviance, crime, and social control."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Stratification and Class Systems",
-    "url": "https://www.ascendprep.edu/modules/social-stratification-and-class-systems-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on social stratification and class systems. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Stratification and Class Systems",
-    "url": "https://www.ascendprep.edu/guides/social-stratification-and-class-systems-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down social stratification and class systems with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Stratification and Class Systems",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI33XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social stratification and class systems."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Global Stratification and Inequality",
-    "url": "https://www.ascendprep.edu/modules/global-stratification-and-inequality-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on global stratification and inequality. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Global Stratification and Inequality",
-    "url": "https://www.ascendprep.edu/guides/global-stratification-and-inequality-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down global stratification and inequality with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Global Stratification and Inequality",
-    "url": "https://www.youtube.com/watch?v=ytBGLOB34XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBGLOB34XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of global stratification and inequality."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Gender Roles, Identity, and Sexism",
-    "url": "https://www.ascendprep.edu/modules/gender-roles-identity-and-sexism-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on gender roles, identity, and sexism. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Gender Roles, Identity, and Sexism",
-    "url": "https://www.ascendprep.edu/guides/gender-roles-identity-and-sexism-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down gender roles, identity, and sexism with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Gender Roles, Identity, and Sexism",
-    "url": "https://www.youtube.com/watch?v=ytBGEND35XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBGEND35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of gender roles, identity, and sexism."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Race and Ethnicity in Modern Sociology",
-    "url": "https://www.ascendprep.edu/modules/race-and-ethnicity-in-modern-sociology-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on race and ethnicity in modern sociology. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Race and Ethnicity in Modern Sociology",
-    "url": "https://www.ascendprep.edu/guides/race-and-ethnicity-in-modern-sociology-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down race and ethnicity in modern sociology with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Race and Ethnicity in Modern Sociology",
-    "url": "https://www.youtube.com/watch?v=ytBRACE36XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBRACE36XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of race and ethnicity in modern sociology."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Aging, Elderly Care, and Gerontology",
-    "url": "https://www.ascendprep.edu/modules/aging-elderly-care-and-gerontology-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on aging, elderly care, and gerontology. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Aging, Elderly Care, and Gerontology",
-    "url": "https://www.ascendprep.edu/guides/aging-elderly-care-and-gerontology-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down aging, elderly care, and gerontology with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Aging, Elderly Care, and Gerontology",
-    "url": "https://www.youtube.com/watch?v=ytBAGIN37XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBAGIN37XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of aging, elderly care, and gerontology."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Institutions: Family and Marriage",
-    "url": "https://www.ascendprep.edu/modules/social-institutions-family-and-marriage-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on social institutions: family and marriage. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Institutions: Family and Marriage",
-    "url": "https://www.ascendprep.edu/guides/social-institutions-family-and-marriage-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down social institutions: family and marriage with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Institutions: Family and Marriage",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI38XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social institutions: family and marriage."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Institutions: Education and Religion",
-    "url": "https://www.ascendprep.edu/modules/social-institutions-education-and-religion-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on social institutions: education and religion. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Institutions: Education and Religion",
-    "url": "https://www.ascendprep.edu/guides/social-institutions-education-and-religion-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down social institutions: education and religion with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Institutions: Education and Religion",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI39XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI39XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social institutions: education and religion."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Institutions: Health and Medicine",
-    "url": "https://www.ascendprep.edu/modules/social-institutions-health-and-medicine-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on social institutions: health and medicine. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Institutions: Health and Medicine",
-    "url": "https://www.ascendprep.edu/guides/social-institutions-health-and-medicine-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down social institutions: health and medicine with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Institutions: Health and Medicine",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI40XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI40XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social institutions: health and medicine."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Institutions: Government and Economy",
-    "url": "https://www.ascendprep.edu/modules/social-institutions-government-and-economy-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on social institutions: government and economy. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Institutions: Government and Economy",
-    "url": "https://www.ascendprep.edu/guides/social-institutions-government-and-economy-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down social institutions: government and economy with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Institutions: Government and Economy",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI41XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social institutions: government and economy."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Population Dynamics and Demography",
-    "url": "https://www.ascendprep.edu/modules/population-dynamics-and-demography-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on population dynamics and demography. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Population Dynamics and Demography",
-    "url": "https://www.ascendprep.edu/guides/population-dynamics-and-demography-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down population dynamics and demography with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Population Dynamics and Demography",
-    "url": "https://www.youtube.com/watch?v=ytBPOPU42XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBPOPU42XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of population dynamics and demography."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Urbanization and City Development",
-    "url": "https://www.ascendprep.edu/modules/urbanization-and-city-development-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on urbanization and city development. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Urbanization and City Development",
-    "url": "https://www.ascendprep.edu/guides/urbanization-and-city-development-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down urbanization and city development with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Urbanization and City Development",
-    "url": "https://www.youtube.com/watch?v=ytBURBA43XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBURBA43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of urbanization and city development."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Collective Behavior and Social Movements",
-    "url": "https://www.ascendprep.edu/modules/collective-behavior-and-social-movements-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on collective behavior and social movements. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Collective Behavior and Social Movements",
-    "url": "https://www.ascendprep.edu/guides/collective-behavior-and-social-movements-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down collective behavior and social movements with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Collective Behavior and Social Movements",
-    "url": "https://www.youtube.com/watch?v=ytBCOLL44XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBCOLL44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of collective behavior and social movements."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Social Change and Globalization",
-    "url": "https://www.ascendprep.edu/modules/social-change-and-globalization-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on social change and globalization. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Social Change and Globalization",
-    "url": "https://www.ascendprep.edu/guides/social-change-and-globalization-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down social change and globalization with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Social Change and Globalization",
-    "url": "https://www.youtube.com/watch?v=ytBSOCI45XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSOCI45XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of social change and globalization."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Language and Nonverbal Communication",
-    "url": "https://www.ascendprep.edu/modules/language-and-nonverbal-communication-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on language and nonverbal communication. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Language and Nonverbal Communication",
-    "url": "https://www.ascendprep.edu/guides/language-and-nonverbal-communication-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down language and nonverbal communication with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Language and Nonverbal Communication",
-    "url": "https://www.youtube.com/watch?v=ytBLANG46XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBLANG46XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of language and nonverbal communication."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Sibling Dynamics and Birth Order Theory",
-    "url": "https://www.ascendprep.edu/modules/sibling-dynamics-and-birth-order-theory-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sibling dynamics and birth order theory. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Sibling Dynamics and Birth Order Theory",
-    "url": "https://www.ascendprep.edu/guides/sibling-dynamics-and-birth-order-theory-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sibling dynamics and birth order theory with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Sibling Dynamics and Birth Order Theory",
-    "url": "https://www.youtube.com/watch?v=ytBSIBL47XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSIBL47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sibling dynamics and birth order theory."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Self-Concept, Self-Esteem, and Self-Efficacy",
-    "url": "https://www.ascendprep.edu/modules/self-concept-self-esteem-and-self-efficacy-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on self-concept, self-esteem, and self-efficacy. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Self-Concept, Self-Esteem, and Self-Efficacy",
-    "url": "https://www.ascendprep.edu/guides/self-concept-self-esteem-and-self-efficacy-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down self-concept, self-esteem, and self-efficacy with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Self-Concept, Self-Esteem, and Self-Efficacy",
-    "url": "https://www.youtube.com/watch?v=ytBSELF48XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBSELF48XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of self-concept, self-esteem, and self-efficacy."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Interactive Practice: Cognitive Biases and Heuristics in Decision Making",
-    "url": "https://www.ascendprep.edu/modules/cognitive-biases-and-heuristics-in-decision-making-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on cognitive biases and heuristics in decision making. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Comprehensive Guide to Cognitive Biases and Heuristics in Decision Making",
-    "url": "https://www.ascendprep.edu/guides/cognitive-biases-and-heuristics-in-decision-making-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down cognitive biases and heuristics in decision making with diagrams and examples."
-  },
-  {
-    "cat": "Behavioral & Social Sciences",
-    "title": "Video Crash Course: Cognitive Biases and Heuristics in Decision Making",
-    "url": "https://www.youtube.com/watch?v=ytBCOGN49XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytBCOGN49XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of cognitive biases and heuristics in decision making."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: The Scientific Method and Research Questions",
-    "url": "https://www.ascendprep.edu/modules/the-scientific-method-and-research-questions-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on the scientific method and research questions. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to The Scientific Method and Research Questions",
-    "url": "https://www.ascendprep.edu/guides/the-scientific-method-and-research-questions-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down the scientific method and research questions with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: The Scientific Method and Research Questions",
-    "url": "https://www.youtube.com/watch?v=ytRTHE-00XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRTHE-00XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of the scientific method and research questions."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Literature Review and Finding Sources",
-    "url": "https://www.ascendprep.edu/modules/literature-review-and-finding-sources-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on literature review and finding sources. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Literature Review and Finding Sources",
-    "url": "https://www.ascendprep.edu/guides/literature-review-and-finding-sources-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down literature review and finding sources with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Literature Review and Finding Sources",
-    "url": "https://www.youtube.com/watch?v=ytRLITE01XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRLITE01XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of literature review and finding sources."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Formulating Testable Hypotheses",
-    "url": "https://www.ascendprep.edu/modules/formulating-testable-hypotheses-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on formulating testable hypotheses. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Formulating Testable Hypotheses",
-    "url": "https://www.ascendprep.edu/guides/formulating-testable-hypotheses-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down formulating testable hypotheses with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Formulating Testable Hypotheses",
-    "url": "https://www.youtube.com/watch?v=ytRFORM02XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRFORM02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of formulating testable hypotheses."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Independent vs. Dependent Variables",
-    "url": "https://www.ascendprep.edu/modules/independent-vs-dependent-variables-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on independent vs. dependent variables. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Independent vs. Dependent Variables",
-    "url": "https://www.ascendprep.edu/guides/independent-vs-dependent-variables-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down independent vs. dependent variables with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Independent vs. Dependent Variables",
-    "url": "https://www.youtube.com/watch?v=ytRINDE03XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINDE03XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of independent vs. dependent variables."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Confounding Variables and How to Control Them",
-    "url": "https://www.ascendprep.edu/modules/confounding-variables-and-how-to-control-them-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on confounding variables and how to control them. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Confounding Variables and How to Control Them",
-    "url": "https://www.ascendprep.edu/guides/confounding-variables-and-how-to-control-them-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down confounding variables and how to control them with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Confounding Variables and How to Control Them",
-    "url": "https://www.youtube.com/watch?v=ytRCONF04XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCONF04XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of confounding variables and how to control them."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Experimental vs. Control Groups",
-    "url": "https://www.ascendprep.edu/modules/experimental-vs-control-groups-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on experimental vs. control groups. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Experimental vs. Control Groups",
-    "url": "https://www.ascendprep.edu/guides/experimental-vs-control-groups-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down experimental vs. control groups with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Experimental vs. Control Groups",
-    "url": "https://www.youtube.com/watch?v=ytREXPE05XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytREXPE05XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of experimental vs. control groups."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Single-Blind and Double-Blind Study Designs",
-    "url": "https://www.ascendprep.edu/modules/single-blind-and-double-blind-study-designs-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on single-blind and double-blind study designs. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Single-Blind and Double-Blind Study Designs",
-    "url": "https://www.ascendprep.edu/guides/single-blind-and-double-blind-study-designs-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down single-blind and double-blind study designs with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Single-Blind and Double-Blind Study Designs",
-    "url": "https://www.youtube.com/watch?v=ytRSING06XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSING06XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of single-blind and double-blind study designs."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Longitudinal vs. Cross-Sectional Studies",
-    "url": "https://www.ascendprep.edu/modules/longitudinal-vs-cross-sectional-studies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on longitudinal vs. cross-sectional studies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Longitudinal vs. Cross-Sectional Studies",
-    "url": "https://www.ascendprep.edu/guides/longitudinal-vs-cross-sectional-studies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down longitudinal vs. cross-sectional studies with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Longitudinal vs. Cross-Sectional Studies",
-    "url": "https://www.youtube.com/watch?v=ytRLONG07XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRLONG07XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of longitudinal vs. cross-sectional studies."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Case Studies and Qualitative Research",
-    "url": "https://www.ascendprep.edu/modules/case-studies-and-qualitative-research-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on case studies and qualitative research. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Case Studies and Qualitative Research",
-    "url": "https://www.ascendprep.edu/guides/case-studies-and-qualitative-research-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down case studies and qualitative research with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Case Studies and Qualitative Research",
-    "url": "https://www.youtube.com/watch?v=ytRCASE08XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCASE08XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of case studies and qualitative research."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Survey Methodology and Question Design",
-    "url": "https://www.ascendprep.edu/modules/survey-methodology-and-question-design-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on survey methodology and question design. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Survey Methodology and Question Design",
-    "url": "https://www.ascendprep.edu/guides/survey-methodology-and-question-design-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down survey methodology and question design with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Survey Methodology and Question Design",
-    "url": "https://www.youtube.com/watch?v=ytRSURV09XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSURV09XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of survey methodology and question design."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Naturalistic Observation Techniques",
-    "url": "https://www.ascendprep.edu/modules/naturalistic-observation-techniques-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on naturalistic observation techniques. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Naturalistic Observation Techniques",
-    "url": "https://www.ascendprep.edu/guides/naturalistic-observation-techniques-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down naturalistic observation techniques with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Naturalistic Observation Techniques",
-    "url": "https://www.youtube.com/watch?v=ytRNATU10XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRNATU10XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of naturalistic observation techniques."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Correlational Research and Coefficients",
-    "url": "https://www.ascendprep.edu/modules/correlational-research-and-coefficients-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on correlational research and coefficients. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Correlational Research and Coefficients",
-    "url": "https://www.ascendprep.edu/guides/correlational-research-and-coefficients-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down correlational research and coefficients with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Correlational Research and Coefficients",
-    "url": "https://www.youtube.com/watch?v=ytRCORR11XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCORR11XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of correlational research and coefficients."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Random Sampling vs. Random Assignment",
-    "url": "https://www.ascendprep.edu/modules/random-sampling-vs-random-assignment-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on random sampling vs. random assignment. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Random Sampling vs. Random Assignment",
-    "url": "https://www.ascendprep.edu/guides/random-sampling-vs-random-assignment-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down random sampling vs. random assignment with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Random Sampling vs. Random Assignment",
-    "url": "https://www.youtube.com/watch?v=ytRRAND12XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRRAND12XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of random sampling vs. random assignment."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Stratified and Convenience Sampling",
-    "url": "https://www.ascendprep.edu/modules/stratified-and-convenience-sampling-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on stratified and convenience sampling. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Stratified and Convenience Sampling",
-    "url": "https://www.ascendprep.edu/guides/stratified-and-convenience-sampling-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down stratified and convenience sampling with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Stratified and Convenience Sampling",
-    "url": "https://www.youtube.com/watch?v=ytRSTRA13XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSTRA13XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of stratified and convenience sampling."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Sampling Bias and Underrepresentation",
-    "url": "https://www.ascendprep.edu/modules/sampling-bias-and-underrepresentation-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sampling bias and underrepresentation. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Sampling Bias and Underrepresentation",
-    "url": "https://www.ascendprep.edu/guides/sampling-bias-and-underrepresentation-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sampling bias and underrepresentation with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Sampling Bias and Underrepresentation",
-    "url": "https://www.youtube.com/watch?v=ytRSAMP14XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSAMP14XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sampling bias and underrepresentation."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Validity in Research (Internal, External)",
-    "url": "https://www.ascendprep.edu/modules/validity-in-research-internal-external-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on validity in research (internal, external). Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Validity in Research (Internal, External)",
-    "url": "https://www.ascendprep.edu/guides/validity-in-research-internal-external-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down validity in research (internal, external) with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Validity in Research (Internal, External)",
-    "url": "https://www.youtube.com/watch?v=ytRVALI15XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRVALI15XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of validity in research (internal, external)."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Reliability of Measurements and Test-Retest",
-    "url": "https://www.ascendprep.edu/modules/reliability-of-measurements-and-test-retest-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on reliability of measurements and test-retest. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Reliability of Measurements and Test-Retest",
-    "url": "https://www.ascendprep.edu/guides/reliability-of-measurements-and-test-retest-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down reliability of measurements and test-retest with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Reliability of Measurements and Test-Retest",
-    "url": "https://www.youtube.com/watch?v=ytRRELI16XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRRELI16XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of reliability of measurements and test-retest."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Institutional Review Boards (IRB) and Ethics",
-    "url": "https://www.ascendprep.edu/modules/institutional-review-boards-irb-and-ethics-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on institutional review boards (irb) and ethics. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Institutional Review Boards (IRB) and Ethics",
-    "url": "https://www.ascendprep.edu/guides/institutional-review-boards-irb-and-ethics-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down institutional review boards (irb) and ethics with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Institutional Review Boards (IRB) and Ethics",
-    "url": "https://www.youtube.com/watch?v=ytRINST17XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINST17XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of institutional review boards (irb) and ethics."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Informed Consent and Debriefing in Studies",
-    "url": "https://www.ascendprep.edu/modules/informed-consent-and-debriefing-in-studies-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on informed consent and debriefing in studies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Informed Consent and Debriefing in Studies",
-    "url": "https://www.ascendprep.edu/guides/informed-consent-and-debriefing-in-studies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down informed consent and debriefing in studies with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Informed Consent and Debriefing in Studies",
-    "url": "https://www.youtube.com/watch?v=ytRINFO18XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINFO18XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of informed consent and debriefing in studies."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Animal Research Ethics and Guidelines",
-    "url": "https://www.ascendprep.edu/modules/animal-research-ethics-and-guidelines-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on animal research ethics and guidelines. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Animal Research Ethics and Guidelines",
-    "url": "https://www.ascendprep.edu/guides/animal-research-ethics-and-guidelines-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down animal research ethics and guidelines with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Animal Research Ethics and Guidelines",
-    "url": "https://www.youtube.com/watch?v=ytRANIM19XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRANIM19XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of animal research ethics and guidelines."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Describing Data: Mean, Median, and Mode",
-    "url": "https://www.ascendprep.edu/modules/describing-data-mean-median-and-mode-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on describing data: mean, median, and mode. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Describing Data: Mean, Median, and Mode",
-    "url": "https://www.ascendprep.edu/guides/describing-data-mean-median-and-mode-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down describing data: mean, median, and mode with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Describing Data: Mean, Median, and Mode",
-    "url": "https://www.youtube.com/watch?v=ytRDESC20XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRDESC20XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of describing data: mean, median, and mode."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Measures of Variation: Range and Variance",
-    "url": "https://www.ascendprep.edu/modules/measures-of-variation-range-and-variance-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on measures of variation: range and variance. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Measures of Variation: Range and Variance",
-    "url": "https://www.ascendprep.edu/guides/measures-of-variation-range-and-variance-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down measures of variation: range and variance with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Measures of Variation: Range and Variance",
-    "url": "https://www.youtube.com/watch?v=ytRMEAS21XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRMEAS21XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of measures of variation: range and variance."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Standard Deviation and Normal Distribution",
-    "url": "https://www.ascendprep.edu/modules/standard-deviation-and-normal-distribution-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on standard deviation and normal distribution. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Standard Deviation and Normal Distribution",
-    "url": "https://www.ascendprep.edu/guides/standard-deviation-and-normal-distribution-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down standard deviation and normal distribution with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Standard Deviation and Normal Distribution",
-    "url": "https://www.youtube.com/watch?v=ytRSTAN22XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSTAN22XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of standard deviation and normal distribution."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Skewed Distributions and Outliers",
-    "url": "https://www.ascendprep.edu/modules/skewed-distributions-and-outliers-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on skewed distributions and outliers. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Skewed Distributions and Outliers",
-    "url": "https://www.ascendprep.edu/guides/skewed-distributions-and-outliers-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down skewed distributions and outliers with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Skewed Distributions and Outliers",
-    "url": "https://www.youtube.com/watch?v=ytRSKEW23XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSKEW23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of skewed distributions and outliers."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Scatterplots and Line of Best Fit",
-    "url": "https://www.ascendprep.edu/modules/scatterplots-and-line-of-best-fit-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on scatterplots and line of best fit. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Scatterplots and Line of Best Fit",
-    "url": "https://www.ascendprep.edu/guides/scatterplots-and-line-of-best-fit-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down scatterplots and line of best fit with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Scatterplots and Line of Best Fit",
-    "url": "https://www.youtube.com/watch?v=ytRSCAT24XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSCAT24XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of scatterplots and line of best fit."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Correlation vs. Causation Principles",
-    "url": "https://www.ascendprep.edu/modules/correlation-vs-causation-principles-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on correlation vs. causation principles. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Correlation vs. Causation Principles",
-    "url": "https://www.ascendprep.edu/guides/correlation-vs-causation-principles-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down correlation vs. causation principles with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Correlation vs. Causation Principles",
-    "url": "https://www.youtube.com/watch?v=ytRCORR25XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCORR25XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of correlation vs. causation principles."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Introduction to Statistical Significance",
-    "url": "https://www.ascendprep.edu/modules/introduction-to-statistical-significance-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on introduction to statistical significance. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Introduction to Statistical Significance",
-    "url": "https://www.ascendprep.edu/guides/introduction-to-statistical-significance-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down introduction to statistical significance with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Introduction to Statistical Significance",
-    "url": "https://www.youtube.com/watch?v=ytRINTR26XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINTR26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introduction to statistical significance."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Understanding p-values and Alpha Levels",
-    "url": "https://www.ascendprep.edu/modules/understanding-p-values-and-alpha-levels-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on understanding p-values and alpha levels. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Understanding p-values and Alpha Levels",
-    "url": "https://www.ascendprep.edu/guides/understanding-p-values-and-alpha-levels-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down understanding p-values and alpha levels with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Understanding p-values and Alpha Levels",
-    "url": "https://www.youtube.com/watch?v=ytRUNDE27XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRUNDE27XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of understanding p-values and alpha levels."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Type I and Type II Errors in Statistics",
-    "url": "https://www.ascendprep.edu/modules/type-i-and-type-ii-errors-in-statistics-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on type i and type ii errors in statistics. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Type I and Type II Errors in Statistics",
-    "url": "https://www.ascendprep.edu/guides/type-i-and-type-ii-errors-in-statistics-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down type i and type ii errors in statistics with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Type I and Type II Errors in Statistics",
-    "url": "https://www.youtube.com/watch?v=ytRTYPE28XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRTYPE28XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of type i and type ii errors in statistics."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Introduction to t-Tests and Comparing Means",
-    "url": "https://www.ascendprep.edu/modules/introduction-to-t-tests-and-comparing-means-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on introduction to t-tests and comparing means. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Introduction to t-Tests and Comparing Means",
-    "url": "https://www.ascendprep.edu/guides/introduction-to-t-tests-and-comparing-means-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down introduction to t-tests and comparing means with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Introduction to t-Tests and Comparing Means",
-    "url": "https://www.youtube.com/watch?v=ytRINTR29XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINTR29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introduction to t-tests and comparing means."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Introduction to Chi-Square Test for Independence",
-    "url": "https://www.ascendprep.edu/modules/introduction-to-chi-square-test-for-independence-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on introduction to chi-square test for independence. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Introduction to Chi-Square Test for Independence",
-    "url": "https://www.ascendprep.edu/guides/introduction-to-chi-square-test-for-independence-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down introduction to chi-square test for independence with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Introduction to Chi-Square Test for Independence",
-    "url": "https://www.youtube.com/watch?v=ytRINTR30XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRINTR30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of introduction to chi-square test for independence."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Reading Scientific Abstracts and Articles",
-    "url": "https://www.ascendprep.edu/modules/reading-scientific-abstracts-and-articles-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on reading scientific abstracts and articles. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Reading Scientific Abstracts and Articles",
-    "url": "https://www.ascendprep.edu/guides/reading-scientific-abstracts-and-articles-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down reading scientific abstracts and articles with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Reading Scientific Abstracts and Articles",
-    "url": "https://www.youtube.com/watch?v=ytRREAD31XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRREAD31XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of reading scientific abstracts and articles."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Structuring a Science Fair Research Paper",
-    "url": "https://www.ascendprep.edu/modules/structuring-a-science-fair-research-paper-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on structuring a science fair research paper. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Structuring a Science Fair Research Paper",
-    "url": "https://www.ascendprep.edu/guides/structuring-a-science-fair-research-paper-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down structuring a science fair research paper with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Structuring a Science Fair Research Paper",
-    "url": "https://www.youtube.com/watch?v=ytRSTRU32XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSTRU32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of structuring a science fair research paper."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Creating Effective Data Charts and Graphs",
-    "url": "https://www.ascendprep.edu/modules/creating-effective-data-charts-and-graphs-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on creating effective data charts and graphs. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Creating Effective Data Charts and Graphs",
-    "url": "https://www.ascendprep.edu/guides/creating-effective-data-charts-and-graphs-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down creating effective data charts and graphs with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Creating Effective Data Charts and Graphs",
-    "url": "https://www.youtube.com/watch?v=ytRCREA33XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCREA33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of creating effective data charts and graphs."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: How to Cite Sources (APA, MLA, Chicago)",
-    "url": "https://www.ascendprep.edu/modules/how-to-cite-sources-apa-mla-chicago-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on how to cite sources (apa, mla, chicago). Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to How to Cite Sources (APA, MLA, Chicago)",
-    "url": "https://www.ascendprep.edu/guides/how-to-cite-sources-apa-mla-chicago-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down how to cite sources (apa, mla, chicago) with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: How to Cite Sources (APA, MLA, Chicago)",
-    "url": "https://www.youtube.com/watch?v=ytRHOW-34XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRHOW-34XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of how to cite sources (apa, mla, chicago)."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Peer Review Process and Scientific Community",
-    "url": "https://www.ascendprep.edu/modules/peer-review-process-and-scientific-community-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on peer review process and scientific community. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Peer Review Process and Scientific Community",
-    "url": "https://www.ascendprep.edu/guides/peer-review-process-and-scientific-community-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down peer review process and scientific community with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Peer Review Process and Scientific Community",
-    "url": "https://www.youtube.com/watch?v=ytRPEER35XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRPEER35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of peer review process and scientific community."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Replication Crisis and Open Science Movement",
-    "url": "https://www.ascendprep.edu/modules/replication-crisis-and-open-science-movement-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on replication crisis and open science movement. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Replication Crisis and Open Science Movement",
-    "url": "https://www.ascendprep.edu/guides/replication-crisis-and-open-science-movement-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down replication crisis and open science movement with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Replication Crisis and Open Science Movement",
-    "url": "https://www.youtube.com/watch?v=ytRREPL36XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRREPL36XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of replication crisis and open science movement."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Meta-Analysis and Systematic Reviews",
-    "url": "https://www.ascendprep.edu/modules/meta-analysis-and-systematic-reviews-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on meta-analysis and systematic reviews. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Meta-Analysis and Systematic Reviews",
-    "url": "https://www.ascendprep.edu/guides/meta-analysis-and-systematic-reviews-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down meta-analysis and systematic reviews with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Meta-Analysis and Systematic Reviews",
-    "url": "https://www.youtube.com/watch?v=ytRMETA37XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRMETA37XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of meta-analysis and systematic reviews."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Epidemiological Research and Study Designs",
-    "url": "https://www.ascendprep.edu/modules/epidemiological-research-and-study-designs-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on epidemiological research and study designs. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Epidemiological Research and Study Designs",
-    "url": "https://www.ascendprep.edu/guides/epidemiological-research-and-study-designs-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down epidemiological research and study designs with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Epidemiological Research and Study Designs",
-    "url": "https://www.youtube.com/watch?v=ytREPID38XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytREPID38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of epidemiological research and study designs."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Clinical Trial Phases and Patient Studies",
-    "url": "https://www.ascendprep.edu/modules/clinical-trial-phases-and-patient-studies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on clinical trial phases and patient studies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Clinical Trial Phases and Patient Studies",
-    "url": "https://www.ascendprep.edu/guides/clinical-trial-phases-and-patient-studies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down clinical trial phases and patient studies with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Clinical Trial Phases and Patient Studies",
-    "url": "https://www.youtube.com/watch?v=ytRCLIN39XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCLIN39XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of clinical trial phases and patient studies."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Survey Response Bias and Social Desirability",
-    "url": "https://www.ascendprep.edu/modules/survey-response-bias-and-social-desirability-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on survey response bias and social desirability. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Survey Response Bias and Social Desirability",
-    "url": "https://www.ascendprep.edu/guides/survey-response-bias-and-social-desirability-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down survey response bias and social desirability with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Survey Response Bias and Social Desirability",
-    "url": "https://www.youtube.com/watch?v=ytRSURV40XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSURV40XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of survey response bias and social desirability."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Confounding of Cohort Effects in Studies",
-    "url": "https://www.ascendprep.edu/modules/confounding-of-cohort-effects-in-studies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on confounding of cohort effects in studies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Confounding of Cohort Effects in Studies",
-    "url": "https://www.ascendprep.edu/guides/confounding-of-cohort-effects-in-studies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down confounding of cohort effects in studies with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Confounding of Cohort Effects in Studies",
-    "url": "https://www.youtube.com/watch?v=ytRCONF41XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRCONF41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of confounding of cohort effects in studies."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Statistical Power and Sample Size Intro",
-    "url": "https://www.ascendprep.edu/modules/statistical-power-and-sample-size-intro-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on statistical power and sample size intro. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Statistical Power and Sample Size Intro",
-    "url": "https://www.ascendprep.edu/guides/statistical-power-and-sample-size-intro-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down statistical power and sample size intro with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Statistical Power and Sample Size Intro",
-    "url": "https://www.youtube.com/watch?v=ytRSTAT42XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRSTAT42XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of statistical power and sample size intro."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Non-Experimental Research Designs",
-    "url": "https://www.ascendprep.edu/modules/non-experimental-research-designs-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on non-experimental research designs. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Non-Experimental Research Designs",
-    "url": "https://www.ascendprep.edu/guides/non-experimental-research-designs-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down non-experimental research designs with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Non-Experimental Research Designs",
-    "url": "https://www.youtube.com/watch?v=ytRNON-43XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRNON-43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of non-experimental research designs."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Qualitative Data Analysis Methods",
-    "url": "https://www.ascendprep.edu/modules/qualitative-data-analysis-methods-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on qualitative data analysis methods. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Qualitative Data Analysis Methods",
-    "url": "https://www.ascendprep.edu/guides/qualitative-data-analysis-methods-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down qualitative data analysis methods with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Qualitative Data Analysis Methods",
-    "url": "https://www.youtube.com/watch?v=ytRQUAL44XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRQUAL44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of qualitative data analysis methods."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Quantitative vs Qualitative Research Parallems",
-    "url": "https://www.ascendprep.edu/modules/quantitative-vs-qualitative-research-parallems-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on quantitative vs qualitative research parallems. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Quantitative vs Qualitative Research Parallems",
-    "url": "https://www.ascendprep.edu/guides/quantitative-vs-qualitative-research-parallems-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down quantitative vs qualitative research parallems with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Quantitative vs Qualitative Research Parallems",
-    "url": "https://www.youtube.com/watch?v=ytRQUAN45XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRQUAN45XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of quantitative vs qualitative research parallems."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Field Experiments vs Lab Experiments",
-    "url": "https://www.ascendprep.edu/modules/field-experiments-vs-lab-experiments-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on field experiments vs lab experiments. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Field Experiments vs Lab Experiments",
-    "url": "https://www.ascendprep.edu/guides/field-experiments-vs-lab-experiments-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down field experiments vs lab experiments with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Field Experiments vs Lab Experiments",
-    "url": "https://www.youtube.com/watch?v=ytRFIEL46XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRFIEL46XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of field experiments vs lab experiments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Hypothesis Testing and Null Hypothesis Basics",
-    "url": "https://www.ascendprep.edu/modules/hypothesis-testing-and-null-hypothesis-basics-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on hypothesis testing and null hypothesis basics. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Hypothesis Testing and Null Hypothesis Basics",
-    "url": "https://www.ascendprep.edu/guides/hypothesis-testing-and-null-hypothesis-basics-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down hypothesis testing and null hypothesis basics with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Hypothesis Testing and Null Hypothesis Basics",
-    "url": "https://www.youtube.com/watch?v=ytRHYPO47XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRHYPO47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of hypothesis testing and null hypothesis basics."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Biostatistics in Public Health Studies",
-    "url": "https://www.ascendprep.edu/modules/biostatistics-in-public-health-studies-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on biostatistics in public health studies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Biostatistics in Public Health Studies",
-    "url": "https://www.ascendprep.edu/guides/biostatistics-in-public-health-studies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down biostatistics in public health studies with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Biostatistics in Public Health Studies",
-    "url": "https://www.youtube.com/watch?v=ytRBIOS48XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRBIOS48XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of biostatistics in public health studies."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Interactive Practice: Data Ethics, Security, and Participant Anonymity",
-    "url": "https://www.ascendprep.edu/modules/data-ethics-security-and-participant-anonymity-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on data ethics, security, and participant anonymity. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Comprehensive Guide to Data Ethics, Security, and Participant Anonymity",
-    "url": "https://www.ascendprep.edu/guides/data-ethics-security-and-participant-anonymity-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down data ethics, security, and participant anonymity with diagrams and examples."
-  },
-  {
-    "cat": "Research Methods",
-    "title": "Video Crash Course: Data Ethics, Security, and Participant Anonymity",
-    "url": "https://www.youtube.com/watch?v=ytRDATA49XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytRDATA49XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of data ethics, security, and participant anonymity."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Active Reading Strategies",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-active-reading-strategies-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: active reading strategies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Active Reading Strategies",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-active-reading-strategies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: active reading strategies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Active Reading Strategies",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-00XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-00XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: active reading strategies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Main Idea and Author's Purpose",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-main-idea-and-author-s-purpose-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: main idea and author's purpose. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Main Idea and Author's Purpose",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-main-idea-and-author-s-purpose-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: main idea and author's purpose with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Main Idea and Author's Purpose",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-01XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-01XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: main idea and author's purpose."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Evidence-Based Questions",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-evidence-based-questions-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: evidence-based questions. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Evidence-Based Questions",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-evidence-based-questions-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: evidence-based questions with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Evidence-Based Questions",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-02XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: evidence-based questions."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Words in Context Strategy",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-words-in-context-strategy-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: words in context strategy. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Words in Context Strategy",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-words-in-context-strategy-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: words in context strategy with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Words in Context Strategy",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-03XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-03XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: words in context strategy."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Analyzing Scientific Passages",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-analyzing-scientific-passages-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: analyzing scientific passages. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Analyzing Scientific Passages",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-analyzing-scientific-passages-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: analyzing scientific passages with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Analyzing Scientific Passages",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-04XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-04XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: analyzing scientific passages."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Reading: Historical and Speech Passages",
-    "url": "https://www.ascendprep.edu/modules/sat-reading-historical-and-speech-passages-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat reading: historical and speech passages. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Reading: Historical and Speech Passages",
-    "url": "https://www.ascendprep.edu/guides/sat-reading-historical-and-speech-passages-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat reading: historical and speech passages with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Reading: Historical and Speech Passages",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-05XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-05XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat reading: historical and speech passages."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Standard English Conventions",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-standard-english-conventions-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: standard english conventions. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Standard English Conventions",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-standard-english-conventions-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: standard english conventions with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Standard English Conventions",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-06XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-06XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: standard english conventions."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Subject-Verb Agreement Rules",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-subject-verb-agreement-rules-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: subject-verb agreement rules. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Subject-Verb Agreement Rules",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-subject-verb-agreement-rules-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: subject-verb agreement rules with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Subject-Verb Agreement Rules",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-07XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-07XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: subject-verb agreement rules."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Pronoun-Antecedent Agreement",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-pronoun-antecedent-agreement-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: pronoun-antecedent agreement. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Pronoun-Antecedent Agreement",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-pronoun-antecedent-agreement-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: pronoun-antecedent agreement with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Pronoun-Antecedent Agreement",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-08XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-08XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: pronoun-antecedent agreement."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Punctuation Rules (Commas, Colons)",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-punctuation-rules-commas-colons-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: punctuation rules (commas, colons). Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Punctuation Rules (Commas, Colons)",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-punctuation-rules-commas-colons-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: punctuation rules (commas, colons) with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Punctuation Rules (Commas, Colons)",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-09XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-09XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: punctuation rules (commas, colons)."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Transition Words and Sentence Flow",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-transition-words-and-sentence-flow-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: transition words and sentence flow. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Transition Words and Sentence Flow",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-transition-words-and-sentence-flow-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: transition words and sentence flow with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Transition Words and Sentence Flow",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-10XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-10XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: transition words and sentence flow."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Writing: Precision and Word Choice",
-    "url": "https://www.ascendprep.edu/modules/sat-writing-precision-and-word-choice-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat writing: precision and word choice. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Writing: Precision and Word Choice",
-    "url": "https://www.ascendprep.edu/guides/sat-writing-precision-and-word-choice-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat writing: precision and word choice with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Writing: Precision and Word Choice",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-11XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-11XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat writing: precision and word choice."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Heart of Algebra Formulas",
-    "url": "https://www.ascendprep.edu/modules/sat-math-heart-of-algebra-formulas-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat math: heart of algebra formulas. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Heart of Algebra Formulas",
-    "url": "https://www.ascendprep.edu/guides/sat-math-heart-of-algebra-formulas-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: heart of algebra formulas with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Heart of Algebra Formulas",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-12XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-12XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: heart of algebra formulas."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Linear Equations and Inequalities",
-    "url": "https://www.ascendprep.edu/modules/sat-math-linear-equations-and-inequalities-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat math: linear equations and inequalities. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Linear Equations and Inequalities",
-    "url": "https://www.ascendprep.edu/guides/sat-math-linear-equations-and-inequalities-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: linear equations and inequalities with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Linear Equations and Inequalities",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-13XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-13XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: linear equations and inequalities."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Problem Solving and Data Analysis",
-    "url": "https://www.ascendprep.edu/modules/sat-math-problem-solving-and-data-analysis-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat math: problem solving and data analysis. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Problem Solving and Data Analysis",
-    "url": "https://www.ascendprep.edu/guides/sat-math-problem-solving-and-data-analysis-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: problem solving and data analysis with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Problem Solving and Data Analysis",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-14XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-14XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: problem solving and data analysis."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Passport to Advanced Math",
-    "url": "https://www.ascendprep.edu/modules/sat-math-passport-to-advanced-math-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat math: passport to advanced math. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Passport to Advanced Math",
-    "url": "https://www.ascendprep.edu/guides/sat-math-passport-to-advanced-math-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: passport to advanced math with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Passport to Advanced Math",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-15XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-15XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: passport to advanced math."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Quadratic and Exponential Functions",
-    "url": "https://www.ascendprep.edu/modules/sat-math-quadratic-and-exponential-functions-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on sat math: quadratic and exponential functions. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Quadratic and Exponential Functions",
-    "url": "https://www.ascendprep.edu/guides/sat-math-quadratic-and-exponential-functions-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: quadratic and exponential functions with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Quadratic and Exponential Functions",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-16XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-16XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: quadratic and exponential functions."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT Math: Additional Topics (Geometry, Trig)",
-    "url": "https://www.ascendprep.edu/modules/sat-math-additional-topics-geometry-trig-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat math: additional topics (geometry, trig). Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT Math: Additional Topics (Geometry, Trig)",
-    "url": "https://www.ascendprep.edu/guides/sat-math-additional-topics-geometry-trig-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat math: additional topics (geometry, trig) with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT Math: Additional Topics (Geometry, Trig)",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-17XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-17XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat math: additional topics (geometry, trig)."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT English: Grammar and Rhetorical Skills",
-    "url": "https://www.ascendprep.edu/modules/act-english-grammar-and-rhetorical-skills-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on act english: grammar and rhetorical skills. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT English: Grammar and Rhetorical Skills",
-    "url": "https://www.ascendprep.edu/guides/act-english-grammar-and-rhetorical-skills-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down act english: grammar and rhetorical skills with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT English: Grammar and Rhetorical Skills",
-    "url": "https://www.youtube.com/watch?v=ytTACT-18XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-18XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act english: grammar and rhetorical skills."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Math: Algebra, Geometry, and Trig Review",
-    "url": "https://www.ascendprep.edu/modules/act-math-algebra-geometry-and-trig-review-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on act math: algebra, geometry, and trig review. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Math: Algebra, Geometry, and Trig Review",
-    "url": "https://www.ascendprep.edu/guides/act-math-algebra-geometry-and-trig-review-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down act math: algebra, geometry, and trig review with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Math: Algebra, Geometry, and Trig Review",
-    "url": "https://www.youtube.com/watch?v=ytTACT-19XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-19XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act math: algebra, geometry, and trig review."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Reading: Managing the Timed Sections",
-    "url": "https://www.ascendprep.edu/modules/act-reading-managing-the-timed-sections-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on act reading: managing the timed sections. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Reading: Managing the Timed Sections",
-    "url": "https://www.ascendprep.edu/guides/act-reading-managing-the-timed-sections-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down act reading: managing the timed sections with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Reading: Managing the Timed Sections",
-    "url": "https://www.youtube.com/watch?v=ytTACT-20XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-20XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act reading: managing the timed sections."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Science: Data Representation Strategies",
-    "url": "https://www.ascendprep.edu/modules/act-science-data-representation-strategies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on act science: data representation strategies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Science: Data Representation Strategies",
-    "url": "https://www.ascendprep.edu/guides/act-science-data-representation-strategies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down act science: data representation strategies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Science: Data Representation Strategies",
-    "url": "https://www.youtube.com/watch?v=ytTACT-21XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-21XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act science: data representation strategies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Science: Research Summaries Analysis",
-    "url": "https://www.ascendprep.edu/modules/act-science-research-summaries-analysis-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on act science: research summaries analysis. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Science: Research Summaries Analysis",
-    "url": "https://www.ascendprep.edu/guides/act-science-research-summaries-analysis-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down act science: research summaries analysis with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Science: Research Summaries Analysis",
-    "url": "https://www.youtube.com/watch?v=ytTACT-22XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-22XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act science: research summaries analysis."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Science: Conflicting Viewpoints Passages",
-    "url": "https://www.ascendprep.edu/modules/act-science-conflicting-viewpoints-passages-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on act science: conflicting viewpoints passages. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Science: Conflicting Viewpoints Passages",
-    "url": "https://www.ascendprep.edu/guides/act-science-conflicting-viewpoints-passages-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down act science: conflicting viewpoints passages with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Science: Conflicting Viewpoints Passages",
-    "url": "https://www.youtube.com/watch?v=ytTACT-23XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act science: conflicting viewpoints passages."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Biology Exam: Section I Strategy",
-    "url": "https://www.ascendprep.edu/modules/ap-biology-exam-section-i-strategy-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on ap biology exam: section i strategy. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Biology Exam: Section I Strategy",
-    "url": "https://www.ascendprep.edu/guides/ap-biology-exam-section-i-strategy-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down ap biology exam: section i strategy with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Biology Exam: Section I Strategy",
-    "url": "https://www.youtube.com/watch?v=ytTAP-B24XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-B24XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap biology exam: section i strategy."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Biology Exam: Section II Free Response",
-    "url": "https://www.ascendprep.edu/modules/ap-biology-exam-section-ii-free-response-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on ap biology exam: section ii free response. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Biology Exam: Section II Free Response",
-    "url": "https://www.ascendprep.edu/guides/ap-biology-exam-section-ii-free-response-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down ap biology exam: section ii free response with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Biology Exam: Section II Free Response",
-    "url": "https://www.youtube.com/watch?v=ytTAP-B25XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-B25XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap biology exam: section ii free response."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Chemistry Exam: Reviewing Big Ideas",
-    "url": "https://www.ascendprep.edu/modules/ap-chemistry-exam-reviewing-big-ideas-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on ap chemistry exam: reviewing big ideas. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Chemistry Exam: Reviewing Big Ideas",
-    "url": "https://www.ascendprep.edu/guides/ap-chemistry-exam-reviewing-big-ideas-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down ap chemistry exam: reviewing big ideas with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Chemistry Exam: Reviewing Big Ideas",
-    "url": "https://www.youtube.com/watch?v=ytTAP-C26XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-C26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap chemistry exam: reviewing big ideas."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Physics Exam: Conceptual Math Prep",
-    "url": "https://www.ascendprep.edu/modules/ap-physics-exam-conceptual-math-prep-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on ap physics exam: conceptual math prep. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Physics Exam: Conceptual Math Prep",
-    "url": "https://www.ascendprep.edu/guides/ap-physics-exam-conceptual-math-prep-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down ap physics exam: conceptual math prep with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Physics Exam: Conceptual Math Prep",
-    "url": "https://www.youtube.com/watch?v=ytTAP-P27XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-P27XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap physics exam: conceptual math prep."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Psychology Exam: Vocabulary Flashcard Strategies",
-    "url": "https://www.ascendprep.edu/modules/ap-psychology-exam-vocabulary-flashcard-strategies-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on ap psychology exam: vocabulary flashcard strategies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Psychology Exam: Vocabulary Flashcard Strategies",
-    "url": "https://www.ascendprep.edu/guides/ap-psychology-exam-vocabulary-flashcard-strategies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down ap psychology exam: vocabulary flashcard strategies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Psychology Exam: Vocabulary Flashcard Strategies",
-    "url": "https://www.youtube.com/watch?v=ytTAP-P28XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-P28XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap psychology exam: vocabulary flashcard strategies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Statistics Exam: Free Response Formulas",
-    "url": "https://www.ascendprep.edu/modules/ap-statistics-exam-free-response-formulas-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on ap statistics exam: free response formulas. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Statistics Exam: Free Response Formulas",
-    "url": "https://www.ascendprep.edu/guides/ap-statistics-exam-free-response-formulas-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down ap statistics exam: free response formulas with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Statistics Exam: Free Response Formulas",
-    "url": "https://www.youtube.com/watch?v=ytTAP-S29XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-S29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap statistics exam: free response formulas."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: General Exam Timing and Pacing Techniques",
-    "url": "https://www.ascendprep.edu/modules/general-exam-timing-and-pacing-techniques-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on general exam timing and pacing techniques. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to General Exam Timing and Pacing Techniques",
-    "url": "https://www.ascendprep.edu/guides/general-exam-timing-and-pacing-techniques-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down general exam timing and pacing techniques with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: General Exam Timing and Pacing Techniques",
-    "url": "https://www.youtube.com/watch?v=ytTGENE30XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTGENE30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of general exam timing and pacing techniques."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Reducing Test Day Anxiety and Prep Mindset",
-    "url": "https://www.ascendprep.edu/modules/reducing-test-day-anxiety-and-prep-mindset-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on reducing test day anxiety and prep mindset. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Reducing Test Day Anxiety and Prep Mindset",
-    "url": "https://www.ascendprep.edu/guides/reducing-test-day-anxiety-and-prep-mindset-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down reducing test day anxiety and prep mindset with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Reducing Test Day Anxiety and Prep Mindset",
-    "url": "https://www.youtube.com/watch?v=ytTREDU31XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTREDU31XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of reducing test day anxiety and prep mindset."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: How to Review Practice Test Mistakes",
-    "url": "https://www.ascendprep.edu/modules/how-to-review-practice-test-mistakes-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on how to review practice test mistakes. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to How to Review Practice Test Mistakes",
-    "url": "https://www.ascendprep.edu/guides/how-to-review-practice-test-mistakes-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down how to review practice test mistakes with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: How to Review Practice Test Mistakes",
-    "url": "https://www.youtube.com/watch?v=ytTHOW-32XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTHOW-32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of how to review practice test mistakes."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Creating a 3-Month SAT/ACT Study Schedule",
-    "url": "https://www.ascendprep.edu/modules/creating-a-3-month-sat-act-study-schedule-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on creating a 3-month sat/act study schedule. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Creating a 3-Month SAT/ACT Study Schedule",
-    "url": "https://www.ascendprep.edu/guides/creating-a-3-month-sat-act-study-schedule-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down creating a 3-month sat/act study schedule with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Creating a 3-Month SAT/ACT Study Schedule",
-    "url": "https://www.youtube.com/watch?v=ytTCREA33XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTCREA33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of creating a 3-month sat/act study schedule."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Spaced Repetition and Flashcard Systems",
-    "url": "https://www.ascendprep.edu/modules/spaced-repetition-and-flashcard-systems-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on spaced repetition and flashcard systems. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Spaced Repetition and Flashcard Systems",
-    "url": "https://www.ascendprep.edu/guides/spaced-repetition-and-flashcard-systems-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down spaced repetition and flashcard systems with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Spaced Repetition and Flashcard Systems",
-    "url": "https://www.youtube.com/watch?v=ytTSPAC34XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSPAC34XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of spaced repetition and flashcard systems."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Active Recall Study Techniques vs Passive Reading",
-    "url": "https://www.ascendprep.edu/modules/active-recall-study-techniques-vs-passive-reading-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on active recall study techniques vs passive reading. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Active Recall Study Techniques vs Passive Reading",
-    "url": "https://www.ascendprep.edu/guides/active-recall-study-techniques-vs-passive-reading-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down active recall study techniques vs passive reading with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Active Recall Study Techniques vs Passive Reading",
-    "url": "https://www.youtube.com/watch?v=ytTACTI35XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACTI35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of active recall study techniques vs passive reading."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Essential No-Calculator Math Tricks",
-    "url": "https://www.ascendprep.edu/modules/essential-no-calculator-math-tricks-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on essential no-calculator math tricks. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Essential No-Calculator Math Tricks",
-    "url": "https://www.ascendprep.edu/guides/essential-no-calculator-math-tricks-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down essential no-calculator math tricks with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Essential No-Calculator Math Tricks",
-    "url": "https://www.youtube.com/watch?v=ytTESSE36XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTESSE36XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of essential no-calculator math tricks."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: SAT/ACT Vocabulary Prep Strategies",
-    "url": "https://www.ascendprep.edu/modules/sat-act-vocabulary-prep-strategies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on sat/act vocabulary prep strategies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to SAT/ACT Vocabulary Prep Strategies",
-    "url": "https://www.ascendprep.edu/guides/sat-act-vocabulary-prep-strategies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down sat/act vocabulary prep strategies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: SAT/ACT Vocabulary Prep Strategies",
-    "url": "https://www.youtube.com/watch?v=ytTSAT-37XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSAT-37XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of sat/act vocabulary prep strategies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Guessing Strategies and Process of Elimination",
-    "url": "https://www.ascendprep.edu/modules/guessing-strategies-and-process-of-elimination-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on guessing strategies and process of elimination. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Guessing Strategies and Process of Elimination",
-    "url": "https://www.ascendprep.edu/guides/guessing-strategies-and-process-of-elimination-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down guessing strategies and process of elimination with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Guessing Strategies and Process of Elimination",
-    "url": "https://www.youtube.com/watch?v=ytTGUES38XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTGUES38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of guessing strategies and process of elimination."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Preparing Your Test-Day Checklist and Supplies",
-    "url": "https://www.ascendprep.edu/modules/preparing-your-test-day-checklist-and-supplies-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on preparing your test-day checklist and supplies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Preparing Your Test-Day Checklist and Supplies",
-    "url": "https://www.ascendprep.edu/guides/preparing-your-test-day-checklist-and-supplies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down preparing your test-day checklist and supplies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Preparing Your Test-Day Checklist and Supplies",
-    "url": "https://www.youtube.com/watch?v=ytTPREP39XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTPREP39XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of preparing your test-day checklist and supplies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Mock Exam Simulation: Setting Up the Workspace",
-    "url": "https://www.ascendprep.edu/modules/mock-exam-simulation-setting-up-the-workspace-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on mock exam simulation: setting up the workspace. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Mock Exam Simulation: Setting Up the Workspace",
-    "url": "https://www.ascendprep.edu/guides/mock-exam-simulation-setting-up-the-workspace-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down mock exam simulation: setting up the workspace with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Mock Exam Simulation: Setting Up the Workspace",
-    "url": "https://www.youtube.com/watch?v=ytTMOCK40XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTMOCK40XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of mock exam simulation: setting up the workspace."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Analyzing Score Reports to Find Weaknesses",
-    "url": "https://www.ascendprep.edu/modules/analyzing-score-reports-to-find-weaknesses-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on analyzing score reports to find weaknesses. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Analyzing Score Reports to Find Weaknesses",
-    "url": "https://www.ascendprep.edu/guides/analyzing-score-reports-to-find-weaknesses-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down analyzing score reports to find weaknesses with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Analyzing Score Reports to Find Weaknesses",
-    "url": "https://www.youtube.com/watch?v=ytTANAL41XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTANAL41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of analyzing score reports to find weaknesses."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Retaking the SAT/ACT: Score Choice Guidelines",
-    "url": "https://www.ascendprep.edu/modules/retaking-the-sat-act-score-choice-guidelines-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on retaking the sat/act: score choice guidelines. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Retaking the SAT/ACT: Score Choice Guidelines",
-    "url": "https://www.ascendprep.edu/guides/retaking-the-sat-act-score-choice-guidelines-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down retaking the sat/act: score choice guidelines with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Retaking the SAT/ACT: Score Choice Guidelines",
-    "url": "https://www.youtube.com/watch?v=ytTRETA42XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTRETA42XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of retaking the sat/act: score choice guidelines."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Understanding Percentiles and Score Scaling",
-    "url": "https://www.ascendprep.edu/modules/understanding-percentiles-and-score-scaling-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on understanding percentiles and score scaling. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Understanding Percentiles and Score Scaling",
-    "url": "https://www.ascendprep.edu/guides/understanding-percentiles-and-score-scaling-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down understanding percentiles and score scaling with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Understanding Percentiles and Score Scaling",
-    "url": "https://www.youtube.com/watch?v=ytTUNDE43XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTUNDE43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of understanding percentiles and score scaling."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Study Groups: Structuring Cooperative Prep",
-    "url": "https://www.ascendprep.edu/modules/study-groups-structuring-cooperative-prep-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on study groups: structuring cooperative prep. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Study Groups: Structuring Cooperative Prep",
-    "url": "https://www.ascendprep.edu/guides/study-groups-structuring-cooperative-prep-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down study groups: structuring cooperative prep with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Study Groups: Structuring Cooperative Prep",
-    "url": "https://www.youtube.com/watch?v=ytTSTUD44XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTSTUD44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of study groups: structuring cooperative prep."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Brain Food and Sleep Hygiene Before Exams",
-    "url": "https://www.ascendprep.edu/modules/brain-food-and-sleep-hygiene-before-exams-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on brain food and sleep hygiene before exams. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Brain Food and Sleep Hygiene Before Exams",
-    "url": "https://www.ascendprep.edu/guides/brain-food-and-sleep-hygiene-before-exams-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down brain food and sleep hygiene before exams with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Brain Food and Sleep Hygiene Before Exams",
-    "url": "https://www.youtube.com/watch?v=ytTBRAI45XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTBRAI45XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of brain food and sleep hygiene before exams."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Digital SAT Bluebook App Walkthrough",
-    "url": "https://www.ascendprep.edu/modules/digital-sat-bluebook-app-walkthrough-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on digital sat bluebook app walkthrough. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Digital SAT Bluebook App Walkthrough",
-    "url": "https://www.ascendprep.edu/guides/digital-sat-bluebook-app-walkthrough-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down digital sat bluebook app walkthrough with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Digital SAT Bluebook App Walkthrough",
-    "url": "https://www.youtube.com/watch?v=ytTDIGI46XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTDIGI46XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of digital sat bluebook app walkthrough."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: ACT Digital Testing: Computer Interface Strategy",
-    "url": "https://www.ascendprep.edu/modules/act-digital-testing-computer-interface-strategy-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on act digital testing: computer interface strategy. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to ACT Digital Testing: Computer Interface Strategy",
-    "url": "https://www.ascendprep.edu/guides/act-digital-testing-computer-interface-strategy-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down act digital testing: computer interface strategy with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: ACT Digital Testing: Computer Interface Strategy",
-    "url": "https://www.youtube.com/watch?v=ytTACT-47XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTACT-47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of act digital testing: computer interface strategy."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: AP Exam Scoring and College Credit Policies",
-    "url": "https://www.ascendprep.edu/modules/ap-exam-scoring-and-college-credit-policies-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on ap exam scoring and college credit policies. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to AP Exam Scoring and College Credit Policies",
-    "url": "https://www.ascendprep.edu/guides/ap-exam-scoring-and-college-credit-policies-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down ap exam scoring and college credit policies with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: AP Exam Scoring and College Credit Policies",
-    "url": "https://www.youtube.com/watch?v=ytTAP-E48XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTAP-E48XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of ap exam scoring and college credit policies."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Interactive Practice: Managing Multiple AP Exams in Two Weeks",
-    "url": "https://www.ascendprep.edu/modules/managing-multiple-ap-exams-in-two-weeks-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on managing multiple ap exams in two weeks. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Comprehensive Guide to Managing Multiple AP Exams in Two Weeks",
-    "url": "https://www.ascendprep.edu/guides/managing-multiple-ap-exams-in-two-weeks-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down managing multiple ap exams in two weeks with diagrams and examples."
-  },
-  {
-    "cat": "Test Prep",
-    "title": "Video Crash Course: Managing Multiple AP Exams in Two Weeks",
-    "url": "https://www.youtube.com/watch?v=ytTMANA49XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytTMANA49XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of managing multiple ap exams in two weeks."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Designing Your High School Four-Year Plan",
-    "url": "https://www.ascendprep.edu/modules/designing-your-high-school-four-year-plan-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on designing your high school four-year plan. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Designing Your High School Four-Year Plan",
-    "url": "https://www.ascendprep.edu/guides/designing-your-high-school-four-year-plan-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down designing your high school four-year plan with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Designing Your High School Four-Year Plan",
-    "url": "https://www.youtube.com/watch?v=ytADESI00XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytADESI00XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of designing your high school four-year plan."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Choosing Advanced Placement (AP) vs IB Courses",
-    "url": "https://www.ascendprep.edu/modules/choosing-advanced-placement-ap-vs-ib-courses-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on choosing advanced placement (ap) vs ib courses. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Choosing Advanced Placement (AP) vs IB Courses",
-    "url": "https://www.ascendprep.edu/guides/choosing-advanced-placement-ap-vs-ib-courses-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down choosing advanced placement (ap) vs ib courses with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Choosing Advanced Placement (AP) vs IB Courses",
-    "url": "https://www.youtube.com/watch?v=ytACHOO01XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytACHOO01XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of choosing advanced placement (ap) vs ib courses."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Navigating Extracurricular Activity Selection",
-    "url": "https://www.ascendprep.edu/modules/navigating-extracurricular-activity-selection-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on navigating extracurricular activity selection. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Navigating Extracurricular Activity Selection",
-    "url": "https://www.ascendprep.edu/guides/navigating-extracurricular-activity-selection-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down navigating extracurricular activity selection with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Navigating Extracurricular Activity Selection",
-    "url": "https://www.youtube.com/watch?v=ytANAVI02XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytANAVI02XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of navigating extracurricular activity selection."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Creating a Professional Extracurricular Resume",
-    "url": "https://www.ascendprep.edu/modules/creating-a-professional-extracurricular-resume-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on creating a professional extracurricular resume. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Creating a Professional Extracurricular Resume",
-    "url": "https://www.ascendprep.edu/guides/creating-a-professional-extracurricular-resume-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down creating a professional extracurricular resume with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Creating a Professional Extracurricular Resume",
-    "url": "https://www.youtube.com/watch?v=ytACREA03XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytACREA03XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of creating a professional extracurricular resume."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Searching for College Scholarships and Grants",
-    "url": "https://www.ascendprep.edu/modules/searching-for-college-scholarships-and-grants-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on searching for college scholarships and grants. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Searching for College Scholarships and Grants",
-    "url": "https://www.ascendprep.edu/guides/searching-for-college-scholarships-and-grants-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down searching for college scholarships and grants with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Searching for College Scholarships and Grants",
-    "url": "https://www.youtube.com/watch?v=ytASEAR04XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytASEAR04XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of searching for college scholarships and grants."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Common App: Setting Up Your Profile",
-    "url": "https://www.ascendprep.edu/modules/common-app-setting-up-your-profile-practice",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on common app: setting up your profile. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Common App: Setting Up Your Profile",
-    "url": "https://www.ascendprep.edu/guides/common-app-setting-up-your-profile-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down common app: setting up your profile with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Common App: Setting Up Your Profile",
-    "url": "https://www.youtube.com/watch?v=ytACOMM05XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytACOMM05XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of common app: setting up your profile."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Writing the Common App Personal Statement",
-    "url": "https://www.ascendprep.edu/modules/writing-the-common-app-personal-statement-practice",
-    "type": "App",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on writing the common app personal statement. Features exercises and self-assessments."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Writing the Common App Personal Statement",
-    "url": "https://www.ascendprep.edu/guides/writing-the-common-app-personal-statement-handbook",
-    "type": "Article",
-    "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down writing the common app personal statement with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Writing the Common App Personal Statement",
-    "url": "https://www.youtube.com/watch?v=ytAWRIT06XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAWRIT06XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of writing the common app personal statement."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Brainstorming Narrative Themes for Essays",
-    "url": "https://www.ascendprep.edu/modules/brainstorming-narrative-themes-for-essays-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on brainstorming narrative themes for essays. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Brainstorming Narrative Themes for Essays",
-    "url": "https://www.ascendprep.edu/guides/brainstorming-narrative-themes-for-essays-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down brainstorming narrative themes for essays with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Brainstorming Narrative Themes for Essays",
-    "url": "https://www.youtube.com/watch?v=ytABRAI07XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytABRAI07XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of brainstorming narrative themes for essays."
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Structuring the Supplemental 'Why Us' Essay",
-    "url": "https://www.ascendprep.edu/modules/structuring-the-supplemental-why-us-essay-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on structuring the supplemental 'why us' essay. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Structuring the Supplemental 'Why Us' Essay",
-    "url": "https://www.ascendprep.edu/guides/structuring-the-supplemental-why-us-essay-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down structuring the supplemental 'why us' essay with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Structuring the Supplemental 'Why Us' Essay",
-    "url": "https://www.youtube.com/watch?v=ytASTRU08XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytASTRU08XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of structuring the supplemental 'why us' essay."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Structuring the Supplemental 'Activity' Essay",
-    "url": "https://www.ascendprep.edu/modules/structuring-the-supplemental-activity-essay-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on structuring the supplemental 'activity' essay. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Structuring the Supplemental 'Activity' Essay",
-    "url": "https://www.ascendprep.edu/guides/structuring-the-supplemental-activity-essay-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down structuring the supplemental 'activity' essay with diagrams and examples."
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Structuring the Supplemental 'Activity' Essay",
-    "url": "https://www.youtube.com/watch?v=ytASTRU09XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytASTRU09XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of structuring the supplemental 'activity' essay."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Understanding Early Decision (ED) vs Early Action",
-    "url": "https://www.ascendprep.edu/modules/understanding-early-decision-ed-vs-early-action-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Chemistry: Atoms First 2e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/chemistry-atoms-first-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on understanding early decision (ed) vs early action. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Chemistry: Atoms First 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Understanding Early Decision (ED) vs Early Action",
-    "url": "https://www.ascendprep.edu/guides/understanding-early-decision-ed-vs-early-action-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down understanding early decision (ed) vs early action with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Understanding Early Decision (ED) vs Early Action",
-    "url": "https://www.youtube.com/watch?v=ytAUNDE10XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAUNDE10XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of understanding early decision (ed) vs early action."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Regular Decision (RD) Applications and Timelines",
-    "url": "https://www.ascendprep.edu/modules/regular-decision-rd-applications-and-timelines-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on regular decision (rd) applications and timelines. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Regular Decision (RD) Applications and Timelines",
-    "url": "https://www.ascendprep.edu/guides/regular-decision-rd-applications-and-timelines-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down regular decision (rd) applications and timelines with diagrams and examples."
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Regular Decision (RD) Applications and Timelines",
-    "url": "https://www.youtube.com/watch?v=ytAREGU11XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAREGU11XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of regular decision (rd) applications and timelines."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Creating a Balanced College List (Reach, Match, Safety)",
-    "url": "https://www.ascendprep.edu/modules/creating-a-balanced-college-list-reach-match-safety-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on creating a balanced college list (reach, match, safety). Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Creating a Balanced College List (Reach, Match, Safety)",
-    "url": "https://www.ascendprep.edu/guides/creating-a-balanced-college-list-reach-match-safety-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down creating a balanced college list (reach, match, safety) with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Creating a Balanced College List (Reach, Match, Safety)",
-    "url": "https://www.youtube.com/watch?v=ytACREA12XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytACREA12XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of creating a balanced college list (reach, match, safety)."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Virtual College Tours and Information Sessions",
-    "url": "https://www.ascendprep.edu/modules/virtual-college-tours-and-information-sessions-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on virtual college tours and information sessions. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Virtual College Tours and Information Sessions",
-    "url": "https://www.ascendprep.edu/guides/virtual-college-tours-and-information-sessions-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down virtual college tours and information sessions with diagrams and examples."
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Virtual College Tours and Information Sessions",
-    "url": "https://www.youtube.com/watch?v=ytAVIRT13XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAVIRT13XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of virtual college tours and information sessions."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Registering and Requesting Letters of Recommendation",
-    "url": "https://www.ascendprep.edu/modules/registering-and-requesting-letters-of-recommendation-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on registering and requesting letters of recommendation. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Registering and Requesting Letters of Recommendation",
-    "url": "https://www.ascendprep.edu/guides/registering-and-requesting-letters-of-recommendation-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down registering and requesting letters of recommendation with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Registering and Requesting Letters of Recommendation",
-    "url": "https://www.youtube.com/watch?v=ytAREGI14XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 14 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/14-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAREGI14XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of registering and requesting letters of recommendation."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 14 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: How to Politely Ask Teachers for Recommendations",
-    "url": "https://www.ascendprep.edu/modules/how-to-politely-ask-teachers-for-recommendations-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 15 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/15-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on how to politely ask teachers for recommendations. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 15 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to How to Politely Ask Teachers for Recommendations",
-    "url": "https://www.ascendprep.edu/guides/how-to-politely-ask-teachers-for-recommendations-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 16 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/16-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down how to politely ask teachers for recommendations with diagrams and examples."
+    "desc": "Comprehensive Chapter 16 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: How to Politely Ask Teachers for Recommendations",
-    "url": "https://www.youtube.com/watch?v=ytAHOW-15XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 17 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/17-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAHOW-15XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of how to politely ask teachers for recommendations."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 17 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Drafting a Letter of Recommendation Brag Sheet",
-    "url": "https://www.ascendprep.edu/modules/drafting-a-letter-of-recommendation-brag-sheet-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 18 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/18-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on drafting a letter of recommendation brag sheet. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 18 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Drafting a Letter of Recommendation Brag Sheet",
-    "url": "https://www.ascendprep.edu/guides/drafting-a-letter-of-recommendation-brag-sheet-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 19 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/19-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down drafting a letter of recommendation brag sheet with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 19 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Drafting a Letter of Recommendation Brag Sheet",
-    "url": "https://www.youtube.com/watch?v=ytADRAF16XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 20 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/20-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytADRAF16XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of drafting a letter of recommendation brag sheet."
+    "desc": "Comprehensive Chapter 20 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Financial Aid 101: Understanding FAFSA Forms",
-    "url": "https://www.ascendprep.edu/modules/financial-aid-101-understanding-fafsa-forms-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 21 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/21-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on financial aid 101: understanding fafsa forms. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 21 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Financial Aid 101: Understanding FAFSA Forms",
-    "url": "https://www.ascendprep.edu/guides/financial-aid-101-understanding-fafsa-forms-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 22 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/22-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down financial aid 101: understanding fafsa forms with diagrams and examples."
+    "desc": "Comprehensive Chapter 22 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Financial Aid 101: Understanding FAFSA Forms",
-    "url": "https://www.youtube.com/watch?v=ytAFINA17XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 23 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/23-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAFINA17XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of financial aid 101: understanding fafsa forms."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 23 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Demystifying the CSS Profile Financial Aid Form",
-    "url": "https://www.ascendprep.edu/modules/demystifying-the-css-profile-financial-aid-form-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 24 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/24-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on demystifying the css profile financial aid form. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 24 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Demystifying the CSS Profile Financial Aid Form",
-    "url": "https://www.ascendprep.edu/guides/demystifying-the-css-profile-financial-aid-form-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 25 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/25-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down demystifying the css profile financial aid form with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 25 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Demystifying the CSS Profile Financial Aid Form",
-    "url": "https://www.youtube.com/watch?v=ytADEMY18XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 26 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/26-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytADEMY18XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of demystifying the css profile financial aid form."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 26 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Comparing Financial Aid Awards and Aid Packages",
-    "url": "https://www.ascendprep.edu/modules/comparing-financial-aid-awards-and-aid-packages-practice",
-    "type": "Course",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 27 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/27-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on comparing financial aid awards and aid packages. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 27 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Comparing Financial Aid Awards and Aid Packages",
-    "url": "https://www.ascendprep.edu/guides/comparing-financial-aid-awards-and-aid-packages-handbook",
-    "type": "Article",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 28 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/28-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down comparing financial aid awards and aid packages with diagrams and examples."
+    "desc": "Comprehensive Chapter 28 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Comparing Financial Aid Awards and Aid Packages",
-    "url": "https://www.youtube.com/watch?v=ytACOMP19XX",
-    "type": "YouTube",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 29 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/29-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytACOMP19XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of comparing financial aid awards and aid packages."
+    "desc": "Comprehensive Chapter 29 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Pre-Health/Pre-Med Track Core Requirements",
-    "url": "https://www.ascendprep.edu/modules/pre-health-pre-med-track-core-requirements-practice",
-    "type": "App",
+    "cat": "Physical Sciences",
+    "title": "OpenStax Astronomy 2e - Chapter 30 Reading",
+    "url": "https://openstax.org/books/astronomy-2e/pages/30-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on pre-health/pre-med track core requirements. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 30 reading from the free, peer-reviewed OpenStax Astronomy 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Pre-Health/Pre-Med Track Core Requirements",
-    "url": "https://www.ascendprep.edu/guides/pre-health-pre-med-track-core-requirements-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down pre-health/pre-med track core requirements with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Pre-Health/Pre-Med Track Core Requirements",
-    "url": "https://www.youtube.com/watch?v=ytAPRE-20XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAPRE-20XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of pre-health/pre-med track core requirements."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Exploring BS/MD Dual Degree Pathway Programs",
-    "url": "https://www.ascendprep.edu/modules/exploring-bs-md-dual-degree-pathway-programs-practice",
-    "type": "Course",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on exploring bs/md dual degree pathway programs. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Exploring BS/MD Dual Degree Pathway Programs",
-    "url": "https://www.ascendprep.edu/guides/exploring-bs-md-dual-degree-pathway-programs-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down exploring bs/md dual degree pathway programs with diagrams and examples."
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Exploring BS/MD Dual Degree Pathway Programs",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL21XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAEXPL21XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of exploring bs/md dual degree pathway programs."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Seeking Clinical Shadowing Opportunities as a Student",
-    "url": "https://www.ascendprep.edu/modules/seeking-clinical-shadowing-opportunities-as-a-student-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on seeking clinical shadowing opportunities as a student. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Seeking Clinical Shadowing Opportunities as a Student",
-    "url": "https://www.ascendprep.edu/guides/seeking-clinical-shadowing-opportunities-as-a-student-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down seeking clinical shadowing opportunities as a student with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Seeking Clinical Shadowing Opportunities as a Student",
-    "url": "https://www.youtube.com/watch?v=ytASEEK22XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytASEEK22XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of seeking clinical shadowing opportunities as a student."
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Securing Hospital Volunteering Roles for Pre-Health",
-    "url": "https://www.ascendprep.edu/modules/securing-hospital-volunteering-roles-for-pre-health-practice",
-    "type": "Course",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on securing hospital volunteering roles for pre-health. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Securing Hospital Volunteering Roles for Pre-Health",
-    "url": "https://www.ascendprep.edu/guides/securing-hospital-volunteering-roles-for-pre-health-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down securing hospital volunteering roles for pre-health with diagrams and examples."
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Securing Hospital Volunteering Roles for Pre-Health",
-    "url": "https://www.youtube.com/watch?v=ytASECU23XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytASECU23XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of securing hospital volunteering roles for pre-health."
+    "difficulty": "AP / Intermediate",
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Researching Summer Undergraduate Research Programs",
-    "url": "https://www.ascendprep.edu/modules/researching-summer-undergraduate-research-programs-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "OpenStax Precalculus 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/precalculus-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on researching summer undergraduate research programs. Features exercises and self-assessments."
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Precalculus 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Researching Summer Undergraduate Research Programs",
-    "url": "https://www.ascendprep.edu/guides/researching-summer-undergraduate-research-programs-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 1 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/1-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down researching summer undergraduate research programs with diagrams and examples."
+    "desc": "Comprehensive Chapter 1 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Researching Summer Undergraduate Research Programs",
-    "url": "https://www.youtube.com/watch?v=ytARESE24XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 2 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/2-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytARESE24XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of researching summer undergraduate research programs."
+    "desc": "Comprehensive Chapter 2 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Essential Pre-Med Core Competencies (AAMC)",
-    "url": "https://www.ascendprep.edu/modules/essential-pre-med-core-competencies-aamc-practice",
-    "type": "Course",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 3 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/3-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on essential pre-med core competencies (aamc). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 3 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Essential Pre-Med Core Competencies (AAMC)",
-    "url": "https://www.ascendprep.edu/guides/essential-pre-med-core-competencies-aamc-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 4 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/4-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down essential pre-med core competencies (aamc) with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 4 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Essential Pre-Med Core Competencies (AAMC)",
-    "url": "https://www.youtube.com/watch?v=ytAESSE25XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 5 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/5-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAESSE25XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of essential pre-med core competencies (aamc)."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 5 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Professionalism and Ethics for Aspiring Doctors",
-    "url": "https://www.ascendprep.edu/modules/professionalism-and-ethics-for-aspiring-doctors-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 6 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/6-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on professionalism and ethics for aspiring doctors. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 6 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Professionalism and Ethics for Aspiring Doctors",
-    "url": "https://www.ascendprep.edu/guides/professionalism-and-ethics-for-aspiring-doctors-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 7 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/7-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down professionalism and ethics for aspiring doctors with diagrams and examples."
+    "desc": "Comprehensive Chapter 7 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Professionalism and Ethics for Aspiring Doctors",
-    "url": "https://www.youtube.com/watch?v=ytAPROF26XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 8 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/8-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytAPROF26XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of professionalism and ethics for aspiring doctors."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 8 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: College Interview Prep: Common Questions",
-    "url": "https://www.ascendprep.edu/modules/college-interview-prep-common-questions-practice",
-    "type": "Course",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 9 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/9-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on college interview prep: common questions. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 9 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to College Interview Prep: Common Questions",
-    "url": "https://www.ascendprep.edu/guides/college-interview-prep-common-questions-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 10 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/10-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down college interview prep: common questions with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 10 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: College Interview Prep: Common Questions",
-    "url": "https://www.youtube.com/watch?v=ytACOLL27XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 11 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/11-introduction",
+    "type": "Book",
     "free": true,
-    "ytId": "ytACOLL27XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of college interview prep: common questions."
+    "desc": "Comprehensive Chapter 11 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Preparing for Multiple Mini Interviews (MMI)",
-    "url": "https://www.ascendprep.edu/modules/preparing-for-multiple-mini-interviews-mmi-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 12 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/12-introduction",
+    "type": "Book",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on preparing for multiple mini interviews (mmi). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive Chapter 12 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Preparing for Multiple Mini Interviews (MMI)",
-    "url": "https://www.ascendprep.edu/guides/preparing-for-multiple-mini-interviews-mmi-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "OpenStax Algebra and Trigonometry 2e - Chapter 13 Reading",
+    "url": "https://openstax.org/books/algebra-and-trigonometry-2e/pages/13-introduction",
+    "type": "Book",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down preparing for multiple mini interviews (mmi) with diagrams and examples."
+    "desc": "Comprehensive Chapter 13 reading from the free, peer-reviewed OpenStax Algebra and Trigonometry 2e textbook, covering core concepts for pre-health and science students."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Preparing for Multiple Mini Interviews (MMI)",
-    "url": "https://www.youtube.com/watch?v=ytAPREP28XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: p-values: What they are and how to interpret them",
+    "url": "https://www.youtube.com/watch?v=vemZtEM63GY",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytAPREP28XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of preparing for multiple mini interviews (mmi)."
+    "desc": "A wonderfully clear, step-by-step conceptual guide to understanding and interpreting p-values in clinical and scientific research.",
+    "ytId": "vemZtEM63GY"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Navigating the CasPer Situational Judgment Test",
-    "url": "https://www.ascendprep.edu/modules/navigating-the-casper-situational-judgment-test-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "StatQuest: One or Two Tailed P-Values",
+    "url": "https://www.youtube.com/watch?v=bsZGt-caXO4",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on navigating the casper situational judgment test. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "Understand the difference between one-tailed and two-tailed p-values, and when to use each in scientific hypotheses.",
+    "ytId": "bsZGt-caXO4"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Navigating the CasPer Situational Judgment Test",
-    "url": "https://www.ascendprep.edu/guides/navigating-the-casper-situational-judgment-test-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: p-hacking and power calculations",
+    "url": "https://www.youtube.com/watch?v=UFhJefdVCjE",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down navigating the casper situational judgment test with diagrams and examples."
+    "desc": "An essential guide to avoiding false positives, identifying p-hacking, and calculating statistical power.",
+    "ytId": "UFhJefdVCjE"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Navigating the CasPer Situational Judgment Test",
-    "url": "https://www.youtube.com/watch?v=ytANAVI29XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: R-squared, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=2AQKmw14mHM",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytANAVI29XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of navigating the casper situational judgment test."
+    "difficulty": "AP / Intermediate",
+    "desc": "Learn how R-squared quantifies the proportion of variance explained by a regression model, in simple terms.",
+    "ytId": "2AQKmw14mHM"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Finding Pre-Med Support Groups and Pre-Health Advising",
-    "url": "https://www.ascendprep.edu/modules/finding-pre-med-support-groups-and-pre-health-advising-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "StatQuest: The Essence of Linear Regression!!!",
+    "url": "https://www.youtube.com/watch?v=aFDOzpTeg0s",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on finding pre-med support groups and pre-health advising. Features exercises and self-assessments."
+    "desc": "The conceptual foundations of fitting a line to data using the least squares method and calculating residuals.",
+    "ytId": "aFDOzpTeg0s"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Finding Pre-Med Support Groups and Pre-Health Advising",
-    "url": "https://www.ascendprep.edu/guides/finding-pre-med-support-groups-and-pre-health-advising-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: Linear Regression, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=7ArmBVF2dCs",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down finding pre-med support groups and pre-health advising with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Step-by-step walkthrough of simple and multiple linear regression, interpreting coefficients, and finding p-values.",
+    "ytId": "7ArmBVF2dCs"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Finding Pre-Med Support Groups and Pre-Health Advising",
-    "url": "https://www.youtube.com/watch?v=ytAFIND30XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: Multiple Linear Regression, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=dQNpSa-ax4Y",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytAFIND30XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of finding pre-med support groups and pre-health advising."
+    "difficulty": "AP / Intermediate",
+    "desc": "An intuitive introduction to predicting dependent outcomes using multiple independent predictors simultaneously.",
+    "ytId": "dQNpSa-ax4Y"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Understanding the Role of Pre-Med Committees",
-    "url": "https://www.ascendprep.edu/modules/understanding-the-role-of-pre-med-committees-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "StatQuest: Logistic Regression, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=yIYKR4sgzI8",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on understanding the role of pre-med committees. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "A clear breakdown of logistic regression, fitting a sigmoid curve to binary data, and clinical diagnostic applications.",
+    "ytId": "yIYKR4sgzI8"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Understanding the Role of Pre-Med Committees",
-    "url": "https://www.ascendprep.edu/guides/understanding-the-role-of-pre-med-committees-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: Logistic Regression Details Pt1: Coefficients",
+    "url": "https://www.youtube.com/watch?v=vN5cNN2-HWE",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down understanding the role of pre-med committees with diagrams and examples."
+    "desc": "The mathematics behind logistic regression coefficients, log-odds, and interpreting raw outputs.",
+    "ytId": "vN5cNN2-HWE"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Understanding the Role of Pre-Med Committees",
-    "url": "https://www.youtube.com/watch?v=ytAUNDE31XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: Logistic Regression Details Pt3: R-squared and p-value",
+    "url": "https://www.youtube.com/watch?v=xxFYro8QuXA",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytAUNDE31XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of understanding the role of pre-med committees."
+    "desc": "Evaluating binary model fits using McFadden's pseudo-R-squared and significance testing.",
+    "ytId": "xxFYro8QuXA"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Choosing a Major: Pre-Med vs Biology vs Humanities",
-    "url": "https://www.ascendprep.edu/modules/choosing-a-major-pre-med-vs-biology-vs-humanities-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "StatQuest: Odds and Log(Odds), Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=ARfXDSK0e9s",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on choosing a major: pre-med vs biology vs humanities. Features exercises and self-assessments."
+    "desc": "Demystifying probability, odds, and log-odds, which are essential foundations for clinical risk assessment.",
+    "ytId": "ARfXDSK0e9s"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Choosing a Major: Pre-Med vs Biology vs Humanities",
-    "url": "https://www.ascendprep.edu/guides/choosing-a-major-pre-med-vs-biology-vs-humanities-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: Odds Ratios, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=8nm0G-1uJzA",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down choosing a major: pre-med vs biology vs humanities with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "How to calculate and interpret odds ratios (OR) in case-control epidemiological studies.",
+    "ytId": "8nm0G-1uJzA"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Choosing a Major: Pre-Med vs Biology vs Humanities",
-    "url": "https://www.youtube.com/watch?v=ytACHOO32XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: ROC and AUC, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=4jRBRDbJemM",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytACHOO32XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of choosing a major: pre-med vs biology vs humanities."
+    "difficulty": "AP / Intermediate",
+    "desc": "Receiver Operating Characteristic (ROC) curves and Area Under Curve (AUC) metrics for evaluating diagnostic test accuracy.",
+    "ytId": "4jRBRDbJemM"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Balancing STEM GPA and Extracurriculars",
-    "url": "https://www.ascendprep.edu/modules/balancing-stem-gpa-and-extracurriculars-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "StatQuest: Sensitivity and Specificity, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=vP06a_3tw0I",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on balancing stem gpa and extracurriculars. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "A clear conceptual guide to sensitivity (true positive rate) and specificity (true negative rate) in medical tests.",
+    "ytId": "vP06a_3tw0I"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Balancing STEM GPA and Extracurriculars",
-    "url": "https://www.ascendprep.edu/guides/balancing-stem-gpa-and-extracurriculars-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: Confusion Matrix, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=Kdsp6DqY0l0",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down balancing stem gpa and extracurriculars with diagrams and examples."
+    "desc": "Understanding true positives, false positives, true negatives, and false negatives in classification matrices.",
+    "ytId": "Kdsp6DqY0l0"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Balancing STEM GPA and Extracurriculars",
-    "url": "https://www.youtube.com/watch?v=ytABALA33XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: The T-Test, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=5D1gV3Z0E44",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytABALA33XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of balancing stem gpa and extracurriculars."
+    "difficulty": "AP / Intermediate",
+    "desc": "How Student's t-test compares the means of two groups relative to their standard deviations and sample sizes.",
+    "ytId": "5D1gV3Z0E44"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Public Health vs Clinical Medicine Career Paths",
-    "url": "https://www.ascendprep.edu/modules/public-health-vs-clinical-medicine-career-paths-practice",
-    "type": "App",
+    "cat": "Research Methods",
+    "title": "StatQuest: ANOVA, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=FgfzS9B-79g",
+    "type": "YouTube",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on public health vs clinical medicine career paths. Features exercises and self-assessments."
+    "desc": "An intuitive introduction to One-Way Analysis of Variance (ANOVA) for comparing multiple group means.",
+    "ytId": "FgfzS9B-79g"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Public Health vs Clinical Medicine Career Paths",
-    "url": "https://www.ascendprep.edu/guides/public-health-vs-clinical-medicine-career-paths-handbook",
-    "type": "Article",
+    "cat": "Research Methods",
+    "title": "StatQuest: Decision Trees, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=7VeUPuFGJHk",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down public health vs clinical medicine career paths with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Understanding classification and regression trees, node splitting criteria (Gini impurity), and decision branches.",
+    "ytId": "7VeUPuFGJHk"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Public Health vs Clinical Medicine Career Paths",
-    "url": "https://www.youtube.com/watch?v=ytAPUBL34XX",
+    "cat": "Research Methods",
+    "title": "StatQuest: Random Forests, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=J4Wdy0Wc_xQ",
     "type": "YouTube",
     "free": true,
-    "ytId": "ytAPUBL34XX",
     "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of public health vs clinical medicine career paths."
+    "desc": "How ensemble learning works, combining multiple decision trees, bagging, and out-of-bag error evaluation.",
+    "ytId": "J4Wdy0Wc_xQ"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Explore Careers in Dentistry and Orthodontics",
-    "url": "https://www.ascendprep.edu/modules/explore-careers-in-dentistry-and-orthodontics-practice",
-    "type": "Course",
+    "cat": "Research Methods",
+    "title": "StatQuest: Naive Bayes, Clearly Explained!!!",
+    "url": "https://www.youtube.com/watch?v=O2L2Uv9pHDA",
+    "type": "YouTube",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on explore careers in dentistry and orthodontics. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "An intuitive explanation of Naive Bayes classifiers based on Bayes' theorem, widely used in clinical diagnostics.",
+    "ytId": "O2L2Uv9pHDA"
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Explore Careers in Dentistry and Orthodontics",
-    "url": "https://www.ascendprep.edu/guides/explore-careers-in-dentistry-and-orthodontics-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Math: Heart of Algebra Practice",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-math-heart-of-algebra",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down explore careers in dentistry and orthodontics with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Personalized drills covering linear equations, systems of linear equations, and linear inequalities in algebra."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Explore Careers in Dentistry and Orthodontics",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL35XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Math: Problem Solving and Data Analysis",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-math-problem-solving",
+    "type": "Course",
     "free": true,
-    "ytId": "ytAEXPL35XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of explore careers in dentistry and orthodontics."
+    "difficulty": "Introductory",
+    "desc": "Interactive lessons covering ratios, proportions, percentages, scatterplots, probability, and descriptive statistics."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Explore Careers as a Physician Assistant (PA)",
-    "url": "https://www.ascendprep.edu/modules/explore-careers-as-a-physician-assistant-pa-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Math: Passport to Advanced Math",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-math-passport-to-advanced-math",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on explore careers as a physician assistant (pa). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Practice with quadratic equations, exponential functions, polynomials, and rational expressions."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Explore Careers as a Physician Assistant (PA)",
-    "url": "https://www.ascendprep.edu/guides/explore-careers-as-a-physician-assistant-pa-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Math: Additional Topics in Math",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-math-additional-topics",
+    "type": "Course",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down explore careers as a physician assistant (pa) with diagrams and examples."
+    "desc": "Essential geometry, trigonometry, and complex numbers topics built specifically for the SAT framework."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Explore Careers as a Physician Assistant (PA)",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL36XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Reading and Writing: Information and Ideas",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-reading-writing-information-ideas",
+    "type": "Course",
     "free": true,
-    "ytId": "ytAEXPL36XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of explore careers as a physician assistant (pa)."
+    "desc": "Drills for analyzing central themes, interpreting evidence-based statements, and summarizing passages."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Explore Careers in Nursing and Nurse Practitioner",
-    "url": "https://www.ascendprep.edu/modules/explore-careers-in-nursing-and-nurse-practitioner-practice",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Reading and Writing: Rhetoric Strategies",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-reading-writing-rhetoric",
     "type": "Course",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on explore careers in nursing and nurse practitioner. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Practice with text structure, point of view, transition words, and author's purpose questions."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Explore Careers in Nursing and Nurse Practitioner",
-    "url": "https://www.ascendprep.edu/guides/explore-careers-in-nursing-and-nurse-practitioner-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Reading and Writing: Synthesis Questions",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-reading-writing-synthesis",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down explore careers in nursing and nurse practitioner with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Learn how to synthesize arguments across multiple passages or integrate visual charts with text arguments."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Explore Careers in Nursing and Nurse Practitioner",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL37XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Reading and Writing: Vocabulary in Context",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/at-reading-writing-vocabulary",
+    "type": "Course",
     "free": true,
-    "ytId": "ytAEXPL37XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of explore careers in nursing and nurse practitioner."
+    "difficulty": "Introductory",
+    "desc": "Master high-frequency SAT vocabulary and techniques to determine word meanings from sentence context."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Explore Careers in Pharmacy and Pharmacology",
-    "url": "https://www.ascendprep.edu/modules/explore-careers-in-pharmacy-and-pharmacology-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Official Practice Test 1 Walkthrough",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-practice-test-1",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on explore careers in pharmacy and pharmacology. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Full explanations and video walkthroughs of the official College Board SAT Practice Test 1."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Explore Careers in Pharmacy and Pharmacology",
-    "url": "https://www.ascendprep.edu/guides/explore-careers-in-pharmacy-and-pharmacology-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Official Practice Test 2 Walkthrough",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-practice-test-2",
+    "type": "Course",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down explore careers in pharmacy and pharmacology with diagrams and examples."
+    "desc": "Full explanations and video walkthroughs of the official College Board SAT Practice Test 2."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Explore Careers in Pharmacy and Pharmacology",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL38XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Official Practice Test 3 Walkthrough",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-practice-test-3",
+    "type": "Course",
     "free": true,
-    "ytId": "ytAEXPL38XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of explore careers in pharmacy and pharmacology."
+    "difficulty": "Introductory",
+    "desc": "Full explanations and video walkthroughs of the official College Board SAT Practice Test 3."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Explore Careers in Physical and Occupational Therapy",
-    "url": "https://www.ascendprep.edu/modules/explore-careers-in-physical-and-occupational-therapy-practice",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Official Practice Test 4 Walkthrough",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-practice-test-4",
     "type": "Course",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on explore careers in physical and occupational therapy. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Full explanations and video walkthroughs of the official College Board SAT Practice Test 4."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Explore Careers in Physical and Occupational Therapy",
-    "url": "https://www.ascendprep.edu/guides/explore-careers-in-physical-and-occupational-therapy-handbook",
-    "type": "Article",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT 3-Month Study Schedule and Strategy",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-study-schedule",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down explore careers in physical and occupational therapy with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Comprehensive planners and recommended daily routines for structuring a highly effective 3-month SAT prep window."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Explore Careers in Physical and Occupational Therapy",
-    "url": "https://www.youtube.com/watch?v=ytAEXPL39XX",
-    "type": "YouTube",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Test-Day Mindset and Packing Tips",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-test-day-tips",
+    "type": "Course",
     "free": true,
-    "ytId": "ytAEXPL39XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of explore careers in physical and occupational therapy."
+    "desc": "Psychological and physical preparation strategies for managing test anxiety and optimizing concentration on test day."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Medical Sociology: Socioeconomic Barriers to Healthcare",
-    "url": "https://www.ascendprep.edu/modules/medical-sociology-socioeconomic-barriers-to-healthcare-practice",
-    "type": "App",
+    "cat": "Test Prep",
+    "title": "Khan Academy SAT Calculator Policy and Desmos Guide",
+    "url": "https://www.khanacademy.org/test-prep/sat/sat-practice/sat-calculator",
+    "type": "Course",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on medical sociology: socioeconomic barriers to healthcare. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "How to use the built-in Desmos graphing calculator on the digital SAT to solve complex algebra and geometry equations rapidly."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Medical Sociology: Socioeconomic Barriers to Healthcare",
-    "url": "https://www.ascendprep.edu/guides/medical-sociology-socioeconomic-barriers-to-healthcare-handbook",
+    "title": "AAMC Medical School Admission Requirements Guide",
+    "url": "https://students-residents.aamc.org/applying-medical-school/msar/",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down medical sociology: socioeconomic barriers to healthcare with diagrams and examples."
+    "desc": "Official portal to navigate prerequisite coursework, average GPA/scores, and timelines of individual medical schools."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Medical Sociology: Socioeconomic Barriers to Healthcare",
-    "url": "https://www.youtube.com/watch?v=ytAMEDI40XX",
-    "type": "YouTube",
+    "title": "AAMC Anatomy of an Applicant Profiles",
+    "url": "https://students-residents.aamc.org/applying-medical-school/anatomy-applicant/",
+    "type": "Article",
     "free": true,
-    "ytId": "ytAMEDI40XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of medical sociology: socioeconomic barriers to healthcare."
+    "difficulty": "Introductory",
+    "desc": "Real-world applicant case studies demonstrating how diverse students exhibited the core competencies through their activities."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Global Health Initiatives and Volunteering Ethically",
-    "url": "https://www.ascendprep.edu/modules/global-health-initiatives-and-volunteering-ethically-practice",
-    "type": "Course",
+    "title": "AAMC Fee Assistance Program Guidelines",
+    "url": "https://students-residents.aamc.org/applying-medical-school/fee-assistance-program/",
+    "type": "Article",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on global health initiatives and volunteering ethically. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Detailed eligibility rules and benefits of the AAMC financial assistance program for MCAT materials and application fees."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Global Health Initiatives and Volunteering Ethically",
-    "url": "https://www.ascendprep.edu/guides/global-health-initiatives-and-volunteering-ethically-handbook",
+    "title": "AAMC Premed Calendar and Timeline Roadmap",
+    "url": "https://students-residents.aamc.org/applying-medical-school/premed-calendar/",
     "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down global health initiatives and volunteering ethically with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "The recommended chronologies for prerequisite courses, extracurricular milestones, clinical hours, and exam timelines."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Global Health Initiatives and Volunteering Ethically",
-    "url": "https://www.youtube.com/watch?v=ytAGLOB41XX",
-    "type": "YouTube",
+    "title": "AAMC Summer Undergraduate Research Programs SURP",
+    "url": "https://students-residents.aamc.org/applying-medical-school/surp/",
+    "type": "Article",
     "free": true,
-    "ytId": "ytAGLOB41XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of global health initiatives and volunteering ethically."
+    "difficulty": "Introductory",
+    "desc": "The official directory of summer science research opportunities for undergraduate and pre-health students."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Understanding health insurance systems (Medicare, Medicaid)",
-    "url": "https://www.ascendprep.edu/modules/understanding-health-insurance-systems-medicare-medicaid-practice",
-    "type": "App",
+    "title": "FAFSA Federal Student Aid Portal Guide",
+    "url": "https://studentaid.gov/h/apply-for-aid/fafsa",
+    "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on understanding health insurance systems (medicare, medicaid). Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The official gateway to register, complete, and submit the Free Application for Federal Student Aid form."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Understanding health insurance systems (Medicare, Medicaid)",
-    "url": "https://www.ascendprep.edu/guides/understanding-health-insurance-systems-medicare-medicaid-handbook",
+    "title": "CSS Profile Private College Financial Aid Guide",
+    "url": "https://cssprofile.collegeboard.org/apply-for-aid",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down understanding health insurance systems (medicare, medicaid) with diagrams and examples."
+    "desc": "The official portal for private college financial aid registration and supplemental asset disclosures."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Understanding health insurance systems (Medicare, Medicaid)",
-    "url": "https://www.youtube.com/watch?v=ytAUNDE42XX",
-    "type": "YouTube",
+    "title": "US BLS Physician and Surgeon Career Outlook",
+    "url": "https://www.bls.gov/ooh/healthcare/physicians-and-surgeons.htm",
+    "type": "Article",
     "free": true,
-    "ytId": "ytAUNDE42XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of understanding health insurance systems (medicare, medicaid)."
+    "desc": "Official labor statistics on wage distributions, education requirements, and career growth projections for physicians."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Transitioning from High School to College Academics",
-    "url": "https://www.ascendprep.edu/modules/transitioning-from-high-school-to-college-academics-practice",
-    "type": "Course",
+    "title": "US BLS Dentist Career Outlook and Licensing",
+    "url": "https://www.bls.gov/ooh/healthcare/dentists.htm",
+    "type": "Article",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on transitioning from high school to college academics. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Official labor statistics on dentist salaries, clinical specialties, and licensing pathways."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Transitioning from High School to College Academics",
-    "url": "https://www.ascendprep.edu/guides/transitioning-from-high-school-to-college-academics-handbook",
+    "title": "US BLS Physician Assistant Career Growth Profile",
+    "url": "https://www.bls.gov/ooh/healthcare/physician-assistants.htm",
     "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down transitioning from high school to college academics with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Official labor statistics outlining the rapidly growing demand, salary curves, and clinical roles of Physician Assistants."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Transitioning from High School to College Academics",
-    "url": "https://www.youtube.com/watch?v=ytATRAN43XX",
-    "type": "YouTube",
+    "title": "US BLS Nurse Practitioner Clinical Scope Outlook",
+    "url": "https://www.bls.gov/ooh/healthcare/nurse-practitioners.htm",
+    "type": "Article",
     "free": true,
-    "ytId": "ytATRAN43XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of transitioning from high school to college academics."
+    "difficulty": "Introductory",
+    "desc": "Official labor statistics detailing advanced practice nursing specialties, practice autonomy, and wage trends."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Time Management for Busy College Pre-Med Students",
-    "url": "https://www.ascendprep.edu/modules/time-management-for-busy-college-pre-med-students-practice",
-    "type": "App",
+    "title": "CDC Public Health: Tuberculosis",
+    "url": "https://www.cdc.gov/tb",
+    "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on time management for busy college pre-med students. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "Learn about Tuberculosis transmission, symptoms, diagnosis, and treatment guidelines from the CDC."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Time Management for Busy College Pre-Med Students",
-    "url": "https://www.ascendprep.edu/guides/time-management-for-busy-college-pre-med-students-handbook",
+    "title": "CDC Public Health: Influenza",
+    "url": "https://www.cdc.gov/flu",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down time management for busy college pre-med students with diagrams and examples."
+    "desc": "The CDC guide to influenza viruses, seasonal flu prevention, and vaccine mechanisms."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Time Management for Busy College Pre-Med Students",
-    "url": "https://www.youtube.com/watch?v=ytATIME44XX",
-    "type": "YouTube",
+    "title": "CDC Public Health: Diabetes Basics",
+    "url": "https://www.cdc.gov/diabetes",
+    "type": "Article",
     "free": true,
-    "ytId": "ytATIME44XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of time management for busy college pre-med students."
+    "difficulty": "Introductory",
+    "desc": "An overview of Type 1 and Type 2 diabetes, risk factors, and management guidelines."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Dealing with Burnout and Finding Support",
-    "url": "https://www.ascendprep.edu/modules/dealing-with-burnout-and-finding-support-practice",
-    "type": "Course",
+    "title": "CDC Public Health: Heart Disease Info",
+    "url": "https://www.cdc.gov/heartdisease",
+    "type": "Article",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on dealing with burnout and finding support. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The biology of heart disease, cardiovascular health, and prevention strategies from the CDC."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Dealing with Burnout and Finding Support",
-    "url": "https://www.ascendprep.edu/guides/dealing-with-burnout-and-finding-support-handbook",
+    "title": "CDC Public Health: Stroke Signs & Prevention",
+    "url": "https://www.cdc.gov/stroke",
     "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down dealing with burnout and finding support with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "Learn how strokes occur, signs of stroke (F.A.S.T.), and preventive clinical measures."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Dealing with Burnout and Finding Support",
-    "url": "https://www.youtube.com/watch?v=ytADEAL45XX",
-    "type": "YouTube",
+    "title": "CDC Public Health: Cancer Screening",
+    "url": "https://www.cdc.gov/cancer",
+    "type": "Article",
     "free": true,
-    "ytId": "ytADEAL45XX",
     "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of dealing with burnout and finding support."
+    "desc": "An overview of cancer types, screening recommendations, and general oncology context from the CDC."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Networking with College Alumni and Faculty",
-    "url": "https://www.ascendprep.edu/modules/networking-with-college-alumni-and-faculty-practice",
-    "type": "App",
+    "title": "CDC Public Health: Asthma Guidance",
+    "url": "https://www.cdc.gov/asthma",
+    "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on networking with college alumni and faculty. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The immunology of asthma, triggers, clinical management, and public health guidelines."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Networking with College Alumni and Faculty",
-    "url": "https://www.ascendprep.edu/guides/networking-with-college-alumni-and-faculty-handbook",
+    "title": "CDC Public Health: ADHD Profile",
+    "url": "https://www.cdc.gov/ncbddd/adhd",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down networking with college alumni and faculty with diagrams and examples."
+    "desc": "Understand ADHD symptoms, developmental milestones, and clinical diagnostic guidelines."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Networking with College Alumni and Faculty",
-    "url": "https://www.youtube.com/watch?v=ytANETW46XX",
-    "type": "YouTube",
+    "title": "CDC Public Health: Hepatitis Prevention",
+    "url": "https://www.cdc.gov/hepatitis",
+    "type": "Article",
     "free": true,
-    "ytId": "ytANETW46XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of networking with college alumni and faculty."
+    "difficulty": "Introductory",
+    "desc": "Learn about viral hepatitis (A, B, and C), transmission, and immunizations from the CDC."
   },
   {
     "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Setting Up a LinkedIn Profile for Academic Success",
-    "url": "https://www.ascendprep.edu/modules/setting-up-a-linkedin-profile-for-academic-success-practice",
-    "type": "Course",
+    "title": "CDC Public Health: Sleep Hygiene",
+    "url": "https://www.cdc.gov/sleep",
+    "type": "Article",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on setting up a linkedin profile for academic success. Features exercises and self-assessments."
+    "difficulty": "Introductory",
+    "desc": "The importance of sleep hygiene, recommended hours, and public health data on sleep disorders."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Setting Up a LinkedIn Profile for Academic Success",
-    "url": "https://www.ascendprep.edu/guides/setting-up-a-linkedin-profile-for-academic-success-handbook",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Mitochondrion",
+    "url": "https://en.wikipedia.org/wiki/Mitochondrion",
     "type": "Article",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down setting up a linkedin profile for academic success with diagrams and examples."
-  },
-  {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Setting Up a LinkedIn Profile for Academic Success",
-    "url": "https://www.youtube.com/watch?v=ytASETT47XX",
-    "type": "YouTube",
-    "free": true,
-    "ytId": "ytASETT47XX",
-    "difficulty": "Undergrad / Advanced",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of setting up a linkedin profile for academic success."
+    "desc": "A highly detailed educational look at mitochondrial structure, ATP synthesis, and cellular roles."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Writing Professional Emails to Researchers and Mentors",
-    "url": "https://www.ascendprep.edu/modules/writing-professional-emails-to-researchers-and-mentors-practice",
-    "type": "App",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Cell membrane",
+    "url": "https://en.wikipedia.org/wiki/Cell_membrane",
+    "type": "Article",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "An interactive study module and practice dashboard focused on writing professional emails to researchers and mentors. Features exercises and self-assessments."
+    "desc": "An overview of the lipid bilayer, selective permeability, active transport, and cell communication."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Writing Professional Emails to Researchers and Mentors",
-    "url": "https://www.ascendprep.edu/guides/writing-professional-emails-to-researchers-and-mentors-handbook",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: DNA replication",
+    "url": "https://en.wikipedia.org/wiki/DNA_replication",
     "type": "Article",
     "free": true,
-    "difficulty": "Introductory",
-    "desc": "A detailed academic article and reference sheet breaking down writing professional emails to researchers and mentors with diagrams and examples."
+    "difficulty": "AP / Intermediate",
+    "desc": "Understand the molecular machinery behind semiconservative DNA replication, leading and lagging strands."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Writing Professional Emails to Researchers and Mentors",
-    "url": "https://www.youtube.com/watch?v=ytAWRIT48XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Transcription",
+    "url": "https://en.wikipedia.org/wiki/Transcription_(biology)",
+    "type": "Article",
     "free": true,
-    "ytId": "ytAWRIT48XX",
-    "difficulty": "Introductory",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of writing professional emails to researchers and mentors."
+    "difficulty": "AP / Intermediate",
+    "desc": "Learn about RNA polymerase, promoter regions, transcription factors, and mRNA synthesis."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Interactive Practice: Developing Resilience and Stress Management Skills",
-    "url": "https://www.ascendprep.edu/modules/developing-resilience-and-stress-management-skills-practice",
-    "type": "Course",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Translation",
+    "url": "https://en.wikipedia.org/wiki/Translation_(biology)",
+    "type": "Article",
     "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "An interactive study module and practice dashboard focused on developing resilience and stress management skills. Features exercises and self-assessments."
+    "difficulty": "AP / Intermediate",
+    "desc": "A deep dive into codon-anticodon pairing, ribosomes, tRNA, and polypeptide chain synthesis."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Comprehensive Guide to Developing Resilience and Stress Management Skills",
-    "url": "https://www.ascendprep.edu/guides/developing-resilience-and-stress-management-skills-handbook",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Mitosis",
+    "url": "https://en.wikipedia.org/wiki/Mitosis",
     "type": "Article",
     "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "A detailed academic article and reference sheet breaking down developing resilience and stress management skills with diagrams and examples."
+    "difficulty": "Introductory",
+    "desc": "A visual and descriptive guide to the phases of mitotic nuclear division in eukaryotic cells."
   },
   {
-    "cat": "Admissions & Planning",
-    "title": "Video Crash Course: Developing Resilience and Stress Management Skills",
-    "url": "https://www.youtube.com/watch?v=ytADEVE49XX",
-    "type": "YouTube",
+    "cat": "Life Sciences",
+    "title": "Wikipedia: Meiosis",
+    "url": "https://en.wikipedia.org/wiki/Meiosis",
+    "type": "Article",
     "free": true,
-    "ytId": "ytADEVE49XX",
-    "difficulty": "AP / Intermediate",
-    "desc": "High-yield video lesson explaining the core principles and common misconceptions of developing resilience and stress management skills."
+    "difficulty": "Introductory",
+    "desc": "Explore the biological significance of meiotic division, crossing over, and genetic diversity."
   }
 ];
