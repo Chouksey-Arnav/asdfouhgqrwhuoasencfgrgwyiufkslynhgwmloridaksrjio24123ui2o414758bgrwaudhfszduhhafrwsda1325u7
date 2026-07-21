@@ -2934,6 +2934,20 @@ export default function App({ account, onAccountChange }) {
                   <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.length} lessons · {unit.quizCat}</div>
                 </div>
               </div>
+              {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
+                  countdown instead of just a dimmed lock icon — a visible, achievable next step
+                  keeps momentum going into the next section of the pathway. */}
+              {!done&&units[ui+1]&&(()=>{
+                const remaining=unit.lessons.filter(l=>!isLessonComplete(l,pathway[l.id])).length;
+                return(
+                  <div style={{...glass2({padding:'10px 14px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:10}}>
+                    <Sparkles size={13} color={accent} style={{flexShrink:0}}/>
+                    <span style={{fontSize:11.5,color:C.t2,lineHeight:1.5}}>
+                      {remaining} more lesson{remaining===1?'':'s'} here unlocks <strong style={{color:C.t1}}>{units[ui+1].title}</strong> — you're closer than it looks.
+                    </span>
+                  </div>
+                );
+              })()}
               <div style={CC({gap:8})}>
                 {unit.lessons.map((lesson)=>{
                   const state=lessonState(lesson,ui,units);
