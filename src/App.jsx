@@ -42,8 +42,8 @@ import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
-import { play, setSFX } from './lib/sounds';
-import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot } from './lib/celebrate';
+import { play, setSFX, isSFXEnabled } from './lib/sounds';
+import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, celebrateMastery, celebrateStreak, celebrateBonusXP, celebrateJackpot, setConfettiEnabled, isConfettiEnabled } from './lib/celebrate';
 import { awardXP, BONUS_COPY } from './lib/rewards';
 import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
@@ -1443,7 +1443,7 @@ export default function App({ account, onAccountChange }) {
   };
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(true);const [sExamDate,setSExamDate]=useState('');
+  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);const [sExamDate,setSExamDate]=useState('');
   // Settings > "Your Goals" — lets a student revisit/update what onboarding collected (goal,
   // obstacles, study method, things they want to accomplish) instead of it being locked in at
   // signup forever. Buffers are only seeded from `user` when the Edit button is clicked (tSettings()).
@@ -1694,6 +1694,11 @@ export default function App({ account, onAccountChange }) {
     else if(profile.goal==='build_application') goPortfolio('overview');
     else goPrep('quizzes');
     toast.success(pickNudge('welcome_new_user',{name}));
+    // The handoff from the ~30-screen onboarding flow into the real app used to be completely
+    // flat — no different from any other page load — despite being the single biggest payoff
+    // moment in the whole flow. One-time burst, not looped, so it reads as a landing moment.
+    play('achieve');
+    celebrateAchievement();
     tourPendingRef.current=true;
     setJustOnboarded(true);
   },[saveUser,goPrep,goPortfolio,onAccountChange,account]);
@@ -2174,6 +2179,13 @@ export default function App({ account, onAccountChange }) {
     setCoachThreads(list=>list.filter(t=>t.id!==id));
     if(id===activeThreadId){ setActiveThreadId(null); setMsgs([]); }
     try{ await DB.deleteCoachThread(id); }catch(err){console.error('Failed to delete chat thread',err);toast.error('Could not delete that chat.');}
+  }
+
+  async function clearAllChats(){
+    if(!coachThreads.length){ toast('No Iatra conversations to clear.'); return; }
+    if(!window.confirm(`Delete all ${coachThreads.length} Iatra conversation${coachThreads.length===1?'':'s'}? This cannot be undone — your XP, streak, and study progress are unaffected.`))return;
+    setCoachThreads([]);setActiveThreadId(null);setMsgs([]);
+    try{ await DB.clearAllCoachThreads(); toast.success('Iatra chat history cleared.'); }catch(err){console.error('Failed to clear chat history',err);toast.error('Could not clear chat history.');}
   }
 
   function copyMsg(text,i){
@@ -5478,12 +5490,27 @@ export default function App({ account, onAccountChange }) {
               <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
             </div>
           </div>
+          <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Celebration Effects</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Confetti bursts for level-ups, streaks, and achievements</div>
+            </div>
+            <div onClick={()=>{const v=!confettiOn;setConfettiOn(v);setConfettiEnabled(v);}} style={{width:44,height:24,borderRadius:12,background:confettiOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${confettiOn?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:confettiOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
         </div>
 
         <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
+        </div>
+
+        <div style={glass({padding:18})}>
+          <SL>Iatra Chat History</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Clear every saved Iatra conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
+          <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
         </div>
 
         <div style={glass({padding:18})}>
