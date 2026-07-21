@@ -30,7 +30,7 @@ import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getIatraPickPrompt } from './lib/recommend';
-import { scorePathways } from './lib/diagnosticEngine';
+import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueCardsBadge, dueCardsSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
@@ -1311,7 +1311,7 @@ export default function App({ account, onAccountChange }) {
   },[filteredCmds,cmdActiveIdx,runCommand]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
-  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);
+  const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);const [dWhy,setDWhy]=useState(null);
   const [dIntro,setDIntro]=useState(true); // show pathway overview + manual selection before the diagnostic quiz starts
 
   // ── Quiz ────────────────────────────────────────────────────────────────────
@@ -2376,9 +2376,10 @@ export default function App({ account, onAccountChange }) {
 
   // ── Diagnostic ────────────────────────────────────────────────────────────────
   function finalizeDiag(answers){
-    const { top, ranked } = scorePathways(answers);
+    const { top, ranked, vector, scored } = scorePathways(answers);
     setDR(top);
     setDCats(ranked.filter(k=>k!==top).slice(0,2)); // top 2 alternates, shown as "you might also fit"
+    setDWhy(explainMatch(vector, top, { scored })); // reasoning behind the match, not just the label
     setDD(true);
     saveUser({...user,diagnosticResult:top});
   }
@@ -2809,6 +2810,32 @@ export default function App({ account, onAccountChange }) {
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
+
+        {/* Why this path — the actual decision logic (5-axis work-style vector + scenario
+            votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
+        <div style={glass({padding:18})}>
+          <SL>Why {path?.label}</SL>
+          {dWhy?.reasons?.length>0?(
+            <div style={CC({gap:10})}>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:0}}>Your answers leaned toward:</p>
+              <div style={R({gap:8,flexWrap:'wrap'})}>
+                {dWhy.reasons.map(r=>(
+                  <span key={r.axis} style={{...pill(`${path?.accent||accent}18`,path?.accent||accent,{fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}}><Check size={11}/>{r.leaning}</span>
+                ))}
+              </div>
+              {dWhy.confidence&&(
+                <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,margin:'4px 0 0'}}>
+                  {dWhy.confidence.isClear
+                    ?`A clear match — ${path?.label} scored well ahead of every other pathway on your answers.`
+                    :`A closer call — ${PATHS[dWhy.confidence.runnerUp]?.label||'another pathway'} was also a strong fit, so it's worth reading through that one too before committing.`}
+                </p>
+              )}
+            </div>
+          ):(
+            <p style={{fontSize:12.5,color:C.t3,lineHeight:1.6,margin:0}}>{dRes==='exploring'?`${path?.label} is the broad, exploratory track — a solid pick when your answers didn't strongly lean toward one specialty yet, or if you're still deciding.`:`Your answers didn't lean strongly in one direction, but ${path?.label} still came out as your best overall match.`} Any of the pathways below sequence the same core SAT/ACT prep either way, so it's easy to switch later.</p>
+          )}
+        </div>
+
         <div style={{...glass({padding:14}),display:'flex',alignItems:'center',gap:10,background:'rgba(255,255,255,0.02)'}}>
           <Milestone size={14} color={C.t3}/>
           <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
