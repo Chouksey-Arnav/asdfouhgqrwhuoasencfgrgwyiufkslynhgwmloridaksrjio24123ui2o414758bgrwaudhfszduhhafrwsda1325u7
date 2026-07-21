@@ -1143,6 +1143,9 @@ export default function App({ account, onAccountChange }) {
   // genuinely first-time user with "Welcome" instead of the default "Welcome back".
   const [justOnboarded, setJustOnboarded] = useState(false);
   const [sGrade, setSGrade] = useState(''); // settings: grade-stage editor
+  // Dev-only: lets Settings re-open the ~30-screen onboarding wizard to preview it without
+  // touching the signed-in account's saved profile. Remove once onboarding is stable.
+  const [previewOnboarding, setPreviewOnboarding] = useState(false);
 
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
   // Prep and Portfolio each absorb several formerly-top-level tabs; these track
@@ -5076,6 +5079,14 @@ export default function App({ account, onAccountChange }) {
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
         </div>
 
+        {/* Dev-only: preview the first-run onboarding wizard without touching this account's
+            saved profile. Remove this card once onboarding is stable. */}
+        <div style={glass({padding:18})}>
+          <SL>Developer</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Temporary, dev-only: preview the first-run onboarding wizard again. Won't change your saved profile — closing or finishing it just returns you here.</p>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)}><RotateCcw size={14}/>Replay Onboarding</button>
+        </div>
+
         {/* Specialty path */}
         <div data-tour="settings-deep-studytrack" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
@@ -5165,6 +5176,15 @@ export default function App({ account, onAccountChange }) {
 
   // ═══ ONBOARDING ════════════════════════════════════════════════════════════════
   if(!dbReady) return <LoadingScreen/>;
+
+  if(previewOnboarding){
+    return(
+      <ErrorBoundary>
+        <Toaster position="bottom-right"/>
+        <Onboarding account={account} onComplete={()=>setPreviewOnboarding(false)}/>
+      </ErrorBoundary>
+    );
+  }
 
   if(!user){
     return(
