@@ -454,7 +454,7 @@ export const PATHS = {
 
 // ── COURSE → QUIZ CATEGORY MAP ────────────────────────────────────────────────
 // Maps a student's self-reported courses (Settings) to the 3 quiz-library
-// categories, so the Quiz Library and Metabrain Quiz Recommendations can both
+// categories, so the Quiz Library and Iatra Quiz Recommendations can both
 // surface "matches your courses" without duplicating this mapping.
 export const COURSE_CAT_MAP = {
   Biology:'Life Sciences', 'Environmental Science':'Life Sciences', 'Anatomy & Physiology':'Life Sciences',
@@ -465,7 +465,7 @@ export const COURSE_CAT_MAP = {
 };
 
 // ── AI COACH — PATHWAY-SPECIFIC BEHAVIORAL NOTES ─────────────────────────────
-// Short, behavioral (not marketing) guidance injected into the Metabrain system
+// Short, behavioral (not marketing) guidance injected into the Iatra system
 // prompt so the coach's advice matches what's actually realistic/appropriate for
 // a high schooler on each track. Distinct from PATHS[].overview/highlights above.
 // All tracks here (including "exploring") are EXPLORATORY, not commitments —
@@ -881,6 +881,41 @@ export const FLASH_DECKS = {
     { front:'What is sustainability?', back:'Meeting present needs without compromising the ability of future generations to meet their own needs.' },
   ],
 };
+
+// ── FLASHCARD DECK CATEGORIES ────────────────────────────────────────────────────
+// Groups every built-in deck into a category + subcategory (SAT > Math, SAT > Reading &
+// Writing, Science > Biology, etc.) so the Flashcards tab can section decks off instead of
+// showing one long flat list. A deck not listed here (i.e. any student-created deck) falls back
+// to the "My Decks" category in the UI rather than needing an entry added here.
+export const DECK_CATEGORIES = {
+  'Algebra II Essentials':                   { category: 'SAT', subcategory: 'Math' },
+  'SAT Math Strategies':                     { category: 'SAT', subcategory: 'Math' },
+  'Statistics & Data Basics':                { category: 'SAT', subcategory: 'Math' },
+  'SAT Reading & Writing: Grammar Rules':    { category: 'SAT', subcategory: 'Reading & Writing' },
+  'Vocabulary Builder':                      { category: 'SAT', subcategory: 'Reading & Writing' },
+  'Essay Writing Toolkit':                   { category: 'SAT', subcategory: 'Reading & Writing' },
+  'Reading Comprehension Tactics':           { category: 'SAT', subcategory: 'Reading & Writing' },
+  'Biology Basics':                          { category: 'Science', subcategory: 'Biology' },
+  'Anatomy & Physiology Basics':             { category: 'Science', subcategory: 'Biology' },
+  'Genetics & Heredity':                     { category: 'Science', subcategory: 'Biology' },
+  'Chemistry Basics':                        { category: 'Science', subcategory: 'Chemistry' },
+  'Organic Chemistry Foundations':           { category: 'Science', subcategory: 'Chemistry' },
+  'Physics Basics':                          { category: 'Science', subcategory: 'Physics' },
+  'Environmental Science Basics':            { category: 'Science', subcategory: 'Environmental Science' },
+  'U.S. History: Key Events':                { category: 'Social Studies', subcategory: 'History' },
+  'World History Highlights':                { category: 'Social Studies', subcategory: 'History' },
+  'Economics Fundamentals':                  { category: 'Social Studies', subcategory: 'Economics' },
+  'Psychology Basics':                       { category: 'Social Studies', subcategory: 'Psychology' },
+  'Study Skills & Test Strategy':            { category: 'Study Skills', subcategory: 'General' },
+};
+// Display order for the category pill row — deliberately SAT-first since that's the app's core
+// focus, then the broader subject areas, with a "My Decks" bucket (any deck not in the map
+// above, i.e. every student-created deck) always last.
+export const DECK_CATEGORY_ORDER = ['SAT', 'Science', 'Social Studies', 'Study Skills', 'My Decks'];
+export function getDeckCategory(deckName, builtin) {
+  if (!builtin) return { category: 'My Decks', subcategory: 'My Decks' };
+  return DECK_CATEGORIES[deckName] || { category: 'Study Skills', subcategory: 'General' };
+}
 
 // ── US STATES ──────────────────────────────────────────────────────────────────
 // Full state list for the Admissions Calculator's "home state" field, so the

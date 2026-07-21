@@ -103,7 +103,7 @@ db.version(9).stores({
   pathwayGoals: 'pathwayKey, startedAt, targetWeeks',
 });
 
-// v10: Metabrain 2.0 multi-chat — conversations used to live only in a single
+// v10: Iatra multi-chat — conversations used to live only in a single
 // in-memory `msgs` array (reset on every reload). Now every conversation is a
 // row in `coachThreads` (title, timestamps) with its messages in
 // `coachMessages`, so a student can keep several parallel chats (e.g. one for
@@ -121,6 +121,7 @@ export async function saveUser(u) {
   const existing = await db.user.toCollection().first();
   if (existing) await db.user.update(existing.id, u);
   else await db.user.add({ ...u });
+  pushDirty();
 }
 
 // ── Pathway ───────────────────────────────────────────────────────────────────
@@ -137,6 +138,7 @@ export async function getPathway() {
 }
 export async function setLessonDone(lessonId) {
   await db.lessons.put({ lessonId, completedAt: Date.now(), verified: false, studying: false });
+  pushDirty();
 }
 // Called when a student opens a lesson's video/resource — marks it "in progress" without
 // counting toward mastery, so credibility isn't granted just for opening a link.
@@ -144,15 +146,18 @@ export async function startLessonStudy(lessonId) {
   const existing = await db.lessons.get(lessonId);
   if (existing?.verified) return;
   await db.lessons.put({ lessonId, completedAt: existing?.completedAt || null, verified: false, studying: true, studyStartedAt: Date.now() });
+  pushDirty();
 }
 // Called when a student passes a lesson's curated verification quiz — this is the only path
 // that sets `verified: true`, which is what unit-unlock gating and the Progress tab's Verified
 // Progress view actually check.
 export async function verifyLesson(lessonId, quizScore) {
   await db.lessons.put({ lessonId, completedAt: Date.now(), verified: true, quizScore, studying: false });
+  pushDirty();
 }
 export async function resetPathway() {
   await db.lessons.clear();
+  pushDirty();
 }
 
 // ── Quiz Scores ───────────────────────────────────────────────────────────────
@@ -165,9 +170,11 @@ export async function getQuizHistory() {
 }
 export async function saveQuizScore(quizId, score) {
   await db.quizScores.put({ quizId, score, completedAt: Date.now() });
+  pushDirty();
 }
 export async function resetQuizScores() {
   await db.quizScores.clear();
+  pushDirty();
 }
 
 // ── Flashcard Decks ───────────────────────────────────────────────────────────
@@ -190,13 +197,16 @@ export async function saveDeck(deckName, cards) {
   // newest-first in the deck list. Re-saves (editing cards) don't bump it.
   const existing = await db.deckMeta.get(deckName);
   if (!existing) await db.deckMeta.put({ name: deckName, createdAt: Date.now() });
+  pushDirty();
 }
 export async function updateCard(id, updates) {
   await db.flashCards.update(id, updates);
+  pushDirty();
 }
 export async function deleteDeck(deckName) {
   await db.flashCards.where('deckName').equals(deckName).delete();
   await db.deckMeta.delete(deckName);
+  pushDirty();
 }
 export async function getDeckCreatedAtMap() {
   const rows = await db.deckMeta.toArray();
@@ -204,6 +214,7 @@ export async function getDeckCreatedAtMap() {
 }
 export async function recordCardReview(cardId) {
   await db.cardReviews.add({ cardId, reviewedAt: Date.now() });
+  pushDirty();
 }
 export async function getTotalCardReviews() {
   return db.cardReviews.count();
@@ -224,9 +235,11 @@ export async function updateCatPerf(category, score) {
   } else {
     await db.catPerf.put({ category, total: score, count: 1 });
   }
+  pushDirty();
 }
 export async function resetCatPerf() {
   await db.catPerf.clear();
+  pushDirty();
 }
 
 // ── Achievements ──────────────────────────────────────────────────────────────
@@ -237,6 +250,7 @@ export async function getAchievements() {
 export async function unlockAchievement(key) {
   try {
     await db.achievements.add({ key, unlockedAt: Date.now() });
+    pushDirty();
     return true; // newly unlocked
   } catch {
     return false; // already existed
@@ -246,7 +260,7 @@ export async function unlockAchievement(key) {
 // ── Streak / Study Days ────────────────────────────────────────────────────────
 export async function recordStudyToday() {
   const today = new Date().toISOString().split('T')[0];
-  try { await db.studyDays.add({ date: today }); } catch { /* already exists */ }
+  try { await db.studyDays.add({ date: today }); pushDirty(); } catch { /* already exists */ }
 }
 export async function getStreak() {
   const days = await db.studyDays.orderBy('date').reverse().toArray();
@@ -289,6 +303,7 @@ export async function grantStreakFreeze() {
   const held = await getStreakFreezeCount();
   if (held >= MAX_STREAK_FREEZES) return false;
   await db.streakFreezes.add({ earnedAt: Date.now(), usedOn: null });
+  pushDirty();
   return true;
 }
 /**
@@ -311,6 +326,7 @@ export async function checkAndApplyStreakFreeze() {
   const unused = await db.streakFreezes.filter(f => !f.usedOn).first();
   if (!unused) return false;
   await db.streakFreezes.update(unused.id, { usedOn: missedKey });
+  pushDirty();
   return true;
 }
 
@@ -319,7 +335,7 @@ export async function getCheckin(date) {
   return db.checkins.get(date);
 }
 export async function recordCheckin(date, day) {
-  try { await db.checkins.add({ date, day }); return true; } catch { return false; }
+  try { await db.checkins.add({ date, day }); pushDirty(); return true; } catch { return false; }
 }
 // Whether the user has ever claimed/seen a check-in before — distinguishes a
 // genuinely first-ever chest (day 1, "Welcome") from a cycle restarting at
@@ -334,7 +350,7 @@ export async function getCosmetics() {
   return new Set(rows.map(r => r.key));
 }
 export async function unlockCosmetic(key) {
-  try { await db.cosmetics.add({ key, unlockedAt: Date.now() }); return true; } catch { return false; }
+  try { await db.cosmetics.add({ key, unlockedAt: Date.now() }); pushDirty(); return true; } catch { return false; }
 }
 export async function getStudyDaysCount() {
   return db.studyDays.count();
@@ -387,6 +403,7 @@ export async function verifyUnit(pathwayKey, unitId, quizId, score) {
   const row = { pathwayKey, unitId, quizId, score, verifiedAt: Date.now() };
   if (existing) await db.unitMastery.update(existing.id, row);
   else await db.unitMastery.add(row);
+  pushDirty();
 }
 
 // ── Pathway Pacing Goals ──────────────────────────────────────────────────────
@@ -398,9 +415,11 @@ export async function getPathwayGoal(pathwayKey) {
 }
 export async function setPathwayGoal(pathwayKey, targetWeeks) {
   await db.pathwayGoals.put({ pathwayKey, startedAt: Date.now(), targetWeeks });
+  pushDirty();
 }
 export async function clearPathwayGoal(pathwayKey) {
   await db.pathwayGoals.delete(pathwayKey);
+  pushDirty();
 }
 
 // ── Local study-event log (Part C profiling groundwork; never transmitted) ───
@@ -419,8 +438,8 @@ export async function addInterviewSession(entry) {
   return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
 }
 
-// ── Metabrain 2.0 Chat Threads ────────────────────────────────────────────────
-// A student can run as many parallel Metabrain conversations as they want —
+// ── Iatra Chat Threads ────────────────────────────────────────────────
+// A student can run as many parallel Iatra conversations as they want —
 // each is its own row here plus a run of rows in coachMessages, so switching
 // threads is just a different IndexedDB query, and nothing is lost on reload.
 export async function getCoachThreads() {
@@ -429,17 +448,21 @@ export async function getCoachThreads() {
 export async function createCoachThread(title = 'New chat') {
   const now = Date.now();
   const id = await db.coachThreads.add({ title, createdAt: now, updatedAt: now });
+  pushDirty();
   return { id, title, createdAt: now, updatedAt: now };
 }
 export async function renameCoachThread(id, title) {
   await db.coachThreads.update(id, { title });
+  pushDirty();
 }
 export async function touchCoachThread(id) {
   await db.coachThreads.update(id, { updatedAt: Date.now() });
+  pushDirty();
 }
 export async function deleteCoachThread(id) {
   await db.coachMessages.where('threadId').equals(id).delete();
   await db.coachThreads.delete(id);
+  pushDirty();
 }
 export async function getCoachMessages(threadId) {
   return db.coachMessages.where('threadId').equals(threadId).sortBy('ts');
@@ -450,6 +473,300 @@ export async function addCoachMessage(threadId, role, content) {
   await touchCoachThread(threadId);
   return { id, threadId, role, content, ts };
 }
+// ── Cross-device progress sync ────────────────────────────────────────────────
+// Builds/restores a JSON-safe snapshot covering every store that should follow a student across
+// browsers/devices (see api/progress-sync.js + src/lib/progressSync.js for the network side).
+// Deliberately excludes the local-only `studyEvents` behavioral log (docs/PROFILING_PLAN.md
+// Phase 1 scope — no granular behavioral tracking leaves the device without a dedicated consent
+// flow) and raw per-card review identifiers (a card's local auto-increment id means nothing on
+// another device) — reviews fold into a per-date count instead, which is all "reviewed this
+// week" style stats actually need.
+const SYNC_VERSION = 1;
+
+function dateKeyOf(ms) { return new Date(ms).toISOString().split('T')[0]; }
+
+export async function buildSyncSnapshot() {
+  const [
+    user, lessons, quizScores, flashCards, deckMetaRows, catPerf, achievements,
+    studyDays, cardReviews, streakFreezes, checkins, cosmetics, unitMastery,
+    pathwayGoals, coachThreads, coachMessages,
+  ] = await Promise.all([
+    db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
+    db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
+    db.achievements.toArray(), db.studyDays.toArray(), db.cardReviews.toArray(),
+    db.streakFreezes.toArray(), db.checkins.toArray(), db.cosmetics.toArray(),
+    db.unitMastery.toArray(), db.pathwayGoals.toArray(), db.coachThreads.toArray(),
+    db.coachMessages.toArray(),
+  ]);
+
+  const reviewCountsByDate = {};
+  for (const r of cardReviews) {
+    const k = dateKeyOf(r.reviewedAt);
+    reviewCountsByDate[k] = (reviewCountsByDate[k] || 0) + 1;
+  }
+  const flashDecks = {};
+  for (const c of flashCards) {
+    const { id, ...rest } = c;
+    (flashDecks[c.deckName] ||= []).push(rest);
+  }
+  const messagesByThread = {};
+  for (const m of coachMessages) {
+    (messagesByThread[m.threadId] ||= []).push({ role: m.role, content: m.content, ts: m.ts });
+  }
+
+  return {
+    v: SYNC_VERSION,
+    user: user ? (({ id, ...rest }) => rest)(user) : null,
+    lessons: lessons.map(({ lessonId, completedAt, verified, quizScore, studying, studyStartedAt }) =>
+      ({ lessonId, completedAt: completedAt || null, verified: !!verified, quizScore: quizScore ?? null, studying: !!studying, studyStartedAt: studyStartedAt || null })),
+    quizScores: quizScores.map(({ quizId, score, completedAt }) => ({ quizId, score, completedAt })),
+    flashDecks,
+    deckMeta: deckMetaRows.map(({ name, createdAt }) => ({ name, createdAt })),
+    catPerf: catPerf.map(({ category, total, count }) => ({ category, total, count })),
+    achievements: achievements.map(({ key, unlockedAt }) => ({ key, unlockedAt })),
+    studyDays: studyDays.map(d => d.date),
+    reviewCountsByDate,
+    streakFreezes: streakFreezes.map(({ earnedAt, usedOn }) => ({ earnedAt, usedOn: usedOn || null })),
+    checkins: checkins.map(({ date, day }) => ({ date, day })),
+    cosmetics: cosmetics.map(({ key, unlockedAt }) => ({ key, unlockedAt })),
+    unitMastery: unitMastery.map(({ pathwayKey, unitId, quizId, score, verifiedAt }) => ({ pathwayKey, unitId, quizId, score, verifiedAt })),
+    pathwayGoals: pathwayGoals.map(({ pathwayKey, startedAt, targetWeeks }) => ({ pathwayKey, startedAt, targetWeeks })),
+    coachThreads: coachThreads.map(t => ({
+      key: t.createdAt, title: t.title, createdAt: t.createdAt, updatedAt: t.updatedAt,
+      messages: messagesByThread[t.id] || [],
+    })),
+  };
+}
+
+function mergeUserRecord(local, remote) {
+  if (!remote) return local;
+  if (!local) return remote;
+  const merged = { ...remote, ...local };
+  for (const k of ['xp', 'aiChatCount', 'interviewCount']) {
+    merged[k] = Math.max(local[k] || 0, remote[k] || 0);
+  }
+  for (const k of ['obstacles', 'accomplish', 'courses', 'bookmarks', 'studied']) {
+    if (Array.isArray(local[k]) || Array.isArray(remote[k])) {
+      merged[k] = Array.from(new Set([...(remote[k] || []), ...(local[k] || [])]));
+    }
+  }
+  if (local.resourceNotes || remote.resourceNotes) {
+    merged.resourceNotes = { ...(remote.resourceNotes || {}), ...(local.resourceNotes || {}) };
+  }
+  return merged;
+}
+
+// Higher reps / a further-out due date means more real study progress on that specific card —
+// used to pick the "more advanced" copy when the same card (by front+back text) exists on two
+// devices independently.
+function fsrsWeight(card) {
+  return (card.reps || 0) * 1e15 + (card.due ? new Date(card.due).getTime() : 0);
+}
+
+/**
+ * Merges a freshly-pulled remote snapshot into whatever is already in this browser's Dexie
+ * tables (empty, in the common "signing in on a new device" case) and writes the merged result
+ * back. Safe to call with remote=null (no-op). Sync push scheduling should stay disabled for
+ * the duration of this call (see setSyncEnabled) so this write-back never triggers a push of
+ * its own intermediate state.
+ */
+export async function applyRemoteSnapshot(remote) {
+  if (!remote) return;
+
+  const [
+    localUser, localLessons, localQuizScores, localFlashRows, localDeckMeta,
+    localCatPerf, localAchievements, localStudyDays, localCardReviews,
+    localStreakFreezes, localCheckins, localCosmetics, localUnitMastery,
+    localPathwayGoals, localCoachThreads, localCoachMessages,
+  ] = await Promise.all([
+    db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
+    db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
+    db.achievements.toArray(), db.studyDays.toArray(), db.cardReviews.toArray(),
+    db.streakFreezes.toArray(), db.checkins.toArray(), db.cosmetics.toArray(),
+    db.unitMastery.toArray(), db.pathwayGoals.toArray(), db.coachThreads.toArray(),
+    db.coachMessages.toArray(),
+  ]);
+
+  // ── profile / XP ──
+  const mergedUser = mergeUserRecord(localUser, remote.user);
+  if (mergedUser) await saveUser(mergedUser);
+
+  // ── pathway / lessons ──
+  const lessonMap = new Map(localLessons.map(r => [r.lessonId, r]));
+  for (const r of (remote.lessons || [])) {
+    const l = lessonMap.get(r.lessonId);
+    if (!l) { lessonMap.set(r.lessonId, r); continue; }
+    const bothScores = [l.quizScore, r.quizScore].filter(s => s != null);
+    const bothCompleted = [l.completedAt, r.completedAt].filter(Boolean).sort((a, b) => a - b);
+    const bothStarted = [l.studyStartedAt, r.studyStartedAt].filter(Boolean).sort((a, b) => a - b);
+    const verified = !!(l.verified || r.verified);
+    lessonMap.set(r.lessonId, {
+      lessonId: r.lessonId,
+      verified,
+      quizScore: bothScores.length ? Math.max(...bothScores) : null,
+      completedAt: bothCompleted[0] || null,
+      studying: verified ? false : !!(l.studying || r.studying),
+      studyStartedAt: bothStarted[0] || null,
+    });
+  }
+  await db.lessons.clear();
+  if (lessonMap.size) await db.lessons.bulkPut([...lessonMap.values()]);
+
+  // ── quiz scores ──
+  const quizMap = new Map(localQuizScores.map(r => [r.quizId, r]));
+  for (const r of (remote.quizScores || [])) {
+    const l = quizMap.get(r.quizId);
+    if (!l || r.score > l.score || (r.score === l.score && r.completedAt < l.completedAt)) quizMap.set(r.quizId, r);
+  }
+  await db.quizScores.clear();
+  if (quizMap.size) await db.quizScores.bulkPut([...quizMap.values()]);
+
+  // ── flashcard decks (merged per-deck by front+back content signature) ──
+  const localByDeck = {};
+  for (const c of localFlashRows) (localByDeck[c.deckName] ||= []).push(c);
+  const deckNames = new Set([...Object.keys(localByDeck), ...Object.keys(remote.flashDecks || {})]);
+  for (const deckName of deckNames) {
+    const localCards = localByDeck[deckName] || [];
+    const remoteCards = (remote.flashDecks || {})[deckName] || [];
+    const bySig = new Map();
+    for (const c of localCards) bySig.set(`${c.front}␟${c.back}`, c);
+    for (const c of remoteCards) {
+      const sig = `${c.front}␟${c.back}`;
+      const existing = bySig.get(sig);
+      if (!existing || fsrsWeight(c) > fsrsWeight(existing)) bySig.set(sig, c);
+    }
+    await db.flashCards.where('deckName').equals(deckName).delete();
+    const merged = [...bySig.values()].map(({ id, ...rest }) => ({ ...rest, deckName }));
+    if (merged.length) await db.flashCards.bulkAdd(merged);
+  }
+
+  // ── deck creation timestamps ──
+  const deckMetaMap = new Map(localDeckMeta.map(r => [r.name, r]));
+  for (const r of (remote.deckMeta || [])) {
+    const l = deckMetaMap.get(r.name);
+    if (!l || r.createdAt < l.createdAt) deckMetaMap.set(r.name, r);
+  }
+  await db.deckMeta.clear();
+  if (deckMetaMap.size) await db.deckMeta.bulkPut([...deckMetaMap.values()]);
+
+  // ── category performance (additive — see docs note in progressSync.js) ──
+  const catMap = new Map(localCatPerf.map(r => [r.category, { ...r }]));
+  for (const r of (remote.catPerf || [])) {
+    const l = catMap.get(r.category);
+    if (l) { l.total += r.total; l.count += r.count; }
+    else catMap.set(r.category, { ...r });
+  }
+  await db.catPerf.clear();
+  if (catMap.size) await db.catPerf.bulkPut([...catMap.values()]);
+
+  // ── achievements ──
+  const achMap = new Map(localAchievements.map(r => [r.key, r]));
+  for (const r of (remote.achievements || [])) {
+    const l = achMap.get(r.key);
+    if (!l || r.unlockedAt < l.unlockedAt) achMap.set(r.key, r);
+  }
+  await db.achievements.clear();
+  if (achMap.size) await db.achievements.bulkPut([...achMap.values()]);
+
+  // ── streak calendar ──
+  const dayKeys = new Set([...localStudyDays.map(r => r.date), ...(remote.studyDays || [])]);
+  await db.studyDays.clear();
+  if (dayKeys.size) await db.studyDays.bulkPut([...dayKeys].map(date => ({ date })));
+
+  // ── review counts -> synthetic per-day cardReviews rows (see buildSyncSnapshot comment) ──
+  const localCounts = {};
+  for (const r of localCardReviews) { const k = dateKeyOf(r.reviewedAt); localCounts[k] = (localCounts[k] || 0) + 1; }
+  const dateSet = new Set([...Object.keys(localCounts), ...Object.keys(remote.reviewCountsByDate || {})]);
+  const mergedReviewRows = [];
+  for (const date of dateSet) {
+    const n = Math.max(localCounts[date] || 0, (remote.reviewCountsByDate || {})[date] || 0);
+    const ts = new Date(`${date}T12:00:00.000Z`).getTime();
+    for (let i = 0; i < n; i++) mergedReviewRows.push({ cardId: null, reviewedAt: ts });
+  }
+  await db.cardReviews.clear();
+  if (mergedReviewRows.length) await db.cardReviews.bulkAdd(mergedReviewRows);
+
+  // ── streak freezes ──
+  const freezeMap = new Map(localStreakFreezes.map(r => [r.earnedAt, r]));
+  for (const r of (remote.streakFreezes || [])) {
+    const l = freezeMap.get(r.earnedAt);
+    freezeMap.set(r.earnedAt, { earnedAt: r.earnedAt, usedOn: (l && l.usedOn) || r.usedOn || null });
+  }
+  await db.streakFreezes.clear();
+  if (freezeMap.size) await db.streakFreezes.bulkPut([...freezeMap.values()]);
+
+  // ── daily check-ins ──
+  const checkinMap = new Map(localCheckins.map(r => [r.date, r]));
+  for (const r of (remote.checkins || [])) if (!checkinMap.has(r.date)) checkinMap.set(r.date, r);
+  await db.checkins.clear();
+  if (checkinMap.size) await db.checkins.bulkPut([...checkinMap.values()]);
+
+  // ── cosmetics ──
+  const cosMap = new Map(localCosmetics.map(r => [r.key, r]));
+  for (const r of (remote.cosmetics || [])) {
+    const l = cosMap.get(r.key);
+    if (!l || r.unlockedAt < l.unlockedAt) cosMap.set(r.key, r);
+  }
+  await db.cosmetics.clear();
+  if (cosMap.size) await db.cosmetics.bulkPut([...cosMap.values()]);
+
+  // ── unit mastery ──
+  const unitMap = new Map(localUnitMastery.map(r => [`${r.pathwayKey}::${r.unitId}`, r]));
+  for (const r of (remote.unitMastery || [])) {
+    const k = `${r.pathwayKey}::${r.unitId}`;
+    const l = unitMap.get(k);
+    if (!l || (r.score || 0) > (l.score || 0)) {
+      const verifiedAtCandidates = [l?.verifiedAt, r.verifiedAt].filter(Boolean).sort((a, b) => a - b);
+      unitMap.set(k, { ...r, verifiedAt: verifiedAtCandidates[0] || r.verifiedAt });
+    }
+  }
+  await db.unitMastery.clear();
+  if (unitMap.size) await db.unitMastery.bulkPut([...unitMap.values()]);
+
+  // ── pathway pacing goals ──
+  const goalMap = new Map(localPathwayGoals.map(r => [r.pathwayKey, r]));
+  for (const r of (remote.pathwayGoals || [])) {
+    const l = goalMap.get(r.pathwayKey);
+    if (!l || r.startedAt < l.startedAt) goalMap.set(r.pathwayKey, r);
+  }
+  await db.pathwayGoals.clear();
+  if (goalMap.size) await db.pathwayGoals.bulkPut([...goalMap.values()]);
+
+  // ── Iatra chat threads (merged by creation time; thread/message ids are per-device) ──
+  const localMsgsByThread = {};
+  for (const m of localCoachMessages) (localMsgsByThread[m.threadId] ||= []).push(m);
+  const localThreadByKey = new Map(localCoachThreads.map(t => [t.createdAt, t]));
+  for (const rt of (remote.coachThreads || [])) {
+    const existing = localThreadByKey.get(rt.key);
+    if (existing) {
+      const existingMsgs = localMsgsByThread[existing.id] || [];
+      const seen = new Set(existingMsgs.map(m => `${m.role}␟${m.ts}`));
+      const toAdd = (rt.messages || []).filter(m => !seen.has(`${m.role}␟${m.ts}`));
+      if (toAdd.length) await db.coachMessages.bulkAdd(toAdd.map(m => ({ threadId: existing.id, role: m.role, content: m.content, ts: m.ts })));
+      if ((rt.updatedAt || 0) > (existing.updatedAt || 0)) await db.coachThreads.update(existing.id, { updatedAt: rt.updatedAt });
+    } else {
+      const newId = await db.coachThreads.add({ title: rt.title, createdAt: rt.createdAt, updatedAt: rt.updatedAt });
+      if ((rt.messages || []).length) {
+        await db.coachMessages.bulkAdd(rt.messages.map(m => ({ threadId: newId, role: m.role, content: m.content, ts: m.ts })));
+      }
+    }
+  }
+}
+
+// ── Sync push scheduling ──────────────────────────────────────────────────────
+// src/lib/progressSync.js registers a listener here once at app start; every exported mutator
+// below that touches a synced table calls pushDirty() so a debounced push follows automatically
+// without every call site in App.jsx needing to remember to trigger one. Kept disabled during
+// account-switch resets and while applyRemoteSnapshot() is writing back a just-pulled snapshot,
+// so neither ever pushes a partial (or, in the account-switch case, empty) snapshot over real
+// cloud progress.
+let dirtyListener = null;
+let syncEnabled = false;
+export function setSyncDirtyListener(fn) { dirtyListener = fn; }
+export function setSyncEnabled(on) { syncEnabled = !!on; }
+export function isSyncEnabled() { return syncEnabled; }
+function pushDirty() { if (syncEnabled && dirtyListener) dirtyListener(); }
+
 // ── Full export ────────────────────────────────────────────────────────────────
 export async function exportAllData() {
   const data = {

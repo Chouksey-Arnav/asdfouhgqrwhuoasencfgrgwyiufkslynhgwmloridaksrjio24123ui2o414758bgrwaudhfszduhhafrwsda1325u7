@@ -19,7 +19,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
@@ -27,15 +27,17 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
-import { rankQuizzes, getMetabrainPickPrompt } from './lib/recommend';
+import { rankQuizzes, getIatraPickPrompt } from './lib/recommend';
 import { scorePathways } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
-import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount } from './lib/gamification';
+import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueCardsBadge, dueCardsSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
 
 import * as DB from './lib/db';
+import * as ProgressSync from './lib/progressSync';
+import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
@@ -1117,8 +1119,12 @@ export default function App({ account, onAccountChange }) {
   const [totalReviews, setTotalReviews] = useState(0);
   const [aiChatCount, setAiChatCount] = useState(0);
   const [interviewCount, setInterviewCount] = useState(0);
-  const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(1200);
+  const [coachRequestsRemaining, setCoachRequestsRemaining] = useState(300);
   const [coachRequestsUsedToday, setCoachRequestsUsedToday] = useState(0);
+  // Kept in sync with api/groq.js's DAILY_LIMIT (returned as `dailyLimit` on every response)
+  // instead of hardcoded, so the usage bar/label below never drifts out of sync with the
+  // server's actual cap the way a hardcoded number silently did before.
+  const [coachDailyLimit, setCoachDailyLimit] = useState(300);
   const [appCounts, setAppCounts] = useState({colleges:0,essays:0,resume:false});
   const [clinicalHoursTotal, setClinicalHoursTotal] = useState(0);
   const [clinicalHoursEntries, setClinicalHoursEntries] = useState([]);
@@ -1129,7 +1135,10 @@ export default function App({ account, onAccountChange }) {
   const [pathwayGoal, setPathwayGoalState] = useState(null); // { pathwayKey, startedAt, targetWeeks } | null
 
   // ── UI state ────────────────────────────────────────────────────────────────
-  const [tab,   setTab]   = useState('home');
+  // Tab/sub-view start from whatever was last persisted (src/lib/viewState.js) so a reload
+  // resumes on the same screen instead of dropping back to Home — see the restore/persist
+  // effects near the flashcards state below for the deeper "resume mid-deck" case.
+  const [tab,   setTab]   = useState(()=>loadViewState().tab||'home');
   const [vidM,  setVM]    = useState(null);
   // ── Lesson Player state (immersive Overview->Article->Video->Quiz->Complete) ─
   const [activeLesson, setActiveLesson] = useState(null); // { lesson, unit } while the player is open
@@ -1150,12 +1159,16 @@ export default function App({ account, onAccountChange }) {
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
   // Prep and Portfolio each absorb several formerly-top-level tabs; these track
   // which absorbed view is active, switched via the SubNav pill bar.
-  const [prepView, setPrepView] = useState('pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
-  const [portfolioView, setPortfolioView] = useState('overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
-  const [progressView, setProgressView] = useState('overview'); // overview|verified|performance|achievements
+  const [prepView, setPrepView] = useState(()=>loadViewState().prepView||'pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
+  const [portfolioView, setPortfolioView] = useState(()=>loadViewState().portfolioView||'overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
+  const [progressView, setProgressView] = useState(()=>loadViewState().progressView||'overview'); // overview|verified|performance|achievements
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
+
+  // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
+  // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
+  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView }); },[tab, prepView, portfolioView, progressView]);
 
   // ── Post-onboarding product tour — a full-depth spotlight walkthrough covering ──
   // every pillar (Home/Prep/Portfolio/Progress/Settings), every absorbed sub-view
@@ -1199,8 +1212,9 @@ export default function App({ account, onAccountChange }) {
     { target:'prep-deep-quizzes', section:'Prep', color:C.violet, title:'Filter by category and difficulty', body:"These stat tiles show your total quizzes and questions at a glance — scroll down to the search bar and filters to narrow by category, difficulty, or the courses you added in Settings.", onEnter:()=>goPrep('quizzes') },
     { target:'prep-sub-flashcards', section:'Prep', color:C.violet, title:'Flashcards', body:"Spaced-repetition decks scheduled with FSRS (the same algorithm behind Anki). Generate your own cards straight from your notes, or study the built-in decks when cards come due.", onEnter:()=>goPrep('flashcards') },
     { target:'prep-deep-flashcards', section:'Prep', color:C.violet, title:'Generate a deck from your notes', body:"Tap \"New Deck\" to turn your own notes into flashcards offline — no account or API call needed — or scroll down to study any built-in deck with cards due today.", onEnter:()=>goPrep('flashcards') },
-    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Metabrain 2.0 — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Metabrain disappears on reload.", onEnter:()=>goPrep('coach') },
+    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Iatra — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Iatra disappears on reload.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Pick Iatra\'s model', body:"Scout answers fast for everyday questions, Guide is the balanced default, and Sage reasons the deepest — worth switching to for something like a full essay critique. Your choice is remembered.", onEnter:()=>goPrep('coach') },
     { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
     { target:'prep-deep-library', section:'Prep', color:C.violet, title:'Bookmark, take notes, export', body:"This card tracks your reading progress across the whole library. Bookmark resources for later, jot notes as you go, then export everything you've written as one study document.", onEnter:()=>goPrep('library') },
 
@@ -1249,7 +1263,7 @@ export default function App({ account, onAccountChange }) {
     // ── Settings ──────────────────────────────────────────────────────────────
     { target:'nav-settings', section:'Settings', color:C.amber, title:'Settings — your account, your rules', body:"Your profile, goals, test date, sound preferences, study track, course load, data export, and account controls all live here now — its own tab, not buried in a menu.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-profile', section:'Settings', color:C.amber, title:'Profile', body:"Your display name, level, current pathway, and streak — update your name here any time.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Metabrain's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Iatra's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-examdate', section:'Settings', color:C.amber, title:'Test Day', body:"Set your test date here to see a live countdown and pacing guidance on Home.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-preferences', section:'Settings', color:C.amber, title:'Preferences', body:"Toggle sound effects for correct answers, level-ups, and achievements on or off.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-studytrack', section:'Settings', color:C.amber, title:'Study Track', body:"Switch your pathway here at any time — see full details on any track before committing, without retaking the diagnostic.", onEnter:()=>setTab('settings') },
@@ -1296,11 +1310,11 @@ export default function App({ account, onAccountChange }) {
   // Library) so finishQuiz() knows to grade it as a verification attempt instead of a plain quiz.
   const [verifyCtx,setVerifyCtx]=useState(null); // { lesson, unit }
 
-  // ── AI Coach (Metabrain 2.0 — multi-chat) ────────────────────────────────────
+  // ── AI Coach (Iatra — multi-chat) ────────────────────────────────────
   const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
   const [copiedIdx,setCopiedIdx]=useState(null);
   // Every conversation is a row in DB.coachThreads (see src/lib/db.js v10) so a student can run
-  // as many parallel Metabrain chats as they want, and none of them disappear on reload the way
+  // as many parallel Iatra chats as they want, and none of them disappear on reload the way
   // the old single in-memory `msgs` array did.
   const [coachThreads,setCoachThreads]=useState([]);
   const [activeThreadId,setActiveThreadId]=useState(null);
@@ -1308,10 +1322,22 @@ export default function App({ account, onAccountChange }) {
   const [coachSidebarOpen,setCoachSidebarOpen]=useState(false); // mobile-only slide-over
   const [renamingThreadId,setRenamingThreadId]=useState(null);
   const [renameDraft,setRenameDraft]=useState('');
+  // Which of Iatra's three model tiers answers new messages — same idea as picking a Claude
+  // model (Haiku/Sonnet/Opus). Persisted locally (a model preference, not study progress, so it
+  // isn't part of cross-device sync) so the choice sticks across reloads.
+  const [coachTier,setCoachTier]=useState(()=>{try{return localStorage.getItem('iatraTier')||'guide';}catch{return'guide';}});
+  useEffect(()=>{try{localStorage.setItem('iatraTier',coachTier);}catch{/* ignore */}},[coachTier]);
+  const COACH_TIERS=[
+    {id:'scout',label:'Scout',desc:'Fastest — quick answers and everyday questions'},
+    {id:'guide',label:'Guide',desc:'Balanced — the default for most coaching'},
+    {id:'sage',label:'Sage',desc:'Deepest reasoning — essay feedback, complex strategy'},
+  ];
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [gStage,setGStage]=useState(0);const [gShake,setGShake]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
   const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
+  const [deckCategory,setDeckCategory]=useState('all'); // 'all' | one of DECK_CATEGORY_ORDER
+  const [deckSubcat,setDeckSubcat]=useState('all'); // 'all' | a subcategory within deckCategory
   const [manageDeck,setManageDeck]=useState(null); // deck name currently being edited in the card manager modal
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
@@ -1429,7 +1455,27 @@ export default function App({ account, onAccountChange }) {
       // streak, and pathway progress instead of its own clean slate or account-backed rebuild.
       const priorLocalUser = await DB.getUser();
       if(priorLocalUser?.email && account?.email && priorLocalUser.email!==account.email){
+        // Sync must stay off across this wipe — it belongs to whichever account is signed
+        // in when the debounced push actually fires, and that's about to become this
+        // (different) account, so pushing here would overwrite that account's real cloud
+        // progress with a stranger's leftover local cache.
+        DB.setSyncEnabled(false);
         await DB.clearAllData();
+        clearViewState();
+      }
+      // Pull this account's cloud snapshot (XP, streak, quiz scores, flashcards, pathway
+      // progress, achievements, Iatra threads, etc.) and merge it into whatever's already
+      // in this browser's IndexedDB — the common case right after the reset above is an empty
+      // local DB, so this is effectively "restore," but a genuine merge runs too in case this
+      // device has progress of its own (e.g. it was used before ever syncing). Sync stays
+      // disabled for the duration so this write-back never triggers a push of its own
+      // intermediate state. Best-effort: offline or a fresh (never-synced) account both just
+      // fall through to whatever's already local.
+      if(account?.email){
+        try{
+          const remoteSnapshot = await ProgressSync.pullSnapshot();
+          if(remoteSnapshot) await DB.applyRemoteSnapshot(remoteSnapshot);
+        }catch(err){ console.error('Progress sync pull failed (continuing offline):', err); }
       }
       // Must run before getStreak() so a bridged (freeze-covered) gap is
       // already reflected in the streak calculation below.
@@ -1459,7 +1505,7 @@ export default function App({ account, onAccountChange }) {
       setTotalReviews(rev||0);
       setStreakFreezes(freezes||0);
       setCosmetics(cos||new Set());
-      // Load Metabrain 2.0's persisted chat threads and resume the most recently
+      // Load Iatra's persisted chat threads and resume the most recently
       // active one (if any) — mirrors how a normal chat app reopens where you left
       // off, instead of dropping a returning student back into an empty composer.
       try{
@@ -1470,7 +1516,7 @@ export default function App({ account, onAccountChange }) {
           const rows=await DB.getCoachMessages(threads[0].id);
           setMsgs((rows||[]).map(r=>({role:r.role,content:r.content})));
         }
-      }catch(err){console.error('Failed to load Metabrain chat threads',err);}
+      }catch(err){console.error('Failed to load Iatra chat threads',err);}
       setThreadsLoading(false);
       // Compute the gap since the last study day BEFORE recordStudyToday() stamps
       // today, so a returning user's actual absence is visible (once today is
@@ -1500,6 +1546,11 @@ export default function App({ account, onAccountChange }) {
           new Promise((_,reject)=>setTimeout(()=>reject(new Error('DB init timed out')),8000)),
         ]);
       }catch(e){console.error('DB init error:',e);}
+      // Only start pushing local changes to the cloud once the initial load (including the
+      // remote-merge write-back above) has fully settled, so nothing here races with it.
+      DB.setSyncDirtyListener(ProgressSync.scheduleSyncPush);
+      DB.setSyncEnabled(true);
+      ProgressSync.installLifecycleFlush();
       setDbReady(true);
     }
     init();
@@ -1602,7 +1653,7 @@ export default function App({ account, onAccountChange }) {
     if(!name)return;
     const gradeStage = GRADE_STAGES[profile.gradeIdx]?.key || null;
     // Every one of these used to be computed for routing purposes only and
-    // then discarded — Metabrain, the dashboard, and Portfolio never saw
+    // then discarded — Iatra, the dashboard, and Portfolio never saw
     // them again. Persisting them onto the user record is what lets
     // buildCoachSystemPrompt() (src/lib/studentProfile.js) and the
     // onboarding recap card actually use what the student told us.
@@ -1690,6 +1741,18 @@ export default function App({ account, onAccountChange }) {
   const eSpec   = user?.specialty||'exploring';
   const curPath = PATHS[eSpec]||PATHS['exploring'];
   const accent  = curPath?.accent||C.blue;
+  // Per-tab color identity — Prep and Home stay keyed to the chosen pathway's own accent (that
+  // pathway color IS their identity, and Home's hero is deliberately tinted per-pathway), but
+  // Portfolio/Progress/Settings are generic app sections with no pathway of their own, so each
+  // gets a fixed color instead of every tab in the app reusing the exact same accent.
+  const portfolioAccent = C.green;
+  const progressAccent = C.cyan;
+  const settingsAccent = C.amber;
+  // Same identity, applied to the nav itself — so the active tab actually highlights in its own
+  // fixed color instead of every nav item lighting up in whatever the current pathway's accent
+  // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
+  // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
+  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -1733,7 +1796,7 @@ export default function App({ account, onAccountChange }) {
     return null;
   },[curPath,pathway,isLessonComplete]);
 
-  // Metabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
+  // Iatra Quiz Recommendations — ranked #1..#N picks driven by real performance
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
@@ -1743,17 +1806,17 @@ export default function App({ account, onAccountChange }) {
   }),[qScores,catAverages,courseCats,curPath]);
   const topPick = rankedQuizzes[0];
 
-  // Optional one-line Metabrain (Groq) narration of the #1 pick — the ranking
+  // Optional one-line Iatra (Groq) narration of the #1 pick — the ranking
   // above is fully deterministic and never depends on this; it's cosmetic.
-  const askMetabrainAboutPick = useCallback(async(pick)=>{
+  const askIatraAboutPick = useCallback(async(pick)=>{
     // Cached per quiz per day — this narration is cosmetic and identical for a given pick
     // within a day, so repeat views/clicks shouldn't re-hit Groq.
     const cacheKey = dailyKey('pickNarration', pick?.quiz?.id||'');
     const cached = getCached(cacheKey);
     if(cached) return cached;
-    const prompt = getMetabrainPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
+    const prompt = getIatraPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
     if(!prompt) return null;
-    const text = await callGroqAI('You are Metabrain, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'fast');
+    const text = await callGroqAI('You are Iatra, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'scout');
     setCached(cacheKey, text);
     return text;
   },[user?.name,curPath]);
@@ -1776,7 +1839,17 @@ export default function App({ account, onAccountChange }) {
 
   function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
-  function signOut(){DB.clearAllData().then(()=>{setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');});toast('Signed out. See you next time!');}
+  async function signOut(){
+    // Flush any progress still sitting behind the debounce window before wiping this device's
+    // local copy, so a burst of XP/reviews right before signing out isn't lost from the cloud
+    // snapshot the next device pulls. Best-effort — an offline sign-out still clears locally.
+    try{ await ProgressSync.flushNow(); }catch(err){ console.error('Pre-signout sync flush failed:',err); }
+    DB.setSyncEnabled(false);
+    await DB.clearAllData();
+    clearViewState();
+    setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
+    toast('Signed out. See you next time!');
+  }
 
   // ── Achievement checker ──────────────────────────────────────────────────────
   const checkAndUnlockAchievements = useCallback(async(u,qCount,perfect,str,reviews,mast,aiC,extra={})=>{
@@ -1899,8 +1972,8 @@ export default function App({ account, onAccountChange }) {
     else if(comebackGap>=7)toast(pickNudge('comeback_long'),{icon:<Coffee size={14}/>,duration:5000});
   },[dbReady,comebackGap]);
 
-  // ── AI (Metabrain, powered by Groq) ────────────────────────────────────────────
-  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'deep') {
+  // ── AI (Iatra, powered by Groq) ────────────────────────────────────────────
+  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide') {
     let r, d;
     try {
       r = await fetch('/api/groq', {
@@ -1909,24 +1982,25 @@ export default function App({ account, onAccountChange }) {
         body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier }),
       });
     } catch {
-      throw new Error("Couldn't reach Metabrain — check your connection and try again.");
+      throw new Error("Couldn't reach Iatra — check your connection and try again.");
     }
     try {
       d = await r.json();
     } catch {
-      throw new Error('Metabrain sent back an unreadable response. Please try again.');
+      throw new Error('Iatra sent back an unreadable response. Please try again.');
     }
     if (typeof d.requestsRemaining === 'number') setCoachRequestsRemaining(d.requestsRemaining);
     if (typeof d.requestsUsedToday === 'number') setCoachRequestsUsedToday(d.requestsUsedToday);
+    if (typeof d.dailyLimit === 'number') setCoachDailyLimit(d.dailyLimit);
     if (!r.ok) {
       const m = d?.error || '';
       if (r.status === 429) throw new Error(m || 'Rate limit reached. Please wait a moment.');
       if (r.status === 500 && m.includes('not configured')) throw new Error('Add GROQ_API_KEY to Vercel environment variables.');
-      if (r.status === 504) throw new Error(m || 'Metabrain took too long to respond. Please try again.');
+      if (r.status === 504) throw new Error(m || 'Iatra took too long to respond. Please try again.');
       throw new Error(m || `Error ${r.status}`);
     }
     if (typeof d.content !== 'string' || !d.content.trim()) {
-      throw new Error("Metabrain didn't return a usable answer. Please try again.");
+      throw new Error("Iatra didn't return a usable answer. Please try again.");
     }
     return d.content;
   }
@@ -1952,6 +2026,7 @@ export default function App({ account, onAccountChange }) {
       const sysPrompt=buildCoachSystemPrompt({
         pathwayLabel:curPath?.label||'college prep',
         pathCoachNote:PATH_COACH_NOTES[eSpec]||PATH_COACH_NOTES.exploring,
+        gradeLabel:GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null,
         user,
         courses:user?.courses||[],
         apIb:!!user?.apIb,
@@ -1968,7 +2043,7 @@ export default function App({ account, onAccountChange }) {
         streak,
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
-      const r=await callGroqAI(sysPrompt,lastUser?.content||'',700,history.filter(m=>m.role!=='error'),'fast');
+      const r=await callGroqAI(sysPrompt,lastUser?.content||'',700,history.filter(m=>m.role!=='error'),coachTier);
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,chatCountForAchievements);
@@ -1979,11 +2054,11 @@ export default function App({ account, onAccountChange }) {
   const lastSendAtRef = useRef(0);
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
-    if(coachRequestsRemaining<=0){toast.error(`Your daily Metabrain quota has been reached. Try again tomorrow.`);return;}
+    if(coachRequestsRemaining<=0){toast.error(`Your daily Iatra quota has been reached. Try again tomorrow.`);return;}
     // Small cooldown (independent of cLoad, which only covers the in-flight request) so a fast
     // double-tap on send can't fire two nearly-identical Groq calls back to back.
     const now=Date.now();
-    if(now-lastSendAtRef.current<3000){toast('Give Metabrain a moment before sending again.',{icon:'⏳'});return;}
+    if(now-lastSendAtRef.current<3000){toast('Give Iatra a moment before sending again.',{icon:'⏳'});return;}
     lastSendAtRef.current=now;
     let threadId=activeThreadId;
     if(!threadId){
@@ -2444,6 +2519,33 @@ export default function App({ account, onAccountChange }) {
 
   const currentCard = deckCards[cIdx];
 
+  // Resume a flashcard session that was mid-review when the page reloaded. Deferred until the
+  // DB (and its custom decks) has finished loading, since telling a builtin deck apart from a
+  // custom one needs both FLASH_DECKS and cDecks. Only restores if the persisted tab/sub-view
+  // was actually the flashcards screen — otherwise the tab/prepView restore above already put
+  // the student back on whatever screen they were really on, and jumping into a card view here
+  // would fight that.
+  useEffect(()=>{
+    if(!dbReady)return;
+    const persisted=loadViewState();
+    const fc=persisted.flashcards;
+    if(!fc?.deckName||persisted.prepView!=='flashcards')return;
+    const isBuiltin=!!FLASH_DECKS[fc.deckName];
+    const isCustom=!isBuiltin&&Array.isArray(cDecks[fc.deckName]);
+    if(!isBuiltin&&!isCustom)return; // deck was deleted/renamed since the last session
+    setAD({name:fc.deckName,builtin:isBuiltin});
+    setStudyMode(fc.studyMode==='due'?'due':'all');
+    setCIdx(fc.cIdx||0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[dbReady]);
+
+  // ...and keep that session's position saved as it progresses, so the very next reload picks
+  // up from wherever the student actually is, not just where the deck was opened.
+  useEffect(()=>{
+    if(activeDeck)saveViewState({flashcards:{deckName:activeDeck.name,cIdx,studyMode}});
+    else saveViewState({flashcards:null});
+  },[activeDeck,cIdx,studyMode]);
+
   // ── Perfect-session celebration (fires once when a completed session was 100% remembered) ──
   const celebratedSessionRef=useRef(null);
   useEffect(()=>{
@@ -2479,7 +2581,7 @@ export default function App({ account, onAccountChange }) {
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
-                {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCards} cards due</span>}
+                {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCardsBadge(dueCards)}</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
                 {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
               </div>
@@ -2503,7 +2605,7 @@ export default function App({ account, onAccountChange }) {
             {nextLesson&&<button onClick={()=>goPrep('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
           </div>
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Metabrain's #1 Pick</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Iatra's #1 Pick</div>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
               <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
               <div style={{minWidth:0}}>
@@ -2515,8 +2617,8 @@ export default function App({ account, onAccountChange }) {
           </div>}
         </div>}
 
-        {/* Metabrain ranked quiz recommendations — top 3 on the dashboard */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMetabrain={askMetabrainAboutPick} compact/>}
+        {/* Iatra ranked quiz recommendations — top 3 on the dashboard */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskIatra={askIatraAboutPick} compact/>}
 
         {/* Deadline countdown */}
         {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
@@ -2533,11 +2635,6 @@ export default function App({ account, onAccountChange }) {
           <Stat label="Level" value={`${lvl} · ${levelInfo.tier}`} icon={<Trophy size={16}/>} color={C.violet} sub={`${levelInfo.pct}% to next`} m={isMobile}/>
           <Stat label="Quizzes Done" value={qTaken} icon={<CheckCircle2 size={16}/>} color={C.green} sub={`${ALL_QUIZZES.length-qTaken} remaining`} m={isMobile}/>
           <Stat label="Mastery" value={`${mastery}%`} icon={<TrendingUp size={16}/>} color={accent} sub={`${doneL}/${allL.length} lessons`} m={isMobile}/>
-        </div>
-
-        {/* Study activity heatmap */}
-        <div style={glass({padding:18,overflowX:'auto'})}>
-          <StreakHeatmap accent={accent}/>
         </div>
 
         {/* XP Progress */}
@@ -2561,8 +2658,8 @@ export default function App({ account, onAccountChange }) {
               {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',pillar:'prep',view:'diagnostic',col:C.violet},
               {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathway',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
-              {Ic:MessageCircle,lbl:'AI Coach',sub:'Metabrain 2.0 tutor',pillar:'prep',view:'coach',col:C.cyan},
-              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?`${dueCards} due now`:`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueCards>0?C.violet:C.orange},
+              {Ic:MessageCircle,lbl:'AI Coach',sub:'Iatra tutor',pillar:'prep',view:'coach',col:C.cyan},
+              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?dueCardsSub(dueCards):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueCards>0?C.violet:C.orange},
               {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
             ].map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
@@ -2837,6 +2934,20 @@ export default function App({ account, onAccountChange }) {
                   <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.length} lessons · {unit.quizCat}</div>
                 </div>
               </div>
+              {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
+                  countdown instead of just a dimmed lock icon — a visible, achievable next step
+                  keeps momentum going into the next section of the pathway. */}
+              {!done&&units[ui+1]&&(()=>{
+                const remaining=unit.lessons.filter(l=>!isLessonComplete(l,pathway[l.id])).length;
+                return(
+                  <div style={{...glass2({padding:'10px 14px',marginBottom:16,background:`${accent}0a`,border:`1px solid ${accent}22`}),display:'flex',alignItems:'center',gap:10}}>
+                    <Sparkles size={13} color={accent} style={{flexShrink:0}}/>
+                    <span style={{fontSize:11.5,color:C.t2,lineHeight:1.5}}>
+                      {remaining} more lesson{remaining===1?'':'s'} here unlocks <strong style={{color:C.t1}}>{units[ui+1].title}</strong> — you're closer than it looks.
+                    </span>
+                  </div>
+                );
+              })()}
               <div style={CC({gap:8})}>
                 {unit.lessons.map((lesson)=>{
                   const state=lessonState(lesson,ui,units);
@@ -2942,7 +3053,6 @@ export default function App({ account, onAccountChange }) {
               <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
             </div>
             <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=><option key={c}>{c}</option>)}</select>
-            <select style={inp({width:'auto'})} value={qDiff} onChange={e=>setQD(e.target.value)}>{['All','Easy','Medium','Hard','Expert'].map(d=><option key={d}>{d}</option>)}</select>
             <div style={{position:'relative'}}>
               <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
               <select style={inp({width:'auto',paddingLeft:30})} value={qSort} onChange={e=>setQSort(e.target.value)}>
@@ -2954,8 +3064,8 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
-        {/* Metabrain ranked quiz recommendations — full top-6 list */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMetabrain={askMetabrainAboutPick}/>}
+        {/* Iatra ranked quiz recommendations — full top-6 list */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskIatra={askIatraAboutPick}/>}
         <div style={R({justifyContent:'space-between'})}>
           <SL extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SL>
         </div>
@@ -3028,7 +3138,7 @@ export default function App({ account, onAccountChange }) {
         </div>
         <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:3,paddingRight:2}}>
           {threadsLoading&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px'}}>Loading chats…</div>}
-          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px',lineHeight:1.5}}>No chats yet — ask Metabrain something below to start your first one.</div>}
+          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px',lineHeight:1.5}}>No chats yet — ask Iatra something below to start your first one.</div>}
           {coachThreads.map(t=>{
             const active=t.id===activeThreadId;
             return(
@@ -3060,7 +3170,7 @@ export default function App({ account, onAccountChange }) {
     );
   }
   function tCoach(){
-    const usagePct=Math.round(((1200-coachRequestsRemaining)/1200)*100);
+    const usagePct=Math.round(((coachDailyLimit-coachRequestsRemaining)/coachDailyLimit)*100);
     const usageColor=usagePct>=100?C.rose:usagePct>=80?C.amber:C.violet;
     return(
       <div style={{display:'flex',height:'calc(100vh - 64px)',position:'relative'}}>
@@ -3096,7 +3206,7 @@ export default function App({ account, onAccountChange }) {
               </div>
               <div>
                 <div style={R({gap:7,marginBottom:1})}>
-                  <h2 style={{fontSize:isMobile?18:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Metabrain 2.0</h2>
+                  <h2 style={{fontSize:isMobile?18:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Iatra</h2>
                   <Sparkles size={13} color={C.amberL}/>
                 </div>
                 <div style={{fontSize:isMobile?11:12,color:C.t3}}>Your SAT/ACT content and study-strategy assistant</div>
@@ -3107,16 +3217,24 @@ export default function App({ account, onAccountChange }) {
                 {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
               </div>
-              {!isMobile&&<span style={{fontSize:10,color:C.t4,fontFamily:C.FM,letterSpacing:'.03em'}}>Powered by Groq</span>}
+              <div style={{display:'flex',gap:3,padding:3,borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`}} data-tour="prep-deep-coach-tier">
+                {COACH_TIERS.map(t=>(
+                  <button key={t.id} title={t.desc} onClick={()=>setCoachTier(t.id)}
+                    style={{padding:'4px 10px',borderRadius:6,border:'none',background:coachTier===t.id?accent:'transparent',color:coachTier===t.id?'#fff':C.t3,fontSize:10.5,fontWeight:700,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,color .15s'}}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>{COACH_TIERS.find(t=>t.id===coachTier)?.desc}</div>
           <div style={{marginTop:16,maxWidth:320}}>
             <div style={R({justifyContent:'space-between',marginBottom:5})}>
               <div style={R({gap:5})}>
                 <Zap size={11} color={C.t3}/>
                 <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Daily coaching usage</span>
               </div>
-              <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{coachRequestsUsedToday}<span style={{color:C.t4}}> / 1200</span></span>
+              <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{coachRequestsUsedToday}<span style={{color:C.t4}}> / {coachDailyLimit}</span></span>
             </div>
             <Bar pct={usagePct} color={usageColor} h={4}/>
           </div>
@@ -3137,7 +3255,7 @@ export default function App({ account, onAccountChange }) {
                 <MessageCircle size={16} color={accent}/>
               </div>
               <div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Metabrain.</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Iatra.</div>
                 <div style={{fontSize:13,color:C.t3,lineHeight:1.6}}>Ask me to explain a concept, build a study plan, or work through a tough problem. I know where you stand in {curPath?.label||'your pathway'} and can tailor answers to it. Pick a prompt below or just start typing.</div>
               </div>
             </div>
@@ -3196,14 +3314,14 @@ export default function App({ account, onAccountChange }) {
         {/* ── Composer ────────────────────────────────────────────────────── */}
         <div style={{flexShrink:0,marginTop:14}}>
           <div style={R({gap:isMobile?6:10})}>
-            <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Metabrain…":"Ask Metabrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Iatra…":"Ask Iatra about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
             <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
           </div>
           <div style={R({justifyContent:'space-between',marginTop:8})}>
             {activeThreadId?<button style={btnG({fontSize:11,padding:'5px 14px',borderRadius:20,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
-            {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Metabrain can make mistakes — double-check anything important.</span>}
+            {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Iatra can make mistakes — double-check anything important.</span>}
           </div>
         </div>
         </div>
@@ -3305,7 +3423,17 @@ export default function App({ account, onAccountChange }) {
 
     const builtinCount=Object.keys(FLASH_DECKS).length, customCount=Object.keys(cDecks).length;
     const searched=searchDecks(deckFuse,allDecksList,dSrch)||allDecksList;
-    const filteredDecks=searched.filter(deck=>{
+    // Section decks into SAT / Science / Social Studies / Study Skills / My Decks (each with its
+    // own subsections, e.g. SAT > Math vs. SAT > Reading & Writing) instead of one flat list —
+    // see DECK_CATEGORIES in constants.js.
+    const subcatsForCategory=deckCategory==='all'?[]:[...new Set(allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===deckCategory).map(d=>getDeckCategory(d.name,d.builtin).subcategory))];
+    const categorized=searched.filter(deck=>{
+      if(deckCategory==='all')return true;
+      const info=getDeckCategory(deck.name,deck.builtin);
+      if(info.category!==deckCategory)return false;
+      return deckSubcat==='all'||info.subcategory===deckSubcat;
+    });
+    const filteredDecks=categorized.filter(deck=>{
       if(deckFilter==='all')return true;
       const deckCardsAll=deck.builtin?(FLASH_DECKS[deck.name]||[]):(cDecks[deck.name]||[]);
       if(deckFilter==='due')return getDueCards(deckCardsAll).length>0;
@@ -3329,6 +3457,28 @@ export default function App({ account, onAccountChange }) {
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
           <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
+        </div>
+
+        {/* Category / subsection pills — SAT > Math vs. SAT > Reading & Writing, Science >
+            Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
+        <div style={CC({gap:8})}>
+          <div style={R({gap:6,flexWrap:'wrap'})}>
+            <button style={btnSm(deckCategory==='all'?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</button>
+            {DECK_CATEGORY_ORDER.map(cat=>{
+              const active=deckCategory===cat;
+              const count=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).length;
+              if(!count)return null;
+              return <button key={cat} style={btnSm(active?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:active?'#fff':C.t2,border:`1px solid ${active?'transparent':C.b1}`})} onClick={()=>{setDeckCategory(cat);setDeckSubcat('all');}}>{cat}<span style={{opacity:.7,marginLeft:4}}>{count}</span></button>;
+            })}
+          </div>
+          {deckCategory!=='all'&&subcatsForCategory.length>1&&(
+            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:6,flexWrap:'wrap',paddingLeft:14,borderLeft:`2px solid ${C.b1}`})}>
+              <button style={btnSm(deckSubcat==='all'?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat==='all'?accent:C.t3,border:`1px solid ${deckSubcat==='all'?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat('all')}>All {deckCategory}</button>
+              {subcatsForCategory.map(sub=>(
+                <button key={sub} style={btnSm(deckSubcat===sub?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat===sub?accent:C.t3,border:`1px solid ${deckSubcat===sub?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat(sub)}>{sub}</button>
+              ))}
+            </motion.div>
+          )}
         </div>
 
         <div style={R({flexWrap:'wrap',gap:10})}>
@@ -3732,7 +3882,7 @@ export default function App({ account, onAccountChange }) {
             <Lightbulb size={16} color={C.blueL} />
           </div>
           <div>
-            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>METABRAIN COACHING INSIGHT</div>
+            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>Iatra Coaching Insight</div>
             <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 2}}>
               {
                 lCat === 'Life Sciences' ? "In Life Sciences, focus on active recall. Rather than re-reading chapters, use our Flashcards workspace or sketch pathways from memory. Use BioMan Biology or HHMI for interactive visual reinforcement." :
@@ -4023,6 +4173,7 @@ export default function App({ account, onAccountChange }) {
   }
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
+    const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
     const totH=Math.round(portActivities.reduce((s,a)=>s+annualH(a),0));
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
@@ -4079,7 +4230,7 @@ export default function App({ account, onAccountChange }) {
             <div onClick={()=>goPrep('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Layers3 size={13} color={C.violet}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Flashcards</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{totalReviews}<span style={{fontSize:11,color:C.t3,fontWeight:600}}> reviews</span></div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueCards} card{dueCards===1?'':'s'} due today</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueCardsSub(dueCards)}</div>
             </div>
             <div onClick={()=>goPortfolio('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Mic size={13} color={C.cyan}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Interview Prep</span></div>
@@ -4089,7 +4240,7 @@ export default function App({ account, onAccountChange }) {
             <div onClick={()=>goPrep('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><MessageCircle size={13} color={C.blue}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>AI Coach</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{aiChatCount}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Metabrain</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Iatra</div>
             </div>
             <div onClick={()=>goPortfolio('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Building2 size={13} color={C.amber}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>College List</span></div>
@@ -4124,12 +4275,11 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
-        {/* Summary stats */}
-        <div style={G(5,14,{},isMobile)}>
+        {/* Summary stats — just the two numbers not already covered by the benchmark bars right
+            below (Leadership/Research/Volunteer hours used to be shown twice: as a bare number
+            here AND as a val/target progress bar below — trimmed to avoid the duplication). */}
+        <div style={G(2,14,{},isMobile)}>
           <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Leadership" value={leadH} icon={<Building2 size={16}/>} color={C.blue} sub={`Rec: ${benchmarks.leadershipHours||100}+`} m={isMobile}/>
-          <Stat label="Research" value={resH} icon={<FlaskConical size={16}/>} color={C.amber} sub="Rec: 100+" m={isMobile}/>
-          <Stat label="Volunteer" value={volH} icon={<Handshake size={16}/>} color={C.violet} sub={`Rec: ${benchmarks.volunteerHours||150}+`} m={isMobile}/>
           <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
@@ -4149,26 +4299,6 @@ export default function App({ account, onAccountChange }) {
               </div>
               <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
             </div>
-          ))}
-        </div>
-
-        {/* Quick links to the rest of the application system */}
-        <div style={G(4,10,{},isMobile)}>
-          {[
-            {label:'Resume Builder',sub:'Full activity, awards & GPA editor',pillar:'portfolio',view:'resume',icon:Award,col:C.violet},
-            {label:'Clinical Hours',sub:'Log shadowing & clinical time',pillar:'portfolio',view:'clinical',icon:Stethoscope,col:accent},
-            {label:'Recommenders',sub:'Track letters of recommendation',pillar:'portfolio',view:'recommenders',icon:UserCheck,col:C.violetL},
-            {label:'Timeline',sub:'Everything, chronologically',pillar:'portfolio',view:'timeline',icon:Milestone,col:C.roseL},
-            {label:'Test Scores',sub:'SAT/ACT history & trend',pillar:'portfolio',view:'scores',icon:TrendingUp,col:C.green},
-            {label:'Financial Aid',sub:'Scholarships & FAFSA/CSS tracking',pillar:'portfolio',view:'aid',icon:Handshake,col:C.cyan},
-            {label:'Study Pathway',sub:'Your track, units & lessons',pillar:'prep',view:'pathway',icon:Route,col:C.blue},
-            {label:'E-Library',sub:'Curated readings & videos',pillar:'prep',view:'library',icon:BookOpen,col:C.orange},
-          ].map(l=>(
-            <motion.div key={l.view} whileHover={{y:-2,borderColor:`${l.col}35`}} onClick={()=>l.pillar==='prep'?goPrep(l.view):goPortfolio(l.view)} style={{...glass2({padding:16,cursor:'pointer',transition:'border-color .15s'})}}>
-              <l.icon size={16} color={l.col}/>
-              <div style={{fontSize:12.5,fontWeight:700,color:C.t1,fontFamily:C.FD,marginTop:8}}>{l.label}</div>
-              <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{l.sub}</div>
-            </motion.div>
           ))}
         </div>
 
@@ -4217,6 +4347,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── ADMISSIONS CALC ───────────────────────────────────────────────────────────
   function tCalc(){
+    const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     return(
       <div style={CC({gap:22})}>
         <div data-tour="portfolio-deep-calc" style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
@@ -4468,6 +4599,7 @@ export default function App({ account, onAccountChange }) {
   }
   // ── ANALYTICS ─────────────────────────────────────────────────────────────────
   function tAnalytics(){
+    const accent=progressAccent; // shadows the pathway accent — Progress has its own fixed color identity
     void questTick; // re-render after claiming a quest (claim state lives in localStorage)
     const recentScores=qHistory.slice(-12);
     const weekKey=getIsoWeekKey();
@@ -4602,7 +4734,14 @@ export default function App({ account, onAccountChange }) {
     return(
       <div>
         <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
-          sub="Readiness, credibility, and performance across your pathway." m={isMobile}/>
+          sub="Readiness, credibility, and performance across your pathway." m={isMobile}
+          right={!isMobile&&(
+            <div style={R({gap:10})}>
+              <div style={{...pill(`${levelInfo.tierColor}1e`,levelInfo.tierColor,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
+              {streak>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Flame size={12}/>{streak}d</div>}
+              <div style={{...pill(C.greenDim,C.greenL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Trophy size={12}/>{achiev.size}</div>
+            </div>
+          )}/>
         <div style={{marginTop:18}}>
           <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub"/>
         </div>
@@ -4622,7 +4761,7 @@ export default function App({ account, onAccountChange }) {
         {/* Onboarding recap — surfaces what the ~30-screen onboarding flow actually collected
             (goal, obstacles, study method, what they want to accomplish) so it's visibly tying
             into the rest of the app instead of vanishing after the paywall screen. Same data
-            feeds Metabrain's system prompt — see src/lib/studentProfile.js. */}
+            feeds Iatra's system prompt — see src/lib/studentProfile.js. */}
         <div style={{...glass2({padding:16}),display:'flex',alignItems:'flex-start',gap:14}}>
           <div style={{width:32,height:32,borderRadius:9,flexShrink:0,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={15} color={C.violetL}/></div>
           <div style={{flex:1,minWidth:0}}>
@@ -4637,7 +4776,7 @@ export default function App({ account, onAccountChange }) {
                 ))}
               </div>
             ):(
-              <div style={{fontSize:12.5,color:C.t3,lineHeight:1.5}}>You haven't set a goal yet — Metabrain coaches better when it knows what you're working toward.</div>
+              <div style={{fontSize:12.5,color:C.t3,lineHeight:1.5}}>You haven't set a goal yet — Iatra coaches better when it knows what you're working toward.</div>
             )}
           </div>
           <button style={btnSm('rgba(255,255,255,0.06)',{fontSize:10.5,flexShrink:0})} onClick={()=>setTab('settings')}>Edit</button>
@@ -4899,11 +5038,16 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>}
 
+        {/* Study activity heatmap — proof-of-the-work belongs here, not on Home's daily snapshot */}
+        <div style={glass({padding:18,overflowX:'auto'})}>
+          <StreakHeatmap accent={accent}/>
+        </div>
+
         {/* Card review stats */}
         <div style={G(3,14,{},isMobile)}>
           <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
           <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
-          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Metabrain conversations" m={isMobile}/>
+          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Iatra conversations" m={isMobile}/>
         </div>
         </>}
 
@@ -4948,32 +5092,47 @@ export default function App({ account, onAccountChange }) {
 
   // ── SETTINGS ──────────────────────────────────────────────────────────────────
   function tSettings(){
+    const accent=settingsAccent; // shadows the pathway accent — Settings has its own fixed color identity
+    // Small section-group label used to chunk the long list of cards below into scannable
+    // groups (Profile & Goals / Study Setup / Preferences & Data / Account) instead of one
+    // undifferentiated stack — the actual cards inside are unchanged.
+    const Group=({icon:Icon,title,children})=>(
+      <div style={CC({gap:14})}>
+        <div style={R({gap:9})}>
+          <div style={{width:22,height:22,borderRadius:6,background:`${accent}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={12} color={accent}/></div>
+          <span style={{fontSize:11,fontWeight:800,color:accent,letterSpacing:'.1em',textTransform:'uppercase'}}>{title}</span>
+        </div>
+        {children}
+      </div>
+    );
     return(
-      <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Settings</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Account & Preferences</h2></div>
-
-        {/* Profile */}
-        <div data-tour="settings-deep-profile" style={glass()}>
-          <SL>Profile</SL>
-          <div style={{...R({gap:14,marginBottom:18})}}>
-            <div style={{width:52,height:52,borderRadius:14,background:`linear-gradient(135deg,${accent}50,${accent}25)`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:22,color:'#fff',boxShadow:`0 6px 20px ${accent}30`}}>
-              {user.name[0].toUpperCase()}
-            </div>
-            <div>
-              <div style={{fontSize:16,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{user.name}</div>
-              <div style={{fontSize:12,color:C.t3,marginTop:2}}>Level {lvl} · {curPath?.label} · {(user.xp||0).toLocaleString()} XP total</div>
-              <div style={R({gap:8,marginTop:6})}>
-                {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={10}/>{streak} day streak</span>}
-                <span style={pill(C.greenDim,C.greenL,{fontSize:10})}>{achiev.size} achievements</span>
-              </div>
+      <div style={CC({gap:30})}>
+        {/* Hero */}
+        <div style={{...glass({padding:26}),background:`linear-gradient(135deg,${accent}14,transparent)`,border:`1px solid ${accent}26`,display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24,color:'#fff',boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
+            {user.name[0].toUpperCase()}
+          </div>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Settings</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{user.name}</h2>
+            <div style={R({gap:8,marginTop:8,flexWrap:'wrap'})}>
+              <span style={pill(`${accent}20`,accent,{fontFamily:C.FM})}>Level {lvl} · {(user.xp||0).toLocaleString()} XP</span>
+              {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} day streak</span>}
+              <span style={pill(C.greenDim,C.greenL,{fontSize:11})}>{achiev.size} achievements</span>
             </div>
           </div>
-          <div style={CC({gap:4,marginBottom:14})}><span style={lbl()}>Display Name</span><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn()} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
+        </div>
+
+        {/* ── Profile & Goals ─────────────────────────────────────────────────── */}
+        <Group icon={UserCog} title="Profile & Goals">
+        <div data-tour="settings-deep-profile" style={glass()}>
+          <SL>Display Name</SL>
+          <div style={CC({gap:4,marginBottom:14})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
+          <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
-            forever. Feeds Metabrain's system prompt (src/lib/studentProfile.js) and the Progress
+            forever. Feeds Iatra's system prompt (src/lib/studentProfile.js) and the Progress
             overview recap card, so updating this here actually changes those. */}
         <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
@@ -4991,7 +5150,7 @@ export default function App({ account, onAccountChange }) {
                 ))}
               </div>
             ):(
-              <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>You haven't set a goal yet — click Edit to tell Metabrain what you're working toward, what's slowing you down, and what you want to accomplish.</p>
+              <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>You haven't set a goal yet — click Edit to tell Iatra what you're working toward, what's slowing you down, and what you want to accomplish.</p>
             )
           ):(
             <div style={CC({gap:18})}>
@@ -5040,60 +5199,32 @@ export default function App({ account, onAccountChange }) {
                 </div>
               </div>
               <div style={R({gap:10})}>
-                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish});setSGoalsEditing(false);toast.success('Goals updated — Metabrain will use this right away.');}}>Save Goals</button>
+                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish});setSGoalsEditing(false);toast.success('Goals updated — Iatra will use this right away.');}}>Save Goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
             </div>
           )}
         </div>
+        </Group>
 
-        {/* Exam date */}
+        {/* ── Study Setup ──────────────────────────────────────────────────────── */}
+        <Group icon={Route} title="Study Setup">
         <div data-tour="settings-deep-examdate" style={glass({padding:18})}>
           <SL>Test Day</SL>
           <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
-            <button style={btn()} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
+            <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
             {user?.examDate&&<button style={btnG()} onClick={()=>{saveUser({...user,examDate:null});setSExamDate('');toast('Test date cleared');}}>Clear</button>}
           </div>
         </div>
 
-        {/* Sound toggle */}
-        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
-          <SL>Preferences</SL>
-          <div style={R({justifyContent:'space-between'})}>
-            <div>
-              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Sound Effects</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
-            </div>
-            <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Help */}
-        <div style={glass({padding:18})}>
-          <SL>Help</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
-        </div>
-
-        {/* Dev-only: preview the first-run onboarding wizard without touching this account's
-            saved profile. Remove this card once onboarding is stable. */}
-        <div style={glass({padding:18})}>
-          <SL>Developer</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Temporary, dev-only: preview the first-run onboarding wizard again. Won't change your saved profile — closing or finishing it just returns you here.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)}><RotateCcw size={14}/>Replay Onboarding</button>
-        </div>
-
-        {/* Specialty path */}
         <div data-tour="settings-deep-studytrack" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Study Track</SL>
             <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
-          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:curPath?.accent||accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
@@ -5107,7 +5238,6 @@ export default function App({ account, onAccountChange }) {
           {sSpec&&sSpec!==eSpec&&<motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16}} onClick={()=>{switchPath(sSpec);setSS('');}}>Switch to {PATHS[sSpec]?.label}</motion.button>}
         </div>
 
-        {/* Course load */}
         <div data-tour="settings-deep-courseload" style={glass()}>
           <SL>Current Course Load</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Tell us what you're taking so the AI Coach and Quiz Library can point you to relevant material.</p>
@@ -5137,37 +5267,65 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
+        </Group>
 
-        {/* Export / Backup */}
+        {/* ── Preferences & Data ───────────────────────────────────────────────── */}
+        <Group icon={Volume2} title="Preferences & Data">
+        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
+          <div style={R({justifyContent:'space-between'})}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Sound Effects</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
+            </div>
+            <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
+        </div>
+
         <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
-        {/* Account */}
+        <div style={glass({padding:18})}>
+          <SL>Help</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
+          <div style={R({gap:10,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
+            {/* Dev-only: preview the first-run onboarding wizard without touching this account's
+                saved profile. Kept as a minimal inline link (not a full card) so it doesn't
+                compete for attention with real settings. Remove once onboarding is stable. */}
+            <button style={{...btnG({fontSize:12,padding:'9px 18px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
+          </div>
+        </div>
+        </Group>
+
+        {/* ── Account ──────────────────────────────────────────────────────────── */}
+        <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your college list, essays, deadlines, and test scores sync to this account.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
-        {/* Danger zone */}
         <div data-tour="settings-deep-danger" style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset Progress</button>
-            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){await AuthAPI.logout();signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
+            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
           </div>
         </div>
+        </Group>
 
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
             MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
-            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Llama 3.3 70B on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
-            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Metabrain 2.0 is powered by large language model technology · All progress data stored locally in your browser via IndexedDB
+            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Iatra on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
+            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Iatra is powered by large language model technology · Your progress is cached on this device via IndexedDB and synced to your account so it follows you to any browser you sign into
           </div>
         </div>
       </div>
@@ -5245,30 +5403,30 @@ export default function App({ account, onAccountChange }) {
   function tPrep(){
     return(
       <div>
-        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile} tourPrefix="prep-sub"/>
+        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={C.violet} m={isMobile} tourPrefix="prep-sub"/>
         {(prepRenders[prepView]||tPath)()}
       </div>
     );
   }
   // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
   const portfolioRenders={
-    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={accent}/>,
-    deadlines:()=><DeadlinesPanel accent={accent}/>,
-    colleges:()=><CollegeListPanel accent={accent}/>,
-    essays:()=><EssayWorkspacePanel accent={accent}/>,
-    scores:()=><ScoreTrackerPanel accent={accent}/>,
-    aid:()=><FinancialAidPanel accent={accent}/>,
-    resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    research:()=><ResearchExperiencePanel accent={accent}/>,
-    skills:()=><SkillsCertificationsPanel accent={accent}/>,
-    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
-    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
-    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portfolioAccent}/>,
+    deadlines:()=><DeadlinesPanel accent={portfolioAccent}/>,
+    colleges:()=><CollegeListPanel accent={portfolioAccent} studentSAT={user?.onboardingCurrentScore||null}/>,
+    essays:()=><EssayWorkspacePanel accent={portfolioAccent}/>,
+    scores:()=><ScoreTrackerPanel accent={portfolioAccent}/>,
+    aid:()=><FinancialAidPanel accent={portfolioAccent}/>,
+    resume:()=><ActivitiesResumePanel accent={portfolioAccent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
+    research:()=><ResearchExperiencePanel accent={portfolioAccent}/>,
+    skills:()=><SkillsCertificationsPanel accent={portfolioAccent}/>,
+    clinical:()=><ClinicalHoursPanel accent={portfolioAccent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={portfolioAccent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    interview:()=><InterviewPrepPanel accent={portfolioAccent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile} tourPrefix="portfolio-sub"/>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
         {(portfolioRenders[portfolioView]||tPort)()}
       </div>
     );
@@ -5326,7 +5484,7 @@ export default function App({ account, onAccountChange }) {
             <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
               <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
             </button>
-            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${accent}12`:undefined}}>
+            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
               <div style={R({gap:11,marginBottom:12})}>
                 <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
                   {user.name[0].toUpperCase()}
@@ -5343,10 +5501,11 @@ export default function App({ account, onAccountChange }) {
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
               {NAV.map(n=>{
                 const active=tab===n.id;
+                const nc=navColor[n.id]||accent;
                 const badge=n.id==='prep'&&dueCards>0?dueCards:null;
                 return(
-                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
-                    <n.ic size={17} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
+                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s'}}>
+                    <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
                   </motion.div>
                 );
@@ -5357,8 +5516,13 @@ export default function App({ account, onAccountChange }) {
 
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
         <main style={{flex:1,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
-          {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${accent}50,${C.cyan}20,transparent)`,zIndex:5}}/>}
-          <div style={{maxWidth:isMobile?'none':'min(1440px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
+          {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
+          {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
+              the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
+              bigger screens. Raised so ordinary desktop/laptop viewports use their full width;
+              content that genuinely needs a narrower reading measure (lesson articles, essay
+              editor, etc.) already caps itself internally rather than relying on this wrapper. */}
+          <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
             <AnimatePresence mode="wait">
               <motion.div key={tab} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.22}}>
                 {(tRenders[tab]||tHome)()}
@@ -5371,10 +5535,11 @@ export default function App({ account, onAccountChange }) {
         {isMobile && (
           <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
             {NAV.map(n=>{
+              const nc=navColor[n.id]||accent;
               const badge=n.id==='prep'&&dueCards>0?dueCards:null;
               return(
-                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:70}}>
-                  <n.ic size={20} color={tab===n.id?accent:C.t3}/>
+                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',width:70}}>
+                  <n.ic size={20} color={tab===n.id?nc:C.t3}/>
                   <span style={{fontSize:10,fontWeight:600}}>{n.label}</span>
                   {badge&&<span style={{position:'absolute',top:-4,right:14,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
                 </div>

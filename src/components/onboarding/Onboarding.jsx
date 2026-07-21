@@ -1,10 +1,11 @@
-// The full MedSchoolPrep onboarding flow — structurally mirrors Cal AI's
-// widely-studied 30(+2)-screen onboarding funnel (splash → warm-up questions
-// → personalization → animated proof/graph moments → permission asks →
-// plan-generation reveal → save-progress → paywall → optional discount
-// downsell), reskinned end-to-end for "a personalized path into medicine for
-// high schoolers." See /tmp .../scratchpad/onboarding-plan.md for the full
-// Cal AI screen → MedSchoolPrep screen mapping this was built from.
+// The full MedSchoolPrep onboarding flow — adapted from the widely-studied Cal AI-style
+// onboarding funnel (splash → warm-up questions → personalization → animated proof/graph
+// moments → permission asks → plan-generation reveal → save-progress), reskinned end-to-end for
+// "a personalized path into medicine for high schoolers." Screens that were pure funnel theater
+// with no real product behind them — a fake paywall/discount-wheel/one-time-offer, a "rate us"
+// screen with fabricated testimonials, and a "gender" question that claimed to calibrate study
+// load but never actually did — were removed rather than carried over, since MedSchoolPrep is
+// free (no premium tier) and every remaining screen should feed something the app actually uses.
 import React, { useMemo, useState } from 'react';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import OnboardingShell from './OnboardingShell';
@@ -18,33 +19,26 @@ import { RealisticTargetStep } from './steps/RealisticTargetStep';
 import { SpeedStep } from './steps/SpeedStep';
 import { ThankYouStep } from './steps/ThankYouStep';
 import { CalendarStep } from './steps/CalendarStep';
-import { RatingStep } from './steps/RatingStep';
 import { NotificationsStep } from './steps/NotificationsStep';
 import { ReferralStep } from './steps/ReferralStep';
 import { GeneratingStep } from './steps/GeneratingStep';
 import { PlanReadyStep } from './steps/PlanReadyStep';
 import { PlanSummaryStep } from './steps/PlanSummaryStep';
 import { SaveProgressStep } from './steps/SaveProgressStep';
-import { PaywallStep } from './steps/PaywallStep';
-import { SpinWheelStep } from './steps/SpinWheelStep';
-import { OneTimeOfferStep } from './steps/OneTimeOfferStep';
 import { PlusCircle, Repeat } from 'lucide-react';
 import { C } from './primitives';
 
 const STEPS = [
-  'splash', 'welcome', 'gender', 'studyHours', 'source', 'triedApps',
+  'splash', 'welcome', 'studyHours', 'source', 'triedApps',
   'proof1', 'gradeScore', 'birthdate', 'goal', 'targetScore', 'realistic',
   'speed', 'proof2', 'obstacles', 'studyMethod', 'accomplish', 'proof3',
-  'thankYou', 'calendar', 'toggleAddBack', 'toggleRollover', 'rating', 'notifications',
-  'referral', 'generating', 'planReady', 'planSummary', 'saveProgress', 'paywall',
-  // bonus downsell branch — only reached if the paywall CTA is declined
-  'spinWheel', 'oneTimeOffer',
+  'thankYou', 'calendar', 'toggleAddBack', 'toggleRollover', 'notifications',
+  'referral', 'generating', 'planReady', 'planSummary', 'saveProgress',
 ];
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
-const PROGRESS_START = STEPS.indexOf('gender');
-const PROGRESS_END = STEPS.indexOf('paywall');
+const PROGRESS_START = STEPS.indexOf('studyHours');
+const PROGRESS_END = STEPS.indexOf('saveProgress');
 
-const GENDER_OPTIONS = [{ value: 'male', label: 'Male' }, { value: 'female', label: 'Female' }, { value: 'other', label: 'Other' }];
 const STUDY_HOURS_OPTIONS = [
   { value: '0-5', label: '0-5 hrs / week', sublabel: 'Just getting started', dots: 1 },
   { value: '6-14', label: '6-14 hrs / week', sublabel: 'Building real momentum', dots: 2 },
@@ -52,7 +46,7 @@ const STUDY_HOURS_OPTIONS = [
 ];
 // Exported (not just used here) so src/lib/studentProfile.js can turn a
 // student's saved onboarding values back into human-readable labels for the
-// Metabrain system prompt and the dashboard's onboarding recap card, instead
+// Iatra system prompt and the dashboard's onboarding recap card, instead
 // of duplicating this copy in a second place that could drift out of sync.
 export const GOAL_OPTIONS = [
   { value: 'boost_score', label: 'Boost my SAT/ACT score' },
@@ -85,12 +79,12 @@ export const ACCOMPLISH_OPTIONS = [
 ];
 
 const DEFAULT_ANSWERS = {
-  gender: null, studyHours: null, source: null, triedApps: null,
+  studyHours: null, source: null, triedApps: null,
   gradeIdx: 2, testTrack: 'SAT', currentScore: 1000,
   monthIdx: 0, dayIdx: 0, yearIdx: 4,
   goal: null, targetScore: 1200, speedLevel: 1,
   obstacles: [], studyMethod: null, accomplish: [],
-  addBack: true, rollover: true, rating: 0, referralCode: '', name: '',
+  addBack: true, rollover: true, referralCode: '', name: '',
 };
 
 // Onboarding is a ~30-screen flow — closing the tab or losing a connection
@@ -140,10 +134,6 @@ export default function Onboarding({ account, onComplete }) {
     onComplete({ ...answers, ...extra });
   }
 
-  function goToBonusOrFinish() {
-    setStepIdx(STEPS.indexOf('spinWheel'));
-  }
-
   const showBack = !NO_CHROME.has(stepKey) && stepIdx > 0;
   const showProgress = !NO_CHROME.has(stepKey);
 
@@ -153,8 +143,6 @@ export default function Onboarding({ account, onComplete }) {
       content = <SplashStep onNext={next} />; break;
     case 'welcome':
       content = <WelcomeStep account={account} onNext={next} />; break;
-    case 'gender':
-      content = <SingleChoiceStep title="Choose your gender" subtitle="This helps us calibrate study-load recommendations for you." options={GENDER_OPTIONS} value={answers.gender} onChange={v => update({ gender: v })} onNext={next} />; break;
     case 'studyHours':
       content = <SingleChoiceStep title="How many hours do you study per week?" subtitle="This will be used to calibrate your custom plan." options={STUDY_HOURS_OPTIONS} value={answers.studyHours} onChange={v => update({ studyHours: v })} onNext={next} />; break;
     case 'source':
@@ -199,8 +187,6 @@ export default function Onboarding({ account, onComplete }) {
       content = <ToggleQuestionStep icon={<PlusCircle size={26} color={C.blueL} />} title="Add extra study sessions back to your daily goal?" subtitle="If you study more than planned, we'll count it toward tomorrow too." note="You can change this anytime in Settings." value={answers.addBack} onChange={v => update({ addBack: v })} onNext={next} />; break;
     case 'toggleRollover':
       content = <ToggleQuestionStep icon={<Repeat size={26} color={C.blueL} />} title="Rollover unused study time to the next day?" subtitle="Missed a session? We'll fold it into tomorrow's plan instead of losing it." value={answers.rollover} onChange={v => update({ rollover: v })} onNext={next} />; break;
-    case 'rating':
-      content = <RatingStep value={answers.rating} onChange={v => update({ rating: v })} onNext={next} />; break;
     case 'notifications':
       content = <NotificationsStep onNext={next} />; break;
     case 'referral':
@@ -212,13 +198,7 @@ export default function Onboarding({ account, onComplete }) {
     case 'planSummary':
       content = <PlanSummaryStep profile={answers} onNext={next} />; break;
     case 'saveProgress':
-      content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={next} />; break;
-    case 'paywall':
-      content = <PaywallStep onAccept={() => finish({ premium: true })} onDecline={goToBonusOrFinish} />; break;
-    case 'spinWheel':
-      content = <SpinWheelStep onNext={next} />; break;
-    case 'oneTimeOffer':
-      content = <OneTimeOfferStep onAccept={() => finish({ premium: true })} onDecline={() => finish({ premium: false })} />; break;
+      content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={() => finish()} />; break;
     default:
       content = null;
   }

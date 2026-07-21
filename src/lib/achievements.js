@@ -14,7 +14,7 @@ export const ACHIEVEMENTS = {
   cards_100:    { key:'cards_100',    name:'Card Master',      desc:'Review 100 flashcards',           icon:'Layers3', xp:150 },
   unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'BookOpen', xp:200 },
   course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'Milestone', xp:300 },
-  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Metabrain AI Coach 5 times',  icon:'MessageCircle', xp:75  },
+  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Iatra AI Coach 5 times',  icon:'MessageCircle', xp:75  },
   college_added:{ key:'college_added',name:'List Builder',     desc:'Add your first school to your college list', icon:'Building2', xp:75 },
   deadline_set: { key:'deadline_set', name:'On the Radar',     desc:'Track your first application deadline', icon:'CalendarDays', xp:50 },
   essay_started:{ key:'essay_started',name:'First Draft',      desc:'Start your first essay draft',    icon:'ScrollText', xp:100 },

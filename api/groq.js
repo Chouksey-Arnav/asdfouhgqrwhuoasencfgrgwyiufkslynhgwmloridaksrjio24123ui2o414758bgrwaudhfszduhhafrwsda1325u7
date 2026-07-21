@@ -1,7 +1,8 @@
 // /api/groq.js — Vercel serverless function
-// Proxies requests to Groq's OpenAI-compatible API server-side (key never exposed to browser)
-// Powers "Metabrain" — routes deep tutoring/coaching to a larger model and
-// lightweight/quick tasks to a smaller, faster model to keep free-tier usage sustainable.
+// Proxies requests to Groq's OpenAI-compatible API server-side (key never exposed to browser).
+// Powers Iatra, routing each request to one of three named model tiers (Scout/Guide/Sage — see
+// MODELS below) and, when a second Groq account is configured, spreading/failing over requests
+// across both accounts' keys to maximize combined free-tier throughput.
 //
 // Daily rate limit: 300 requests per IP per day (well under Groq free-tier caps)
 // Per-minute limit: 8 requests per minute per IP
@@ -51,14 +52,40 @@ function setCachedResponse(key, content, model) {
   responseCache.set(key, { content, model, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
-// Model routing: 'deep' for tasks that benefit from stronger reasoning (still a
-// cheap model — llama-3.3-70b-versatile was ~10x pricier for marginal gains on
-// this app's short, well-scoped tasks), 'fast' for lightweight chat turns where
-// speed/cost matter most and Groq's free/low-tier TPM caps bite hardest.
+// ── Model tiers ────────────────────────────────────────────────────────────
+// Iatra offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
+// — each maps to a real Groq-hosted model:
+//   Scout — llama-3.1-8b-instant, fastest, for quick turns and lightweight generation. Used as
+//           the default for the main chat coach, the highest-volume call in the app.
+//   Guide — openai/gpt-oss-20b, the balanced tier for tasks that benefit from more structure/
+//           reasoning without the cost and TPM pressure of a 70B model.
+//   Sage  — llama-3.3-70b-versatile, the most capable tier, for when a student explicitly wants
+//           the deepest feedback available (e.g. a full essay critique) and is fine trading
+//           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
+// 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
 const MODELS = {
-  deep: 'openai/gpt-oss-20b',
-  fast: 'llama-3.1-8b-instant',
+  scout: 'llama-3.1-8b-instant',
+  guide: 'openai/gpt-oss-20b',
+  sage: 'llama-3.3-70b-versatile',
 };
+const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
+const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
+
+// ── Groq API keys (up to 2 separate accounts) ───────────────────────────────
+// Configuring a second account's key roughly doubles the combined free-tier throughput
+// available to Iatra: normal traffic round-robins between the two, and if one account's key
+// comes back rate-limited, the request automatically fails over to the other key instead of
+// failing outright. GROQ_API_KEY_2 is entirely optional — everything still works with just one.
+const GROQ_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(Boolean);
+let keyCursor = 0;
+// Candidate keys in the order to try them for this request: starts at the next key in the
+// rotation (spreading load evenly across accounts), then falls through the rest as failover.
+function keyOrderForThisRequest() {
+  if (GROQ_KEYS.length <= 1) return GROQ_KEYS;
+  const start = keyCursor % GROQ_KEYS.length;
+  keyCursor = (keyCursor + 1) % GROQ_KEYS.length;
+  return [...GROQ_KEYS.slice(start), ...GROQ_KEYS.slice(0, start)];
+}
 
 function isDailyLimited(ip) {
   const now = Date.now();
@@ -134,9 +161,8 @@ export default async function handler(req, res) {
   }
 
   // ── API key check ──────────────────────────────────────────────────────────
-  const GROQ_API_KEY = process.env.GROQ_API_KEY;
-  if (!GROQ_API_KEY) {
-    return res.status(500).json({ error: 'Metabrain is not configured. Set GROQ_API_KEY in Vercel environment variables.' });
+  if (!GROQ_KEYS.length) {
+    return res.status(500).json({ error: 'Iatra is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2) in your environment variables.' });
   }
 
   // ── Parse and validate body ────────────────────────────────────────────────
@@ -147,17 +173,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body.' });
   }
 
-  const { system, message, messages: rawMessages, maxTokens = 700, tier = 'deep' } = body || {};
+  const { system, message, messages: rawMessages, maxTokens = 700, tier: rawTier = 'guide' } = body || {};
 
   if (!message && !rawMessages) {
     return res.status(400).json({ error: 'No message provided.' });
   }
 
-  const model = MODELS[tier] || MODELS.deep;
+  const tier = TIER_ALIASES[rawTier] || rawTier;
+  const model = MODELS[tier] || MODELS.guide;
 
   // ── Build messages array (OpenAI-compatible format) ────────────────────────
   const groqMessages = [];
-  // Cap raised from 1200 → 4000: Metabrain's system prompt (see
+  // Cap raised from 1200 → 4000: Iatra's system prompt (see
   // src/lib/studentProfile.js buildCoachSystemPrompt) now folds in a
   // student's onboarding goal/obstacles/study habits alongside live
   // Prep/Portfolio signals, which runs meaningfully longer than the old
@@ -165,7 +192,7 @@ export default async function handler(req, res) {
   // pathological client payload can't blow up per-request token cost.
   const systemPrompt = system
     ? String(system).slice(0, 4000)
-    : 'You are Metabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
+    : 'You are Iatra, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {
@@ -190,6 +217,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       content: cached.content,
       model_used: cached.model,
+      tier,
+      tierLabel: TIER_LABELS[tier] || tier,
       requestsUsedToday: getRequestsUsedToday(ip),
       requestsRemaining: Math.max(0, DAILY_LIMIT - getRequestsUsedToday(ip)),
       dailyLimit: DAILY_LIMIT,
@@ -209,7 +238,7 @@ export default async function handler(req, res) {
   // ── Call Groq API (with timeout + one retry on transient failure) ──────────
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), 1500);
 
-  async function callGroqOnce(useModel, timeoutMs) {
+  async function callGroqOnce(useModel, apiKey, timeoutMs) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -217,7 +246,7 @@ export default async function handler(req, res) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${GROQ_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
           model: useModel,
@@ -232,6 +261,22 @@ export default async function handler(req, res) {
     } finally {
       clearTimeout(timer);
     }
+  }
+
+  // Tries each configured Groq key in rotation order, failing over to the next account on a
+  // 429 (that account's own rate limit) or a 5xx — this is what actually maximizes combined
+  // usage across two accounts, rather than just splitting requests evenly and hoping neither
+  // hits its cap. A genuine 4xx client error (bad request, auth) isn't retried on the other key
+  // since it isn't account-specific and would just fail the same way twice.
+  async function callGroqWithFailover(useModel, timeoutMs) {
+    const keys = keyOrderForThisRequest();
+    let last = null;
+    for (const key of keys) {
+      last = await callGroqOnce(useModel, key, timeoutMs);
+      if (last.response.ok) return last;
+      if (last.response.status !== 429 && last.response.status < 500) return last;
+    }
+    return last;
   }
 
   // Groq's message.content is normally a string, but some models/response
@@ -252,21 +297,20 @@ export default async function handler(req, res) {
   }
 
   try {
-    let { response, data } = await callGroqOnce(model, 20000);
+    let { response, data } = await callGroqWithFailover(model, 20000);
 
-    // One retry on transient failure (5xx, network hiccup) so a single blip
-    // doesn't dead-end the chat. Skip 429s — retrying immediately into a rate
-    // limit just wastes the retry.
+    // One more pass through the key rotation on a transient failure (5xx, network hiccup) so a
+    // single blip doesn't dead-end the chat.
     if (!response.ok && response.status >= 500) {
-      ({ response, data } = await callGroqOnce(model, 15000));
+      ({ response, data } = await callGroqWithFailover(model, 15000));
     }
 
     if (!response.ok) {
-      const errMsg = data?.error?.message || `Metabrain error (${response.status})`;
+      const errMsg = data?.error?.message || `Iatra error (${response.status})`;
       console.error('Groq API error:', errMsg);
 
       if (response.status === 429 || errMsg.toLowerCase().includes('rate limit')) {
-        return res.status(429).json({ error: 'Metabrain is busy right now. Please wait a moment and try again.' });
+        return res.status(429).json({ error: 'Iatra is busy right now. Please wait a moment and try again.' });
       }
 
       return res.status(502).json({ error: errMsg });
@@ -274,7 +318,7 @@ export default async function handler(req, res) {
 
     const content = extractText(data?.choices?.[0]?.message);
     if (!content) {
-      return res.status(502).json({ error: 'Metabrain had trouble forming a response. Please try again.' });
+      return res.status(502).json({ error: 'Iatra had trouble forming a response. Please try again.' });
     }
 
     addRequestToday(ip);
@@ -285,6 +329,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       content,
       model_used: data?.model || model,
+      tier,
+      tierLabel: TIER_LABELS[tier] || tier,
       requestsUsedToday,
       requestsRemaining,
       dailyLimit: DAILY_LIMIT,
@@ -293,7 +339,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('API handler error:', err);
     if (err?.name === 'AbortError') {
-      return res.status(504).json({ error: 'Metabrain took too long to respond. Please try again.' });
+      return res.status(504).json({ error: 'Iatra took too long to respond. Please try again.' });
     }
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }

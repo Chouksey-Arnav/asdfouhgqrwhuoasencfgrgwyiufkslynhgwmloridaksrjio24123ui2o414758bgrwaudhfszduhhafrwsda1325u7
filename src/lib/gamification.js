@@ -45,6 +45,26 @@ export function getLevelInfo(xp) {
   return { level, tier: tier.name, tierIcon: tier.icon, tierColor: tier.color, xpIntoLevel, xpForNext, xpRemaining: xpForNext - xpIntoLevel, pct };
 }
 
+// ── Encouraging due-card copy ─────────────────────────────────────────────────
+// A raw flashcard "due" count (FSRS naturally lets this pile up if a student takes a break) is
+// motivating when it's small — "3 cards ready" reads like a quick win — but a big bare number
+// like "285 cards due" reads like an intimidating backlog, which is the opposite of what a
+// spaced-repetition system should feel like. These stay honest (the true count still shows for
+// small, approachable numbers) while reframing larger ones around "a session," not a debt.
+export function dueCardsBadge(n) {
+  if (n <= 0) return null;
+  if (n <= 20) return `${n} card${n === 1 ? '' : 's'} ready`;
+  if (n <= 60) return 'A review session is ready';
+  return 'Loads of cards ready — dive in anytime';
+}
+
+export function dueCardsSub(n) {
+  if (n <= 0) return 'All caught up';
+  if (n <= 20) return `${n} card${n === 1 ? '' : 's'} ready to review`;
+  if (n <= 60) return 'A full session ready whenever you are';
+  return 'Plenty ready — even a few minutes helps';
+}
+
 // ── Weekly quests ─────────────────────────────────────────────────────────────
 // Fixed 3-quest set, reset every Monday (ISO week key). Claim state lives in
 // localStorage since it's a short-horizon, non-critical reward loop.
