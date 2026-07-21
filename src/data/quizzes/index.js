@@ -2,10 +2,12 @@ import { BIO_BIOCHEM_QUIZZES } from './bioBiochem';
 import { CHEM_PHYS_QUIZZES }   from './chemPhys';
 import { PSYCH_SOC_QUIZZES }   from './psychSoc';
 import { LESSON_QUIZZES }      from './lessonQuizzes';
+import { FOUNDATIONS_QUIZZES } from './foundations';
 
 export const ALL_QUIZZES = [
   ...BIO_BIOCHEM_QUIZZES,
   ...CHEM_PHYS_QUIZZES,
   ...PSYCH_SOC_QUIZZES,
   ...LESSON_QUIZZES,
+  ...FOUNDATIONS_QUIZZES,
 ];
