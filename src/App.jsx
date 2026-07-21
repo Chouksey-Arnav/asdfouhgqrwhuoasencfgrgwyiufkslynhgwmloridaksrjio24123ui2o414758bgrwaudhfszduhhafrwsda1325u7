@@ -4756,7 +4756,14 @@ export default function App({ account, onAccountChange }) {
     return(
       <div>
         <PageHeader icon={LineChart} color={accent} eyebrow="Progress" title="Your Progress"
-          sub="Readiness, credibility, and performance across your pathway." m={isMobile}/>
+          sub="Readiness, credibility, and performance across your pathway." m={isMobile}
+          right={!isMobile&&(
+            <div style={R({gap:10})}>
+              <div style={{...pill(`${levelInfo.tierColor}1e`,levelInfo.tierColor,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
+              {streak>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Flame size={12}/>{streak}d</div>}
+              <div style={{...pill(C.greenDim,C.greenL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Trophy size={12}/>{achiev.size}</div>
+            </div>
+          )}/>
         <div style={{marginTop:18}}>
           <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub"/>
         </div>
