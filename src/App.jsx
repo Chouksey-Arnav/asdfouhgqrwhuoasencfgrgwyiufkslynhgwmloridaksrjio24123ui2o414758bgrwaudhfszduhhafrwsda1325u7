@@ -19,7 +19,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
@@ -1739,6 +1739,18 @@ export default function App({ account, onAccountChange }) {
   const eSpec   = user?.specialty||'exploring';
   const curPath = PATHS[eSpec]||PATHS['exploring'];
   const accent  = curPath?.accent||C.blue;
+  // Per-tab color identity — Prep and Home stay keyed to the chosen pathway's own accent (that
+  // pathway color IS their identity, and Home's hero is deliberately tinted per-pathway), but
+  // Portfolio/Progress/Settings are generic app sections with no pathway of their own, so each
+  // gets a fixed color instead of every tab in the app reusing the exact same accent.
+  const portfolioAccent = C.green;
+  const progressAccent = C.cyan;
+  const settingsAccent = C.amber;
+  // Same identity, applied to the nav itself — so the active tab actually highlights in its own
+  // fixed color instead of every nav item lighting up in whatever the current pathway's accent
+  // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
+  // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
+  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -4114,6 +4126,7 @@ export default function App({ account, onAccountChange }) {
   }
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
+    const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
     const totH=Math.round(portActivities.reduce((s,a)=>s+annualH(a),0));
     const leadH=Math.round(portActivities.filter(a=>a.activity_type==='Leadership').reduce((s,a)=>s+annualH(a),0));
@@ -4308,6 +4321,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── ADMISSIONS CALC ───────────────────────────────────────────────────────────
   function tCalc(){
+    const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     return(
       <div style={CC({gap:22})}>
         <div data-tour="portfolio-deep-calc" style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
@@ -4559,6 +4573,7 @@ export default function App({ account, onAccountChange }) {
   }
   // ── ANALYTICS ─────────────────────────────────────────────────────────────────
   function tAnalytics(){
+    const accent=progressAccent; // shadows the pathway accent — Progress has its own fixed color identity
     void questTick; // re-render after claiming a quest (claim state lives in localStorage)
     const recentScores=qHistory.slice(-12);
     const weekKey=getIsoWeekKey();
@@ -5044,28 +5059,43 @@ export default function App({ account, onAccountChange }) {
 
   // ── SETTINGS ──────────────────────────────────────────────────────────────────
   function tSettings(){
+    const accent=settingsAccent; // shadows the pathway accent — Settings has its own fixed color identity
+    // Small section-group label used to chunk the long list of cards below into scannable
+    // groups (Profile & Goals / Study Setup / Preferences & Data / Account) instead of one
+    // undifferentiated stack — the actual cards inside are unchanged.
+    const Group=({icon:Icon,title,children})=>(
+      <div style={CC({gap:14})}>
+        <div style={R({gap:9})}>
+          <div style={{width:22,height:22,borderRadius:6,background:`${accent}18`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Icon size={12} color={accent}/></div>
+          <span style={{fontSize:11,fontWeight:800,color:accent,letterSpacing:'.1em',textTransform:'uppercase'}}>{title}</span>
+        </div>
+        {children}
+      </div>
+    );
     return(
-      <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Settings</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Account & Preferences</h2></div>
-
-        {/* Profile */}
-        <div data-tour="settings-deep-profile" style={glass()}>
-          <SL>Profile</SL>
-          <div style={{...R({gap:14,marginBottom:18})}}>
-            <div style={{width:52,height:52,borderRadius:14,background:`linear-gradient(135deg,${accent}50,${accent}25)`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:22,color:'#fff',boxShadow:`0 6px 20px ${accent}30`}}>
-              {user.name[0].toUpperCase()}
-            </div>
-            <div>
-              <div style={{fontSize:16,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{user.name}</div>
-              <div style={{fontSize:12,color:C.t3,marginTop:2}}>Level {lvl} · {curPath?.label} · {(user.xp||0).toLocaleString()} XP total</div>
-              <div style={R({gap:8,marginTop:6})}>
-                {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={10}/>{streak} day streak</span>}
-                <span style={pill(C.greenDim,C.greenL,{fontSize:10})}>{achiev.size} achievements</span>
-              </div>
+      <div style={CC({gap:30})}>
+        {/* Hero */}
+        <div style={{...glass({padding:26}),background:`linear-gradient(135deg,${accent}14,transparent)`,border:`1px solid ${accent}26`,display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24,color:'#fff',boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
+            {user.name[0].toUpperCase()}
+          </div>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Settings</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{user.name}</h2>
+            <div style={R({gap:8,marginTop:8,flexWrap:'wrap'})}>
+              <span style={pill(`${accent}20`,accent,{fontFamily:C.FM})}>Level {lvl} · {(user.xp||0).toLocaleString()} XP</span>
+              {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} day streak</span>}
+              <span style={pill(C.greenDim,C.greenL,{fontSize:11})}>{achiev.size} achievements</span>
             </div>
           </div>
-          <div style={CC({gap:4,marginBottom:14})}><span style={lbl()}>Display Name</span><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn()} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
+        </div>
+
+        {/* ── Profile & Goals ─────────────────────────────────────────────────── */}
+        <Group icon={UserCog} title="Profile & Goals">
+        <div data-tour="settings-deep-profile" style={glass()}>
+          <SL>Display Name</SL>
+          <div style={CC({gap:4,marginBottom:14})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
+          <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
@@ -5142,54 +5172,26 @@ export default function App({ account, onAccountChange }) {
             </div>
           )}
         </div>
+        </Group>
 
-        {/* Exam date */}
+        {/* ── Study Setup ──────────────────────────────────────────────────────── */}
+        <Group icon={Route} title="Study Setup">
         <div data-tour="settings-deep-examdate" style={glass({padding:18})}>
           <SL>Test Day</SL>
           <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
-            <button style={btn()} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
+            <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
             {user?.examDate&&<button style={btnG()} onClick={()=>{saveUser({...user,examDate:null});setSExamDate('');toast('Test date cleared');}}>Clear</button>}
           </div>
         </div>
 
-        {/* Sound toggle */}
-        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
-          <SL>Preferences</SL>
-          <div style={R({justifyContent:'space-between'})}>
-            <div>
-              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Sound Effects</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
-            </div>
-            <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Help */}
-        <div style={glass({padding:18})}>
-          <SL>Help</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
-        </div>
-
-        {/* Dev-only: preview the first-run onboarding wizard without touching this account's
-            saved profile. Remove this card once onboarding is stable. */}
-        <div style={glass({padding:18})}>
-          <SL>Developer</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Temporary, dev-only: preview the first-run onboarding wizard again. Won't change your saved profile — closing or finishing it just returns you here.</p>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)}><RotateCcw size={14}/>Replay Onboarding</button>
-        </div>
-
-        {/* Specialty path */}
         <div data-tour="settings-deep-studytrack" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Study Track</SL>
             <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
-          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:curPath?.accent||accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
@@ -5203,7 +5205,6 @@ export default function App({ account, onAccountChange }) {
           {sSpec&&sSpec!==eSpec&&<motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16}} onClick={()=>{switchPath(sSpec);setSS('');}}>Switch to {PATHS[sSpec]?.label}</motion.button>}
         </div>
 
-        {/* Course load */}
         <div data-tour="settings-deep-courseload" style={glass()}>
           <SL>Current Course Load</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Tell us what you're taking so the AI Coach and Quiz Library can point you to relevant material.</p>
@@ -5233,22 +5234,49 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
+        </Group>
 
-        {/* Export / Backup */}
+        {/* ── Preferences & Data ───────────────────────────────────────────────── */}
+        <Group icon={Volume2} title="Preferences & Data">
+        <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
+          <div style={R({justifyContent:'space-between'})}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Sound Effects</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
+            </div>
+            <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
+        </div>
+
         <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{DB.exportAllData();toast.success('Export started — check your Downloads folder');}}><Package size={14}/>Export All Data</button>
         </div>
 
-        {/* Account */}
+        <div style={glass({padding:18})}>
+          <SL>Help</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Not sure where everything lives? Replay the full guided tour — every tab, every sub-view inside Prep, Portfolio, and Progress, Settings, and the ⌘K quick-switcher.</p>
+          <div style={R({gap:10,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={startTour}><Compass size={14}/>Replay App Tour</button>
+            {/* Dev-only: preview the first-run onboarding wizard without touching this account's
+                saved profile. Kept as a minimal inline link (not a full card) so it doesn't
+                compete for attention with real settings. Remove once onboarding is stable. */}
+            <button style={{...btnG({fontSize:12,padding:'9px 18px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
+          </div>
+        </div>
+        </Group>
+
+        {/* ── Account ──────────────────────────────────────────────────────────── */}
+        <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Iatra chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
-        {/* Danger zone */}
         <div data-tour="settings-deep-danger" style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
@@ -5257,6 +5285,7 @@ export default function App({ account, onAccountChange }) {
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
           </div>
         </div>
+        </Group>
 
         {/* About */}
         <div style={glass({padding:18})}>
@@ -5341,30 +5370,30 @@ export default function App({ account, onAccountChange }) {
   function tPrep(){
     return(
       <div>
-        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={accent} m={isMobile} tourPrefix="prep-sub"/>
+        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={C.violet} m={isMobile} tourPrefix="prep-sub"/>
         {(prepRenders[prepView]||tPath)()}
       </div>
     );
   }
   // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
   const portfolioRenders={
-    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={accent}/>,
-    deadlines:()=><DeadlinesPanel accent={accent}/>,
-    colleges:()=><CollegeListPanel accent={accent}/>,
-    essays:()=><EssayWorkspacePanel accent={accent}/>,
-    scores:()=><ScoreTrackerPanel accent={accent}/>,
-    aid:()=><FinancialAidPanel accent={accent}/>,
-    resume:()=><ActivitiesResumePanel accent={accent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    research:()=><ResearchExperiencePanel accent={accent}/>,
-    skills:()=><SkillsCertificationsPanel accent={accent}/>,
-    clinical:()=><ClinicalHoursPanel accent={accent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
-    recommenders:()=><RecommendersPanel accent={accent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
-    interview:()=><InterviewPrepPanel accent={accent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portfolioAccent}/>,
+    deadlines:()=><DeadlinesPanel accent={portfolioAccent}/>,
+    colleges:()=><CollegeListPanel accent={portfolioAccent}/>,
+    essays:()=><EssayWorkspacePanel accent={portfolioAccent}/>,
+    scores:()=><ScoreTrackerPanel accent={portfolioAccent}/>,
+    aid:()=><FinancialAidPanel accent={portfolioAccent}/>,
+    resume:()=><ActivitiesResumePanel accent={portfolioAccent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
+    research:()=><ResearchExperiencePanel accent={portfolioAccent}/>,
+    skills:()=><SkillsCertificationsPanel accent={portfolioAccent}/>,
+    clinical:()=><ClinicalHoursPanel accent={portfolioAccent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={portfolioAccent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    interview:()=><InterviewPrepPanel accent={portfolioAccent} pathway={curPath} pathwayKey={eSpec} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={accent} m={isMobile} tourPrefix="portfolio-sub"/>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
         {(portfolioRenders[portfolioView]||tPort)()}
       </div>
     );
@@ -5422,7 +5451,7 @@ export default function App({ account, onAccountChange }) {
             <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} style={{margin:'12px 18px 0',padding:'8px 12px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,color:C.t3,fontSize:12,fontFamily:C.FB,display:'flex',alignItems:'center',gap:8,cursor:'pointer'}}>
               <Search size={13}/><span style={{flex:1,textAlign:'left'}}>Jump to…</span><span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>⌘K</span>
             </button>
-            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${accent}12`:undefined}}>
+            <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
               <div style={R({gap:11,marginBottom:12})}>
                 <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
                   {user.name[0].toUpperCase()}
@@ -5439,10 +5468,11 @@ export default function App({ account, onAccountChange }) {
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
               {NAV.map(n=>{
                 const active=tab===n.id;
+                const nc=navColor[n.id]||accent;
                 const badge=n.id==='prep'&&dueCards>0?dueCards:null;
                 return(
-                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${accent}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${accent}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${accent}`:'2px solid transparent',transition:'all .2s'}}>
-                    <n.ic size={17} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
+                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s'}}>
+                    <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
                   </motion.div>
                 );
@@ -5453,7 +5483,7 @@ export default function App({ account, onAccountChange }) {
 
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
         <main style={{flex:1,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
-          {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${accent}50,${C.cyan}20,transparent)`,zIndex:5}}/>}
+          {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
               bigger screens. Raised so ordinary desktop/laptop viewports use their full width;
@@ -5472,10 +5502,11 @@ export default function App({ account, onAccountChange }) {
         {isMobile && (
           <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
             {NAV.map(n=>{
+              const nc=navColor[n.id]||accent;
               const badge=n.id==='prep'&&dueCards>0?dueCards:null;
               return(
-                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?accent:C.t3,cursor:'pointer',width:70}}>
-                  <n.ic size={20} color={tab===n.id?accent:C.t3}/>
+                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',width:70}}>
+                  <n.ic size={20} color={tab===n.id?nc:C.t3}/>
                   <span style={{fontSize:10,fontWeight:600}}>{n.label}</span>
                   {badge&&<span style={{position:'absolute',top:-4,right:14,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
                 </div>
