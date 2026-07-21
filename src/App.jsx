@@ -22,7 +22,7 @@ import {
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff,
 } from 'lucide-react';
 
-const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck };
+const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
 const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown };
 
 import { ALL_QUIZZES } from './data/quizzes/index';
@@ -3131,7 +3131,26 @@ export default function App({ account, onAccountChange }) {
   }
 
   // ── AI COACH ─────────────────────────────────────────────────────────────────
-  const COACH_ICONS = { FlaskConical, Compass };
+  const COACH_ICONS = { FlaskConical, Compass, Sparkles };
+  // Builds a "For You Right Now" group from the same profile signals already
+  // fed into buildCoachSystemPrompt (weakest category, exam countdown, due
+  // cards, stated goal) so the starter prompts a student actually sees are
+  // grounded in their real data instead of the same three generic examples
+  // every account was shown before.
+  const personalizedQuickPrompts=useCallback(()=>{
+    const personal=[];
+    const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+    if(weakIdx)personal.push(`I'm scoring lowest in ${cats3[weakIdx.i]} (${weakIdx.v}%) — walk me through how to approach it`);
+    if(user?.examDate){
+      const days=Math.ceil((new Date(user.examDate)-new Date())/86400000);
+      if(days>=0)personal.push(`I have ${days} day${days===1?'':'s'} until my test — what should I focus on right now?`);
+    }
+    if(dueCards>0)personal.push(`Quiz me out loud on my ${dueCards} due flashcard${dueCards===1?'':'s'} instead of the review screen`);
+    const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
+    if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
+    if(!personal.length)return QUICK_P_GROUPS;
+    return [{label:'For You Right Now',icon:'Sparkles',prompts:personal.slice(0,3)},...QUICK_P_GROUPS];
+  },[secAvgs,cats3,user,dueCards]);
   function TypingDots(){
     return(
       <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 2px'}}>
@@ -3282,13 +3301,15 @@ export default function App({ account, onAccountChange }) {
                 <div style={{fontSize:13,color:C.t3,lineHeight:1.6}}>Ask me to explain a concept, build a study plan, or work through a tough problem. I know where you stand in {curPath?.label||'your pathway'} and can tailor answers to it. Pick a prompt below or just start typing.</div>
               </div>
             </div>
-            {QUICK_P_GROUPS.map(group=>{const GIc=COACH_ICONS[group.icon];return(
+            {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For You Right Now';return(
               <div key={group.label} style={{marginBottom:18}}>
-                <div style={{...R({gap:6}),marginBottom:10}}><GIc size={12} color={C.t3}/><span style={lbl({marginBottom:0})}>{group.label}</span></div>
+                <div style={{...R({gap:6}),marginBottom:10}}>
+                  <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
+                </div>
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:10}}>
                   {group.prompts.map((p,i)=>(
-                    <motion.button key={i} whileHover={{y:-2,borderColor:`${accent}50`,background:'rgba(255,255,255,0.045)'}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'12px 14px',borderRadius:12,border:`1px solid ${C.b1}`,background:'rgba(255,255,255,0.025)',color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                    <motion.button key={i} whileHover={{y:-2,borderColor:`${personal?C.amber:accent}50`,background:'rgba(255,255,255,0.045)'}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
+                      style={{textAlign:'left',padding:'12px 14px',borderRadius:12,border:`1px solid ${personal?C.amber+'30':C.b1}`,background:personal?C.amberDim:'rgba(255,255,255,0.025)',color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
