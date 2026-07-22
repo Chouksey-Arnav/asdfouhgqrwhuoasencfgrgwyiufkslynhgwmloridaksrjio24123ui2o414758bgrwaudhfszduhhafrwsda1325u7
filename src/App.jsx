@@ -1214,7 +1214,7 @@ export default function App({ account, onAccountChange }) {
     { target:'prep-deep-flashcards', section:'Prep', color:C.violet, title:'Generate a deck from your notes', body:"Tap \"New Deck\" to turn your own notes into flashcards offline — no account or API call needed — or scroll down to study any built-in deck with cards due today.", onEnter:()=>goPrep('flashcards') },
     { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Medabrain — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
     { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Medabrain disappears on reload.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Medabrain picks its own model', body:"No switcher to fuss with — Medabrain reads each message and routes it itself: Scout for quick questions, Guide as the balanced default, Sage for essay feedback and deep strategy. This badge just shows which one just answered.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Pick your model — or let Medabrain choose', body:"Leave it on Auto and Medabrain routes each message itself — Scout for quick questions, Guide as the balanced default, Sage for essay feedback and deep strategy. Or tap Scout/Guide/Sage to pin every message to one model. Below the header you'll see how many answers each model has given you.", onEnter:()=>goPrep('coach') },
     { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
     { target:'prep-deep-library', section:'Prep', color:C.violet, title:'Bookmark, take notes, export', body:"This card tracks your reading progress across the whole library. Bookmark resources for later, jot notes as you go, then export everything you've written as one study document.", onEnter:()=>goPrep('library') },
 
@@ -1338,10 +1338,19 @@ export default function App({ account, onAccountChange }) {
   // display (the small badge in the coach header showing which tier just responded).
   const [coachTier,setCoachTier]=useState('guide');
   const COACH_TIERS=[
-    {id:'scout',label:'Scout',desc:'Fastest — quick answers and everyday questions'},
-    {id:'guide',label:'Guide',desc:'Balanced — the default for most coaching'},
-    {id:'sage',label:'Sage',desc:'Deepest reasoning — essay feedback, complex strategy'},
+    {id:'scout',label:'Scout',desc:'Fastest — quick answers and everyday questions',color:C.cyan},
+    {id:'guide',label:'Guide',desc:'Balanced — the default for most coaching',color:C.violet},
+    {id:'sage',label:'Sage',desc:'Deepest reasoning — essay feedback, complex strategy',color:C.amber},
   ];
+  // Model preference: 'auto' lets Medabrain route each message itself (classifyCoachTier);
+  // 'scout'/'guide'/'sage' pins every message to that model. Device-local so it survives reloads
+  // without touching the synced profile schema.
+  const [coachModelPref,setCoachModelPref]=useState(()=>{try{return localStorage.getItem('msp_coachModelPref')||'auto';}catch{return 'auto';}});
+  useEffect(()=>{try{localStorage.setItem('msp_coachModelPref',coachModelPref);}catch{/* private mode */}},[coachModelPref]);
+  // How many answers each model has produced — powers the usage breakdown (which model you lean on
+  // most vs least). Local tally; resets only if storage is cleared.
+  const [coachTierCounts,setCoachTierCounts]=useState(()=>{try{return JSON.parse(localStorage.getItem('msp_coachTierCounts'))||{scout:0,guide:0,sage:0};}catch{return {scout:0,guide:0,sage:0};}});
+  useEffect(()=>{try{localStorage.setItem('msp_coachTierCounts',JSON.stringify(coachTierCounts));}catch{/* private mode */}},[coachTierCounts]);
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [gStage,setGStage]=useState(0);const [gShake,setGShake]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
@@ -2126,9 +2135,11 @@ export default function App({ account, onAccountChange }) {
         streak,
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
-      const tier=classifyCoachTier(lastUser?.content||'');
+      // Honor a pinned model; otherwise let Medabrain auto-route this message.
+      const tier=coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref;
       setCoachTier(tier);
       const r=await callGroqAI(sysPrompt,lastUser?.content||'',700,history.filter(m=>m.role!=='error'),tier);
+      setCoachTierCounts(c=>({...c,[tier]:(c[tier]||0)+1}));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
       checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,chatCountForAchievements);
@@ -3329,6 +3340,9 @@ export default function App({ account, onAccountChange }) {
   function tCoach(){
     const usagePct=Math.round(((coachDailyLimit-coachRequestsRemaining)/coachDailyLimit)*100);
     const usageColor=usagePct>=100?C.rose:usagePct>=80?C.amber:C.violet;
+    const tierTotal=(coachTierCounts.scout||0)+(coachTierCounts.guide||0)+(coachTierCounts.sage||0);
+    const rankedTiers=[...COACH_TIERS].sort((a,b)=>(coachTierCounts[b.id]||0)-(coachTierCounts[a.id]||0));
+    const activePinned=coachModelPref!=='auto';
     return(
       <div style={{display:'flex',height:'calc(100vh - 64px)',position:'relative'}}>
         {/* ── Chat sidebar (desktop: fixed column · mobile: slide-over) ────── */}
@@ -3374,15 +3388,48 @@ export default function App({ account, onAccountChange }) {
                 {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
               </div>
-              <div style={{display:'flex',gap:6,padding:'4px 9px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',cursor:'default'}} data-tour="prep-deep-coach-tier" title="Medabrain automatically picks the model for each message — Scout for quick answers, Guide for everyday coaching, Sage for essay feedback and deep strategy.">
-                <motion.span animate={{opacity:[1,.4,1]}} transition={{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:6,height:6,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`,flexShrink:0}}/>
-                <span style={{fontSize:9.5,fontWeight:700,color:C.t4,letterSpacing:'.08em',textTransform:'uppercase'}}>Auto</span>
-                <span style={{width:1,height:12,background:C.b1}}/>
-                <span style={{fontSize:10.5,fontWeight:700,color:accent,fontFamily:C.FB}}>{COACH_TIERS.find(t=>t.id===coachTier)?.label}</span>
+              {/* Interactive model switcher — Auto (Medabrain routes) or pin a specific model. */}
+              <div data-tour="prep-deep-coach-tier" style={{display:'flex',gap:3,padding:3,borderRadius:11,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center'}}>
+                <button onClick={()=>{setCoachModelPref('auto');play('click');}} title="Let Medabrain pick the best model for each message"
+                  style={{display:'inline-flex',alignItems:'center',gap:4,padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:coachModelPref==='auto'?`${C.greenL}22`:'transparent',transition:'all .15s'}}>
+                  {coachModelPref==='auto'&&<motion.span animate={{opacity:[1,.4,1]}} transition={{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:5,height:5,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`}}/>}
+                  <span style={{fontSize:10,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase',color:coachModelPref==='auto'?C.greenL:C.t4}}>Auto</span>
+                </button>
+                {COACH_TIERS.map(t=>{const on=coachModelPref===t.id;return(
+                  <button key={t.id} onClick={()=>{setCoachModelPref(t.id);play('click');}} title={t.desc}
+                    style={{padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:on?`${t.color}26`:'transparent',transition:'all .15s'}}>
+                    <span style={{fontSize:10.5,fontWeight:700,fontFamily:C.FB,color:on?t.color:C.t4}}>{t.label}</span>
+                  </button>
+                );})}
               </div>
             </div>
           </div>
-          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>Medabrain matches the model to your question automatically — {COACH_TIERS.find(t=>t.id===coachTier)?.label} answered last</div>
+          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>{activePinned?<>Pinned to <span style={{color:COACH_TIERS.find(t=>t.id===coachModelPref)?.color,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachModelPref)?.label}</span> — every message uses this model. Switch back to Auto to let Medabrain choose.</>:<>Auto mode — Medabrain matched <span style={{color:accent,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachTier)?.label}</span> to your last message.</>}</div>
+
+          {/* Per-model usage breakdown — which model you lean on most vs least. */}
+          {tierTotal>0&&(
+            <div style={{marginTop:14,padding:'12px 14px',borderRadius:12,background:C.s2,border:`1px solid ${C.b1}`,maxWidth:isMobile?'100%':420}}>
+              <div style={R({justifyContent:'space-between',marginBottom:9})}>
+                <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Model usage</span>
+                <span style={{fontSize:10,color:C.t4,fontFamily:C.FM}}>{tierTotal} answer{tierTotal!==1?'s':''}</span>
+              </div>
+              {/* Stacked proportion bar */}
+              <div style={{display:'flex',height:7,borderRadius:6,overflow:'hidden',background:C.s4,marginBottom:9}}>
+                {COACH_TIERS.map(t=>{const pct=tierTotal?((coachTierCounts[t.id]||0)/tierTotal*100):0;return pct>0?<div key={t.id} title={`${t.label}: ${coachTierCounts[t.id]||0}`} style={{width:`${pct}%`,background:t.color,transition:'width .3s'}}/>:null;})}
+              </div>
+              <div style={R({gap:isMobile?8:14,flexWrap:'wrap'})}>
+                {rankedTiers.map((t,i)=>(
+                  <div key={t.id} style={R({gap:5})}>
+                    <span style={{width:8,height:8,borderRadius:2,background:t.color,flexShrink:0}}/>
+                    <span style={{fontSize:11,fontWeight:700,color:C.t2}}>{t.label}</span>
+                    <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{coachTierCounts[t.id]||0}</span>
+                    {tierTotal>=3&&i===0&&<span style={pill(`${t.color}22`,t.color,{fontSize:8.5,padding:'1px 6px'})}>MOST</span>}
+                    {tierTotal>=3&&i===rankedTiers.length-1&&(coachTierCounts[t.id]||0)<(coachTierCounts[rankedTiers[0].id]||0)&&<span style={pill(C.s4,C.t3,{fontSize:8.5,padding:'1px 6px'})}>LEAST</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div style={{marginTop:16,maxWidth:320}}>
             <div style={R({justifyContent:'space-between',marginBottom:5})}>
               <div style={R({gap:5})}>
