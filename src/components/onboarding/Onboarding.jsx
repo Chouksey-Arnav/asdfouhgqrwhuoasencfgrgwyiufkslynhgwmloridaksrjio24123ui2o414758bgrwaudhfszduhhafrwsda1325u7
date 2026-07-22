@@ -46,7 +46,7 @@ const STUDY_HOURS_OPTIONS = [
 ];
 // Exported (not just used here) so src/lib/studentProfile.js can turn a
 // student's saved onboarding values back into human-readable labels for the
-// Axio system prompt and the dashboard's onboarding recap card, instead
+// Medabrain system prompt and the dashboard's onboarding recap card, instead
 // of duplicating this copy in a second place that could drift out of sync.
 export const GOAL_OPTIONS = [
   { value: 'boost_score', label: 'Boost my SAT/ACT score' },
@@ -84,7 +84,7 @@ const DEFAULT_ANSWERS = {
   monthIdx: 0, dayIdx: 0, yearIdx: 4,
   goal: null, targetScore: 1200, speedLevel: 1,
   obstacles: [], studyMethod: null, accomplish: [],
-  addBack: true, rollover: true, referralCode: '', name: '',
+  addBack: true, rollover: true, referralCode: '', name: '', generatedPlan: null,
 };
 
 // Onboarding is a ~30-screen flow — closing the tab or losing a connection
@@ -192,11 +192,11 @@ export default function Onboarding({ account, onComplete }) {
     case 'referral':
       content = <ReferralStep value={answers.referralCode} onChange={v => update({ referralCode: v })} onNext={next} />; break;
     case 'generating':
-      content = <GeneratingStep onNext={next} />; break;
+      content = <GeneratingStep profile={answers} onPlan={plan => update({ generatedPlan: plan })} onNext={next} />; break;
     case 'planReady':
       content = <PlanReadyStep onNext={next} />; break;
     case 'planSummary':
-      content = <PlanSummaryStep profile={answers} onNext={next} />; break;
+      content = <PlanSummaryStep profile={answers} plan={answers.generatedPlan} onNext={next} />; break;
     case 'saveProgress':
       content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={() => finish()} />; break;
     default:

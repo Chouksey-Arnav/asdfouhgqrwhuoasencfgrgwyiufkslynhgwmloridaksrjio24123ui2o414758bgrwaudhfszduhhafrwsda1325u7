@@ -5,6 +5,7 @@ import { Mic, Shuffle, Send, RefreshCw, Sparkles, ListFilter, Info } from 'lucid
 import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
 import { getQuestionSet, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
+import LiveVoiceInterview from './LiveVoiceInterview';
 import * as DB from '../lib/db';
 
 const PATHWAY_LABELS = {
@@ -15,6 +16,7 @@ const PATHWAY_LABELS = {
 };
 
 const MODES = [
+  { id: 'live', label: '🎙 Live Voice Interview' },
   { id: 'standard', label: 'Standard' },
   { id: 'mmi', label: 'MMI Practice' },
   { id: 'casper', label: 'CASPer Practice' },
@@ -27,8 +29,8 @@ function randomIdx(len, exclude = -1) {
   return i;
 }
 
-export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'exploring', onSessionComplete }) {
-  const [mode, setMode] = useState('standard');
+export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'exploring', studentName, onSessionComplete }) {
+  const [mode, setMode] = useState('live');
   const [setKey, setSetKey] = useState(pathwayKey);
   const questions = useMemo(() => getQuestionSet(setKey), [setKey]);
   const [qIdx, setQIdx] = useState(0);
@@ -71,18 +73,18 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
       let system, questionText;
       if (mode === 'standard') {
         questionText = stdQuestion;
-        system = `You are Axio's Interview Coach, helping a high school student (grades 9-12) practice for college admissions and scholarship/program interviews — not medical, graduate, or professional-school interviews (never reference the MMI, CASPer, or clinical vignettes). Pathway: ${pathLabel}. Question: "${questionText}". Student's answer: "${answer}". Give 2-3 sentences of specific, encouraging feedback (did they answer with a concrete example? how's the structure — Situation/Task/Action/Result?), then ONE concrete tip to strengthen it, then end with "Score: X/10". Warm and constructive — this is a teenager building confidence. Under 120 words.`;
+        system = `You are Medabrain's Interview Coach, helping a high school student (grades 9-12) practice for college admissions and scholarship/program interviews — not medical, graduate, or professional-school interviews (never reference the MMI, CASPer, or clinical vignettes). Pathway: ${pathLabel}. Question: "${questionText}". Student's answer: "${answer}". Give 2-3 sentences of specific, encouraging feedback (did they answer with a concrete example? how's the structure — Situation/Task/Action/Result?), then ONE concrete tip to strengthen it, then end with "Score: X/10". Warm and constructive — this is a teenager building confidence. Under 120 words.`;
       } else if (mode === 'mmi') {
         questionText = mmiStation.prompt;
-        system = `You are Axio's Interview Coach, previewing the MMI (Multiple Mini Interview) format for a high school student who is years away from actually applying anywhere that uses it — this is a low-stakes preview of the FORMAT (ethical/interpersonal reasoning under time pressure), not exam prep. Scenario: "${questionText}". Student's response: "${answer}". Give 2-3 sentences of encouraging feedback on their reasoning and communication (did they consider multiple perspectives? were they clear and specific?), then ONE concrete tip, then end with "Score: X/10". Never suggest this is something they need to master now — frame it as an interesting skill to practice. Under 120 words.`;
+        system = `You are Medabrain's Interview Coach, previewing the MMI (Multiple Mini Interview) format for a high school student who is years away from actually applying anywhere that uses it — this is a low-stakes preview of the FORMAT (ethical/interpersonal reasoning under time pressure), not exam prep. Scenario: "${questionText}". Student's response: "${answer}". Give 2-3 sentences of encouraging feedback on their reasoning and communication (did they consider multiple perspectives? were they clear and specific?), then ONE concrete tip, then end with "Score: X/10". Never suggest this is something they need to master now — frame it as an interesting skill to practice. Under 120 words.`;
       } else {
         questionText = `${casperScenario.scenario} — ${casperScenario.probes.join(' ')}`;
-        system = `You are Axio's Interview Coach, previewing the CASPer situational-judgment-test format for a high school student who is years away from actually taking it — this is a low-stakes preview, not exam prep. Scenario: "${casperScenario.scenario}" Probe questions: ${casperScenario.probes.map((p,i)=>`(${i+1}) ${p}`).join(' ')} Student's response: "${answer}". Give 2-3 sentences of encouraging feedback on their judgment and reasoning (did they address the different probes? did they show self-awareness?), then ONE concrete tip, then end with "Score: X/10". Never suggest this is something they need to master now. Under 120 words.`;
+        system = `You are Medabrain's Interview Coach, previewing the CASPer situational-judgment-test format for a high school student who is years away from actually taking it — this is a low-stakes preview, not exam prep. Scenario: "${casperScenario.scenario}" Probe questions: ${casperScenario.probes.map((p,i)=>`(${i+1}) ${p}`).join(' ')} Student's response: "${answer}". Give 2-3 sentences of encouraging feedback on their judgment and reasoning (did they address the different probes? did they show self-awareness?), then ONE concrete tip, then end with "Score: X/10". Never suggest this is something they need to master now. Under 120 words.`;
       }
       const r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system, message: answer, maxTokens: 220, tier: 'fast' }),
+        body: JSON.stringify({ system, message: answer, maxTokens: 220, purpose: 'interview' }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
@@ -113,13 +115,23 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
         ))}
       </div>
 
-      {mode !== 'standard' && (
+      {mode === 'live' && (
+        <LiveVoiceInterview
+          accent={accent}
+          pathwayLabel={PATHWAY_LABELS[setKey] || pathway?.label || 'General Admissions'}
+          studentName={studentName}
+          onSessionComplete={onSessionComplete}
+        />
+      )}
+
+      {(mode === 'mmi' || mode === 'casper') && (
         <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 10, alignItems: 'flex-start', background: C.violetDim, border: `1px solid ${C.violet}25` }}>
           <Info size={14} color={C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />
           <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{mode === 'mmi' ? 'MMI (Multiple Mini Interview)' : 'CASPer'} is a format some health-professional programs use — years from now, not something you need for college admissions. This is just a fun, low-stakes preview of the format: ethical judgment and communication scenarios, not clinical knowledge.</span>
         </div>
       )}
 
+      {mode !== 'live' && (<>
       <div style={glass()}>
         {mode === 'standard' && (
           <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 })}>
@@ -176,6 +188,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
           </motion.div>
         )}
       </AnimatePresence>
+      </>)}
     </div>
   );
 }

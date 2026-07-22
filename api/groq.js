@@ -1,6 +1,6 @@
 // /api/groq.js — Vercel serverless function
 // Proxies requests to Groq's OpenAI-compatible API server-side (key never exposed to browser).
-// Powers Axio, routing each request to one of three named model tiers (Scout/Guide/Sage — see
+// Powers Medabrain, routing each request to one of three named model tiers (Scout/Guide/Sage — see
 // MODELS below) and, when additional Groq accounts are configured (up to 3 total), spreading/
 // failing over requests across every account's key to maximize combined free-tier throughput.
 //
@@ -53,7 +53,7 @@ function setCachedResponse(key, content, model) {
 }
 
 // ── Model tiers ────────────────────────────────────────────────────────────
-// Axio offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
+// Medabrain offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
 // — each maps to a real Groq-hosted model:
 //   Scout — llama-3.1-8b-instant, fastest, for quick turns and lightweight generation. Used as
 //           the default for the main chat coach, the highest-volume call in the app.
@@ -71,23 +71,70 @@ const MODELS = {
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
 const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
 
-// ── Groq API keys (up to 3 separate accounts) ───────────────────────────────
-// Each additional account's key adds to the combined free-tier throughput available to Axio:
-// normal traffic round-robins across every configured key, and if one account's key comes back
-// rate-limited, the request automatically fails over to the next key instead of failing outright.
-// Keys are pooled globally across all 3 model tiers (not tied to a specific tier) — that's what
-// actually maximizes combined headroom, since a tier-locked key would sit idle whenever that
-// tier isn't in use. GROQ_API_KEY_2 and GROQ_API_KEY_3 are both entirely optional — everything
-// still works with just GROQ_API_KEY.
-const GROQ_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
+// ── The Medabrain "brain" architecture — purpose-scoped key pools ───────────
+// Medabrain is the head/meta brain of the app. Underneath it, distinct subsystems each get their
+// own dedicated Groq account/key so their traffic (and free-tier rate limits) don't compete with
+// each other, and so usage is attributable per subsystem. Every request carries a `purpose`:
+//
+//   coach     → the head Medabrain chat coach (the highest-volume, general-purpose surface)
+//   interview → the mock-interview simulator (spoken, conversational, one live session at a time)
+//   portfolio → portfolio intelligence: college-list/essay/activity/research guidance that reads a
+//               student's full tracker
+//   prep      → in-context prep help (a question about the current pathway lesson, quiz, or e-library
+//               video) — high volume, must be cheap
+//   plan      → the one-time onboarding "max-out plan" generation — low volume, deepest model
+//
+// Each purpose resolves to a POOL of keys. If purpose-specific keys are configured they're used;
+// otherwise the purpose transparently falls back to the shared Medabrain pool (GROQ_API_KEY[/2/3]),
+// so the app works end-to-end with a single key and only *improves* (more headroom, cleaner
+// attribution) as you add dedicated ones. Within a pool the existing round-robin + failover logic
+// (below) is unchanged.
+//
+// Env vars (see GROQ_SETUP.md):
+//   GROQ_API_KEY, GROQ_API_KEY_2, GROQ_API_KEY_3   → shared Medabrain head pool (also the fallback)
+//   GROQ_API_KEY_INTERVIEW                          → interview simulator
+//   GROQ_API_KEY_PORTFOLIO                          → portfolio tracker intelligence
+//   GROQ_API_KEY_PREP                               → in-context prep help
+//   GROQ_API_KEY_PLAN                               → onboarding max-out plan generation
+const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
+const PURPOSE_KEYS = {
+  interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
+  portfolio: [process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
+  prep: [process.env.GROQ_API_KEY_PREP].filter(Boolean),
+  plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
+};
+const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan']);
+
+// Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
+// falls back to the shared Medabrain pool. De-dupe in case someone points two vars at one key.
+function keysForPurpose(purpose) {
+  const dedicated = PURPOSE_KEYS[purpose] || [];
+  const pool = dedicated.length ? [...dedicated, ...SHARED_KEYS] : SHARED_KEYS;
+  return [...new Set(pool)];
+}
+
+// Every configured key anywhere — used only for the "is anything configured at all?" guard.
+const ALL_KEYS = [...new Set([...SHARED_KEYS, ...Object.values(PURPOSE_KEYS).flat()])];
+
+// Default model tier per purpose when the caller doesn't pin one — keeps each subsystem on the
+// cheapest model that's still good enough for its job (the whole point of splitting keys is to run
+// high-volume surfaces cheap while reserving the 70B tier for the rare, high-value plan generation).
+const PURPOSE_DEFAULT_TIER = {
+  coach: 'guide',
+  prep: 'scout',       // quick in-context "explain this" — cheapest, fastest
+  portfolio: 'guide',  // structured reasoning over a tracker, still cheap
+  interview: 'guide',  // conversational, low-latency for spoken turns
+  plan: 'sage',        // one-time, max-quality — worth the 70B model
+};
+
 let keyCursor = 0;
 // Candidate keys in the order to try them for this request: starts at the next key in the
 // rotation (spreading load evenly across accounts), then falls through the rest as failover.
-function keyOrderForThisRequest() {
-  if (GROQ_KEYS.length <= 1) return GROQ_KEYS;
-  const start = keyCursor % GROQ_KEYS.length;
-  keyCursor = (keyCursor + 1) % GROQ_KEYS.length;
-  return [...GROQ_KEYS.slice(start), ...GROQ_KEYS.slice(0, start)];
+function keyOrderForThisRequest(pool) {
+  if (pool.length <= 1) return pool;
+  const start = keyCursor % pool.length;
+  keyCursor = (keyCursor + 1) % pool.length;
+  return [...pool.slice(start), ...pool.slice(0, start)];
 }
 
 function isDailyLimited(ip) {
@@ -164,8 +211,8 @@ export default async function handler(req, res) {
   }
 
   // ── API key check ──────────────────────────────────────────────────────────
-  if (!GROQ_KEYS.length) {
-    return res.status(500).json({ error: 'Axio is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.' });
+  if (!ALL_KEYS.length) {
+    return res.status(500).json({ error: 'Medabrain is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.' });
   }
 
   // ── Parse and validate body ────────────────────────────────────────────────
@@ -176,18 +223,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body.' });
   }
 
-  const { system, message, messages: rawMessages, maxTokens = 700, tier: rawTier = 'guide' } = body || {};
+  const { system, message, messages: rawMessages, maxTokens = 700, tier: rawTier, purpose: rawPurpose } = body || {};
 
   if (!message && !rawMessages) {
     return res.status(400).json({ error: 'No message provided.' });
   }
 
-  const tier = TIER_ALIASES[rawTier] || rawTier;
+  // Which Medabrain subsystem this call belongs to — selects the key pool (and, when the caller
+  // doesn't pin a tier, the default model). Unknown/absent purpose falls back to the head coach,
+  // which is exactly how every existing caller behaves, so this stays backward compatible.
+  const purpose = VALID_PURPOSES.has(rawPurpose) ? rawPurpose : 'coach';
+  const keyPool = keysForPurpose(purpose);
+
+  // Caller may still pin a tier; otherwise use the purpose's cost-appropriate default.
+  const effectiveRawTier = rawTier || PURPOSE_DEFAULT_TIER[purpose] || 'guide';
+  const tier = TIER_ALIASES[effectiveRawTier] || effectiveRawTier;
   const model = MODELS[tier] || MODELS.guide;
 
   // ── Build messages array (OpenAI-compatible format) ────────────────────────
   const groqMessages = [];
-  // Cap raised from 1200 → 4000: Axio's system prompt (see
+  // Cap raised from 1200 → 4000: Medabrain's system prompt (see
   // src/lib/studentProfile.js buildCoachSystemPrompt) now folds in a
   // student's onboarding goal/obstacles/study habits alongside live
   // Prep/Portfolio signals, which runs meaningfully longer than the old
@@ -195,7 +250,7 @@ export default async function handler(req, res) {
   // pathological client payload can't blow up per-request token cost.
   const systemPrompt = system
     ? String(system).slice(0, 4000)
-    : 'You are Axio, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
+    : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {
@@ -214,13 +269,14 @@ export default async function handler(req, res) {
   // the same tier/system/last-message combo — from this user or any other — is served from
   // cache without touching the daily/minute limits or the Groq API at all.
   const lastUserMsg = [...groqMessages].reverse().find(m => m.role === 'user')?.content || '';
-  const cacheKey = hashKey(`${tier}|${systemPrompt}|${lastUserMsg}`);
+  const cacheKey = hashKey(`${purpose}|${tier}|${systemPrompt}|${lastUserMsg}`);
   const cached = getCachedResponse(cacheKey);
   if (cached) {
     return res.status(200).json({
       content: cached.content,
       model_used: cached.model,
       tier,
+      purpose,
       tierLabel: TIER_LABELS[tier] || tier,
       requestsUsedToday: getRequestsUsedToday(ip),
       requestsRemaining: Math.max(0, DAILY_LIMIT - getRequestsUsedToday(ip)),
@@ -272,7 +328,7 @@ export default async function handler(req, res) {
   // hits its cap. A genuine 4xx client error (bad request, auth) isn't retried on the other key
   // since it isn't account-specific and would just fail the same way twice.
   async function callGroqWithFailover(useModel, timeoutMs) {
-    const keys = keyOrderForThisRequest();
+    const keys = keyOrderForThisRequest(keyPool);
     let last = null;
     for (const key of keys) {
       last = await callGroqOnce(useModel, key, timeoutMs);
@@ -309,11 +365,11 @@ export default async function handler(req, res) {
     }
 
     if (!response.ok) {
-      const errMsg = data?.error?.message || `Axio error (${response.status})`;
+      const errMsg = data?.error?.message || `Medabrain error (${response.status})`;
       console.error('Groq API error:', errMsg);
 
       if (response.status === 429 || errMsg.toLowerCase().includes('rate limit')) {
-        return res.status(429).json({ error: 'Axio is busy right now. Please wait a moment and try again.' });
+        return res.status(429).json({ error: 'Medabrain is busy right now. Please wait a moment and try again.' });
       }
 
       return res.status(502).json({ error: errMsg });
@@ -321,7 +377,7 @@ export default async function handler(req, res) {
 
     const content = extractText(data?.choices?.[0]?.message);
     if (!content) {
-      return res.status(502).json({ error: 'Axio had trouble forming a response. Please try again.' });
+      return res.status(502).json({ error: 'Medabrain had trouble forming a response. Please try again.' });
     }
 
     addRequestToday(ip);
@@ -333,6 +389,7 @@ export default async function handler(req, res) {
       content,
       model_used: data?.model || model,
       tier,
+      purpose,
       tierLabel: TIER_LABELS[tier] || tier,
       requestsUsedToday,
       requestsRemaining,
@@ -342,7 +399,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('API handler error:', err);
     if (err?.name === 'AbortError') {
-      return res.status(504).json({ error: 'Axio took too long to respond. Please try again.' });
+      return res.status(504).json({ error: 'Medabrain took too long to respond. Please try again.' });
     }
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
