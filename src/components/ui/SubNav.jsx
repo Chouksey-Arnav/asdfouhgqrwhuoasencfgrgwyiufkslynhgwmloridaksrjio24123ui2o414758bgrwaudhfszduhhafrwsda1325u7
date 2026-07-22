@@ -10,6 +10,9 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
     <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginBottom: 18, WebkitOverflowScrolling: 'touch' }}>
       {items.map(it => {
         const isActive = active === it.id;
+        // Each item may carry its own colour so a long sub-nav reads as a
+        // recognisable spectrum of sections rather than one flat accent.
+        const c = it.color || accent;
         return (
           <motion.button
             key={it.id}
@@ -20,14 +23,15 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
               padding: m ? '8px 12px' : '8px 14px', borderRadius: 999,
-              border: isActive ? `1px solid ${accent}55` : `1px solid ${C.b1}`,
-              background: isActive ? `${accent}1c` : 'rgba(255,255,255,0.02)',
+              border: isActive ? `1px solid ${c}66` : `1px solid ${C.b1}`,
+              background: isActive ? `${c}22` : 'rgba(255,255,255,0.02)',
               color: isActive ? '#fff' : C.t2, fontWeight: isActive ? 700 : 500,
               fontSize: 12.5, fontFamily: C.FB, cursor: 'pointer', whiteSpace: 'nowrap',
               transition: 'all .15s',
+              boxShadow: isActive ? `0 4px 14px ${c}33` : 'none',
             }}
           >
-            {it.icon && <it.icon size={13} color={isActive ? accent : C.t3} />}
+            {it.icon && <it.icon size={13} color={isActive ? c : (it.color ? `${it.color}bb` : C.t3)} />}
             {it.label}
             {!!it.badge && (
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accent : C.s4, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '0 4px' }}>{it.badge}</span>

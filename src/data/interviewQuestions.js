@@ -7,6 +7,12 @@
 // programs, shadowing/observing (not performing) in a health setting, research
 // fairs. MMI/CASPer-style practice lives separately in mmiCasperQuestions.js
 // and is only offered as an explicit opt-in mode, never mixed into Standard.
+//
+// Expanded bank: each pathway now carries a much deeper set (roughly 20-26
+// questions) so a student can practice many sessions without repeats, plus
+// two new shared banks — SCHOLARSHIP (money/merit interviews) and a broad
+// BEHAVIORAL set (STAR-style prompts that apply to any pathway). INTERVIEW_TIPS
+// gives per-pathway coaching cues the panel can surface next to the question.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const INTERVIEW_QUESTIONS = {
@@ -23,6 +29,18 @@ export const INTERVIEW_QUESTIONS = {
     "Where do you see yourself contributing on this campus?",
     "Tell me about a time you took initiative without being asked.",
     "What question do you wish I'd asked you?",
+    "Who has had the biggest influence on the kind of person you're becoming, and why?",
+    "Tell me about a time you changed your mind about something important.",
+    "What's a class or subject that surprised you — you expected to dislike it and didn't, or the reverse?",
+    "Describe a time you were a leader. What did you learn about yourself?",
+    "What do you do when you're stuck on a hard problem and your first few tries don't work?",
+    "Tell me about a community you belong to and what your role in it is.",
+    "What's a strength of yours that doesn't show up on a transcript?",
+    "What's a weakness you're actively working on, and how?",
+    "Describe a time you had to manage your time across a lot of competing commitments.",
+    "If you had a completely free summer and unlimited resources, what would you do with it?",
+    "Tell me about a risk you took that didn't pay off. Would you take it again?",
+    "What does success look like to you at 25 — not the job title, but the feeling?",
   ],
   physician: [
     "Tell me about a time you shadowed or observed a physician — what did you actually see and learn?",
@@ -37,6 +55,18 @@ export const INTERVIEW_QUESTIONS = {
     "This is a long training path — what would help you confirm it's genuinely right for you, not just prestigious?",
     "Tell me about a time you had to follow instructions precisely and why that mattered.",
     "Describe a time you noticed someone needed help before they asked for it.",
+    "What worries you about medicine as a career, and how are you thinking about that concern?",
+    "Tell me about a time you had to admit you were wrong or didn't know something.",
+    "Describe a health topic you've read about on your own — what made you want to understand it?",
+    "What does 'good bedside manner' mean to you, from what you've observed?",
+    "Tell me about a time you kept going with something long after it stopped being fun or easy.",
+    "How do you think you'd handle making a mistake that affected someone else?",
+    "Describe a time you had to earn someone's trust who was hesitant at first.",
+    "What's a part of medicine that isn't glamorous that you think you'd actually be good at?",
+    "Tell me about a time you helped a family member or friend through something medical or hard.",
+    "If a friend said 'I want to be a doctor because they make a lot of money,' what would you say?",
+    "Describe a moment that made you feel like medicine might really be for you.",
+    "What do you do to take care of your own wellbeing when things get overwhelming?",
   ],
   nursing: [
     "Tell me about a time you shadowed or volunteered alongside a nurse — what did you actually see and learn?",
@@ -49,6 +79,16 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time you noticed someone needed help before they asked for it.",
     "What have you learned about what nurses actually do day-to-day, beyond the stereotype?",
     "Nursing is relationship-heavy work — tell me about a relationship you've built with someone over time through consistent care or attention.",
+    "Tell me about a time you had to advocate for someone who couldn't speak up for themselves.",
+    "Describe a time you had to stay patient and kind even when you were tired or frustrated.",
+    "What do you think is the hardest part of nursing, and why do you still want to do it?",
+    "Tell me about a time you caught a detail or mistake others had missed.",
+    "Describe a time you had to give someone difficult news or feedback gently.",
+    "How do you handle it when you're responsible for a lot of things at once?",
+    "Tell me about someone whose care or kindness you admired — what did they do?",
+    "Describe a time you had to work with someone from a very different background than yours.",
+    "What does 'putting the patient first' actually look like to you, in a small everyday way?",
+    "Tell me about a time you stayed calm while someone around you was panicking.",
   ],
   physicianAssistant: [
     "Tell me about a time you shadowed a physician, PA, or other clinician — what did you actually see and learn?",
@@ -61,6 +101,13 @@ export const INTERVIEW_QUESTIONS = {
     "What have you learned about the realities of team-based clinical care from shadowing or research?",
     "Describe a time you took direction well from someone more experienced than you.",
     "This is an exploratory interest for you right now — what would help you figure out if this path fits?",
+    "Tell me about a time you had to learn something quickly to be useful to a group.",
+    "Describe a time you balanced doing your own thing with supporting someone else's lead.",
+    "What appeals to you about a career with more flexibility to change specialties over time?",
+    "Tell me about a time you gave someone credit or made sure the team got recognized.",
+    "Describe a time you had to juggle detail-heavy work without cutting corners.",
+    "How do you handle feedback that stings a little but is probably right?",
+    "Tell me about a time you helped hold a group together when things got tense.",
   ],
   pharmacy: [
     "Tell me about a time you shadowed or visited a pharmacy and paid attention to what the pharmacist actually did.",
@@ -73,6 +120,12 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time you worked with numbers or measurements where a small error would have mattered.",
     "What's a class or subject where careful, methodical work paid off for you?",
     "This is an exploratory interest for you right now — what would help you confirm this path is right for you?",
+    "Tell me about a time you had to explain rules or safety information to someone who didn't want to hear it.",
+    "Describe a time you were the person others trusted to get the details right.",
+    "What interests you about the counseling side of pharmacy — talking with patients about their medications?",
+    "Tell me about a time you spotted a potential problem before it happened.",
+    "Describe a time you had to stay focused on repetitive but important work.",
+    "How do you think about the responsibility of knowing that a mistake could genuinely hurt someone?",
   ],
   dentistry: [
     "Tell me about a time you shadowed or visited a dental office and paid attention to what the dentist actually did.",
@@ -85,6 +138,11 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time you ran or helped run something on your own, even something small.",
     "What have you learned about the realities of dentistry — the business side, the hands-on side — from shadowing or research?",
     "This is an exploratory interest for you right now — what would help you figure out if this path is right for you?",
+    "Tell me about a time you calmed someone down who was anxious about something.",
+    "Describe a hobby or skill that shows your patience for slow, precise, detailed work.",
+    "What interests you about building long-term relationships with patients you see year after year?",
+    "Tell me about a time you had to be both technically careful and personally reassuring at once.",
+    "Describe a time attention to a tiny detail changed the outcome of something.",
   ],
   biomedResearch: [
     "Tell me about a research project, science fair, or independent study you've done — what was your specific role?",
@@ -97,6 +155,13 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time you had to explain a technical idea to someone non-technical.",
     "What draws you to research specifically, rather than direct patient care?",
     "Tell me about a time you had to carefully follow a procedure or protocol exactly.",
+    "Describe a time your data or results surprised you and made you rethink an assumption.",
+    "What scientific paper, article, or discovery have you read about that genuinely excited you?",
+    "Tell me about a time you had to keep careful records or documentation of your work.",
+    "Describe a time you questioned whether a result was real or a mistake — how did you check?",
+    "What do you find motivating about work where progress is slow and mostly invisible?",
+    "Tell me about a time you collaborated with someone who knew more than you did.",
+    "How do you handle the frustration of something failing over and over before it works?",
   ],
   physicalOccupTherapy: [
     "Tell me about a time you shadowed or observed a physical or occupational therapist — what did you actually see?",
@@ -109,6 +174,11 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time an injury, setback, or physical challenge taught you something.",
     "What have you learned about the realities of PT/OT from shadowing or research?",
     "This is an exploratory interest for you right now — what would help you confirm this path is right for you?",
+    "Tell me about a time you motivated someone who wanted to give up.",
+    "Describe a time you had to adjust your approach because what you tried first wasn't working for that person.",
+    "What appeals to you about work where you celebrate small wins over a long recovery?",
+    "Tell me about a time you coached, tutored, or trained someone one-on-one.",
+    "Describe a time you had to read someone's mood and adjust how hard you pushed them.",
   ],
   publicHealth: [
     "Tell me about a time you got curious about a health issue affecting a community, not just an individual.",
@@ -121,6 +191,12 @@ export const INTERVIEW_QUESTIONS = {
     "Describe a time you worked on something aimed at helping a large group of people, not just one person.",
     "What draws you to prevention and systems-level thinking about health?",
     "Tell me about a time you had to interpret or work with data to understand a bigger pattern.",
+    "Describe a time you tried to change how a group of people did something — did it work?",
+    "What health inequity have you noticed in your own community, and how do you think about it?",
+    "Tell me about a time you organized people around a shared goal.",
+    "Describe a time you had to communicate an idea to people who started out skeptical.",
+    "What do you find motivating about work whose impact is hard to see on any single person?",
+    "Tell me about a time you looked past a headline to understand the fuller story behind a health issue.",
   ],
   healthAdmin: [
     "Tell me about a DECA, FBLA, student government, or other leadership activity you've been part of — what was your role?",
@@ -133,6 +209,12 @@ export const INTERVIEW_QUESTIONS = {
     "What does good leadership look like to you, based on something you've actually experienced?",
     "Tell me about a time you helped a group of people work better together.",
     "What's a healthcare system or organizational problem you'd want to help fix someday?",
+    "Describe a time you had to make a decision with incomplete information.",
+    "Tell me about a time you had to deliver a decision that not everyone agreed with.",
+    "What have you learned about how the business of healthcare affects patients?",
+    "Describe a time you improved something by changing how a group was organized.",
+    "Tell me about a time you had to balance what was efficient with what was fair.",
+    "How do you handle being responsible for an outcome that depends on other people's work?",
   ],
   exploring: [
     "Tell me about a time you shadowed, volunteered, or observed in a healthcare or health-adjacent setting — what did you actually see and learn?",
@@ -147,9 +229,95 @@ export const INTERVIEW_QUESTIONS = {
     "This is an exploratory interest for you right now, not a locked-in decision — what would help you figure out if this path is right for you?",
     "Tell me about a time you had to follow instructions precisely and why that mattered.",
     "Describe a time you noticed someone needed help before they asked for it.",
+    "If you could spend a day shadowing anyone in healthcare, who would it be and why?",
+    "What health careers are you deciding between right now, and what's pulling you toward each?",
+    "Tell me about a class, book, or video that made you more curious about medicine or health.",
+    "Describe a time helping someone felt genuinely rewarding — what made it feel that way?",
+    "What do you think you'd find hardest about a health career, and does that scare you off or not?",
+    "Tell me about a time your curiosity led you to learn something no one assigned.",
+    "Describe a person in your life who works in health or caregiving — what have you learned from them?",
+    "What's one small step you could take this year to test whether a health path fits you?",
+  ],
+  scholarship: [
+    "Why do you deserve this scholarship — and try to answer without just listing your achievements?",
+    "How would this scholarship change what's possible for you?",
+    "Tell me about a time you overcame an obstacle that could have stopped you.",
+    "What will you do with this opportunity that someone else might not?",
+    "Describe how you've given back to your community.",
+    "What are your goals for the next five years, and how does this help?",
+    "Tell me about a time you demonstrated the value this scholarship is meant to reward (leadership, service, resilience, etc.).",
+    "What's a cause or problem you care about enough to keep working on for years?",
+    "How do you define hard work, and where have you shown it?",
+    "If you don't receive this scholarship, what's your plan?",
+    "Who in your life made sacrifices for your education, and how does that shape you?",
+    "Tell me about a time you led by example rather than by title.",
+    "What would you want the people funding this scholarship to know about the impact it would have?",
+    "Describe a moment you're genuinely proud of that no one else knows about.",
+  ],
+  behavioral: [
+    "Tell me about a time you set a difficult goal and reached it. How?",
+    "Describe a conflict you had with a peer and how you resolved it.",
+    "Tell me about a time you received criticism. What did you do with it?",
+    "Describe a time you had to step up because no one else would.",
+    "Tell me about a time you failed publicly. How did you recover?",
+    "Describe a time you had to make an unpopular decision.",
+    "Tell me about a time you helped someone succeed at your own expense.",
+    "Describe a time you had to persevere through something boring or repetitive to reach a goal.",
+    "Tell me about a time you had to adapt quickly when a plan fell apart.",
+    "Describe a time you took responsibility for a mistake instead of blaming others.",
+    "Tell me about a time you spoke up about something even though it was uncomfortable.",
+    "Describe a time you managed a lot of competing priorities. What gave, and what didn't?",
+    "Tell me about a time you had to build trust with someone who doubted you.",
+    "Describe the most creative solution you've come up with to a real problem.",
+    "Tell me about a time you kept a commitment even when it became inconvenient.",
+    "Describe a time you learned something important from someone much younger or less experienced than you.",
   ],
 };
 
+// Per-pathway coaching cues — short, concrete reminders the panel surfaces
+// next to the current question so a student knows what a strong answer sounds
+// like for THIS kind of interview.
+export const INTERVIEW_TIPS = {
+  general: [
+    "Use a specific story, not a general statement — 'I organized a 40-person food drive' beats 'I like helping people.'",
+    "Structure longer answers as Situation → Task → Action → Result. It keeps you from rambling.",
+    "It's fine to pause and think. A 3-second silence feels long to you and normal to the interviewer.",
+    "End with what you learned or how you'd do it differently — that's what shows maturity.",
+  ],
+  scholarship: [
+    "Connect your story to the scholarship's mission — show why YOU are what they're trying to fund.",
+    "Be honest about obstacles without making the whole answer about hardship — pivot to what you did.",
+    "Have a concrete plan for the money and your future; vague dreams are less convincing than specific steps.",
+  ],
+  behavioral: [
+    "Behavioral questions reward a real, specific example over a hypothetical 'I would…' answer.",
+    "Name the result. 'And because of that, attendance doubled' lands harder than trailing off.",
+    "Pick stories where YOU acted, not ones where you watched someone else act.",
+  ],
+  physician: [
+    "Ground your 'why medicine' in a specific moment, not the salary or prestige.",
+    "Show you understand the hard parts too — long training, loss, uncertainty — not just the rewarding ones.",
+    "Talk about people you served as individuals, not as 'patients' in the abstract.",
+  ],
+  nursing: [
+    "Emphasize relationships and communication — nursing is deeply human work.",
+    "Show you can stay organized and calm when a lot is happening at once.",
+    "Advocacy matters: a story where you spoke up for someone lands well.",
+  ],
+  exploring: [
+    "It's a strength, not a weakness, to say you're still exploring — just show you're exploring actively.",
+    "Talk about the concrete steps you're taking to figure out if a path fits.",
+    "Curiosity is your best asset here — let it show.",
+  ],
+};
+
+// Fallback tips for any pathway without a bespoke list.
+const DEFAULT_TIPS = INTERVIEW_TIPS.general;
+
 export function getQuestionSet(pathwayKey) {
   return INTERVIEW_QUESTIONS[pathwayKey] || INTERVIEW_QUESTIONS.general;
+}
+
+export function getTips(pathwayKey) {
+  return INTERVIEW_TIPS[pathwayKey] || DEFAULT_TIPS;
 }

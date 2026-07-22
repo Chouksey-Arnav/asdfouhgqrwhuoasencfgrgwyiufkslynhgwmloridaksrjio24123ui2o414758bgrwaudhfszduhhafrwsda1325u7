@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Mic, Shuffle, Send, RefreshCw, Sparkles, ListFilter, Info } from 'lucide-react';
+import { Mic, Shuffle, Send, RefreshCw, Sparkles, ListFilter, Info, ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
-import { getQuestionSet, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
+import { getQuestionSet, getTips, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
 import LiveVoiceInterview from './LiveVoiceInterview';
 import * as DB from '../lib/db';
@@ -16,10 +16,10 @@ const PATHWAY_LABELS = {
 };
 
 const MODES = [
-  { id: 'live', label: '🎙 Live Voice Interview' },
-  { id: 'standard', label: 'Standard' },
-  { id: 'mmi', label: 'MMI Practice' },
-  { id: 'casper', label: 'CASPer Practice' },
+  { id: 'live', label: '🎙 Live Voice Interview', color: C.rose },
+  { id: 'standard', label: 'Standard', color: C.blue },
+  { id: 'mmi', label: 'MMI Practice', color: C.violet },
+  { id: 'casper', label: 'CASPer Practice', color: C.cyan },
 ];
 
 function randomIdx(len, exclude = -1) {
@@ -56,6 +56,16 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
     setAnswer('');
     setFeedback(null);
   }
+
+  function step(dir) {
+    setQIdx(i => (i + dir + poolLen) % poolLen);
+    setAnswer('');
+    setFeedback(null);
+  }
+
+  const modeColor = MODES.find(m => m.id === mode)?.color || accent;
+  const tips = useMemo(() => getTips(mode === 'standard' ? setKey : mode), [mode, setKey]);
+  const tip = tips[qIdx % tips.length];
 
   function switchSet(key) {
     setSetKey(key);
@@ -104,13 +114,13 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
       <div data-tour="portfolio-deep-interview">
         <div style={lbl()}>Interview Prep</div>
         <h2 style={{ fontSize: 24, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>Mock Interview Practice</h2>
-        <p style={{ fontSize: 13, color: C.t3, marginTop: 6, lineHeight: 1.6 }}>Practice answering real college-admissions-style questions and get instant, encouraging feedback. Not medical or graduate school prep — just building your confidence for the interviews you'll actually have.</p>
+        <p style={{ fontSize: 13, color: C.t3, marginTop: 6, lineHeight: 1.6 }}>Practice answering real college-admissions-style questions and get instant, encouraging feedback. Choose a question set, work through {Object.values(INTERVIEW_QUESTIONS).reduce((n, a) => n + a.length, 0)}+ curated prompts across every pathway, and preview MMI/CASPer formats too. Not medical or graduate school prep — just building your confidence for the interviews you'll actually have.</p>
       </div>
 
       <div style={R({ gap: 6, flexWrap: 'wrap' })}>
         {MODES.map(m => (
-          <motion.button key={m.id} whileHover={{ scale: 1.03 }} whileTap={{ scale: .97 }}
-            style={btnSm(mode === m.id ? accent : C.s4, { color: mode === m.id ? '#fff' : C.t2, border: mode === m.id ? 'none' : `1px solid ${C.b1}` })}
+          <motion.button key={m.id} whileHover={{ scale: 1.04, y: -1 }} whileTap={{ scale: .96 }}
+            style={btnSm(mode === m.id ? m.color : C.s4, { color: mode === m.id ? '#fff' : C.t2, border: mode === m.id ? 'none' : `1px solid ${C.b1}`, boxShadow: mode === m.id ? `0 4px 14px ${m.color}45` : 'none' })}
             onClick={() => switchMode(m.id)}>{m.label}</motion.button>
         ))}
       </div>
@@ -148,7 +158,10 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
 
         <AnimatePresence mode="wait">
           <motion.div key={qIdx + setKey + mode} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={glass2({ padding: 18, marginBottom: 14 })}>
-            <div style={R({ gap: 8, marginBottom: 8 })}><Mic size={14} color={accent} /><span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '.06em' }}>{mode === 'casper' ? 'Scenario' : 'Question'}</span></div>
+            <div style={R({ gap: 8, marginBottom: 8, justifyContent: 'space-between' })}>
+              <div style={R({ gap: 8 })}><Mic size={14} color={modeColor} /><span style={{ fontSize: 11, fontWeight: 700, color: modeColor, textTransform: 'uppercase', letterSpacing: '.06em' }}>{mode === 'casper' ? 'Scenario' : 'Question'}</span></div>
+              <span style={pill(`${modeColor}18`, modeColor, { fontSize: 10, fontFamily: C.FM })}>{qIdx + 1} / {poolLen}</span>
+            </div>
             {mode === 'standard' && <div style={{ fontSize: 15, fontWeight: 600, color: C.t1, fontFamily: C.FD, lineHeight: 1.5 }}>{stdQuestion}</div>}
             {mode === 'mmi' && <div style={{ fontSize: 15, fontWeight: 600, color: C.t1, fontFamily: C.FD, lineHeight: 1.5 }}>{mmiStation.prompt}</div>}
             {mode === 'casper' && (
@@ -162,7 +175,17 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
           </motion.div>
         </AnimatePresence>
 
-        <button style={{ ...btnG({ fontSize: 12, marginBottom: 14 }), display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={shuffle}><Shuffle size={13} />Shuffle {mode === 'casper' ? 'Scenario' : 'Question'}</button>
+        <div style={R({ gap: 8, marginBottom: 14, flexWrap: 'wrap' })}>
+          <button style={{ ...btnG({ fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={() => step(-1)}><ChevronLeft size={14} />Prev</button>
+          <button style={{ ...btnG({ fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={() => step(1)}>Next<ChevronRight size={14} /></button>
+          <button style={{ ...btnG({ fontSize: 12, borderColor: `${modeColor}40`, color: modeColor }), display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={shuffle}><Shuffle size={13} />Shuffle</button>
+        </div>
+
+        {/* Rotating coaching tip for this interview type */}
+        <div style={{ ...glass2({ padding: 12, marginBottom: 14 }), display: 'flex', gap: 9, alignItems: 'flex-start', background: `linear-gradient(135deg, ${C.amberDim}, transparent)`, border: `1px solid ${C.amber}22` }}>
+          <Lightbulb size={14} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}><strong style={{ color: C.amberL }}>Coach tip:</strong> {tip}</span>
+        </div>
 
         <textarea
           style={{ ...inp({ minHeight: 130, resize: 'vertical', fontFamily: C.FB, lineHeight: 1.6 }) }}
@@ -172,7 +195,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
         />
 
         <div style={R({ gap: 10, marginTop: 14 })}>
-          <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad, { fontSize: 13 }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: loading || !answer.trim() ? 0.6 : 1 }} disabled={loading || !answer.trim()} onClick={getFeedback}>
+          <button style={{ ...btn(modeColor, { fontSize: 13 }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: loading || !answer.trim() ? 0.6 : 1, boxShadow: `0 4px 16px ${modeColor}40` }} disabled={loading || !answer.trim()} onClick={getFeedback}>
             {loading ? <RefreshCw size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={14} />}
             {loading ? 'Getting feedback…' : 'Get Feedback'}
           </button>
