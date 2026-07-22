@@ -5,6 +5,7 @@ import { Mic, Shuffle, Send, RefreshCw, Sparkles, ListFilter, Info } from 'lucid
 import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
 import { getQuestionSet, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
+import LiveVoiceInterview from './LiveVoiceInterview';
 import * as DB from '../lib/db';
 
 const PATHWAY_LABELS = {
@@ -15,6 +16,7 @@ const PATHWAY_LABELS = {
 };
 
 const MODES = [
+  { id: 'live', label: '🎙 Live Voice Interview' },
   { id: 'standard', label: 'Standard' },
   { id: 'mmi', label: 'MMI Practice' },
   { id: 'casper', label: 'CASPer Practice' },
@@ -27,8 +29,8 @@ function randomIdx(len, exclude = -1) {
   return i;
 }
 
-export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'exploring', onSessionComplete }) {
-  const [mode, setMode] = useState('standard');
+export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKey = 'exploring', studentName, onSessionComplete }) {
+  const [mode, setMode] = useState('live');
   const [setKey, setSetKey] = useState(pathwayKey);
   const questions = useMemo(() => getQuestionSet(setKey), [setKey]);
   const [qIdx, setQIdx] = useState(0);
@@ -113,13 +115,23 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
         ))}
       </div>
 
-      {mode !== 'standard' && (
+      {mode === 'live' && (
+        <LiveVoiceInterview
+          accent={accent}
+          pathwayLabel={PATHWAY_LABELS[setKey] || pathway?.label || 'General Admissions'}
+          studentName={studentName}
+          onSessionComplete={onSessionComplete}
+        />
+      )}
+
+      {(mode === 'mmi' || mode === 'casper') && (
         <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 10, alignItems: 'flex-start', background: C.violetDim, border: `1px solid ${C.violet}25` }}>
           <Info size={14} color={C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />
           <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{mode === 'mmi' ? 'MMI (Multiple Mini Interview)' : 'CASPer'} is a format some health-professional programs use — years from now, not something you need for college admissions. This is just a fun, low-stakes preview of the format: ethical judgment and communication scenarios, not clinical knowledge.</span>
         </div>
       )}
 
+      {mode !== 'live' && (<>
       <div style={glass()}>
         {mode === 'standard' && (
           <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 })}>
@@ -176,6 +188,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
           </motion.div>
         )}
       </AnimatePresence>
+      </>)}
     </div>
   );
 }
