@@ -3768,7 +3768,7 @@ export default function App({ account, onAccountChange }) {
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
-                  <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deckCardsAll.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
+                  <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deck.cards.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
                   <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
                     {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
                     {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
