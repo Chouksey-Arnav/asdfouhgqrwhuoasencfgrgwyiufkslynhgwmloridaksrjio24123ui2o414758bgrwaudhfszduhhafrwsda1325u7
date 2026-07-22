@@ -11,6 +11,24 @@ let pushTimer = null;
 let pushing = false;
 let pushAgainAfter = false;
 
+// ── Self-healing retry ───────────────────────────────────────────────────────
+// A transient failure (flaky wifi, a cold serverless function, a dropped request) used to leave
+// sync stuck in the 'error' state until the student happened to make another local write. That's
+// the "Sync couldn't reach the server" message people were seeing and reading as "my progress is
+// lost." Instead we now auto-retry a failed push a few times with exponential backoff, and re-flush
+// the moment the browser reports it's back online — so the error state clears itself without the
+// student having to do anything. Local IndexedDB is always the source of truth in the meantime, so
+// nothing is ever lost; sync just catches up when it can.
+const RETRY_DELAYS_MS = [2000, 5000, 15000, 45000];
+let retryTimer = null;
+let retryAttempt = 0;
+function scheduleRetry() {
+  clearTimeout(retryTimer);
+  if (retryAttempt >= RETRY_DELAYS_MS.length) return; // give up quietly; next local write or `online` will retry
+  const delay = RETRY_DELAYS_MS[retryAttempt++];
+  retryTimer = setTimeout(() => { flushNow().catch(() => {}); }, delay);
+}
+
 // ── Sync status pub-sub ─────────────────────────────────────────────────────
 // Lightweight status broadcast so the UI (Settings' "Synced just now" line)
 // can reflect what's actually happening instead of the sync layer being a
@@ -70,9 +88,12 @@ export async function flushNow(opts = {}) {
       body: JSON.stringify({ data: snapshot }),
       keepalive: !!opts.keepalive,
     });
+    retryAttempt = 0;            // success clears the backoff ladder
+    clearTimeout(retryTimer);
     setStatus({ state: 'synced', lastSyncedAt: Date.now(), error: null });
   } catch (err) {
     setStatus({ state: 'error', error: err.message || 'Sync failed.' });
+    scheduleRetry();             // self-heal instead of staying stuck on 'error'
     throw err;
   } finally {
     pushing = false;
@@ -85,11 +106,21 @@ export async function flushNow(opts = {}) {
 
 // Registered with DB.setSyncDirtyListener — called (a lot, potentially) after any write to a
 // synced table. Debounced so a burst of writes (e.g. finishing a 20-card review session)
-// collapses into a single network call a few seconds after things go quiet.
+// collapses into a single network call a few seconds after things go quiet. A fresh local change
+// also resets the retry ladder so a pending backoff doesn't delay syncing brand-new work.
 export function scheduleSyncPush() {
+  retryAttempt = 0;
+  clearTimeout(retryTimer);
   setStatus({ state: 'pending', error: null });
   clearTimeout(pushTimer);
   pushTimer = setTimeout(() => { flushNow().catch(() => {}); }, PUSH_DEBOUNCE_MS);
+}
+
+// User-initiated "Retry sync now" (Settings) — resets the backoff ladder and pushes immediately.
+export function retrySyncNow() {
+  retryAttempt = 0;
+  clearTimeout(retryTimer);
+  return flushNow();
 }
 
 // Best-effort safety net: flush immediately when the tab is backgrounded or closed, so a burst
@@ -100,6 +131,13 @@ export function installLifecycleFlush() {
   lifecycleInstalled = true;
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') flushNow({ keepalive: true }).catch(() => {});
+    // Coming back to a foregrounded tab is the other natural moment to reconcile — if we drifted
+    // into an error state while backgrounded, catch up now.
+    else if (syncStatus.state === 'error' || syncStatus.state === 'pending') flushNow().catch(() => {});
   });
   window.addEventListener('pagehide', () => { flushNow({ keepalive: true }).catch(() => {}); });
+  // Regaining connectivity is the single most reliable signal that a failed sync can now succeed —
+  // re-flush immediately (resetting the backoff ladder) so "Sync couldn't reach the server" clears
+  // itself the instant the network is back.
+  window.addEventListener('online', () => { retryAttempt = 0; clearTimeout(retryTimer); flushNow().catch(() => {}); });
 }

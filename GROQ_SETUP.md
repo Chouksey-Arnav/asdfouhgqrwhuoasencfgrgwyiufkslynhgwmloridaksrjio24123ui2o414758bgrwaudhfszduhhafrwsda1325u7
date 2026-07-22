@@ -1,10 +1,51 @@
-# Axio — Groq API Setup
+# Medabrain — Groq API Setup
 
-Axio, the AI coach, is powered server-side by [Groq](https://console.groq.com) (free tier).
-The API key is never exposed to the browser — all requests go through `/api/groq.js`.
+Medabrain is the AI "head brain" of the app, powered server-side by
+[Groq](https://console.groq.com) (free tier). API keys are never exposed to the browser —
+all requests go through `/api/groq.js`.
 
 Note: flashcard generation does **not** use Groq (or any hosted model) — it runs
 entirely offline in the browser. See "Flashcard generation" below.
+
+## The Medabrain "brain" architecture (purpose-scoped keys)
+
+Medabrain sits on top of several subsystems, each of which can have its **own dedicated Groq
+account/key** so their traffic and free-tier rate limits don't compete, and so usage is
+attributable per subsystem. Every request to `/api/groq.js` carries a `purpose`, which selects a
+key pool and a cost-appropriate default model:
+
+| `purpose`   | What it powers                                                        | Default model tier | Dedicated env var         |
+|-------------|-----------------------------------------------------------------------|--------------------|---------------------------|
+| `coach`     | The head Medabrain chat coach (highest-volume, general purpose)       | Guide / auto       | *(shared pool)*           |
+| `interview` | The mock-interview simulator (spoken, conversational)                 | Guide              | `GROQ_API_KEY_INTERVIEW`  |
+| `portfolio` | Portfolio intelligence over a student's full application tracker      | Guide              | `GROQ_API_KEY_PORTFOLIO`  |
+| `prep`      | In-context prep help (a question about the current lesson/quiz/video) | Scout (cheapest)   | `GROQ_API_KEY_PREP`       |
+| `plan`      | The one-time onboarding "max-out plan" generation                     | Sage (best)        | `GROQ_API_KEY_PLAN`       |
+
+**Every purpose falls back to the shared Medabrain pool** (`GROQ_API_KEY` / `_2` / `_3`) when its
+dedicated key isn't set — so the whole app works with a single key today, and simply gains more
+headroom and cleaner per-subsystem attribution as you add dedicated keys. All dedicated keys are
+optional.
+
+### What to name the environment variables
+
+Create these in Vercel → **Settings → Environment Variables** (or Coolify's Environment tab),
+across **Production, Preview, Development**, then redeploy:
+
+```
+# Shared Medabrain head pool (required — at least GROQ_API_KEY) + failover
+GROQ_API_KEY=gsk_...          # from your 1st Groq account
+GROQ_API_KEY_2=gsk_...        # optional, 2nd account
+GROQ_API_KEY_3=gsk_...        # optional, 3rd account
+
+# Dedicated per-subsystem keys (all optional — each falls back to the shared pool above)
+GROQ_API_KEY_INTERVIEW=gsk_...   # 4th account → interview simulator
+GROQ_API_KEY_PORTFOLIO=gsk_...   # 5th account → portfolio tracker intelligence
+GROQ_API_KEY_PREP=gsk_...        # 6th account → in-context prep help
+GROQ_API_KEY_PLAN=gsk_...        # 7th account → onboarding max-out plan generation
+```
+
+Put the same values in a `.env.local` at the project root for local dev.
 
 ## 1. Get a free Groq API key (or several)
 
@@ -44,7 +85,7 @@ GROQ_API_KEY_3=gsk_your_third_key_here
 
 ## Multiple accounts, maximized usage
 
-`GROQ_API_KEY_2` and `GROQ_API_KEY_3` are both entirely optional — Axio works fine with just one
+`GROQ_API_KEY_2` and `GROQ_API_KEY_3` are both entirely optional — Medabrain works fine with just one
 key. When more than one is set, `api/groq.js` round-robins requests across every configured
 account to spread load evenly, and if one account's key comes back rate-limited (or errors), the
 same request automatically retries on the next key before failing — so a burst of traffic that
@@ -93,10 +134,10 @@ uses by default) handles all scheduling downstream of generation, unchanged.
 
 ## Branding note
 
-The product-facing name for the coach is **"Axio."** This is fine to keep as your
+The product-facing name for the coach is **"Medabrain."** This is fine to keep as your
 own product name — you're not required to disclose the underlying model vendor in your UI.
 To stay on the safe side of advertising law, avoid claiming you trained/built the model
-yourselves; a line like "Axio is powered by large language model technology" (already
+yourselves; a line like "Medabrain is powered by large language model technology" (already
 present in Settings/About) keeps things honest without undercutting the branding. This
 does not apply to flashcard generation, which is offline/extraction-based and should be
 described as such (not as AI-generated).

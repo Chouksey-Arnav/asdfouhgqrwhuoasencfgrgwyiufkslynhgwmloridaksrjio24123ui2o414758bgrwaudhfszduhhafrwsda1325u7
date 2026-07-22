@@ -29,7 +29,7 @@ import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
-import { rankQuizzes, getAxioPickPrompt } from './lib/recommend';
+import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import AnimatedLogo from './components/AnimatedLogo';
@@ -1212,9 +1212,9 @@ export default function App({ account, onAccountChange }) {
     { target:'prep-deep-quizzes', section:'Prep', color:C.violet, title:'Filter by category and difficulty', body:"These stat tiles show your total quizzes and questions at a glance — scroll down to the search bar and filters to narrow by category, difficulty, or the courses you added in Settings.", onEnter:()=>goPrep('quizzes') },
     { target:'prep-sub-flashcards', section:'Prep', color:C.violet, title:'Flashcards', body:"Spaced-repetition decks scheduled with FSRS (the same algorithm behind Anki). Generate your own cards straight from your notes, or study the built-in decks when cards come due.", onEnter:()=>goPrep('flashcards') },
     { target:'prep-deep-flashcards', section:'Prep', color:C.violet, title:'Generate a deck from your notes', body:"Tap \"New Deck\" to turn your own notes into flashcards offline — no account or API call needed — or scroll down to study any built-in deck with cards due today.", onEnter:()=>goPrep('flashcards') },
-    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Axio — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Axio disappears on reload.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Axio picks its own model', body:"No switcher to fuss with — Axio reads each message and routes it itself: Scout for quick questions, Guide as the balanced default, Sage for essay feedback and deep strategy. This badge just shows which one just answered.", onEnter:()=>goPrep('coach') },
+    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Medabrain — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Medabrain disappears on reload.", onEnter:()=>goPrep('coach') },
+    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Medabrain picks its own model', body:"No switcher to fuss with — Medabrain reads each message and routes it itself: Scout for quick questions, Guide as the balanced default, Sage for essay feedback and deep strategy. This badge just shows which one just answered.", onEnter:()=>goPrep('coach') },
     { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
     { target:'prep-deep-library', section:'Prep', color:C.violet, title:'Bookmark, take notes, export', body:"This card tracks your reading progress across the whole library. Bookmark resources for later, jot notes as you go, then export everything you've written as one study document.", onEnter:()=>goPrep('library') },
 
@@ -1263,7 +1263,7 @@ export default function App({ account, onAccountChange }) {
     // ── Settings ──────────────────────────────────────────────────────────────
     { target:'nav-settings', section:'Settings', color:C.amber, title:'Settings — your account, your rules', body:"Your profile, goals, test date, sound preferences, study track, course load, data export, and account controls all live here now — its own tab, not buried in a menu.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-profile', section:'Settings', color:C.amber, title:'Profile', body:"Your display name, level, current pathway, and streak — update your name here any time.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Axio's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
+    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Medabrain's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-examdate', section:'Settings', color:C.amber, title:'Test Day', body:"Set your test date here to see a live countdown and pacing guidance on Home.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-preferences', section:'Settings', color:C.amber, title:'Preferences', body:"Toggle sound effects for correct answers, level-ups, and achievements on or off.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-studytrack', section:'Settings', color:C.amber, title:'Study Track', body:"Switch your pathway here at any time — see full details on any track before committing, without retaking the diagnostic.", onEnter:()=>setTab('settings') },
@@ -1320,11 +1320,11 @@ export default function App({ account, onAccountChange }) {
   // Library) so finishQuiz() knows to grade it as a verification attempt instead of a plain quiz.
   const [verifyCtx,setVerifyCtx]=useState(null); // { lesson, unit }
 
-  // ── AI Coach (Axio — multi-chat) ────────────────────────────────────
+  // ── AI Coach (Medabrain — multi-chat) ────────────────────────────────────
   const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
   const [copiedIdx,setCopiedIdx]=useState(null);
   // Every conversation is a row in DB.coachThreads (see src/lib/db.js v10) so a student can run
-  // as many parallel Axio chats as they want, and none of them disappear on reload the way
+  // as many parallel Medabrain chats as they want, and none of them disappear on reload the way
   // the old single in-memory `msgs` array did.
   const [coachThreads,setCoachThreads]=useState([]);
   const [activeThreadId,setActiveThreadId]=useState(null);
@@ -1332,7 +1332,7 @@ export default function App({ account, onAccountChange }) {
   const [coachSidebarOpen,setCoachSidebarOpen]=useState(false); // mobile-only slide-over
   const [renamingThreadId,setRenamingThreadId]=useState(null);
   const [renameDraft,setRenameDraft]=useState('');
-  // Which of Axio's three model tiers answered the most-recent message — same idea as Claude's
+  // Which of Medabrain's three model tiers answered the most-recent message — same idea as Claude's
   // Haiku/Sonnet/Opus, but the tier itself is chosen automatically per message by
   // classifyCoachTier() below (the "meta brain"), not by the student. This state is purely for
   // display (the small badge in the coach header showing which tier just responded).
@@ -1474,7 +1474,7 @@ export default function App({ account, onAccountChange }) {
         clearViewState();
       }
       // Pull this account's cloud snapshot (XP, streak, quiz scores, flashcards, pathway
-      // progress, achievements, Axio threads, etc.) and merge it into whatever's already
+      // progress, achievements, Medabrain threads, etc.) and merge it into whatever's already
       // in this browser's IndexedDB — the common case right after the reset above is an empty
       // local DB, so this is effectively "restore," but a genuine merge runs too in case this
       // device has progress of its own (e.g. it was used before ever syncing). Sync stays
@@ -1515,7 +1515,7 @@ export default function App({ account, onAccountChange }) {
       setTotalReviews(rev||0);
       setStreakFreezes(freezes||0);
       setCosmetics(cos||new Set());
-      // Load Axio's persisted chat threads and resume the most recently
+      // Load Medabrain's persisted chat threads and resume the most recently
       // active one (if any) — mirrors how a normal chat app reopens where you left
       // off, instead of dropping a returning student back into an empty composer.
       try{
@@ -1526,7 +1526,7 @@ export default function App({ account, onAccountChange }) {
           const rows=await DB.getCoachMessages(threads[0].id);
           setMsgs((rows||[]).map(r=>({role:r.role,content:r.content})));
         }
-      }catch(err){console.error('Failed to load Axio chat threads',err);}
+      }catch(err){console.error('Failed to load Medabrain chat threads',err);}
       setThreadsLoading(false);
       // Compute the gap since the last study day BEFORE recordStudyToday() stamps
       // today, so a returning user's actual absence is visible (once today is
@@ -1675,7 +1675,7 @@ export default function App({ account, onAccountChange }) {
     if(!name)return;
     const gradeStage = GRADE_STAGES[profile.gradeIdx]?.key || null;
     // Every one of these used to be computed for routing purposes only and
-    // then discarded — Axio, the dashboard, and Portfolio never saw
+    // then discarded — Medabrain, the dashboard, and Portfolio never saw
     // them again. Persisting them onto the user record is what lets
     // buildCoachSystemPrompt() (src/lib/studentProfile.js) and the
     // onboarding recap card actually use what the student told us.
@@ -1854,7 +1854,7 @@ export default function App({ account, onAccountChange }) {
     return null;
   },[curPath,pathway,isLessonComplete]);
 
-  // Axio Quiz Recommendations — ranked #1..#N picks driven by real performance
+  // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
@@ -1864,17 +1864,17 @@ export default function App({ account, onAccountChange }) {
   }),[qScores,catAverages,courseCats,curPath]);
   const topPick = rankedQuizzes[0];
 
-  // Optional one-line Axio (Groq) narration of the #1 pick — the ranking
+  // Optional one-line Medabrain (Groq) narration of the #1 pick — the ranking
   // above is fully deterministic and never depends on this; it's cosmetic.
-  const askAxioAboutPick = useCallback(async(pick)=>{
+  const askMedabrainAboutPick = useCallback(async(pick)=>{
     // Cached per quiz per day — this narration is cosmetic and identical for a given pick
     // within a day, so repeat views/clicks shouldn't re-hit Groq.
     const cacheKey = dailyKey('pickNarration', pick?.quiz?.id||'');
     const cached = getCached(cacheKey);
     if(cached) return cached;
-    const prompt = getAxioPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
+    const prompt = getMedabrainPickPrompt({ pick, studentName: user?.name, pathwayLabel: curPath?.label });
     if(!prompt) return null;
-    const text = await callGroqAI('You are Axio, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'scout');
+    const text = await callGroqAI('You are Medabrain, an encouraging AI study coach for a high schooler. Respond with exactly one short sentence, no markdown.', prompt, 60, null, 'scout');
     setCached(cacheKey, text);
     return text;
   },[user?.name,curPath]);
@@ -2039,8 +2039,8 @@ export default function App({ account, onAccountChange }) {
     else if(comebackGap>=7)toast(pickNudge('comeback_long'),{icon:<Coffee size={14}/>,duration:5000});
   },[dbReady,comebackGap]);
 
-  // ── AI (Axio, powered by Groq) ────────────────────────────────────────────
-  // The meta-router: picks which of Axio's 3 model tiers should answer a given message, purely
+  // ── AI (Medabrain, powered by Groq) ────────────────────────────────────────────
+  // The meta-router: picks which of Medabrain's 3 model tiers should answer a given message, purely
   // from the message itself — no manual switcher, no extra model call to classify (keeps it free
   // and instant). Deep/strategic asks (essays, MMI/CASPer, comparing schools, long messages) get
   // Sage; short/simple asks get Scout; everything else gets Guide, the balanced default.
@@ -2053,21 +2053,24 @@ export default function App({ account, onAccountChange }) {
     if (text.length <= 42 || quickSignals.test(lower)) return 'scout';
     return 'guide';
   }
-  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide') {
+  // `purpose` selects which Medabrain subsystem key-pool the server routes this call through
+  // (coach/interview/portfolio/prep/plan — see api/groq.js). Defaults to the head coach so every
+  // existing caller is unchanged; portfolio/prep/plan features pass their own purpose.
+  async function callGroqAI(sys, msg, toks = 700, hist = null, tier = 'guide', purpose = 'coach') {
     let r, d;
     try {
       r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier }),
+        body: JSON.stringify({ system: sys, message: msg, messages: hist, maxTokens: toks, tier, purpose }),
       });
     } catch {
-      throw new Error("Couldn't reach Axio — check your connection and try again.");
+      throw new Error("Couldn't reach Medabrain — check your connection and try again.");
     }
     try {
       d = await r.json();
     } catch {
-      throw new Error('Axio sent back an unreadable response. Please try again.');
+      throw new Error('Medabrain sent back an unreadable response. Please try again.');
     }
     if (typeof d.requestsRemaining === 'number') setCoachRequestsRemaining(d.requestsRemaining);
     if (typeof d.requestsUsedToday === 'number') setCoachRequestsUsedToday(d.requestsUsedToday);
@@ -2076,11 +2079,11 @@ export default function App({ account, onAccountChange }) {
       const m = d?.error || '';
       if (r.status === 429) throw new Error(m || 'Rate limit reached. Please wait a moment.');
       if (r.status === 500 && m.includes('not configured')) throw new Error('Add GROQ_API_KEY to Vercel environment variables.');
-      if (r.status === 504) throw new Error(m || 'Axio took too long to respond. Please try again.');
+      if (r.status === 504) throw new Error(m || 'Medabrain took too long to respond. Please try again.');
       throw new Error(m || `Error ${r.status}`);
     }
     if (typeof d.content !== 'string' || !d.content.trim()) {
-      throw new Error("Axio didn't return a usable answer. Please try again.");
+      throw new Error("Medabrain didn't return a usable answer. Please try again.");
     }
     return d.content;
   }
@@ -2136,11 +2139,11 @@ export default function App({ account, onAccountChange }) {
   const lastSendAtRef = useRef(0);
   async function sendChat(message){
     if(!message.trim()||cLoad)return;
-    if(coachRequestsRemaining<=0){toast.error(`Your daily Axio quota has been reached. Try again tomorrow.`);return;}
+    if(coachRequestsRemaining<=0){toast.error(`Your daily Medabrain quota has been reached. Try again tomorrow.`);return;}
     // Small cooldown (independent of cLoad, which only covers the in-flight request) so a fast
     // double-tap on send can't fire two nearly-identical Groq calls back to back.
     const now=Date.now();
-    if(now-lastSendAtRef.current<3000){toast('Give Axio a moment before sending again.',{icon:'⏳'});return;}
+    if(now-lastSendAtRef.current<3000){toast('Give Medabrain a moment before sending again.',{icon:'⏳'});return;}
     lastSendAtRef.current=now;
     let threadId=activeThreadId;
     if(!threadId){
@@ -2205,10 +2208,10 @@ export default function App({ account, onAccountChange }) {
   }
 
   async function clearAllChats(){
-    if(!coachThreads.length){ toast('No Axio conversations to clear.'); return; }
-    if(!window.confirm(`Delete all ${coachThreads.length} Axio conversation${coachThreads.length===1?'':'s'}? This cannot be undone — your XP, streak, and study progress are unaffected.`))return;
+    if(!coachThreads.length){ toast('No Medabrain conversations to clear.'); return; }
+    if(!window.confirm(`Delete all ${coachThreads.length} Medabrain conversation${coachThreads.length===1?'':'s'}? This cannot be undone — your XP, streak, and study progress are unaffected.`))return;
     setCoachThreads([]);setActiveThreadId(null);setMsgs([]);
-    try{ await DB.clearAllCoachThreads(); toast.success('Axio chat history cleared.'); }catch(err){console.error('Failed to clear chat history',err);toast.error('Could not clear chat history.');}
+    try{ await DB.clearAllCoachThreads(); toast.success('Medabrain chat history cleared.'); }catch(err){console.error('Failed to clear chat history',err);toast.error('Could not clear chat history.');}
   }
 
   function copyMsg(text,i){
@@ -2714,7 +2717,7 @@ export default function App({ account, onAccountChange }) {
             {nextLesson&&<button onClick={()=>goPrep('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
           </div>
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Axio's #1 Pick</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
               <div style={{width:36,height:36,borderRadius:10,background:`${C.amber}15`,border:`1px solid ${C.amber}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.amberL}/></div>
               <div style={{minWidth:0}}>
@@ -2726,8 +2729,8 @@ export default function App({ account, onAccountChange }) {
           </div>}
         </div>}
 
-        {/* Axio ranked quiz recommendations — top 3 on the dashboard */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskAxio={askAxioAboutPick} compact/>}
+        {/* Medabrain ranked quiz recommendations — top 3 on the dashboard */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} compact/>}
 
         {/* Deadline countdown */}
         {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
@@ -2767,7 +2770,7 @@ export default function App({ account, onAccountChange }) {
               {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',pillar:'prep',view:'diagnostic',col:C.violet},
               {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathway',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
-              {Ic:MessageCircle,lbl:'AI Coach',sub:'Axio tutor',pillar:'prep',view:'coach',col:C.cyan},
+              {Ic:MessageCircle,lbl:'AI Coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
               {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?dueCardsSub(dueCards):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueCards>0?C.violet:C.orange},
               {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
             ].map((a,i)=>(
@@ -3199,8 +3202,8 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
-        {/* Axio ranked quiz recommendations — full top-6 list */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskAxio={askAxioAboutPick}/>}
+        {/* Medabrain ranked quiz recommendations — full top-6 list */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick}/>}
         <div style={R({justifyContent:'space-between'})}>
           <SL extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SL>
         </div>
@@ -3292,7 +3295,7 @@ export default function App({ account, onAccountChange }) {
         </div>
         <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:3,paddingRight:2}}>
           {threadsLoading&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px'}}>Loading chats…</div>}
-          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px',lineHeight:1.5}}>No chats yet — ask Axio something below to start your first one.</div>}
+          {!threadsLoading&&coachThreads.length===0&&<div style={{fontSize:11.5,color:C.t4,padding:'8px 6px',lineHeight:1.5}}>No chats yet — ask Medabrain something below to start your first one.</div>}
           {coachThreads.map(t=>{
             const active=t.id===activeThreadId;
             return(
@@ -3360,7 +3363,7 @@ export default function App({ account, onAccountChange }) {
               </div>
               <div>
                 <div style={R({gap:7,marginBottom:1})}>
-                  <h2 style={{fontSize:isMobile?18:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Axio</h2>
+                  <h2 style={{fontSize:isMobile?18:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Medabrain</h2>
                   <Sparkles size={13} color={C.amberL}/>
                 </div>
                 <div style={{fontSize:isMobile?11:12,color:C.t3}}>Your SAT/ACT content and study-strategy assistant</div>
@@ -3371,7 +3374,7 @@ export default function App({ account, onAccountChange }) {
                 {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
               </div>
-              <div style={{display:'flex',gap:6,padding:'4px 9px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',cursor:'default'}} data-tour="prep-deep-coach-tier" title="Axio automatically picks the model for each message — Scout for quick answers, Guide for everyday coaching, Sage for essay feedback and deep strategy.">
+              <div style={{display:'flex',gap:6,padding:'4px 9px',borderRadius:9,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',cursor:'default'}} data-tour="prep-deep-coach-tier" title="Medabrain automatically picks the model for each message — Scout for quick answers, Guide for everyday coaching, Sage for essay feedback and deep strategy.">
                 <motion.span animate={{opacity:[1,.4,1]}} transition={{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:6,height:6,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`,flexShrink:0}}/>
                 <span style={{fontSize:9.5,fontWeight:700,color:C.t4,letterSpacing:'.08em',textTransform:'uppercase'}}>Auto</span>
                 <span style={{width:1,height:12,background:C.b1}}/>
@@ -3379,7 +3382,7 @@ export default function App({ account, onAccountChange }) {
               </div>
             </div>
           </div>
-          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>Axio matches the model to your question automatically — {COACH_TIERS.find(t=>t.id===coachTier)?.label} answered last</div>
+          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>Medabrain matches the model to your question automatically — {COACH_TIERS.find(t=>t.id===coachTier)?.label} answered last</div>
           <div style={{marginTop:16,maxWidth:320}}>
             <div style={R({justifyContent:'space-between',marginBottom:5})}>
               <div style={R({gap:5})}>
@@ -3407,7 +3410,7 @@ export default function App({ account, onAccountChange }) {
                 <MessageCircle size={16} color={accent}/>
               </div>
               <div>
-                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Axio.</div>
+                <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Medabrain.</div>
                 <div style={{fontSize:13,color:C.t3,lineHeight:1.6}}>Ask me to explain a concept, build a study plan, or work through a tough problem. I know where you stand in {curPath?.label||'your pathway'} and can tailor answers to it. Pick a prompt below or just start typing.</div>
               </div>
             </div>
@@ -3468,14 +3471,14 @@ export default function App({ account, onAccountChange }) {
         {/* ── Composer ────────────────────────────────────────────────────── */}
         <div style={{flexShrink:0,marginTop:14}}>
           <div style={R({gap:isMobile?6:10})}>
-            <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Axio…":"Ask Axio about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain…":"Ask Medabrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
             <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
           </div>
           <div style={R({justifyContent:'space-between',marginTop:8})}>
             {activeThreadId?<button style={btnG({fontSize:11,padding:'5px 14px',borderRadius:20,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
-            {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Axio can make mistakes — double-check anything important.</span>}
+            {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Medabrain can make mistakes — double-check anything important.</span>}
           </div>
         </div>
         </div>
@@ -4084,7 +4087,7 @@ export default function App({ account, onAccountChange }) {
             <Lightbulb size={16} color={C.blueL} />
           </div>
           <div>
-            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>Axio Coaching Insight</div>
+            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>Medabrain Coaching Insight</div>
             <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 2}}>
               {
                 lCat === 'Life Sciences' ? "In Life Sciences, focus on active recall. Rather than re-reading chapters, use our Flashcards workspace or sketch pathways from memory. Use BioMan Biology or HHMI for interactive visual reinforcement." :
@@ -4457,7 +4460,7 @@ export default function App({ account, onAccountChange }) {
             <div onClick={()=>goPrep('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><MessageCircle size={13} color={C.blue}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>AI Coach</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{aiChatCount}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Axio</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Medabrain</div>
             </div>
             <div onClick={()=>goPortfolio('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Building2 size={13} color={C.amber}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>College List</span></div>
@@ -4977,7 +4980,7 @@ export default function App({ account, onAccountChange }) {
         {/* Onboarding recap — surfaces what the ~30-screen onboarding flow actually collected
             (goal, obstacles, study method, what they want to accomplish) so it's visibly tying
             into the rest of the app instead of vanishing after the paywall screen. Same data
-            feeds Axio's system prompt — see src/lib/studentProfile.js. */}
+            feeds Medabrain's system prompt — see src/lib/studentProfile.js. */}
         <div style={{...glass2({padding:16}),display:'flex',alignItems:'flex-start',gap:14}}>
           <div style={{width:32,height:32,borderRadius:9,flexShrink:0,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><Target size={15} color={C.violetL}/></div>
           <div style={{flex:1,minWidth:0}}>
@@ -4992,7 +4995,7 @@ export default function App({ account, onAccountChange }) {
                 ))}
               </div>
             ):(
-              <div style={{fontSize:12.5,color:C.t3,lineHeight:1.5}}>You haven't set a goal yet — Axio coaches better when it knows what you're working toward.</div>
+              <div style={{fontSize:12.5,color:C.t3,lineHeight:1.5}}>You haven't set a goal yet — Medabrain coaches better when it knows what you're working toward.</div>
             )}
           </div>
           <button style={btnSm('rgba(255,255,255,0.06)',{fontSize:10.5,flexShrink:0})} onClick={()=>setTab('settings')}>Edit</button>
@@ -5263,7 +5266,7 @@ export default function App({ account, onAccountChange }) {
         <div style={G(3,14,{},isMobile)}>
           <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
           <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
-          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Axio conversations" m={isMobile}/>
+          <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Medabrain conversations" m={isMobile}/>
         </div>
         </>}
 
@@ -5362,7 +5365,7 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
-            forever. Feeds Axio's system prompt (src/lib/studentProfile.js) and the Progress
+            forever. Feeds Medabrain's system prompt (src/lib/studentProfile.js) and the Progress
             overview recap card, so updating this here actually changes those. */}
         <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
@@ -5380,7 +5383,7 @@ export default function App({ account, onAccountChange }) {
                 ))}
               </div>
             ):(
-              <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>You haven't set a goal yet — click Edit to tell Axio what you're working toward, what's slowing you down, and what you want to accomplish.</p>
+              <p style={{fontSize:13,color:C.t3,lineHeight:1.6}}>You haven't set a goal yet — click Edit to tell Medabrain what you're working toward, what's slowing you down, and what you want to accomplish.</p>
             )
           ):(
             <div style={CC({gap:18})}>
@@ -5429,7 +5432,7 @@ export default function App({ account, onAccountChange }) {
                 </div>
               </div>
               <div style={R({gap:10})}>
-                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish});setSGoalsEditing(false);toast.success('Goals updated — Axio will use this right away.');}}>Save Goals</button>
+                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
             </div>
@@ -5529,8 +5532,8 @@ export default function App({ account, onAccountChange }) {
         </div>
 
         <div style={glass({padding:18})}>
-          <SL>Axio Chat History</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Clear every saved Axio conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
+          <SL>Medabrain Chat History</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Clear every saved Medabrain conversation — a scoped reset that leaves your XP, streak, quiz scores, and pathway progress untouched.</p>
           <button style={{...btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={clearAllChats}><Trash2 size={13}/>Clear All Chats{coachThreads.length>0?` (${coachThreads.length})`:''}</button>
         </div>
 
@@ -5551,14 +5554,14 @@ export default function App({ account, onAccountChange }) {
         <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Axio chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:12,lineHeight:1.65}}>Signed in as <strong style={{color:C.t1}}>{account?.email}</strong>. Your whole profile — XP, streak, quiz scores, flashcards, pathway progress, achievements, Medabrain chats, and your Portfolio — syncs to this account, so signing in anywhere else picks up right where you left off.</p>
           {/* Makes the otherwise-invisible cross-device sync machinery (progressSync.js)
               visible and checkable, instead of the student just having to trust it works. */}
           <div style={{...R({gap:8}),marginBottom:14,padding:'8px 12px',borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,width:'fit-content'}}>
             {syncStatus.state==='syncing'&&<><RefreshCw size={13} color={C.blueL} style={{animation:'spin 1s linear infinite'}}/><span style={{fontSize:12,color:C.blueL,fontWeight:600}}>Syncing…</span></>}
             {syncStatus.state==='pending'&&<><Clock size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Changes pending sync…</span></>}
             {syncStatus.state==='synced'&&<><Cloud size={13} color={C.greenL}/><span style={{fontSize:12,color:C.greenL,fontWeight:600}}>Synced{syncTimeLabel(syncStatus.lastSyncedAt)?` ${syncTimeLabel(syncStatus.lastSyncedAt)}`:''}</span></>}
-            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.rose}/><span style={{fontSize:12,color:C.rose}} title={syncStatus.error||''}>Sync couldn't reach the server — your progress is still saved on this device</span></>}
+            {syncStatus.state==='error'&&<><CloudOff size={13} color={C.amber}/><span style={{fontSize:12,color:C.amber}} title={syncStatus.error||''}>Offline — your progress is safe on this device and will sync automatically when you reconnect.</span><button onClick={()=>{ProgressSync.retrySyncNow().catch(()=>{});}} style={{marginLeft:2,fontSize:11,fontWeight:700,color:C.blueL,background:'none',border:'none',cursor:'pointer',padding:0,textDecoration:'underline'}}>Retry now</button></>}
             {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
           </div>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
@@ -5578,8 +5581,8 @@ export default function App({ account, onAccountChange }) {
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
             MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
-            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Axio on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
-            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Axio is powered by large language model technology · Your progress is cached on this device via IndexedDB and synced to your account so it follows you to any browser you sign into
+            Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Medabrain on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
+            Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Medabrain is powered by large language model technology · Your progress is cached on this device via IndexedDB and synced to your account so it follows you to any browser you sign into
           </div>
         </div>
       </div>

@@ -4,7 +4,7 @@
 // freeform name (SCHOOL_DATA covers ~150 well-known institutions, not every accredited US
 // college), so nothing is blocked if a school isn't in the list — it just won't show stats.
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { C, glass2, inp } from '../lib/theme';
+import { C, inp } from '../lib/theme';
 import { SCHOOL_DATA } from '../data/constants';
 
 export default function CollegeAutocomplete({ value = '', onChange, onSelectSchool, onKeyDown, placeholder = 'School name', inputStyle = {} }) {
@@ -44,7 +44,11 @@ export default function CollegeAutocomplete({ value = '', onChange, onSelectScho
         onKeyDown={e => { if (e.key === 'Escape') setOpen(false); onKeyDown?.(e); }}
       />
       {open && matches.length > 0 && (
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50, ...glass2({ padding: 6 }), maxHeight: 280, overflowY: 'auto', boxShadow: '0 12px 32px rgba(0,0,0,0.5)' }}>
+        // Opaque, high-z-index surface: `glass2`'s near-transparent fill let already-added school
+        // cards below bleed through and made the list unusable ("some colleges are getting blocked").
+        // A solid background + z-index above sibling panels + a hairline border keeps it readable and
+        // always on top of the form fields it overlaps.
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, background: C.s2, border: `1px solid ${C.b2 || C.b1}`, borderRadius: 12, padding: 6, maxHeight: 300, overflowY: 'auto', boxShadow: '0 18px 44px rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)' }}>
           {matches.map(s => (
             <div
               key={s.name}

@@ -273,7 +273,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                 <span>10 career pathways</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>90+ verified lessons</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>Spaced-repetition flashcards</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
-                <span>Axio AI coach</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
+                <span>Medabrain AI coach</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>College list scored to your stats</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>MMI &amp; CASPer interview prep</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>100% free, always</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
@@ -419,8 +419,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               {pillTag('rgba(6,182,212,0.14)', '#22d3ee', 'AI coach', (
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8s-3.6 8-8 8c-1.3 0-2.5-.3-3.6-.9L4 20l1-4.6C4.4 14.3 4 13.2 4 12z"></path></svg>
               ))}
-              <h3 style={{ margin: '16px 0 0', fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.12, fontSize: 'clamp(24px,3.4vw,36px)', color: '#eef2ff' }}>Stuck on a concept at 11pm? Ask Axio.</h3>
-              <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.7, color: '#94a3c0' }}>Axio explains whatever's blocking you — a systems-of-equations problem, a shaky grasp of photosynthesis, an SAT section you keep missing — and builds you a study plan around it. Free, unlimited, no upsell.</p>
+              <h3 style={{ margin: '16px 0 0', fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.12, fontSize: 'clamp(24px,3.4vw,36px)', color: '#eef2ff' }}>Stuck on a concept at 11pm? Ask Medabrain.</h3>
+              <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.7, color: '#94a3c0' }}>Medabrain explains whatever's blocking you — a systems-of-equations problem, a shaky grasp of photosynthesis, an SAT section you keep missing — and builds you a study plan around it. Free, unlimited, no upsell.</p>
               <ul style={{ margin: '20px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <li style={{ display: 'flex', gap: 10, fontSize: '14.5px', color: 'rgba(238,242,255,0.9)' }}><Check color="#22d3ee" />Explains any concept, at whatever level you're actually at</li>
                 <li style={{ display: 'flex', gap: 10, fontSize: '14.5px', color: 'rgba(238,242,255,0.9)' }}><Check color="#22d3ee" />Builds a study schedule for the section you're behind on</li>
@@ -429,7 +429,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
             </div>
             <div style={{ flex: '1 1 380px', minWidth: 300 }}>
               <div style={{ borderRadius: 20, border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.025)', padding: 22 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#506080', marginBottom: 14 }}>Axio</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#506080', marginBottom: 14 }}>Medabrain</div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <div style={{ maxWidth: '78%', borderRadius: '14px 14px 3px 14px', background: '#162032', padding: '11px 14px', fontSize: 13, color: '#eef2ff', lineHeight: 1.5 }}>What's high-yield for SAT Math I'm probably missing?</div>
                 </div>

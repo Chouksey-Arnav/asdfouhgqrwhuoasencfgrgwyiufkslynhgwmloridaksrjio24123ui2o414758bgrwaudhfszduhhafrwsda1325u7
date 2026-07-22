@@ -1,4 +1,4 @@
-// Lightweight client-side cache for Groq (Axio) responses that repeat in shape across
+// Lightweight client-side cache for Groq (Medabrain) responses that repeat in shape across
 // sessions — e.g. the daily "why this quiz" narration for the #1 recommendation. Backed by
 // localStorage (not Dexie) since entries are small strings with a short TTL and don't need to
 // survive a full data export/import cycle.
