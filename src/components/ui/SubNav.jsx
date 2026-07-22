@@ -27,7 +27,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
               transition: 'all .15s',
             }}
           >
-            {it.icon && <it.icon size={13} color={isActive ? accent : C.t3} />}
+            {it.ic && <it.ic size={13} color={isActive ? accent : C.t3} />}
             {it.label}
             {!!it.badge && (
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accent : C.s4, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '0 4px' }}>{it.badge}</span>

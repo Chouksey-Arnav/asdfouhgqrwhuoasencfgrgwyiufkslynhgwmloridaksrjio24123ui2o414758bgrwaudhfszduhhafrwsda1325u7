@@ -13,7 +13,7 @@ import {
   Home, Compass, Route, Layers, MessageCircle, Layers3, BookOpen,
   Trophy, Building2, LineChart, Settings, Flame, Zap, CheckCircle2, TrendingUp,
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
-  Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
+  Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft, ChevronDown, ChevronUp,
   RefreshCw, Star, Gem, Dumbbell, Milestone, Dna, Calculator, Circle, Clock, ArrowUp, ArrowRight,
   Bookmark,
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
@@ -1367,6 +1367,7 @@ export default function App({ account, onAccountChange }) {
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
   const [cF,setCF]=useState('All');
+  const [oppsExpanded,setOppsExpanded]=useState(false); // Portfolio Overview's Opportunities grid starts collapsed to 6 — the Overview page already stacks 7 other sections above it, so showing all 20 by default was the single biggest contributor to how long that page ran
 
 
   // ── Calc ────────────────────────────────────────────────────────────────────
@@ -4536,16 +4537,17 @@ export default function App({ account, onAccountChange }) {
           <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
         </div>}
 
-        {/* Opportunities */}
+        {/* Opportunities — collapsed to 6 by default so this (the longest section on an already-
+            long Overview page) doesn't force a wall of scrolling before a student even chooses to browse it */}
         <div>
           <div style={R({marginBottom:16})}>
             <SL extra={{margin:0}}>Opportunities & Competitions</SL>
-            <select style={{...inp({width:'auto',marginLeft:'auto'})}} value={cF} onChange={e=>setCF(e.target.value)}>
+            <select style={{...inp({width:'auto',marginLeft:'auto'})}} value={cF} onChange={e=>{setCF(e.target.value);setOppsExpanded(false);}}>
               {['All','Competition','Research','Scholarship','Volunteering','Organization','Academic','National','State'].map(t=><option key={t}>{t}</option>)}
             </select>
           </div>
           <div style={G(2,12,{},isMobile)}>
-            {fComp.map((c,i)=>{const ec={Elite:C.rose,Competitive:C.amber,Open:C.green}[c.effort]||C.t2;return(
+            {(oppsExpanded?fComp:fComp.slice(0,6)).map((c,i)=>{const ec={Elite:C.rose,Competitive:C.amber,Open:C.green}[c.effort]||C.t2;return(
               <motion.div key={i} whileHover={{borderColor:`${ec}30`,y:-1}} style={glass({padding:18,transition:'border-color .15s'})}>
                 <div style={R({marginBottom:10})}>
                   <span style={pill(`${ec}18`,ec,{fontSize:10})}>{c.effort}</span>
@@ -4557,6 +4559,11 @@ export default function App({ account, onAccountChange }) {
               </motion.div>
             );})}
           </div>
+          {fComp.length>6&&(
+            <button style={{...btnG({fontSize:12,padding:'9px 18px',marginTop:14}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setOppsExpanded(v=>!v)}>
+              {oppsExpanded?<>Show fewer<ChevronUp size={13}/></>:<>Show all {fComp.length}<ChevronDown size={13}/></>}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -5769,7 +5776,7 @@ export default function App({ account, onAccountChange }) {
         )}
 
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
-        <main style={{flex:1,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
+        <main style={{flex:1,overflowY:'auto',position:'relative',background:`radial-gradient(ellipse 70% 50% at 85% 0%,${accent}12 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 5% 100%,${C.cyan}0c 0%,transparent 55%),${C.bg}`,backgroundAttachment:'fixed',paddingBottom:isMobile?80:0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
