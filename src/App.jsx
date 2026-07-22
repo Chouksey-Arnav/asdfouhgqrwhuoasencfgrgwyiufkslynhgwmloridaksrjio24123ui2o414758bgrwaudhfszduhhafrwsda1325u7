@@ -1693,6 +1693,7 @@ export default function App({ account, onAccountChange }) {
       goal:profile.goal||null, obstacles:profile.obstacles||[], studyMethod:profile.studyMethod||null,
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
       onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
+      generatedPlan:profile.generatedPlan||null,
       onboardingCompletedAt:Date.now(),
     });
     AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});

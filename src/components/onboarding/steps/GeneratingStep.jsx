@@ -1,29 +1,53 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Loader2 } from 'lucide-react';
 import { C } from '../primitives';
+import { generateMaxOutPlan } from '../../../lib/planGenerator';
 
 const LINES = [
-  'Calculating your target score',
-  'Building your study plan',
+  'Reading everything you told us',
+  'Balancing test prep with pre-health',
   'Matching your pathway',
-  'Finalizing your plan',
+  'Writing your personalized plan',
 ];
 
-export function GeneratingStep({ onNext }) {
+// Now a real generation moment: the animation runs while generateMaxOutPlan() (purpose:'plan')
+// actually builds the student's plan. We hold the last progress tick until the plan resolves — but
+// never longer than a hard cap, since generateMaxOutPlan always returns a usable fallback.
+export function GeneratingStep({ profile, onPlan, onNext }) {
   const [pct, setPct] = useState(0);
   const [doneIdx, setDoneIdx] = useState(-1);
+  const planRef = useRef(null);
+  const advancedRef = useRef(false);
+
+  // Kick off the real plan generation once.
+  useEffect(() => {
+    let cancelled = false;
+    generateMaxOutPlan(profile || {}).then(plan => {
+      if (cancelled) return;
+      planRef.current = plan;
+      onPlan?.(plan);
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     let raf;
     const start = Date.now();
-    const DURATION = 2600;
+    const MIN_DURATION = 2600;   // don't flash by faster than this even if the plan is instant
+    const HARD_CAP = 12000;      // never hang the flow waiting on the model
+    function advance() { if (!advancedRef.current) { advancedRef.current = true; setPct(100); setDoneIdx(LINES.length); setTimeout(onNext, 500); } }
     function tick() {
-      const t = Math.min(1, (Date.now() - start) / DURATION);
-      setPct(Math.round(t * 100));
-      setDoneIdx(Math.floor(t * LINES.length) - (t >= 1 ? 0 : 1));
-      if (t < 1) raf = requestAnimationFrame(tick);
-      else setTimeout(onNext, 500);
+      const elapsed = Date.now() - start;
+      // Ease toward 92% over MIN_DURATION, then wait for the plan (or the cap) before completing.
+      const t = Math.min(1, elapsed / MIN_DURATION);
+      const shown = Math.min(92, Math.round(t * 92));
+      setPct(shown);
+      setDoneIdx(Math.floor((shown / 100) * LINES.length) - (shown >= 92 ? 0 : 1));
+      const ready = planRef.current && elapsed >= MIN_DURATION;
+      if (ready || elapsed >= HARD_CAP) { advance(); return; }
+      raf = requestAnimationFrame(tick);
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
