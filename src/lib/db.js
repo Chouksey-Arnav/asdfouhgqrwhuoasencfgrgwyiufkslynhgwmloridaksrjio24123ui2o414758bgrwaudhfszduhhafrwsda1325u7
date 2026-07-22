@@ -103,7 +103,7 @@ db.version(9).stores({
   pathwayGoals: 'pathwayKey, startedAt, targetWeeks',
 });
 
-// v10: Iatra multi-chat — conversations used to live only in a single
+// v10: Axio multi-chat — conversations used to live only in a single
 // in-memory `msgs` array (reset on every reload). Now every conversation is a
 // row in `coachThreads` (title, timestamps) with its messages in
 // `coachMessages`, so a student can keep several parallel chats (e.g. one for
@@ -438,8 +438,8 @@ export async function addInterviewSession(entry) {
   return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
 }
 
-// ── Iatra Chat Threads ────────────────────────────────────────────────
-// A student can run as many parallel Iatra conversations as they want —
+// ── Axio Chat Threads ────────────────────────────────────────────────
+// A student can run as many parallel Axio conversations as they want —
 // each is its own row here plus a run of rows in coachMessages, so switching
 // threads is just a different IndexedDB query, and nothing is lost on reload.
 export async function getCoachThreads() {
@@ -464,7 +464,7 @@ export async function deleteCoachThread(id) {
   await db.coachThreads.delete(id);
   pushDirty();
 }
-// Scoped alternative to a full account wipe — clears every Iatra conversation without touching
+// Scoped alternative to a full account wipe — clears every Axio conversation without touching
 // XP, streak, quiz scores, flashcards, or pathway progress.
 export async function clearAllCoachThreads() {
   await db.coachMessages.clear();
@@ -739,7 +739,7 @@ export async function applyRemoteSnapshot(remote) {
   await db.pathwayGoals.clear();
   if (goalMap.size) await db.pathwayGoals.bulkPut([...goalMap.values()]);
 
-  // ── Iatra chat threads (merged by creation time; thread/message ids are per-device) ──
+  // ── Axio chat threads (merged by creation time; thread/message ids are per-device) ──
   const localMsgsByThread = {};
   for (const m of localCoachMessages) (localMsgsByThread[m.threadId] ||= []).push(m);
   const localThreadByKey = new Map(localCoachThreads.map(t => [t.createdAt, t]));

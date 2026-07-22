@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Sparkles, GraduationCap } from 'lucide-react';
 import { C, glass } from '../../lib/theme';
+import AnimatedLogo from '../AnimatedLogo';
 
 const HIGHLIGHTS = [
   { icon: GraduationCap, title: '10 health career pathways', desc: 'Physician, Nursing, PA, Pharmacy, Dentistry, and more — matched to you, not assumed.' },
@@ -19,7 +20,7 @@ function BrandPanel() {
       <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 20% 10%, rgba(45,127,255,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 90%, rgba(6,182,212,0.08) 0%, transparent 55%)', pointerEvents: 'none' }} />
       <div style={{ position: 'relative', maxWidth: 420 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 10, overflow: 'hidden', flexShrink: 0 }}><img src="/icon.svg" width={38} height={38} alt="" /></div>
+          <AnimatedLogo size={38} variant="pop" />
           <div>
             <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</div>
             <div style={{ fontSize: 9.5, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Your path into medicine</div>

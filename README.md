@@ -38,8 +38,9 @@ service role server-side and enforces per-user ownership itself.
 ### Optional environment variables
 
 ```
-GROQ_API_KEY=...    # Iatra AI tutoring/coaching (api/groq.js)
-GROQ_API_KEY_2=...  # optional 2nd Groq account — see GROQ_SETUP.md "Two accounts, maximized usage"
+GROQ_API_KEY=...    # Axio AI tutoring/coaching (api/groq.js)
+GROQ_API_KEY_2=...  # optional 2nd Groq account — see GROQ_SETUP.md "Multiple accounts, maximized usage"
+GROQ_API_KEY_3=...  # optional 3rd Groq account — same pooling/failover as above
 ```
 
 ### Running the production server locally

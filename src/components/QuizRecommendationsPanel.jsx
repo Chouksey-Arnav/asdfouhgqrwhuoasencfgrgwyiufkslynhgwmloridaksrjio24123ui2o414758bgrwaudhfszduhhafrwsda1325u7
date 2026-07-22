@@ -1,8 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Iatra Quiz Recommendations — ranked "what should I do next" panel.
+// Axio Quiz Recommendations — ranked "what should I do next" panel.
 // Pure presentation: all ranking math lives in ../lib/recommend.js. This panel
 // renders the #1 pick as a featured hero card and #2+ as a numbered list, with
-// an optional one-tap "Ask Iatra why" narration powered by the same Groq
+// an optional one-tap "Ask Axio why" narration powered by the same Groq
 // coach that already runs the rest of the app.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
@@ -39,9 +39,9 @@ function RankBadge({ rank }) {
 /**
  * @param {Array}    ranked        output of rankQuizzes()
  * @param {Function} onStart       (quiz) => void — launch the quiz
- * @param {Function} [onAskIatra] async (pick) => string — optional Groq narration for #1
+ * @param {Function} [onAskAxio] async (pick) => string — optional Groq narration for #1
  */
-export default function QuizRecommendationsPanel({ ranked, onStart, onAskIatra, compact = false }) {
+export default function QuizRecommendationsPanel({ ranked, onStart, onAskAxio, compact = false }) {
   const [brainNote, setBrainNote] = useState(null); // { rank, text }
   const [brainLoading, setBrainLoading] = useState(false);
 
@@ -62,11 +62,11 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskIatra, 
   const [top, ...rest] = ranked;
   const topColor = dColors[top.quiz.diff] || C.blue;
 
-  async function askIatra(pick) {
-    if (!onAskIatra || brainLoading) return;
+  async function askAxio(pick) {
+    if (!onAskAxio || brainLoading) return;
     setBrainLoading(true);
     try {
-      const text = await onAskIatra(pick);
+      const text = await onAskAxio(pick);
       setBrainNote({ rank: pick.rank, text });
     } catch {
       setBrainNote({ rank: pick.rank, text: null });
@@ -78,7 +78,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskIatra, 
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Brain size={15} color={C.violetL} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Iatra Picks — Ranked For You</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Axio Picks — Ranked For You</span>
       </div>
 
       {/* #1 — featured hero card */}
@@ -117,7 +117,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskIatra, 
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
                   <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: C.roseDim, border: `1px solid ${C.rose}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
                     <Brain size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 2 }} />
-                    <span style={{ fontSize: 12, color: C.t2 }}>Iatra couldn't explain this pick right now — try again in a moment.</span>
+                    <span style={{ fontSize: 12, color: C.t2 }}>Axio couldn't explain this pick right now — try again in a moment.</span>
                   </div>
                 </motion.div>
               )}
@@ -129,13 +129,13 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskIatra, 
               onClick={() => onStart(top.quiz)}>
               Start Now<ChevronRight size={14} />
             </motion.button>
-            {onAskIatra && (
+            {onAskAxio && (
               <button
                 style={{ ...pill('transparent', C.violetL, { fontSize: 10.5, cursor: 'pointer', border: `1px solid ${C.violet}30`, justifyContent: 'center', padding: '7px 12px' }) }}
                 disabled={brainLoading}
-                onClick={() => askIatra(top)}
+                onClick={() => askAxio(top)}
               >
-                {brainLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Loader2 size={11} className="spin" /> Thinking…</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Sparkles size={11} />Ask Iatra why</span>}
+                {brainLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Loader2 size={11} className="spin" /> Thinking…</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Sparkles size={11} />Ask Axio why</span>}
               </button>
             )}
           </div>

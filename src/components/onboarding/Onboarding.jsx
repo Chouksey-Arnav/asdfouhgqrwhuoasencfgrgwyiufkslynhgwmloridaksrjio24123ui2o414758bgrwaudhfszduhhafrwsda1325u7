@@ -46,7 +46,7 @@ const STUDY_HOURS_OPTIONS = [
 ];
 // Exported (not just used here) so src/lib/studentProfile.js can turn a
 // student's saved onboarding values back into human-readable labels for the
-// Iatra system prompt and the dashboard's onboarding recap card, instead
+// Axio system prompt and the dashboard's onboarding recap card, instead
 // of duplicating this copy in a second place that could drift out of sync.
 export const GOAL_OPTIONS = [
   { value: 'boost_score', label: 'Boost my SAT/ACT score' },
