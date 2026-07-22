@@ -14,7 +14,7 @@ export const ACHIEVEMENTS = {
   cards_100:    { key:'cards_100',    name:'Card Master',      desc:'Review 100 flashcards',           icon:'Layers3', xp:150 },
   unit_master:  { key:'unit_master',  name:'Unit Complete',    desc:'Master all lessons in a unit',    icon:'BookOpen', xp:200 },
   course_half:  { key:'course_half',  name:'Halfway There',    desc:'Complete 50% of the course',      icon:'Milestone', xp:300 },
-  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Iatra AI Coach 5 times',  icon:'MessageCircle', xp:75  },
+  ai_user:      { key:'ai_user',      name:'AI Powered',       desc:'Use Axio AI Coach 5 times',  icon:'MessageCircle', xp:75  },
   college_added:{ key:'college_added',name:'List Builder',     desc:'Add your first school to your college list', icon:'Building2', xp:75 },
   deadline_set: { key:'deadline_set', name:'On the Radar',     desc:'Track your first application deadline', icon:'CalendarDays', xp:50 },
   essay_started:{ key:'essay_started',name:'First Draft',      desc:'Start your first essay draft',    icon:'ScrollText', xp:100 },
@@ -37,7 +37,7 @@ export const ACHIEVEMENTS = {
   streak_100:   { key:'streak_100',   name:'Streak Legend',    desc:'Study 100 days in a row',          icon:'Crown', xp:750 },
   course_complete:{ key:'course_complete', name:'Course Complete', desc:'Master 100% of your pathway',  icon:'GraduationCap', xp:500 },
   level_20:     { key:'level_20',     name:'Elite Scholar',    desc:'Reach Level 20',                   icon:'Crown', xp:400 },
-  ai_user_25:   { key:'ai_user_25',   name:'Iatra Regular',    desc:'Use Iatra AI Coach 25 times',      icon:'MessageCircle', xp:150 },
+  ai_user_25:   { key:'ai_user_25',   name:'Axio Regular',    desc:'Use Axio AI Coach 25 times',      icon:'MessageCircle', xp:150 },
   path_explorer:{ key:'path_explorer',name:'Track Explorer',  desc:'Fully complete 3 different pathways', icon:'Compass', xp:600 },
 
   // Pathway completion — one per PATHS key (src/data/constants.js), unlocked when every

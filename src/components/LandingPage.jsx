@@ -1,24 +1,7 @@
 import React, { useEffect } from 'react';
+import AnimatedLogo from './AnimatedLogo';
 
 // ── Reusable bits ─────────────────────────────────────────────────────────
-
-function Logo({ size = 34, idPrefix = 'nav' }) {
-  return (
-    <svg viewBox="0 0 100 100" width={size} height={size} style={{ flexShrink: 0 }}>
-      <defs>
-        <linearGradient id={`${idPrefix}bg`} x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#274873" /><stop offset="1" stopColor="#13233b" /></linearGradient>
-        <linearGradient id={`${idPrefix}gold`} x1="50" y1="18" x2="50" y2="90" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#e3c47c" /><stop offset="1" stopColor="#b3894a" /></linearGradient>
-      </defs>
-      <rect width="100" height="100" rx="22" fill={`url(#${idPrefix}bg)`} />
-      <path d="M50 21 L75 30.5 V54 C75 71 64.5 82 50 87 C35.5 82 25 71 25 54 V30.5 Z" fill="#ffffff" fillOpacity="0.06" stroke={`url(#${idPrefix}gold)`} strokeWidth="3.4" strokeLinejoin="round" />
-      <path d="M50 47 V71 C46 67.5 41 65.5 34.5 65.5 V44 C41 44 46 45.5 50 47 Z" fill="#f4ecd8" fillOpacity="0.92" />
-      <path d="M50 47 V71 C54 67.5 59 65.5 65.5 65.5 V44 C59 44 54 45.5 50 47 Z" fill="#f4ecd8" fillOpacity="0.75" />
-      <path d="M50 47 V71" stroke="#13233b" strokeWidth="1.1" />
-      <rect x="46.6" y="27" width="6.8" height="17" rx="1.2" fill={`url(#${idPrefix}gold)`} />
-      <rect x="41.5" y="32.1" width="17" height="6.8" rx="1.2" fill={`url(#${idPrefix}gold)`} />
-    </svg>
-  );
-}
 
 function ArrowRight({ size = 14 }) {
   return (
@@ -137,7 +120,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(4,6,11,0.82)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
           <div style={{ maxWidth: 1180, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
             <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <Logo size={34} idPrefix="msplNav" />
+              <AnimatedLogo size={34} variant="hover" glow={false} />
               <span style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: '16.5px', letterSpacing: '-0.01em', color: '#eef2ff' }}>MedSchoolPrep</span>
             </a>
             <div style={{ display: 'flex', alignItems: 'center', gap: 26, fontSize: '13.5px', fontWeight: 600, color: '#94a3c0', flexWrap: 'wrap' }}>
@@ -158,6 +141,9 @@ export default function LandingPage({ onGetStarted, onLogin }) {
 
         {/* HERO */}
         <header id="top" style={{ maxWidth: 840, margin: '0 auto', padding: 'clamp(48px,9vw,104px) 24px clamp(32px,6vw,56px)', textAlign: 'center' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 22 }}>
+            <AnimatedLogo size={56} variant="pop" />
+          </div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, borderRadius: 999, border: '1px solid rgba(255,255,255,0.11)', background: 'rgba(255,255,255,0.03)', padding: '7px 16px 7px 8px', fontSize: '12.5px', fontWeight: 600, color: '#94a3c0' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: 'rgba(45,127,255,0.15)', color: '#5da0ff', padding: '4px 10px', fontSize: 11, letterSpacing: '0.02em', fontWeight: 700 }}>
               <ShieldIcon size={11} />
@@ -287,7 +273,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                 <span>10 career pathways</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>90+ verified lessons</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>Spaced-repetition flashcards</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
-                <span>Iatra AI coach</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
+                <span>Axio AI coach</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>College list scored to your stats</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>MMI &amp; CASPer interview prep</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
                 <span>100% free, always</span><span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
@@ -433,8 +419,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
               {pillTag('rgba(6,182,212,0.14)', '#22d3ee', 'AI coach', (
                 <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8s-3.6 8-8 8c-1.3 0-2.5-.3-3.6-.9L4 20l1-4.6C4.4 14.3 4 13.2 4 12z"></path></svg>
               ))}
-              <h3 style={{ margin: '16px 0 0', fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.12, fontSize: 'clamp(24px,3.4vw,36px)', color: '#eef2ff' }}>Stuck on a concept at 11pm? Ask Iatra.</h3>
-              <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.7, color: '#94a3c0' }}>Iatra explains whatever's blocking you — a systems-of-equations problem, a shaky grasp of photosynthesis, an SAT section you keep missing — and builds you a study plan around it. Free, unlimited, no upsell.</p>
+              <h3 style={{ margin: '16px 0 0', fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.12, fontSize: 'clamp(24px,3.4vw,36px)', color: '#eef2ff' }}>Stuck on a concept at 11pm? Ask Axio.</h3>
+              <p style={{ marginTop: 14, fontSize: 16, lineHeight: 1.7, color: '#94a3c0' }}>Axio explains whatever's blocking you — a systems-of-equations problem, a shaky grasp of photosynthesis, an SAT section you keep missing — and builds you a study plan around it. Free, unlimited, no upsell.</p>
               <ul style={{ margin: '20px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <li style={{ display: 'flex', gap: 10, fontSize: '14.5px', color: 'rgba(238,242,255,0.9)' }}><Check color="#22d3ee" />Explains any concept, at whatever level you're actually at</li>
                 <li style={{ display: 'flex', gap: 10, fontSize: '14.5px', color: 'rgba(238,242,255,0.9)' }}><Check color="#22d3ee" />Builds a study schedule for the section you're behind on</li>
@@ -443,7 +429,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
             </div>
             <div style={{ flex: '1 1 380px', minWidth: 300 }}>
               <div style={{ borderRadius: 20, border: '1px solid rgba(255,255,255,0.09)', background: 'rgba(255,255,255,0.025)', padding: 22 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#506080', marginBottom: 14 }}>Iatra</div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#506080', marginBottom: 14 }}>Axio</div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <div style={{ maxWidth: '78%', borderRadius: '14px 14px 3px 14px', background: '#162032', padding: '11px 14px', fontSize: 13, color: '#eef2ff', lineHeight: 1.5 }}>What's high-yield for SAT Math I'm probably missing?</div>
                 </div>
@@ -549,7 +535,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
           <div style={{ maxWidth: 1160, margin: '0 auto', padding: '36px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Logo size={30} idPrefix="msplFt" />
+              <AnimatedLogo size={30} variant="hover" />
               <div>
                 <div style={{ fontFamily: "'Bricolage Grotesque',sans-serif", fontWeight: 800, fontSize: '14.5px', color: '#eef2ff' }}>MedSchoolPrep</div>
                 <div style={{ fontSize: '11.5px', color: '#506080' }}>Your path into medicine.</div>

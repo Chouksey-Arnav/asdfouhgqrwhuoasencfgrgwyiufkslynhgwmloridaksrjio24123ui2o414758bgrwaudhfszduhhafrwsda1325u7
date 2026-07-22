@@ -454,7 +454,7 @@ export const PATHS = {
 
 // ── COURSE → QUIZ CATEGORY MAP ────────────────────────────────────────────────
 // Maps a student's self-reported courses (Settings) to the 3 quiz-library
-// categories, so the Quiz Library and Iatra Quiz Recommendations can both
+// categories, so the Quiz Library and Axio Quiz Recommendations can both
 // surface "matches your courses" without duplicating this mapping.
 export const COURSE_CAT_MAP = {
   Biology:'Life Sciences', 'Environmental Science':'Life Sciences', 'Anatomy & Physiology':'Life Sciences',
@@ -465,7 +465,7 @@ export const COURSE_CAT_MAP = {
 };
 
 // ── AI COACH — PATHWAY-SPECIFIC BEHAVIORAL NOTES ─────────────────────────────
-// Short, behavioral (not marketing) guidance injected into the Iatra system
+// Short, behavioral (not marketing) guidance injected into the Axio system
 // prompt so the coach's advice matches what's actually realistic/appropriate for
 // a high schooler on each track. Distinct from PATHS[].overview/highlights above.
 // All tracks here (including "exploring") are EXPLORATORY, not commitments —

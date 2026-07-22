@@ -1,8 +1,8 @@
 // /api/groq.js — Vercel serverless function
 // Proxies requests to Groq's OpenAI-compatible API server-side (key never exposed to browser).
-// Powers Iatra, routing each request to one of three named model tiers (Scout/Guide/Sage — see
-// MODELS below) and, when a second Groq account is configured, spreading/failing over requests
-// across both accounts' keys to maximize combined free-tier throughput.
+// Powers Axio, routing each request to one of three named model tiers (Scout/Guide/Sage — see
+// MODELS below) and, when additional Groq accounts are configured (up to 3 total), spreading/
+// failing over requests across every account's key to maximize combined free-tier throughput.
 //
 // Daily rate limit: 300 requests per IP per day (well under Groq free-tier caps)
 // Per-minute limit: 8 requests per minute per IP
@@ -53,7 +53,7 @@ function setCachedResponse(key, content, model) {
 }
 
 // ── Model tiers ────────────────────────────────────────────────────────────
-// Iatra offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
+// Axio offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
 // — each maps to a real Groq-hosted model:
 //   Scout — llama-3.1-8b-instant, fastest, for quick turns and lightweight generation. Used as
 //           the default for the main chat coach, the highest-volume call in the app.
@@ -71,12 +71,15 @@ const MODELS = {
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
 const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
 
-// ── Groq API keys (up to 2 separate accounts) ───────────────────────────────
-// Configuring a second account's key roughly doubles the combined free-tier throughput
-// available to Iatra: normal traffic round-robins between the two, and if one account's key
-// comes back rate-limited, the request automatically fails over to the other key instead of
-// failing outright. GROQ_API_KEY_2 is entirely optional — everything still works with just one.
-const GROQ_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2].filter(Boolean);
+// ── Groq API keys (up to 3 separate accounts) ───────────────────────────────
+// Each additional account's key adds to the combined free-tier throughput available to Axio:
+// normal traffic round-robins across every configured key, and if one account's key comes back
+// rate-limited, the request automatically fails over to the next key instead of failing outright.
+// Keys are pooled globally across all 3 model tiers (not tied to a specific tier) — that's what
+// actually maximizes combined headroom, since a tier-locked key would sit idle whenever that
+// tier isn't in use. GROQ_API_KEY_2 and GROQ_API_KEY_3 are both entirely optional — everything
+// still works with just GROQ_API_KEY.
+const GROQ_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
 let keyCursor = 0;
 // Candidate keys in the order to try them for this request: starts at the next key in the
 // rotation (spreading load evenly across accounts), then falls through the rest as failover.
@@ -162,7 +165,7 @@ export default async function handler(req, res) {
 
   // ── API key check ──────────────────────────────────────────────────────────
   if (!GROQ_KEYS.length) {
-    return res.status(500).json({ error: 'Iatra is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2) in your environment variables.' });
+    return res.status(500).json({ error: 'Axio is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.' });
   }
 
   // ── Parse and validate body ────────────────────────────────────────────────
@@ -184,7 +187,7 @@ export default async function handler(req, res) {
 
   // ── Build messages array (OpenAI-compatible format) ────────────────────────
   const groqMessages = [];
-  // Cap raised from 1200 → 4000: Iatra's system prompt (see
+  // Cap raised from 1200 → 4000: Axio's system prompt (see
   // src/lib/studentProfile.js buildCoachSystemPrompt) now folds in a
   // student's onboarding goal/obstacles/study habits alongside live
   // Prep/Portfolio signals, which runs meaningfully longer than the old
@@ -192,7 +195,7 @@ export default async function handler(req, res) {
   // pathological client payload can't blow up per-request token cost.
   const systemPrompt = system
     ? String(system).slice(0, 4000)
-    : 'You are Iatra, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
+    : 'You are Axio, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {
@@ -306,11 +309,11 @@ export default async function handler(req, res) {
     }
 
     if (!response.ok) {
-      const errMsg = data?.error?.message || `Iatra error (${response.status})`;
+      const errMsg = data?.error?.message || `Axio error (${response.status})`;
       console.error('Groq API error:', errMsg);
 
       if (response.status === 429 || errMsg.toLowerCase().includes('rate limit')) {
-        return res.status(429).json({ error: 'Iatra is busy right now. Please wait a moment and try again.' });
+        return res.status(429).json({ error: 'Axio is busy right now. Please wait a moment and try again.' });
       }
 
       return res.status(502).json({ error: errMsg });
@@ -318,7 +321,7 @@ export default async function handler(req, res) {
 
     const content = extractText(data?.choices?.[0]?.message);
     if (!content) {
-      return res.status(502).json({ error: 'Iatra had trouble forming a response. Please try again.' });
+      return res.status(502).json({ error: 'Axio had trouble forming a response. Please try again.' });
     }
 
     addRequestToday(ip);
@@ -339,7 +342,7 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error('API handler error:', err);
     if (err?.name === 'AbortError') {
-      return res.status(504).json({ error: 'Iatra took too long to respond. Please try again.' });
+      return res.status(504).json({ error: 'Axio took too long to respond. Please try again.' });
     }
     return res.status(500).json({ error: 'Internal server error. Please try again.' });
   }
