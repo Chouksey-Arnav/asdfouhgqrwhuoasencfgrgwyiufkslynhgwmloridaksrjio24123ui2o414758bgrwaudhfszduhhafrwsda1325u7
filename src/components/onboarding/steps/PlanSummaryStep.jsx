@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, BookOpenCheck, Target, Sparkles, Flag, CheckCircle2, Rocket } from 'lucide-react';
+import { Clock, BookOpenCheck, Target, Sparkles, Flag, CheckCircle2, Rocket, CalendarRange, TrendingUp, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { StepHeader, ContinueButton, RadialRing, C, glass } from '../primitives';
 import { heuristicPlan } from '../../../lib/planGenerator';
 
@@ -98,6 +98,55 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
               ))}
             </div>
           </Section>
+        )}
+
+        {/* Weekly rhythm */}
+        {p.weeklyRhythm?.length > 0 && (
+          <Section icon={<CalendarRange size={13} color={C.cyan} />} title="Your weekly rhythm">
+            <div style={{ ...glass({ padding: '12px 14px' }), backdropFilter: 'none', borderColor: `${C.cyan}22`, background: `linear-gradient(135deg, ${C.cyan}0d, transparent)` }}>
+              {p.weeklyRhythm.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.cyan, flexShrink: 0, boxShadow: `0 0 6px ${C.cyan}` }} />
+                  <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* 90-day goal */}
+        {p.ninetyDayGoal && (
+          <div style={{ marginBottom: 18, padding: '14px 16px', borderRadius: 12, background: `linear-gradient(135deg, ${C.amber}14, ${C.orange || '#f97316'}0d)`, border: `1px solid ${C.amber}30`, display: 'flex', gap: 11, alignItems: 'flex-start' }}>
+            <TrendingUp size={16} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.amberL, marginBottom: 3 }}>Where you could be in 90 days</div>
+              <p style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.6, margin: 0 }}>{p.ninetyDayGoal}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Strengths & watch-outs */}
+        {(p.strengths?.length > 0 || p.watchOut?.length > 0) && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 18 }}>
+            {p.strengths?.length > 0 && (
+              <div style={{ padding: '12px 14px', borderRadius: 12, background: `${C.green}0d`, border: `1px solid ${C.green}22` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                  <ShieldCheck size={13} color={C.greenL} />
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.greenL }}>Your edge</span>
+                </div>
+                {p.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '3px 0' }}>• {s}</div>)}
+              </div>
+            )}
+            {p.watchOut?.length > 0 && (
+              <div style={{ padding: '12px 14px', borderRadius: 12, background: `${C.rose}0d`, border: `1px solid ${C.rose}22` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+                  <AlertTriangle size={13} color={C.roseL} />
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.roseL }}>Keep an eye on</span>
+                </div>
+                {p.watchOut.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '3px 0' }}>• {s}</div>)}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Encouragement */}

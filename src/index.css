@@ -3,8 +3,11 @@ html, body, #root { height: 100%; width: 100%; }
 body {
   background: #04060b;
   background-image:
-    radial-gradient(ellipse 80% 60% at 70% 0%, rgba(45,127,255,0.07) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 40% at 0% 100%, rgba(6,182,212,0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 55% at 72% -5%, rgba(45,127,255,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 5% 8%, rgba(139,92,246,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 100% 55%, rgba(236,72,153,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at -5% 100%, rgba(6,182,212,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 105%, rgba(16,185,129,0.045) 0%, transparent 55%);
   background-attachment: fixed;
   color: #eef2ff;
   font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -51,6 +54,17 @@ body::before {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.9s linear infinite; }
+
+/* Slow-drifting gradient for hero/CTA surfaces so vibrant fills feel alive
+   rather than static. Apply with `.msp-aurora` on a background-image gradient
+   that uses background-size:200% 200%. */
+@keyframes mspGradientDrift { 0%{background-position:0% 50%;} 50%{background-position:100% 50%;} 100%{background-position:0% 50%;} }
+.msp-aurora { background-size: 200% 200% !important; animation: mspGradientDrift 12s ease infinite; }
+@keyframes mspPulseGlow { 0%,100%{opacity:.55;} 50%{opacity:1;} }
+.msp-pulse-glow { animation: mspPulseGlow 3.2s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .msp-aurora, .msp-pulse-glow { animation: none !important; }
+}
 
 .mb-group .mb-copy { opacity: 0; }
 .mb-group:hover .mb-copy { opacity: 1; }

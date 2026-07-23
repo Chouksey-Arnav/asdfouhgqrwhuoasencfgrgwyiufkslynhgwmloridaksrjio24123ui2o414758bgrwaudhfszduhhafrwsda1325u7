@@ -4,8 +4,9 @@
 //
 // Routes through purpose:'plan' (the GROQ_API_KEY_PLAN pool) on the strongest model, since this is
 // a once-per-student, high-value generation where quality matters more than cost. It ALWAYS resolves
-// to a usable plan: if the network/model fails, a deterministic heuristic plan is returned so the
-// onboarding flow can never dead-end waiting on an API.
+// to a usable, COMPLETE plan: every field is validated and, if the model omits or mangles one, that
+// single field is repaired from the deterministic heuristic plan. So the onboarding flow can never
+// dead-end, and the display code can render the result without a single defensive null-check.
 import { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from '../components/onboarding/Onboarding';
 
 const GRADE_LABELS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Applying soon'];
@@ -21,15 +22,17 @@ export function deriveLoad(profile) {
 }
 
 // A complete, sensible plan built with no network — used as the fallback and as the shape contract
-// the AI plan must match, so the display code can render either identically.
+// the AI plan must match, so the display code can render either identically. Every field the display
+// touches is present and valid here, which is what makes the merge in generateMaxOutPlan foolproof.
 export function heuristicPlan(profile) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(profile);
   const track = profile.testTrack || 'SAT';
   const goalLabel = labelOf(GOAL_OPTIONS, profile.goal) || 'building your path into medicine';
   const obstacles = labelsOf(OBSTACLE_OPTIONS, profile.obstacles);
+  const grade = GRADE_LABELS[profile.gradeIdx] || 'high school';
   return {
     headline: `Your ${track} + pre-health game plan`,
-    summary: `A balanced plan built around ${dailyMinutes} focused minutes a day — steady ${track} practice paired with the early pre-health foundations that make a future medicine application strong. Designed for where you are now, not where you'll be in four years.`,
+    summary: `A balanced plan built around ${dailyMinutes} focused minutes a day — steady ${track} practice paired with the early pre-health foundations that make a future medicine application strong. Designed for where you are now as a ${grade.toLowerCase()}, not where you'll be in four years.`,
     dailyMinutes,
     weeklyQuestions,
     focusAreas: [
@@ -48,6 +51,23 @@ export function heuristicPlan(profile) {
       'Start one flashcard deck from your notes',
       obstacles.includes('No structured plan') ? 'Set a daily study reminder' : 'Add one activity to your Portfolio',
     ],
+    // ── Expanded fields — richer, but every one degrades gracefully because the
+    // display treats them as optional and the validator repairs them from here. ──
+    weeklyRhythm: [
+      `${track} practice — 3 short sessions`,
+      'Science reading or a Crash Course video — 2 days',
+      'Flashcard review — daily, 5 minutes',
+      'One weekend catch-up + reflection block',
+    ],
+    strengths: [
+      goalLabel ? `You already know your "why": ${goalLabel.toLowerCase()}.` : 'You have a clear reason to start.',
+      'Starting in high school gives you years of runway most applicants never had.',
+    ],
+    watchOut: [
+      obstacles[0] ? `Your biggest hurdle right now: ${obstacles[0].toLowerCase()} — the plan is built to work around it.` : 'Consistency beats intensity — small daily reps win.',
+      'Don\'t let test prep crowd out exploring whether medicine actually fits you.',
+    ],
+    ninetyDayGoal: `In 90 days: a steady daily study habit, a measurable ${track} score bump, and at least one real-world taste of a health career (shadowing, volunteering, or a health club).`,
     encouragement: `You're starting earlier than most — that's a real advantage. Small, steady days compound. We've got you.`,
     source: 'fallback',
   };
@@ -77,6 +97,7 @@ Rules:
 - SAT/ACT prep matters and belongs in the plan, but it is NOT the whole story — balance it with early science foundations, exploration of whether medicine fits, and low-pressure activities. Do not make the plan feel like a test-prep bootcamp.
 - Be emotionally attuned: acknowledge their stated obstacles supportively, and keep the tone encouraging and age-appropriate — this is a teenager building confidence.
 - Keep the study load consistent with the pace they chose (≈${dailyMinutes} min/day, ${weeklyQuestions} questions/week).
+- Reference their ACTUAL goal, grade, and obstacle in the copy so it feels personal, not templated.
 
 Respond with ONLY a valid JSON object (no markdown, no code fences, no prose before or after) matching exactly this schema:
 {
@@ -87,6 +108,10 @@ Respond with ONLY a valid JSON object (no markdown, no code fences, no prose bef
   "focusAreas": [ {"title": "short", "why": "one sentence"} ],  // exactly 3, balanced across test prep, science foundations, and exploration
   "milestones": [ {"title": "short", "when": "timeframe like 'This week' or '~3 months'", "detail": "one sentence"} ],  // exactly 3, in time order
   "firstWeek": [ "concrete action", "..." ],  // exactly 4 short first-week actions
+  "weeklyRhythm": [ "short line describing a typical week's split", "..." ],  // 3 to 4 items
+  "strengths": [ "one genuine strength you see in their profile", "..." ],  // exactly 2
+  "watchOut": [ "one supportive heads-up tied to their obstacle", "..." ],  // exactly 2
+  "ninetyDayGoal": "one concrete sentence describing where they could realistically be in 90 days",
   "encouragement": "one or two warm, personal closing sentences that name a stated obstacle or goal"
 }`;
 
@@ -94,45 +119,121 @@ Respond with ONLY a valid JSON object (no markdown, no code fences, no prose bef
 }
 
 // Defensive JSON extraction — strips accidental code fences / leading prose and grabs the outermost
-// object, so a slightly-chatty model still parses.
+// object, then makes a couple of common-mistake repairs (trailing commas, smart quotes) before
+// giving up, so a slightly-messy model still parses.
 function parsePlanJSON(text) {
   if (!text) return null;
   let s = String(text).trim().replace(/^```(?:json)?/i, '').replace(/```$/i, '').trim();
   const first = s.indexOf('{'); const last = s.lastIndexOf('}');
   if (first === -1 || last === -1 || last <= first) return null;
-  try { return JSON.parse(s.slice(first, last + 1)); } catch { return null; }
+  let body = s.slice(first, last + 1);
+  const tryParse = (t) => { try { return JSON.parse(t); } catch { return null; } };
+  return (
+    tryParse(body) ||
+    // Strip trailing commas before } or ] — the single most common model JSON error.
+    tryParse(body.replace(/,\s*([}\]])/g, '$1')) ||
+    // Normalise smart quotes that occasionally leak into keys/strings.
+    tryParse(body.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/,\s*([}\]])/g, '$1')) ||
+    null
+  );
 }
 
-function validateShape(p) {
-  return p && typeof p === 'object'
-    && typeof p.summary === 'string'
-    && Array.isArray(p.focusAreas) && p.focusAreas.length
-    && Array.isArray(p.milestones) && p.milestones.length
-    && Array.isArray(p.firstWeek) && p.firstWeek.length;
+// ── Field-level coercion helpers ──────────────────────────────────────────────
+const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+const num = (v) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null);
+
+// Coerce a "list of {title, ...}" field, tolerating the model returning bare strings, a single
+// object, or extra/missing keys. Pads/truncates to `want` using the fallback list.
+function coerceObjList(v, keys, want, fallbackList) {
+  let arr = Array.isArray(v) ? v : v ? [v] : [];
+  arr = arr.map((item) => {
+    if (typeof item === 'string') return { [keys[0]]: item.trim(), ...(keys[1] ? { [keys[1]]: '' } : {}) };
+    if (item && typeof item === 'object') {
+      const out = {};
+      for (const k of keys) out[k] = str(item[k]) || '';
+      // Salvage a title from any string value if the expected key was named differently.
+      if (!out[keys[0]]) { const anyStr = Object.values(item).find(str); if (anyStr) out[keys[0]] = String(anyStr).trim(); }
+      return out;
+    }
+    return null;
+  }).filter((x) => x && x[keys[0]]);
+  // Pad from fallback, then clamp to the desired length.
+  for (let i = arr.length; i < want; i++) arr.push(fallbackList[i % fallbackList.length]);
+  return arr.slice(0, want);
 }
 
-// Public entry point. Always resolves to a usable plan object (never throws).
-export async function generateMaxOutPlan(profile) {
-  const fallback = heuristicPlan(profile);
+// Coerce a "list of strings" field with padding/clamping.
+function coerceStrList(v, want, fallbackList, max) {
+  let arr = Array.isArray(v) ? v : v ? [v] : [];
+  arr = arr.map((x) => (typeof x === 'string' ? x.trim() : x && typeof x === 'object' ? str(x.title) || str(x.text) : null)).filter(Boolean);
+  for (let i = arr.length; i < want; i++) arr.push(fallbackList[i % fallbackList.length]);
+  return arr.slice(0, max || want);
+}
+
+// The core of the "foolproof" guarantee: take whatever the model produced and the deterministic
+// fallback, and return a plan where EVERY field the UI reads is present and valid — repairing each
+// field independently so one bad field never sinks the whole plan.
+function repairPlan(parsed, fallback) {
+  const p = parsed && typeof parsed === 'object' ? parsed : {};
+  return {
+    headline: str(p.headline) || fallback.headline,
+    summary: str(p.summary) || fallback.summary,
+    dailyMinutes: num(p.dailyMinutes) || fallback.dailyMinutes,
+    weeklyQuestions: num(p.weeklyQuestions) || fallback.weeklyQuestions,
+    focusAreas: coerceObjList(p.focusAreas, ['title', 'why'], 3, fallback.focusAreas),
+    milestones: coerceObjList(p.milestones, ['title', 'when', 'detail'], 3, fallback.milestones),
+    firstWeek: coerceStrList(p.firstWeek, 4, fallback.firstWeek, 4),
+    weeklyRhythm: coerceStrList(p.weeklyRhythm, 3, fallback.weeklyRhythm, 4),
+    strengths: coerceStrList(p.strengths, 2, fallback.strengths, 3),
+    watchOut: coerceStrList(p.watchOut, 2, fallback.watchOut, 3),
+    ninetyDayGoal: str(p.ninetyDayGoal) || fallback.ninetyDayGoal,
+    encouragement: str(p.encouragement) || fallback.encouragement,
+    source: 'ai',
+    generatedAt: Date.now(),
+  };
+}
+
+// Is this parsed object worth repairing, or so empty we should just retry / fall back?
+// We only need a couple of the substantive fields to have survived for the repair to be meaningful.
+function looksUsable(p) {
+  if (!p || typeof p !== 'object') return false;
+  const hasSummary = !!str(p.summary);
+  const hasList = ['focusAreas', 'milestones', 'firstWeek'].some((k) => Array.isArray(p[k]) && p[k].length);
+  return hasSummary || hasList;
+}
+
+// One network attempt. Returns a parsed-and-usable object, or null (so the caller can retry/fallback).
+async function attemptPlan(system, user) {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timer = controller ? setTimeout(() => controller.abort(), 11000) : null;
   try {
-    const { system, user } = buildPlanPrompt(profile);
     const r = await fetch('/api/groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, message: user, maxTokens: 1100, purpose: 'plan' }),
+      body: JSON.stringify({ system, message: user, maxTokens: 1400, purpose: 'plan' }),
+      signal: controller ? controller.signal : undefined,
     });
+    if (!r.ok) return null;
     const d = await r.json();
-    if (!r.ok) return fallback;
-    const parsed = parsePlanJSON(d.content);
-    if (!validateShape(parsed)) return fallback;
-    // Merge over the fallback so any missing optional fields (headline, stats) are still populated.
-    return {
-      ...fallback,
-      ...parsed,
-      dailyMinutes: Number(parsed.dailyMinutes) || fallback.dailyMinutes,
-      weeklyQuestions: Number(parsed.weeklyQuestions) || fallback.weeklyQuestions,
-      source: 'ai',
-    };
+    const parsed = parsePlanJSON(d && d.content);
+    return looksUsable(parsed) ? parsed : null;
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+// Public entry point. Always resolves to a usable, COMPLETE plan object (never throws). Tries the
+// model up to twice; if both attempts fail or come back empty, returns the deterministic fallback.
+export async function generateMaxOutPlan(profile) {
+  const fallback = heuristicPlan(profile || {});
+  try {
+    const { system, user } = buildPlanPrompt(profile || {});
+    let parsed = await attemptPlan(system, user);
+    if (!parsed) parsed = await attemptPlan(system, user); // one retry — models occasionally emit junk
+    if (!parsed) return fallback;
+    return repairPlan(parsed, fallback);
   } catch {
     return fallback;
   }

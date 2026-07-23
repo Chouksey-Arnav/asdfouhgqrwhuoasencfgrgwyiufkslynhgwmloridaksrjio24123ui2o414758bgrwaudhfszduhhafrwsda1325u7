@@ -30,9 +30,20 @@
 // Expansion — ~30 additional real, well-known, stable resources (official
 // government/test-maker sites, established free college-planning tools,
 // open textbook libraries) were added on top of the audited set below.
-// What remains is a smaller but fully human-verified library.
+// What remains is a smaller but fully human-verified core library.
+//
+// Library expansion (see ./elibExtra.js) — the core set below is combined with
+// a large second batch of 265 additional resources for a ~409-entry library
+// spanning nine categories (the six here plus three new ones: Clinical
+// Exposure, Wellness & Balance, and Math & Data). Every entry in that batch is
+// a canonical URL for a well-known institution, test-maker, government agency,
+// open-textbook project, or established educational channel, verified via web
+// search (this sandbox cannot reach youtube.com/khanacademy directly), with no
+// duplicate titles or URLs across the two sets.
 
-export const ELIB = [
+import { ELIB_EXTRA } from './elibExtra';
+
+const ELIB_CORE = [
   {
     "cat": "Life Sciences",
     "title": "Khan Academy Biology",
@@ -1355,3 +1366,8 @@ export const ELIB = [
     "desc": "Official U.S. government resource on the responsible conduct of research — ethics, data integrity, and research misconduct."
   }
 ];
+
+// The full library = the human-verified core set above + the large expansion
+// batch (elibExtra.js). Keeping them in separate modules makes the expansion
+// easy to audit while the app continues to import a single `ELIB` array.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA];

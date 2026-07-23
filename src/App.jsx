@@ -67,6 +67,7 @@ import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
+import MyPlanCard from './components/MyPlanCard';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -90,10 +91,41 @@ const C = {
   rose:'#f43f5e', roseL:'#fb7185', roseDim:'rgba(244,63,94,0.10)',
   violet:'#8b5cf6', violetL:'#a78bfa', violetDim:'rgba(139,92,246,0.10)',
   cyan:'#06b6d4', cyanDim:'rgba(6,182,212,0.10)', orange:'#f97316',
+  // Extended palette — gives each surface its own identity instead of blue-everywhere.
+  cyanL:'#22d3ee', orangeL:'#fb923c', orangeDim:'rgba(249,115,22,0.10)',
+  teal:'#14b8a6', tealL:'#2dd4bf', tealDim:'rgba(20,184,166,0.10)',
+  indigo:'#6366f1', indigoL:'#818cf8', indigoDim:'rgba(99,102,241,0.10)',
+  pink:'#ec4899', pinkL:'#f472b6', pinkDim:'rgba(236,72,153,0.10)',
+  fuchsia:'#d946ef', fuchsiaL:'#e879f9', fuchsiaDim:'rgba(217,70,239,0.10)',
+  lime:'#84cc16', limeL:'#a3e635', limeDim:'rgba(132,204,22,0.10)',
+  sky:'#0ea5e9', skyL:'#38bdf8', skyDim:'rgba(14,165,233,0.10)',
+  emerald:'#059669', emeraldL:'#34d399', emeraldDim:'rgba(5,150,105,0.10)',
+  red:'#ef4444', redL:'#f87171', redDim:'rgba(239,68,68,0.10)',
+  gold:'#eab308', goldL:'#facc15', goldDim:'rgba(234,179,8,0.10)',
+  auroraGrad:'linear-gradient(120deg,#2d7fff 0%,#8b5cf6 45%,#ec4899 100%)',
+  oceanGrad:'linear-gradient(135deg,#06b6d4 0%,#2d7fff 60%,#6366f1 100%)',
+  sunsetGrad:'linear-gradient(135deg,#f59e0b 0%,#f43f5e 55%,#d946ef 100%)',
+  forestGrad:'linear-gradient(135deg,#10b981 0%,#14b8a6 55%,#0ea5e9 100%)',
+  violetGrad:'linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%)',
   FD:"'Bricolage Grotesque',-apple-system,sans-serif",
   FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
   FM:"'JetBrains Mono','SF Mono',monospace",
 };
+
+// ── Category identity map — each study category carries its own colour,
+// tint and gradient so cards/badges are recognisable at a glance. ──
+const CAT_META = {
+  'Life Sciences':                { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad, emoji:'🧬' },
+  'Physical Sciences':            { color:C.cyan,   light:C.cyanL,   dim:C.cyanDim,   grad:C.oceanGrad,  emoji:'⚗️' },
+  'Behavioral & Social Sciences': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad, emoji:'🧠' },
+  'Research Methods':             { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad, emoji:'🔬' },
+  'Test Prep':                    { color:C.amber,  light:C.amberL,  dim:C.amberDim,  grad:C.sunsetGrad, emoji:'📝' },
+  'Admissions & Planning':        { color:C.blue,   light:C.blueL,   dim:C.blueDim,   grad:C.blueGrad,   emoji:'🎯' },
+  'Clinical Exposure':            { color:C.rose,   light:C.roseL,   dim:C.roseDim,   grad:C.sunsetGrad, emoji:'🩺' },
+  'Wellness & Balance':           { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad, emoji:'🌱' },
+  'Math & Data':                  { color:C.indigo, light:C.indigoL, dim:C.indigoDim, grad:C.oceanGrad,  emoji:'📊' },
+};
+const catMeta = (cat) => CAT_META[cat] || { color:C.blue, light:C.blueL, dim:C.blueDim, grad:C.blueGrad, emoji:'📚' };
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
 const glass  = (x={}) => ({ background:'rgba(255,255,255,0.03)', border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:'0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
@@ -265,34 +297,34 @@ const NAV = [
   {id:'settings',ic:Settings,label:'Settings'},
 ];
 const PREP_SUBNAV = [
-  {id:'diagnostic',ic:Compass,label:'Diagnostic'},
-  {id:'pathway',ic:Route,label:'Pathway'},
-  {id:'quizzes',ic:Layers,label:'Quiz Library'},
-  {id:'flashcards',ic:Layers3,label:'Flashcards'},
-  {id:'coach',ic:MessageCircle,label:'AI Coach'},
-  {id:'library',ic:BookOpen,label:'E-Library'},
+  {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
+  {id:'pathway',ic:Route,label:'Pathway',color:C.blue},
+  {id:'quizzes',ic:Layers,label:'Quiz Library',color:C.green},
+  {id:'flashcards',ic:Layers3,label:'Flashcards',color:C.amber},
+  {id:'coach',ic:MessageCircle,label:'AI Coach',color:C.violet},
+  {id:'library',ic:BookOpen,label:'E-Library',color:C.pink},
 ];
 const PORTFOLIO_SUBNAV = [
-  {id:'overview',ic:Building2,label:'Overview'},
-  {id:'timeline',ic:Milestone,label:'Timeline'},
-  {id:'colleges',ic:GraduationCap,label:'College List'},
-  {id:'essays',ic:ScrollText,label:'Essays'},
-  {id:'deadlines',ic:CalendarDays,label:'Deadlines'},
-  {id:'aid',ic:Handshake,label:'Financial Aid'},
-  {id:'resume',ic:Award,label:'Activities & Resume'},
-  {id:'research',ic:FlaskConical,label:'Research'},
-  {id:'skills',ic:BadgeCheck,label:'Skills & Certs'},
-  {id:'clinical',ic:Stethoscope,label:'Clinical Hours'},
-  {id:'recommenders',ic:UserCheck,label:'Recommenders'},
-  {id:'interview',ic:Mic,label:'Interview Prep'},
-  {id:'scores',ic:TrendingUp,label:'Test Scores'},
-  {id:'calc',ic:Calculator,label:'Admissions Calc'},
+  {id:'overview',ic:Building2,label:'Overview',color:C.blue},
+  {id:'timeline',ic:Milestone,label:'Timeline',color:C.indigo},
+  {id:'colleges',ic:GraduationCap,label:'College List',color:C.sky},
+  {id:'essays',ic:ScrollText,label:'Essays',color:C.violet},
+  {id:'deadlines',ic:CalendarDays,label:'Deadlines',color:C.rose},
+  {id:'aid',ic:Handshake,label:'Financial Aid',color:C.green},
+  {id:'resume',ic:Award,label:'Activities & Resume',color:C.amber},
+  {id:'research',ic:FlaskConical,label:'Research',color:C.cyan},
+  {id:'skills',ic:BadgeCheck,label:'Skills & Certs',color:C.teal},
+  {id:'clinical',ic:Stethoscope,label:'Clinical Hours',color:C.pink},
+  {id:'recommenders',ic:UserCheck,label:'Recommenders',color:C.fuchsia},
+  {id:'interview',ic:Mic,label:'Interview Prep',color:C.orange},
+  {id:'scores',ic:TrendingUp,label:'Test Scores',color:C.lime},
+  {id:'calc',ic:Calculator,label:'Admissions Calc',color:C.gold},
 ];
 const PROGRESS_SUBNAV = [
-  {id:'overview',ic:LineChart,label:'Overview'},
-  {id:'verified',ic:ShieldCheck,label:'Verified Progress'},
-  {id:'performance',ic:TrendingUp,label:'Performance'},
-  {id:'achievements',ic:Trophy,label:'Achievements'},
+  {id:'overview',ic:LineChart,label:'Overview',color:C.blue},
+  {id:'verified',ic:ShieldCheck,label:'Verified Progress',color:C.green},
+  {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
+  {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
 ];
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
@@ -306,7 +338,7 @@ const QUICK_P_GROUPS = [
     'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Research Methods','Test Prep','Admissions & Planning'];
+const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Math & Data','Behavioral & Social Sciences','Research Methods','Clinical Exposure','Test Prep','Admissions & Planning','Wellness & Balance'];
 const COURSE_GROUPS = [
   { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
   { group:'Science', items:['Biology','Chemistry','Physics','Environmental Science'] },
@@ -2713,6 +2745,10 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
+        {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
+            surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
+        {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent}/>}
+
         {/* Continue where you left off */}
         {(nextLesson||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
           <div style={{flex:1,minWidth:220}}>
@@ -3952,9 +3988,10 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={CC({gap:22})}>
         {/* Progress Tracker Card Header */}
-        <div data-tour="prep-deep-library" style={{...glass({padding:20, background: `linear-gradient(135deg, ${C.blueDim}, transparent)`, border: `1px solid rgba(45, 127, 255, 0.15)`}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
-          <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.s2, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px solid ${C.b1}`}}>
-            <BookOpen size={24} color={pct > 0 ? C.blueL : C.t3} />
+        <div data-tour="prep-deep-library" style={{...glass({padding:20, background: `linear-gradient(120deg, ${C.blueDim}, ${C.violetDim} 45%, ${C.pinkDim})`, border: `1px solid ${C.violet}22`, position:'relative', overflow:'hidden'}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
+          <div style={{position:'absolute',inset:0,background:C.auroraGrad,opacity:0.06,pointerEvents:'none'}}/>
+          <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.auroraGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow:`0 6px 20px ${C.violet}40`}}>
+            <BookOpen size={24} color="#fff" />
             {pct > 0 && <span style={{position: 'absolute', bottom: -4, right: -4, ...pill(C.green, '#fff', {fontSize: 9, padding: '2px 6px', borderRadius: 4})}}>{pct}%</span>}
           </div>
           <div style={{flex: 1, minWidth: 200}}>
@@ -4050,6 +4087,20 @@ export default function App({ account, onAccountChange }) {
           <select style={inp({width:'auto'})} value={lCat} onChange={e=>setLC(e.target.value)}>{LIB_CATS.map(c=><option key={c}>{c}</option>)}</select>
         </div>
 
+        {/* Colorful category quick-filter chips */}
+        <div style={R({gap:8,flexWrap:'wrap'})}>
+          {LIB_CATS.map(c=>{
+            const active=lCat===c;
+            const cm=c==='All'?{color:C.blue,light:C.blueL,dim:C.blueDim,emoji:'✨'}:catMeta(c);
+            return(
+              <motion.button key={c} whileHover={{scale:1.05,y:-1}} whileTap={{scale:.96}} onClick={()=>setLC(c)}
+                style={{...pill(active?cm.color:cm.dim, active?'#fff':cm.light, {fontSize:11,padding:'6px 13px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
+                {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c}
+              </motion.button>
+            );
+          })}
+        </div>
+
         {/* Row 2 Filter: Resource Type, Cost, Sort Order */}
         <div style={R({flexWrap: 'wrap', gap: 10, justifyContent: 'space-between', borderTop: `1px solid ${C.b0}`, paddingTop: 10})}>
           <div style={R({flexWrap: 'wrap', gap: 8})}>
@@ -4113,8 +4164,8 @@ export default function App({ account, onAccountChange }) {
           style={{
             ...glass({
               padding: '14px 18px',
-              background: `linear-gradient(135deg, ${C.blueDim}80, rgba(147, 51, 234, 0.04))`,
-              border: `1px dashed rgba(45, 127, 255, 0.25)`
+              background: `linear-gradient(135deg, ${(lCat==='All'?{dim:C.blueDim}:catMeta(lCat)).dim}, transparent)`,
+              border: `1px dashed ${(lCat==='All'?{color:C.blue}:catMeta(lCat)).color}40`
             }),
             display: 'flex',
             alignItems: 'center',
@@ -4125,17 +4176,17 @@ export default function App({ account, onAccountChange }) {
             width: 32,
             height: 32,
             borderRadius: '50%',
-            background: `${C.blueDim}`,
+            background: (lCat==='All'?{grad:C.auroraGrad}:catMeta(lCat)).grad,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            border: `1.5px solid rgba(45, 127, 255, 0.2)`
+            boxShadow:`0 4px 12px ${(lCat==='All'?{color:C.blue}:catMeta(lCat)).color}40`
           }}>
-            <Lightbulb size={16} color={C.blueL} />
+            <Lightbulb size={16} color="#fff" />
           </div>
           <div>
-            <div style={{fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: '.06em', textTransform: 'uppercase'}}>Medabrain Coaching Insight</div>
+            <div style={{fontSize: 10, fontWeight: 700, color: (lCat==='All'?{light:C.blueL}:catMeta(lCat)).light, letterSpacing: '.06em', textTransform: 'uppercase'}}>Medabrain Coaching Insight</div>
             <div style={{fontSize: 12, color: C.t2, lineHeight: 1.5, marginTop: 2}}>
               {
                 lCat === 'Life Sciences' ? "In Life Sciences, focus on active recall. Rather than re-reading chapters, use our Flashcards workspace or sketch pathways from memory. Use BioMan Biology or HHMI for interactive visual reinforcement." :
@@ -4144,6 +4195,9 @@ export default function App({ account, onAccountChange }) {
                 lCat === 'Research Methods' ? "Clinical and basic science research is a major pre-med differentiator. Explore Science Journal for Kids or the NIH archive to learn how real scientific hypotheses are formulated and tested." :
                 lCat === 'Test Prep' ? "Consistency beats cramming. Use Anki for spaced repetition and take advantage of official, free Khan Academy Digital SAT/ACT materials. Tackling 10-15 questions daily yields huge score gains!" :
                 lCat === 'Admissions & Planning' ? "Medical school admissions committee members look for holistic preparation. Study the AAMC Core Competencies to see how your extracurriculars, clinical hours, and volunteering align with entering student expectations." :
+                lCat === 'Clinical Exposure' ? "Real exposure beats reading about medicine. Use MedlinePlus and the professional-association sites here to understand a field, then turn that into shadowing, volunteering, or a CPR certification you can actually log." :
+                lCat === 'Wellness & Balance' ? "The best students protect their sleep, focus, and mental health on purpose. Try one study-skills technique (like the Pomodoro timer or spaced repetition) and one wellbeing habit this week — burnout helps no one." :
+                lCat === 'Math & Data' ? "Math rewards reps, not cramming. Pair a concept video (Khan Academy, 3Blue1Brown) with 10-15 practice problems, and lean on Desmos or Wolfram Alpha to check your reasoning — not to skip it." :
                 "Welcome to your resource library! High-achieving pre-health students build strong habits early. Try bookmarking 3-4 key resources and setting a personal weekly goal to study at least one."
               }
             </div>
@@ -4199,7 +4253,7 @@ export default function App({ account, onAccountChange }) {
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
                   <div style={R({justifyContent:'space-between', flexWrap: 'wrap', gap: 8})}>
                     <div style={R({gap:6})}>
-                      <span style={pill(C.blueDim,C.blueL,{fontSize:10})}>{r.cat}</span>
+                      <span style={pill(catMeta(r.cat).dim,catMeta(r.cat).light,{fontSize:10})}>{catMeta(r.cat).emoji} {r.cat}</span>
                       <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
                     </div>
                     <div style={R({gap:8})}>
@@ -4289,13 +4343,15 @@ export default function App({ account, onAccountChange }) {
               const isSaved = user?.bookmarks?.includes(r.title);
               const isStudied = user?.studied?.includes(r.title);
               const hasNotes = !!user?.resourceNotes?.[r.title];
+              const cm=catMeta(r.cat);
               return(
-                <motion.div key={i} whileHover={{y:-1,borderColor:`${col}30`}} style={glass({padding:18,transition:'border-color .15s',position:'relative'})}>
-                  <div style={R({justifyContent:'space-between',marginBottom:12})}>
+                <motion.div key={i} whileHover={{y:-2,borderColor:`${cm.color}45`,boxShadow:`0 10px 30px ${cm.color}18`}} style={glass({padding:18,transition:'all .18s',position:'relative',borderLeft:`3px solid ${cm.color}`,overflow:'hidden'})}>
+                  <div style={{position:'absolute',top:0,right:0,width:120,height:120,background:`radial-gradient(circle at top right, ${cm.dim}, transparent 70%)`,pointerEvents:'none'}}/>
+                  <div style={R({justifyContent:'space-between',marginBottom:12,position:'relative'})}>
                     <span style={pill(`${col}18`,col,{fontSize:10})}>{r.type}</span>
                     <div style={R({gap:6})}>
                       {r.free?<span style={pill(C.greenDim,C.greenL,{fontSize:10})}>FREE</span>:<span style={pill(C.amberDim,C.amberL,{fontSize:10})}>Paid</span>}
-                      <span style={{fontSize:10,color:C.t3}}>{r.cat}</span>
+                      <span style={pill(cm.dim,cm.light,{fontSize:10})}>{cm.emoji} {r.cat}</span>
                       <span style={pill('rgba(255,255,255,0.06)',C.t3,{fontSize:10})}>{r.difficulty}</span>
 
                       {/* Floating save bookmark */}
