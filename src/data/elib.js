@@ -42,6 +42,8 @@
 // duplicate titles or URLs across the two sets.
 
 import { ELIB_EXTRA } from './elibExtra';
+import { ELIB_EXPANSION_A } from './elibExpansionA';
+import { ELIB_EXPANSION_B } from './elibExpansionB';
 
 const ELIB_CORE = [
   {
@@ -1368,6 +1370,12 @@ const ELIB_CORE = [
 ];
 
 // The full library = the human-verified core set above + the large expansion
-// batch (elibExtra.js). Keeping them in separate modules makes the expansion
-// easy to audit while the app continues to import a single `ELIB` array.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA];
+// batch (elibExtra.js) + two further verified batches (elibExpansionA.js —
+// Life Sciences/Physical Sciences/Math & Data/Research Methods, and
+// elibExpansionB.js — Behavioral & Social Sciences/Clinical Exposure/Test
+// Prep/Admissions & Planning/Wellness & Balance). Every entry across all four
+// modules was sourced via live search rather than invented, and the combined
+// set has been programmatically checked for duplicate URLs/titles. Keeping
+// them in separate modules makes each expansion easy to audit on its own
+// while the app continues to import a single `ELIB` array.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B];

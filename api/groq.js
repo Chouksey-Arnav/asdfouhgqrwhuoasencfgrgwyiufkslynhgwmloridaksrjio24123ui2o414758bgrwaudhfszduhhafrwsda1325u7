@@ -176,14 +176,23 @@ function isMinuteLimited(ip) {
   return false;
 }
 
+// Most callers (chat-style coach/interview/portfolio turns) are fine with a 2500-char input cap.
+// 'prep' is the exception: besides in-context lesson Q&A, it's also used by the flashcard AI
+// polish pass (src/lib/flashcards/aiPolish.js), which sends a notes excerpt plus a batch of draft
+// cards as JSON in a single message — comfortably larger than a chat turn, so it gets a higher cap.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000 };
+const DEFAULT_MAX_INPUT_CHARS = 2500;
+function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
+
 // Sanitize incoming messages to prevent prompt injection / oversized payloads
-function sanitizeMessages(messages) {
+function sanitizeMessages(messages, purpose) {
   if (!Array.isArray(messages)) return null;
+  const cap = inputCharsFor(purpose);
   return messages
     .filter(m => m && typeof m.role === 'string' && typeof m.content === 'string')
     .map(m => ({
       role: ['user', 'assistant'].includes(m.role) ? m.role : 'user',
-      content: String(m.content).slice(0, 2500),
+      content: String(m.content).slice(0, cap),
     }))
     .slice(-10); // keep last 10 messages only — trimmed from 20 to cut token cost per call
 }
@@ -254,10 +263,10 @@ export default async function handler(req, res) {
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {
-    const cleaned = sanitizeMessages(rawMessages);
+    const cleaned = sanitizeMessages(rawMessages, purpose);
     if (cleaned) groqMessages.push(...cleaned);
   } else if (message) {
-    groqMessages.push({ role: 'user', content: String(message).slice(0, 2500) });
+    groqMessages.push({ role: 'user', content: String(message).slice(0, inputCharsFor(purpose)) });
   }
 
   if (groqMessages.length <= 1) {
@@ -295,7 +304,11 @@ export default async function handler(req, res) {
   }
 
   // ── Call Groq API (with timeout + one retry on transient failure) ──────────
-  const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), 1500);
+  // Same reasoning as the input-char cap above: 'prep' also covers the flashcard AI polish pass,
+  // which returns an edit-list across a batch of cards — routinely larger than a chat reply.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000 };
+  const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
+  const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
   async function callGroqOnce(useModel, apiKey, timeoutMs) {
     const controller = new AbortController();
