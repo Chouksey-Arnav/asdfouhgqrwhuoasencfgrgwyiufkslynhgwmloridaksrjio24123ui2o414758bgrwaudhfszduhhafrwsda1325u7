@@ -1843,6 +1843,34 @@ export default function App({ account, onAccountChange }) {
   const nearLevelUp = (xpForNext-xpIn) > 0 && (xpForNext-xpIn) <= 25;
   const qTaken  = Object.keys(qScores).length;
   const avgSc   = qTaken>0?Math.round(Object.values(qScores).reduce((a,b)=>a+b,0)/qTaken):0;
+  // Live progress toward every one of the 40 achievements — recomputed from the same counters
+  // that drive checkAndUnlockAchievements, so "X/Y" here always matches what would actually
+  // trigger the unlock, and updates automatically as those counters change (no separate cache to
+  // go stale). Shared by the Home "Achievements Unlocked" strip and the Progress > Achievements
+  // deep view so the two never drift apart.
+  const achievementProgress = useMemo(()=>{
+    const perfectCount = qHistory.filter(q=>q.score===100).length;
+    const pathwayProgress = {};
+    let livePathwayCompletions = 0;
+    for (const k of PATHWAY_KEYS) {
+      const lessons = (PATHS[k]?.units||[]).flatMap(u=>u.lessons||[]);
+      const done = lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length;
+      pathwayProgress[k] = [done, lessons.length||1];
+      if (lessons.length>0 && done>=lessons.length) livePathwayCompletions++;
+    }
+    return {
+      first_quiz:[qTaken,1], perfect_score:[perfectCount,1], quiz_10:[qTaken,10],
+      level_5:[lvl,5], level_10:[lvl,10], streak_7:[streak,7], streak_30:[streak,30], cards_100:[totalReviews,100],
+      unit_master:[mastery,33], course_half:[mastery,50], ai_user:[aiChatCount,5],
+      college_added:[appCounts.colleges,1], deadline_set:[(upcomingDeadlines||[]).length,1], essay_started:[appCounts.essays,1],
+      activity_logged:[portActivities.length,1], interview_first:[interviewCount,1], interview_5:[interviewCount,5],
+      clinical_hours_50:[clinicalHoursTotal,50], recommender_added:[recommendersCount,1], mmi_practiced:[mmiCasperCount,1],
+      quiz_50:[qTaken,50], perfect_5:[perfectCount,5], cards_500:[totalReviews,500],
+      streak_14:[streak,14], streak_100:[streak,100], course_complete:[mastery,100], level_20:[lvl,20],
+      ai_user_25:[aiChatCount,25], path_explorer:[livePathwayCompletions,3],
+      ...Object.fromEntries(PATHWAY_KEYS.map(k=>[`path_${k}_complete`,pathwayProgress[k]])),
+    };
+  },[qHistory,qTaken,lvl,streak,totalReviews,mastery,aiChatCount,appCounts,upcomingDeadlines,portActivities,interviewCount,clinicalHoursTotal,recommendersCount,mmiCasperCount,pathway]);
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
   const daysToExam = user?.examDate ? Math.ceil((new Date(user.examDate+'T00:00:00') - new Date(new Date().toDateString())) / 86400000) : null;
 
@@ -2836,19 +2864,32 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
-        {/* Achievements strip */}
-        {achiev.size>0&&<div style={glass({padding:18})}>
-          <SL extra={{marginBottom:12}}>Achievements Unlocked ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
+        {/* Achievements strip — clicking the header or any badge jumps to the full Progress >
+            Achievements view (same data via the shared achievementProgress memo), which shows
+            every achievement with a live progress bar, not just the unlocked ones. Shown even at
+            0 unlocked (not gated on achiev.size) so brand-new accounts can discover it and see
+            progress toward their first badge, not just once they've already earned one. */}
+        <div onClick={()=>{goProgress('achievements');play('click');}} style={{...glass({padding:18}),cursor:'pointer',transition:'border-color .2s'}}
+          onMouseEnter={e=>e.currentTarget.style.borderColor=`${C.amber}35`}
+          onMouseLeave={e=>e.currentTarget.style.borderColor=C.b1}>
+          <div style={{...R({justifyContent:'space-between'}),marginBottom:12}}>
+            <SL extra={{marginBottom:0}}>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
+            <span style={{...R({gap:4}),fontSize:11,color:C.t3,fontWeight:600}}>View all<ChevronRight size={13}/></span>
+          </div>
           <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
             {Object.values(ACHIEVEMENTS).map(a=>{
               const has=achiev.has(a.key);
               const AIc=ACH_ICONS[a.icon]||Award;
-              return<div key={a.key} title={`${a.name}: ${a.desc}`} style={{width:40,height:40,borderRadius:10,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',opacity:has?1:.3,cursor:'default',transition:'all .2s'}}>
+              const prog=achievementProgress[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
+              return<div key={a.key} title={`${a.name}: ${a.desc}${!has&&prog?` — ${prog[0]}/${prog[1]}`:''}`} style={{width:40,height:40,borderRadius:10,background:has?`${C.amber}18`:'rgba(255,255,255,0.04)',border:`1px solid ${has?`${C.amber}30`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',position:'relative',opacity:has?1:.55,transition:'all .2s',overflow:'hidden'}}>
                 <AIc size={18} color={has?C.amberL:C.t3}/>
+                {!has&&pct!==null&&pct>0&&<div style={{position:'absolute',left:0,right:0,bottom:0,height:3,background:C.s4}}>
+                  <div style={{height:'100%',width:`${pct}%`,background:accent,transition:'width .3s'}}/>
+                </div>}
               </div>;
             })}
           </div>
-        </div>}
+        </div>
 
         {/* Predicted score */}
         {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
@@ -5375,23 +5416,15 @@ export default function App({ account, onAccountChange }) {
         </>}
 
         {progressView==='achievements'&&<>
-        {/* Achievements */}
-        {(()=>{
-          const progressFor={
-            first_quiz:[qTaken,1], perfect_score:[qHistory.filter(q=>q.score===100).length,1], quiz_10:[qTaken,10],
-            level_5:[lvl,5], level_10:[lvl,10], streak_7:[streak,7], streak_30:[streak,30], cards_100:[totalReviews,100],
-            unit_master:[mastery,33], course_half:[mastery,50], ai_user:[aiChatCount,5],
-            college_added:[appCounts.colleges,1], deadline_set:[(upcomingDeadlines||[]).length,1], essay_started:[appCounts.essays,1],
-            activity_logged:[portActivities.length,1], interview_first:[interviewCount,1], interview_5:[interviewCount,5],
-            clinical_hours_50:[clinicalHoursTotal,50], recommender_added:[recommendersCount,1], mmi_practiced:[mmiCasperCount,1],
-          };
-          return(
+        {/* Achievements — every locked badge shows a live progress bar via the shared
+            achievementProgress memo (kept in sync with the Home strip and with the actual
+            unlock conditions in checkAchievements). */}
         <div data-tour="progress-deep-achievements" style={glass({padding:18})}>
           <SL>Achievements ({achiev.size}/{Object.keys(ACHIEVEMENTS).length})</SL>
           <div style={G(4,10,{},isMobile)}>
             {Object.values(ACHIEVEMENTS).map(a=>{
               const has=achiev.has(a.key);const AIc=ACH_ICONS[a.icon]||Award;
-              const prog=progressFor[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
+              const prog=achievementProgress[a.key];const pct=prog?Math.min(100,Math.round((prog[0]/prog[1])*100)):null;
               return(
               <div key={a.key} title={`${a.name}: ${a.desc}${has?` (+${a.xp} XP)`:''}`} style={{...glass2({padding:12,textAlign:'center',opacity:has?1:.55,border:has?`1px solid ${C.amber}30`:undefined,transition:'opacity .2s'})}}>
                 <div style={{display:'flex',justifyContent:'center',marginBottom:6}}><AIc size={20} color={has?C.amberL:C.t3}/></div>
@@ -5405,8 +5438,6 @@ export default function App({ account, onAccountChange }) {
             );})}
           </div>
         </div>
-          );
-        })()}
         </>}
         </div>
       </div>
@@ -5809,7 +5840,7 @@ export default function App({ account, onAccountChange }) {
         onOpen={()=>{ chest?.onOpen?.(); }}
         onClose={closeChest}
       />
-      <div style={{display:'flex',flexDirection:isMobile?'column':'row',height:'100dvh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
+      <div style={{display:'flex',flexDirection:isMobile?'column':'row',width:'100%',minWidth:0,height:'100dvh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
@@ -5876,7 +5907,7 @@ export default function App({ account, onAccountChange }) {
         )}
 
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
-        <main style={{flex:1,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
+        <main style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
