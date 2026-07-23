@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { generateAIFlashcards } from './lib/aiFlashcards';
+import { polishFlashcardsWithAI } from './lib/flashcards/aiPolish';
 import { AnimatePresence, motion } from 'framer-motion';
 import toast, { Toaster } from 'react-hot-toast';
 import {
@@ -644,7 +645,7 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
 // pathway lesson never bounces the student out of the app. The Quiz step
 // hands off to the app's existing aQuiz/QuizEngine fullscreen gate (reusing
 // openVerifyQuiz/finishQuiz as-is) rather than duplicating quiz logic here.
-function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false}){
+function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false}){
   const content = LESSON_CONTENT[lesson.id];
   const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
   const hasArticle = !!content?.article;
@@ -653,6 +654,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   const stepOrder = ['overview', hasArticle&&'article', hasVideo&&'video', 'quiz', 'complete'].filter(Boolean);
   const curIdx = Math.max(0,stepOrder.indexOf(step));
   const articleScrollRef = useRef(null);
+  const restoredScrollRef = useRef(false);
 
   function goNext(){
     const idx=stepOrder.indexOf(step);
@@ -662,19 +664,39 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
     const idx=stepOrder.indexOf(step);
     if(idx>0)onStep(stepOrder[idx-1]);
   }
+  // Restores exactly where a student scrolled to in this article the moment the step mounts
+  // (e.g. resuming after a reload) — a plain "read/unread" flag alone can't do that, only a
+  // remembered scroll fraction of the actual content can.
+  useEffect(()=>{
+    if(step!=='article'||restoredScrollRef.current)return;
+    const el=articleScrollRef.current;
+    if(!el||initialScrollPct<=0)return;
+    restoredScrollRef.current=true;
+    requestAnimationFrame(()=>{ if(el)el.scrollTop = (initialScrollPct/100)*(el.scrollHeight-el.clientHeight); });
+  },[step,initialScrollPct]);
+  const scrollSaveTimer=useRef(null);
   function handleArticleScroll(e){
     const el=e.target;
     if(!articleRead&&el.scrollHeight-el.scrollTop-el.clientHeight<48)onArticleRead();
+    if(!onScrollProgress)return;
+    clearTimeout(scrollSaveTimer.current);
+    scrollSaveTimer.current=setTimeout(()=>{
+      const denom=el.scrollHeight-el.clientHeight;
+      const pct=denom>0?Math.min(100,Math.round((el.scrollTop/denom)*100)):100;
+      onScrollProgress(pct);
+    },400);
   }
 
   const canContinueArticle = !hasArticle || articleRead;
   const canContinueVideo = !hasVideo || videoWatched;
 
   return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'100vh',background:C.bg,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
+      {/* Thin pathway-colored top rule so the immersive lesson view still reads as "this pathway" at a glance */}
+      <div style={{height:3,width:'100%',flexShrink:0,background:`linear-gradient(90deg,${accent},${accent}55,transparent)`}}/>
       {/* Header — progress dots + close */}
       <div style={{position:'sticky',top:0,zIndex:20,background:`${C.bg}f2`,backdropFilter:'blur(12px)',borderBottom:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px'}}>
-        <div style={{display:'flex',alignItems:'center',gap:12,maxWidth:720,margin:'0 auto',width:'100%'}}>
+        <div style={{display:'flex',alignItems:'center',gap:12,maxWidth:860,margin:'0 auto',width:'100%'}}>
           <button onClick={onClose} aria-label="Close lesson" style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:40,height:40,minWidth:40,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:10,flexShrink:0}}><X size={18}/></button>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:m?12:13,fontWeight:700,color:C.t1,fontFamily:C.FD,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{lesson.title}</div>
@@ -690,7 +712,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
 
       {/* Body */}
       <div style={{flex:1,overflowY:step==='article'?undefined:'auto'}}>
-        <div style={{maxWidth:720,margin:'0 auto',padding:m?'20px 16px 100px':'32px 24px 110px',width:'100%',boxSizing:'border-box'}}>
+        <div style={{maxWidth:860,margin:'0 auto',padding:m?'20px 16px 100px':'32px 24px 110px',width:'100%',boxSizing:'border-box'}}>
 
           {step==='overview'&&(
             <div style={CC({gap:18})}>
@@ -780,7 +802,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
       {/* Footer nav — big, thumb-reachable tap targets */}
       {step!=='quiz'&&step!=='complete'&&(
         <div style={{position:'sticky',bottom:0,background:`${C.bg}f5`,backdropFilter:'blur(12px)',borderTop:`1px solid ${C.b1}`,padding:m?'12px 14px':'16px 24px',paddingBottom:m?'calc(12px + env(safe-area-inset-bottom))':16}}>
-          <div style={{display:'flex',gap:10,maxWidth:720,margin:'0 auto'}}>
+          <div style={{display:'flex',gap:10,maxWidth:860,margin:'0 auto'}}>
             <button onClick={goBack} disabled={curIdx===0} style={{...btnG({flex:'0 0 auto',padding:'14px 18px',fontSize:13,opacity:curIdx===0?.4:1,minHeight:48}),display:'inline-flex',alignItems:'center',gap:6}}><ChevronLeft size={16}/>Back</button>
             <motion.button whileHover={{scale:1.01}} whileTap={{scale:.98}} onClick={goNext}
               disabled={(step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo)}
@@ -1177,6 +1199,7 @@ export default function App({ account, onAccountChange }) {
   const [lessonStep, setLessonStep] = useState('overview');
   const [articleRead, setArticleRead] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
+  const [articleScrollPct, setArticleScrollPct] = useState(0); // exact scroll position within the article step, for resuming mid-passage
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
@@ -1395,6 +1418,8 @@ export default function App({ account, onAccountChange }) {
   const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
   const [genCount,setGenCount]=useState(20);
   const [genCountInput,setGenCountInput]=useState('20'); // raw text of the count field, so typing isn't clobbered mid-edit
+  const [genCountMode,setGenCountMode]=useState('auto'); // 'auto' (content decides the count) | 'manual' (genCount)
+  const [genPolishNote,setGenPolishNote]=useState(''); // last AI-polish summary, shown under the generator
 
   // ── Library ─────────────────────────────────────────────────────────────────
   const [lSrch,setLS]=useState('');
@@ -2293,8 +2318,13 @@ export default function App({ account, onAccountChange }) {
     });
   }
 
-  const GEN_STAGES = ['Reading your notes…', 'Extracting key concepts…', 'Selecting the best cards…', 'Polishing answers…'];
+  const GEN_STAGES = ['Reading your notes…', 'Extracting key concepts…', 'Selecting the best cards…', 'Handing off to Medabrain for a final pass…'];
   const GEN_COUNT_MIN = 5, GEN_COUNT_MAX = 150;
+  // Auto mode's ceiling on the offline engine: big note dumps can surface far more than a flat 20
+  // distinct facts, small ones far fewer — the engine never pads short of what it finds (see
+  // rank.js), so requesting this ceiling just means "give me everything worth keeping, up to a
+  // sane deck size" instead of an arbitrary fixed count regardless of how much was pasted in.
+  const GEN_COUNT_AUTO_CEILING = 90;
 
   function commitGenCount(raw) {
     const n = parseInt(raw, 10);
@@ -2314,27 +2344,40 @@ export default function App({ account, onAccountChange }) {
       }
       return;
     }
-    setGL(true); setGStage(0);
+    setGL(true); setGStage(0); setGenPolishNote('');
     const stageTimer = setInterval(()=>setGStage(s=>Math.min(s+1, GEN_STAGES.length-1)), 750);
     const startedAt = Date.now();
     try {
-      const { cards, requested, generated, coverage } = generateAIFlashcards({ text: notes, count: genCount });
+      const targetCount = genCountMode === 'auto' ? GEN_COUNT_AUTO_CEILING : genCount;
+      const { cards, requested, generated, coverage } = generateAIFlashcards({ text: notes, count: targetCount });
+
+      // Final pass: hand the offline-generated deck to Medabrain's Scout tier (the same
+      // model/key pool behind the rest of Medabrain) to tighten wording and drop anything
+      // still redundant. Fails soft — polishResult is null on any network/parsing issue, and
+      // the original offline deck is used untouched.
+      const polishResult = await polishFlashcardsWithAI({ cards, notesText: notes });
+      const finalCards = polishResult?.cards?.length ? polishResult.cards : cards;
+
       // Guarantee the stage narrative has time to actually play out, so
       // generation never feels like an instant flicker even though the local
-      // engine resolves in a few milliseconds.
+      // engine resolves in a few milliseconds (the polish call above already
+      // adds real latency of its own when it succeeds).
       const minFloor = GEN_STAGES.length * 550;
       const elapsed = Date.now() - startedAt;
       if (elapsed < minFloor) await new Promise(r => setTimeout(r, minFloor - elapsed));
       const deckName = `Notes Deck — ${new Date().toLocaleDateString()}`;
-      await saveDeck(deckName, cards);
+      await saveDeck(deckName, finalCards);
       setNotes('');
-      setAD({ name: deckName, cards, builtin: false });
+      setAD({ name: deckName, cards: finalCards, builtin: false });
       setCIdx(0);
       setFlip(false);
-      if (coverage === 'full') {
-        toast.success(`Generated all ${generated} flashcards you asked for.`, { icon: <Brain size={16}/> });
+
+      const sizeNote = genCountMode === 'auto' ? `sized to your notes (${finalCards.length} card${finalCards.length===1?'':'s'})` : coverage === 'full' ? `all ${generated} you asked for` : `${generated} of the ${requested} you asked for — that's every distinct fact we could find`;
+      if (polishResult) {
+        setGenPolishNote(polishResult.note || 'Medabrain reviewed this deck for clarity.');
+        toast.success(`Generated ${sizeNote}, then polished by Medabrain (Scout).`, { icon: <Brain size={16}/> });
       } else {
-        toast(`Generated ${generated} of the ${requested} you asked for — that's every distinct fact we could find in your notes. Add more detail for more cards.`, { icon: <Wand2 size={16}/>, duration: 5000 });
+        toast(`Generated ${sizeNote}. (Medabrain's polish pass was unavailable — the deck is fully usable as-is.)`, { icon: <Wand2 size={16}/>, duration: 5000 });
       }
     } catch (e) {
       toast.error(e.message.slice(0, 160));
@@ -2407,6 +2450,7 @@ export default function App({ account, onAccountChange }) {
     setActiveLesson({lesson,unit});
     setArticleRead(!!already?.verified);
     setVideoWatched(!!already?.verified);
+    setArticleScrollPct(0);
     setLessonStep(already?.verified?'complete':'overview');
     if(!already?.verified){
       const hour=new Date().getHours(),day=new Date().getDay();
@@ -2414,7 +2458,39 @@ export default function App({ account, onAccountChange }) {
       toast(pickNudge(scenario,{lesson:lesson.title}),{icon:<BookOpen size={16}/>,duration:2600});
     }
   }
-  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); }
+  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); }
+
+  // Resume a lesson that was mid-read/mid-video when the page reloaded — same pattern as the
+  // flashcard-session resume below, restoring not just which lesson but the exact step, whether
+  // the article/video were already marked read/watched, and how far into the article the student
+  // had scrolled, so a reload never bounces them back to the top of a passage they were mid-way
+  // through. Only resumes if the persisted tab was actually 'prep' (mirrors the flashcard guard)
+  // and the lesson still resolves within the CURRENT pathway (a pathway switch since then means
+  // the old in-progress lesson isn't necessarily relevant anymore, so it's safe to just drop it).
+  useEffect(()=>{
+    if(!dbReady||!curPath)return;
+    const persisted=loadViewState();
+    const al=persisted.activeLesson;
+    if(!al?.lessonId||persisted.tab!=='prep')return;
+    const flat=(curPath.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
+    const match=flat.find(x=>x.lesson.id===al.lessonId&&x.unit.id===al.unitId);
+    if(!match)return; // lesson/unit no longer exists in the current pathway — nothing safe to resume
+    setActiveLesson({lesson:match.lesson,unit:match.unit});
+    setLessonStep(al.step||'overview');
+    setArticleRead(!!al.articleRead);
+    setVideoWatched(!!al.videoWatched);
+    setArticleScrollPct(al.articleScrollPct||0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[dbReady,curPath]);
+
+  // ...and keep that lesson's exact position saved as it progresses.
+  useEffect(()=>{
+    if(activeLesson){
+      saveViewState({activeLesson:{lessonId:activeLesson.lesson.id,unitId:activeLesson.unit.id,step:lessonStep,articleRead,videoWatched,articleScrollPct}});
+    }else{
+      saveViewState({activeLesson:null});
+    }
+  },[activeLesson,lessonStep,articleRead,videoWatched,articleScrollPct]);
   // Once the active lesson's quiz is passed (verified flips true in `pathway`), jump the
   // player to the Complete step — this is what lets the Quiz step hand off to the app-level
   // aQuiz/QuizEngine fullscreen gate and have control cleanly return to LessonPlayer afterward
@@ -3017,8 +3093,13 @@ export default function App({ account, onAccountChange }) {
     if(dIntro){
       return(
         <div style={CC({gap:22})}>
-          <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
-            <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic — real questions about how you think and what pulls you in, not just "pick your favorite subject" — for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.</p>
+          <div style={{...glass({padding:22,background:`linear-gradient(120deg,${C.cyanDim},${C.blueDim} 55%,${C.violetDim})`,border:`1px solid ${C.cyan}25`,position:'relative',overflow:'hidden'})}}>
+            <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.07,pointerEvents:'none'}}/>
+            <div style={{position:'relative'}}>
+              <div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div>
+              <h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
+              <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic — real questions about how you think and what pulls you in, not just "pick your favorite subject" — for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.</p>
+            </div>
           </div>
           <motion.div data-tour="prep-deep-diagnostic" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
@@ -3074,16 +3155,22 @@ export default function App({ account, onAccountChange }) {
     const units=curPath?.units||[];
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="prep-deep-pathway" style={R()}>
-          <div><div style={lbl()}>Learning Pathway</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
+        <div data-tour="prep-deep-pathway" style={{...glass({padding:22,background:`linear-gradient(120deg,${accent}22,${curPath?.accent2||accent}12 60%,transparent)`,border:`1px solid ${accent}35`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div style={{position:'absolute',inset:0,background:curPath?.gradient||C.blueGrad,opacity:0.08,pointerEvents:'none'}}/>
+          <div style={{position:'relative',width:56,height:56,borderRadius:16,background:curPath?.gradient||C.blueGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 20px ${accent}45`}}>
+            {(()=>{const Ic=PATH_ICONS[eSpec]||Compass;return <Ic size={26} color="#fff"/>;})()}
+          </div>
+          <div style={{position:'relative',flex:1,minWidth:200}}>
+            <div style={{...lbl(),color:accent}}>Learning Pathway</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
             {curPath?.tagline&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{curPath.tagline}</div>}
           </div>
-          <div style={{marginLeft:'auto',...R({gap:12})}}>
+          <div style={{position:'relative',marginLeft:isMobile?0:'auto',...R({gap:12})}}>
             <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.t2,fontFamily:C.FM}}>{doneL}/{allL.length}</div><div style={{fontSize:10,color:C.t3}}>lessons</div></div>
             <Arc pct={mastery} size={60} stroke={5} color={accent} label={`${mastery}%`}/>
           </div>
         </div>
-        {curPath?.overview&&<div style={{...glass2({padding:'14px 18px',background:`${accent}08`,border:`1px solid ${accent}20`})}}>
+        {curPath?.overview&&<div style={{...glass2({padding:'14px 18px',background:`${accent}12`,border:`1px solid ${accent}28`})}}>
           <p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:0}}>{curPath.overview}</p>
         </div>}
         <Bar pct={mastery} color={accent} h={5} glow/>
@@ -3149,7 +3236,7 @@ export default function App({ account, onAccountChange }) {
         {units.map((unit,ui)=>{
           const p=unitM(unit);const done=p===100;
           return(
-            <motion.div key={unit.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:ui*.05}} style={glass()}>
+            <motion.div key={unit.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:ui*.05}} style={{...glass({borderLeft:`3px solid ${done?C.green:accent}55`}),background:`linear-gradient(120deg,${done?C.green:accent}0a,transparent 40%)`}}>
               <div style={R({marginBottom:20})}>
                 <Arc pct={p} size={50} stroke={4} color={done?C.green:accent} label={`${p}%`}/>
                 <div style={{flex:1}}>
@@ -3242,19 +3329,26 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={CC({gap:22})}>
         <div data-tour="prep-deep-quizzes" style={R()}>
-          <div><div style={lbl()}>Quiz Library</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Practice Quizzes</h2></div>
+          <div style={{...glass({padding:'18px 22px',background:`linear-gradient(120deg,${C.greenDim},${C.cyanDim} 55%,${C.blueDim})`,border:`1px solid ${C.green}28`,position:'relative',overflow:'hidden',width:'100%'}),display:'flex',alignItems:'center',gap:16}}>
+            <div style={{position:'absolute',inset:0,background:C.forestGrad,opacity:0.07,pointerEvents:'none'}}/>
+            <div style={{position:'relative',width:48,height:48,borderRadius:14,background:C.forestGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${C.green}40`}}><Layers size={22} color="#fff"/></div>
+            <div style={{position:'relative'}}>
+              <div style={{...lbl(),color:C.greenL}}>Quiz Library</div>
+              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Practice Quizzes</h2>
+            </div>
+          </div>
         </div>
         {/* Stat tiles */}
         <div style={G(3,12,{},isMobile)}>
-          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+          <div style={{...glass2({padding:'16px 18px',background:`linear-gradient(120deg,${C.blueDim},transparent)`,border:`1px solid ${C.blue}25`}),display:'flex',alignItems:'center',gap:12}}>
             <div style={{width:36,height:36,borderRadius:10,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.blueL}/></div>
             <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>quizzes · {TOTAL_QUESTIONS} questions</div></div>
           </div>
-          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+          <div style={{...glass2({padding:'16px 18px',background:`linear-gradient(120deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}),display:'flex',alignItems:'center',gap:12}}>
             <div style={{width:36,height:36,borderRadius:10,background:C.greenDim,border:`1px solid ${C.green}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><CheckCircle2 size={16} color={C.greenL}/></div>
             <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{qTaken}/{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>completed</div></div>
           </div>
-          <div style={{...glass2({padding:'16px 18px'}),display:'flex',alignItems:'center',gap:12}}>
+          <div style={{...glass2({padding:'16px 18px',background:avgSc>0?`linear-gradient(120deg,${scCol(avgSc)}18,transparent)`:undefined,border:`1px solid ${avgSc>0?scCol(avgSc)+'30':C.b1}`}),display:'flex',alignItems:'center',gap:12}}>
             <div style={{width:36,height:36,borderRadius:10,background:avgSc>0?`${scCol(avgSc)}18`:C.s3,border:`1px solid ${avgSc>0?scCol(avgSc)+'30':C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Target size={16} color={avgSc>0?scCol(avgSc):C.t3}/></div>
             <div><div style={{fontSize:19,fontWeight:800,color:avgSc>0?scCol(avgSc):C.t3,fontFamily:C.FM,lineHeight:1}}>{avgSc>0?`${avgSc}%`:'—'}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>average score</div></div>
           </div>
@@ -3300,8 +3394,8 @@ export default function App({ account, onAccountChange }) {
           {fQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;
             return(
-              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden'}),transition:'box-shadow .2s'}}>
-                {taken&&<div style={{height:3,background:`linear-gradient(90deg,${scc},${scc}88)`}}/>}
+              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden',background:`linear-gradient(160deg,${(taken?scc:dc)}0d,transparent 55%)`}),transition:'box-shadow .2s'}}>
+                <div style={{height:3,background:`linear-gradient(90deg,${taken?scc:dc},${(taken?scc:dc)}77)`}}/>
                 <div style={{padding:22}}>
                   <div style={R({marginBottom:14,flexWrap:'wrap'})}>
                     <span style={pill(`${dc}18`,dc,{fontSize:10})}>{q.diff}</span>
@@ -3442,7 +3536,7 @@ export default function App({ account, onAccountChange }) {
         </AnimatePresence>
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div data-tour="prep-deep-coach" style={{paddingBottom:18,borderBottom:`1px solid ${C.b1}`,marginBottom:18,flexShrink:0}}>
+        <div data-tour="prep-deep-coach" style={{padding:'16px 18px',marginBottom:18,flexShrink:0,borderRadius:16,background:`linear-gradient(120deg,${C.violetDim},${C.blueDim} 55%,transparent)`,border:`1px solid ${C.violet}20`}}>
           <div style={{display:'flex',flexDirection:isMobile?'column':'row',justifyContent:'space-between',alignItems:isMobile?'flex-start':'flex-start',gap:isMobile?10:12}}>
             <div style={R({gap:isMobile?10:12,alignItems:'flex-start'})}>
               {isMobile&&(
@@ -3739,19 +3833,24 @@ export default function App({ account, onAccountChange }) {
 
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="prep-deep-flashcards" style={R()}>
-          <div><div style={lbl()}>Flashcards</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2></div>
-          <div style={{marginLeft:'auto',...R({gap:8})}}>
-            <button style={{...btn(C.blueGrad,{fontSize:12,padding:'8px 16px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
+        <div data-tour="prep-deep-flashcards" style={{...glass({padding:'18px 22px',background:`linear-gradient(120deg,${C.amberDim},${C.orangeDim} 55%,${C.roseDim})`,border:`1px solid ${C.amber}28`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+          <div style={{position:'absolute',inset:0,background:C.sunsetGrad,opacity:0.07,pointerEvents:'none'}}/>
+          <div style={{position:'relative',width:48,height:48,borderRadius:14,background:C.sunsetGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${C.amber}40`}}><Layers3 size={22} color="#fff"/></div>
+          <div style={{position:'relative'}}>
+            <div style={{...lbl(),color:C.amberL}}>Flashcards</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2>
+          </div>
+          <div style={{position:'relative',marginLeft:'auto',...R({gap:8})}}>
+            <button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
           </div>
         </div>
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
-          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{builtinCount+customCount}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Decks</div></div>
-          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
-          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
-          <div style={glass2({padding:14})}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
+          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.blueDim},transparent)`,border:`1px solid ${C.blue}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{builtinCount+customCount}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Decks</div></div>
+          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.tealDim},transparent)`,border:`1px solid ${C.teal}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
+          <div style={{...glass2({padding:14,background:dueCards>0?`linear-gradient(120deg,${C.amberDim},transparent)`:`linear-gradient(120deg,${C.greenDim},transparent)`,border:`1px solid ${dueCards>0?C.amber:C.green}22`})}}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
+          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.violetDim},transparent)`,border:`1px solid ${C.violet}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
         </div>
 
         {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
@@ -3839,25 +3938,31 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
-        {/* AI Generator */}
+        {/* AI Generator — offline NLP extraction, then a Medabrain (Scout) polish pass */}
         <motion.div animate={gShake?{x:[0,-7,7,-5,5,-2,2,0]}:{x:0}} transition={{duration:.42}}
-          style={{...glass({background:`${C.violetDim}`,border:`1px solid rgba(139,92,246,0.2)`,position:'relative',overflow:'hidden'})}}>
-          <div style={R({marginBottom:14})}>
+          style={{...glass({background:`linear-gradient(135deg,${C.violetDim},${C.fuchsiaDim} 60%,${C.pinkDim})`,border:`1px solid rgba(139,92,246,0.3)`,position:'relative',overflow:'hidden'})}}>
+          <div style={{position:'absolute',inset:0,background:C.auroraGrad,opacity:0.05,pointerEvents:'none'}}/>
+          <div style={{...R({marginBottom:14}),position:'relative'}}>
             <motion.div animate={gLoad?{rotate:360}:{rotate:0}} transition={gLoad?{duration:1.6,repeat:Infinity,ease:'linear'}:{duration:.3}}
-              style={{width:36,height:36,borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}20`}}><Brain size={17} color={C.violetL}/></motion.div>
+              style={{width:36,height:36,borderRadius:10,background:C.violetGrad,border:`1px solid ${C.violet}30`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}40`}}><Brain size={17} color="#fff"/></motion.div>
             <div style={{flex:1}}>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Generate Deck From Notes</div>
-              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Turns your notes into flashcards — runs entirely on your device, no account or API needed</div>
+              <div style={{fontSize:11,color:C.t2,marginTop:1}}>Offline extraction, sized to your notes, then a Medabrain (Scout) pass to tighten wording — no account needed</div>
             </div>
           </div>
-          <div style={R({gap:6,marginBottom:12,justifyContent:'flex-end'})}>
-            <span style={{fontSize:10,color:C.t3}}>Cards</span>
+          <div style={{...R({gap:8,marginBottom:12,justifyContent:'flex-end',flexWrap:'wrap'}),position:'relative'}}>
+            <button disabled={gLoad} onClick={()=>setGenCountMode('auto')}
+              style={{...btnSm(genCountMode==='auto'?C.violetGrad:'rgba(255,255,255,0.05)',{color:genCountMode==='auto'?'#fff':C.t2,border:`1px solid ${genCountMode==='auto'?'transparent':C.b1}`,fontSize:11,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:5}}>
+              <Wand2 size={11}/>Auto
+            </button>
+            <span style={{fontSize:10,color:C.t3}}>{genCountMode==='auto'?'sizes to your notes':'Cards'}</span>
             <input
               type="number" min={GEN_COUNT_MIN} max={GEN_COUNT_MAX} step={1}
               disabled={gLoad}
-              style={inp({width:70,padding:'5px 10px',fontSize:11,opacity:gLoad?.6:1})}
+              style={inp({width:70,padding:'5px 10px',fontSize:11,opacity:gLoad?.6:genCountMode==='auto'?.45:1})}
               value={genCountInput}
-              onChange={e=>setGenCountInput(e.target.value)}
+              onFocus={()=>setGenCountMode('manual')}
+              onChange={e=>{setGenCountMode('manual');setGenCountInput(e.target.value);}}
               onBlur={e=>commitGenCount(e.target.value)}
             />
           </div>
@@ -3865,7 +3970,7 @@ export default function App({ account, onAccountChange }) {
             <textarea disabled={gLoad} style={{...inp({minHeight:80,resize:'vertical',fontFamily:C.FB,lineHeight:1.6,opacity:gLoad?.6:1})}} placeholder="Paste your class notes, study guides, or any text here…" value={notes} onChange={e=>setNotes(e.target.value)}/>
             <div style={{position:'absolute',right:10,bottom:8,fontSize:9.5,color:C.t4,fontFamily:C.FM,pointerEvents:'none'}}>{notes.length>0?`${notes.trim().split(/\s+/).filter(Boolean).length} words`:''}</div>
           </div>
-          <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},#7c3aed)`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}30`,minWidth:220,justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
+          <motion.button whileHover={gLoad?{}:{scale:1.02}} whileTap={gLoad?{}:{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.violet},${C.fuchsia})`,{fontSize:12,boxShadow:`0 4px 16px ${C.violet}40`,minWidth:220,justifyContent:'center',position:'relative'}),display:'inline-flex',alignItems:'center',gap:8,cursor:gLoad?'wait':'pointer'}} onClick={genDeck} disabled={gLoad||!notes.trim()}>
             {gLoad?(
               <>
                 <motion.span animate={{rotate:360}} transition={{duration:.9,repeat:Infinity,ease:'linear'}} style={{display:'flex'}}><RefreshCw size={14}/></motion.span>
@@ -3875,12 +3980,18 @@ export default function App({ account, onAccountChange }) {
                   </motion.span>
                 </AnimatePresence>
               </>
-            ):(<><Sparkles size={14}/>{`Generate ${genCount} Flashcards`}</>)}
+            ):(<><Sparkles size={14}/>{genCountMode==='auto'?'Generate Flashcards (Auto)':`Generate ${genCount} Flashcards`}</>)}
           </motion.button>
+          {!gLoad&&genPolishNote&&(
+            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} style={{position:'relative',marginTop:12,display:'flex',alignItems:'flex-start',gap:8,padding:'10px 12px',borderRadius:10,background:C.violetDim,border:`1px solid ${C.violet}25`}}>
+              <Brain size={13} color={C.violetL} style={{flexShrink:0,marginTop:1}}/>
+              <span style={{fontSize:11,color:C.t2,lineHeight:1.5}}><strong style={{color:C.violetL}}>Medabrain: </strong>{genPolishNote}</span>
+            </motion.div>
+          )}
           <AnimatePresence>
             {gLoad&&(
               <motion.div initial={{scaleX:0}} animate={{scaleX:1}} exit={{opacity:0}} transition={{duration:GEN_STAGES.length*0.55,ease:'linear'}}
-                style={{position:'absolute',left:0,bottom:0,height:2,width:'100%',transformOrigin:'left',background:`linear-gradient(90deg,${C.violet},#7c3aed)`}}/>
+                style={{position:'absolute',left:0,bottom:0,height:2,width:'100%',transformOrigin:'left',background:`linear-gradient(90deg,${C.violet},${C.fuchsia})`}}/>
             )}
           </AnimatePresence>
         </motion.div>
@@ -3892,7 +4003,7 @@ export default function App({ account, onAccountChange }) {
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
-                whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative'})}}>
+                whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${accent}45`}),background:`linear-gradient(120deg,${accent}09,transparent 45%)`}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
@@ -4252,7 +4363,7 @@ export default function App({ account, onAccountChange }) {
             {yt.map((r,i)=>{
               const hasNotes = !!user?.resourceNotes?.[r.title];
               return (
-              <motion.div key={i} whileHover={{y:-2,boxShadow:'0 12px 40px rgba(0,0,0,0.6)'}} style={glass({padding:0,overflow:'hidden',position:'relative'})}>
+              <motion.div key={i} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${catMeta(r.cat).color}25`}} style={glass({padding:0,overflow:'hidden',position:'relative',borderLeft:`3px solid ${catMeta(r.cat).color}55`})}>
                 {/* Floating Bookmark Star Button */}
                 <button
                   onClick={(e) => { e.stopPropagation(); toggleBookmark(r.title); }}
@@ -5749,7 +5860,7 @@ export default function App({ account, onAccountChange }) {
   if(aQuiz){
     return(
       <ErrorBoundary>
-        <div style={{minHeight:'100vh',background:C.bg,color:C.t1,fontFamily:C.FB}}>
+        <div style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
           <div style={{maxWidth:780,margin:'0 auto',padding:'24px 24px 60px'}}>
             <div style={{...glass({padding:'14px 22px',marginBottom:18}),...R()}}>
@@ -5779,6 +5890,7 @@ export default function App({ account, onAccountChange }) {
           step={lessonStep} onStep={setLessonStep}
           articleRead={articleRead} onArticleRead={()=>setArticleRead(true)}
           videoWatched={videoWatched} onVideoWatched={()=>setVideoWatched(true)}
+          initialScrollPct={articleScrollPct} onScrollProgress={setArticleScrollPct}
           onClose={closeLesson}
           onStartQuiz={()=>openVerifyQuiz(lesson,unit)}
           onNextLesson={()=>{ if(nextInfo)openLesson(nextInfo.lesson,nextInfo.unit); }}
@@ -5793,10 +5905,17 @@ export default function App({ account, onAccountChange }) {
   // ── Prep: diagnostic/pathway/quizzes/flashcards/coach/library, switched via SubNav ──
   const prepRenders={ diagnostic:tDiag, pathway:tPath, quizzes:tQuizzes, flashcards:tFlash, coach:tCoach, library:tLib };
   function tPrep(){
+    // Prep's whole ambient backdrop shifts with the active pathway — switching pathways in the
+    // Diagnostic/Pathway tab visibly re-themes every tab under Prep, not just the pathway page
+    // itself, since this wash sits behind SubNav and every rendered sub-tab.
+    const pA=curPath?.accent||C.blue, pA2=curPath?.accent2||C.blueL;
     return(
-      <div>
-        <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={C.violet} m={isMobile} tourPrefix="prep-sub"/>
-        {(prepRenders[prepView]||tPath)()}
+      <div style={{position:'relative'}}>
+        <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
+        <div style={{position:'relative',zIndex:1}}>
+          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
+          {(prepRenders[prepView]||tPath)()}
+        </div>
       </div>
     );
   }
