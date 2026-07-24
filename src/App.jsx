@@ -72,7 +72,7 @@ import PortfolioMetaBrain from './components/PortfolioMetaBrain';
 import PanelHero from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import PlansTab from './components/PlansTab';
-import { summarizePlanForCoach } from './lib/masterPlanGenerator';
+import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -1237,6 +1237,23 @@ export default function App({ account, onAccountChange }) {
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
   useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView }); },[tab, prepView, portfolioView, progressView]);
 
+  // Keep the browser tab title in sync with where the student actually is — previously the
+  // <title> in index.html ("MedSchoolPrep — Your Path Into Medicine") never changed after load,
+  // so every tab looked identical whether you were on Plans, Flashcards, or Settings, which is
+  // useless with multiple tabs open. Home keeps the full marketing title (that's the one place a
+  // generic, welcoming title actually makes sense); everywhere else leads with the specific
+  // section so it's identifiable at a glance in a crowded tab strip.
+  useEffect(()=>{
+    if(tab==='home'){ document.title='MedSchoolPrep — Your Path Into Medicine'; return; }
+    const navLabel=NAV.find(n=>n.id===tab)?.label||'MedSchoolPrep';
+    const subLabel=
+      tab==='prep'?PREP_SUBNAV.find(n=>n.id===prepView)?.label:
+      tab==='portfolio'?PORTFOLIO_SUBNAV.find(n=>n.id===portfolioView)?.label:
+      tab==='progress'?PROGRESS_SUBNAV.find(n=>n.id===progressView)?.label:
+      null;
+    document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
+  },[tab,prepView,portfolioView,progressView]);
+
   // ── Post-onboarding product tour — a full-depth spotlight walkthrough covering ──
   // every pillar (Home/Prep/Portfolio/Progress/Settings), every absorbed sub-view
   // inside Prep/Portfolio/Progress, and the ⌘K quick-switcher — offered right
@@ -1432,6 +1449,14 @@ export default function App({ account, onAccountChange }) {
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
   const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+  // A deck queued up by a Plan task deep link (openPlanResource), waiting on the "Start Studying"
+  // screen below rather than dropping straight into the review loop — see tFlash()'s
+  // planDeckPending branch. Every OTHER deck entry point in the app (deck list, Smart Mix banner,
+  // "Study Again") stays instant-start on purpose: those are already a deliberate, in-context
+  // click on a specific deck. A Plan task is different — it's handed to the student as an
+  // assignment, so landing on a real "here's what you're about to study, hit Start" screen first
+  // reads as a considered session instead of an abrupt jump-scare into flashcards.
+  const [planDeckPending,setPlanDeckPending]=useState(null); // {name,builtin,smartMix} | null
   const [genCount,setGenCount]=useState(20);
   const [genCountInput,setGenCountInput]=useState('20'); // raw text of the count field, so typing isn't clobbered mid-edit
   const [genCountMode,setGenCountMode]=useState('auto'); // 'auto' (content decides the count) | 'manual' (genCount)
@@ -1750,6 +1775,28 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
+  // ── Plan accountability: auto-checks off Plan tasks when their exact linked resource is
+  // actually completed elsewhere in the app (quiz submitted, lesson verified, flashcard deck
+  // session finished) — see AUTO_VERIFIABLE_KINDS in masterPlanGenerator.js for why only quiz/
+  // lesson/deck tasks get this treatment; PlansTab strips the manual checkbox from those exact
+  // task types, so this auto-complete path is the ONLY way they can ever become done — closing
+  // the "check it, uncheck it, check it again" loophole at the root instead of just capping XP.
+  // Takes the user object as of right now so a caller mid-XP-award for the primary action (e.g.
+  // finishQuiz already bumping xp for the quiz score) can pass its own freshly-built `newUser`
+  // instead of racing stale closure state, and folds the Plan XP into that same object so there's
+  // only ever one saveUser() call per action.
+  function applyPlanAutoComplete(baseUser, isMatch){
+    const plan=baseUser?.masterPlan;
+    if(!plan)return baseUser;
+    const {plan:updatedPlan,completed}=autoCompleteResourceTasks(plan,isMatch);
+    if(!completed.length)return baseUser;
+    const {finalXP,tier}=awardXP(6*completed.length);
+    toast.success(`${completed.length>1?`${completed.length} plan tasks`:`"${completed[0].title}"`} auto-verified on your plan · ${BONUS_COPY[tier](finalXP)}`,{icon:<ShieldCheck size={16}/>,duration:2800});
+    if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
+    else if(tier==='big'||tier==='bonus')celebrateBonusXP();
+    else celebrateXP();
+    return {...baseUser,masterPlan:updatedPlan,xp:(baseUser.xp||0)+finalXP};
+  }
   // Runs once the full ~30-screen onboarding flow (src/components/onboarding/Onboarding.jsx)
   // finishes. Creates the local (per-device) profile immediately so the app feels instant, and
   // separately pushes name/grade/testTrack/onboardingComplete to the Supabase-backed account —
@@ -2558,7 +2605,12 @@ export default function App({ account, onAccountChange }) {
         logEvent('unit_lesson_verified',lesson.id);
         setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
         const { finalXP, tier } = awardXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
-        const newUser={...user,xp:(user?.xp||0)+finalXP};
+        const bumpedUser={...user,xp:(user?.xp||0)+finalXP};
+        // A Plan task could point at either the lesson itself or its verification quiz
+        // (resolveTaskResource can resolve a "quiz" task to any real quiz, including this one) —
+        // match both so either shape gets credited.
+        const lessonMatch=resourceMatch('lesson',lesson.id), quizMatch=resourceMatch('quiz',aQuiz.id);
+        const newUser=applyPlanAutoComplete(bumpedUser,t=>lessonMatch(t)||quizMatch(t));
         saveUser(newUser);
         play('xp');
         if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
@@ -2603,7 +2655,8 @@ export default function App({ account, onAccountChange }) {
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
     const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
-    const newUser={...user,xp:(user?.xp||0)+xpGain};
+    const bumpedUser={...user,xp:(user?.xp||0)+xpGain};
+    const newUser=applyPlanAutoComplete(bumpedUser,resourceMatch('quiz',aQuiz.id));
     saveUser(newUser);
     if(quizTier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(quizTier==='big'||quizTier==='bonus'){celebrateBonusXP();}
@@ -2845,6 +2898,23 @@ export default function App({ account, onAccountChange }) {
     else saveViewState({flashcards:null});
   },[activeDeck,cIdx,studyMode]);
 
+  // Drop a queued Plan-deck Start screen the moment the student leaves Flashcards entirely, so it
+  // never resurfaces out of context on a later, unrelated visit — openPlanResource sets tab/
+  // prepView to 'prep'/'flashcards' in the same batch it sets planDeckPending, so this never
+  // clears the screen it was just asked to show.
+  useEffect(()=>{ if(tab!=='prep'||prepView!=='flashcards')setPlanDeckPending(null); },[tab,prepView]);
+
+  function startPlanDeck(){
+    if(!planDeckPending)return;
+    const pd=planDeckPending;
+    setAD(pd);
+    setStudyMode(pd.smartMix?'all':(getDueCards(cardsForDeck(pd.name,pd.builtin)).length>0?'due':'all'));
+    setCIdx(0);setFlip(false);
+    setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+    setPlanDeckPending(null);
+    play('click');
+  }
+
   // ── Perfect-session celebration (fires once when a completed session was 100% remembered) ──
   const celebratedSessionRef=useRef(null);
   useEffect(()=>{
@@ -2855,6 +2925,24 @@ export default function App({ account, onAccountChange }) {
     if(celebratedSessionRef.current===key)return;
     celebratedSessionRef.current=key;
     celebratePerfect();
+  },[activeDeck,currentCard,sessionStats]);
+  // ── Plan accountability: a flashcard session finishing (every due card reviewed) auto-checks
+  // off any Plan task pointed at this exact deck — same once-only ref-guard pattern as the
+  // perfect-session celebration just above, since this effect re-fires on every sessionStats
+  // change while the "session complete" render state persists. Smart Mix pools due cards from
+  // every deck into one session, so it credits every source deck actually cleared (tagged via
+  // `_srcDeck` on each pooled card), plus the literal "Smart Mix" resource id some tasks resolve
+  // to directly (see resolveTaskResource's dueish fallback in masterPlanGenerator.js).
+  const planAutoDeckRef=useRef(null);
+  useEffect(()=>{
+    if(!activeDeck||currentCard||sessionStats.reviewed===0)return;
+    const key=`${activeDeck.name}:${sessionStats.startedAt}`;
+    if(planAutoDeckRef.current===key)return;
+    planAutoDeckRef.current=key;
+    const ids=activeDeck.smartMix?[...new Set([...deckCards.map(c=>c._srcDeck).filter(Boolean),'Smart Mix'])]:[activeDeck.name];
+    if(!ids.length)return;
+    const newUser=applyPlanAutoComplete(user,resourceMatch('deck',ids));
+    if(newUser!==user)saveUser(newUser);
   },[activeDeck,currentCard,sessionStats]);
   // ═══ TAB RENDERS ══════════════════════════════════════════════════════════════
 
@@ -3745,6 +3833,29 @@ export default function App({ account, onAccountChange }) {
   }
   // ── FLASHCARDS ────────────────────────────────────────────────────────────────
   function tFlash(){
+    if(planDeckPending&&!activeDeck){
+      const pd=planDeckPending;
+      const dueCount=pd.smartMix?dueCards:getDueCards(cardsForDeck(pd.name,pd.builtin)).length;
+      const totalCount=pd.smartMix?dueCards:cardsForDeck(pd.name,pd.builtin).length;
+      return(
+        <div style={CC({gap:16})}>
+          <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All Decks</button>
+          <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:isMobile?28:40,textAlign:'center'}),border:`1px solid ${C.amber}30`}}>
+            <div style={{width:60,height:60,borderRadius:18,margin:'0 auto 18px',display:'grid',placeItems:'center',background:C.sunsetGrad,boxShadow:`0 10px 30px ${C.amber}40`}}>
+              {pd.smartMix?<Sparkles size={26} color="#fff"/>:<Layers3 size={26} color="#fff"/>}
+            </div>
+            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:C.amberL,marginBottom:8}}>Today's Plan Task</div>
+            <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.02em',marginBottom:10}}>{pd.smartMix?'Smart Mix':pd.name}</div>
+            <div style={{fontSize:13.5,color:C.t2,lineHeight:1.6,maxWidth:420,margin:'0 auto 20px'}}>
+              {pd.smartMix?`Review every due card across every deck — ${dueCount} card${dueCount===1?'':'s'} in this session.`:`${dueCount>0?`${dueCount} card${dueCount===1?'':'s'} due for review`:`${totalCount} card${totalCount===1?'':'s'} in this deck`} — spaced-repetition scheduling picks up right where you left off.`}
+            </div>
+            <button style={{...btn(C.sunsetGrad,{fontSize:14,padding:'13px 30px'}),display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 6px 22px ${C.amber}40`}} onClick={startPlanDeck}>
+              <Play size={16}/>Start Studying
+            </button>
+          </motion.div>
+        </div>
+      );
+    }
     if(activeDeck){
       const sessionTotal=sessionStats.reviewed;
       const sessionAcc=sessionTotal>0?Math.round(((sessionStats.good+sessionStats.easy)/sessionTotal)*100):null;
@@ -5985,7 +6096,7 @@ export default function App({ account, onAccountChange }) {
     skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
     clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
     recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
-    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
@@ -6030,14 +6141,13 @@ export default function App({ account, onAccountChange }) {
       }
     }else if(kind==='deck'){
       const builtin=!!FLASH_DECKS[id];
+      // Queue the deck on the Start-Studying screen instead of jumping straight into cards —
+      // see planDeckPending above.
       if(id==='Smart Mix'){
-        setAD({name:'Smart Mix',builtin:true,smartMix:true});
+        setPlanDeckPending({name:'Smart Mix',builtin:true,smartMix:true});
       }else if(builtin||cDecks[id]){
-        setAD({name:id,builtin});
-        setStudyMode(getDueCards(cardsForDeck(id,builtin)).length>0?'due':'all');
-      }else return; // deck no longer exists — flashcards home we navigated to is the fallback
-      setCIdx(0);setFlip(false);
-      setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+        setPlanDeckPending({name:id,builtin});
+      } // else: deck no longer exists — flashcards home we navigated to is the fallback
     }else if(kind==='article'){
       // Land on the E-Library pre-searched to exactly this resource.
       setLS(id);setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');

@@ -7,6 +7,8 @@ import PanelHero from './ui/PanelHero';
 import { getQuestionSet, getTips, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
 import LiveVoiceInterview from './LiveVoiceInterview';
+import InterviewHistoryPanel from './InterviewHistoryPanel';
+import { parseInterviewScore } from '../lib/interviewScore';
 import * as DB from '../lib/db';
 
 const PATHWAY_LABELS = {
@@ -21,6 +23,7 @@ const MODES = [
   { id: 'standard', label: 'Standard', color: C.blue },
   { id: 'mmi', label: 'MMI Practice', color: C.violet },
   { id: 'casper', label: 'CASPer Practice', color: C.cyan },
+  { id: 'history', label: '📊 History', color: C.green },
 ];
 
 function randomIdx(len, exclude = -1) {
@@ -102,7 +105,8 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
       setFeedback(d.content || '');
       const next = sessions + 1;
       setSessions(next);
-      DB.addInterviewSession({ mode, pathwayKey: setKey, question: questionText.slice(0, 300) }).catch(() => {});
+      const score = parseInterviewScore(d.content);
+      DB.addInterviewSession({ mode, pathwayKey: setKey, question: questionText.slice(0, 300), score }).catch(() => {});
       onSessionComplete?.(mode);
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not get feedback right now.');
@@ -134,6 +138,8 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
         />
       )}
 
+      {mode === 'history' && <InterviewHistoryPanel accent={accent} />}
+
       {(mode === 'mmi' || mode === 'casper') && (
         <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 10, alignItems: 'flex-start', background: C.violetDim, border: `1px solid ${C.violet}25` }}>
           <Info size={14} color={C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />
@@ -141,7 +147,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
         </div>
       )}
 
-      {mode !== 'live' && (<>
+      {mode !== 'live' && mode !== 'history' && (<>
       <div style={glass()}>
         {mode === 'standard' && (
           <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 14 })}>
