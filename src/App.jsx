@@ -2020,13 +2020,25 @@ export default function App({ account, onAccountChange }) {
   },[curPath,pathway,isLessonComplete]);
 
   // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
-  // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
+  // data (weak categories, enrolled courses, pathway, and staleness). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
+  // Last time each category was touched, derived from real quiz history — lets the
+  // ranking gently resurface categories that have gone cold instead of only ever
+  // pushing weak/new ones (a lightweight, category-level stand-in for spaced repetition).
+  const catLastActivity = useMemo(()=>{
+    const byId = new Map(ALL_QUIZZES.map(q=>[q.id,q]));
+    const out = {};
+    for(const h of qHistory){
+      const cat = byId.get(h.quizId)?.cat;
+      if(cat && (!out[cat] || h.completedAt>out[cat])) out[cat]=h.completedAt;
+    }
+    return out;
+  },[qHistory]);
   const rankedQuizzes = useMemo(()=>rankQuizzes({
-    quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
-    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:6,
-  }),[qScores,catAverages,courseCats,curPath]);
+    quizzes: ALL_QUIZZES, qScores, catAverages, courseCats, catLastActivity,
+    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:10,
+  }),[qScores,catAverages,courseCats,catLastActivity,curPath]);
   const topPick = rankedQuizzes[0];
 
   // Optional one-line Medabrain (Groq) narration of the #1 pick — the ranking

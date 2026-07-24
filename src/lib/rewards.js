@@ -10,7 +10,7 @@
 // Ordered low→high; probabilities must sum to 1. Kept front-loaded toward ×1 so
 // the *median* payout stays close to the base amount — this is meant to add
 // delight, not to functionally shrink expected rewards.
-const BONUS_TABLE = [
+export const BONUS_TABLE = [
   { multiplier: 1,   chance: 0.70, tier: 'none'   },
   { multiplier: 1.5, chance: 0.20, tier: 'bonus'   },
   { multiplier: 2.5, chance: 0.08, tier: 'big'      },

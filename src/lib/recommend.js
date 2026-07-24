@@ -9,13 +9,28 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const DIFF_WEIGHT = { Easy: 1, Medium: 0.86, Hard: 0.55, Expert: 0.35 };
-const REASON_PRIORITY = ['course', 'weak', 'pathway', 'streak', 'new'];
+const REASON_PRIORITY = ['course', 'weak', 'stale', 'pathway', 'streak', 'new'];
 
-function buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken }) {
+// Below this many days since a category was last touched, its untaken quizzes get a
+// small "keep it fresh" nudge — a lightweight, deterministic stand-in for spaced
+// repetition at the category level (real per-card FSRS scheduling already exists for
+// flashcards; quizzes don't get individual review dates since each quiz is only ever
+// taken once, so we approximate staleness at the category granularity instead).
+const STALE_AFTER_DAYS = 10;
+const STALE_MAX_BONUS_DAYS = 30; // bonus caps out once a category has been cold this long
+
+function daysSince(ts, now) {
+  if (!ts) return null;
+  return Math.max(0, (now - ts) / 86400000);
+}
+
+function buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken, staleDays }) {
   const reasons = [];
   if (catAvg !== null && catAvg !== undefined) {
     if (catAvg < 75) {
       reasons.push({ type: 'weak', text: `Your ${quiz.cat} average is ${catAvg}% — this is the fastest way to close the gap.` });
+    } else if (staleDays !== null && staleDays >= STALE_AFTER_DAYS) {
+      reasons.push({ type: 'stale', text: `It's been ${Math.round(staleDays)} days since you tested ${quiz.cat} — a quick refresher keeps it sharp.` });
     }
   } else {
     reasons.push({ type: 'new', text: `You haven't started ${quiz.cat} yet — a fresh area to build up.` });
@@ -50,10 +65,14 @@ function primaryReason(reasons) {
  * @param {Set}    opts.courseCats    categories matching the student's enrolled courses
  * @param {Array}  opts.pathwayCats   PATHS[specialty].quizCats
  * @param {string} opts.pathwayLabel  PATHS[specialty].label
+ * @param {Object} [opts.catLastActivity]  { [category]: lastCompletedAtMs } — last time any quiz
+ *                                          in that category was completed, e.g. derived from
+ *                                          qHistory. Optional — omitting it just skips staleness scoring.
+ * @param {number} [opts.now]         current time in ms (defaults to Date.now()) — pass explicitly for testability
  * @param {number} opts.count         how many ranked picks to return (default 6)
  * @returns {Array<{rank, quiz, reason, tags}>}
  */
-export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', count = 6 }) {
+export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', catLastActivity = {}, now = Date.now(), count = 6 }) {
   const untaken = quizzes.filter(q => qScores[q.id] === undefined);
   if (!untaken.length) return [];
 
@@ -61,11 +80,19 @@ export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = n
 
   const scored = untaken.map(quiz => {
     const catAvg = catAverages[quiz.cat] ?? null;
-    const reasons = buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken });
+    const staleDays = daysSince(catLastActivity[quiz.cat], now);
+    const reasons = buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken, staleDays });
 
     let score = 50;
     if (catAvg !== null) score += Math.max(0, 100 - catAvg) * 0.6;
     else score += 18; // unexplored-category breadth bonus
+    if (staleDays !== null && staleDays >= STALE_AFTER_DAYS) {
+      // Ramps from 0 at STALE_AFTER_DAYS up to a flat +16 once a category has gone cold
+      // for STALE_MAX_BONUS_DAYS+ — keeps previously-strong categories from being
+      // permanently ignored just because they scored well once.
+      const t = Math.min(1, (staleDays - STALE_AFTER_DAYS) / (STALE_MAX_BONUS_DAYS - STALE_AFTER_DAYS));
+      score += 16 * t;
+    }
     if (courseCats?.has(quiz.cat)) score += 20;
     if (pathwayCats?.includes(quiz.cat)) score += 14;
     if (totalTaken < 5 && quiz.diff === 'Easy') score += 12;

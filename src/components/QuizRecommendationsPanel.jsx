@@ -7,11 +7,20 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2 } from 'lucide-react';
+import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Dices } from 'lucide-react';
 import { C, glass, glass2, btn, pill } from '../lib/theme';
 import { rankLabel } from '../lib/recommend';
+import { BONUS_TABLE } from '../lib/rewards';
 
 const dColors = { Easy: C.green, Medium: C.cyan, Hard: C.amber, Expert: C.rose };
+
+// A quiz's actual XP payout depends on the score you get (base = round(pct*0.5)) plus a
+// variable-ratio bonus roll (see lib/rewards.js) — so the true number isn't knowable until
+// you finish. What IS knowable up front is the ceiling, which is what makes a good "up to"
+// dopamine preview: perfect score (base 50) hitting the rarest, biggest multiplier.
+const JACKPOT = BONUS_TABLE[BONUS_TABLE.length - 1];
+const MAX_QUIZ_XP = Math.round(50 * JACKPOT.multiplier);
+const JACKPOT_PCT = Math.round(JACKPOT.chance * 100);
 
 const RANK_STYLE = {
   1: { grad: 'linear-gradient(135deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.35)', icon: Trophy },
@@ -103,7 +112,10 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
             </div>
             <div style={{ fontSize: compact ? 15 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4, lineHeight: 1.3 }}>{top.quiz.title}</div>
             <div style={{ fontSize: 12.5, color: C.t2, marginBottom: 4 }}>{top.reason}</div>
-            <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, display: 'flex', alignItems: 'center', gap: 5 }}><ScrollText size={11} />{top.quiz.qs.length} questions</div>
+            <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><ScrollText size={11} />{top.quiz.qs.length} questions</span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: C.amberL }}><Dices size={11} />Up to +{MAX_QUIZ_XP} XP · {JACKPOT_PCT}% JACKPOT chance</span>
+            </div>
             <AnimatePresence>
               {brainNote?.rank === 1 && brainNote.text && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
@@ -147,26 +159,51 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rest.map((p, i) => {
             const dc = dColors[p.quiz.diff] || C.t2;
+            const canAskBrain = onAskMedabrain && p.rank <= 3;
             return (
               <motion.div
                 key={p.quiz.id}
                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.05 }}
                 whileHover={{ x: 2 }}
-                style={{ ...glass2({ padding: '12px 14px' }), display: 'flex', alignItems: 'center', gap: 12 }}
+                style={glass2({ padding: '12px 14px' })}
               >
-                <RankBadge rank={p.rank} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.quiz.title}</span>
-                    <span style={pill(`${dc}18`, dc, { fontSize: 9 })}>{p.quiz.diff}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <RankBadge rank={p.rank} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.quiz.title}</span>
+                      <span style={pill(`${dc}18`, dc, { fontSize: 9 })}>{p.quiz.diff}</span>
+                    </div>
+                    <div style={{ fontSize: 11, color: C.t3 }}>{p.reason}</div>
                   </div>
-                  <div style={{ fontSize: 11, color: C.t3 }}>{p.reason}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                    {canAskBrain && (
+                      <button
+                        title="Ask Medabrain why"
+                        style={{ ...pill('transparent', C.violetL, { fontSize: 9.5, cursor: 'pointer', border: `1px solid ${C.violet}30`, padding: '6px 9px' }) }}
+                        disabled={brainLoading}
+                        onClick={() => askMedabrain(p)}
+                      >
+                        {brainLoading && brainNote?.rank !== p.rank ? <Loader2 size={10} className="spin" /> : <Brain size={10} />}
+                      </button>
+                    )}
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                      style={{ ...btn(C.s3, { fontSize: 11.5, padding: '7px 14px', border: `1px solid ${C.b2}`, color: C.t1, flexShrink: 0 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                      onClick={() => onStart(p.quiz)}>
+                      Start<ChevronRight size={12} />
+                    </motion.button>
+                  </div>
                 </div>
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  style={{ ...btn(C.s3, { fontSize: 11.5, padding: '7px 14px', border: `1px solid ${C.b2}`, color: C.t1, flexShrink: 0 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
-                  onClick={() => onStart(p.quiz)}>
-                  Start<ChevronRight size={12} />
-                </motion.button>
+                <AnimatePresence>
+                  {brainNote?.rank === p.rank && brainNote.text && (
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+                      <div style={{ marginTop: 8, padding: '8px 10px', borderRadius: 8, background: C.violetDim, border: `1px solid ${C.violet}25`, display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+                        <Brain size={12} color={C.violetL} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <span style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic' }}>{brainNote.text}</span>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
