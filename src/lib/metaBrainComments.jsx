@@ -51,6 +51,10 @@ const BANK = {
     `${p.position || 'Activity'} logged. Depth (what you actually did) reads stronger than a long list — the description field is worth filling in.`,
     `Added to your activities. If it involved leadership or measurable impact, that's exactly what belongs in the impact field.`,
   ]),
+  opportunity_added: (p) => pick([
+    `${p.name} added from the Opportunities database. Track the real deadline once you have one, and check back — recommendations here update as your Portfolio fills in.`,
+    `${p.name} is on your list now. This is exactly the kind of ${(p.type || 'activity').toLowerCase()} that closes a gap in a well-rounded application.`,
+  ]),
   research_added: (p) => pick([
     `${p.title} logged. Research is one of the strongest differentiators an application like yours can show — even one project counts.`,
     `Research entry saved. If this leads to a publication or poster, come back and drop the link in — it upgrades the entry a lot.`,

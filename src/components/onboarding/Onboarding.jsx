@@ -20,7 +20,6 @@ import { SpeedStep } from './steps/SpeedStep';
 import { ThankYouStep } from './steps/ThankYouStep';
 import { CalendarStep } from './steps/CalendarStep';
 import { NotificationsStep } from './steps/NotificationsStep';
-import { ReferralStep } from './steps/ReferralStep';
 import { GeneratingStep } from './steps/GeneratingStep';
 import { PlanReadyStep } from './steps/PlanReadyStep';
 import { PlanSummaryStep } from './steps/PlanSummaryStep';
@@ -33,13 +32,15 @@ const STEPS = [
   'proof1', 'gradeScore', 'birthdate', 'goal', 'targetScore', 'realistic',
   'speed', 'proof2', 'obstacles', 'studyMethod', 'accomplish', 'proof3',
   'thankYou', 'calendar', 'toggleAddBack', 'toggleRollover', 'notifications',
-  'referral', 'generating', 'planReady', 'planSummary', 'saveProgress',
+  'generating', 'planReady', 'planSummary', 'saveProgress',
 ];
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
 const PROGRESS_START = STEPS.indexOf('studyHours');
 const PROGRESS_END = STEPS.indexOf('saveProgress');
 
-const STUDY_HOURS_OPTIONS = [
+// Exported (not just used here) so Settings' "Your Goals" editor can offer
+// the same options when a student updates their study hours after onboarding.
+export const STUDY_HOURS_OPTIONS = [
   { value: '0-5', label: '0-5 hrs / week', sublabel: 'Just getting started', dots: 1 },
   { value: '6-14', label: '6-14 hrs / week', sublabel: 'Building real momentum', dots: 2 },
   { value: '15+', label: '15+ hrs / week', sublabel: 'Highly dedicated', dots: 3 },
@@ -84,7 +85,7 @@ const DEFAULT_ANSWERS = {
   monthIdx: 0, dayIdx: 0, yearIdx: 4,
   goal: null, targetScore: 1200, speedLevel: 1,
   obstacles: [], studyMethod: null, accomplish: [],
-  addBack: true, rollover: true, referralCode: '', name: '', generatedPlan: null,
+  addBack: true, rollover: true, name: '', generatedPlan: null,
 };
 
 // Onboarding is a ~30-screen flow — closing the tab or losing a connection
@@ -92,29 +93,34 @@ const DEFAULT_ANSWERS = {
 // full restart. Progress is now mirrored to localStorage on every change and
 // rehydrated on mount (keyed per account so switching users doesn't leak a
 // stranger's answers), so "foolproof" also means "can't lose your progress."
-function draftKey(account) { return `onboardingDraft:${account?.email || 'anon'}`; }
-function loadDraft(account) {
+// `preview` (Settings' dev-only "preview onboarding" flag) gets its own key
+// suffix — without it, previewing onboarding on a real signed-in account
+// would share the exact same draft key as that account's actual in-progress
+// onboarding (if they started it on another device and hadn't finished),
+// letting a preview session silently read or overwrite real draft data.
+function draftKey(account, preview) { return `onboardingDraft:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
+function loadDraft(account, preview) {
   try {
-    const raw = localStorage.getItem(draftKey(account));
+    const raw = localStorage.getItem(draftKey(account, preview));
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
     return parsed;
   } catch { return null; }
 }
-function saveDraft(account, stepIdx, answers) {
-  try { localStorage.setItem(draftKey(account), JSON.stringify({ stepIdx, answers })); } catch { /* storage full/unavailable — non-critical */ }
+function saveDraft(account, preview, stepIdx, answers) {
+  try { localStorage.setItem(draftKey(account, preview), JSON.stringify({ stepIdx, answers })); } catch { /* storage full/unavailable — non-critical */ }
 }
-function clearDraft(account) {
-  try { localStorage.removeItem(draftKey(account)); } catch { /* ignore */ }
+function clearDraft(account, preview) {
+  try { localStorage.removeItem(draftKey(account, preview)); } catch { /* ignore */ }
 }
 
-export default function Onboarding({ account, onComplete }) {
-  const draft = useMemo(() => loadDraft(account), [account]);
+export default function Onboarding({ account, onComplete, preview = false }) {
+  const draft = useMemo(() => loadDraft(account, preview), [account, preview]);
   const [stepIdx, setStepIdx] = useState(() => Math.min(draft?.stepIdx ?? 0, STEPS.length - 1));
   const [answers, setAnswers] = useState(() => (draft?.answers ? { ...DEFAULT_ANSWERS, ...draft.answers } : DEFAULT_ANSWERS));
 
-  React.useEffect(() => { saveDraft(account, stepIdx, answers); }, [account, stepIdx, answers]);
+  React.useEffect(() => { saveDraft(account, preview, stepIdx, answers); }, [account, preview, stepIdx, answers]);
 
   const stepKey = STEPS[stepIdx];
   const next = () => setStepIdx(i => Math.min(STEPS.length - 1, i + 1));
@@ -130,7 +136,7 @@ export default function Onboarding({ account, onComplete }) {
   }, [stepKey]);
 
   function finish(extra = {}) {
-    clearDraft(account);
+    clearDraft(account, preview);
     onComplete({ ...answers, ...extra });
   }
 
@@ -189,8 +195,6 @@ export default function Onboarding({ account, onComplete }) {
       content = <ToggleQuestionStep icon={<Repeat size={26} color={C.blueL} />} title="Rollover unused study time to the next day?" subtitle="Missed a session? We'll fold it into tomorrow's plan instead of losing it." value={answers.rollover} onChange={v => update({ rollover: v })} onNext={next} />; break;
     case 'notifications':
       content = <NotificationsStep onNext={next} />; break;
-    case 'referral':
-      content = <ReferralStep value={answers.referralCode} onChange={v => update({ referralCode: v })} onNext={next} />; break;
     case 'generating':
       content = <GeneratingStep profile={answers} onPlan={plan => update({ generatedPlan: plan })} onNext={next} />; break;
     case 'planReady':

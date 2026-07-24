@@ -1099,29 +1099,9 @@ export const SCHOOL_DATA = [
   { "name": "Saint Joseph's University", 'gpa': 3.5, 'sat': 1180, 'accept': 80.0, 'state': 'PA', 'type': 'Private', 'preHealthRank': 4, 'bsmd': false, 'clinicalProximity': 'Excellent', 'hasPreMedCommittee': true, 'region': 'Northeast', 'specialtyStrong': 'Pharmacy' },
 ];
 
-// ── EXTRACURRICULARS, COMPETITIONS & PROGRAMS ────────────────────────────────
-export const COMPETITIONS = [
-  { name:'Regeneron Science Talent Search', type:'Competition', desc:'The nation\'s oldest and most prestigious science research competition for high school seniors.', effort:'Elite', level:'National' },
-  { name:'Science Olympiad', type:'Competition', desc:'Team-based STEM competition covering biology, chemistry, physics, and engineering events.', effort:'Competitive', level:'National' },
-  { name:'National Merit Scholarship Program', type:'Scholarship', desc:'Academic scholarship competition based on PSAT/NMSQT performance.', effort:'Elite', level:'National' },
-  { name:'Coca-Cola Scholars Program', type:'Scholarship', desc:'$20,000 scholarship for graduating seniors based on leadership and community service.', effort:'Elite', level:'National' },
-  { name:'Model United Nations (MUN)', type:'Organization', desc:'Simulated UN debate and diplomacy — builds public speaking, research, and negotiation skills.', effort:'Open', level:'State' },
-  { name:'DECA', type:'Competition', desc:'Business, marketing, and finance competitions for high school students.', effort:'Open', level:'National' },
-  { name:'Future Business Leaders of America (FBLA)', type:'Organization', desc:'Student business organization with competitive events and leadership development.', effort:'Open', level:'National' },
-  { name:'National Speech & Debate Association', type:'Competition', desc:'Competitive speech and debate leagues — strong for developing argumentation and communication skills.', effort:'Competitive', level:'National' },
-  { name:'Habitat for Humanity', type:'Volunteering', desc:'Community service building homes — shows sustained commitment to service.', effort:'Open', level:'State' },
-  { name:'Student Government', type:'Organization', desc:'Elected leadership role within your school — direct evidence of leadership and initiative.', effort:'Open', level:'State' },
-  { name:'Jack Kent Cooke Foundation Scholarship', type:'Scholarship', desc:'Scholarship for high-achieving students from lower-income families.', effort:'Elite', level:'National' },
-  { name:'Technovation Girls', type:'Competition', desc:'Global technology and entrepreneurship competition for young women building mobile apps.', effort:'Competitive', level:'National' },
-  { name:'FIRST Robotics Competition', type:'Competition', desc:'Team-based robotics design and engineering competition with regional and world championships.', effort:'Competitive', level:'National' },
-  { name:'National History Day', type:'Competition', desc:'Research-based history competition culminating in papers, documentaries, or exhibits.', effort:'Competitive', level:'National' },
-  { name:'Congressional App Challenge', type:'Competition', desc:'District-level coding competition sponsored by members of Congress for student-built apps.', effort:'Open', level:'State' },
-  { name:'QuestBridge National College Match', type:'Scholarship', desc:'Connects high-achieving, low-income students with full four-year scholarships at top colleges.', effort:'Elite', level:'National' },
-  { name:'Pre-College Summer Research Programs', type:'Research', desc:'Summer research opportunities at local universities — builds research experience and mentor relationships.', effort:'Competitive', level:'State' },
-  { name:'Local Food Bank / Community Volunteering', type:'Volunteering', desc:'Ongoing local community service — depth and consistency matter more than a single event.', effort:'Open', level:'State' },
-  { name:'Key Club International', type:'Organization', desc:'Student-led service organization with local, district, and international leadership opportunities.', effort:'Open', level:'State' },
-  { name:'AP Scholar Awards', type:'Academic', desc:'College Board recognition for outstanding performance on multiple AP Exams.', effort:'Competitive', level:'National' },
-];
+// Extracurriculars/competitions/programs moved to src/data/opportunities.js (OPPORTUNITIES) —
+// a much larger, richer-schema database powering the Portfolio Overview tab's searchable
+// Opportunities & Competitions database (see src/components/OpportunitiesDatabase.jsx).
 
 // ── DIAGNOSTIC QUESTIONS ──────────────────────────────────────────────────────
 // Personality/work-style + real career-content diagnostic that sorts students

@@ -28,7 +28,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, COMPETITIONS, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
@@ -69,6 +69,8 @@ import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import PortfolioMetaBrain from './components/PortfolioMetaBrain';
+import PrepMetaBrain from './components/PrepMetaBrain';
+import OpportunitiesDatabase from './components/OpportunitiesDatabase';
 import PanelHero from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import PlansTab from './components/PlansTab';
@@ -76,7 +78,7 @@ import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch } from 
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
-import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from './components/onboarding/Onboarding';
+import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
@@ -1212,6 +1214,14 @@ export default function App({ account, onAccountChange }) {
   const [articleRead, setArticleRead] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
   const [articleScrollPct, setArticleScrollPct] = useState(0); // exact scroll position within the article step, for resuming mid-passage
+  // ── Prep Meta Brain (purpose:'prep') — lifted up here rather than owned locally by
+  // PrepMetaBrain.jsx because the component is mounted from two different places (inside the
+  // full-screen LessonPlayer overlay, and inside the Prep tab itself — LessonPlayer replaces
+  // the entire app shell in an early return, so it can't share a DOM node/component instance
+  // with the Prep tab's tree). Lifting open/messages here means the same conversation and
+  // open/closed state survives a student entering or exiting a lesson, instead of resetting.
+  const [prepBrainOpen, setPrepBrainOpen] = useState(false);
+  const [prepBrainMessages, setPrepBrainMessages] = useState([]);
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
@@ -1473,7 +1483,6 @@ export default function App({ account, onAccountChange }) {
   const [openNotes,setOpenNotes]=useState({});
 
   // ── Portfolio ───────────────────────────────────────────────────────────────
-  const [cF,setCF]=useState('All');
 
 
   // ── Calc ────────────────────────────────────────────────────────────────────
@@ -1559,6 +1568,11 @@ export default function App({ account, onAccountChange }) {
   const [sObstacles,setSObstacles]=useState([]);
   const [sStudyMethod,setSStudyMethod]=useState(null);
   const [sAccomplish,setSAccomplish]=useState([]);
+  // studyHours/onboardingTargetScore are both in ONBOARDING_FIELDS (studentProfile.js) — without
+  // an edit path here, a student who skipped or wants to update either one could never reach
+  // 100% onboarding completeness, since these were previously onboarding-only fields.
+  const [sStudyHours,setSStudyHours]=useState(null);
+  const [sTargetScore,setSTargetScore]=useState('');
 
   // ── Pomodoro ────────────────────────────────────────────────────────────────
   const [pomT,setPT]=useState(25*60);const [pomR,setPR]=useState(false);const [pomM,setPomM]=useState('focus');const [pomSessions,setPomSessions]=useState(0);
@@ -1820,6 +1834,11 @@ export default function App({ account, onAccountChange }) {
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
       onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
       generatedPlan:profile.generatedPlan||null,
+      // The onboarding toggleAddBack/toggleRollover steps promise these are used to shape the
+      // Plans tab's day-by-day roadmap (see applyRolloverPrefs/applyAddBackPrefs in
+      // masterPlanGenerator.js) and are editable later in Settings — persisting them here is what
+      // makes both of those promises real instead of the answers being silently dropped.
+      addBack:profile.addBack!==false, rollover:profile.rollover!==false,
       onboardingCompletedAt:Date.now(),
     });
     AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
@@ -2755,7 +2774,6 @@ export default function App({ account, onAccountChange }) {
 
     return result;
   }, [libFuse, lSrch, lCat, lType, lDiff, lFreeOnly, lSubTab, lSort, user]);
-  const fComp   = useMemo(()=>cF==='All'?COMPETITIONS:COMPETITIONS.filter(c=>c.type===cF||c.level===cF),[cF]);
   const hasCalc = cGPA&&cSAT;
   const calcR   = useMemo(()=>{
     if (!hasCalc) return [];
@@ -4956,27 +4974,12 @@ export default function App({ account, onAccountChange }) {
           <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
         </div>}
 
-        {/* Opportunities */}
+        {/* Opportunities & Competitions — searchable database, portfolio-ranked recommendations,
+            and a Meta Brain blurb (purpose:'portfolio') grounded in this student's real activity
+            log; see src/components/OpportunitiesDatabase.jsx. */}
         <div>
-          <div style={R({marginBottom:16})}>
-            <SL extra={{margin:0}}>Opportunities & Competitions</SL>
-            <select style={{...inp({width:'auto',marginLeft:'auto'})}} value={cF} onChange={e=>setCF(e.target.value)}>
-              {['All','Competition','Research','Scholarship','Volunteering','Organization','Academic','National','State'].map(t=><option key={t}>{t}</option>)}
-            </select>
-          </div>
-          <div style={G(2,12,{},isMobile)}>
-            {fComp.map((c,i)=>{const ec={Elite:C.rose,Competitive:C.amber,Open:C.green}[c.effort]||C.t2;return(
-              <motion.div key={i} whileHover={{borderColor:`${ec}30`,y:-1}} style={glass({padding:18,transition:'border-color .15s'})}>
-                <div style={R({marginBottom:10})}>
-                  <span style={pill(`${ec}18`,ec,{fontSize:10})}>{c.effort}</span>
-                  <span style={{marginLeft:'auto',fontSize:10,color:C.t3}}>{c.type} · {c.level}</span>
-                </div>
-                <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:5}}>{c.name}</div>
-                <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>{c.desc}</div>
-                <button style={{...btnSm(C.blueDim,{color:C.blueL,border:`1px solid ${C.blue}25`,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={async()=>{await addPortActivity({type:c.type,name:c.name,desc:c.desc});toast.success(`Added: ${c.name.slice(0,30)}`);}}><Plus size={12}/>Add to Portfolio</button>
-              </motion.div>
-            );})}
-          </div>
+          <SL extra={{marginBottom:16}}>Opportunities & Competitions</SL>
+          <OpportunitiesDatabase accent={accent} onAdd={addPortActivity} askMetaBrain={askPortfolioMetaBrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
         </div>
       </div>
     );
@@ -5776,7 +5779,7 @@ export default function App({ account, onAccountChange }) {
         <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Your Goals</SL>
-            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
+            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSStudyHours(user.studyHours||null);setSTargetScore(user.onboardingTargetScore||'');setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
           </div>
           {!sGoalsEditing?(
             onboardingRecap.length>0?(
@@ -5837,8 +5840,23 @@ export default function App({ account, onAccountChange }) {
                   ))}
                 </div>
               </div>
+              <div>
+                <SL>Weekly study time</SL>
+                <div style={CC({gap:6})}>
+                  {STUDY_HOURS_OPTIONS.map(o=>(
+                    <div key={o.value} onClick={()=>setSStudyHours(o.value)} style={{...glass2({padding:'10px 14px',cursor:'pointer',border:sStudyHours===o.value?`1px solid ${accent}60`:undefined}),display:'flex',alignItems:'center',gap:10}}>
+                      <div style={{width:16,height:16,borderRadius:'50%',border:`2px solid ${sStudyHours===o.value?accent:C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>{sStudyHours===o.value&&<div style={{width:8,height:8,borderRadius:'50%',background:accent}}/>}</div>
+                      <span style={{fontSize:12.5,color:C.t2}}>{o.label}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <SL>Target {user?.testTrack||'SAT'} score</SL>
+                <input type="number" style={inp({width:'auto'})} placeholder={user?.testTrack==='ACT'?'e.g. 32':'e.g. 1400'} value={sTargetScore} onChange={e=>setSTargetScore(e.target.value)}/>
+              </div>
               <div style={R({gap:10})}>
-                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
+                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours,onboardingTargetScore:sTargetScore?Number(sTargetScore):null});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
             </div>
@@ -5931,6 +5949,30 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
+        {/* Honors the "you can change this anytime in Settings" promise made during onboarding's
+            toggleAddBack/toggleRollover steps — see applyRolloverPrefs/applyAddBackPrefs in
+            masterPlanGenerator.js for how these actually shape the Plans tab's day-by-day plan. */}
+        <div data-tour="settings-deep-planprefs" style={glass({padding:18})}>
+          <div style={R({justifyContent:'space-between'})}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Add Extra Sessions Back</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>If you finish a day's plan early, tomorrow's load gets a little lighter.</div>
+            </div>
+            <div onClick={()=>saveUser({...user,addBack:!(user.addBack!==false)})} style={{width:44,height:24,borderRadius:12,background:user.addBack!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.addBack!==false?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.addBack!==false?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
+          <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:C.t1,fontFamily:C.FD}}>Rollover Missed Sessions</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:2}}>Missed tasks get folded into the next generated day instead of lost.</div>
+            </div>
+            <div onClick={()=>saveUser({...user,rollover:!(user.rollover!==false)})} style={{width:44,height:24,borderRadius:12,background:user.rollover!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.rollover!==false?accent:C.b2}`}}>
+              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.rollover!==false?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+            </div>
+          </div>
+        </div>
+
         <div data-tour="settings-deep-backup" style={glass({padding:18})}>
           <SL>Data & Backup</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>Export all your progress data as a JSON file. Useful for backup or transferring to a new device.</p>
@@ -6002,7 +6044,7 @@ export default function App({ account, onAccountChange }) {
     return(
       <ErrorBoundary>
         <Toaster position="bottom-right"/>
-        <Onboarding account={account} onComplete={()=>setPreviewOnboarding(false)}/>
+        <Onboarding account={account} preview onComplete={()=>setPreviewOnboarding(false)}/>
       </ErrorBoundary>
     );
   }
@@ -6041,6 +6083,7 @@ export default function App({ account, onAccountChange }) {
   if(activeLesson){
     const {lesson,unit}=activeLesson;
     const nextInfo=getNextLesson(lesson);
+    const lessonContent=LESSON_CONTENT[lesson.id];
     return(
       <ErrorBoundary>
         <Toaster position="top-right"/>
@@ -6056,6 +6099,18 @@ export default function App({ account, onAccountChange }) {
           onNextLesson={()=>{ if(nextInfo)openLesson(nextInfo.lesson,nextInfo.unit); }}
           hasNextLesson={!!nextInfo}
           accent={curPath?.accent||C.blue} m={isMobile}
+        />
+        {/* Fills the right-side gutter of the immersive lesson view with a click-away Prep Meta
+            Brain (purpose:'prep'), grounded in this exact lesson's content — see PrepMetaBrain.jsx. */}
+        <PrepMetaBrain
+          open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
+          messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
+          user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          accent={curPath?.accent||C.blue} isMobile={isMobile}
+          lesson={lesson} unit={unit}
+          articleSections={lessonContent?.article?.sections||[]}
+          keyTakeaways={lessonContent?.article?.keyTakeaways||[]}
+          objectives={lesson.objectives||[]}
         />
       </ErrorBoundary>
     );
@@ -6076,6 +6131,16 @@ export default function App({ account, onAccountChange }) {
           <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
           {(prepRenders[prepView]||tPath)()}
         </div>
+        {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
+            parity with how PortfolioMetaBrain is mounted once for the whole Portfolio tab below.
+            No specific lesson is open here, so it grounds in the pathway's unit list instead. */}
+        <PrepMetaBrain
+          open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
+          messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
+          user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          accent={pA} isMobile={isMobile}
+          unitTitles={(curPath?.units||[]).map(u=>u.title)}
+        />
       </div>
     );
   }
