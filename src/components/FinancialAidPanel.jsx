@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send } from 'lucide-react';
+import { Plus, Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import ScholarshipDatabase from './ScholarshipDatabase';
+import { showMetaBrainToast } from '../lib/metaBrainComments';
 
 const STATUSES = [
   { id: 'researching', label: 'Researching', color: C.t3 },
@@ -13,7 +15,7 @@ const STATUSES = [
   { id: 'denied', label: 'Denied', color: C.roseL },
 ];
 
-export default function FinancialAidPanel({ accent = C.blue }) {
+export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
   const [scholarships, setScholarships] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
@@ -52,13 +54,27 @@ export default function FinancialAidPanel({ accent = C.blue }) {
       const row = await createItem('scholarships', { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' });
       setScholarships(prev => [...prev, row]);
       setName(''); setAmount(''); setDeadline('');
-      toast.success('Added to your list');
+      showMetaBrainToast('scholarship_added', { name: row.name });
     } catch (err) { toast.error(err.message); }
   }
 
+  // Used by the ScholarshipDatabase search below — a curated-database pick or an AI-fallback
+  // result both land here as a plain { name, notes } row (see ScholarshipDatabase.jsx notesFor()).
+  async function addFromDatabase({ name: scholarName, notes }) {
+    const row = await createItem('scholarships', { name: scholarName, notes, status: 'researching' });
+    setScholarships(prev => [...prev, row]);
+    showMetaBrainToast('scholarship_added', { name: row.name });
+  }
+
   async function updateRow(id, patch) {
+    const prevRow = scholarships.find(s => s.id === id);
     setScholarships(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s));
-    try { await updateItem('scholarships', id, patch); } catch (err) { toast.error(err.message); }
+    try {
+      await updateItem('scholarships', id, patch);
+      if (patch.status === 'awarded' && prevRow && prevRow.status !== 'awarded') {
+        showMetaBrainToast('scholarship_awarded', { name: prevRow.name });
+      }
+    } catch (err) { toast.error(err.message); }
   }
 
   async function removeRow(id) {
@@ -111,8 +127,13 @@ export default function FinancialAidPanel({ accent = C.blue }) {
         )}
       </div>
 
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
+        <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
+        <ScholarshipDatabase accent={C.violet} onAdd={addFromDatabase} askMetaBrain={askMetaBrain}/>
+      </div>
+
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
-        <SectionTitle icon={Plus} color={accent}>Add a scholarship</SectionTitle>
+        <SectionTitle icon={Plus} color={accent}>Add a scholarship manually</SectionTitle>
         <form onSubmit={addScholarship} style={R({gap:10,flexWrap:'wrap'})}>
           <input style={inp({flex:1,minWidth:160})} placeholder="Scholarship name" value={name} onChange={e=>setName(e.target.value)} />
           <input type="number" min="0" style={inp({width:120})} placeholder="Amount ($)" value={amount} onChange={e=>setAmount(e.target.value)} />

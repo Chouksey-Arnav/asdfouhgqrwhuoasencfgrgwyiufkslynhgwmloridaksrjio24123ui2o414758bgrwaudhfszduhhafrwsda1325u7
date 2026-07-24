@@ -1,0 +1,241 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { Brain, X, Send, Loader2, Sparkles, RotateCcw } from 'lucide-react';
+import { C, glass, tint } from '../lib/theme';
+import { listItems } from '../lib/dataApi';
+import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
+import { renderMarkdown } from '../lib/renderMarkdown';
+
+const SUGGESTIONS = [
+  'Which colleges on my list actually fit me?',
+  "What's the single most urgent thing in my Portfolio right now?",
+  'Where are the biggest gaps in my portfolio?',
+  'Rank my upcoming deadlines by urgency',
+];
+
+const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders'];
+
+// The Portfolio tab's dedicated AI — a small pull-tab that opens a chat panel calling
+// /api/groq with purpose:'portfolio' EXCLUSIVELY (its own Groq key pool — see api/groq.js
+// and GROQ_SETUP.md). Deliberately self-contained rather than threading through App.jsx's
+// head-coach chat state: it fetches the full Portfolio resource lists itself so it always
+// reasons over live, complete data, and its API traffic never competes with or gets mixed
+// into the main Medabrain coach's key pool/rate limits.
+export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile, testScore = null, testType = null }) {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [portfolioData, setPortfolioData] = useState(null);
+  const listRef = useRef(null);
+  const lastSendRef = useRef(0);
+
+  const loadPortfolioData = useCallback(async () => {
+    setDataLoading(true);
+    try {
+      const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders] =
+        await Promise.all(RESOURCES.map(r => listItems(r).catch(() => [])));
+      setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders });
+    } catch {
+      // Non-fatal — the prompt builder treats missing arrays as empty, so a partial/failed
+      // fetch degrades to "nothing tracked yet" rather than crashing the chat.
+    } finally {
+      setDataLoading(false);
+    }
+  }, []);
+
+  function toggleOpen() {
+    const next = !open;
+    setOpen(next);
+    if (next) loadPortfolioData(); // refresh on every open, so it never answers from stale data
+  }
+
+  useEffect(() => {
+    listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' });
+  }, [messages, loading]);
+
+  async function send(text) {
+    const trimmed = (text ?? input).trim();
+    if (!trimmed || loading) return;
+    const now = Date.now();
+    if (now - lastSendRef.current < 2500) { toast('Give Meta Brain a moment before asking again.', { icon: '⏳' }); return; }
+    lastSendRef.current = now;
+
+    const userMsg = { role: 'user', content: trimmed };
+    const nextMsgs = [...messages, userMsg];
+    setMessages(nextMsgs);
+    setInput('');
+    setLoading(true);
+    try {
+      const sys = buildPortfolioSystemPrompt({
+        user, pathwayLabel, gradeLabel, testScore, testType,
+        colleges: portfolioData?.colleges || [], essays: portfolioData?.essays || [],
+        deadlines: portfolioData?.deadlines || [], scholarships: portfolioData?.scholarships || [],
+        activities: portfolioData?.activities || [], research: portfolioData?.research || [],
+        skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
+        recommenders: portfolioData?.recommenders || [],
+      });
+      const res = await fetch('/api/groq', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 800 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || `Meta Brain error (${res.status})`);
+      if (!data?.content) throw new Error("Meta Brain didn't return a usable answer. Try again.");
+      setMessages(m => [...m, { role: 'assistant', content: data.content }]);
+    } catch (err) {
+      setMessages(m => [...m, { role: 'error', content: err.message }]);
+      toast.error(err.message.slice(0, 100));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const counts = portfolioData ? [
+    portfolioData.colleges.length && `${portfolioData.colleges.length} college${portfolioData.colleges.length === 1 ? '' : 's'}`,
+    portfolioData.essays.length && `${portfolioData.essays.length} essay${portfolioData.essays.length === 1 ? '' : 's'}`,
+    portfolioData.deadlines.length && `${portfolioData.deadlines.length} deadline${portfolioData.deadlines.length === 1 ? '' : 's'}`,
+    portfolioData.scholarships.length && `${portfolioData.scholarships.length} scholarship${portfolioData.scholarships.length === 1 ? '' : 's'}`,
+  ].filter(Boolean).join(' · ') : '';
+
+  return (
+    <>
+      {/* Pull tab — a slim vertical handle on the right edge (desktop), a round FAB above the
+          bottom nav (mobile). Always visible so it reads as an ambient, always-available brain
+          rather than a menu item buried in a tab. */}
+      {!open && (isMobile ? (
+        <motion.button
+          onClick={toggleOpen} whileTap={{ scale: 0.94 }} aria-label="Ask Meta Brain"
+          style={{
+            position: 'fixed', right: 16, bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)', zIndex: 320,
+            width: 52, height: 52, borderRadius: '50%', border: `1px solid ${tint(C.violet, 0.5)}`,
+            background: `linear-gradient(135deg,${C.violet},${C.indigo})`, boxShadow: `0 8px 24px ${tint(C.violet, 0.5)}`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          }}>
+          <Brain size={22} color="#fff" />
+        </motion.button>
+      ) : (
+        <motion.button
+          onClick={toggleOpen} whileHover={{ x: -3 }} aria-label="Ask Meta Brain"
+          style={{
+            position: 'fixed', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 320,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+            padding: '14px 8px', borderRadius: '12px 0 0 12px', border: `1px solid ${tint(C.violet, 0.4)}`, borderRight: 'none',
+            background: `linear-gradient(160deg,${tint(C.violet, 0.9)},${tint(C.indigo, 0.9)})`,
+            boxShadow: `-4px 4px 20px ${tint(C.violet, 0.35)}`, cursor: 'pointer',
+          }}>
+          <Sparkles size={15} color="#fff" />
+          <span style={{ writingMode: 'vertical-rl', fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '.06em', fontFamily: C.FB }}>Ask Meta Brain</span>
+        </motion.button>
+      ))}
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <motion.div
+              key="backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setOpen(false)}
+              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 325 }}
+            />
+            <motion.div
+              key="panel"
+              initial={isMobile ? { y: '100%' } : { x: '100%' }}
+              animate={isMobile ? { y: 0 } : { x: 0 }}
+              exit={isMobile ? { y: '100%' } : { x: '100%' }}
+              transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+              style={isMobile ? {
+                position: 'fixed', left: 0, right: 0, bottom: 0, height: '82vh', zIndex: 330,
+                background: C.s0, borderTop: `1px solid ${tint(C.violet, 0.3)}`, borderRadius: '20px 20px 0 0',
+                display: 'flex', flexDirection: 'column', boxShadow: `0 -8px 40px rgba(0,0,0,0.6)`,
+              } : {
+                position: 'fixed', right: 0, top: 0, bottom: 0, width: 400, maxWidth: '92vw', zIndex: 330,
+                background: C.s0, borderLeft: `1px solid ${tint(C.violet, 0.3)}`,
+                display: 'flex', flexDirection: 'column', boxShadow: `-8px 0 40px rgba(0,0,0,0.6)`,
+              }}
+            >
+              {/* Header */}
+              <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(C.violet, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(C.violet, 0.4)}` }}>
+                    <Brain size={17} color="#fff" />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Meta Brain</div>
+                    <div style={{ fontSize: 10.5, color: C.t3 }}>Portfolio Intelligence · sees your full tracker</div>
+                  </div>
+                  {messages.length > 0 && (
+                    <button onClick={() => setMessages([])} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                      <RotateCcw size={15} />
+                    </button>
+                  )}
+                  <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                    <X size={17} />
+                  </button>
+                </div>
+                <div style={{ fontSize: 10, color: C.t4, marginTop: 8, minHeight: 14 }}>
+                  {dataLoading ? 'Reading your portfolio…' : counts ? `Currently grounded in: ${counts}` : 'Nothing tracked in Portfolio yet'}
+                </div>
+              </div>
+
+              {/* Messages */}
+              <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {messages.length === 0 && (
+                  <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02))`, border: `1px solid ${tint(C.violet, 0.22)}` }}>
+                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>
+                      Ask me anything about your application Portfolio — I read your full college list, essays, deadlines, financial aid, activities, research, skills, clinical hours, and recommenders to answer, not just a summary.
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {SUGGESTIONS.map(s => (
+                        <button key={s} onClick={() => send(s)} style={{
+                          textAlign: 'left', fontSize: 12, color: C.t1, background: 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${C.b1}`, borderRadius: 9, padding: '9px 12px', cursor: 'pointer', fontFamily: C.FB,
+                        }}>{s}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {messages.map((m, i) => (
+                  <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%' }}>
+                    {m.role === 'user' ? (
+                      <div style={{ background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '9px 13px', fontSize: 13, color: C.t1 }}>{m.content}</div>
+                    ) : m.role === 'error' ? (
+                      <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '9px 13px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
+                    ) : (
+                      <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '9px 13px' }}>
+                        <div style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {loading && (
+                  <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8, color: C.t3, fontSize: 12 }}>
+                    <Loader2 size={14} className="spin" /> Meta Brain is reading your portfolio…
+                  </div>
+                )}
+              </div>
+
+              {/* Composer */}
+              <form onSubmit={e => { e.preventDefault(); send(); }} style={{ padding: 14, borderTop: `1px solid ${C.b1}`, display: 'flex', gap: 8, flexShrink: 0 }}>
+                <input
+                  value={input} onChange={e => setInput(e.target.value)}
+                  placeholder="Ask about your portfolio…" disabled={loading}
+                  style={{ flex: 1, background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 10, padding: '10px 13px', color: C.t1, fontSize: 13, fontFamily: C.FB, outline: 'none' }}
+                />
+                <button type="submit" disabled={loading || !input.trim()} style={{
+                  width: 40, height: 40, borderRadius: 10, border: 'none', flexShrink: 0,
+                  background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
+                }}>
+                  <Send size={15} color="#fff" />
+                </button>
+              </form>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
