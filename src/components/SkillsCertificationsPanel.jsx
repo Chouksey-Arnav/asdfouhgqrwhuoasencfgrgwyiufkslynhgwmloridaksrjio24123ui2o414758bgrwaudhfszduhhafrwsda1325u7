@@ -4,6 +4,7 @@ import { Plus, Trash2, BadgeCheck, ExternalLink, AlertTriangle, ShieldCheck, Cal
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import { showMetaBrainToast } from '../lib/metaBrainComments';
 
 // New Portfolio resource — part of the "crazy in-depth" database expansion (see
 // supabase/migrations/0001_portfolio_credibility_expansion.sql). Certifications like CPR/BLS/EMT
@@ -36,7 +37,7 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
       });
       setEntries(prev => [row, ...prev]);
       setName(''); setIssuingBody(''); setEarnedDate(''); setExpiryDate(''); setCertificateUrl('');
-      toast.success(`Added ${row.name}`);
+      showMetaBrainToast('skill_added', { name: row.name });
     } catch (err) { toast.error(err.message); }
   }
 

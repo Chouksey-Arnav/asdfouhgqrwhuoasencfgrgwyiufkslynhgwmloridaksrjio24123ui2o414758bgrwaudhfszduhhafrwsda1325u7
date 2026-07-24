@@ -6,6 +6,7 @@ import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint } fr
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import { showMetaBrainToast } from '../lib/metaBrainComments';
 
 const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 // Every activity type gets its own colour so the logged list reads as a
@@ -63,7 +64,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       });
       setActivities(prev => [...prev, row]);
       setDraft(emptyActivity());
-      toast.success('Activity added');
+      showMetaBrainToast('activity_added', { position: row.position });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -83,7 +84,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       });
       setAwards(prev => [...prev, row]);
       setAwardDraft(emptyAward());
-      toast.success('Award added');
+      showMetaBrainToast('award_added', { title: row.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -101,7 +102,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       const row = await createItem('gpa_entries', { ...gpaDraft, gpa: Number(gpaDraft.gpa) });
       setGpaEntries(prev => [...prev, row]);
       setGpaDraft(emptyGpa());
-      toast.success('GPA entry added');
+      showMetaBrainToast('gpa_added');
     } catch (err) { toast.error(err.message); }
   }
 
@@ -137,7 +138,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
 
   function exportPdf() {
     exportPortfolioResume(null, activities, awards, gpaEntries);
-    toast.success('Resume PDF downloaded');
+    showMetaBrainToast('resume_exported');
     onResumeExported?.();
   }
 

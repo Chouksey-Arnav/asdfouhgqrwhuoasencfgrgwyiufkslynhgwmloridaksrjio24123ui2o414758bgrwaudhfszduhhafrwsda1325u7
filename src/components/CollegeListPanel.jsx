@@ -6,6 +6,7 @@ import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } fr
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import CollegeAutocomplete from './CollegeAutocomplete';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import { showMetaBrainToast } from '../lib/metaBrainComments';
 
 const CATEGORIES = [
   { id: 'reach', label: 'Reach', color: C.rose },
@@ -73,7 +74,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
     setColleges(prev => [...prev, college]);
     setNewName('');
     setCategoryTouched(false);
-    toast.success(`${college.name} added to your list`);
+    showMetaBrainToast('college_added', { name: college.name });
     try {
       const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
         createItem('college_checklist_items', { college_id: college.id, label, sort_order: i })

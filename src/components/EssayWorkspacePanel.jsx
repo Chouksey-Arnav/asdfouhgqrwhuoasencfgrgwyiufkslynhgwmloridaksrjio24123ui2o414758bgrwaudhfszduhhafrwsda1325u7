@@ -4,6 +4,7 @@ import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2 } fr
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import { showMetaBrainToast } from '../lib/metaBrainComments';
 
 const STATUSES = [
   { id: 'not_started', label: 'Not Started', color: C.t3 },
@@ -83,7 +84,7 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
       setEssays(prev => [...prev, essay]);
       setNewTitle('');
       setSelected(essay);
-      toast.success('Essay created');
+      showMetaBrainToast('essay_started', { title: essay.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -100,8 +101,14 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   }
 
   async function patchEssay(id, patch) {
+    const prevEssay = essays.find(e => e.id === id);
     setEssayLocal(id, patch);
-    try { await updateItem('essays', id, patch); } catch (err) { toast.error(err.message); }
+    try {
+      await updateItem('essays', id, patch);
+      if (patch.status === 'final' && prevEssay && prevEssay.status !== 'final') {
+        showMetaBrainToast('essay_completed', { title: prevEssay.title });
+      }
+    } catch (err) { toast.error(err.message); }
   }
 
   async function saveVersion() {

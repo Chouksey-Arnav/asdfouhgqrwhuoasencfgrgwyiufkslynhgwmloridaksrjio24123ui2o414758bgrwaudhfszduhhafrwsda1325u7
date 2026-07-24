@@ -68,6 +68,7 @@ import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
+import PortfolioMetaBrain from './components/PortfolioMetaBrain';
 import PanelHero from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import PlansTab from './components/PlansTab';
@@ -1187,6 +1188,13 @@ export default function App({ account, onAccountChange }) {
   const [clinicalHoursTotal, setClinicalHoursTotal] = useState(0);
   const [clinicalHoursEntries, setClinicalHoursEntries] = useState([]);
   const [recommendersCount, setRecommendersCount] = useState(0);
+  // Lightweight portfolio-breadth counts so the head Medabrain coach's system prompt (see
+  // buildCoachSystemPrompt) can reference them too — actual full-detail reasoning over these
+  // resources lives in the Portfolio tab's "Ask Meta Brain" sidebar (purpose:'portfolio'), which
+  // fetches the complete lists itself rather than relying on these summary counts.
+  const [scholarshipCount, setScholarshipCount] = useState(0);
+  const [researchCount, setResearchCount] = useState(0);
+  const [skillsCount, setSkillsCount] = useState(0);
   const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
   const [questTick, setQuestTick] = useState(0);
@@ -1710,6 +1718,12 @@ export default function App({ account, onAccountChange }) {
         setRecommendersCount((recs||[]).length);
         setMmiCasperCount((sessions||[]).filter(s=>s.mode==='mmi'||s.mode==='casper').length);
       }catch(e){/* non-critical */}
+      try{
+        const [scholarships,research,skills]=await Promise.all([listItems('scholarships'),listItems('research_experience'),listItems('skills_certifications')]);
+        setScholarshipCount((scholarships||[]).length);
+        setResearchCount((research||[]).length);
+        setSkillsCount((skills||[]).length);
+      }catch(e){/* non-critical — portfolio-breadth counts for the coach prompt only */}
     })();
   },[tab,user]);
 
@@ -2192,6 +2206,18 @@ export default function App({ account, onAccountChange }) {
     return d.content;
   }
 
+  // Used by the Financial Aid tab's scholarship-database search (ScholarshipDatabase.jsx) when a
+  // searched scholarship isn't in the curated list. Routes through purpose:'portfolio' — its own
+  // key pool, same as the rest of Portfolio's AI — but with a lightweight system prompt since it's
+  // answering from general knowledge, not reasoning over the student's tracked data (that deeper,
+  // grounded reasoning is what the Ask Meta Brain sidebar / buildPortfolioSystemPrompt is for).
+  async function askPortfolioMetaBrain(question) {
+    return callGroqAI(
+      "You are Meta Brain, MedSchoolPrep's Portfolio Intelligence specialist. You do not have web access — answer only from general knowledge, and say so plainly if you don't actually recognize something instead of inventing details.",
+      question, 400, null, 'guide', 'portfolio',
+    );
+  }
+
   // Moves a touched thread to the top of the local sidebar list and stamps its
   // updatedAt, mirroring what DB.addCoachMessage() already did in IndexedDB —
   // avoids a full re-fetch of the thread list on every message.
@@ -2227,6 +2253,9 @@ export default function App({ account, onAccountChange }) {
         recommendersCount,
         collegeCount:appCounts.colleges,
         essayCount:appCounts.essays,
+        scholarshipCount,
+        researchCount,
+        skillsCount,
         streak,
         planSummary:summarizePlanForCoach(user?.masterPlan),
       });
@@ -5946,11 +5975,11 @@ export default function App({ account, onAccountChange }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
-    deadlines:()=><DeadlinesPanel accent={portC.deadlines}/>,
+    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMetaBrain={askPortfolioMetaBrain}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
-    aid:()=><FinancialAidPanel accent={portC.aid}/>,
+    aid:()=><FinancialAidPanel accent={portC.aid} askMetaBrain={askPortfolioMetaBrain}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
     research:()=><ResearchExperiencePanel accent={portC.research}/>,
     skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
@@ -5963,6 +5992,12 @@ export default function App({ account, onAccountChange }) {
       <div>
         <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
         {(portfolioRenders[portfolioView]||tPort)()}
+        <PortfolioMetaBrain
+          user={user} pathwayLabel={curPath?.label||'college prep'}
+          gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          testScore={user?.onboardingCurrentScore||null} testType={user?.testTrack||null}
+          isMobile={isMobile}
+        />
       </div>
     );
   }

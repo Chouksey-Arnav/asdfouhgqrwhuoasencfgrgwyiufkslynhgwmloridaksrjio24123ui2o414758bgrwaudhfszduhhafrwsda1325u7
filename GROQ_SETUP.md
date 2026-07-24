@@ -159,6 +159,35 @@ check off, and keep extending.
   whichever tier answers a given chat message — all know the same plan the Plans tab shows, without
   a separate integration per tier.
 
+## Portfolio Meta Brain — the `purpose:'portfolio'` key finally in use
+
+The `portfolio` purpose/key pool (table above) existed server-side in `api/groq.js` for a while
+before anything on the client actually called it. It now powers three separate surfaces, all
+routed exclusively through `purpose:'portfolio'` — none of them use the shared coach pool:
+
+- **Ask Meta Brain** (`src/components/PortfolioMetaBrain.jsx`) — a slide-out panel reachable from
+  a small pull-tab on the right edge of the Portfolio tab (desktop) or a floating button above the
+  bottom nav (mobile). Self-contained: it fetches the student's full colleges/essays/deadlines/
+  scholarships/activities/research/skills/clinical-hours/recommenders lists itself on open and
+  grounds every answer in `buildPortfolioSystemPrompt()` (`src/lib/studentProfile.js`) — a
+  deliberately more detailed prompt than the head coach's `buildCoachSystemPrompt`, since this
+  surface exists specifically to reason over the full tracker rather than summary counts.
+- **Scholarship database AI fallback** (`src/components/ScholarshipDatabase.jsx`, via
+  `askPortfolioMetaBrain()` in `App.jsx`) — when a search matches nothing in the curated database
+  (`src/data/scholarships.js`), a button offers to ask Meta Brain from general knowledge, clearly
+  labeled unverified/AI-generated in the UI rather than presented as a database result.
+- **Deadlines priority summary** (`src/components/DeadlinesPanel.jsx`) — a short, cached
+  (`src/lib/aiCache.js`, keyed per-day and per-list-shape) read on what's most urgent, grounded in
+  the student's real upcoming deadlines list embedded directly in the prompt. The actual suggested
+  *dates* come from `src/lib/autoDeadlines.js`, which is deliberately non-AI/deterministic (derived
+  from college EA/ED/RD/aid dates and tracked scholarship deadlines already entered elsewhere in
+  Portfolio, plus FAFSA's well-known Oct 1 opening and the AP/IB exam window) — a wrong date is a
+  missed application, not a stylistic miss, so it's never left to a model to guess.
+
+Lighter, template-based reactions after a student updates something in Portfolio (added a college,
+logged clinical hours, etc.) are handled separately by `src/lib/metaBrainComments.jsx` and are
+**not** Groq calls — see the comment at the top of that file for why.
+
 ## Flashcard generation (no Groq, no network)
 
 Flashcard decks are generated entirely client-side by `src/lib/noteFlashcardEngine.js`
