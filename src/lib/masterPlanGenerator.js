@@ -554,13 +554,13 @@ function heuristicDays(plan, fromDate, numDays, catalog, user) {
   return days;
 }
 
-function buildDayChunkSystemPrompt(numDays, catalogText) {
+function buildDayChunkSystemPrompt(numDays, catalogText, prefsNote = '') {
   return `You are Medabrain's Oracle, continuing to build a student's day-by-day study plan inside MedSchoolPrep. Their full roadmap already exists — your job right now is to fill in SPECIFIC, concrete daily tasks for a ${numDays}-day window, fully consistent with the roadmap phase/week themes given below. This should read like an actual day planner a great advisor handed them — not vague ("study science") but specific ("Quiz Library → Physical Sciences → 12 questions on acid-base chemistry, tied to your Chemistry for Medicine unit").
 
 ${AGE_APPROPRIATE_RULES}
 - Balance across the ${numDays} days: mix Prep (pathway lessons/quizzes/flashcards/library/coach) and Portfolio (colleges/essays/deadlines/activities/clinical hours/research/recommenders/interview prep) — do not make every day only test prep.
 - Weekends should be lighter — a shorter catch-up, reflection, or reading day, not a full load.
-- Vary task count 3-5 per day depending on how busy that day naturally should be.
+- Vary task count 3-5 per day depending on how busy that day naturally should be.${prefsNote}
 
 Here is the real MedSchoolPrep resource catalog to ground tasks in:
 ${catalogText}
@@ -600,6 +600,46 @@ function repairDays(parsed, fallbackDays, plan, catalog) {
   });
 }
 
+// ── Onboarding "addBack"/"rollover" prefs — real deterministic behavior ────
+// Onboarding.jsx's toggleAddBack/toggleRollover steps promise two things
+// ("if you study more than planned, we'll count it toward tomorrow too" /
+// "missed a session? we'll fold it into tomorrow's plan") — both are applied
+// here as plain post-processing on a freshly-generated day chunk, not left as
+// a prompt hint the model might silently ignore. Both are pure functions over
+// plain plan-day data, so they're testable independent of the LLM entirely.
+
+// Rollover: carries not-yet-`done` tasks from the last couple of already-
+// generated days into the first day of the new chunk (deduped by title, fresh
+// ids, `rolledOverFrom` pointing at the original task) — capped at 2 so a
+// student who's fallen behind doesn't get an ever-growing pile-up.
+export function applyRolloverPrefs(days, priorDays, prefs) {
+  if (!prefs?.rollover || !priorDays?.length || !days?.length) return days;
+  const missed = priorDays.flatMap(d => d.tasks.filter(t => !t.done)).slice(-2);
+  if (!missed.length) return days;
+  const [first, ...rest] = days;
+  const existingTitles = new Set(first.tasks.map(t => t.title));
+  const rolled = missed
+    .filter(t => !existingTitles.has(t.title))
+    .map((t, i) => ({ ...t, id: `${first.date}-rollover${i}`, done: false, doneAt: null, xpAwarded: false, rolledOverFrom: t.id }));
+  if (!rolled.length) return days;
+  return [{ ...first, tasks: [...rolled, ...first.tasks] }, ...rest];
+}
+
+// Add-back: when the most recent already-generated day was fully completed
+// (every task done — the "studied more than planned" signal available from
+// this data model), trims one task off the new chunk's first day as a lighter
+// reward day. Never trims below a 3-task floor, so a light day doesn't become
+// an empty one.
+export function applyAddBackPrefs(days, priorDays, prefs) {
+  if (!prefs?.addBack || !priorDays?.length || !days?.length) return days;
+  const lastDay = priorDays[priorDays.length - 1];
+  const overCompleted = lastDay?.tasks?.length > 0 && lastDay.tasks.every(t => t.done);
+  if (!overCompleted) return days;
+  const [first, ...rest] = days;
+  if (first.tasks.length <= 3) return days;
+  return [{ ...first, tasks: first.tasks.slice(0, -1) }, ...rest];
+}
+
 // Generates the next `numDays` of daily tasks starting the day after
 // plan.daysGeneratedThrough (or `fromDate` for the very first chunk).
 export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = 7) {
@@ -612,14 +652,23 @@ export async function generateDayChunk(plan, user, liveSignals, catalog, fromDat
     ...d,
     tasks: d.tasks.map(t => ({ ...t, ...resolveTaskResource(t, index, { seedKey: d.date, weakestCategory: liveSignals?.weakestCategory }) })),
   }));
+  // Applied identically regardless of whether the AI call below succeeds or
+  // falls back — the rollover/addBack promise shouldn't depend on that.
+  const priorDays = (plan?.days || []).filter(d => d.date < fromDate).slice(-2);
+  const prefs = { rollover: user?.rollover, addBack: user?.addBack };
+  const applyPrefs = (days) => applyAddBackPrefs(applyRolloverPrefs(days, priorDays, prefs), priorDays, prefs);
+  const prefsNote = [
+    prefs.rollover ? ' This student opted into "rollover" — if a note below mentions catching up, keep today\'s load reasonable since rolled-over tasks are added separately.' : '',
+    prefs.addBack ? ' This student opted into "add back" — if they\'ve been finishing early, today can be slightly lighter.' : '',
+  ].join('');
   try {
     const dayTable = fallback.map(d => `Day ${d.dayIndex}: ${d.date} (${d.weekday}) — Week ${d.weekNumber}, phase "${phaseForWeek(plan, d.weekNumber)?.title || ''}", week theme: "${weeklyThemeForWeek(plan, d.weekNumber)?.theme || d.theme}"`).join('\n');
-    const system = buildDayChunkSystemPrompt(numDays, catalog.text);
+    const system = buildDayChunkSystemPrompt(numDays, catalog.text, prefsNote);
     const userMsg = `Roadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals)}\n\nDays to fill in:\n${dayTable}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
     const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 5500, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
-    return linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback);
+    return applyPrefs(linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback));
   } catch {
-    return linkAll(fallback);
+    return applyPrefs(linkAll(fallback));
   }
 }
 
