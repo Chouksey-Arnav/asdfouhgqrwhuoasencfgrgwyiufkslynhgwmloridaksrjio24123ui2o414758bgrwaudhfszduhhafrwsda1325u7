@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Sparkles, Target, Flag, TrendingUp, ChevronDown, CheckCircle2, Circle, RefreshCw,
-  CalendarClock, Map, Clock, ArrowRight, ShieldAlert, BookOpen, Layers, Layers3,
+  CalendarClock, Map, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
   MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
-  FlaskConical, UserCheck, Moon, Mic, Compass,
+  FlaskConical, UserCheck, Moon, Mic, Compass, X,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, R, CC, G, pill } from '../lib/theme';
 import { awardXP, BONUS_COPY } from '../lib/rewards';
 import { celebrateXP, celebrateBonusXP, celebrateJackpot } from '../lib/celebrate';
+import * as speech from '../lib/speech';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, resolveAllTaskLinks,
+  AUTO_VERIFIABLE_KINDS,
 } from '../lib/masterPlanGenerator';
 
 const PILLAR_META = {
@@ -119,9 +121,15 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     }
   }
 
+  // Manual toggling only ever applies to task types the app has no way to verify happened (see
+  // AUTO_VERIFIABLE_KINDS) — quiz/lesson/deck tasks are checked off automatically, for real, from
+  // inside those features (App.jsx's applyPlanAutoComplete), and TaskRow below never renders a
+  // clickable checkbox for them. toggleTaskDone itself is also exploit-proof now regardless
+  // (xpAwarded is a one-way flag), but keeping the checkbox off those types entirely is what
+  // actually makes "check it, uncheck it, check it again" impossible rather than just unrewarding.
   function handleToggleTask(date, taskId) {
-    const { plan: updated, justCompleted } = toggleTaskDone(plan, date, taskId);
-    if (!justCompleted) { saveUser({ ...user, masterPlan: updated }); return; }
+    const { plan: updated, justEarnedXP } = toggleTaskDone(plan, date, taskId);
+    if (!justEarnedXP) { saveUser({ ...user, masterPlan: updated }); return; }
     const { finalXP, tier } = awardXP(6);
     saveUser({ ...user, masterPlan: updated, xp: (user?.xp || 0) + finalXP });
     toast.success(BONUS_COPY[tier] ? BONUS_COPY[tier](finalXP) : `+${finalXP} XP`, { duration: 1800 });
@@ -151,6 +159,8 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   return (
     <div style={CC({ gap: 22 })}>
       <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} />
+
+      <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} accent={accent} />
 
       <div style={{ display: 'flex', gap: 6 }}>
         {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: Map }].map(v => {
@@ -250,6 +260,102 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate }) {
   );
 }
 
+// ── Dictation — "tell Medabrain more" ─────────────────────────────────────
+// Same Web Speech API (src/lib/speech.js) the Live Voice Interview uses for its mic input,
+// reused here so anything the student says gets folded straight into the plan: saved to
+// user.planNotes (read by buildProfileFactsText in masterPlanGenerator.js, so every future
+// generation — extend, regenerate, the next rolling day chunk — sees it too, not just this one
+// rebuild) and immediately used to refresh the roadmap right now, so it's visibly "in" the plan
+// rather than a note that silently waits for the next scheduled rebuild.
+function PlanVoiceNotes({ user, saveUser, plan, liveSignals, accent }) {
+  const [draft, setDraft] = useState('');
+  const [listening, setListening] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const recognizerRef = useRef(null);
+  const sttSupported = speech.isSTTSupported();
+  const notes = user?.planNotes || [];
+
+  useEffect(() => () => { recognizerRef.current?.stop?.(); }, []);
+
+  function toggleMic() {
+    if (!sttSupported) return;
+    if (listening) { recognizerRef.current?.stop(); return; }
+    const rec = speech.createRecognizer({
+      onResult: (t) => setDraft(t),
+      onEnd: () => setListening(false),
+      onError: (e) => { setListening(false); if (e?.error && e.error !== 'no-speech' && e.error !== 'aborted') toast.error('Mic issue — you can type instead.'); },
+    });
+    if (!rec) return;
+    recognizerRef.current = rec;
+    rec.start();
+    setListening(true);
+  }
+
+  async function submit() {
+    const text = draft.trim();
+    if (!text || submitting) return;
+    recognizerRef.current?.stop(); setListening(false);
+    setSubmitting(true);
+    const nextNotes = [...notes, text].slice(-8); // bounded so the profile-facts prompt never grows unbounded
+    const updatedUser = { ...user, planNotes: nextNotes };
+    try {
+      const updated = await regenerateRoadmap(plan, updatedUser, liveSignals || {});
+      saveUser({ ...updatedUser, masterPlan: updated });
+      toast.success("Got it — Medabrain folded that into your plan.");
+    } catch {
+      saveUser(updatedUser); // note is kept even if the live refresh call fails — it'll be included next time the plan regenerates
+      toast.error("Saved — but couldn't refresh your roadmap right now. It'll be included next time your plan updates.");
+    }
+    setDraft('');
+    setSubmitting(false);
+  }
+
+  function removeNote(i) {
+    saveUser({ ...user, planNotes: notes.filter((_, idx) => idx !== i) });
+  }
+
+  return (
+    <div style={glass({ padding: 16 })}>
+      <div style={R({ gap: 8, marginBottom: 8 })}>
+        <Mic size={13} color={accent} />
+        <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>Tell Medabrain More</span>
+      </div>
+      <p style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, margin: '0 0 12px' }}>
+        Anything your plan should account for — an upcoming trip, a new goal, a subject you want more of — say it or type it, and it's folded straight into your roadmap.
+      </p>
+      {notes.length > 0 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          {notes.map((n, i) => (
+            <span key={i} style={{ ...pill('rgba(255,255,255,0.04)', C.t2, { fontSize: 10.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, maxWidth: 320 }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n}</span>
+              <button onClick={() => removeNote(i)} style={{ all: 'unset', cursor: 'pointer', display: 'flex', opacity: 0.6 }} aria-label="Remove note"><X size={10} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+      <textarea
+        style={{ width: '100%', minHeight: 60, resize: 'vertical', background: C.s2, border: `1px solid ${listening ? C.green : C.b1}`, borderRadius: 10, padding: '10px 12px', color: C.t1, fontSize: 12.5, lineHeight: 1.55, fontFamily: C.FB, outline: 'none', boxSizing: 'border-box' }}
+        placeholder={listening ? 'Listening — speak what you want added…' : sttSupported ? 'Tap the mic and speak, or type here…' : 'Type what you want added to your plan…'}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+      />
+      <div style={R({ gap: 8, marginTop: 10 })}>
+        {sttSupported && (
+          <button onClick={toggleMic} disabled={submitting}
+            style={{ ...btnSm(listening ? C.rose : 'rgba(255,255,255,0.04)', { color: listening ? '#fff' : C.t2, border: listening ? 'none' : `1px solid ${C.b1}` }), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <Mic size={12} />{listening ? 'Stop' : 'Speak'}
+          </button>
+        )}
+        <button onClick={submit} disabled={!draft.trim() || submitting}
+          style={{ ...btnSm(accent, { color: '#fff' }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: !draft.trim() || submitting ? 0.55 : 1 }}>
+          {submitting ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={12} />}
+          {submitting ? 'Updating plan…' : 'Add to My Plan'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── This Week / rolling day-by-day view ──────────────────────────────────
 function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending }) {
   const today = todayStr();
@@ -344,6 +450,13 @@ function TaskRow({ task, onToggle, onJump }) {
   const meta = PILLAR_META[task.pillar] || PILLAR_META.prep;
   const Icon = TYPE_ICON[task.type] || BookOpen;
   const canJump = task.resourceTab && task.resourceView;
+  // Accountability: quiz/lesson/deck tasks can only ever be checked off by actually doing them —
+  // App.jsx's applyPlanAutoComplete flips `done` (and `autoVerified`) the moment the real quiz is
+  // submitted, lesson verified, or deck session finished. No checkbox is rendered for these at
+  // all, so there's no self-report path to game — see AUTO_VERIFIABLE_KINDS in
+  // masterPlanGenerator.js. Everything else (activities, essays, deadlines, reflection, rest…)
+  // has no in-app "this really happened" signal, so it stays an honest, manually-toggled checkbox.
+  const autoVerify = AUTO_VERIFIABLE_KINDS.has(task.resourceKind);
   // Label the link with the EXACT resource it opens ("Open: Linear Equations
   // Practice") so the student knows the click lands on the real thing, not a
   // generic tab. Specific resources (quiz/lesson/deck/article) read "Open:",
@@ -354,9 +467,16 @@ function TaskRow({ task, onToggle, onJump }) {
     : (task.resourceLabel ? `Go to ${task.resourceLabel}` : 'Open');
   return (
     <div style={{ ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }), opacity: task.done ? 0.55 : 1, borderLeft: `2px solid ${meta.color}45` }}>
-      <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', marginTop: 1, flexShrink: 0 }} aria-label="Toggle task done">
-        {task.done ? <CheckCircle2 size={17} color={C.green} /> : <Circle size={17} color={C.t3} />}
-      </button>
+      {autoVerify ? (
+        <span title={task.done ? 'Verified automatically — you actually did this' : 'Checks off automatically when you complete it — no self-report'}
+          style={{ marginTop: 1, flexShrink: 0, display: 'flex', cursor: 'default' }} aria-label={task.done ? 'Verified' : 'Verifies automatically'}>
+          {task.done ? <ShieldCheck size={17} color={C.green} /> : <ShieldCheck size={17} color={C.t4} style={{ opacity: 0.5 }} />}
+        </span>
+      ) : (
+        <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', marginTop: 1, flexShrink: 0 }} aria-label="Toggle task done">
+          {task.done ? <CheckCircle2 size={17} color={C.green} /> : <Circle size={17} color={C.t3} />}
+        </button>
+      )}
       <div style={{ width: 22, height: 22, borderRadius: 6, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
         <Icon size={11} color={meta.color} />
       </div>
@@ -365,6 +485,9 @@ function TaskRow({ task, onToggle, onJump }) {
         {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
         <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
+          {autoVerify && (task.done
+            ? <span style={pill(C.greenDim || `${C.green}18`, C.green, { fontSize: 9 })}><ShieldCheck size={9} style={{ marginRight: 3, verticalAlign: -1 }} />Verified</span>
+            : <span style={pill('rgba(255,255,255,0.04)', C.t4, { fontSize: 9 })}>Auto-verifies</span>)}
           {task.estMinutes > 0 && <span style={R({ gap: 3 })}><Clock size={10} color={C.t3} /><span style={{ fontSize: 10, color: C.t3 }}>{task.estMinutes}m</span></span>}
           {canJump && (
             <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }} onClick={onJump} aria-label="Open this task's resource"

@@ -11,6 +11,7 @@ import { Mic, MicOff, Square, Play, Volume2, VolumeX, Send, Loader2, Sparkles, R
 import { C, glass, glass2, btn, btnG, R, CC, pill } from '../lib/theme';
 import * as speech from '../lib/speech';
 import * as DB from '../lib/db';
+import { parseInterviewScore } from '../lib/interviewScore';
 
 // A rotating pool of focus areas the interviewer can draw on — passed as *inspiration*, with an
 // explicit instruction to craft its own fresh questions and never repeat, so no two sessions feel
@@ -28,11 +29,27 @@ function pickFocus(n = 6) {
   return shuffled.slice(0, n);
 }
 
+// Interviewer-style presets, chosen by the student on the idle screen before starting — lets the
+// same simulator serve "I just want a gentle confidence-building round" and "push me, I want a
+// real stress-test" without needing separate modes. Purely a tone instruction folded into the
+// system prompt (buildInterviewerPrompt) — the age-appropriateness rules and one-question-at-a-
+// time flow are identical across all three; only how much the interviewer pushes back changes.
+export const INTERVIEW_STYLES = [
+  { id: 'warm', label: 'Warm & Encouraging', desc: 'Gentle and supportive — ideal for a first practice round.' },
+  { id: 'balanced', label: 'Balanced & Realistic', desc: 'Professional and fair, like a real admissions interviewer.' },
+  { id: 'rigorous', label: 'Rigorous & Challenging', desc: 'Pushes harder with tougher follow-ups — a real stress-test.' },
+];
+const STYLE_TONE = {
+  warm: 'TONE FOR THIS SESSION: Be extra warm, gentle, and encouraging — this is a confidence-building session. Give generous, affirming acknowledgment before each next question, and let shorter answers pass with a gentle nudge rather than repeated pressure.',
+  balanced: 'TONE FOR THIS SESSION: Be professional, courteous, and realistic — like an actual, fair college admissions interviewer. Warm but measured, not gushing; acknowledge genuinely without over-praising.',
+  rigorous: 'TONE FOR THIS SESSION: Be a rigorous, higher-expectations interviewer. Press harder with pointed, specific follow-ups whenever an answer is vague, generic, or thin ("What did YOU specifically do, step by step?"), and hold a real bar for depth and evidence before moving on. Still respectful and never unkind — a teenager should feel challenged, never attacked — but do not let a weak answer slide unchallenged the way a warmer session would.',
+};
+
 // The interviewer persona + rules of engagement. Deliberately detailed: it defines who is being
 // interviewed (a 14–18-year-old, college-admissions context — NOT med/grad school), the tone, the
 // one-question-at-a-time cadence, how to acknowledge and adapt, hard age-appropriateness limits,
 // and the fact that its lines are spoken aloud (so: no markdown, no lists, natural spoken phrasing).
-function buildInterviewerPrompt({ pathwayLabel, studentName, focus, sessionSeed }) {
+function buildInterviewerPrompt({ pathwayLabel, studentName, focus, sessionSeed, style }) {
   return `You are "Medabrain," a warm, experienced college-admissions and scholarship interviewer conducting a LIVE practice interview with a high-school student${studentName ? ` named ${studentName}` : ''} (roughly 14–18 years old). Their long-term interest area is: ${pathwayLabel}. This is undergraduate-admissions and scholarship interview practice — NEVER treat it as medical school, graduate school, residency, MMI, or CASPer; never use clinical vignettes or ask about topics a teenager wouldn't have lived yet.
 
 YOUR JOB, TURN BY TURN:
@@ -41,7 +58,9 @@ YOUR JOB, TURN BY TURN:
 - On every turn after the first: briefly and specifically acknowledge what they just said (one warm sentence that shows you actually listened and references a detail), then ask your next question.
 - Adapt. If an answer was vague or short, ask a gentle, specific follow-up ("Can you walk me through what you actually did?") instead of moving on. If it was strong, dig one layer deeper or move to a new area.
 - Vary your questions across the interview so it feels like a real conversation, drawing on areas like: ${focus.join('; ')}. Invent your own fresh, well-crafted questions — do not read a list, and never ask something you've already asked. (Session variety token: ${sessionSeed}.)
-- Stay encouraging and low-pressure the whole time — this is a teenager building confidence, not an exam. Never be cold, tricky, or interrogating.
+- Never be cold, tricky, or interrogating — this is a teenager practicing, not an adversarial exam.
+
+${STYLE_TONE[style] || STYLE_TONE.warm}
 
 FLOW:
 - Your FIRST turn: warmly greet them by name if you know it, put them at ease in one sentence, and ask ONE welcoming opening question (e.g. something inviting them to introduce themselves or share what excites them). Nothing else.
@@ -65,6 +84,8 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   const [muted, setMuted] = useState(false);
   const [debrief, setDebrief] = useState(null);
   const [questionCount, setQuestionCount] = useState(0);
+  const [style, setStyle] = useState('warm');         // 'warm' | 'balanced' | 'rigorous' — picked on the idle screen
+  const [chosenFocus, setChosenFocus] = useState([]);  // areas explicitly picked on the idle screen; empty = let the interviewer pick at random
 
   const sessionRef = useRef({ system: '', history: [] }); // history in OpenAI role format for the API
   const recognizerRef = useRef(null);
@@ -112,10 +133,12 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     if (loading) return;
     setLoading(true);
     setTurns([]); setDebrief(null); setQuestionCount(0);
-    const focus = pickFocus();
+    // Honor exactly what the student picked on the idle screen; if they left it on "surprise me"
+    // (nothing selected), fall back to a random spread like before.
+    const focus = chosenFocus.length ? chosenFocus : pickFocus();
     const sessionSeed = Math.random().toString(36).slice(2, 8);
     sessionRef.current = {
-      system: buildInterviewerPrompt({ pathwayLabel, studentName, focus, sessionSeed }),
+      system: buildInterviewerPrompt({ pathwayLabel, studentName, focus, sessionSeed, style }),
       history: [],
     };
     try {
@@ -181,7 +204,8 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
       setDebrief(summary);
       setPhase('done');
       speakLine(summary);
-      DB.addInterviewSession({ mode: 'live', pathwayKey: 'live', question: `Live voice interview · ${questionCount} questions` }).catch(() => {});
+      const score = parseInterviewScore(summary);
+      DB.addInterviewSession({ mode: 'live', pathwayKey: 'live', question: `Live voice interview · ${questionCount} questions`, score }).catch(() => {});
       onSessionComplete?.('live');
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not generate your debrief.');
@@ -214,7 +238,35 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
           <span style={pill(C.s3, C.t3, { fontSize: 11 })}>{sttSupported ? <><Mic size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Answer by voice</> : <><MessageSquare size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Answer by typing</>}</span>
           <span style={pill(C.s3, C.t3, { fontSize: 11 })}>~{MAX_QUESTIONS} questions</span>
         </div>
-        <button style={{ ...btn(accent, { fontSize: 14, marginTop: 22, padding: '12px 26px' }), display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={startInterview} disabled={loading}>
+
+        {/* Customize this session — interviewer tone + optional focus areas, picked before Start
+            so the same simulator can be a gentle warm-up or a real stress-test on demand. */}
+        <div style={{ ...glass2({ padding: 16, marginTop: 20, textAlign: 'left' }) }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Interviewer Style</div>
+          <div style={R({ gap: 7, flexWrap: 'wrap', marginBottom: 16 })}>
+            {INTERVIEW_STYLES.map(s => (
+              <button key={s.id} title={s.desc} onClick={() => setStyle(s.id)}
+                style={{ ...btnG({ fontSize: 11.5, padding: '7px 13px' }), background: style === s.id ? accent : 'transparent', color: style === s.id ? '#fff' : C.t2, border: `1px solid ${style === s.id ? accent : C.b1}` }}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Focus Areas <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0, color: C.t4 }}>(optional — pick up to 4, or leave blank to let the interviewer choose)</span></div>
+          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            {FOCUS_AREAS.map(area => {
+              const on = chosenFocus.includes(area);
+              const label = area.charAt(0).toUpperCase() + area.slice(1);
+              return (
+                <button key={area} onClick={() => setChosenFocus(cur => on ? cur.filter(a => a !== area) : cur.length >= 4 ? cur : [...cur, area])}
+                  style={{ ...pill(on ? `${accent}22` : 'rgba(255,255,255,0.03)', on ? accent : C.t3, { fontSize: 10.5 }), cursor: 'pointer', border: `1px solid ${on ? `${accent}55` : C.b1}` }}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <button style={{ ...btn(accent, { fontSize: 14, marginTop: 20, padding: '12px 26px' }), display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={startInterview} disabled={loading}>
           {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Play size={16} />}
           {loading ? 'Starting…' : 'Start the interview'}
         </button>

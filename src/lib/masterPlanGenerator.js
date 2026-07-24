@@ -141,6 +141,11 @@ function buildProfileFactsText(user, liveSignals = {}) {
     liveSignals.clinicalHours > 0 ? `${liveSignals.clinicalHours} clinical/shadowing hour(s) logged so far` : null,
     liveSignals.recommendersCount > 0 ? `Tracking ${liveSignals.recommendersCount} recommender(s)` : null,
     `Current study streak: ${liveSignals.streak || 0} day(s)`,
+    // Things the student said directly (typed or dictated by mic — see PlanVoiceNotes in
+    // PlansTab.jsx) — the highest-signal input there is, since it's exactly what they asked for
+    // in their own words, not an inference. Weight it accordingly: treat these as real
+    // constraints/requests to actually build into the plan, not just background color.
+    (user?.planNotes || []).length ? `The student told Medabrain directly (treat these as real, current requests to build into the plan):\n${user.planNotes.map(n => `  • ${n}`).join('\n')}` : null,
   ].filter(Boolean);
   return lines.join('\n');
 }
@@ -693,8 +698,16 @@ export function pruneRollingWindow(plan) {
   return { ...plan, days: keep, progressLog: log.slice(-60) };
 }
 
+// Toggling a task's checkbox flips its visible `done` state, but XP is a
+// one-time reward for the underlying accomplishment — not for the checkbox.
+// Without `xpAwarded` as a separate, never-reset flag, unchecking then
+// rechecking the same task re-triggers the "just completed" branch and pays
+// out again, indefinitely (the exact exploit: check → +XP, uncheck, check →
+// +XP again). `xpAwarded` only ever flips false→true and is never cleared by
+// unchecking, so a given task can earn its XP exactly once, no matter how
+// many times it's toggled afterward.
 export function toggleTaskDone(plan, date, taskId) {
-  let justCompleted = false;
+  let justEarnedXP = false;
   const days = plan.days.map(d => {
     if (d.date !== date) return d;
     return {
@@ -702,12 +715,55 @@ export function toggleTaskDone(plan, date, taskId) {
       tasks: d.tasks.map(t => {
         if (t.id !== taskId) return t;
         const nextDone = !t.done;
-        if (nextDone) justCompleted = true;
-        return { ...t, done: nextDone, doneAt: nextDone ? Date.now() : null };
+        if (nextDone && !t.xpAwarded) justEarnedXP = true;
+        return { ...t, done: nextDone, doneAt: nextDone ? Date.now() : null, xpAwarded: t.xpAwarded || nextDone };
       }),
     };
   });
-  return { plan: { ...plan, days, updatedAt: Date.now() }, justCompleted };
+  return { plan: { ...plan, days, updatedAt: Date.now() }, justEarnedXP };
+}
+
+// Task types the app can verify actually happened, rather than trusting a
+// self-reported checkbox — see resolveTaskResource for how resourceKind gets
+// set. Quiz/lesson/deck all have a real "completed this in the app" event to
+// hook; everything else (activities logged outside the app, essays, deadline
+// admin, reflection, rest days, ...) has no such signal and stays a manual,
+// self-reported checkbox.
+export const AUTO_VERIFIABLE_KINDS = new Set(['quiz', 'lesson', 'deck']);
+
+// Builds an `isMatch(task)` predicate for the common case — a task whose
+// resolved resource is exactly this {kind, id} (a specific quiz/lesson/deck).
+// `id` may be an array to match any of several (e.g. a Smart Mix session
+// completing should also credit a task that names one specific deck).
+export function resourceMatch(kind, id) {
+  const ids = Array.isArray(id) ? id : [id];
+  return (t) => t.resourceKind === kind && ids.includes(t.resourceId);
+}
+
+// Auto-checks off every not-yet-done task across the whole plan (not just
+// today — a student who works ahead should still get credit) that `isMatch`
+// accepts. This is the real accountability mechanism: for auto-verifiable
+// task types (see AUTO_VERIFIABLE_KINDS) the UI removes the manual checkbox
+// entirely (see PlansTab's TaskRow), so the *only* way these ever become done
+// is by actually doing the linked quiz/lesson/deck — there's no self-report
+// path left to game. XP follows the same one-time-only rule as the manual
+// toggle above (`xpAwarded`), just set proactively here since there's no
+// separate "toggle" event to gate it on.
+export function autoCompleteResourceTasks(plan, isMatch) {
+  if (!plan?.days?.length || typeof isMatch !== 'function') return { plan, completed: [] };
+  const completed = [];
+  let changed = false;
+  const days = plan.days.map(d => ({
+    ...d,
+    tasks: d.tasks.map(t => {
+      if (t.done || !isMatch(t)) return t;
+      changed = true;
+      completed.push({ date: d.date, id: t.id, title: t.title });
+      return { ...t, done: true, doneAt: Date.now(), xpAwarded: true, autoVerified: true };
+    }),
+  }));
+  if (!changed) return { plan, completed: [] };
+  return { plan: { ...plan, days, updatedAt: Date.now() }, completed };
 }
 
 // ── Read helpers — shared by the Plans tab UI and the coach system prompt ──
