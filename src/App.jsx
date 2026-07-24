@@ -71,7 +71,7 @@ import PortfolioTimeline from './components/PortfolioTimeline';
 import PortfolioMetaBrain from './components/PortfolioMetaBrain';
 import PrepMetaBrain from './components/PrepMetaBrain';
 import OpportunitiesDatabase from './components/OpportunitiesDatabase';
-import PanelHero from './components/ui/PanelHero';
+import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import PlansTab from './components/PlansTab';
 import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch } from './lib/masterPlanGenerator';
@@ -133,6 +133,18 @@ const CAT_META = {
   'Math & Data':                  { color:C.indigo, light:C.indigoL, dim:C.indigoDim, grad:C.oceanGrad,  emoji:'📊' },
 };
 const catMeta = (cat) => CAT_META[cat] || { color:C.blue, light:C.blueL, dim:C.blueDim, grad:C.blueGrad, emoji:'📚' };
+
+// ── Flashcard deck-category identity map — same idea as CAT_META but keyed to
+// DECK_CATEGORY_ORDER, so every deck card/pill/mastery bar carries its subject's
+// colour instead of the whole library rendering in one flat accent. ──
+const DECK_CAT_META = {
+  'SAT':            { color:C.sky,    light:C.skyL,    dim:C.skyDim,    grad:C.oceanGrad,   emoji:'✏️' },
+  'Science':        { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad,  emoji:'🧪' },
+  'Social Studies': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad,  emoji:'🏛️' },
+  'Study Skills':   { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad,  emoji:'🧠' },
+  'My Decks':       { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad,  emoji:'🗂️' },
+};
+const deckCatMeta = (cat) => DECK_CAT_META[cat] || { color:C.amber, light:C.amberL, dim:C.amberDim, grad:C.sunsetGrad, emoji:'📚' };
 
 // ── Style helpers ─────────────────────────────────────────────────────────────
 const glass  = (x={}) => ({ background:'rgba(255,255,255,0.03)', border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:'0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
@@ -3169,7 +3181,7 @@ export default function App({ account, onAccountChange }) {
       const totalLessons=(path?.units||[]).reduce((s,u)=>s+u.lessons.length,0);
       return(
       <div style={CC({gap:22})}>
-        <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
+        <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:path?.gradient?`linear-gradient(135deg,${path.accent}14,${path.accent2||path.accent}08)`:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid ${path?.accent||C.blue}30`})}}>
           <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={path?.accent||accent}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
@@ -3183,8 +3195,8 @@ export default function App({ account, onAccountChange }) {
 
         {/* Why this path — the actual decision logic (5-axis work-style vector + scenario
             votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
-        <div style={glass({padding:18})}>
-          <SL>Why {path?.label}</SL>
+        <div style={glass({padding:18,borderLeft:`3px solid ${path?.accent||C.cyan}55`,background:`linear-gradient(120deg,${path?.accent||C.cyan}08,transparent 45%)`})}>
+          <SectionTitle icon={Lightbulb} color={path?.accent||C.cyanL}>Why {path?.label}</SectionTitle>
           {dWhy?.reasons?.length>0?(
             <div style={CC({gap:10})}>
               <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:0}}>Your answers leaned toward:</p>
@@ -3211,7 +3223,7 @@ export default function App({ account, onAccountChange }) {
           <span style={{fontSize:12,color:C.t3}}>Interests shift as you learn more — it's worth retaking this diagnostic every few months to confirm your pathway still fits.</span>
         </div>
         {alternates.length>0&&<div style={glass({padding:18})}>
-          <SL>You Might Also Fit</SL>
+          <SectionTitle icon={Sparkles} color={C.violetL}>You Might Also Fit</SectionTitle>
           <div style={G(2,10,{},isMobile)}>
             {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
@@ -3225,7 +3237,7 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>}
         <div style={glass({padding:18})}>
-          <SL>All Pathways</SL>
+          <SectionTitle icon={Compass} color={C.cyanL}>All Pathways</SectionTitle>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
@@ -3244,24 +3256,25 @@ export default function App({ account, onAccountChange }) {
     if(dIntro){
       return(
         <div style={CC({gap:22})}>
-          <div style={{...glass({padding:22,background:`linear-gradient(120deg,${C.cyanDim},${C.blueDim} 55%,${C.violetDim})`,border:`1px solid ${C.cyan}25`,position:'relative',overflow:'hidden'})}}>
-            <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.07,pointerEvents:'none'}}/>
-            <div style={{position:'relative'}}>
-              <div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div>
-              <h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Find Your Pathway</h2>
-              <p style={{fontSize:13,color:C.t2,marginTop:8,maxWidth:640,lineHeight:1.7}}>Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic — real questions about how you think and what pulls you in, not just "pick your favorite subject" — for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.</p>
-            </div>
-          </div>
-          <motion.div data-tour="prep-deep-diagnostic" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid rgba(45,127,255,0.2)`}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-            <div style={{width:56,height:56,borderRadius:14,background:`${accent}18`,border:`2px solid ${accent}40`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Compass size={26} color={accent}/></div>
-            <div style={{flex:1,minWidth:220}}>
+          <PanelHero icon={Compass} color={C.cyan} color2={C.blue} m={isMobile}
+            eyebrow="Pathway Diagnostic" title="Find Your Pathway"
+            sub={`Every pathway below sequences the same core SAT/ACT prep — math, reading/writing, and science — around the units and quizzes most relevant to a specific health career, so studying also builds toward the path you're most likely to pursue. Take the diagnostic for a recommendation, or read through the pathways yourself and pick one directly. You can always switch later.`}
+            stats={[
+              {value:DIAG_QS.length,label:'questions'},
+              {value:'~6',label:'min',color:C.blue},
+              {value:Object.keys(PATHS).length,label:'pathways',color:C.violet},
+            ]}/>
+          <motion.div data-tour="prep-deep-diagnostic" initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.cyanDim},${C.blueDim} 70%,transparent)`,border:`1px solid ${C.cyan}30`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+            <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
+            <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
+            <div style={{position:'relative',flex:1,minWidth:220}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
               <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
             </div>
-            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.blueGrad,{fontSize:13,padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>setDIntro(false)}>Start Diagnostic<ChevronRight size={15}/></motion.button>
           </motion.div>
           <div>
-            <SL>All Pathways — Choose Manually</SL>
+            <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
                 <PathwayCard key={key} pathKey={key} p={p} current={eSpec===key} m={isMobile}
@@ -3277,19 +3290,29 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={CC({gap:22})}>
         <div style={R()}>
-          <div><div style={lbl()}>Pathway Diagnostic</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Q{dStep+1} <span style={{color:C.t3,fontWeight:400}}>/ {DIAG_QS.length}</span></h2></div>
-          <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={accent} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
+          <div>
+            <div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div>
+            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Question {dStep+1} <span style={{color:C.t3,fontWeight:400}}>of {DIAG_QS.length}</span></h2>
+            {/* Step dots — answered steps fill cyan, current step glows, the rest stay dim */}
+            <div style={R({gap:4,marginTop:8})}>
+              {DIAG_QS.map((_,i)=>(
+                <span key={i} style={{width:i===dStep?16:6,height:6,borderRadius:3,background:i<dStep?C.cyan:i===dStep?C.cyanL:C.s4,boxShadow:i===dStep?`0 0 8px ${C.cyan}80`:'none',transition:'all .25s'}}/>
+              ))}
+            </div>
+          </div>
+          <div style={{marginLeft:'auto'}}><Arc pct={(dStep/DIAG_QS.length)*100} size={52} stroke={4} color={C.cyan} label={`${dStep+1}/${DIAG_QS.length}`}/></div>
         </div>
-        <Bar pct={(dStep/DIAG_QS.length)*100} color={accent} h={3}/>
-        <motion.div key={dStep} initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} style={glass({padding:28})}>
+        <Bar pct={(dStep/DIAG_QS.length)*100} color={C.cyan} h={3} glow/>
+        <motion.div key={dStep} initial={{opacity:0,x:20}} animate={{opacity:1,x:0}} style={{...glass({padding:28,borderLeft:`3px solid ${C.cyan}55`,background:`linear-gradient(160deg,${C.cyan}08,transparent 50%)`})}}>
           <p style={{fontSize:16,fontWeight:600,lineHeight:1.75,marginBottom:22,color:C.t1,fontFamily:C.FB}}>{q.q}</p>
           <div style={CC({gap:10})}>
             {q.ch.map((ch,ci)=>(
-              <motion.div key={ci} whileHover={{background:C.blueDim,borderColor:`${C.blue}40`}} whileTap={{scale:.98}}
+              <motion.div key={ci} whileHover={{background:C.cyanDim,borderColor:`${C.cyan}45`,x:3}} whileTap={{scale:.98}}
                 onClick={()=>{const next=[...dAns,ci];setDA(next);play('select');if(dStep<DIAG_QS.length-1)setDS(s=>s+1);else finalizeDiag(next);}}
                 style={{...glass2({padding:'15px 18px',cursor:'pointer',transition:'all .15s'}),display:'flex',alignItems:'center',gap:14}}>
-                <span style={{width:28,height:28,borderRadius:8,background:C.s4,border:`1px solid ${C.b2}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.t3,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
+                <span style={{width:28,height:28,borderRadius:8,background:`${C.cyan}12`,border:`1px solid ${C.cyan}30`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:700,color:C.cyanL,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
                 <span style={{fontSize:14,color:C.t1,fontFamily:C.FB}}>{ch.text}</span>
+                <ChevronRight size={14} color={C.t4} style={{marginLeft:'auto',flexShrink:0}}/>
               </motion.div>
             ))}
           </div>
@@ -3307,6 +3330,7 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={CC({gap:22})}>
         <div data-tour="prep-deep-pathway" style={{...glass({padding:22,background:`linear-gradient(120deg,${accent}22,${curPath?.accent2||accent}12 60%,transparent)`,border:`1px solid ${accent}35`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${accent},${curPath?.accent2||accent}00)`}}/>
           <div style={{position:'absolute',inset:0,background:curPath?.gradient||C.blueGrad,opacity:0.08,pointerEvents:'none'}}/>
           <div style={{position:'relative',width:56,height:56,borderRadius:16,background:curPath?.gradient||C.blueGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 20px ${accent}45`}}>
             {(()=>{const Ic=PATH_ICONS[eSpec]||Compass;return <Ic size={26} color="#fff"/>;})()}
@@ -3385,18 +3409,19 @@ export default function App({ account, onAccountChange }) {
           );
         })()}
         {units.map((unit,ui)=>{
-          const p=unitM(unit);const done=p===100;
+          const p=unitM(unit);const done=p===100;const ucm=catMeta(unit.quizCat);
           return(
             <motion.div key={unit.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:ui*.05}} style={{...glass({borderLeft:`3px solid ${done?C.green:accent}55`}),background:`linear-gradient(120deg,${done?C.green:accent}0a,transparent 40%)`}}>
               <div style={R({marginBottom:20})}>
                 <Arc pct={p} size={50} stroke={4} color={done?C.green:accent} label={`${p}%`}/>
                 <div style={{flex:1}}>
-                  <div style={R({gap:8,marginBottom:3})}>
-                    <span style={{fontSize:10,fontWeight:700,color:C.t3,fontFamily:C.FM,letterSpacing:'.08em'}}>UNIT {ui+1}</span>
+                  <div style={R({gap:8,marginBottom:3,flexWrap:'wrap'})}>
+                    <span style={{...pill(done?C.greenDim:`${accent}14`,done?C.greenL:accent,{fontSize:9.5,fontWeight:800,fontFamily:C.FM,letterSpacing:'.08em',padding:'2px 9px'})}}>UNIT {ui+1}</span>
+                    <span style={{...pill(ucm.dim,ucm.light,{fontSize:9.5})}}>{ucm.emoji} {unit.quizCat}</span>
                     {done&&<span style={{...pill(C.greenDim,C.greenL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Mastered</span>}
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.length} lessons · {unit.quizCat}</div>
+                  <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length}/{unit.lessons.length} lessons complete</div>
                 </div>
               </div>
               {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
@@ -3419,7 +3444,7 @@ export default function App({ account, onAccountChange }) {
                   const isDone=state==='done';const isVerified=state==='verified';const isStudying=state==='studying';
                   const avail=state==='available';
                   return(
-                    <div key={lesson.id} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1}),display:'flex',flexDirection:'column',gap:8}}>
+                    <motion.div key={lesson.id} whileHover={state==='locked'?{}:{borderColor:`${isVerified||isDone?C.green:accent}35`,background:`${isVerified||isDone?C.green:accent}08`}} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1,transition:'background .15s'}),display:'flex',flexDirection:'column',gap:8}}>
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
                         <Dot state={state}/>
                         <div style={{flex:1}}>
@@ -3443,7 +3468,7 @@ export default function App({ account, onAccountChange }) {
                           ))}
                         </div>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -3452,7 +3477,7 @@ export default function App({ account, onAccountChange }) {
         })}
         <div style={glass({padding:18})}>
           <div style={R({justifyContent:'space-between',marginBottom:14})}>
-            <SL extra={{marginBottom:0}}>Switch Study Track</SL>
+            <SectionTitle icon={Route} color={accent} extra={{marginBottom:0}}>Switch Study Track</SectionTitle>
             <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
           <div style={G(3,10,{},isMobile)}>
@@ -3479,41 +3504,38 @@ export default function App({ account, onAccountChange }) {
     const clearFilters = ()=>{setQSrch('');setQC('All');setQD('All');setQSort('default');};
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="prep-deep-quizzes" style={R()}>
-          <div style={{...glass({padding:'18px 22px',background:`linear-gradient(120deg,${C.greenDim},${C.cyanDim} 55%,${C.blueDim})`,border:`1px solid ${C.green}28`,position:'relative',overflow:'hidden',width:'100%'}),display:'flex',alignItems:'center',gap:16}}>
-            <div style={{position:'absolute',inset:0,background:C.forestGrad,opacity:0.07,pointerEvents:'none'}}/>
-            <div style={{position:'relative',width:48,height:48,borderRadius:14,background:C.forestGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${C.green}40`}}><Layers size={22} color="#fff"/></div>
-            <div style={{position:'relative'}}>
-              <div style={{...lbl(),color:C.greenL}}>Quiz Library</div>
-              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Practice Quizzes</h2>
-            </div>
-          </div>
-        </div>
+        <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
+          eyebrow="Quiz Library" title="Practice Quizzes"
+          sub="Exam-style questions across every subject — filter by category and difficulty, or let Medabrain rank what to take next."/>
         {/* Stat tiles */}
         <div style={G(3,12,{},isMobile)}>
-          <div style={{...glass2({padding:'16px 18px',background:`linear-gradient(120deg,${C.blueDim},transparent)`,border:`1px solid ${C.blue}25`}),display:'flex',alignItems:'center',gap:12}}>
-            <div style={{width:36,height:36,borderRadius:10,background:C.blueDim,border:`1px solid ${C.blue}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers size={16} color={C.blueL}/></div>
-            <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>quizzes · {TOTAL_QUESTIONS} questions</div></div>
-          </div>
-          <div style={{...glass2({padding:'16px 18px',background:`linear-gradient(120deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}),display:'flex',alignItems:'center',gap:12}}>
-            <div style={{width:36,height:36,borderRadius:10,background:C.greenDim,border:`1px solid ${C.green}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><CheckCircle2 size={16} color={C.greenL}/></div>
-            <div><div style={{fontSize:19,fontWeight:800,color:C.t1,fontFamily:C.FM,lineHeight:1}}>{qTaken}/{ALL_QUIZZES.length}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>completed</div></div>
-          </div>
-          <div style={{...glass2({padding:'16px 18px',background:avgSc>0?`linear-gradient(120deg,${scCol(avgSc)}18,transparent)`:undefined,border:`1px solid ${avgSc>0?scCol(avgSc)+'30':C.b1}`}),display:'flex',alignItems:'center',gap:12}}>
-            <div style={{width:36,height:36,borderRadius:10,background:avgSc>0?`${scCol(avgSc)}18`:C.s3,border:`1px solid ${avgSc>0?scCol(avgSc)+'30':C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Target size={16} color={avgSc>0?scCol(avgSc):C.t3}/></div>
-            <div><div style={{fontSize:19,fontWeight:800,color:avgSc>0?scCol(avgSc):C.t3,fontFamily:C.FM,lineHeight:1}}>{avgSc>0?`${avgSc}%`:'—'}</div><div style={{fontSize:10,color:C.t3,marginTop:3}}>average score</div></div>
-          </div>
+          <StatTile icon={Layers} value={ALL_QUIZZES.length} label={`quizzes · ${TOTAL_QUESTIONS} questions`} color={C.sky}/>
+          <StatTile icon={CheckCircle2} value={`${qTaken}/${ALL_QUIZZES.length}`} label="completed" color={C.green}/>
+          <StatTile icon={Target} value={avgSc>0?`${avgSc}%`:'—'} label="average score" sub={avgSc>0?undefined:'take a quiz to start tracking'} color={avgSc>0?scCol(avgSc):C.violet}/>
         </div>
         {/* Filter toolbar */}
         <div style={glass({padding:16})}>
           <div style={R({justifyContent:'space-between',marginBottom:12})}>
-            <SL extra={{marginBottom:0}}>Filter & Sort</SL>
+            <SectionTitle icon={ListFilter} color={C.greenL} extra={{marginBottom:0}}>Filter & Sort</SectionTitle>
             {filtersActive&&<button style={{...btnG({fontSize:10.5,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:5}} onClick={clearFilters}><RefreshCw size={10}/>Reset filters</button>}
+          </div>
+          {/* Category identity chips — same colour language as the E-Library's category row */}
+          <div style={R({gap:8,flexWrap:'wrap',marginBottom:12})}>
+            {['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=>{
+              const active=qCat===c;
+              const cm=c==='All'?{color:C.green,light:C.greenL,dim:C.greenDim,emoji:'✨'}:catMeta(c);
+              return(
+                <motion.button key={c} whileHover={{scale:1.05,y:-1}} whileTap={{scale:.96}} onClick={()=>setQC(c)}
+                  style={{...pill(active?cm.color:cm.dim,active?'#fff':cm.light,{fontSize:11,padding:'6px 13px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
+                  {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c}
+                </motion.button>
+              );
+            })}
           </div>
           <div style={R({gap:8,flexWrap:'wrap',marginBottom:14})}>
             {diffLevels.map(d=>{const cnt=ALL_QUIZZES.filter(q=>q.diff===d).length;const dc=dColors[d];return cnt>0&&(
               <div key={d} onClick={()=>setQD(qDiff===d?'All':d)} style={{background:qDiff===d?`${dc}18`:'rgba(255,255,255,0.02)',border:`1px solid ${qDiff===d?dc+'55':C.b1}`,padding:'7px 14px',display:'flex',gap:7,alignItems:'center',cursor:'pointer',borderRadius:9,transition:'all .15s'}}>
-                <span style={{width:7,height:7,borderRadius:'50%',background:dc,flexShrink:0}}/>
+                <span style={{width:7,height:7,borderRadius:'50%',background:dc,boxShadow:`0 0 6px ${dc}80`,flexShrink:0}}/>
                 <span style={{fontSize:11,color:qDiff===d?dc:C.t2,fontWeight:700}}>{d}</span>
                 <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{cnt}</span>
               </div>
@@ -3524,7 +3546,6 @@ export default function App({ account, onAccountChange }) {
               <span style={{position:'absolute',left:12,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><Search size={14}/></span>
               <input style={inp({paddingLeft:36})} placeholder="Search quizzes…" value={qSrch} onChange={e=>setQSrch(e.target.value)}/>
             </div>
-            <select style={inp({width:'auto'})} value={qCat} onChange={e=>setQC(e.target.value)}>{['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=><option key={c}>{c}</option>)}</select>
             <div style={{position:'relative'}}>
               <span style={{position:'absolute',left:10,top:'50%',transform:'translateY(-50%)',color:C.t3,display:'flex',pointerEvents:'none'}}><ListFilter size={13}/></span>
               <select style={inp({width:'auto',paddingLeft:30})} value={qSort} onChange={e=>setQSort(e.target.value)}>
@@ -3539,22 +3560,22 @@ export default function App({ account, onAccountChange }) {
         {/* Medabrain ranked quiz recommendations — full top-6 list */}
         {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick}/>}
         <div style={R({justifyContent:'space-between'})}>
-          <SL extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SL>
+          <SectionTitle icon={Layers} color={C.greenL} extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SectionTitle>
         </div>
         <div style={G(2,14,{},isMobile)}>
           {fQuiz.map((q,qi)=>{
-            const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;
+            const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;const cm=catMeta(q.cat);
             return(
-              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${dc}20`}} style={{...glass({padding:0,overflow:'hidden',background:`linear-gradient(160deg,${(taken?scc:dc)}0d,transparent 55%)`}),transition:'box-shadow .2s'}}>
+              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${cm.color}25`}} style={{...glass({padding:0,overflow:'hidden',background:`linear-gradient(160deg,${cm.color}0d,transparent 55%)`,borderLeft:`3px solid ${cm.color}55`}),transition:'box-shadow .2s'}}>
                 <div style={{height:3,background:`linear-gradient(90deg,${taken?scc:dc},${(taken?scc:dc)}77)`}}/>
                 <div style={{padding:22}}>
                   <div style={R({marginBottom:14,flexWrap:'wrap'})}>
-                    <span style={pill(`${dc}18`,dc,{fontSize:10})}>{q.diff}</span>
+                    <span style={{...pill(`${dc}18`,dc,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:5}}><span style={{width:6,height:6,borderRadius:'50%',background:dc,flexShrink:0}}/>{q.diff}</span>
                     {myCourseCats.has(q.cat)&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}>Matches your courses</span>}
-                    <span style={{marginLeft:'auto',fontSize:11,color:C.t3}}>{q.cat}</span>
+                    <span style={{marginLeft:'auto',...pill(cm.dim,cm.light,{fontSize:10})}}>{cm.emoji} {q.cat}</span>
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.4,fontFamily:C.FD}}>{q.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM,display:'flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{q.qs.length} questions</div>
+                  <div style={{fontSize:11,color:C.t3,marginBottom:18,fontFamily:C.FM,display:'flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{q.qs.length} questions{taken?<span style={{...pill(`${scc}16`,scc,{fontSize:9,marginLeft:4}),display:'inline-flex',alignItems:'center',gap:3}}><CheckCircle2 size={9}/>completed</span>:null}</div>
                   <div style={R()}>
                     {taken?(
                       <>
@@ -3564,7 +3585,7 @@ export default function App({ account, onAccountChange }) {
                         <div style={{fontSize:18,fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>
                       </>
                     ):(
-                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(C.blueGrad,{flex:1,fontSize:12}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
+                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(cm.grad,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${cm.color}35,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
                         Start Quiz<ChevronRight size={14}/>
                       </motion.button>
                     )}
@@ -3604,7 +3625,7 @@ export default function App({ account, onAccountChange }) {
     return(
       <div style={{display:'flex',alignItems:'center',gap:4,padding:'4px 2px'}}>
         {[0,1,2].map(i=>(
-          <motion.span key={i} animate={{opacity:[.3,1,.3],y:[0,-3,0]}} transition={{duration:1.1,repeat:Infinity,delay:i*0.15,ease:'easeInOut'}} style={{width:6,height:6,borderRadius:'50%',background:accent,display:'inline-block'}}/>
+          <motion.span key={i} animate={{opacity:[.3,1,.3],y:[0,-3,0]}} transition={{duration:1.1,repeat:Infinity,delay:i*0.15,ease:'easeInOut'}} style={{width:6,height:6,borderRadius:'50%',background:C.violetL,display:'inline-block'}}/>
         ))}
       </div>
     );
@@ -3623,7 +3644,7 @@ export default function App({ account, onAccountChange }) {
       <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
         <div style={{paddingBottom:14,flexShrink:0}}>
           <motion.button whileHover={{scale:1.02,filter:'brightness(1.08)'}} whileTap={{scale:.97}} onClick={startNewChat}
-            style={{...btn(`linear-gradient(135deg,${accent},${C.cyan})`,{width:'100%',justifyContent:'flex-start',padding:'10px 14px',fontSize:12.5}),boxShadow:`0 4px 14px ${accent}30`}}>
+            style={{...btn(C.violetGrad,{width:'100%',justifyContent:'flex-start',padding:'10px 14px',fontSize:12.5}),boxShadow:`0 4px 14px ${C.violet}35`}}>
             <Plus size={14}/>New chat
           </motion.button>
         </div>
@@ -3634,8 +3655,8 @@ export default function App({ account, onAccountChange }) {
             const active=t.id===activeThreadId;
             return(
               <div key={t.id} className="mb-thread-row" onClick={()=>renamingThreadId!==t.id&&switchChatThread(t.id)}
-                style={{position:'relative',borderRadius:10,padding:'9px 10px',cursor:'pointer',background:active?`${accent}18`:'transparent',border:active?`1px solid ${accent}35`:'1px solid transparent',display:'flex',alignItems:'center',gap:8,transition:'background .15s'}}>
-                <MessageCircle size={13} color={active?accent:C.t4} style={{flexShrink:0}}/>
+                style={{position:'relative',borderRadius:10,padding:'9px 10px',cursor:'pointer',background:active?`${C.violet}18`:'transparent',border:active?`1px solid ${C.violet}35`:'1px solid transparent',display:'flex',alignItems:'center',gap:8,transition:'background .15s'}}>
+                <MessageCircle size={13} color={active?C.violetL:C.t4} style={{flexShrink:0}}/>
                 {renamingThreadId===t.id?(
                   <input autoFocus value={renameDraft} onChange={e=>setRenameDraft(e.target.value)}
                     onKeyDown={e=>{if(e.key==='Enter')commitRenameThread();if(e.key==='Escape')setRenamingThreadId(null);}}
@@ -3687,7 +3708,8 @@ export default function App({ account, onAccountChange }) {
         </AnimatePresence>
         <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div data-tour="prep-deep-coach" style={{padding:'16px 18px',marginBottom:18,flexShrink:0,borderRadius:16,background:`linear-gradient(120deg,${C.violetDim},${C.blueDim} 55%,transparent)`,border:`1px solid ${C.violet}20`}}>
+        <div data-tour="prep-deep-coach" style={{padding:'16px 18px',marginBottom:18,flexShrink:0,borderRadius:16,background:`linear-gradient(120deg,${C.violetDim},${C.blueDim} 55%,transparent)`,border:`1px solid ${C.violet}28`,position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${C.violet},${C.fuchsia}00)`}}/>
           <div style={{display:'flex',flexDirection:isMobile?'column':'row',justifyContent:'space-between',alignItems:isMobile?'flex-start':'flex-start',gap:isMobile?10:12}}>
             <div style={R({gap:isMobile?10:12,alignItems:'flex-start'})}>
               {isMobile&&(
@@ -3695,8 +3717,8 @@ export default function App({ account, onAccountChange }) {
                   <Menu size={16}/>
                 </button>
               )}
-              <div style={{width:isMobile?34:40,height:isMobile?34:40,borderRadius:12,flexShrink:0,background:`linear-gradient(135deg,${accent}35,${C.cyan}22)`,border:`1px solid ${accent}35`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 14px ${accent}20`}}>
-                <Brain size={isMobile?16:19} color={accent}/>
+              <div style={{width:isMobile?34:40,height:isMobile?34:40,borderRadius:12,flexShrink:0,background:C.violetGrad,border:`1px solid ${C.violet}45`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 6px 16px ${C.violet}40`}}>
+                <Brain size={isMobile?16:19} color="#fff"/>
               </div>
               <div>
                 <div style={R({gap:7,marginBottom:1})}>
@@ -3775,9 +3797,9 @@ export default function App({ account, onAccountChange }) {
         {/* ── Empty state / suggestions ──────────────────────────────────── */}
         {msgs.length===0&&(
           <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column'}}>
-            <div style={{...glass2({padding:isMobile?16:20}),marginBottom:20,display:'flex',gap:14,alignItems:'flex-start'}}>
-              <div style={{width:36,height:36,borderRadius:10,flexShrink:0,background:`linear-gradient(135deg,${accent}35,${C.cyan}22)`,border:`1px solid ${accent}35`,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                <MessageCircle size={16} color={accent}/>
+            <div style={{...glass2({padding:isMobile?16:20,background:`linear-gradient(120deg,${C.violetDim},transparent 60%)`,border:`1px solid ${C.violet}22`}),marginBottom:20,display:'flex',gap:14,alignItems:'flex-start'}}>
+              <div style={{width:36,height:36,borderRadius:10,flexShrink:0,background:C.violetGrad,border:`1px solid ${C.violet}45`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}35`}}>
+                <MessageCircle size={16} color="#fff"/>
               </div>
               <div>
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Medabrain.</div>
@@ -3808,8 +3830,8 @@ export default function App({ account, onAccountChange }) {
           <AnimatePresence initial={false}>
             {msgs.map((m,i)=>(
               <motion.div key={i} layout initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
-                {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${m.role==='error'?C.rose+'40':accent+'30'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  {m.role==='error'?<AlertTriangle size={isMobile?12:14} color={C.roseL}/>:<Brain size={isMobile?12:14} color={accent}/>}
+                {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${C.violet}35,${C.indigo}22)`,border:`1px solid ${m.role==='error'?C.rose+'40':C.violet+'35'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                  {m.role==='error'?<AlertTriangle size={isMobile?12:14} color={C.roseL}/>:<Brain size={isMobile?12:14} color={C.violetL}/>}
                 </div>}
                 <div className="mb-group" style={{maxWidth:isMobile?'85%':'78%',position:'relative'}}>
                   <div style={{padding:isMobile?'10px 14px':'13px 18px',borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.role==='user'?`linear-gradient(135deg,${accent},${C.blueD})`:m.role==='error'?C.roseDim:C.s2,border:m.role==='user'?'none':m.role==='error'?`1px solid ${C.rose}30`:`1px solid ${C.b1}`,fontSize:isMobile?13:14,lineHeight:1.75,color:C.t1,fontFamily:C.FB,boxShadow:m.role==='user'?`0 4px 16px ${accent}30`:'0 2px 8px rgba(0,0,0,0.3)'}}>
@@ -3831,7 +3853,7 @@ export default function App({ account, onAccountChange }) {
             ))}
           </AnimatePresence>
           {cLoad&&<motion.div initial={{opacity:0}} animate={{opacity:1}} style={{display:'flex',alignItems:'flex-end',gap:10}}>
-            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${accent}30,${C.cyan}20)`,border:`1px solid ${accent}30`,display:'flex',alignItems:'center',justifyContent:'center'}}><Brain size={14} color={accent}/></div>
+            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${C.violet}35,${C.indigo}22)`,border:`1px solid ${C.violet}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Brain size={14} color={C.violetL}/></div>
             <div style={{padding:'11px 18px',background:C.s2,border:`1px solid ${C.b1}`,borderRadius:'18px 18px 18px 4px'}}><TypingDots/></div>
           </motion.div>}
           <div ref={chatEnd}/>
@@ -3842,7 +3864,7 @@ export default function App({ account, onAccountChange }) {
         <div style={{flexShrink:0,marginTop:14}}>
           <div style={R({gap:isMobile?6:10})}>
             <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain…":"Ask Medabrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
-            <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.blueGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${accent}35`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
+            <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${C.violet}40`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
           </div>
@@ -3935,8 +3957,8 @@ export default function App({ account, onAccountChange }) {
               </div>
             </div>
             <div style={R({gap:6})}>
-              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
-              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.blueGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`,boxShadow:studyMode==='due'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
+              {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`,boxShadow:studyMode==='all'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:11})} onClick={()=>{deleteDeck_(activeDeck.name);setAD(null);toast('Deck deleted');}}>Delete</button>}
             </div>
@@ -4007,24 +4029,17 @@ export default function App({ account, onAccountChange }) {
 
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="prep-deep-flashcards" style={{...glass({padding:'18px 22px',background:`linear-gradient(120deg,${C.amberDim},${C.orangeDim} 55%,${C.roseDim})`,border:`1px solid ${C.amber}28`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
-          <div style={{position:'absolute',inset:0,background:C.sunsetGrad,opacity:0.07,pointerEvents:'none'}}/>
-          <div style={{position:'relative',width:48,height:48,borderRadius:14,background:C.sunsetGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 6px 18px ${C.amber}40`}}><Layers3 size={22} color="#fff"/></div>
-          <div style={{position:'relative'}}>
-            <div style={{...lbl(),color:C.amberL}}>Flashcards</div>
-            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Study Decks</h2>
-          </div>
-          <div style={{position:'relative',marginLeft:'auto',...R({gap:8})}}>
-            <button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'8px 16px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>
-          </div>
-        </div>
+        <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
+          eyebrow="Flashcards" title="Study Decks"
+          sub="Spaced-repetition decks scheduled with FSRS — study what's due, or generate a new deck straight from your own notes."
+          right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'9px 18px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
 
         {/* Overview stats */}
         <div style={G(4,12,{},isMobile)}>
-          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.blueDim},transparent)`,border:`1px solid ${C.blue}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{builtinCount+customCount}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Decks</div></div>
-          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.tealDim},transparent)`,border:`1px solid ${C.teal}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{allCards.length}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Total Cards</div></div>
-          <div style={{...glass2({padding:14,background:dueCards>0?`linear-gradient(120deg,${C.amberDim},transparent)`:`linear-gradient(120deg,${C.greenDim},transparent)`,border:`1px solid ${dueCards>0?C.amber:C.green}22`})}}><div style={{fontSize:20,fontWeight:800,color:dueCards>0?C.amberL:C.greenL,fontFamily:C.FD}}>{dueCards}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Due Now</div></div>
-          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.violetDim},transparent)`,border:`1px solid ${C.violet}22`})}}><div style={{fontSize:20,fontWeight:800,color:C.violetL,fontFamily:C.FD}}>{avgRetention!==null?`${avgRetention}%`:'—'}</div><div style={{fontSize:10,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Avg. Retention</div></div>
+          <StatTile icon={Layers3} value={builtinCount+customCount} label="Total Decks" color={C.sky}/>
+          <StatTile icon={ScrollText} value={allCards.length} label="Total Cards" color={C.teal}/>
+          <StatTile icon={dueCards>0?Clock:CheckCircle2} value={dueCards} label="Due Now" sub={dueCards>0?undefined:'all caught up'} color={dueCards>0?C.amber:C.green}/>
+          <StatTile icon={Brain} value={avgRetention!==null?`${avgRetention}%`:'—'} label="Avg. Retention" color={C.violet}/>
         </div>
 
         {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
@@ -4045,20 +4060,20 @@ export default function App({ account, onAccountChange }) {
             one blended library-wide number, so it's obvious which subject needs more review. */}
         {categoryMastery.length>1&&(
           <div style={glass({padding:18})}>
-            <SL extra={{marginBottom:14}}>Mastery by Subject</SL>
+            <SectionTitle icon={Brain} color={C.amberL} extra={{marginBottom:14}}>Mastery by Subject</SectionTitle>
             <div style={G(2,10,{},isMobile)}>
-              {categoryMastery.map(({cat,total,due,avgRet})=>(
-                <div key={cat} style={glass2({padding:'12px 14px'})}>
+              {categoryMastery.map(({cat,total,due,avgRet})=>{const dm=deckCatMeta(cat);return(
+                <div key={cat} style={{...glass2({padding:'12px 14px',background:`linear-gradient(120deg,${dm.color}0c,transparent 55%)`,border:`1px solid ${dm.color}22`,borderLeft:`3px solid ${dm.color}66`})}}>
                   <div style={R({justifyContent:'space-between',marginBottom:6})}>
-                    <span style={{fontSize:12,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{cat}</span>
-                    <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{avgRet!==null?`${avgRet}%`:'—'}</span>
+                    <span style={{fontSize:12,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{dm.emoji} {cat}</span>
+                    <span style={{fontSize:11,fontWeight:700,color:avgRet!==null?(avgRet>=80?C.greenL:avgRet>=50?C.amberL:C.roseL):C.t3,fontFamily:C.FM}}>{avgRet!==null?`${avgRet}%`:'—'}</span>
                   </div>
                   {avgRet!==null
-                    ?<Bar pct={avgRet} color={avgRet>=80?C.green:avgRet>=50?C.amber:C.rose} h={5}/>
+                    ?<Bar pct={avgRet} color={avgRet>=80?C.green:avgRet>=50?C.amber:C.rose} h={5} glow/>
                     :<div style={{fontSize:10.5,color:C.t4}}>Not studied yet — {total} card{total===1?'':'s'} waiting</div>}
-                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:C.t3,marginTop:5}}>{due} due now</div>}
+                  {avgRet!==null&&due>0&&<div style={{fontSize:10,color:dm.light,marginTop:5,fontWeight:600}}>{due} due now</div>}
                 </div>
-              ))}
+              );})}
             </div>
           </div>
         )}
@@ -4067,22 +4082,23 @@ export default function App({ account, onAccountChange }) {
             Biology/Chemistry/Physics, etc. — instead of one flat list of every deck. */}
         <div style={CC({gap:8})}>
           <div style={R({gap:6,flexWrap:'wrap'})}>
-            <button style={btnSm(deckCategory==='all'?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</button>
+            <motion.button whileHover={{y:-1}} whileTap={{scale:.96}} style={btnSm(deckCategory==='all'?C.sunsetGrad:C.s4,{fontSize:11.5,fontWeight:700,color:deckCategory==='all'?'#fff':C.t2,border:`1px solid ${deckCategory==='all'?'transparent':C.b1}`,boxShadow:deckCategory==='all'?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>{setDeckCategory('all');setDeckSubcat('all');}}>All Subjects</motion.button>
             {DECK_CATEGORY_ORDER.map(cat=>{
               const active=deckCategory===cat;
               const count=allDecksList.filter(d=>getDeckCategory(d.name,d.builtin).category===cat).length;
               if(!count)return null;
-              return <button key={cat} style={btnSm(active?C.blueGrad:C.s4,{fontSize:11.5,fontWeight:700,color:active?'#fff':C.t2,border:`1px solid ${active?'transparent':C.b1}`})} onClick={()=>{setDeckCategory(cat);setDeckSubcat('all');}}>{cat}<span style={{opacity:.7,marginLeft:4}}>{count}</span></button>;
+              const dm=deckCatMeta(cat);
+              return <motion.button key={cat} whileHover={{y:-1}} whileTap={{scale:.96}} style={btnSm(active?dm.color:dm.dim,{fontSize:11.5,fontWeight:700,color:active?'#fff':dm.light,border:`1px solid ${active?dm.color:'transparent'}`,boxShadow:active?`0 4px 12px ${dm.color}40`:'none'})} onClick={()=>{setDeckCategory(cat);setDeckSubcat('all');}}>{dm.emoji} {cat}<span style={{opacity:.75,marginLeft:4,fontFamily:C.FM}}>{count}</span></motion.button>;
             })}
           </div>
-          {deckCategory!=='all'&&subcatsForCategory.length>1&&(
-            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:6,flexWrap:'wrap',paddingLeft:14,borderLeft:`2px solid ${C.b1}`})}>
-              <button style={btnSm(deckSubcat==='all'?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat==='all'?accent:C.t3,border:`1px solid ${deckSubcat==='all'?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat('all')}>All {deckCategory}</button>
+          {deckCategory!=='all'&&subcatsForCategory.length>1&&(()=>{const dm=deckCatMeta(deckCategory);return(
+            <motion.div initial={{opacity:0,height:0}} animate={{opacity:1,height:'auto'}} style={R({gap:6,flexWrap:'wrap',paddingLeft:14,borderLeft:`2px solid ${dm.color}44`})}>
+              <button style={btnSm(deckSubcat==='all'?`${dm.color}30`:'transparent',{fontSize:10.5,color:deckSubcat==='all'?dm.light:C.t3,border:`1px solid ${deckSubcat==='all'?`${dm.color}50`:C.b1}`})} onClick={()=>setDeckSubcat('all')}>All {deckCategory}</button>
               {subcatsForCategory.map(sub=>(
-                <button key={sub} style={btnSm(deckSubcat===sub?`${accent}30`:'transparent',{fontSize:10.5,color:deckSubcat===sub?accent:C.t3,border:`1px solid ${deckSubcat===sub?`${accent}50`:C.b1}`})} onClick={()=>setDeckSubcat(sub)}>{sub}</button>
+                <button key={sub} style={btnSm(deckSubcat===sub?`${dm.color}30`:'transparent',{fontSize:10.5,color:deckSubcat===sub?dm.light:C.t3,border:`1px solid ${deckSubcat===sub?`${dm.color}50`:C.b1}`})} onClick={()=>setDeckSubcat(sub)}>{sub}</button>
               ))}
             </motion.div>
-          )}
+          );})()}
         </div>
 
         <div style={R({flexWrap:'wrap',gap:10})}>
@@ -4107,7 +4123,7 @@ export default function App({ account, onAccountChange }) {
           </div>
           <div style={R({gap:6})}>
             {[['all','All'],['due','Due'],['builtin','Built-in'],['custom','My Decks']].map(([key,label])=>(
-              <button key={key} style={btnSm(deckFilter===key?C.blueGrad:C.s4,{fontSize:11,color:deckFilter===key?'#fff':C.t2,border:`1px solid ${deckFilter===key?'transparent':C.b1}`})} onClick={()=>setDeckFilter(key)}>{label}</button>
+              <button key={key} style={btnSm(deckFilter===key?C.sunsetGrad:C.s4,{fontSize:11,color:deckFilter===key?'#fff':C.t2,border:`1px solid ${deckFilter===key?'transparent':C.b1}`,boxShadow:deckFilter===key?`0 4px 12px ${C.amber}30`:'none'})} onClick={()=>setDeckFilter(key)}>{label}</button>
             ))}
           </div>
         </div>
@@ -4175,16 +4191,21 @@ export default function App({ account, onAccountChange }) {
             const dc=getDueCards(deck.cards).length;
             const deckRet=(()=>{const rets=deck.cards.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
+            const info=getDeckCategory(deck.name,deck.builtin);const dm=deckCatMeta(info.category);
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
-                whileHover={{y:-2,borderColor:`${accent}35`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${accent}20`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${accent}45`}),background:`linear-gradient(120deg,${accent}09,transparent 45%)`}}>
+                whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
-                  <div style={{width:36,height:36,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',marginBottom:12}}><Layers3 size={17} color={accent}/></div>
+                  <div style={R({gap:8,marginBottom:12})}>
+                    <div style={{width:36,height:36,borderRadius:10,background:`${dm.color}16`,border:`1px solid ${dm.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers3 size={17} color={dm.light}/></div>
+                    <span style={{...pill(dm.dim,dm.light,{fontSize:9.5,fontWeight:700})}}>{dm.emoji} {info.subcategory!=='General'&&info.subcategory!==info.category?info.subcategory:info.category}</span>
+                  </div>
                   <div style={{fontSize:13,fontWeight:700,color:C.t1,marginBottom:4,lineHeight:1.35,fontFamily:C.FD}}>{deck.name}</div>
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deck.cards.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
+                  {deckRet!==null&&<div style={{marginTop:8}}><Bar pct={deckRet} color={deckRet>=80?C.green:deckRet>=50?C.amber:C.rose} h={3}/></div>}
                   <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
                     {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
-                    {dc>0&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}}>{dc} due now</div>}
+                    {dc>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontFamily:C.FM,fontWeight:700})}}>{dc} due now</div>}
                     {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
                   </div>
                 </div>
@@ -4315,6 +4336,7 @@ export default function App({ account, onAccountChange }) {
       <div style={CC({gap:22})}>
         {/* Progress Tracker Card Header */}
         <div data-tour="prep-deep-library" style={{...glass({padding:20, background: `linear-gradient(120deg, ${C.blueDim}, ${C.violetDim} 45%, ${C.pinkDim})`, border: `1px solid ${C.violet}22`, position:'relative', overflow:'hidden'}), display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap'}}>
+          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:C.auroraGrad}}/>
           <div style={{position:'absolute',inset:0,background:C.auroraGrad,opacity:0.06,pointerEvents:'none'}}/>
           <div style={{position: 'relative', width: 64, height: 64, borderRadius: '50%', background: C.auroraGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow:`0 6px 20px ${C.violet}40`}}>
             <BookOpen size={24} color="#fff" />
@@ -4325,7 +4347,7 @@ export default function App({ account, onAccountChange }) {
             <div style={{fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 2}}>E-Library Workspace</div>
             {/* Progress Bar */}
             <div style={{marginTop: 10, width: '100%', height: 6, borderRadius: 3, background: C.s4, overflow: 'hidden', position: 'relative'}}>
-              <motion.div initial={{width: 0}} animate={{width: `${pct}%`}} transition={{duration: 0.6}} style={{position: 'absolute', left: 0, top: 0, height: '100%', background: C.blueGrad}} />
+              <motion.div initial={{width: 0}} animate={{width: `${pct}%`}} transition={{duration: 0.6}} style={{position: 'absolute', left: 0, top: 0, height: '100%', background: C.auroraGrad, boxShadow: `0 0 10px ${C.violet}60`}} />
             </div>
           </div>
           <div style={{display: 'flex', gap: 16, flexWrap: 'wrap'}}>
@@ -4348,10 +4370,10 @@ export default function App({ account, onAccountChange }) {
         <div style={R({borderBottom: `1px solid ${C.b1}`, paddingBottom: 10, gap: 10, flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center'})}>
           <div style={R({gap: 10, flexWrap: 'wrap'})}>
             {[
-              { id: 'all', label: 'All Resources', icon: BookOpen },
-              { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark },
-              { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck },
-              { id: 'notes', label: `My Notes (${notesCount})`, icon: ScrollText }
+              { id: 'all', label: 'All Resources', icon: BookOpen, color: C.blue, light: C.blueL, dim: C.blueDim },
+              { id: 'saved', label: `My Saved (${savedCount})`, icon: Bookmark, color: C.amber, light: C.amberL, dim: C.amberDim },
+              { id: 'completed', label: `Completed (${completedCount})`, icon: BadgeCheck, color: C.green, light: C.greenL, dim: C.greenDim },
+              { id: 'notes', label: `My Notes (${notesCount})`, icon: ScrollText, color: C.violet, light: C.violetL, dim: C.violetDim }
             ].map(tab => {
               const Icon = tab.icon;
               const active = lSubTab === tab.id;
@@ -4360,20 +4382,21 @@ export default function App({ account, onAccountChange }) {
                   key={tab.id}
                   onClick={() => setLSubTab(tab.id)}
                   style={{
-                    ...btnSm(active ? C.blueDim : 'transparent', {
-                      color: active ? C.blueL : C.t2,
-                      border: active ? `1px solid ${C.blue}30` : '1px solid transparent',
+                    ...btnSm(active ? tab.dim : 'transparent', {
+                      color: active ? tab.light : C.t2,
+                      border: active ? `1px solid ${tab.color}35` : '1px solid transparent',
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
                       padding: '8px 16px',
                       fontSize: 12,
                       fontWeight: 600,
-                      borderRadius: 8
+                      borderRadius: 8,
+                      boxShadow: active ? `0 3px 10px ${tab.color}22` : 'none'
                     })
                   }}
                 >
-                  <Icon size={14} />
+                  <Icon size={14} color={active ? tab.light : undefined} />
                   {tab.label}
                 </button>
               );
@@ -4532,7 +4555,7 @@ export default function App({ account, onAccountChange }) {
 
         {/* Video Resources Section */}
         {yt.length>0&&<div>
-          <SL>Video Resources ({yt.length})</SL>
+          <SectionTitle icon={Play} color={C.redL}>Video Resources ({yt.length})</SectionTitle>
           <div style={G(2,14,{},isMobile)}>
             {yt.map((r,i)=>{
               const hasNotes = !!user?.resourceNotes?.[r.title];
@@ -4662,7 +4685,7 @@ export default function App({ account, onAccountChange }) {
 
         {/* Text/Interactive Resources Section */}
         {reg.length>0&&<div>
-          {yt.length>0&&<SL>Articles, Books & Courses ({reg.length})</SL>}
+          {yt.length>0&&<SectionTitle icon={BookOpen} color={C.pinkL}>Articles, Books & Courses ({reg.length})</SectionTitle>}
           <div style={G(2,12,{},isMobile)}>
             {reg.map((r,i)=>{
               const col=tc[r.type]||C.t2;
