@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Award, ClipboardCopy, FileDown, TrendingUp, ShieldCheck, ShieldQuestion } from 'lucide-react';
+import { Plus, Trash2, Award, ClipboardCopy, FileDown, TrendingUp, ShieldCheck, ShieldQuestion, Layers, Clock, GraduationCap } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G } from '../lib/theme';
+import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
+// Every activity type gets its own colour so the logged list reads as a
+// varied, scannable portfolio instead of a monochrome stack.
+const ACT_COLORS = {
+  'Clinical/Shadowing': C.pink, 'Patient Care (paid)': C.rose, 'Health Club/HOSA': C.cyan,
+  Leadership: C.blue, Volunteering: C.violet, Research: C.teal, Athletics: C.green,
+  'Arts & Performance': C.fuchsia, 'Work Experience': C.orange, 'Clubs & Organizations': C.sky, Other: C.t3,
+};
 const GRADE_LEVELS = ['9','10','11','12','Post-graduate'];
 const STATUSES = ['ongoing','completed'];
 
@@ -158,27 +166,35 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
   }), []);
 
   const latestGpa = gpaEntries.length ? gpaEntries[gpaEntries.length - 1].gpa : null;
+  const totalHours = Math.round(activities.reduce((s,a)=>s+((Number(a.hours_per_week)||0)*(Number(a.weeks_per_year)||0)),0));
+  const leadershipCount = activities.filter(a=>a.leadership_role).length;
 
   return (
     <div style={CC({gap:22})}>
-      <div style={R({justifyContent:'space-between',flexWrap:'wrap'})}>
-        <div data-tour="portfolio-deep-resume">
-          <div style={lbl()}>Applications</div>
-          <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Resume Builder</h2>
-        </div>
-        {(activities.length>0||awards.length>0) && (
-          <div style={R({gap:8})}>
+      <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange}
+        eyebrow="Applications" title="Activities & Resume Builder"
+        sub="Log every extracurricular, job, and leadership role with hours and impact — then export a polished, ready-to-submit resume in one click."
+        right={(activities.length>0||awards.length>0) ? (
+          <div style={R({gap:8,flexWrap:'wrap'})}>
             <button style={btnG({fontSize:12})} onClick={exportText}><ClipboardCopy size={13}/>Copy Common App format</button>
-            <button style={{...btn(accent!==C.blue?accent:C.blueGrad,{fontSize:12}),display:'inline-flex',alignItems:'center',gap:6}} onClick={exportPdf}><FileDown size={13}/>Download Resume PDF</button>
+            <button style={{...btn(`linear-gradient(135deg,${accent},${C.orange})`,{fontSize:12,boxShadow:`0 4px 14px ${tint(accent,0.35)}`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={exportPdf}><FileDown size={13}/>Download Resume PDF</button>
           </div>
-        )}
-      </div>
+        ) : undefined}/>
+
+      {(activities.length>0||awards.length>0||gpaEntries.length>0) && (
+        <div style={G(4,12,{},true)}>
+          <StatTile icon={Layers} value={activities.length} label="Activities" color={C.blue}/>
+          <StatTile icon={Clock} value={`${totalHours.toLocaleString()}h`} label="Est. hours / year" color={C.violet}/>
+          <StatTile icon={Award} value={awards.length} label="Honors & awards" color={C.gold}/>
+          <StatTile icon={GraduationCap} value={latestGpa!==null?latestGpa:'—'} label="Current GPA" sub={leadershipCount?`${leadershipCount} leadership role${leadershipCount===1?'':'s'}`:undefined} color={C.green}/>
+        </div>
+      )}
 
       {/* Academic history / GPA tracker */}
-      <div style={glass({padding:18})}>
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.green,0.05)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.green,0.18)}`}}>
         <div style={R({justifyContent:'space-between',marginBottom:14})}>
-          <div style={lbl({marginBottom:0})}>Academic History</div>
-          {latestGpa!==null && <span style={pill(`${accent}20`,accent,{fontFamily:C.FM})}>Current GPA: {latestGpa}</span>}
+          <SectionTitle icon={TrendingUp} color={C.greenL} extra={{marginBottom:0}}>Academic History</SectionTitle>
+          {latestGpa!==null && <span style={pill(tint(C.green,0.15),C.greenL,{fontFamily:C.FM})}>Current GPA: {latestGpa}</span>}
         </div>
         {gpaEntries.length>1 && (
           <div style={{height:180,marginBottom:18}}>
@@ -211,8 +227,8 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
         )}
       </div>
 
-      <div style={glass({padding:18})}>
-        <div style={lbl()}>Add an activity</div>
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Add an activity</SectionTitle>
         <div style={G(2,10,{},true)}>
           <div>
             <label style={lbl()}>Type</label>
@@ -271,11 +287,14 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
 
       {!loading && activities.length > 0 && (
         <div style={CC({gap:8})}>
-          {activities.map(a => (
-            <div key={a.id} style={{...glass2({padding:14}),display:'flex',gap:12}}>
+          <SectionTitle icon={Layers} color={accent}>My Activities ({activities.length})</SectionTitle>
+          {activities.map(a => {
+            const tc = ACT_COLORS[a.activity_type] || C.blue;
+            return (
+            <div key={a.id} style={{...glass2({padding:14}),display:'flex',gap:12,borderLeft:`3px solid ${tc}`,background:`linear-gradient(120deg,${tint(tc,0.05)},rgba(255,255,255,0.02) 55%)`}}>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:700,color:C.t1}}>
-                  {a.position} <span style={{color:C.t3,fontWeight:400}}>· {a.activity_type}{a.organization?` · ${a.organization}`:''}</span>
+                  {a.position} <span style={{color:tc,fontWeight:600}}>· {a.activity_type}</span><span style={{color:C.t3,fontWeight:400}}>{a.organization?` · ${a.organization}`:''}</span>
                   <span style={{...pill(a.status==='ongoing'?C.greenDim:C.blueDim,a.status==='ongoing'?C.greenL:C.blueL,{fontSize:9,marginLeft:8}),textTransform:'capitalize'}}>{a.status}</span>
                   {a.leadership_role && <span style={pill(`${accent}20`,accent,{fontSize:9,marginLeft:6})}>Leadership</span>}
                   <VerificationBadge status={a.verification_status} />
@@ -288,12 +307,12 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
               </div>
               <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeActivity(a.id)}><Trash2 size={12}/></button>
             </div>
-          ))}
+          );})}
         </div>
       )}
 
-      <div style={glass({padding:18})}>
-        <div style={lbl()}>Add an honor or award</div>
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.gold,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.gold,0.2)}`}}>
+        <SectionTitle icon={Award} color={C.goldL}>Add an honor or award</SectionTitle>
         <div style={G(3,10,{},true)}>
           <input style={inp()} placeholder="Award title" value={awardDraft.title} onChange={e=>setAwardDraft({...awardDraft,title:e.target.value})} />
           <select style={inp()} value={awardDraft.grade_level} onChange={e=>setAwardDraft({...awardDraft,grade_level:e.target.value})}>
@@ -315,8 +334,8 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       {!loading && awards.length > 0 && (
         <div style={CC({gap:8})}>
           {awards.map(a => (
-            <div key={a.id} style={{...glass2({padding:12}),display:'flex',alignItems:'center',gap:12}}>
-              <Award size={14} color={accent}/>
+            <div key={a.id} style={{...glass2({padding:12}),display:'flex',alignItems:'center',gap:12,borderLeft:`3px solid ${C.gold}`,background:`linear-gradient(120deg,${tint(C.gold,0.05)},rgba(255,255,255,0.02) 55%)`}}>
+              <div style={{width:30,height:30,borderRadius:9,background:tint(C.gold,0.13),border:`1px solid ${tint(C.gold,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Award size={14} color={C.goldL}/></div>
               <div style={{flex:1}}>
                 <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{a.title}</span>
                 <span style={{fontSize:11,color:C.t3,marginLeft:8}}>{[a.level,a.grade_level&&`Grade ${a.grade_level}`,a.issuing_organization].filter(Boolean).join(' · ')}</span>

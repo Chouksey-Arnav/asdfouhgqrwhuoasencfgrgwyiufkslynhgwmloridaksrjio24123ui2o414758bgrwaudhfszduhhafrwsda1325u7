@@ -2,7 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Mic, Shuffle, Send, RefreshCw, Sparkles, ListFilter, Info, ChevronLeft, ChevronRight, Lightbulb } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
+import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill, tint } from '../lib/theme';
+import PanelHero from './ui/PanelHero';
 import { getQuestionSet, getTips, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
 import LiveVoiceInterview from './LiveVoiceInterview';
@@ -111,11 +112,10 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
 
   return (
     <div style={CC({ gap: 22 })}>
-      <div data-tour="portfolio-deep-interview">
-        <div style={lbl()}>Interview Prep</div>
-        <h2 style={{ fontSize: 24, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>Mock Interview Practice</h2>
-        <p style={{ fontSize: 13, color: C.t3, marginTop: 6, lineHeight: 1.6 }}>Practice answering real college-admissions-style questions and get instant, encouraging feedback. Choose a question set, work through {Object.values(INTERVIEW_QUESTIONS).reduce((n, a) => n + a.length, 0)}+ curated prompts across every pathway, and preview MMI/CASPer formats too. Not medical or graduate school prep — just building your confidence for the interviews you'll actually have.</p>
-      </div>
+      <PanelHero tourTag="portfolio-deep-interview" icon={Mic} color={accent} color2={C.rose}
+        eyebrow="Interview Prep" title="Mock Interview Practice"
+        sub={`Practice real college-admissions-style questions with instant, encouraging feedback — ${Object.values(INTERVIEW_QUESTIONS).reduce((n, a) => n + a.length, 0)}+ curated prompts across every pathway, plus live voice interviews and MMI/CASPer format previews.`}
+        stats={sessions > 0 ? [{ value: sessions, label: 'practiced this session', color: C.roseL }] : []}/>
 
       <div style={R({ gap: 6, flexWrap: 'wrap' })}>
         {MODES.map(m => (

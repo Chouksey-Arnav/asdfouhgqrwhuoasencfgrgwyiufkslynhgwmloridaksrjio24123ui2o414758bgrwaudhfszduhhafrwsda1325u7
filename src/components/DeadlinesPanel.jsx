@@ -1,20 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, CalendarClock } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
+import { Plus, Trash2, CalendarClock, CalendarDays, Hourglass, AlertTriangle, History } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const KINDS = [
-  { id: 'common_app_open', label: 'Common App Opens' },
-  { id: 'early_action', label: 'Early Action' },
-  { id: 'early_decision', label: 'Early Decision' },
-  { id: 'regular_decision', label: 'Regular Decision' },
-  { id: 'fafsa', label: 'FAFSA Opens' },
-  { id: 'css_profile', label: 'CSS Profile' },
-  { id: 'ap_exam', label: 'AP Exam' },
-  { id: 'ib_exam', label: 'IB Exam' },
-  { id: 'scholarship', label: 'Scholarship' },
-  { id: 'custom', label: 'Custom' },
+  { id: 'common_app_open', label: 'Common App Opens', color: C.blue },
+  { id: 'early_action', label: 'Early Action', color: C.violet },
+  { id: 'early_decision', label: 'Early Decision', color: C.fuchsia },
+  { id: 'regular_decision', label: 'Regular Decision', color: C.sky },
+  { id: 'fafsa', label: 'FAFSA Opens', color: C.green },
+  { id: 'css_profile', label: 'CSS Profile', color: C.teal },
+  { id: 'ap_exam', label: 'AP Exam', color: C.amber },
+  { id: 'ib_exam', label: 'IB Exam', color: C.orange },
+  { id: 'scholarship', label: 'Scholarship', color: C.gold },
+  { id: 'custom', label: 'Custom', color: C.cyan },
 ];
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -105,15 +106,28 @@ export default function DeadlinesPanel({ accent = C.blue }) {
   }
 
   const sorted = [...deadlines].sort((a,b)=>a.due_date.localeCompare(b.due_date));
+  const upcoming = sorted.filter(d => daysUntil(d.due_date) >= 0);
+  const urgentCount = upcoming.filter(d => daysUntil(d.due_date) <= 14).length;
+  const pastCount = sorted.length - upcoming.length;
+  const next = upcoming[0];
 
   return (
     <div style={CC({gap:22})}>
-      <div data-tour="portfolio-deep-deadlines">
-        <div style={lbl()}>Applications</div>
-        <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Deadlines</h2>
-      </div>
+      <PanelHero tourTag="portfolio-deep-deadlines" icon={CalendarDays} color={accent} color2={C.orange}
+        eyebrow="Applications" title="Deadlines"
+        sub="Every application, scholarship, and exam date in one countdown — deadlines you add here also surface on your Home dashboard as they approach."
+        stats={deadlines.length > 0 ? [{ value: upcoming.length, label: 'upcoming', color: accent }] : []}/>
 
-      <div style={glass({padding:18})}>
+      {deadlines.length > 0 && (
+        <div style={G(3,12,{},true)}>
+          <StatTile icon={Hourglass} value={next ? (daysUntil(next.due_date) === 0 ? 'Today' : `${daysUntil(next.due_date)}d`) : '—'} label={next ? `until ${next.title.slice(0, 26)}${next.title.length > 26 ? '…' : ''}` : 'nothing upcoming'} color={next && daysUntil(next.due_date) <= 14 ? C.rose : C.sky}/>
+          <StatTile icon={AlertTriangle} value={urgentCount} label="due within 14 days" color={urgentCount > 0 ? C.amber : C.green}/>
+          <StatTile icon={History} value={pastCount} label="already passed" color={C.t3}/>
+        </div>
+      )}
+
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Add a deadline</SectionTitle>
         <form onSubmit={addDeadline} style={R({gap:10,flexWrap:'wrap'})}>
           <input style={inp({flex:1,minWidth:180})} placeholder="e.g. Stanford EA deadline" value={title} onChange={e=>setTitle(e.target.value)} />
           <input type="date" style={inp({width:'auto'})} value={date} onChange={e=>setDate(e.target.value)} />
@@ -135,18 +149,21 @@ export default function DeadlinesPanel({ accent = C.blue }) {
         {sorted.map(d => {
           const days = daysUntil(d.due_date);
           const past = days < 0;
-          const urgent = !past && days <= 14;
+          const kind = KINDS.find(k=>k.id===d.kind) || KINDS[KINDS.length-1];
+          // Countdown chip colour escalates with urgency: rose ≤7d, amber ≤14d,
+          // sky ≤30d, calm neutral beyond that.
+          const urgency = past ? C.t4 : days <= 7 ? C.rose : days <= 14 ? C.amber : days <= 30 ? C.sky : C.t3;
           return (
-            <div key={d.id} style={{...glass2({padding:14}),display:'flex',alignItems:'center',gap:14,opacity:past?0.5:1}}>
-              <div style={{width:56,textAlign:'center',flexShrink:0}}>
-                <div style={{fontSize:20,fontWeight:800,color:urgent?C.roseL:C.t1,fontFamily:C.FD}}>{past?'—':days}</div>
-                <div style={{fontSize:9,color:C.t3,textTransform:'uppercase'}}>{past?'past':'days'}</div>
+            <div key={d.id} style={{...glass2({padding:14}),display:'flex',alignItems:'center',gap:14,opacity:past?0.5:1,borderLeft:`3px solid ${past?C.t4:kind.color}`,background:`linear-gradient(120deg,${tint(kind.color,past?0.02:0.05)},rgba(255,255,255,0.02) 55%)`}}>
+              <div style={{width:60,flexShrink:0,textAlign:'center',padding:'8px 4px',borderRadius:10,background:tint(urgency,past?0.05:0.1),border:`1px solid ${tint(urgency,past?0.12:0.28)}`}}>
+                <div style={{fontSize:19,fontWeight:800,color:past?C.t4:urgency,fontFamily:C.FD,lineHeight:1}}>{past?'—':days===0?'now':days}</div>
+                <div style={{fontSize:8.5,color:C.t3,textTransform:'uppercase',letterSpacing:'.05em',marginTop:3}}>{past?'past':days===0?'today':'days left'}</div>
               </div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:600,color:C.t1}}>{d.title}</div>
                 <div style={R({gap:8,marginTop:3})}>
                   <span style={{fontSize:11,color:C.t3}}>{new Date(d.due_date+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span>
-                  <span style={pill(C.blueDim,C.blueL,{fontSize:9})}>{KINDS.find(k=>k.id===d.kind)?.label || 'Custom'}</span>
+                  <span style={pill(tint(kind.color,0.13),kind.color,{fontSize:9})}>{kind.label}</span>
                 </div>
               </div>
               <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeDeadline(d.id)}><Trash2 size={12}/></button>

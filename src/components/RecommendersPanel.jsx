@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, UserCheck, Users } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
+import { Plus, Trash2, UserCheck, Users, Mail, CheckCircle2 } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const STATUSES = ['Planning to ask', 'Asked', 'Confirmed', 'Submitted'];
 const STATUS_COLORS = { 'Planning to ask':C.t3, 'Asked':C.amberL, 'Confirmed':C.blueL, 'Submitted':C.greenL };
@@ -57,17 +58,26 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
 
   const individuals = entries.filter(e => e.type === 'individual');
   const committee = entries.filter(e => e.type === 'committee');
+  const confirmedOrIn = entries.filter(e => ['Confirmed','Submitted'].includes(e.status)).length;
+  const submitted = entries.filter(e => e.status === 'Submitted').length;
 
   return (
     <div style={CC({gap:22})}>
-      <div style={R()}>
-        <div data-tour="portfolio-deep-recommenders"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Letters of Recommendation</h2></div>
-        <div style={{marginLeft:'auto'}}><span style={pill(C.blueDim,C.blueL)}>{entries.length} tracked</span></div>
-      </div>
-      <p style={{fontSize:13,color:C.t2,lineHeight:1.6,marginTop:-14}}>Track who you're asking for a letter — a teacher, counselor, coach, or someone you shadowed — plus your school's pre-health committee letter if it has one.</p>
+      <PanelHero tourTag="portfolio-deep-recommenders" icon={UserCheck} color={accent} color2={C.violet}
+        eyebrow="Portfolio" title="Letters of Recommendation"
+        sub="Track who you're asking for a letter — a teacher, counselor, coach, or someone you shadowed — plus your school's pre-health committee letter if it has one. Most applications need 2-3."
+        stats={entries.length > 0 ? [{ value: entries.length, label: 'tracked' }] : []}/>
 
-      <div style={glass({padding:18})}>
-        <SL>Add a Recommender</SL>
+      {entries.length > 0 && (
+        <div style={G(3,12,{},true)}>
+          <StatTile icon={Mail} value={entries.filter(e=>e.status==='Asked').length} label="Asked, awaiting answer" color={C.amber}/>
+          <StatTile icon={UserCheck} value={confirmedOrIn} label="Confirmed writers" color={C.blue}/>
+          <StatTile icon={CheckCircle2} value={submitted} label="Letters submitted" color={C.green}/>
+        </div>
+      )}
+
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Add a Recommender</SectionTitle>
         <form onSubmit={addEntry} style={CC({gap:10})}>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input style={inp({flex:1,minWidth:160})} placeholder="Name" value={name} onChange={e=>setName(e.target.value)} />
@@ -103,21 +113,30 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
 function Section({ title, items, accent, onCycle, onRemove }) {
   return (
     <div style={CC({gap:8})}>
-      <SL>{title}</SL>
-      {items.map(e => (
-        <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
-          <div style={{width:34,height:34,borderRadius:10,background:`${accent}15`,border:`1px solid ${accent}25`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><UserCheck size={15} color={accent}/></div>
+      <SectionTitle icon={Users} color={accent}>{title}</SectionTitle>
+      {items.map(e => {
+        const sc = STATUS_COLORS[e.status] || C.t3;
+        const stepIdx = STATUSES.indexOf(e.status);
+        return (
+        <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'}),borderLeft:`3px solid ${sc}`,background:`linear-gradient(120deg,${tint(sc,0.05)},rgba(255,255,255,0.02) 55%)`}}>
+          <div style={{width:34,height:34,borderRadius:10,background:tint(accent,0.13),border:`1px solid ${tint(accent,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><UserCheck size={15} color={accent}/></div>
           <div style={{flex:1,minWidth:0}}>
             <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{e.name}</div>
             <div style={{fontSize:11,color:C.t3,marginTop:2}}>{e.relationship}{e.due_date?` · due ${new Date(e.due_date+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})}`:''}</div>
             {e.notes && <div style={{fontSize:11,color:C.t2,marginTop:4}}>{e.notes}</div>}
+            {/* 4-step ask→submitted progress strip — click the status pill to advance */}
+            <div style={{display:'flex',gap:4,marginTop:8,maxWidth:180}}>
+              {STATUSES.map((s,i)=>(
+                <span key={s} title={s} style={{flex:1,height:4,borderRadius:3,background:i<=stepIdx?(STATUS_COLORS[s]===C.t3?C.t4:STATUS_COLORS[s]):'rgba(255,255,255,0.07)'}}/>
+              ))}
+            </div>
           </div>
           <div style={{...R({gap:6}),flexShrink:0}}>
-            <button onClick={()=>onCycle(e)} style={pill(`${STATUS_COLORS[e.status]}18`,STATUS_COLORS[e.status],{cursor:'pointer',border:'none',fontSize:10})}>{e.status}</button>
+            <button onClick={()=>onCycle(e)} style={pill(tint(sc,0.15),sc,{cursor:'pointer',border:`1px solid ${tint(sc,0.3)}`,fontSize:10})}>{e.status}</button>
             <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>onRemove(e.id)}><Trash2 size={12}/></button>
           </div>
         </div>
-      ))}
+      );})}
     </div>
   );
 }

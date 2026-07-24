@@ -39,7 +39,7 @@
 // against — via the same "repair per-field from a deterministic fallback"
 // pattern planGenerator.js established for the onboarding plan.
 // ─────────────────────────────────────────────────────────────────────────────
-import { PATHS, GRADE_STAGES, DECK_CATEGORY_ORDER } from '../data/constants';
+import { PATHS, GRADE_STAGES, DECK_CATEGORY_ORDER, FLASH_DECKS } from '../data/constants';
 import { ALL_QUIZZES } from '../data/quizzes/index';
 import { ELIB } from '../data/elib';
 import { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from '../components/onboarding/Onboarding';
@@ -93,15 +93,23 @@ export function buildResourceCatalog(specialtyKey) {
   for (const q of ALL_QUIZZES) quizCatCounts[q.cat] = (quizCatCounts[q.cat] || 0) + 1;
   const quizCats = Object.keys(quizCatCounts);
   const quizLine = Object.entries(quizCatCounts).map(([c, n]) => `${c} (${n})`).join(', ');
+  // A per-category sample of REAL quiz titles so the model can name an exact quiz
+  // (which the deep-link resolver then matches to a launchable quiz id) instead
+  // of inventing plausible-sounding but nonexistent practice sets.
+  const quizSampleLines = quizCats
+    .map(c => `  • ${c} — e.g. ${ALL_QUIZZES.filter(q => q.cat === c).slice(0, 8).map(q => `"${q.title}"`).join(', ')}`)
+    .join('\n');
   const elibCats = [...new Set(ELIB.map(e => e.cat))];
-  const deckCats = DECK_CATEGORY_ORDER.filter(c => c !== 'My Decks');
+  const deckNames = Object.keys(FLASH_DECKS);
+  const articleSample = ELIB.slice(0, 14).map(e => `"${e.title}"`).join(', ');
   const text = [
     `PATHWAY — ${path.label} (this student's current track):`,
     unitLines,
     '',
-    `QUIZ LIBRARY: ${ALL_QUIZZES.length} practice quizzes across ${quizLine}`,
-    `FLASHCARDS: pre-built decks across ${deckCats.join(', ')}, plus decks the student can generate from their own notes`,
-    `E-LIBRARY: ~${ELIB.length} curated articles/videos/courses across ${elibCats.join(', ')}`,
+    `QUIZ LIBRARY: ${ALL_QUIZZES.length} practice quizzes across ${quizLine}. Sample real quiz titles you may reference by exact name:`,
+    quizSampleLines,
+    `FLASHCARDS: these exact pre-built decks: ${deckNames.join(', ')} — plus "Smart Mix" (all due cards across every deck) and decks the student can generate from their own notes`,
+    `E-LIBRARY: ~${ELIB.length} curated articles/videos/courses across ${elibCats.join(', ')} (sample titles: ${articleSample})`,
     `AI COACH: Medabrain chat tutor (inside Prep) for questions, explanations, and being quizzed out loud`,
     `PORTFOLIO TOOLS: College List, Essay Workspace, Deadlines Tracker, Financial Aid Tracker, Activities & Resume Builder, Research Experience Log, Skills & Certifications, Clinical Hours Log, Recommenders Tracker, Interview Prep practice, Test Score Tracker, Admissions Calculator`,
   ].join('\n');
@@ -202,6 +210,145 @@ function sanitizeDestination(tab, view) {
 }
 const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'rest']);
 const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'coach', 'activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'interview', 'reflection', 'rest']);
+
+// ── Specific-resource resolution — the "give me the actual link" layer ─────
+// A task saying "SAT practice set" is only useful if clicking it opens THE
+// practice set. Every task is resolved here, deterministically and locally,
+// to a concrete launchable resource: a real quiz id, a real pathway lesson
+// id, a real flashcard deck name, or a real E-Library article title. The AI
+// may *suggest* a resource by name (resourceName in the day-chunk schema);
+// this resolver validates that suggestion against the app's actual catalogs
+// and, when it doesn't match anything real, falls back to a sensible pick —
+// so a link is present and working on 100% of tasks regardless of what the
+// model returned.
+const TYPE_DEFAULT_DEST = {
+  lesson: ['prep', 'pathway'], quiz: ['prep', 'quizzes'], flashcards: ['prep', 'flashcards'],
+  reading: ['prep', 'library'], coach: ['prep', 'coach'],
+  activity: ['portfolio', 'resume'], college: ['portfolio', 'colleges'], essay: ['portfolio', 'essays'],
+  deadline: ['portfolio', 'deadlines'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
+  recommender: ['portfolio', 'recommenders'], interview: ['portfolio', 'interview'],
+  reflection: ['progress', 'overview'], rest: null,
+};
+const VIEW_LABELS = {
+  'prep:diagnostic': 'Pathway Diagnostic', 'prep:pathway': 'Your Pathway', 'prep:quizzes': 'Quiz Library',
+  'prep:flashcards': 'Flashcards', 'prep:coach': 'AI Coach', 'prep:library': 'E-Library',
+  'portfolio:overview': 'Portfolio Overview', 'portfolio:timeline': 'Timeline', 'portfolio:colleges': 'College List',
+  'portfolio:essays': 'Essay Workspace', 'portfolio:deadlines': 'Deadlines Tracker', 'portfolio:aid': 'Financial Aid',
+  'portfolio:resume': 'Activities & Resume', 'portfolio:research': 'Research Log', 'portfolio:skills': 'Skills & Certs',
+  'portfolio:clinical': 'Clinical Hours Log', 'portfolio:recommenders': 'Recommenders', 'portfolio:interview': 'Interview Prep',
+  'portfolio:scores': 'Test Score Tracker', 'portfolio:calc': 'Admissions Calculator',
+  'progress:overview': 'Progress Overview', 'progress:verified': 'Verified Progress',
+  'progress:performance': 'Performance', 'progress:achievements': 'Achievements',
+};
+
+const MATCH_STOPWORDS = new Set(['the', 'and', 'for', 'your', 'with', 'into', 'from', 'that', 'this', 'you', 'are', 'not', 'set', 'sets', 'practice', 'quiz', 'quizzes', 'deck', 'decks', 'review', 'lesson', 'lessons', 'unit', 'library', 'session', 'question', 'questions', 'flashcard', 'flashcards', 'card', 'cards', 'study', 'read', 'reading', 'article', 'video', 'complete', 'continue', 'today', 'daily']);
+function matchTokens(s) {
+  return String(s || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/)
+    .filter(w => w.length > 2 && !MATCH_STOPWORDS.has(w));
+}
+// Best token-overlap candidate; `min` guards against coincidental one-word hits
+// when matching loose free text (title+detail) rather than an exact name.
+function bestMatch(text, candidates, getTitle, min = 2) {
+  const qt = new Set(matchTokens(text));
+  if (!qt.size) return null;
+  let best = null, bestScore = 0;
+  for (const c of candidates) {
+    const ct = matchTokens(getTitle(c));
+    let score = 0;
+    for (const t of ct) if (qt.has(t)) score++;
+    if (score > bestScore || (score === bestScore && score > 0 && best && matchTokens(getTitle(best)).length > ct.length)) {
+      if (score > 0) { best = c; bestScore = score; }
+    }
+  }
+  return bestScore >= Math.min(min, matchTokens(text).length) ? best : null;
+}
+// Deterministic small hash so fallback picks vary day to day (and task to
+// task) without any randomness — the same plan always resolves the same way.
+function seedFrom(str) {
+  let h = 0;
+  const s = String(str);
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function buildResourceIndex(specialtyKey) {
+  const path = PATHS[specialtyKey] || PATHS.exploring;
+  return {
+    lessons: path.units.flatMap(u => u.lessons.map(l => ({ id: l.id, title: l.title, unitTitle: u.title }))),
+    quizzes: ALL_QUIZZES.map(q => ({ id: q.id, title: q.title, cat: q.cat, diff: q.diff })),
+    decks: Object.keys(FLASH_DECKS),
+    articles: ELIB.map(e => ({ title: e.title, cat: e.cat })),
+  };
+}
+
+// Resolves ONE task to { resourceTab, resourceView, resourceKind, resourceId,
+// resourceLabel }. Never throws; always returns a complete link object (or a
+// bare view link when the type has no addressable resource, e.g. coach/rest).
+export function resolveTaskResource(task, index, { seedKey = '', weakestCategory = null } = {}) {
+  const type = VALID_TASK_TYPES.has(task?.type) ? task.type : 'reading';
+  // Destination: keep a valid AI-provided tab/view, otherwise derive from type.
+  let dest = sanitizeDestination(task?.resourceTab, task?.resourceView);
+  if (!dest.resourceTab) {
+    const def = TYPE_DEFAULT_DEST[type];
+    dest = def ? { resourceTab: def[0], resourceView: def[1] } : { resourceTab: null, resourceView: null };
+  }
+  const hint = [task?.resourceName, task?.title, task?.detail].filter(Boolean).join(' ');
+  const exactHint = task?.resourceName || '';
+  const seed = seedFrom(seedKey + (task?.title || ''));
+  let kind = 'view', id = null, label = dest.resourceTab ? (VIEW_LABELS[`${dest.resourceTab}:${dest.resourceView}`] || null) : null;
+
+  if (type === 'quiz' && dest.resourceTab === 'prep') {
+    dest = { resourceTab: 'prep', resourceView: 'quizzes' };
+    const hit = bestMatch(exactHint, index.quizzes, q => q.title, 1) || bestMatch(hint, index.quizzes, q => q.title, 2)
+      || (() => {
+        // Fallback: honour the category the task text names, else target the
+        // student's weakest category, else rotate — always lands on a real quiz.
+        const mentioned = index.quizzes.filter(q => hint.toLowerCase().includes(q.cat.toLowerCase()));
+        const catHit = index.quizzes.filter(q => weakestCategory && q.cat === weakestCategory);
+        const pool = mentioned.length ? mentioned : (catHit.length ? catHit : index.quizzes);
+        return pool[seed % pool.length];
+      })();
+    if (hit) { kind = 'quiz'; id = hit.id; label = hit.title; }
+  } else if (type === 'lesson' && dest.resourceTab === 'prep') {
+    dest = { resourceTab: 'prep', resourceView: 'pathway' };
+    const hit = bestMatch(exactHint, index.lessons, l => l.title, 1) || bestMatch(hint, index.lessons, l => `${l.title} ${l.unitTitle}`, 2)
+      || index.lessons[seed % Math.max(1, index.lessons.length)];
+    if (hit) { kind = 'lesson'; id = hit.id; label = hit.title; }
+  } else if (type === 'flashcards' && dest.resourceTab === 'prep') {
+    dest = { resourceTab: 'prep', resourceView: 'flashcards' };
+    const named = bestMatch(exactHint, index.decks, d => d, 1) || bestMatch(hint, index.decks, d => d, 2);
+    // "clear what's due" style tasks route to Smart Mix — the due-cards-across-
+    // every-deck session — which always exists regardless of the student's decks.
+    const dueish = /due|smart mix|review/i.test(hint);
+    const pick = named || (dueish ? 'Smart Mix' : index.decks[seed % Math.max(1, index.decks.length)]);
+    if (pick) { kind = 'deck'; id = pick; label = pick === 'Smart Mix' ? 'Smart Mix (due cards)' : pick; }
+  } else if (dest.resourceTab === 'prep' && dest.resourceView === 'library') {
+    // Any task pointed at the E-Library (reading, reflection, rest-day skims)
+    // gets a specific article when one can be named or matched.
+    const hit = bestMatch(exactHint, index.articles, a => a.title, 1) || bestMatch(hint, index.articles, a => a.title, 2);
+    if (hit) { kind = 'article'; id = hit.title; label = hit.title; }
+  }
+  return { ...dest, resourceKind: kind, resourceId: id, resourceLabel: label };
+}
+
+// Walks an entire plan and (re-)resolves the link fields on every task —
+// used both to upgrade plans generated before deep links existed and as a
+// belt-and-braces pass after any generation, so no stored plan can ever have
+// a task without a working link.
+export function resolveAllTaskLinks(plan, user, liveSignals = {}) {
+  if (!plan?.days?.length) return plan;
+  const index = buildResourceIndex(user?.specialty || 'exploring');
+  let changed = false;
+  const days = plan.days.map(d => ({
+    ...d,
+    tasks: (d.tasks || []).map(t => {
+      if (t.resourceKind && (t.resourceId || t.resourceKind === 'view')) return t;
+      changed = true;
+      return { ...t, ...resolveTaskResource(t, index, { seedKey: d.date, weakestCategory: liveSignals.weakestCategory }) };
+    }),
+  }));
+  return changed ? { ...plan, days, linkVersion: 2 } : plan;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ROADMAP — the durable spine of the plan
@@ -414,8 +561,8 @@ Here is the real MedSchoolPrep resource catalog to ground tasks in:
 ${catalogText}
 
 Respond with ONLY valid JSON (no markdown, no code fences, no prose) matching exactly this schema:
-{ "days": [ { "dayIndex": number, "theme": "short line tying the day to its week theme", "tasks": [ { "pillar": "prep|portfolio|progress|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource", "estMinutes": number, "resourceTab": "prep|portfolio|progress or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathway, colleges, essays) or null" } ], "reflectionPrompt": "string or null — only on the last day of the window or a natural weekly-reflection day" } ] }
-Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order.`;
+{ "days": [ { "dayIndex": number, "theme": "short line tying the day to its week theme", "tasks": [ { "pillar": "prep|portfolio|progress|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource", "estMinutes": number, "resourceTab": "prep|portfolio|progress or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathway, colleges, essays) or null", "resourceName": "the EXACT title of the one specific quiz, lesson, flashcard deck, or E-Library resource this task uses, copied verbatim from the catalog above — or null for tasks that don't target a single named resource" } ], "reflectionPrompt": "string or null — only on the last day of the window or a natural weekly-reflection day" } ] }
+Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order. For every quiz/lesson/flashcards/reading task, ALWAYS fill "resourceName" with a real name from the catalog — this becomes a clickable link that opens that exact resource for the student.`;
 }
 
 function repairDays(parsed, fallbackDays, plan, catalog) {
@@ -435,6 +582,7 @@ function repairDays(parsed, fallbackDays, plan, catalog) {
         title: str(t?.title) || fb.tasks[ti]?.title || 'Study session',
         detail: str(t?.detail) || fb.tasks[ti]?.detail || '',
         estMinutes: num(t?.estMinutes) || fb.tasks[ti]?.estMinutes || 20,
+        resourceName: str(t?.resourceName) || null,
         ...dest,
       };
     });
@@ -451,14 +599,22 @@ function repairDays(parsed, fallbackDays, plan, catalog) {
 // plan.daysGeneratedThrough (or `fromDate` for the very first chunk).
 export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = 7) {
   const fallback = heuristicDays(plan, fromDate, numDays, catalog, user);
+  // Final belt-and-braces pass: EVERY task — AI-written or fallback — leaves
+  // here resolved to a concrete launchable resource (see resolveTaskResource),
+  // so the "open this exact quiz/lesson/deck/article" link always works.
+  const index = buildResourceIndex(user?.specialty || 'exploring');
+  const linkAll = (days) => days.map(d => ({
+    ...d,
+    tasks: d.tasks.map(t => ({ ...t, ...resolveTaskResource(t, index, { seedKey: d.date, weakestCategory: liveSignals?.weakestCategory }) })),
+  }));
   try {
     const dayTable = fallback.map(d => `Day ${d.dayIndex}: ${d.date} (${d.weekday}) — Week ${d.weekNumber}, phase "${phaseForWeek(plan, d.weekNumber)?.title || ''}", week theme: "${weeklyThemeForWeek(plan, d.weekNumber)?.theme || d.theme}"`).join('\n');
     const system = buildDayChunkSystemPrompt(numDays, catalog.text);
     const userMsg = `Roadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals)}\n\nDays to fill in:\n${dayTable}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
     const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 5500, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
-    return parsed ? repairDays(parsed, fallback, plan, catalog) : fallback;
+    return linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback);
   } catch {
-    return fallback;
+    return linkAll(fallback);
   }
 }
 
@@ -479,7 +635,7 @@ export async function createMasterPlan(user, liveSignals) {
   const days = [...firstChunk, ...secondChunk];
   const now = Date.now();
   return {
-    version: 1, ...roadmap, startDate,
+    version: 1, linkVersion: 2, ...roadmap, startDate,
     days, daysGeneratedFrom: startDate, daysGeneratedThrough: addDaysStr(startDate, ROLLING_WINDOW_DAYS - 1),
     progressLog: [], createdAt: now, updatedAt: now, lastExtendedAt: now,
   };

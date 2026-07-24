@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, FileText, History } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill } from '../lib/theme';
+import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2 } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const STATUSES = [
   { id: 'not_started', label: 'Not Started', color: C.t3 },
@@ -117,14 +118,27 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   const wc = wordCount(draft);
   const over = selected && wc > selected.word_limit;
 
+  const totalWords = essays.reduce((s, e) => s + wordCount(e.content), 0);
+  const finals = essays.filter(e => e.status === 'final').length;
+  const inFlight = essays.filter(e => ['outlining','drafting','revising'].includes(e.status)).length;
+
   return (
     <div style={CC({gap:22})}>
-      <div data-tour="portfolio-deep-essays">
-        <div style={lbl()}>Applications</div>
-        <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Essay Workspace</h2>
-      </div>
+      <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia}
+        eyebrow="Applications" title="Essay Workspace"
+        sub="Draft, revise, and track every personal statement and supplemental in one place — with version history so no rewrite is ever lost."
+        stats={essays.length > 0 ? [{ value: essays.length, label: essays.length === 1 ? 'essay' : 'essays' }] : []}/>
 
-      <div style={glass({padding:18})}>
+      {essays.length > 0 && (
+        <div style={G(3,12,{},true)}>
+          <StatTile icon={PenLine} value={inFlight} label="In progress" color={C.blue}/>
+          <StatTile icon={CheckCircle2} value={finals} label="Finalized" color={C.green}/>
+          <StatTile icon={FileText} value={totalWords.toLocaleString()} label="Words written" color={accent}/>
+        </div>
+      )}
+
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Start a new essay</SectionTitle>
         <div style={R({gap:10,flexWrap:'wrap'})}>
           <input style={inp({flex:1,minWidth:180})} placeholder="e.g. Common App Personal Statement" value={newTitle} onChange={e=>setNewTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addEssay()} />
           <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addEssay}><Plus size={14}/>New Essay</button>
@@ -133,7 +147,9 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
 
       {!loading && essays.length === 0 && (
         <div style={glass({padding:30,textAlign:'center'})}>
-          <FileText size={28} color={C.t3} style={{margin:'0 auto 10px'}}/>
+          <div style={{width:48,height:48,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
+            <FileText size={22} color={accent}/>
+          </div>
           <div style={{fontSize:14,color:C.t2}}>No essays yet. Start with your Common App personal statement.</div>
         </div>
       )}
@@ -142,15 +158,20 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
         <div style={CC({gap:8})}>
           {essays.map(essay => {
             const st = STATUSES.find(s => s.id === essay.status) || STATUSES[0];
+            const ewc = wordCount(essay.content);
+            const wpct = essay.word_limit ? Math.min(100, Math.round((ewc / essay.word_limit) * 100)) : 0;
             return (
-              <div key={essay.id} onClick={()=>selectEssay(essay)} style={{...glass2({padding:12,cursor:'pointer',border:selected?.id===essay.id?`1px solid ${accent}60`:undefined})}}>
+              <div key={essay.id} onClick={()=>selectEssay(essay)} style={{...glass2({padding:12,cursor:'pointer',border:selected?.id===essay.id?`1px solid ${accent}60`:`1px solid ${C.b1}`}),borderLeft:`3px solid ${st.color}`,background:selected?.id===essay.id?`linear-gradient(120deg,${tint(accent,0.08)},rgba(255,255,255,0.02))`:undefined}}>
                 <div style={R({gap:8,justifyContent:'space-between'})}>
                   <span style={{fontSize:13,fontWeight:700,color:C.t1,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{essay.title}</span>
                   <button style={btnSm(C.roseDim,{color:C.rose,padding:'3px 8px'})} onClick={e=>{e.stopPropagation();removeEssay(essay.id);}}><Trash2 size={11}/></button>
                 </div>
                 <div style={R({gap:6,marginTop:6})}>
                   <span style={pill(`${st.color}18`, st.color, {fontSize:9})}>{st.label}</span>
-                  <span style={{fontSize:10,color:C.t3}}>{wordCount(essay.content)}/{essay.word_limit} words</span>
+                  <span style={{fontSize:10,color:C.t3}}>{ewc}/{essay.word_limit} words</span>
+                </div>
+                <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,overflow:'hidden',marginTop:8}}>
+                  <div style={{height:'100%',width:`${wpct}%`,background:ewc>essay.word_limit?C.rose:st.color,borderRadius:2,transition:'width .3s'}}/>
                 </div>
               </div>
             );
@@ -195,6 +216,9 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
                 <span style={{fontSize:11,color:over?C.roseL:C.t3}}>{wc} / {selected.word_limit} words</span>
               </div>
               <textarea style={{...inp(),minHeight:260,resize:'vertical',lineHeight:1.6}} value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Write your essay here…" />
+              <div style={{height:4,background:'rgba(255,255,255,0.06)',borderRadius:3,overflow:'hidden',marginTop:8}}>
+                <div style={{height:'100%',width:`${selected.word_limit?Math.min(100,Math.round((wc/selected.word_limit)*100)):0}%`,background:over?C.rose:wc>=selected.word_limit*0.85?C.amber:accent,borderRadius:3,transition:'width .3s'}}/>
+              </div>
             </div>
             <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:12}} onClick={saveVersion}>Save Version</button>
 

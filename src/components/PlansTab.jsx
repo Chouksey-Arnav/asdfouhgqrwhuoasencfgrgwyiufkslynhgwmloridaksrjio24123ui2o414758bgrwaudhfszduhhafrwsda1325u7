@@ -12,7 +12,7 @@ import { awardXP, BONUS_COPY } from '../lib/rewards';
 import { celebrateXP, celebrateBonusXP, celebrateJackpot } from '../lib/celebrate';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, pruneRollingWindow, toggleTaskDone,
-  needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr,
+  needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, resolveAllTaskLinks,
 } from '../lib/masterPlanGenerator';
 
 const PILLAR_META = {
@@ -48,7 +48,7 @@ function relTime(ts) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, liveSignals }) {
+export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, openResource, liveSignals }) {
   const plan = user?.masterPlan || null;
   const [view, setView] = useState('week'); // 'week' | 'roadmap'
   const [generating, setGenerating] = useState(false);
@@ -57,12 +57,14 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   const [expandedDay, setExpandedDay] = useState(null);
   const [expandedPhase, setExpandedPhase] = useState(null);
 
-  // Compact old days into progressLog on load so the synced blob never grows unbounded.
+  // Compact old days into progressLog on load so the synced blob never grows
+  // unbounded — and upgrade any plan generated before deep links existed so
+  // every task carries a working "open this exact resource" link.
   useEffect(() => {
     if (!plan) return;
-    const pruned = pruneRollingWindow(plan);
-    if (pruned !== plan) saveUser({ ...user, masterPlan: pruned });
-  }, [plan?.days?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+    const upgraded = resolveAllTaskLinks(pruneRollingWindow(plan), user, liveSignals || {});
+    if (upgraded !== plan) saveUser({ ...user, masterPlan: upgraded });
+  }, [plan?.days?.length, plan?.linkVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-extend the rolling window in the background — this is what keeps the plan
   // "continuing to plan" instead of going stale once the generated window runs out. Re-checks
@@ -128,7 +130,11 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     else celebrateXP();
   }
 
-  function jumpTo(tab, subview) {
+  // Prefer the app-provided deep-link opener (launches the exact quiz/lesson/
+  // deck/article the task names); plain tab navigation is the fallback.
+  function jumpTo(task) {
+    if (openResource) { openResource(task); return; }
+    const { resourceTab: tab, resourceView: subview } = task || {};
     if (!tab || !subview) return;
     if (tab === 'prep') goPrep?.(subview);
     else if (tab === 'portfolio') goPortfolio?.(subview);
@@ -319,7 +325,7 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
             <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {day.tasks.map(t => (
-                <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t.resourceTab, t.resourceView)} />
+                <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
               ))}
               {day.reflectionPrompt && (
                 <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>
@@ -338,8 +344,16 @@ function TaskRow({ task, onToggle, onJump }) {
   const meta = PILLAR_META[task.pillar] || PILLAR_META.prep;
   const Icon = TYPE_ICON[task.type] || BookOpen;
   const canJump = task.resourceTab && task.resourceView;
+  // Label the link with the EXACT resource it opens ("Open: Linear Equations
+  // Practice") so the student knows the click lands on the real thing, not a
+  // generic tab. Specific resources (quiz/lesson/deck/article) read "Open:",
+  // bare views read "Go to".
+  const specific = task.resourceKind && task.resourceKind !== 'view' && task.resourceLabel;
+  const linkLabel = specific
+    ? `Open: ${task.resourceLabel.length > 34 ? task.resourceLabel.slice(0, 32) + '…' : task.resourceLabel}`
+    : (task.resourceLabel ? `Go to ${task.resourceLabel}` : 'Open');
   return (
-    <div style={{ ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }), opacity: task.done ? 0.55 : 1 }}>
+    <div style={{ ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }), opacity: task.done ? 0.55 : 1, borderLeft: `2px solid ${meta.color}45` }}>
       <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', marginTop: 1, flexShrink: 0 }} aria-label="Toggle task done">
         {task.done ? <CheckCircle2 size={17} color={C.green} /> : <Circle size={17} color={C.t3} />}
       </button>
@@ -349,16 +363,23 @@ function TaskRow({ task, onToggle, onJump }) {
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</div>
         {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
-        <div style={R({ gap: 8, marginTop: 6 })}>
+        <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
           {task.estMinutes > 0 && <span style={R({ gap: 3 })}><Clock size={10} color={C.t3} /><span style={{ fontSize: 10, color: C.t3 }}>{task.estMinutes}m</span></span>}
+          {canJump && (
+            <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }} onClick={onJump} aria-label="Open this task's resource"
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 11px', borderRadius: 999,
+                border: `1px solid ${meta.color}45`, background: `${meta.color}16`, color: meta.color,
+                fontSize: 10.5, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%',
+                boxShadow: `0 2px 8px ${meta.color}22`,
+              }}>
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{linkLabel}</span>
+              <ArrowRight size={11} style={{ flexShrink: 0 }} />
+            </motion.button>
+          )}
         </div>
       </div>
-      {canJump && (
-        <button onClick={onJump} style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', color: C.t3, flexShrink: 0, padding: 4 }} aria-label="Go to resource">
-          <ArrowRight size={14} />
-        </button>
-      )}
     </div>
   );
 }
