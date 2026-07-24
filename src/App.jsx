@@ -20,7 +20,7 @@ import {
   ListFilter, Timer, Trash2, GraduationCap, ScrollText, Play, ExternalLink, Plus,
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
-  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff,
+  Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -69,6 +69,8 @@ import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import MyPlanCard from './components/MyPlanCard';
+import PlansTab from './components/PlansTab';
+import { summarizePlanForCoach } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -294,6 +296,7 @@ const NAV = [
   {id:'home',ic:Home,label:'Home'},
   {id:'prep',ic:Compass,label:'Prep'},
   {id:'portfolio',ic:Building2,label:'Portfolio'},
+  {id:'plans',ic:CalendarClock,label:'Plans'},
   {id:'progress',ic:LineChart,label:'Progress'},
   {id:'settings',ic:Settings,label:'Settings'},
 ];
@@ -1304,6 +1307,10 @@ export default function App({ account, onAccountChange }) {
     { target:'portfolio-sub-calc', section:'Portfolio', color:C.green, title:'Admissions Calculator', body:"Estimate your competitiveness at specific schools using your GPA, test scores, rigor, and activities — sync it straight from your Portfolio with one button.", onEnter:()=>goPortfolio('calc') },
     { target:'portfolio-deep-calc', section:'Portfolio', color:C.green, title:'Sync your real data, one click', body:"Hit \"Sync with Portfolio\" to pull your latest GPA, test scores, and activity hours in automatically instead of retyping them here.", onEnter:()=>goPortfolio('calc') },
 
+    // ── Plans ─────────────────────────────────────────────────────────────────
+    { target:'nav-plans', section:'Plans', color:C.fuchsia, title:'Plans — your full day-by-day roadmap', body:"Medabrain's deepest planning model builds a complete plan just for you: phases and milestones for the months ahead, plus real day-by-day tasks pulled from every resource in Prep and Portfolio — and it keeps extending itself as you go.", onEnter:()=>setTab('plans') },
+    { target:'plans-deep-hero', section:'Plans', color:C.fuchsia, title:'Built from your whole profile', body:"One click builds your full plan — your goal, pace, pathway, and obstacles all shape it. Once it exists, check off each day's tasks for XP, jump straight to the resource a task points to, or flip to the Full Roadmap view for the big picture.", onEnter:()=>setTab('plans') },
+
     // ── Progress ──────────────────────────────────────────────────────────────
     { target:'nav-progress', section:'Progress', color:C.cyan, title:'Progress — proof of the work', body:"A full picture of everything you've actually verified, mastered, and unlocked — separate from Home's daily snapshot, this is the long-run record.", onEnter:()=>setTab('progress') },
     { target:'progress-sub-overview', section:'Progress', color:C.cyan, title:'Overview', body:"Your big-picture stats: total XP, level, streak history, and how your onboarding goals are tracking over time.", onEnter:()=>goProgress('overview') },
@@ -1842,11 +1849,12 @@ export default function App({ account, onAccountChange }) {
   const portfolioAccent = C.green;
   const progressAccent = C.cyan;
   const settingsAccent = C.amber;
+  const plansAccent = C.fuchsia;
   // Same identity, applied to the nav itself — so the active tab actually highlights in its own
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
   // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
   // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
-  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, progress: progressAccent, settings: settingsAccent };
+  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -2219,6 +2227,7 @@ export default function App({ account, onAccountChange }) {
         collegeCount:appCounts.colleges,
         essayCount:appCounts.essays,
         streak,
+        planSummary:summarizePlanForCoach(user?.masterPlan),
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
@@ -5942,7 +5951,22 @@ export default function App({ account, onAccountChange }) {
       </div>
     );
   }
-  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, progress:tAnalytics, settings:tSettings };
+  // ── Plans: the full day-by-day master plan (src/lib/masterPlanGenerator.js) ──
+  // Same live-signal shape buildCoachSystemPrompt uses below (see requestAIResponse) — grounding
+  // the plan in the exact same "where they stand right now" facts the chat coach reasons over is
+  // what makes the Plans tab and Medabrain's chat feel like one brain instead of two features.
+  function tPlans(){
+    const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+    const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
+    const liveSignals={
+      weakestCategory:weakIdx?cats3[weakIdx.i]:null, weakestScore:weakIdx?weakIdx.v:null,
+      dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
+      portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
+      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
+    };
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} liveSignals={liveSignals}/>;
+  }
+  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
     <ErrorBoundary>
@@ -6049,10 +6073,15 @@ export default function App({ account, onAccountChange }) {
               const nc=navColor[n.id]||accent;
               const badge=n.id==='prep'&&dueCards>0?dueCards:null;
               return(
-                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',width:70}}>
-                  <n.ic size={20} color={tab===n.id?nc:C.t3}/>
-                  <span style={{fontSize:10,fontWeight:600}}>{n.label}</span>
-                  {badge&&<span style={{position:'absolute',top:-4,right:14,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
+                // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
+                // was width:70 back when there were only 5 tabs; fixed widths would overflow once
+                // Plans made it 6.
+                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0 2px'}}>
+                  <div style={{position:'relative',display:'flex'}}>
+                    <n.ic size={19} color={tab===n.id?nc:C.t3}/>
+                    {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
+                  </div>
+                  <span style={{fontSize:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
                 </div>
               );
             })}
