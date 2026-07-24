@@ -14,13 +14,14 @@ account/key** so their traffic and free-tier rate limits don't compete, and so u
 attributable per subsystem. Every request to `/api/groq.js` carries a `purpose`, which selects a
 key pool and a cost-appropriate default model:
 
-| `purpose`   | What it powers                                                        | Default model tier | Dedicated env var         |
-|-------------|-----------------------------------------------------------------------|--------------------|---------------------------|
-| `coach`     | The head Medabrain chat coach (highest-volume, general purpose)       | Guide / auto       | *(shared pool)*           |
-| `interview` | The mock-interview simulator (spoken, conversational)                 | Guide              | `GROQ_API_KEY_INTERVIEW`  |
-| `portfolio` | Portfolio intelligence over a student's full application tracker      | Guide              | `GROQ_API_KEY_PORTFOLIO`  |
-| `prep`      | In-context prep help (a question about the current lesson/quiz/video) | Scout (cheapest)   | `GROQ_API_KEY_PREP`       |
-| `plan`      | The one-time onboarding "max-out plan" generation                     | Sage (best)        | `GROQ_API_KEY_PLAN`       |
+| `purpose`    | What it powers                                                        | Default model tier | Dedicated env var          |
+|--------------|-------------------------------------------------------------------------|--------------------|-----------------------------|
+| `coach`      | The head Medabrain chat coach (highest-volume, general purpose)       | Guide / auto       | *(shared pool)*             |
+| `interview`  | The mock-interview simulator (spoken, conversational)                 | Guide              | `GROQ_API_KEY_INTERVIEW`    |
+| `portfolio`  | Portfolio intelligence over a student's full application tracker      | Guide              | `GROQ_API_KEY_PORTFOLIO`    |
+| `prep`       | In-context prep help (a question about the current lesson/quiz/video) | Scout (cheapest)   | `GROQ_API_KEY_PREP`         |
+| `plan`       | The one-time onboarding "max-out plan" generation                     | Sage (best)        | `GROQ_API_KEY_PLAN`         |
+| `masterplan` | The **Plans tab**'s full day-by-day roadmap generation (rare, heaviest)| Oracle (biggest)   | `GROQ_API_KEY_MASTERPLAN`   |
 
 **Every purpose falls back to the shared Medabrain pool** (`GROQ_API_KEY` / `_2` / `_3`) when its
 dedicated key isn't set — so the whole app works with a single key today, and simply gains more
@@ -39,10 +40,11 @@ GROQ_API_KEY_2=gsk_...        # optional, 2nd account
 GROQ_API_KEY_3=gsk_...        # optional, 3rd account
 
 # Dedicated per-subsystem keys (all optional — each falls back to the shared pool above)
-GROQ_API_KEY_INTERVIEW=gsk_...   # 4th account → interview simulator
-GROQ_API_KEY_PORTFOLIO=gsk_...   # 5th account → portfolio tracker intelligence
-GROQ_API_KEY_PREP=gsk_...        # 6th account → in-context prep help
-GROQ_API_KEY_PLAN=gsk_...        # 7th account → onboarding max-out plan generation
+GROQ_API_KEY_INTERVIEW=gsk_...    # 4th account → interview simulator
+GROQ_API_KEY_PORTFOLIO=gsk_...    # 5th account → portfolio tracker intelligence
+GROQ_API_KEY_PREP=gsk_...         # 6th account → in-context prep help
+GROQ_API_KEY_PLAN=gsk_...         # 7th account → onboarding max-out plan generation
+GROQ_API_KEY_MASTERPLAN=gsk_...   # 8th account → Plans tab full day-by-day roadmap generation
 ```
 
 Put the same values in a `.env.local` at the project root for local dev.
@@ -103,11 +105,12 @@ and routes it automatically — short/simple asks get Scout, essay feedback/deep
 Sage, everything else gets Guide. The AI Coach header shows a small "Auto" badge with whichever
 tier just answered, purely for transparency.
 
-| Tier    | Model                     | Used for                                                        |
-|---------|---------------------------|------------------------------------------------------------------|
-| `scout` | `llama-3.1-8b-instant`    | Fastest — quick turns, lightweight generation                    |
-| `guide` | `openai/gpt-oss-20b`      | Balanced default — structured reasoning without 70B-model cost    |
-| `sage`  | `llama-3.3-70b-versatile` | Deepest reasoning — essay feedback, complex pathway questions     |
+| Tier     | Model                     | Used for                                                          |
+|----------|---------------------------|--------------------------------------------------------------------|
+| `scout`  | `llama-3.1-8b-instant`    | Fastest — quick turns, lightweight generation                      |
+| `guide`  | `openai/gpt-oss-20b`      | Balanced default — structured reasoning without 70B-model cost      |
+| `sage`   | `llama-3.3-70b-versatile` | Deepest chat-facing reasoning — essay feedback, complex questions   |
+| `oracle` | `openai/gpt-oss-120b`     | Server-side only — the Plans tab's full day-by-day roadmap          |
 
 (`fast`/`deep` are still accepted as aliases for `scout`/`guide` for backwards compatibility.)
 
@@ -117,6 +120,44 @@ higher tokens-per-minute headroom than Sage's `llama-3.3-70b-versatile` (≈$0.5
 exactly why the classifier only routes to Sage for messages that actually look like they need it:
 it's the most capable tier, but the priciest and most likely to hit Groq's TPM limits if it were
 the default for every chat turn.
+
+Oracle (`openai/gpt-oss-120b`) is never offered in the student-facing Scout/Guide/Sage picker —
+it's reserved entirely for `purpose:'masterplan'`. It was chosen deliberately over Groq's other
+options for that one job: a 131K-token context window with a **32,768-token max completion**
+(vs. Kimi K2's 8,192-token cap — too small to hold a multi-week structured JSON plan in one
+response), native support for `reasoning_effort` (run at `'high'` for the initial roadmap so the
+model actually thinks before committing to a multi-month structure) and Groq's JSON-object
+response mode (cheap insurance against malformed JSON on the largest generation in the app), at
+$0.15/$0.75 per million input/output tokens — a fraction of Kimi K2's ~$1/$3. See
+`src/lib/masterPlanGenerator.js` for the full generation architecture (roadmap + rolling
+day-by-day window) and rationale.
+
+## The Plans tab — the full day-by-day master plan
+
+The Plans tab (`src/components/PlansTab.jsx`) is a permanent, always-available upgrade on the
+onboarding "max-out plan" (`generatedPlan`, still shown on Home via `MyPlanCard`) — instead of one
+short summary generated once, it's a genuinely deep, long-horizon roadmap the student can revisit,
+check off, and keep extending.
+
+- **Grounded in real resources, not invented ones.** `buildResourceCatalog()` feeds the model the
+  student's actual pathway units/lessons, real quiz categories, flashcard deck categories, E-Library
+  subjects, and every Portfolio tool by name — the model is instructed to never reference a
+  resource outside that list.
+- **Two-layer generation, not one giant blob.** `generateRoadmap()` makes one call for the durable
+  "spine" (phases + a one-line theme for every week across the whole horizon), then
+  `generateDayChunk()` makes small calls that explode only the *near-term* rolling window (a couple
+  weeks at a time) into real day-by-day tasks. This keeps every individual call fast/reliable, keeps
+  the stored plan small (the synced snapshot has a shared 2MB cap — see `api/progress-sync.js`), and
+  means far-future days get planned once they're actually close, using up-to-date progress instead of
+  a stale guess made months earlier.
+- **Keeps planning itself.** `needsExtension()`/`extendMasterPlan()` roll the day-by-day window
+  forward automatically as the student works through it (triggered client-side when the Plans tab is
+  open and the window is running low) — this is the mechanism behind "it keeps extending itself,"
+  not a background server job (there isn't one in this serverless architecture).
+- **One brain, not two features.** `summarizePlanForCoach()` folds today's tasks and this week's
+  theme into `buildCoachSystemPrompt()` (`src/lib/studentProfile.js`), so Scout, Guide, and Sage —
+  whichever tier answers a given chat message — all know the same plan the Plans tab shows, without
+  a separate integration per tier.
 
 ## Flashcard generation (no Groq, no network)
 

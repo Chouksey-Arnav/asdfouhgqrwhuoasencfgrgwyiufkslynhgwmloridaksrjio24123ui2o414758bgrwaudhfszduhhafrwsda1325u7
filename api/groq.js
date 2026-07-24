@@ -63,13 +63,23 @@ function setCachedResponse(key, content, model) {
 //           the deepest feedback available (e.g. a full essay critique) and is fine trading
 //           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
 // 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
+//   Oracle — openai/gpt-oss-120b, server-side only (never offered in the student-facing Scout/
+//            Guide/Sage picker). Reserved for the Plans tab's "master plan" generation: a 128K-
+//            context, 32,768-max-output reasoning model with native Structured Outputs and a
+//            tunable reasoning_effort — the deepest, largest-output model Groq hosts, worth the
+//            extra latency for a generation that happens rarely and matters a lot.
 const MODELS = {
   scout: 'llama-3.1-8b-instant',
   guide: 'openai/gpt-oss-20b',
   sage: 'llama-3.3-70b-versatile',
+  oracle: 'openai/gpt-oss-120b',
 };
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
-const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
+const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage', oracle: 'Oracle' };
+// gpt-oss models accept an optional reasoning_effort ('low'|'medium'|'high') that trades latency
+// for deeper chain-of-thought — only meaningful for that model family, so gate on the model id
+// rather than trusting every caller to know which models support it.
+const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss-20b']);
 
 // ── The Medabrain "brain" architecture — purpose-scoped key pools ───────────
 // Medabrain is the head/meta brain of the app. Underneath it, distinct subsystems each get their
@@ -83,6 +93,10 @@ const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
 //   prep      → in-context prep help (a question about the current pathway lesson, quiz, or e-library
 //               video) — high volume, must be cheap
 //   plan      → the one-time onboarding "max-out plan" generation — low volume, deepest model
+//   masterplan → the Plans tab's full day-by-day roadmap generation (see src/lib/masterPlanGenerator.js)
+//               — rarest and heaviest calls in the app (multi-thousand-token structured JSON), so it
+//               gets its own key pool and the biggest-output model (Oracle) rather than competing
+//               with the onboarding 'plan' pool's rate limits.
 //
 // Each purpose resolves to a POOL of keys. If purpose-specific keys are configured they're used;
 // otherwise the purpose transparently falls back to the shared Medabrain pool (GROQ_API_KEY[/2/3]),
@@ -96,14 +110,16 @@ const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage' };
 //   GROQ_API_KEY_PORTFOLIO                          → portfolio tracker intelligence
 //   GROQ_API_KEY_PREP                               → in-context prep help
 //   GROQ_API_KEY_PLAN                               → onboarding max-out plan generation
+//   GROQ_API_KEY_MASTERPLAN                         → Plans tab full day-by-day plan generation
 const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
 const PURPOSE_KEYS = {
   interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
   portfolio: [process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
   prep: [process.env.GROQ_API_KEY_PREP].filter(Boolean),
   plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
+  masterplan: [process.env.GROQ_API_KEY_MASTERPLAN].filter(Boolean),
 };
-const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan']);
+const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan']);
 
 // Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
 // falls back to the shared Medabrain pool. De-dupe in case someone points two vars at one key.
@@ -125,6 +141,7 @@ const PURPOSE_DEFAULT_TIER = {
   portfolio: 'guide',  // structured reasoning over a tracker, still cheap
   interview: 'guide',  // conversational, low-latency for spoken turns
   plan: 'sage',        // one-time, max-quality — worth the 70B model
+  masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
 };
 
 let keyCursor = 0;
@@ -180,7 +197,10 @@ function isMinuteLimited(ip) {
 // 'prep' is the exception: besides in-context lesson Q&A, it's also used by the flashcard AI
 // polish pass (src/lib/flashcards/aiPolish.js), which sends a notes excerpt plus a batch of draft
 // cards as JSON in a single message — comfortably larger than a chat turn, so it gets a higher cap.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000 };
+// 'masterplan' prompts carry a resource catalog (real pathway/quiz/library/portfolio names) plus
+// the full onboarding profile and live app-state signals, so they routinely run several thousand
+// characters longer than a chat turn.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 
@@ -232,7 +252,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON body.' });
   }
 
-  const { system, message, messages: rawMessages, maxTokens = 700, tier: rawTier, purpose: rawPurpose } = body || {};
+  const {
+    system, message, messages: rawMessages, maxTokens = 700, tier: rawTier, purpose: rawPurpose,
+    jsonMode, reasoningEffort: rawReasoningEffort,
+  } = body || {};
 
   if (!message && !rawMessages) {
     return res.status(400).json({ error: 'No message provided.' });
@@ -257,8 +280,17 @@ export default async function handler(req, res) {
   // Prep/Portfolio signals, which runs meaningfully longer than the old
   // generic prompt. Still capped well below Groq's context window so a
   // pathological client payload can't blow up per-request token cost.
+  // 'masterplan' gets a much higher cap: its system prompt carries a real resource catalog
+  // (pathway units, quiz categories, library subjects, portfolio tools) the model needs intact to
+  // ground the plan in things that actually exist in the app — see src/lib/masterPlanGenerator.js.
+  // Default nudged 4000 → 4800: buildCoachSystemPrompt (src/lib/studentProfile.js) now also folds
+  // in a condensed summary of the student's Plans-tab master plan (today's tasks, week theme),
+  // and that block is appended near the end, right before the behavioral guardrail paragraph — a
+  // cap that's too tight would truncate the guardrails themselves before the model ever sees them.
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 9000 };
+  const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 4800;
   const systemPrompt = system
-    ? String(system).slice(0, 4000)
+    ? String(system).slice(0, systemCap)
     : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
@@ -306,9 +338,29 @@ export default async function handler(req, res) {
   // ── Call Groq API (with timeout + one retry on transient failure) ──────────
   // Same reasoning as the input-char cap above: 'prep' also covers the flashcard AI polish pass,
   // which returns an edit-list across a batch of cards — routinely larger than a chat reply.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000 };
+  // 'masterplan' is the biggest: a week-by-week roadmap or a week of day-by-day tasks, each a
+  // structured JSON array — comfortably under Oracle's 32,768-token ceiling but far above every
+  // other purpose here.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
+
+  // JSON mode: the caller (currently only masterPlanGenerator.js) can request Groq's "JSON object"
+  // response format, which guarantees syntactically valid JSON back — much more reliable than
+  // asking nicely in the prompt and regex-extracting the result. Only meaningful/safe to forward
+  // when the caller actually asked for it, since OpenAI-compatible APIs require the word "JSON" to
+  // appear somewhere in the prompt when this is set (masterPlanGenerator.js's prompts always do).
+  const responseFormat = jsonMode ? { type: 'json_object' } : undefined;
+  // reasoning_effort only applies to the gpt-oss model family (Guide/Oracle) — silently ignored
+  // for other tiers so a stray value on a non-reasoning model can't cause a 400.
+  const reasoningEffort = (['low', 'medium', 'high'].includes(rawReasoningEffort) && REASONING_CAPABLE_MODELS.has(model))
+    ? rawReasoningEffort : undefined;
+
+  // Heavier purposes get more time before we give up — a multi-thousand-token structured
+  // generation on the 120B model legitimately takes longer than a chat reply.
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000 };
+  const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
+  const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
 
   async function callGroqOnce(useModel, apiKey, timeoutMs) {
     const controller = new AbortController();
@@ -325,6 +377,8 @@ export default async function handler(req, res) {
           max_tokens: clampedTokens,
           temperature: 0.7,
           messages: groqMessages,
+          ...(responseFormat ? { response_format: responseFormat } : {}),
+          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         }),
         signal: controller.signal,
       });
@@ -369,12 +423,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    let { response, data } = await callGroqWithFailover(model, 20000);
+    let { response, data } = await callGroqWithFailover(model, primaryTimeoutMs);
 
     // One more pass through the key rotation on a transient failure (5xx, network hiccup) so a
     // single blip doesn't dead-end the chat.
     if (!response.ok && response.status >= 500) {
-      ({ response, data } = await callGroqWithFailover(model, 15000));
+      ({ response, data } = await callGroqWithFailover(model, retryTimeoutMs));
     }
 
     if (!response.ok) {
