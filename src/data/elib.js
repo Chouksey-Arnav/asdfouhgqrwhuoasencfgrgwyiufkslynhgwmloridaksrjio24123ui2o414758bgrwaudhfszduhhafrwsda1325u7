@@ -45,6 +45,7 @@ import { ELIB_EXTRA } from './elibExtra';
 import { ELIB_EXPANSION_A } from './elibExpansionA';
 import { ELIB_EXPANSION_B } from './elibExpansionB';
 import { ELIB_EXPANSION_C } from './elibExpansionC';
+import { ELIB_EXPANSION_D } from './elibExpansionD';
 
 const ELIB_CORE = [
   {
@@ -1375,11 +1376,15 @@ const ELIB_CORE = [
 // Life Sciences/Physical Sciences/Math & Data/Research Methods, and
 // elibExpansionB.js — Behavioral & Social Sciences/Clinical Exposure/Test
 // Prep/Admissions & Planning/Wellness & Balance) — plus elibExpansionC.js, a
-// fourth 101-entry batch spanning all nine categories (see that file's own
-// header for its verification checklist and duplicate-removal history).
-// Every entry across all five modules was sourced via live search rather
+// fourth 101-entry batch spanning all nine categories, and elibExpansionD.js,
+// a fifth batch (101 entries) that closed a concrete gap (the app had zero
+// economics/health-policy resources despite the Health Administration
+// pathway's own lessons teaching economics) and rounded out every other
+// category with real, appropriately-leveled resources (see that file's own
+// header for the full rationale and verification checklist).
+// Every entry across all six modules was sourced via live search rather
 // than invented, and the combined set has been programmatically checked for
 // duplicate URLs/titles. Keeping them in separate modules makes each
 // expansion easy to audit on its own while the app continues to import a
 // single `ELIB` array.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C];
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D];
