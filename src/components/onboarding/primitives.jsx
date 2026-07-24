@@ -205,45 +205,155 @@ export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, v
   );
 }
 
-// Small hand-rolled animated line chart used for the illustrative social-proof
-// / progress graphs — deliberately lightweight (no chart.js) since these are
-// decorative marketing graphics, not real data visualizations.
-export function MiniLineChart({ width = 380, height = 150, lines, xLabels }) {
-  const pad = 12;
-  const w = width - pad * 2, h = height - pad * 2;
+// Animated count-up for headline numbers — the moment a stat "lands" is what
+// makes the proof screens feel alive instead of static marketing copy.
+export function useCountUp(target, { duration = 1200, delay = 300 } = {}) {
+  const [val, setVal] = useState(0);
+  useEffect(() => {
+    let raf; let start = null; let started = false;
+    const timer = setTimeout(() => { started = true; raf = requestAnimationFrame(tick); }, delay);
+    function tick(ts) {
+      if (start == null) start = ts;
+      const t = Math.min(1, (ts - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setVal(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    }
+    return () => { clearTimeout(timer); if (started) cancelAnimationFrame(raf); };
+  }, [target, duration, delay]);
+  return val;
+}
+
+// Hand-rolled animated line chart for the proof/projection screens —
+// deliberately lightweight (no chart.js). Upgraded from a bare polyline to a
+// full "moment": glow-filtered gradient strokes, a slow area sweep, labeled
+// milestone checkpoints, endpoint value badges with the student's REAL scores,
+// and a pulsing end dot. All new props are optional so old call sites render
+// unchanged.
+//   lines: [{ points:[0..1], color, width, fill, dashed, endDot, glow }]
+//   milestones: [{ f: 0..1 along line 0, score, label }]
+//   startLabel/endLabel: value badges anchored to line 0's endpoints
+export function MiniLineChart({ width = 380, height = 150, lines, xLabels, milestones, startLabel, endLabel }) {
+  const pad = 14, padTop = startLabel || endLabel ? 30 : 14, padBottom = xLabels ? 22 : 14;
+  const w = width - pad * 2, h = height - padTop - padBottom;
+  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
+  const ptsOf = (ln) => ln.points.map((p, i) => [pad + (w * i) / (ln.points.length - 1), padTop + h * (1 - p)]);
+  // Interpolate a point at fraction f along a line's polyline for milestones.
+  const at = (pts, f) => {
+    const x = pad + w * f;
+    for (let i = 1; i < pts.length; i++) {
+      if (x <= pts[i][0]) {
+        const t = (x - pts[i - 1][0]) / (pts[i][0] - pts[i - 1][0] || 1);
+        return [x, pts[i - 1][1] + (pts[i][1] - pts[i - 1][1]) * t];
+      }
+    }
+    return pts[pts.length - 1];
+  };
+  const main = lines[0] ? ptsOf(lines[0]) : null;
   return (
-    <svg width="100%" viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', overflow: 'visible' }}>
       <defs>
         {lines.map((ln, i) => ln.fill && (
-          <linearGradient key={i} id={`msp-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={ln.color} stopOpacity="0.35" />
+          <linearGradient key={`f${i}`} id={`msp-${uid}-grad-${i}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={ln.color} stopOpacity="0.38" />
             <stop offset="100%" stopColor={ln.color} stopOpacity="0" />
           </linearGradient>
         ))}
+        {lines.map((ln, i) => (
+          <linearGradient key={`s${i}`} id={`msp-${uid}-stroke-${i}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={ln.color} stopOpacity="0.55" />
+            <stop offset="100%" stopColor={ln.color} stopOpacity="1" />
+          </linearGradient>
+        ))}
+        <filter id={`msp-${uid}-glow`} x="-30%" y="-60%" width="160%" height="220%">
+          <feGaussianBlur stdDeviation="3" result="b" />
+          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
       </defs>
       {[0.25, 0.5, 0.75].map(f => (
-        <line key={f} x1={pad} x2={width - pad} y1={pad + h * f} y2={pad + h * f} stroke={C.b0} strokeWidth={1} />
+        <line key={f} x1={pad} x2={width - pad} y1={padTop + h * f} y2={padTop + h * f} stroke={C.b0} strokeWidth={1} />
       ))}
+      <line x1={pad} x2={width - pad} y1={padTop + h} y2={padTop + h} stroke={C.b1} strokeWidth={1} />
       {lines.map((ln, li) => {
-        const pts = ln.points.map((p, i) => [pad + (w * i) / (ln.points.length - 1), pad + h * (1 - p)]);
+        const pts = ptsOf(ln);
         const d = pts.map((p, i) => (i === 0 ? `M${p[0]},${p[1]}` : `L${p[0]},${p[1]}`)).join(' ');
-        const area = `${d} L${pts[pts.length - 1][0]},${pad + h} L${pts[0][0]},${pad + h} Z`;
+        const area = `${d} L${pts[pts.length - 1][0]},${padTop + h} L${pts[0][0]},${padTop + h} Z`;
         return (
           <g key={li}>
-            {ln.fill && <motion.path d={area} fill={`url(#msp-grad-${li})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4, duration: 0.6 }} />}
-            <motion.path d={d} fill="none" stroke={ln.color} strokeWidth={ln.width || 2.5} strokeLinecap="round" strokeDasharray={ln.dashed ? '5 5' : undefined}
-              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1], delay: li * 0.15 }} />
+            {ln.fill && <motion.path d={area} fill={`url(#msp-${uid}-grad-${li})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }} />}
+            <motion.path d={d} fill="none" stroke={`url(#msp-${uid}-stroke-${li})`} strokeWidth={ln.width || 2.5} strokeLinecap="round" strokeDasharray={ln.dashed ? '5 5' : undefined}
+              filter={ln.glow !== false && !ln.dashed ? `url(#msp-${uid}-glow)` : undefined}
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1], delay: 0.15 + li * 0.2 }} />
             {ln.endDot && (
-              <motion.circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5} fill={ln.color}
-                initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.1 + li * 0.15, type: 'spring', stiffness: 400 }} />
+              <g>
+                <motion.circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5.5} fill={ln.color}
+                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.3 + li * 0.2, type: 'spring', stiffness: 400 }} />
+                <motion.circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5.5} fill="none" stroke={ln.color} strokeWidth={1.5}
+                  initial={{ opacity: 0 }} animate={{ opacity: [0, 0.7, 0], scale: [1, 2.4] }}
+                  transition={{ delay: 1.5, duration: 1.8, repeat: Infinity, ease: 'easeOut' }} style={{ transformOrigin: `${pts[pts.length - 1][0]}px ${pts[pts.length - 1][1]}px` }} />
+              </g>
             )}
           </g>
         );
       })}
+      {main && milestones && milestones.map((m, i) => {
+        const [mx, my] = at(main, m.f);
+        return (
+          <motion.g key={i} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.9 + i * 0.25, type: 'spring', stiffness: 320 }} style={{ transformOrigin: `${mx}px ${my}px` }}>
+            <circle cx={mx} cy={my} r={4} fill={C.bg} stroke={lines[0].color} strokeWidth={2} />
+            {m.score != null && <text x={mx} y={my - 11} fontSize="10.5" fontWeight="800" fill={C.t1} fontFamily={C.FM} textAnchor="middle">{m.score}</text>}
+            {m.label && <text x={mx} y={padTop + h + 14} fontSize="9" fill={C.t3} fontFamily={C.FB} textAnchor="middle">{m.label}</text>}
+          </motion.g>
+        );
+      })}
+      {main && startLabel && (
+        <motion.g initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <text x={main[0][0]} y={main[0][1] - 12} fontSize="12" fontWeight="800" fill={C.t2} fontFamily={C.FM} textAnchor="start">{startLabel}</text>
+        </motion.g>
+      )}
+      {main && endLabel && (
+        <motion.g initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.45, type: 'spring', stiffness: 300 }}
+          style={{ transformOrigin: `${main[main.length - 1][0]}px ${main[main.length - 1][1]}px` }}>
+          <rect x={main[main.length - 1][0] - 46} y={main[main.length - 1][1] - 30} width={46} height={20} rx={10} fill={lines[0].color} />
+          <text x={main[main.length - 1][0] - 23} y={main[main.length - 1][1] - 16} fontSize="11.5" fontWeight="800" fill="#fff" fontFamily={C.FM} textAnchor="middle">{endLabel}</text>
+        </motion.g>
+      )}
       {xLabels && xLabels.map((lbl, i) => (
         <text key={i} x={i === 0 ? pad : width - pad} y={height - 2} fontSize="10" fill={C.t4} fontFamily={C.FB} textAnchor={i === 0 ? 'start' : 'end'}>{lbl}</text>
       ))}
     </svg>
+  );
+}
+
+// Horizontal comparison bars ("you vs. typical student") with animated grow-in
+// and a shine sweep on the highlighted bar — used by the insight screens.
+export function CompareBars({ bars }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {bars.map((b, i) => (
+        <div key={i}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: b.highlight ? C.t1 : C.t3 }}>{b.label}</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: b.highlight ? C.blueL : C.t3, fontFamily: C.FM }}>{Math.round(b.pct * 100)}%</span>
+          </div>
+          <div style={{ height: 12, borderRadius: 6, background: C.s2, overflow: 'hidden', position: 'relative' }}>
+            <motion.div initial={{ width: 0 }} animate={{ width: `${b.pct * 100}%` }}
+              transition={{ delay: 0.35 + i * 0.2, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              style={{
+                height: '100%', borderRadius: 6, position: 'relative', overflow: 'hidden',
+                background: b.highlight ? C.blueGrad : C.s4,
+                boxShadow: b.highlight ? `0 0 14px ${C.blue}60` : 'none',
+              }}>
+              {b.highlight && (
+                <motion.span initial={{ x: '-110%' }} animate={{ x: '240%' }} transition={{ delay: 1.3, duration: 1, ease: 'easeInOut' }}
+                  style={{ position: 'absolute', top: 0, bottom: 0, width: '45%', background: 'linear-gradient(105deg,transparent,rgba(255,255,255,0.35),transparent)' }} />
+              )}
+            </motion.div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 

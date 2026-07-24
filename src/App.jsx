@@ -1834,6 +1834,12 @@ export default function App({ account, onAccountChange }) {
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
       onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
       generatedPlan:profile.generatedPlan||null,
+      // Med-focused profile answers from the redesigned flow — persisted so the
+      // coach prompt, plan generators, and dashboard recap can use them (see
+      // studentProfile.js / planGenerator.js).
+      whyMedicine:profile.whyMedicine||null, dreamRole:profile.dreamRole||null, certainty:profile.certainty||null,
+      gpaBand:profile.gpa||null, sciences:profile.sciences||[], healthExperience:profile.experience||[],
+      testTimeline:profile.testTimeline||null,
       // The onboarding toggleAddBack/toggleRollover steps promise these are used to shape the
       // Plans tab's day-by-day roadmap (see applyRolloverPrefs/applyAddBackPrefs in
       // masterPlanGenerator.js) and are editable later in Settings — persisting them here is what

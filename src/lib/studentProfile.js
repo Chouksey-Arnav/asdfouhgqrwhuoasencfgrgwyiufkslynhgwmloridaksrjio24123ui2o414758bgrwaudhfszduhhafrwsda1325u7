@@ -16,7 +16,11 @@
 // Pure functions only, same spirit as applicationStrength.js/insights.js —
 // no persistence, no side effects.
 // ─────────────────────────────────────────────────────────────────────────────
-import { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from '../components/onboarding/Onboarding';
+import {
+  GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
+  WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+} from '../components/onboarding/Onboarding';
 
 const labelOf = (options, value) => options.find(o => o.value === value)?.label || null;
 const labelsOf = (options, values) => (values || []).map(v => labelOf(options, v)).filter(Boolean);
@@ -25,11 +29,24 @@ export const getGoalLabel = (v) => labelOf(GOAL_OPTIONS, v);
 export const getStudyMethodLabel = (v) => labelOf(STUDY_METHOD_OPTIONS, v);
 export const getObstacleLabels = (arr) => labelsOf(OBSTACLE_OPTIONS, arr);
 export const getAccomplishLabels = (arr) => labelsOf(ACCOMPLISH_OPTIONS, arr);
+export const getWhyMedicineLabel = (v) => labelOf(WHY_MEDICINE_OPTIONS, v);
+export const getDreamRoleLabel = (v) => labelOf(DREAM_ROLE_OPTIONS, v);
+export const getCertaintyLabel = (v) => labelOf(CERTAINTY_OPTIONS, v);
+export const getGpaLabel = (v) => labelOf(GPA_OPTIONS, v);
+export const getScienceLabels = (arr) => labelsOf(SCIENCE_OPTIONS, arr);
+export const getExperienceLabels = (arr) => labelsOf(EXPERIENCE_OPTIONS, arr);
+export const getTestTimelineLabel = (v) => labelOf(TEST_TIMELINE_OPTIONS, v);
 
 // The fields completeOnboarding() now stamps onto the user record — see
 // App.jsx. Kept as one list so completeness scoring and the recap card can't
 // silently drift apart from what's actually saved.
-const ONBOARDING_FIELDS = ['goal', 'obstacles', 'studyMethod', 'accomplish', 'studyHours', 'onboardingTargetScore'];
+const ONBOARDING_FIELDS = [
+  'goal', 'obstacles', 'studyMethod', 'accomplish', 'studyHours', 'onboardingTargetScore',
+  // Med-focused fields added by the redesigned onboarding — students who
+  // onboarded before it shipped will read lower here, which is the intended
+  // nudge toward Settings > "Update my goals."
+  'whyMedicine', 'dreamRole', 'certainty', 'gpaBand', 'sciences', 'healthExperience', 'testTimeline',
+];
 
 function isFilled(value) {
   if (Array.isArray(value)) return value.length > 0;
@@ -53,6 +70,10 @@ export function computeOnboardingCompleteness(user) {
 export function buildOnboardingRecap(user) {
   if (!user) return [];
   const items = [];
+  const whyLabel = getWhyMedicineLabel(user.whyMedicine);
+  if (whyLabel) items.push({ label: 'Why medicine', value: whyLabel });
+  const roleLabel = getDreamRoleLabel(user.dreamRole);
+  if (roleLabel && user.dreamRole !== 'undecided') items.push({ label: 'Dream role', value: roleLabel });
   const goalLabel = getGoalLabel(user.goal);
   if (goalLabel) items.push({ label: 'Your goal', value: goalLabel });
   if (user.onboardingTargetScore && user.testTrack) items.push({ label: 'Target score', value: `${user.onboardingTargetScore} ${user.testTrack}` });
@@ -63,6 +84,12 @@ export function buildOnboardingRecap(user) {
   const studyMethodLabel = getStudyMethodLabel(user.studyMethod);
   if (studyMethodLabel && user.studyMethod !== 'none') items.push({ label: 'Current study method', value: studyMethodLabel });
   if (user.studyHours) items.push({ label: 'Weekly study time', value: `${user.studyHours} hrs/week` });
+  const scienceLabels = getScienceLabels(user.sciences);
+  if (scienceLabels.length && !(user.sciences || []).every(v => v === 'none_yet')) items.push({ label: 'Science courses', value: scienceLabels.filter(l => l !== 'None of these yet').join(', ') });
+  const expLabels = getExperienceLabels(user.healthExperience);
+  if (expLabels.length && !(user.healthExperience || []).every(v => v === 'none')) items.push({ label: 'Health experience', value: expLabels.filter(l => !l.startsWith('Nothing yet')).join(', ') });
+  const timelineLabel = getTestTimelineLabel(user.testTimeline);
+  if (timelineLabel && user.testTimeline !== 'unscheduled') items.push({ label: 'Test date', value: timelineLabel });
   return items;
 }
 
@@ -109,7 +136,23 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
   const studyMethodLabel = getStudyMethodLabel(user?.studyMethod);
 
   const onboardingParts = [];
+  const whyLabel = getWhyMedicineLabel(user?.whyMedicine);
+  if (whyLabel) onboardingParts.push(`Why they're drawn to medicine: "${whyLabel}" — this is their emotional anchor; connect encouragement back to it when they're struggling.`);
+  const roleLabel = getDreamRoleLabel(user?.dreamRole);
+  if (roleLabel && user?.dreamRole !== 'undecided') onboardingParts.push(`Their dream role: ${roleLabel}.`);
+  const certaintyLabel = getCertaintyLabel(user?.certainty);
+  if (certaintyLabel) onboardingParts.push(`How certain they are about medicine: "${certaintyLabel}"${user?.certainty === 'exploring' ? ' — keep exploration honest and pressure-free; never assume medicine is a done deal for them' : ''}.`);
   if (goalLabel) onboardingParts.push(`Their stated top goal from onboarding is: "${goalLabel}."`);
+  const gpaLabel = getGpaLabel(user?.gpaBand);
+  if (gpaLabel && user?.gpaBand !== 'unsure') onboardingParts.push(`Self-reported grades: ${gpaLabel}.`);
+  const scienceLabels = getScienceLabels(user?.sciences).filter(l => l !== 'None of these yet');
+  if (scienceLabels.length) onboardingParts.push(`Science courses taken/taking: ${scienceLabels.join(', ')}.`);
+  else if ((user?.sciences || []).includes('none_yet')) onboardingParts.push('They have not taken core science courses yet — pitch science content at a true-beginner level.');
+  const expLabels = getExperienceLabels(user?.healthExperience).filter(l => !l.startsWith('Nothing yet'));
+  if (expLabels.length) onboardingParts.push(`Hands-on health experience so far: ${expLabels.join(', ')}.`);
+  else if ((user?.healthExperience || []).includes('none')) onboardingParts.push('They have no hands-on health experience yet — treat a first shadowing/volunteering step as a meaningful milestone to work toward.');
+  const timelineLabel = getTestTimelineLabel(user?.testTimeline);
+  if (timelineLabel) onboardingParts.push(`Planned ${user?.testTrack || 'SAT'} timing: ${timelineLabel}.`);
   if (user?.onboardingTargetScore && user?.testTrack) onboardingParts.push(`They're targeting a ${user.onboardingTargetScore} ${user.testTrack} (their self-reported starting score was ${user.onboardingCurrentScore || 'not given'}).`);
   if (obstacleLabels.length) onboardingParts.push(`They told us their biggest obstacles are: ${obstacleLabels.join(', ')} — proactively address these when they're relevant instead of waiting to be asked (e.g. if "losing motivation" is listed and they seem discouraged, acknowledge it directly rather than generic encouragement).`);
   if (accomplishLabels.length) onboardingParts.push(`Things they specifically said they want to accomplish: ${accomplishLabels.join(', ')}.`);

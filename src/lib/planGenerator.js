@@ -7,7 +7,11 @@
 // to a usable, COMPLETE plan: every field is validated and, if the model omits or mangles one, that
 // single field is repaired from the deterministic heuristic plan. So the onboarding flow can never
 // dead-end, and the display code can render the result without a single defensive null-check.
-import { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from '../components/onboarding/Onboarding';
+import {
+  GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
+  WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+} from '../components/onboarding/Onboarding';
 
 const GRADE_LABELS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Applying soon'];
 const labelOf = (opts, v) => opts.find(o => o.value === v)?.label || null;
@@ -30,6 +34,9 @@ export function heuristicPlan(profile) {
   const goalLabel = labelOf(GOAL_OPTIONS, profile.goal) || 'building your path into medicine';
   const obstacles = labelsOf(OBSTACLE_OPTIONS, profile.obstacles);
   const grade = GRADE_LABELS[profile.gradeIdx] || 'high school';
+  const roleLabel = profile.dreamRole && profile.dreamRole !== 'undecided' ? labelOf(DREAM_ROLE_OPTIONS, profile.dreamRole) : null;
+  const hasScience = (profile.sciences || []).some(v => v !== 'none_yet');
+  const hasExperience = (profile.experience || []).some(v => v !== 'none');
   return {
     headline: `Your ${track} + pre-health game plan`,
     summary: `A balanced plan built around ${dailyMinutes} focused minutes a day — steady ${track} practice paired with the early pre-health foundations that make a future medicine application strong. Designed for where you are now as a ${grade.toLowerCase()}, not where you'll be in four years.`,
@@ -37,8 +44,8 @@ export function heuristicPlan(profile) {
     weeklyQuestions,
     focusAreas: [
       { title: `${track} core skills`, why: `Consistent daily reps are the single biggest lever on your score.` },
-      { title: 'Science foundations', why: 'Biology and chemistry basics now make college pre-med far less of a wall later.' },
-      { title: 'Early exposure', why: 'Light shadowing/volunteering helps you test whether medicine truly fits — no pressure.' },
+      { title: hasScience ? 'Science depth' : 'Science foundations', why: hasScience ? "You've started the science track — now we deepen it toward pre-health strength." : 'Biology and chemistry basics now make college pre-med far less of a wall later.' },
+      { title: hasExperience ? 'Build on your experience' : 'Early exposure', why: hasExperience ? "You already have real-world exposure — we'll turn it into a story colleges notice." : 'Light shadowing/volunteering helps you test whether medicine truly fits — no pressure.' },
     ],
     milestones: [
       { title: 'Find your pathway', when: 'This week', detail: 'Take the diagnostic so your prep is aimed at the health career that fits you.' },
@@ -68,7 +75,9 @@ export function heuristicPlan(profile) {
       'Don\'t let test prep crowd out exploring whether medicine actually fits you.',
     ],
     ninetyDayGoal: `In 90 days: a steady daily study habit, a measurable ${track} score bump, and at least one real-world taste of a health career (shadowing, volunteering, or a health club).`,
-    encouragement: `You're starting earlier than most — that's a real advantage. Small, steady days compound. We've got you.`,
+    encouragement: roleLabel
+      ? `Every ${roleLabel.toLowerCase().replace(/ \/.*$/, '')} started exactly where you are — a student with a goal and a plan. Small, steady days compound. We've got you.`
+      : `You're starting earlier than most — that's a real advantage. Small, steady days compound. We've got you.`,
     source: 'fallback',
   };
 }
@@ -81,7 +90,14 @@ function buildPlanPrompt(profile) {
   const facts = [
     `Name: ${profile.name || 'the student'}`,
     `Grade: ${GRADE_LABELS[profile.gradeIdx] || 'high school'}`,
+    `Why they're drawn to medicine: ${labelOf(WHY_MEDICINE_OPTIONS, profile.whyMedicine) || 'not shared'}`,
+    `Dream health role: ${labelOf(DREAM_ROLE_OPTIONS, profile.dreamRole) || 'undecided'}`,
+    `How certain they are about medicine: ${labelOf(CERTAINTY_OPTIONS, profile.certainty) || 'not shared'}`,
     `Test track: ${profile.testTrack || 'SAT'} (current ~${profile.currentScore}, target ~${profile.targetScore})`,
+    `Planned test timing: ${labelOf(TEST_TIMELINE_OPTIONS, profile.testTimeline) || 'not scheduled yet'}`,
+    `Self-reported grades: ${labelOf(GPA_OPTIONS, profile.gpa) || 'not shared'}`,
+    `Science courses taken/taking: ${labelsOf(SCIENCE_OPTIONS, profile.sciences).join(', ') || 'not shared'}`,
+    `Hands-on health experience: ${labelsOf(EXPERIENCE_OPTIONS, profile.experience).join(', ') || 'none yet'}`,
     `Weekly study time available: ${profile.studyHours || 'unsure'}`,
     `Chosen pace: ${['relaxed', 'steady', 'intense'][profile.speedLevel] || 'steady'} (≈${dailyMinutes} min/day, ${weeklyQuestions} Qs/week)`,
     `Primary goal: ${labelOf(GOAL_OPTIONS, profile.goal) || 'exploring medicine'}`,
@@ -96,6 +112,9 @@ Rules:
 - They are years away from medical school. NEVER mention the MCAT, medical-school applications, residency, clinical rotations, MMI, or CASPer. Frame everything as high-school and undergraduate-admissions prep with an eye toward a future health career.
 - SAT/ACT prep matters and belongs in the plan, but it is NOT the whole story — balance it with early science foundations, exploration of whether medicine fits, and low-pressure activities. Do not make the plan feel like a test-prep bootcamp.
 - Be emotionally attuned: acknowledge their stated obstacles supportively, and keep the tone encouraging and age-appropriate — this is a teenager building confidence.
+- Use their "why medicine" and dream role to make the plan feel like it's aimed at THEIR future, not a generic student's. If they said they're still exploring or undecided, keep the medicine framing honest and pressure-free — exploration is part of the plan, not a foregone conclusion.
+- Match science recommendations to the courses they've actually taken (true beginner if none), and if they already have hands-on health experience, build on it instead of suggesting they start from zero.
+- Respect their planned test timing: a test within 3 months means front-loading highest-impact prep; an unscheduled test means the plan should include choosing a date.
 - Keep the study load consistent with the pace they chose (≈${dailyMinutes} min/day, ${weeklyQuestions} questions/week).
 - Reference their ACTUAL goal, grade, and obstacle in the copy so it feels personal, not templated.
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Loader2 } from 'lucide-react';
 import { C } from '../primitives';
+import { LogoMark } from '../brand';
 import { generateMaxOutPlan } from '../../../lib/planGenerator';
 
 const LINES = [
@@ -56,20 +57,24 @@ export function GeneratingStep({ profile, onPlan, onNext }) {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ position: 'relative', width: 120, height: 120, marginBottom: 30 }}>
-        <svg width={120} height={120} style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx={60} cy={60} r={52} fill="none" stroke={C.s3} strokeWidth={7} />
-          <motion.circle cx={60} cy={60} r={52} fill="none" stroke="url(#msp-gen-grad)" strokeWidth={7} strokeLinecap="round"
-            strokeDasharray={2 * Math.PI * 52} strokeDashoffset={2 * Math.PI * 52 * (1 - pct / 100)} style={{ filter: `drop-shadow(0 0 8px rgba(45,127,255,0.5))` }} />
+      <div style={{ position: 'relative', width: 132, height: 132, marginBottom: 26 }}>
+        <svg width={132} height={132} style={{ transform: 'rotate(-90deg)', position: 'absolute', inset: 0 }}>
+          <circle cx={66} cy={66} r={58} fill="none" stroke={C.s3} strokeWidth={7} />
+          <motion.circle cx={66} cy={66} r={58} fill="none" stroke="url(#msp-gen-grad)" strokeWidth={7} strokeLinecap="round"
+            strokeDasharray={2 * Math.PI * 58} strokeDashoffset={2 * Math.PI * 58 * (1 - pct / 100)} style={{ filter: `drop-shadow(0 0 8px rgba(45,127,255,0.5))` }} />
           <defs>
             <linearGradient id="msp-gen-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#2d7fff" /><stop offset="100%" stopColor="#5da0ff" />
+              <stop offset="0%" stopColor="#2d7fff" /><stop offset="100%" stopColor="#e3c47c" />
             </linearGradient>
           </defs>
         </svg>
-        <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{pct}%</div>
+        <motion.div animate={{ scale: [1, 1.06, 1] }} transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <LogoMark size={72} glow={false} />
+        </motion.div>
       </div>
-      <h1 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: '0 0 24px', textAlign: 'center' }}>Building your path into medicine…</h1>
+      <div style={{ fontSize: 26, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>{pct}%</div>
+      <h1 style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: '0 0 24px', textAlign: 'center' }}>Building your path into medicine…</h1>
       <div style={{ width: '100%', maxWidth: 300 }}>
         {LINES.map((l, i) => (
           <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', opacity: i <= doneIdx ? 1 : 0.35, transition: 'opacity .3s' }}>

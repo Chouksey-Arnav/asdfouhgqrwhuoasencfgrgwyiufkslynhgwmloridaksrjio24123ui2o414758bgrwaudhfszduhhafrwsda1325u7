@@ -42,7 +42,11 @@
 import { PATHS, GRADE_STAGES, DECK_CATEGORY_ORDER, FLASH_DECKS } from '../data/constants';
 import { ALL_QUIZZES } from '../data/quizzes/index';
 import { ELIB } from '../data/elib';
-import { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS } from '../components/onboarding/Onboarding';
+import {
+  GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
+  WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+} from '../components/onboarding/Onboarding';
 import { deriveLoad } from './planGenerator';
 
 const labelOf = (opts, v) => opts.find(o => o.value === v)?.label || null;
@@ -131,6 +135,13 @@ function buildProfileFactsText(user, liveSignals = {}) {
     `Weekly study time available: ${user?.studyHours || 'unsure'}`,
     `Pace: about ${dailyMinutes} minutes/day, ${weeklyQuestions} practice questions/week`,
     `Primary goal: ${goalLabel}`,
+    labelOf(WHY_MEDICINE_OPTIONS, user?.whyMedicine) ? `Why they're drawn to medicine: ${labelOf(WHY_MEDICINE_OPTIONS, user?.whyMedicine)}` : null,
+    (user?.dreamRole && user.dreamRole !== 'undecided') ? `Dream health role: ${labelOf(DREAM_ROLE_OPTIONS, user.dreamRole)}` : null,
+    labelOf(CERTAINTY_OPTIONS, user?.certainty) ? `Certainty about medicine: ${labelOf(CERTAINTY_OPTIONS, user?.certainty)}` : null,
+    (user?.gpaBand && user.gpaBand !== 'unsure') ? `Self-reported grades: ${labelOf(GPA_OPTIONS, user.gpaBand)}` : null,
+    labelsOf(SCIENCE_OPTIONS, user?.sciences).length ? `Science courses: ${labelsOf(SCIENCE_OPTIONS, user.sciences).join(', ')}` : null,
+    labelsOf(EXPERIENCE_OPTIONS, user?.healthExperience).length ? `Hands-on health experience: ${labelsOf(EXPERIENCE_OPTIONS, user.healthExperience).join(', ')}` : null,
+    labelOf(TEST_TIMELINE_OPTIONS, user?.testTimeline) ? `Planned test timing: ${labelOf(TEST_TIMELINE_OPTIONS, user?.testTimeline)}` : null,
     accomplish.length ? `Wants to accomplish: ${accomplish.join(', ')}` : null,
     obstacles.length ? `Their stated obstacles: ${obstacles.join(', ')}` : null,
     (studyMethodLabel && user?.studyMethod !== 'none') ? `Also currently using: ${studyMethodLabel}` : null,

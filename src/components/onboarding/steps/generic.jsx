@@ -56,7 +56,7 @@ export function ToggleQuestionStep({ icon, title, subtitle, note, value, onChang
 // Illustrative "social proof" / progress graph screen — reused for the four
 // spots in the Cal AI flow that show an animated chart to build conviction
 // right before/after a commitment moment (steps 7, 12, 14, 18).
-export function ProofGraphStep({ eyebrow, title, subtitle, lines, xLabels, statLine, legend, onNext, ctaLabel = 'Continue', autoNext }) {
+export function ProofGraphStep({ eyebrow, title, subtitle, lines, xLabels, statLine, legend, startLabel, endLabel, milestones, onNext, ctaLabel = 'Continue', autoNext }) {
   React.useEffect(() => {
     if (!autoNext) return;
     const t = setTimeout(onNext, autoNext);
@@ -78,7 +78,7 @@ export function ProofGraphStep({ eyebrow, title, subtitle, lines, xLabels, statL
               ))}
             </div>
           )}
-          <MiniLineChart lines={lines} xLabels={xLabels} />
+          <MiniLineChart lines={lines} xLabels={xLabels} startLabel={startLabel} endLabel={endLabel} milestones={milestones} height={startLabel || endLabel ? 168 : 150} />
         </div>
         {statLine && (
           <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: C.greenDim, border: `1px solid rgba(16,185,129,0.25)`, fontSize: 13, color: C.greenL, fontWeight: 600, lineHeight: 1.5 }}>
