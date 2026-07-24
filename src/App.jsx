@@ -68,6 +68,7 @@ import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
+import PanelHero from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import PlansTab from './components/PlansTab';
 import { summarizePlanForCoach } from './lib/masterPlanGenerator';
@@ -4659,15 +4660,19 @@ export default function App({ account, onAccountChange }) {
     });
     const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
 
+    // Each strength subscore carries its own colour so the gauge breakdown reads
+    // as four distinct dimensions, not four identical grey numbers.
+    const subscoreMeta={academic:{col:C.blue,Ic:GraduationCap},clinical:{col:C.pink,Ic:Stethoscope},application:{col:C.violet,Ic:ScrollText},activities:{col:C.amber,Ic:Award}};
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="portfolio-deep-overview" style={R()}>
-          <div><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Application Overview</h2></div>
-          <div style={{marginLeft:'auto',...R({gap:8})}}>
-            <span style={pill(C.blueDim,C.blueL)}>{portActivities.length} activities</span>
-            <span style={pill(C.amberDim,C.amberL)}>{portAwards.length} awards</span>
-          </div>
-        </div>
+        <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
+          eyebrow="Portfolio" title="Application Overview"
+          sub="Every piece of your application — activities, scores, essays, deadlines, letters — pulled into one place so nothing falls through the cracks."
+          stats={[
+            {value:portActivities.length,label:'activities',color:C.blueL},
+            {value:portAwards.length,label:'awards',color:C.amberL},
+            {value:clinicalHoursTotal,label:'clinical hrs',color:C.pinkL},
+          ]}/>
 
         {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
         <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
@@ -4677,13 +4682,20 @@ export default function App({ account, onAccountChange }) {
             <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
             <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — updates as you fill in Portfolio.</div>
           </div>
-          <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
-            {Object.entries(strength.subscores).map(([k,v])=>(
-              <div key={k} style={{textAlign:'center',minWidth:64}}>
-                <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{v}%</div>
-                <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
-              </div>
-            ))}
+          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+            {Object.entries(strength.subscores).map(([k,v])=>{
+              const m=subscoreMeta[k]||{col:C.blue,Ic:Circle};
+              return(
+                <div key={k} style={{textAlign:'center',minWidth:76,padding:'10px 12px',borderRadius:12,background:`${m.col}0f`,border:`1px solid ${m.col}28`}}>
+                  <m.Ic size={13} color={m.col} style={{marginBottom:4}}/>
+                  <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:m.col}}>{v}%</div>
+                  <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
+                  <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,overflow:'hidden',marginTop:6}}>
+                    <div style={{height:'100%',width:`${Math.min(100,v)}%`,background:m.col,borderRadius:2}}/>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -4835,20 +4847,19 @@ export default function App({ account, onAccountChange }) {
     const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     return(
       <div style={CC({gap:22})}>
-        <div data-tour="portfolio-deep-calc" style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 })}>
-          <div>
-            <div style={lbl()}>Admissions Calculator</div>
-            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Personalized College List & Match Index</h2>
-          </div>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={syncWithPortfolio}
-            style={{ ...btn(`linear-gradient(135deg, ${C.amber}, ${C.orange})`, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px ${C.orange}35` }}
-          >
-            <Sparkles size={14}/> Sync with Portfolio
-          </motion.button>
-        </div>
+        <PanelHero tourTag="portfolio-deep-calc" icon={Calculator} color={C.gold} color2={C.orange} m={isMobile}
+          eyebrow="Admissions Calculator" title="Personalized College List & Match Index"
+          sub="Estimate your competitiveness at real schools from your GPA, test scores, rigor, and activities — or sync it all straight from your Portfolio."
+          right={
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={syncWithPortfolio}
+              style={{ ...btn(`linear-gradient(135deg, ${C.amber}, ${C.orange})`, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px ${C.orange}35` }}
+            >
+              <Sparkles size={14}/> Sync with Portfolio
+            </motion.button>
+          }/>
 
         {/* Profile Card */}
         <div style={glass()}>
@@ -5929,19 +5940,23 @@ export default function App({ account, onAccountChange }) {
     );
   }
   // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
+  // Each sub-view inherits ITS OWN SubNav colour as its accent so the whole
+  // Portfolio reads as a spectrum of distinct, recognisable sections (matching
+  // the pill it was opened from) rather than one flat green everywhere.
+  const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
-    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portfolioAccent}/>,
-    deadlines:()=><DeadlinesPanel accent={portfolioAccent}/>,
-    colleges:()=><CollegeListPanel accent={portfolioAccent} studentSAT={user?.onboardingCurrentScore||null}/>,
-    essays:()=><EssayWorkspacePanel accent={portfolioAccent}/>,
-    scores:()=><ScoreTrackerPanel accent={portfolioAccent}/>,
-    aid:()=><FinancialAidPanel accent={portfolioAccent}/>,
-    resume:()=><ActivitiesResumePanel accent={portfolioAccent} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    research:()=><ResearchExperiencePanel accent={portfolioAccent}/>,
-    skills:()=><SkillsCertificationsPanel accent={portfolioAccent}/>,
-    clinical:()=><ClinicalHoursPanel accent={portfolioAccent} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
-    recommenders:()=><RecommendersPanel accent={portfolioAccent} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
-    interview:()=><InterviewPrepPanel accent={portfolioAccent} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
+    deadlines:()=><DeadlinesPanel accent={portC.deadlines}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays}/>,
+    scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
+    aid:()=><FinancialAidPanel accent={portC.aid}/>,
+    resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
+    research:()=><ResearchExperiencePanel accent={portC.research}/>,
+    skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
+    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
+    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser({...user,interviewCount:nc});bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
@@ -5955,6 +5970,44 @@ export default function App({ account, onAccountChange }) {
   // Same live-signal shape buildCoachSystemPrompt uses below (see requestAIResponse) — grounding
   // the plan in the exact same "where they stand right now" facts the chat coach reasons over is
   // what makes the Plans tab and Medabrain's chat feel like one brain instead of two features.
+  // Opens the EXACT resource a plan task resolved to — not just the right tab.
+  // A quiz task launches that quiz fullscreen, a lesson task opens the lesson
+  // player (unless still locked), a deck task drops straight into that deck's
+  // study session, an article task lands on the E-Library pre-searched to it.
+  function openPlanResource(task){
+    const {resourceTab:tab,resourceView:view,resourceKind:kind,resourceId:id}=task||{};
+    if(!tab||!view)return;
+    if(tab==='prep')goPrep(view);else if(tab==='portfolio')goPortfolio(view);else goProgress(view);
+    play('click');
+    if(!kind||kind==='view'||!id)return;
+    if(kind==='quiz'){
+      const q=ALL_QUIZZES.find(x=>x.id===id);
+      if(q)setAQ(qScores[q.id]!==undefined?{...q,readonly:true}:q);
+    }else if(kind==='lesson'){
+      const units=curPath?.units||[];
+      const flat=units.flatMap((u,ui)=>u.lessons.map(l=>({l,u,ui})));
+      const hit=flat.find(x=>x.l.id===id);
+      if(!hit)return; // pathway switched since the plan was built — the pathway view we just navigated to is the right landing spot
+      if(lessonState(hit.l,hit.ui,units)==='locked'){
+        toast(`"${hit.l.title}" is still locked — finish the earlier unit first.`,{icon:<Lock size={15}/>});
+      }else{
+        openLesson(hit.l,hit.u);
+      }
+    }else if(kind==='deck'){
+      const builtin=!!FLASH_DECKS[id];
+      if(id==='Smart Mix'){
+        setAD({name:'Smart Mix',builtin:true,smartMix:true});
+      }else if(builtin||cDecks[id]){
+        setAD({name:id,builtin});
+        setStudyMode(getDueCards(cardsForDeck(id,builtin)).length>0?'due':'all');
+      }else return; // deck no longer exists — flashcards home we navigated to is the fallback
+      setCIdx(0);setFlip(false);
+      setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+    }else if(kind==='article'){
+      // Land on the E-Library pre-searched to exactly this resource.
+      setLS(id);setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');
+    }
+  }
   function tPlans(){
     const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
     const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
@@ -5964,7 +6017,7 @@ export default function App({ account, onAccountChange }) {
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
     };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} liveSignals={liveSignals}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} openResource={openPlanResource} liveSignals={liveSignals}/>;
   }
   const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 

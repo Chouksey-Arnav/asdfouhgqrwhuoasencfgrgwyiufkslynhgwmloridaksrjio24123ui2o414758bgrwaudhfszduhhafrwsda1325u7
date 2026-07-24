@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Line } from 'react-chartjs-2';
 import { Plus, Trash2, Target, Sparkles, Brain, Trophy, Zap, TrendingUp, CheckCircle2, ChevronRight } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill } from '../lib/theme';
+import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
+import PanelHero from './ui/PanelHero';
 
 const SAT_SECTIONS = [
   { key: 'rw', label: 'Reading & Writing', max: 800, placeholder: 'e.g. 680' },
@@ -317,17 +318,16 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
 
   return (
     <div style={CC({gap:22})}>
-      <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
-        <div data-tour="portfolio-deep-scores">
-          <div style={lbl()}>Test Prep</div>
-          <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>SAT / ACT Score Tracker</h2>
-        </div>
-        <div style={R({ gap: 6 })}>
-          {['SAT', 'ACT'].map(type => (
-            <button key={type} style={btnSm(testType===type ? C.blueGrad : C.s4, { fontSize: 12 })} onClick={()=>{setTestType(type); setSections({});}}>{type} Dashboard</button>
-          ))}
-        </div>
-      </div>
+      <PanelHero tourTag="portfolio-deep-scores" icon={TrendingUp} color={accent} color2={C.green} m={isMobile}
+        eyebrow="Test Prep" title="SAT / ACT Score Tracker"
+        sub="Log every attempt and set a target — your scores here drive the countdown gap on Home and feed straight into the Admissions Calculator."
+        right={
+          <div style={R({ gap: 6 })}>
+            {['SAT', 'ACT'].map(type => (
+              <button key={type} style={btnSm(testType===type ? `linear-gradient(135deg,${accent},${C.green})` : C.s4, { fontSize: 12, boxShadow: testType===type?`0 4px 12px ${tint(accent,0.3)}`:'none' })} onClick={()=>{setTestType(type); setSections({});}}>{type} Dashboard</button>
+            ))}
+          </div>
+        }/>
 
       {/* Dynamic Header Metrics Grid */}
       {(latest || target || currentSuperscore) && (

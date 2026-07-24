@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, ChevronDown, ChevronUp, School, Check } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill } from '../lib/theme';
+import { Plus, Trash2, ChevronDown, ChevronUp, School, Check, GraduationCap, Send } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import CollegeAutocomplete from './CollegeAutocomplete';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const CATEGORIES = [
   { id: 'reach', label: 'Reach', color: C.rose },
@@ -28,10 +29,6 @@ const DEFAULT_CHECKLIST = [
   'Supplemental essays',
   'Interview (if applicable)',
 ];
-
-function SectionLabel({ children }) {
-  return <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:12}}>{children}</div>;
-}
 
 export default function CollegeListPanel({ accent = C.blue, studentSAT = null }) {
   const [colleges, setColleges] = useState([]);
@@ -108,26 +105,26 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
   const inProgress = colleges.filter(c => ['application_started', 'essays_in_progress'].includes(c.status)).length;
   const notStarted = colleges.filter(c => c.status === 'researching').length;
 
+  const catCount = (id) => colleges.filter(c => c.category === id).length;
+
   return (
     <div style={CC({gap: 22})}>
-      <div data-tour="portfolio-deep-colleges">
-        <div style={lbl()}>Applications</div>
-        <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>College List & Application Tracker</h2>
-      </div>
+      <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue}
+        eyebrow="Applications" title="College List & Application Tracker"
+        sub="Build a balanced list of reach, target, and safety schools — with per-school deadlines and a checklist so every application actually gets finished."
+        stats={colleges.length > 0 ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }] : []}/>
 
       {colleges.length > 0 && (
-        <div style={glass2({padding:16})}>
-          <div style={R({gap:20,flexWrap:'wrap'})}>
-            <span style={{fontSize:13,color:C.t1,fontWeight:700}}>{colleges.length} school{colleges.length===1?'':'s'}</span>
-            <span style={{fontSize:12,color:C.t2}}>{submitted} fully submitted</span>
-            <span style={{fontSize:12,color:C.t2}}>{inProgress} in progress</span>
-            <span style={{fontSize:12,color:C.t2}}>{notStarted} not started</span>
-          </div>
+        <div style={G(4,12,{},true)}>
+          <StatTile icon={School} value={catCount('reach')} label="Reach" color={C.rose}/>
+          <StatTile icon={School} value={catCount('target')} label="Target" color={C.blue}/>
+          <StatTile icon={School} value={catCount('safety')} label="Safety" color={C.green}/>
+          <StatTile icon={Send} value={submitted} label="Submitted" sub={`${inProgress} in progress · ${notStarted} researching`} color={C.violet}/>
         </div>
       )}
 
-      <div style={glass({padding:18})}>
-        <SectionLabel>Add a school</SectionLabel>
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Add a school</SectionTitle>
         <div style={R({gap:10,flexWrap:'wrap'})}>
           <CollegeAutocomplete
             value={newName}
@@ -154,7 +151,9 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
         <div style={{fontSize:13,color:C.t3}}>Loading…</div>
       ) : colleges.length === 0 ? (
         <div style={glass({padding:30,textAlign:'center'})}>
-          <School size={28} color={C.t3} style={{margin:'0 auto 10px'}}/>
+          <div style={{width:48,height:48,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
+            <School size={22} color={accent}/>
+          </div>
           <div style={{fontSize:14,color:C.t2}}>No schools yet — add your first one above.</div>
         </div>
       ) : (
@@ -163,18 +162,24 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
             const cat = CATEGORIES.find(c => c.id === college.category) || CATEGORIES[1];
             const items = checklists[college.id] || [];
             const doneCount = items.filter(i => i.done).length;
+            const checklistPct = items.length ? Math.round((doneCount / items.length) * 100) : 0;
             const isOpen = expanded === college.id;
             return (
-              <div key={college.id} style={glass2({padding:0,overflow:'hidden'})}>
+              <div key={college.id} style={{...glass2({padding:0,overflow:'hidden'}),borderLeft:`3px solid ${cat.color}`,background:`linear-gradient(120deg,${tint(cat.color,0.05)},rgba(255,255,255,0.02) 50%)`}}>
                 <div style={{...R({gap:12,padding:14,cursor:'pointer'})}} onClick={()=>setExpanded(isOpen?null:college.id)}>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={R({gap:8})}>
                       <span style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{college.name}</span>
                       <span style={pill(`${cat.color}18`, cat.color)}>{cat.label}</span>
                     </div>
-                    <div style={{fontSize:11,color:C.t3,marginTop:4}}>
+                    <div style={{fontSize:11,color:C.t3,marginTop:4,display:'flex',alignItems:'center',gap:8}}>
                       {items.length ? `${doneCount}/${items.length} checklist items` : 'No checklist yet'}
-                      {college.css_profile_required && <span style={{marginLeft:8,color:C.violetL}}>· CSS Profile required</span>}
+                      {items.length > 0 && (
+                        <span style={{flex:'0 1 90px',height:4,background:'rgba(255,255,255,0.06)',borderRadius:3,overflow:'hidden',display:'inline-block'}}>
+                          <span style={{display:'block',height:'100%',width:`${checklistPct}%`,background:checklistPct===100?C.green:cat.color,borderRadius:3}}/>
+                        </span>
+                      )}
+                      {college.css_profile_required && <span style={{color:C.violetL}}>· CSS Profile required</span>}
                     </div>
                   </div>
                   <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={college.status} onClick={e=>e.stopPropagation()} onChange={e=>updateCollege(college.id, { status: e.target.value })}>

@@ -13,6 +13,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
         // Each item may carry its own colour so a long sub-nav reads as a
         // recognisable spectrum of sections rather than one flat accent.
         const c = it.color || accent;
+        const Icon = it.icon || it.ic; // NAV configs use `ic`, older callers `icon`
         return (
           <motion.button
             key={it.id}
@@ -31,7 +32,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
               boxShadow: isActive ? `0 4px 14px ${c}33` : 'none',
             }}
           >
-            {it.icon && <it.icon size={13} color={isActive ? c : (it.color ? `${it.color}bb` : C.t3)} />}
+            {Icon && <Icon size={13} color={isActive ? c : (it.color ? `${it.color}bb` : C.t3)} />}
             {it.label}
             {!!it.badge && (
               <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accent : C.s4, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '0 4px' }}>{it.badge}</span>

@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, Clock, Stethoscope, ShieldCheck, ShieldQuestion } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, pill } from '../lib/theme';
+import { Plus, Trash2, Clock, Stethoscope, ShieldCheck, ShieldQuestion, Building2 } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
+import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 
 const SITE_TYPES = [
   'Hospital', 'Outpatient Clinic', 'Physician Office', 'Dental Office',
   'Pharmacy', 'PT/Rehab Clinic', 'Research Lab', 'Community Health / Free Clinic', 'Other',
 ];
+// Site types each get a colour so the per-site hour tiles and entry rows read
+// as distinct kinds of clinical exposure at a glance.
+const SITE_COLORS = {
+  Hospital: C.rose, 'Outpatient Clinic': C.sky, 'Physician Office': C.blue, 'Dental Office': C.cyan,
+  Pharmacy: C.green, 'PT/Rehab Clinic': C.orange, 'Research Lab': C.violet,
+  'Community Health / Free Clinic': C.teal, Other: C.t3,
+};
 
 // Supabase-backed (see supabase/migrations/0001_portfolio_credibility_expansion.sql) — this
 // used to be local-only Dexie data; it now syncs cross-device and carries a verification_status
@@ -60,17 +68,17 @@ export default function ClinicalHoursPanel({ accent = C.blue, onLogged }) {
 
   return (
     <div style={CC({gap:22})}>
-      <div style={R()}>
-        <div data-tour="portfolio-deep-clinical"><div style={lbl()}>Portfolio</div><h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Clinical & Shadowing Hours</h2></div>
-        <div style={{marginLeft:'auto',...R({gap:6})}}>
-          <span style={pill(C.blueDim,C.blueL)}>{totalHours.toLocaleString()} total hours</span>
-          {verifiedHours>0 && <span style={pill(C.greenDim,C.greenL)}><ShieldCheck size={10} style={{marginRight:4}}/>{verifiedHours}h verified</span>}
-        </div>
-      </div>
-      <p style={{fontSize:13,color:C.t2,lineHeight:1.6,marginTop:-14}}>Log every shadowing day, volunteer shift, or clinical hour — most health-career applications ask for this exact history, and it feeds your readiness score on the Progress page. Add a supervisor's contact so an entry can eventually be marked <b>verified</b> instead of self-reported.</p>
+      <PanelHero tourTag="portfolio-deep-clinical" icon={Stethoscope} color={accent} color2={C.rose}
+        eyebrow="Portfolio" title="Clinical & Shadowing Hours"
+        sub="Log every shadowing day, volunteer shift, or clinical hour — most health-career applications ask for this exact history, and it feeds your readiness score. Add a supervisor's contact so an entry can eventually be marked verified instead of self-reported."
+        stats={[
+          { value: totalHours.toLocaleString(), label: 'total hours', color: accent },
+          ...(verifiedHours > 0 ? [{ icon: <ShieldCheck size={11}/>, value: `${verifiedHours}h`, label: 'verified', color: C.greenL }] : []),
+          ...(entries.length > 0 ? [{ value: entries.length, label: entries.length === 1 ? 'entry' : 'entries', color: C.roseL }] : []),
+        ]}/>
 
-      <div style={glass({padding:18})}>
-        <SL>Log New Hours</SL>
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Log New Hours</SectionTitle>
         <form onSubmit={addEntry} style={CC({gap:10})}>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input style={inp({flex:1,minWidth:160})} placeholder="Site name (e.g. St. Mary's ER)" value={siteName} onChange={e=>setSiteName(e.target.value)} />
@@ -93,38 +101,40 @@ export default function ClinicalHoursPanel({ accent = C.blue, onLogged }) {
 
       {bySite.length > 0 && (
         <div style={G3(bySite.length)}>
-          {bySite.map(s => (
-            <div key={s.type} style={glass2({padding:14})}>
-              <div style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>{s.type}</div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1,marginTop:4}}>{s.hours}h</div>
-            </div>
-          ))}
+          {bySite.map(s => {
+            const sc = SITE_COLORS[s.type] || accent;
+            return <StatTile key={s.type} icon={Building2} value={`${s.hours}h`} label={s.type} color={sc}/>;
+          })}
         </div>
       )}
 
       {!loading && entries.length === 0 && (
         <div style={glass({padding:24,textAlign:'center'})}>
-          <Stethoscope size={22} color={C.t3} style={{marginBottom:8}}/>
+          <div style={{width:46,height:46,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
+            <Stethoscope size={20} color={accent}/>
+          </div>
           <div style={{fontSize:13,color:C.t2}}>No hours logged yet — add your first shadowing day or volunteer shift above.</div>
         </div>
       )}
 
       <div style={CC({gap:8})}>
-        {entries.map(e => (
-          <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
-            <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${accent},${accent}60)`,flexShrink:0,boxShadow:`0 0 8px ${accent}40`}}/>
+        {entries.map(e => {
+          const sc = SITE_COLORS[e.site_type] || accent;
+          return (
+          <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'}),background:`linear-gradient(120deg,${tint(sc,0.05)},rgba(255,255,255,0.02) 55%)`}}>
+            <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${sc},${tint(sc,0.35)})`,flexShrink:0,boxShadow:`0 0 8px ${tint(sc,0.4)}`}}/>
             <div style={{flex:1,minWidth:0}}>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{e.site_name}{e.supervisor_name?` · ${e.supervisor_name}`:''}</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{e.site_type} · {new Date(e.entry_date+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</div>
+              <div style={{fontSize:11,marginTop:2,fontFamily:C.FM}}><span style={{color:sc,fontWeight:700}}>{e.site_type}</span><span style={{color:C.t3}}> · {new Date(e.entry_date+'T00:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'})}</span></div>
               {e.notes && <div style={{fontSize:11,color:C.t2,marginTop:4}}>{e.notes}</div>}
             </div>
             <div style={{...R({gap:6}),flexShrink:0}}>
               <VerificationBadge status={e.verification_status} />
-              <span style={pill(C.blueDim,C.blueL,{fontFamily:C.FM})}><Clock size={10} style={{marginRight:4}}/>{e.hours}h</span>
+              <span style={pill(tint(sc,0.13),sc,{fontFamily:C.FM})}><Clock size={10} style={{marginRight:4}}/>{e.hours}h</span>
               <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeEntry(e.id)}><Trash2 size={12}/></button>
             </div>
           </div>
-        ))}
+        );})}
       </div>
     </div>
   );
