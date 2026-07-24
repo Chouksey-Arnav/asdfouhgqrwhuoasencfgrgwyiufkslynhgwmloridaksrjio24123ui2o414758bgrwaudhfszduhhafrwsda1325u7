@@ -846,6 +846,8 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         @media (max-width: 520px) { .lp-tools-grid { grid-template-columns: 1fr; } }
         .lp-manifesto-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         @media (max-width: 920px) { .lp-manifesto-grid { grid-template-columns: 1fr; } }
+        .lp-foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 40px; }
+        @media (max-width: 720px) { .lp-foot-grid { grid-template-columns: 1fr; gap: 28px; } }
 
         /* ── Cards & hovers ────────────────────────────────────────────── */
         .lp-card-hover { transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s, background .3s; }
@@ -1141,7 +1143,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <div className="lp-sec" style={{ maxWidth: 900, paddingTop: 'clamp(64px,7vw,100px)', paddingBottom: 'clamp(64px,7vw,100px)' }}>
             <div className="lp-reveal" style={{ textAlign: 'center' }}>
               <Eyebrow color={C.blueL} glow={C.blue}>FAQ</Eyebrow>
-              <h2 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, fontSize: 'clamp(26px,3.4vw,40px)', color: C.t1 }}>Frequently asked questions</h2>
+              <h2 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1, fontSize: 'clamp(26px,3.4vw,40px)', color: C.t1 }}>Questions, answered.</h2>
             </div>
             <div className="lp-reveal lp-d1" style={{ marginTop: 40, display: 'flex', flexDirection: 'column', gap: 12 }}>
               {FAQS.map((f) => (
@@ -1155,43 +1157,59 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         </section>
 
         {/* ── FINAL CTA ───────────────────────────────────────────────── */}
-        <section className="lp-sec" style={{ paddingTop: 'clamp(24px,3vw,48px)', paddingBottom: 'clamp(80px,9vw,130px)' }}>
-          <div className="lp-reveal" style={{ position: 'relative', borderRadius: 26, border: `1px solid rgba(45,127,255,0.3)`, background: 'linear-gradient(135deg,rgba(45,127,255,0.14),rgba(6,182,212,0.06) 55%,rgba(139,92,246,0.1))', overflow: 'hidden', padding: 'clamp(48px,6vw,88px) clamp(24px,5vw,72px)', textAlign: 'center' }}>
-            <div aria-hidden style={{ position: 'absolute', top: '-50%', left: '50%', transform: 'translateX(-50%)', width: '80%', height: '120%', background: 'radial-gradient(ellipse at center,rgba(45,127,255,0.22),transparent 65%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 24 }}>
-                <AnimatedLogo size={56} variant="pop" />
-              </div>
-              <h2 style={{ margin: 0, fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.05, fontSize: 'clamp(30px,4.8vw,58px)', color: C.t1, textWrap: 'balance' }}>
-                Stop wondering if you're "pre-med enough."
-              </h2>
-              <p style={{ margin: '18px auto 0', maxWidth: '46ch', fontSize: 17, lineHeight: 1.7, color: C.t2 }}>Take the diagnostic, get matched to your pathway, and start building the application that actually gets you in.</p>
-              <div style={{ marginTop: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '17px 32px', borderRadius: 14, background: C.blueGrad, color: '#fff', fontSize: 16, fontWeight: 700, boxShadow: '0 0 0 1px rgba(45,127,255,0.35),0 22px 50px -16px rgba(45,127,255,0.95)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-                  Get started free
-                  <ArrowRight size={16} />
-                </button>
-              </div>
-              <p style={{ marginTop: 16, fontSize: 12.5, color: C.t3 }}>No paywall. No credit card. No ads. Just a plan.</p>
+        <section className="lp-sec" style={{ paddingTop: 'clamp(40px,5vw,64px)', paddingBottom: 'clamp(64px,8vw,110px)' }}>
+          <div className="lp-reveal" style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(45,127,255,0.25)', background: 'linear-gradient(135deg,rgba(45,127,255,0.14),rgba(139,92,246,0.08))', padding: 'clamp(40px,6vw,72px)', textAlign: 'center' }}>
+            <div aria-hidden style={{ position: 'absolute', right: '-10%', top: '-40%', width: '60%', height: '180%', borderRadius: '50%', background: 'radial-gradient(circle,rgba(45,127,255,0.18),transparent 70%)', pointerEvents: 'none' }} />
+            <h2 style={{ position: 'relative', margin: 0, fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, fontSize: 'clamp(30px,4vw,54px)', color: C.t1, textWrap: 'balance' }}>Ready to find your path?</h2>
+            <p style={{ position: 'relative', margin: '18px auto 0', maxWidth: '52ch', fontSize: 'clamp(15px,1.3vw,18px)', lineHeight: 1.6, color: '#c3cfe8' }}>Take the diagnostic, get your top match, and start walking the path today — free, forever.</p>
+            <div className="lp-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginTop: 30, position: 'relative' }}>
+              <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 30px', borderRadius: 12, background: C.blueGrad, color: '#fff', fontSize: 16, fontWeight: 700, boxShadow: '0 16px 40px -14px rgba(45,127,255,0.9)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                Get started free
+                <ArrowRight size={16} />
+              </button>
+              <a className="lp-btn-secondary" href="#pathways" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 26px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.14)', color: C.t1, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+                Explore the pathways
+              </a>
             </div>
           </div>
         </section>
 
         {/* ── FOOTER ──────────────────────────────────────────────────── */}
         <footer style={{ borderTop: `1px solid ${C.b1}` }}>
-          <div className="lp-sec" style={{ padding: '38px clamp(20px,4.5vw,64px)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 22, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <AnimatedLogo size={30} variant="hover" />
+          <div className="lp-sec" style={{ paddingTop: 48, paddingBottom: 40 }}>
+            <div className="lp-foot-grid">
               <div>
-                <div style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 14.5, color: C.t1 }}>MedSchoolPrep</div>
-                <div style={{ fontSize: 11.5, color: C.t3 }}>Your path into medicine · medschoolprep.cloud</div>
+                <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <AnimatedLogo size={32} variant="hover" glow={false} />
+                  <span style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 16, color: C.t1 }}>MedSchoolPrep</span>
+                </a>
+                <p style={{ margin: '14px 0 0', maxWidth: '38ch', fontSize: 13.5, lineHeight: 1.6, color: C.t2 }}>A free path into medicine for high schoolers — diagnostic, verified lessons, flashcards, an AI coach, and a full application portfolio.</p>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.t3, marginBottom: 14 }}>Product</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <a href="#pathways" style={{ color: C.t2, fontSize: 13.5 }}>Pathways</a>
+                  <a href="#learn" style={{ color: C.t2, fontSize: 13.5 }}>Prep &amp; lessons</a>
+                  <a href="#portfolio" style={{ color: C.t2, fontSize: 13.5 }}>Portfolio</a>
+                  <a href="#learn" style={{ color: C.t2, fontSize: 13.5 }}>Medabrain AI coach</a>
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.t3, marginBottom: 14 }}>More</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <a href="#faq" style={{ color: C.t2, fontSize: 13.5 }}>FAQ</a>
+                  <button onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>Log in</button>
+                  <button onClick={onGetStarted} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>Get started</button>
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 22, fontSize: 13, color: C.t2, flexWrap: 'wrap' }}>
-              {navLinks.map(([href, label]) => <a key={href} className="lp-nav-link" href={href}>{label}</a>)}
-              <button onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13, fontFamily: 'inherit', padding: 0 }}>Log in</button>
+            <div style={{ marginTop: 40, paddingTop: 22, borderTop: `1px solid ${C.b1}`, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, color: C.t3 }}>
+              <span>© 2026 MedSchoolPrep. Free forever.</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 8px ${C.green}` }} />
+                No paywall · No ads · Built for high schoolers
+              </span>
             </div>
-            <p style={{ fontSize: 11.5, color: C.t3, margin: 0 }}>Free forever · Built for high schoolers</p>
           </div>
         </footer>
 
