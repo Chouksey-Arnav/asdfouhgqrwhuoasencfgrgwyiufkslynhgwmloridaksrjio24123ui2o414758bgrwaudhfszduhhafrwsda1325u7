@@ -4,12 +4,12 @@ import { Brain, Sparkles } from 'lucide-react';
 import { C, tint } from '../lib/theme';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The "Ask Meta Brain" launcher — the always-visible pull-tab (desktop) / FAB
-// (mobile) that opens PortfolioMetaBrain.jsx or PrepMetaBrain.jsx.
+// The "Ask Medabrain" launcher — the always-visible pull-tab (desktop) / FAB
+// (mobile) that opens PortfolioMedabrain.jsx or PrepMedabrain.jsx.
 //
 // Design intent: a dark glass tab with a living gradient edge, instead of a
 // flat colour slab. Three layers of motion, each tied to user intent:
-//   1. Ambient — a slow breathing aura (msp-pulse-glow) signals Meta Brain is a
+//   1. Ambient — a slow breathing aura (msp-pulse-glow) signals Medabrain is a
 //      standing presence reading live context, not a static menu item.
 //   2. Hover — a soft accent spotlight physically follows the cursor across the
 //      button (CSS vars --mb-x/--mb-y set from onMouseMove), the tab eases out
@@ -52,7 +52,7 @@ const Ripples = ({ ripples, accent }) => ripples.map((r) => (
   }} />
 ));
 
-export default function MetaBrainLauncher({ onClick, accent = C.violet, accent2 = null, isMobile, label = 'Ask Meta Brain' }) {
+export default function MedabrainLauncher({ onClick, accent = C.violet, accent2 = null, isMobile, label = 'Ask Medabrain' }) {
   const a2 = accent2 || accent;
   const { ref, ripples, onMouseMove, spawnRipple } = useLauncherFX();
   const handleClick = useCallback((e) => { spawnRipple(e); onClick?.(e); }, [spawnRipple, onClick]);

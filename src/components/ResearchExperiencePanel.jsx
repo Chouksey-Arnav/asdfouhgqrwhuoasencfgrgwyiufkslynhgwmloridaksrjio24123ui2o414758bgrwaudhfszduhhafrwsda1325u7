@@ -4,7 +4,7 @@ import { Plus, Trash2, FlaskConical, ExternalLink, BookOpenCheck, Clock, Microsc
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = ['Ongoing', 'Completed', 'Published'];
 const STATUS_COLORS = { Ongoing: C.amber, Completed: C.blue, Published: C.green };
@@ -43,7 +43,7 @@ export default function ResearchExperiencePanel({ accent = C.blue }) {
       });
       setEntries(prev => [row, ...prev]);
       setTitle(''); setMentorName(''); setInstitution(''); setDescription(''); setPublicationUrl(''); setHours('');
-      showMetaBrainToast('research_added', { title: row.title });
+      showMedabrainToast('research_added', { title: row.title });
     } catch (err) { toast.error(err.message); }
   }
 

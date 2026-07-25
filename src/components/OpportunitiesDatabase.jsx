@@ -7,7 +7,7 @@ import { C, glass, glass2, btn, btnSm, inp, R, CC, pill, tint } from '../lib/the
 import { listItems } from '../lib/dataApi';
 import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../data/opportunities';
 import { rankOpportunities } from '../lib/recommendOpportunities';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 
@@ -38,7 +38,7 @@ const RANK_STYLE = {
 // deterministic "Recommended for you" ranking (rankOpportunities(), same
 // shape as the Prep tab's quiz recommender) and a daily-cached Meta Brain
 // blurb grounded in the student's real Portfolio activities.
-export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMetaBrain, pathwayKey = null, pathwayLabel = 'college prep', user = null }) {
+export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedabrain, pathwayKey = null, pathwayLabel = 'college prep', user = null }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
@@ -91,17 +91,17 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMetaB
   }, [portfolioSignals, ranked, pathwayKey, user]);
 
   useEffect(() => {
-    if (!askMetaBrain || !cacheKey || !ranked.length) { setBrainSummary(null); return; }
+    if (!askMedabrain || !cacheKey || !ranked.length) { setBrainSummary(null); return; }
     const cached = getCached(cacheKey);
     if (cached) { setBrainSummary({ loading: false, content: cached, error: null }); return; }
     let cancelled = false;
     setBrainSummary({ loading: true, content: null, error: null });
     const list = ranked.map(r => `${r.item.name} (${r.item.type}, ${r.item.effort})`).join(', ');
-    askMetaBrain(`Here are this student's top-ranked Opportunities & Competitions picks right now, already ranked by a deterministic algorithm against their real Portfolio activities: ${list}. In 2-3 concise sentences, tell them why these specific picks make sense for them right now. Only reference items from this exact list — never invent one.`)
+    askMedabrain(`Here are this student's top-ranked Opportunities & Competitions picks right now, already ranked by a deterministic algorithm against their real Portfolio activities: ${list}. In 2-3 concise sentences, tell them why these specific picks make sense for them right now. Only reference items from this exact list — never invent one.`)
       .then(content => { if (!cancelled) { setCached(cacheKey, content); setBrainSummary({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) setBrainSummary({ loading: false, content: null, error: err.message }); });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, App.jsx recreates it every render
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, App.jsx recreates it every render
   }, [cacheKey]);
 
   const showAiFallback = query.trim().length >= 3 && results.length === 0;
@@ -109,17 +109,17 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMetaB
   async function handleAdd(o) {
     try {
       await onAdd({ type: o.type, name: o.name, desc: o.desc });
-      showMetaBrainToast('opportunity_added', { name: o.name, type: o.type });
+      showMedabrainToast('opportunity_added', { name: o.name, type: o.type });
       toast.success(`Added: ${o.name.slice(0, 40)}`);
     } catch (err) { toast.error(err.message); }
   }
 
   async function askAboutMissingOpportunity() {
     const q = query.trim();
-    if (!q || !askMetaBrain) return;
+    if (!q || !askMedabrain) return;
     setAiLookup({ query: q, loading: true, content: null, error: null });
     try {
-      const content = await askMetaBrain(
+      const content = await askMedabrain(
         `The student searched the Opportunities & Competitions database for "${q}" and nothing matched. Using your general knowledge, tell them in 3-4 sentences what "${q}" is (if you recognize it) — who runs it, roughly what it's for, and typical eligibility. If you don't actually recognize this as a real program, say so plainly instead of inventing details. Always end by telling them to confirm current details on the program's own website since you cannot browse the web.`
       );
       setAiLookup({ query: q, loading: false, content, error: null });
@@ -251,7 +251,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMetaB
               <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>
                 "{query.trim()}" isn't in our {OPPORTUNITIES.length}-program curated list. Meta Brain can try to tell you what it knows from general knowledge — or you can just add it as a custom entry below.
               </p>
-              {askMetaBrain && (
+              {askMedabrain && (
                 <button style={btn(C.violetGrad, { fontSize: 12 })} onClick={askAboutMissingOpportunity}><Sparkles size={13} />Ask Meta Brain about "{query.trim()}"</button>
               )}
             </>

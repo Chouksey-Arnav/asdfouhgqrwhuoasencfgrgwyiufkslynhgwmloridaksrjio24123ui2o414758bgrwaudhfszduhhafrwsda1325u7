@@ -5,7 +5,7 @@ import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 import { buildPrepSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
-import MetaBrainLauncher from './MetaBrainLauncher';
+import MedabrainLauncher from './MedabrainLauncher';
 
 const LESSON_SUGGESTIONS = [
   'Explain this a different way',
@@ -22,7 +22,7 @@ const PATHWAY_SUGGESTIONS = [
 // The Prep tab's dedicated AI — the `purpose:'prep'` Groq key pool was
 // configured server-side (see api/groq.js / GROQ_SETUP.md) from early on but
 // never had a real chat surface on the client until this component. Mirrors
-// PortfolioMetaBrain.jsx's pull-tab + slide-out panel pattern, with two
+// PortfolioMedabrain.jsx's pull-tab + slide-out panel pattern, with two
 // differences:
 //   1. Uses the pathway's own accent color (passed in) instead of Portfolio's
 //      fixed violet, so it visually reads as "a different specialist."
@@ -33,7 +33,7 @@ const PATHWAY_SUGGESTIONS = [
 //      node with the Prep tab's tree). Lifting the state up means the same
 //      conversation and open/closed state persists across that boundary
 //      instead of resetting every time a student enters or exits a lesson.
-export default function PrepMetaBrain({
+export default function PrepMedabrain({
   open, onOpenChange, messages, onMessagesChange,
   user, pathwayLabel, gradeLabel, accent = C.blue, isMobile,
   lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [],
@@ -54,7 +54,7 @@ export default function PrepMetaBrain({
     const trimmed = (text ?? input).trim();
     if (!trimmed || loading) return;
     const now = Date.now();
-    if (now - lastSendRef.current < 2500) { toast('Give Meta Brain a moment before asking again.', { icon: '⏳' }); return; }
+    if (now - lastSendRef.current < 2500) { toast('Give Medabrain a moment before asking again.', { icon: '⏳' }); return; }
     lastSendRef.current = now;
 
     const userMsg = { role: 'user', content: trimmed };
@@ -74,8 +74,8 @@ export default function PrepMetaBrain({
         body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 700 }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Meta Brain error (${res.status})`);
-      if (!data?.content) throw new Error("Meta Brain didn't return a usable answer. Try again.");
+      if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);
+      if (!data?.content) throw new Error("Medabrain didn't return a usable answer. Try again.");
       onMessagesChange(m => [...m, { role: 'assistant', content: data.content }]);
     } catch (err) {
       onMessagesChange(m => [...m, { role: 'error', content: err.message }]);
@@ -91,7 +91,7 @@ export default function PrepMetaBrain({
   return (
     <>
       {!open && (
-        <MetaBrainLauncher onClick={toggleOpen} accent={accent} isMobile={isMobile} />
+        <MedabrainLauncher onClick={toggleOpen} accent={accent} isMobile={isMobile} />
       )}
 
       <AnimatePresence>
@@ -124,7 +124,7 @@ export default function PrepMetaBrain({
                     <Brain size={17} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Meta Brain</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Medabrain</div>
                     <div style={{ fontSize: 10.5, color: C.t3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
                   </div>
                   {messages.length > 0 && (
@@ -171,7 +171,7 @@ export default function PrepMetaBrain({
                 ))}
                 {loading && (
                   <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8, color: C.t3, fontSize: 12 }}>
-                    <Loader2 size={14} className="spin" /> Meta Brain is thinking…
+                    <Loader2 size={14} className="spin" /> Medabrain is thinking…
                   </div>
                 )}
               </div>

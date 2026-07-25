@@ -4,7 +4,7 @@ import { Plus, Trash2, UserCheck, Users, Mail, CheckCircle2 } from 'lucide-react
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = ['Planning to ask', 'Asked', 'Confirmed', 'Submitted'];
 const STATUS_COLORS = { 'Planning to ask':C.t3, 'Asked':C.amberL, 'Confirmed':C.blueL, 'Submitted':C.greenL };
@@ -39,7 +39,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
       });
       setEntries(prev => [row, ...prev]);
       setName(''); setDueDate(''); setNotes('');
-      showMetaBrainToast('recommender_added', { name: row.name });
+      showMedabrainToast('recommender_added', { name: row.name });
       onChange?.();
     } catch (err) { toast.error(err.message); }
   }

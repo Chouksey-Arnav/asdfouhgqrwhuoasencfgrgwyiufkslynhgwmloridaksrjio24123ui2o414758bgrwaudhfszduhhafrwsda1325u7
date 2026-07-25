@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Meta Brain micro-commentary — the small, instant reaction that fires right
+// Medabrain micro-commentary — the small, instant reaction that fires right
 // after a student updates something in Portfolio, so the AI feels like it's
 // actually paying attention to the tracker rather than only showing up when
 // summoned. Deliberately template-based and instant (zero network calls): a
 // real Groq call on every keystroke/save would be slow, rate-limited, and
 // mostly wasted on one-liners nobody needed AI reasoning for. The deeper,
-// grounded reasoning lives in the Ask Meta Brain sidebar (PortfolioMetaBrain.jsx)
+// grounded reasoning lives in the Ask Medabrain sidebar (PortfolioMedabrain.jsx)
 // and the Deadlines priority summary, both of which DO call purpose:'portfolio'.
 import React from 'react';
 import toast from 'react-hot-toast';
@@ -20,7 +20,7 @@ const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const BANK = {
   college_added: (p) => pick([
     `${p.name} is on the list. Reach, target, or safety — either way, get its EA/ED deadline into the checklist while it's top of mind.`,
-    `Added ${p.name}. One more data point for "which colleges fit me" — ask any time from the Meta Brain tab.`,
+    `Added ${p.name}. One more data point for "which colleges fit me" — ask any time from the Medabrain tab.`,
     `${p.name} tracked. Once it has a category, I can weigh in on whether your list is balanced across reach/target/safety.`,
   ]),
   deadline_added: (p) => pick([
@@ -33,7 +33,7 @@ const BANK = {
   ]),
   essay_started: (p) => pick([
     `New essay draft started${p.title ? `: "${p.title}"` : ''}. First drafts are supposed to be rough — just get words down.`,
-    `Essay workspace opened${p.title ? ` for "${p.title}"` : ''}. Ping the Meta Brain tab if you want a second pair of eyes once there's a draft.`,
+    `Essay workspace opened${p.title ? ` for "${p.title}"` : ''}. Ping the Medabrain tab if you want a second pair of eyes once there's a draft.`,
   ]),
   essay_completed: (p) => pick([
     `"${p.title}" marked final. Worth a last read-aloud pass before it ships — typos hide from silent reading.`,
@@ -88,9 +88,9 @@ export function localComment(eventType, payload = {}) {
 
 // A distinct visual identity from both the plain react-hot-toast success/error
 // toasts and the amber achievement toast in App.jsx — violet/indigo, a Brain
-// icon, and an explicit "Meta Brain" label, so a student learns to recognize
+// icon, and an explicit "Medabrain" label, so a student learns to recognize
 // "the AI just reacted to what I did" at a glance.
-export function showMetaBrainToast(eventType, payload = {}) {
+export function showMedabrainToast(eventType, payload = {}) {
   const line = localComment(eventType, payload);
   if (!line) return;
   toast.custom((t) => (
@@ -107,7 +107,7 @@ export function showMetaBrainToast(eventType, payload = {}) {
         <Brain size={14} color={C.violetL} />
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 3 }}>Meta Brain</div>
+        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 3 }}>Medabrain</div>
         <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>{line}</div>
       </div>
     </motion.div>
