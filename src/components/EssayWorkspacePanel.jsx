@@ -1,10 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2 } from 'lucide-react';
+import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2, Sparkles, Loader2 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { getCached, setCached, dailyKey } from '../lib/aiCache';
+import { renderMarkdown } from '../lib/renderMarkdown';
+import { getWhyMedicineLabel, getDreamRoleLabel } from '../lib/studentProfile';
 
 const STATUSES = [
   { id: 'not_started', label: 'Not Started', color: C.t3 },
@@ -18,7 +21,7 @@ function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function EssayWorkspacePanel({ accent = C.blue }) {
+export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMetaBrain = null }) {
   const [essays, setEssays] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,8 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   const [newTitle, setNewTitle] = useState('');
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState('');
+  const [portfolioCtx, setPortfolioCtx] = useState(null); // broader context for the ambient recommendation only — activities/research/clinical hours/awards
+  const [brainTake, setBrainTake] = useState(null); // { loading, content, error }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,6 +42,18 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  // Fetched once, separately from the essay/college state above — this is only ever read by the
+  // ambient Meta Brain recommendation below, never rendered directly, so a failed fetch degrades
+  // to "no extra context" rather than breaking the essay workspace itself.
+  useEffect(() => {
+    Promise.all([
+      listItems('activities').catch(() => []),
+      listItems('research_experience').catch(() => []),
+      listItems('clinical_hours').catch(() => []),
+      listItems('awards').catch(() => []),
+    ]).then(([activities, research, clinicalHours, awards]) => setPortfolioCtx({ activities, research, clinicalHours, awards })).catch(() => setPortfolioCtx({ activities: [], research: [], clinicalHours: [], awards: [] }));
+  }, []);
 
   useEffect(() => {
     if (!selected) { setVersions([]); return; }
@@ -129,6 +146,52 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
   const finals = essays.filter(e => e.status === 'final').length;
   const inFlight = essays.filter(e => ['outlining','drafting','revising'].includes(e.status)).length;
 
+  // ── Meta Brain's take — an unasked-for, personalized recommendation on how to approach the
+  // essay(s) that still need work, grounded in the real essay list AND the rest of the student's
+  // portfolio/onboarding profile (not just word counts) — same "inline card, not a toast, cached
+  // per-day" pattern as DeadlinesPanel/CollegeListPanel. Only fires once colleges + the broader
+  // portfolioCtx fetch have both resolved, so it never reasons from a partial picture.
+  const brainCacheKey = useMemo(
+    () => dailyKey('essayTake', essays.map(e => `${e.title}:${e.status}:${wordCount(e.content)}`).join('|')),
+    [essays]
+  );
+  const brainFetchedKeyRef = useRef(null);
+  useEffect(() => {
+    if (!askMetaBrain || essays.length === 0 || !portfolioCtx) { setBrainTake(null); return; }
+    const cached = getCached(brainCacheKey);
+    if (cached) { setBrainTake({ loading: false, content: cached, error: null }); brainFetchedKeyRef.current = brainCacheKey; return; }
+    if (brainFetchedKeyRef.current === brainCacheKey) return;
+    brainFetchedKeyRef.current = brainCacheKey;
+    let cancelled = false;
+    setBrainTake({ loading: true, content: null, error: null });
+
+    const essayList = essays.map(e => `"${e.title}" (${e.status}, ${wordCount(e.content)}/${e.word_limit} words${e.college_id ? `, linked to ${colleges.find(c=>c.id===e.college_id)?.name || 'a school'}` : ''})`).join('; ');
+    const notStarted = essays.filter(e => e.status === 'not_started' || !wordCount(e.content));
+    const whyMed = getWhyMedicineLabel(user?.whyMedicine);
+    const dreamRole = getDreamRoleLabel(user?.dreamRole);
+    const activityList = (portfolioCtx.activities||[]).slice(0,8).map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}`).join(', ');
+    const researchList = (portfolioCtx.research||[]).slice(0,4).map(r => r.title).join(', ');
+    const clinicalTotal = (portfolioCtx.clinicalHours||[]).reduce((s,h)=>s+(h.hours||0),0);
+    const awardList = (portfolioCtx.awards||[]).slice(0,5).map(a => a.title).join(', ');
+
+    const contextParts = [
+      `Essays tracked: ${essayList}.`,
+      notStarted.length ? `Not yet started or empty: ${notStarted.map(e=>`"${e.title}"`).join(', ')}.` : `Every tracked essay has some draft content.`,
+      whyMed ? `Why they're drawn to medicine (from onboarding): "${whyMed}."` : '',
+      dreamRole && dreamRole !== 'Undecided' ? `Their dream role: ${dreamRole}.` : '',
+      activityList ? `Activities: ${activityList}.` : 'No activities logged yet.',
+      researchList ? `Research: ${researchList}.` : '',
+      clinicalTotal > 0 ? `${clinicalTotal} clinical/shadowing hours logged.` : '',
+      awardList ? `Awards: ${awardList}.` : '',
+    ].filter(Boolean).join(' ');
+
+    askMetaBrain(`Here is this student's real essay workspace and portfolio: ${contextParts} In 2-4 concise, warm sentences, give a specific, personalized recommendation for how to start or move forward on whichever essay most needs attention right now — suggest a concrete angle or story beat drawn from their OWN logged activities/research/why-medicine answer above, not generic essay advice. Only reference essays, activities, or experiences from this exact data — never invent one.`)
+      .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
+      .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
+  }, [brainCacheKey, portfolioCtx]);
+
   return (
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia}
@@ -141,6 +204,18 @@ export default function EssayWorkspacePanel({ accent = C.blue }) {
           <StatTile icon={PenLine} value={inFlight} label="In progress" color={C.blue}/>
           <StatTile icon={CheckCircle2} value={finals} label="Finalized" color={C.green}/>
           <StatTile icon={FileText} value={totalWords.toLocaleString()} label="Words written" color={accent}/>
+        </div>
+      )}
+
+      {brainTake && (
+        <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
+          <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
+            <Sparkles size={13} color={C.violetL}/>
+            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain's take</span>
+          </div>
+          {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your essays and portfolio…</div>}
+          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now.</div>}
+          {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
         </div>
       )}
 

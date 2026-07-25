@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Brain, X, Send, Loader2, Sparkles, RotateCcw } from 'lucide-react';
+import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
+import MetaBrainLauncher from './MetaBrainLauncher';
 
 const SUGGESTIONS = [
   'Which colleges on my list actually fit me?',
@@ -107,31 +108,9 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
       {/* Pull tab — a slim vertical handle on the right edge (desktop), a round FAB above the
           bottom nav (mobile). Always visible so it reads as an ambient, always-available brain
           rather than a menu item buried in a tab. */}
-      {!open && (isMobile ? (
-        <motion.button
-          onClick={toggleOpen} whileTap={{ scale: 0.94 }} aria-label="Ask Meta Brain"
-          style={{
-            position: 'fixed', right: 16, bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)', zIndex: 320,
-            width: 52, height: 52, borderRadius: '50%', border: `1px solid ${tint(C.violet, 0.5)}`,
-            background: `linear-gradient(135deg,${C.violet},${C.indigo})`, boxShadow: `0 8px 24px ${tint(C.violet, 0.5)}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-          <Brain size={22} color="#fff" />
-        </motion.button>
-      ) : (
-        <motion.button
-          onClick={toggleOpen} whileHover={{ x: -3 }} aria-label="Ask Meta Brain"
-          style={{
-            position: 'fixed', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 320,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-            padding: '14px 8px', borderRadius: '12px 0 0 12px', border: `1px solid ${tint(C.violet, 0.4)}`, borderRight: 'none',
-            background: `linear-gradient(160deg,${tint(C.violet, 0.9)},${tint(C.indigo, 0.9)})`,
-            boxShadow: `-4px 4px 20px ${tint(C.violet, 0.35)}`, cursor: 'pointer',
-          }}>
-          <Sparkles size={15} color="#fff" />
-          <span style={{ writingMode: 'vertical-rl', fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '.06em', fontFamily: C.FB }}>Ask Meta Brain</span>
-        </motion.button>
-      ))}
+      {!open && (
+        <MetaBrainLauncher onClick={toggleOpen} accent={C.violet} accent2={C.indigo} isMobile={isMobile} />
+      )}
 
       <AnimatePresence>
         {open && (

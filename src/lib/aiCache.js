@@ -2,6 +2,8 @@
 // sessions — e.g. the daily "why this quiz" narration for the #1 recommendation. Backed by
 // localStorage (not Dexie) since entries are small strings with a short TTL and don't need to
 // survive a full data export/import cycle.
+import { localDateStr } from './dateUtils';
+
 const PREFIX = 'aiCache:';
 
 export function getCached(key) {
@@ -26,6 +28,5 @@ export function setCached(key, value, ttlMs = 24 * 60 * 60 * 1000) {
 
 // Keys the day into the cache key so the narration refreshes once every 24h instead of never.
 export function dailyKey(...parts) {
-  const today = new Date().toISOString().slice(0, 10);
-  return [...parts, today].join(':');
+  return [...parts, localDateStr()].join(':');
 }

@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, ChevronDown, ChevronUp, School, Check, GraduationCap, Send } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp, School, Check, GraduationCap, Send, Sparkles, Loader2 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import CollegeAutocomplete from './CollegeAutocomplete';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { getCached, setCached, dailyKey } from '../lib/aiCache';
+import { renderMarkdown } from '../lib/renderMarkdown';
 
 const CATEGORIES = [
   { id: 'reach', label: 'Reach', color: C.rose },
@@ -31,7 +33,7 @@ const DEFAULT_CHECKLIST = [
   'Interview (if applicable)',
 ];
 
-export default function CollegeListPanel({ accent = C.blue, studentSAT = null }) {
+export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMetaBrain = null }) {
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
   const [loading, setLoading] = useState(true);
@@ -39,6 +41,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
   const [newName, setNewName] = useState('');
   const [newCategory, setNewCategory] = useState('target');
   const [categoryTouched, setCategoryTouched] = useState(false); // true once the student picks a category manually, so an autocomplete pick afterward doesn't overwrite their choice
+  const [brainTake, setBrainTake] = useState(null); // { loading, content, error }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -108,6 +111,32 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
 
   const catCount = (id) => colleges.filter(c => c.category === id).length;
 
+  // ── Meta Brain's take — an ambient, unasked-for read on list balance and which schools it
+  // recommends leaning on, grounded in the real list embedded directly in the question (same
+  // pattern as DeadlinesPanel's priority summary) and cached per-day/per-list-shape so it only
+  // re-calls Groq when the day rolls over or the list itself actually changes. Deliberately an
+  // inline card, not a toast — this should read as a standing observation, not a notification.
+  const brainCacheKey = useMemo(
+    () => dailyKey('collegeListTake', colleges.map(c => `${c.name}:${c.category}:${c.status}`).join('|')),
+    [colleges]
+  );
+  const brainFetchedKeyRef = useRef(null);
+  useEffect(() => {
+    if (!askMetaBrain || colleges.length === 0) { setBrainTake(null); return; }
+    const cached = getCached(brainCacheKey);
+    if (cached) { setBrainTake({ loading: false, content: cached, error: null }); brainFetchedKeyRef.current = brainCacheKey; return; }
+    if (brainFetchedKeyRef.current === brainCacheKey) return;
+    brainFetchedKeyRef.current = brainCacheKey;
+    let cancelled = false;
+    setBrainTake({ loading: true, content: null, error: null });
+    const list = colleges.map(c => `${c.name} (${c.category || 'uncategorized'}, status: ${c.status || 'researching'})`).join('; ');
+    askMetaBrain(`Here is this student's real college list: ${list}. In 2-3 concise sentences: comment on whether the reach/target/safety balance looks healthy, flag any school whose category seems off given typical selectivity for a school with that name, and name which 1-2 schools on THIS list they should prioritize finishing an application for next. Only reference schools from this exact list — never invent or suggest a school that isn't on it.`)
+      .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
+      .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
+  }, [brainCacheKey]);
+
   return (
     <div style={CC({gap: 22})}>
       <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue}
@@ -121,6 +150,18 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null })
           <StatTile icon={School} value={catCount('target')} label="Target" color={C.blue}/>
           <StatTile icon={School} value={catCount('safety')} label="Safety" color={C.green}/>
           <StatTile icon={Send} value={submitted} label="Submitted" sub={`${inProgress} in progress · ${notStarted} researching`} color={C.violet}/>
+        </div>
+      )}
+
+      {brainTake && (
+        <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
+          <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
+            <Sparkles size={13} color={C.violetL}/>
+            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain's take</span>
+          </div>
+          {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Weighing your list balance…</div>}
+          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — your list below is still accurate.</div>}
+          {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
         </div>
       )}
 
