@@ -51,6 +51,7 @@ import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
 import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
+import { localDateStr } from './lib/dateUtils';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
@@ -1667,7 +1668,7 @@ export default function App({ account, onAccountChange }) {
       if(u){
         const priorDays=(await DB.getStudyDays()).slice().sort();
         if(priorDays.length){
-          const todayStr=new Date().toISOString().split('T')[0];
+          const todayStr=localDateStr();
           const lastDay=priorDays[priorDays.length-1];
           if(lastDay!==todayStr){
             const gapDays=Math.round((new Date(todayStr)-new Date(lastDay))/86400000);
@@ -1861,7 +1862,7 @@ export default function App({ account, onAccountChange }) {
     });
     AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
     if(profile.targetScore){
-      createItem('test_scores',{ test_type:profile.testTrack==='ACT'?'ACT':'SAT', test_date:new Date().toISOString().slice(0,10), composite:profile.targetScore, section_scores:{}, is_target:true }).catch(()=>{});
+      createItem('test_scores',{ test_type:profile.testTrack==='ACT'?'ACT':'SAT', test_date:localDateStr(), composite:profile.targetScore, section_scores:{}, is_target:true }).catch(()=>{});
     }
     if(profile.goal==='explore_pathway') goPrep('diagnostic');
     else if(profile.goal==='build_application') goPortfolio('overview');
@@ -2195,7 +2196,7 @@ export default function App({ account, onAccountChange }) {
     if(!dbReady||!user||streakNudgeRef.current||streak<=2)return;
     if(new Date().getHours()<18)return; // evening only
     (async()=>{
-      const todayKey = new Date().toISOString().split('T')[0];
+      const todayKey = localDateStr();
       const nudgeKey = `streakNudge:${todayKey}`;
       if(localStorage.getItem(nudgeKey))return;
       const days = await DB.getStudyDays();
@@ -6162,13 +6163,20 @@ export default function App({ account, onAccountChange }) {
         </div>
         {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
             parity with how PortfolioMetaBrain is mounted once for the whole Portfolio tab below.
-            No specific lesson is open here, so it grounds in the pathway's unit list instead. */}
+            No specific lesson is open here, so it grounds in the pathway's real unit-by-unit
+            completion (not just titles) plus weakest-category/due-cards/streak — so "what should
+            I study next" answers reference this student's actual progress, matching what the head
+            coach already knows via buildCoachSystemPrompt. */}
         <PrepMetaBrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
           user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
           accent={pA} isMobile={isMobile}
-          unitTitles={(curPath?.units||[]).map(u=>u.title)}
+          units={(curPath?.units||[]).map(u=>({ title:u.title, done:(u.lessons||[]).filter(l=>isLessonComplete(l,pathway[l.id])).length, total:(u.lessons||[]).length }))}
+          totalDone={curPathDoneL} totalLessons={curPathAllL.length}
+          weakestCategory={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?cats3[w.i]:null;})()}
+          weakestScore={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?w.v:null;})()}
+          dueCards={dueCards} streak={streak}
         />
       </div>
     );
@@ -6181,8 +6189,8 @@ export default function App({ account, onAccountChange }) {
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
     deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMetaBrain={askPortfolioMetaBrain}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMetaBrain={askPortfolioMetaBrain}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMetaBrain={askPortfolioMetaBrain}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMetaBrain={askPortfolioMetaBrain}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,

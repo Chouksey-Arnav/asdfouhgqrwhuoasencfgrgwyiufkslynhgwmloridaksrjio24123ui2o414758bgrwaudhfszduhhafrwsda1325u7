@@ -66,6 +66,24 @@ body::before {
   .msp-aurora, .msp-pulse-glow { animation: none !important; }
 }
 
+/* Meta Brain launcher (PortfolioMetaBrain / PrepMetaBrain pull-tab + mobile FAB) — a diagonal
+   light sweep that glides across the button on hover, on top of the ambient .msp-pulse-glow ring
+   already applied to its own glow layer. isolation:isolate keeps the ::after sweep clipped to
+   this element's own stacking context so it can't bleed over neighbouring UI. */
+.mb-launcher { position: relative; overflow: hidden; isolation: isolate; }
+.mb-launcher::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.4) 48%, rgba(255,255,255,0.05) 58%, transparent 75%);
+  transform: translateX(-140%);
+  transition: transform .85s cubic-bezier(.22,1,.36,1);
+  pointer-events: none;
+}
+.mb-launcher:hover::after, .mb-launcher:focus-visible::after { transform: translateX(140%); }
+@media (prefers-reduced-motion: reduce) {
+  .mb-launcher::after { transition: none; opacity: 0; }
+}
+
 .mb-group .mb-copy { opacity: 0; }
 .mb-group:hover .mb-copy { opacity: 1; }
 .mb-copy:hover { border-color: rgba(255,255,255,0.24) !important; color: #eef2ff !important; }

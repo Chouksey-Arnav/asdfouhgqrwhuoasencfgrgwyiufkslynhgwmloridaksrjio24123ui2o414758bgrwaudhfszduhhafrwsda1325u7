@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { C, lbl, R } from '../lib/theme';
 import * as DB from '../lib/db';
+import { localDateStr } from '../lib/dateUtils';
 
 const WEEKS = 18;
 
@@ -23,7 +24,7 @@ export default function StreakHeatmap({ accent = C.blue }) {
     for (let i = 0; i < totalDays; i++) {
       const d = new Date(start);
       d.setDate(start.getDate() + i);
-      const key = d.toISOString().split('T')[0];
+      const key = localDateStr(d);
       const future = d > today;
       const active = studied.has(key);
       if (!future) { activeDayCount++; if (active) studiedCount++; }

@@ -5,6 +5,7 @@
 //           portfolio, achievements, study sessions, streak calendar.
 // ─────────────────────────────────────────────────────────────────────────────
 import Dexie from 'dexie';
+import { localDateStr } from './dateUtils';
 
 const db = new Dexie('MedSchoolPrep');
 
@@ -259,7 +260,7 @@ export async function unlockAchievement(key) {
 
 // ── Streak / Study Days ────────────────────────────────────────────────────────
 export async function recordStudyToday() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateStr();
   try { await db.studyDays.add({ date: today }); pushDirty(); } catch { /* already exists */ }
 }
 export async function getStreak() {
@@ -283,7 +284,7 @@ export async function getStreak() {
       // checkAndApplyStreakFreeze, called once per app load).
       const missed = new Date(check);
       missed.setDate(missed.getDate() - 1);
-      const missedKey = missed.toISOString().split('T')[0];
+      const missedKey = localDateStr(missed);
       if (bridgedDates.has(missedKey)) { streak++; check = d; }
       else break;
     } else break;
@@ -320,7 +321,7 @@ export async function checkAndApplyStreakFreeze() {
   const gapDays = Math.round((today - mostRecent) / 86400000);
   if (gapDays !== 2) return false; // only bridges a single missed day
   const missed = new Date(mostRecent); missed.setDate(missed.getDate() + 1);
-  const missedKey = missed.toISOString().split('T')[0];
+  const missedKey = localDateStr(missed);
   const alreadyBridged = await db.streakFreezes.where('usedOn').equals(missedKey).count();
   if (alreadyBridged) return false;
   const unused = await db.streakFreezes.filter(f => !f.usedOn).first();
@@ -490,7 +491,7 @@ export async function addCoachMessage(threadId, role, content) {
 // week" style stats actually need.
 const SYNC_VERSION = 1;
 
-function dateKeyOf(ms) { return new Date(ms).toISOString().split('T')[0]; }
+function dateKeyOf(ms) { return localDateStr(new Date(ms)); }
 
 export async function buildSyncSnapshot() {
   const [

@@ -1,10 +1,11 @@
 import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Brain, X, Send, Loader2, Sparkles, RotateCcw } from 'lucide-react';
+import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 import { buildPrepSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
+import MetaBrainLauncher from './MetaBrainLauncher';
 
 const LESSON_SUGGESTIONS = [
   'Explain this a different way',
@@ -36,6 +37,7 @@ export default function PrepMetaBrain({
   open, onOpenChange, messages, onMessagesChange,
   user, pathwayLabel, gradeLabel, accent = C.blue, isMobile,
   lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [],
+  units = [], totalDone = null, totalLessons = null, weakestCategory = null, weakestScore = null, dueCards = 0, streak = 0,
 }) {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -64,6 +66,7 @@ export default function PrepMetaBrain({
       const sys = buildPrepSystemPrompt({
         user, pathwayLabel, gradeLabel,
         lesson, unit, articleSections, keyTakeaways, objectives, unitTitles,
+        units, totalDone, totalLessons, weakestCategory, weakestScore, dueCards, streak,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
@@ -87,31 +90,9 @@ export default function PrepMetaBrain({
 
   return (
     <>
-      {!open && (isMobile ? (
-        <motion.button
-          onClick={toggleOpen} whileTap={{ scale: 0.94 }} aria-label="Ask Meta Brain"
-          style={{
-            position: 'fixed', right: 16, bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)', zIndex: 320,
-            width: 52, height: 52, borderRadius: '50%', border: `1px solid ${tint(accent, 0.5)}`,
-            background: `linear-gradient(135deg,${accent},${accent}cc)`, boxShadow: `0 8px 24px ${tint(accent, 0.5)}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-          }}>
-          <Brain size={22} color="#fff" />
-        </motion.button>
-      ) : (
-        <motion.button
-          onClick={toggleOpen} whileHover={{ x: -3 }} aria-label="Ask Meta Brain"
-          style={{
-            position: 'fixed', right: 0, top: '50%', transform: 'translateY(-50%)', zIndex: 320,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-            padding: '14px 8px', borderRadius: '12px 0 0 12px', border: `1px solid ${tint(accent, 0.4)}`, borderRight: 'none',
-            background: `linear-gradient(160deg,${tint(accent, 0.9)},${tint(accent, 0.7)})`,
-            boxShadow: `-4px 4px 20px ${tint(accent, 0.35)}`, cursor: 'pointer',
-          }}>
-          <Sparkles size={15} color="#fff" />
-          <span style={{ writingMode: 'vertical-rl', fontSize: 11, fontWeight: 700, color: '#fff', letterSpacing: '.06em', fontFamily: C.FB }}>Ask Meta Brain</span>
-        </motion.button>
-      ))}
+      {!open && (
+        <MetaBrainLauncher onClick={toggleOpen} accent={accent} isMobile={isMobile} />
+      )}
 
       <AnimatePresence>
         {open && (

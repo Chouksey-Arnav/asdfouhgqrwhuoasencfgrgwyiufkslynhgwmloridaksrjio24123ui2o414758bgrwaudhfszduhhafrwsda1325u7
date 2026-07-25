@@ -5,6 +5,7 @@
 // claiming does not forfeit the day, avoiding a FOMO-driven dark pattern.
 // ─────────────────────────────────────────────────────────────────────────────
 import * as DB from './db';
+import { localDateStr, localDateStrOffset } from './dateUtils';
 
 // Day 7 is a mystery chest rather than a flat number — resolved by the caller
 // via RewardChest's own variable pool, this table just marks it as `chest`.
@@ -19,7 +20,7 @@ export const CHECKIN_TABLE = [
 ];
 
 function todayStr() {
-  return new Date().toISOString().split('T')[0];
+  return localDateStr();
 }
 
 /** Has today's check-in already been claimed (or skipped)? */
@@ -29,7 +30,7 @@ export async function getTodayCheckinStatus() {
 
 /** Which cycle day (1-7) is next, based on yesterday's entry. */
 export async function getNextCheckinDay() {
-  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+  const yesterday = localDateStrOffset(-1);
   const y = await DB.getCheckin(yesterday);
   if (y && y.day < 7) return y.day + 1;
   if (y && y.day >= 7) return 1;

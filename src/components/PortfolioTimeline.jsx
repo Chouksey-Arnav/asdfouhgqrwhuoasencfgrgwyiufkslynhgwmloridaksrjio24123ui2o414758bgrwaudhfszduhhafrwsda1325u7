@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CalendarDays, TrendingUp, Stethoscope, UserCheck, Milestone, History, Hourglass } from 'lucide-react';
 import { C, glass, glass2, R, CC, pill, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
+import { localDateStr } from '../lib/dateUtils';
 import PanelHero, { SectionTitle } from './ui/PanelHero';
 
 const KIND_META = {
@@ -36,7 +37,7 @@ export default function PortfolioTimeline({ accent = C.indigo }) {
 
   if (events === null) return null;
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = localDateStr();
   const upcoming = events.filter(e => e.date >= today);
   const past = events.filter(e => e.date < today).reverse();
   const next = upcoming[0];
