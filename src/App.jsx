@@ -1287,16 +1287,10 @@ export default function App({ account, onAccountChange }) {
     setTourActive(false);
     setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
   }, []);
-  // completeOnboarding() routes brand-new users straight into the Pathway Diagnostic — the
-  // tour's first step forces tab back to Home, so auto-starting it on a blind timer would yank
-  // the user out of the diagnostic they just launched into. Defer it with this flag instead,
-  // and only actually start the tour once they naturally land on Home themselves.
-  const tourPendingRef = useRef(false);
-  useEffect(()=>{
-    if(!tourPendingRef.current||tourActive||tab!=='home')return;
-    tourPendingRef.current=false;
-    startTour();
-  },[tab,tourActive,startTour]);
+  // completeOnboarding() calls startTour() directly, right after the onboarding
+  // handoff — the tour's own first step (`nav-home`) already forces the tab back
+  // to Home via its onEnter, so there's no separate "wait until they land on Home"
+  // step needed; the whole point is the tour picks up the instant onboarding ends.
   // Full-depth product tour — every pillar, every absorbed sub-view inside Prep/Portfolio/
   // Progress, and every Settings section, so a brand-new student sees the entire app (not
   // just the top-level tabs) before they're left to explore on their own. Each sub-view gets
@@ -1880,9 +1874,9 @@ export default function App({ account, onAccountChange }) {
     // moment in the whole flow. One-time burst, not looped, so it reads as a landing moment.
     play('achieve');
     celebrateAchievement();
-    tourPendingRef.current=true;
     setJustOnboarded(true);
-  },[saveUser,goPrep,goPortfolio,onAccountChange,account]);
+    startTour();
+  },[saveUser,goPrep,goPortfolio,onAccountChange,account,startTour]);
   // Cross-device: if this device has no local profile yet but the signed-in account already
   // finished onboarding elsewhere, rebuild the local profile from the account instead of asking
   // for their name again.
