@@ -131,6 +131,7 @@ const CAT_META = {
   'Clinical Exposure':            { color:C.rose,   light:C.roseL,   dim:C.roseDim,   grad:C.sunsetGrad, emoji:'🩺' },
   'Wellness & Balance':           { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad, emoji:'🌱' },
   'Math & Data':                  { color:C.indigo, light:C.indigoL, dim:C.indigoDim, grad:C.oceanGrad,  emoji:'📊' },
+  'History & Social Studies':     { color:C.gold,   light:C.goldL,   dim:C.goldDim,   grad:C.sunsetGrad, emoji:'🏛️' },
 };
 const catMeta = (cat) => CAT_META[cat] || { color:C.blue, light:C.blueL, dim:C.blueDim, grad:C.blueGrad, emoji:'📚' };
 
@@ -3498,7 +3499,7 @@ export default function App({ account, onAccountChange }) {
   function tQuizzes(){
     const dColors={Easy:C.green,Medium:C.cyan,Hard:C.amber,Expert:C.rose};
     const diffLevels=['Easy','Medium','Hard','Expert'];
-    const COURSE_CAT_MAP={Biology:'Life Sciences','Environmental Science':'Life Sciences',Chemistry:'Physical Sciences',Physics:'Physical Sciences','AP Psychology':'Behavioral & Social Sciences','US History':'Behavioral & Social Sciences','World History':'Behavioral & Social Sciences','AP US History':'Behavioral & Social Sciences','AP World History':'Behavioral & Social Sciences'};
+    const COURSE_CAT_MAP={Biology:'Life Sciences','Environmental Science':'Life Sciences',Chemistry:'Physical Sciences',Physics:'Physical Sciences','AP Psychology':'Behavioral & Social Sciences','US History':'History & Social Studies','World History':'History & Social Studies','AP US History':'History & Social Studies','AP World History':'History & Social Studies','AP Government':'History & Social Studies','Algebra II':'Math & Data',Precalculus:'Math & Data','Calculus AB':'Math & Data','Calculus BC':'Math & Data',Statistics:'Math & Data',English:'Test Prep','AP English Language':'Test Prep','AP English Literature':'Test Prep'};
     const myCourseCats=new Set((user.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean));
     const filtersActive = qSrch.trim()!==''||qCat!=='All'||qDiff!=='All'||qSort!=='default';
     const clearFilters = ()=>{setQSrch('');setQC('All');setQD('All');setQSort('default');};
@@ -3521,13 +3522,13 @@ export default function App({ account, onAccountChange }) {
           </div>
           {/* Category identity chips — same colour language as the E-Library's category row */}
           <div style={R({gap:8,flexWrap:'wrap',marginBottom:12})}>
-            {['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=>{
+            {['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences','Math & Data','Test Prep','History & Social Studies'].map(c=>{
               const active=qCat===c;
               const cm=c==='All'?{color:C.green,light:C.greenL,dim:C.greenDim,emoji:'✨'}:catMeta(c);
               return(
                 <motion.button key={c} whileHover={{scale:1.05,y:-1}} whileTap={{scale:.96}} onClick={()=>setQC(c)}
                   style={{...pill(active?cm.color:cm.dim,active?'#fff':cm.light,{fontSize:11,padding:'6px 13px',cursor:'pointer',border:`1px solid ${active?cm.color:'transparent'}`,boxShadow:active?`0 4px 14px ${cm.color}45`:'none',fontWeight:700})}}>
-                  {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c}
+                  {cm.emoji} {c==='Behavioral & Social Sciences'?'Behavioral Sci.':c==='History & Social Studies'?'History & Soc.':c}
                 </motion.button>
               );
             })}
