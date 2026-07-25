@@ -48,6 +48,7 @@ import { ELIB_EXPANSION_C } from './elibExpansionC';
 import { ELIB_EXPANSION_D } from './elibExpansionD';
 import { ELIB_EXPANSION_E } from './elibExpansionE';
 import { ELIB_EXPANSION_F } from './elibExpansionF';
+import { ELIB_EXPANSION_G } from './elibExpansionG';
 
 const ELIB_CORE = [
   {
@@ -1416,4 +1417,23 @@ const ELIB_CORE = [
 // handful of smaller gaps (CITI Program, EndNote, PSAT 8/9, and a few more
 // teen-crisis and general-science resources). See that file's own header for
 // the full rationale and verification checklist.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F];
+// Expansion batch G (see ./elibExpansionG.js) — an eighth batch (100 entries)
+// closing the accessibility/inclusion gap (testing accommodations, learning
+// differences, undocumented/foster/first-gen access programs — previously
+// zero entries on any of this), rounding out nutrition and physical-activity
+// resources, adding a nursing and pharmacy honor-society/professional-body
+// tier to match the one that already existed for medicine and dentistry,
+// filling out the roster of major disease-specific patient organizations to
+// match the depth already established for a handful of conditions, adding
+// named national student science competitions (USA Biolympiad, ExploraVision,
+// Genes in Space) that had no entries anywhere in the library, and closing
+// smaller practical-tooling and topic-symmetry gaps (SQL/spreadsheet/Python
+// basics, lab-protocol and image-analysis tools, a free calculator guidebook,
+// world history and philosophy textbooks, and the biology/biochemistry MCAT
+// track that was missing while its physics and psychology counterparts
+// already existed). A pre-existing broken duplicate — a stale Khan Academy AP
+// Environmental Science URL in elibExpansionC.js that pointed to a dead slug
+// while a correct copy already existed in Physical Sciences — was removed as
+// part of this pass. See elibExpansionG.js's own header for the full
+// rationale and verification checklist.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F, ...ELIB_EXPANSION_G];
