@@ -47,6 +47,7 @@ import { ELIB_EXPANSION_B } from './elibExpansionB';
 import { ELIB_EXPANSION_C } from './elibExpansionC';
 import { ELIB_EXPANSION_D } from './elibExpansionD';
 import { ELIB_EXPANSION_E } from './elibExpansionE';
+import { ELIB_EXPANSION_F } from './elibExpansionF';
 
 const ELIB_CORE = [
   {
@@ -1405,4 +1406,14 @@ const ELIB_CORE = [
 // elibExtra.js's own header for that fix). Keeping them in separate modules
 // makes each expansion easy to audit on its own while the app continues to
 // import a single `ELIB` array.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E];
+// Expansion batch F (see ./elibExpansionF.js) — a seventh batch (104 entries)
+// that closed named-but-unlinked gaps from the app's own lesson content
+// (NAPLEX, CNA/NNAAP certification, ATI TEAS, medical scribe and phlebotomy
+// certification, DECA and FBLA), added the narrative-medicine book genre the
+// library previously had none of, rounded out physician/nursing/dental
+// specialty-society and allied-health-career breadth to match the pattern
+// already established for the specialties that existed, and closed a
+// handful of smaller gaps (CITI Program, EndNote, PSAT 8/9, and a few more
+// teen-crisis and general-science resources). See that file's own header for
+// the full rationale and verification checklist.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F];
