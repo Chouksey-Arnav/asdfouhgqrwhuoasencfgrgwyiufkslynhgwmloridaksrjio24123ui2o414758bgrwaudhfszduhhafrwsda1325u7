@@ -69,8 +69,8 @@ import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
-import PortfolioMetaBrain from './components/PortfolioMetaBrain';
-import PrepMetaBrain from './components/PrepMetaBrain';
+import PortfolioMedabrain from './components/PortfolioMedabrain';
+import PrepMedabrain from './components/PrepMedabrain';
 import OpportunitiesDatabase from './components/OpportunitiesDatabase';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
@@ -2297,7 +2297,7 @@ export default function App({ account, onAccountChange }) {
   // key pool, same as the rest of Portfolio's AI — but with a lightweight system prompt since it's
   // answering from general knowledge, not reasoning over the student's tracked data (that deeper,
   // grounded reasoning is what the Ask Meta Brain sidebar / buildPortfolioSystemPrompt is for).
-  async function askPortfolioMetaBrain(question) {
+  async function askPortfolioMedabrain(question) {
     return callGroqAI(
       "You are Meta Brain, MedSchoolPrep's Portfolio Intelligence specialist. You do not have web access — answer only from general knowledge, and say so plainly if you don't actually recognize something instead of inventing details.",
       question, 400, null, 'guide', 'portfolio',
@@ -5013,7 +5013,7 @@ export default function App({ account, onAccountChange }) {
             log; see src/components/OpportunitiesDatabase.jsx. */}
         <div>
           <SL extra={{marginBottom:16}}>Opportunities & Competitions</SL>
-          <OpportunitiesDatabase accent={accent} onAdd={addPortActivity} askMetaBrain={askPortfolioMetaBrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
+          <OpportunitiesDatabase accent={accent} onAdd={addPortActivity} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
         </div>
       </div>
     );
@@ -6136,7 +6136,7 @@ export default function App({ account, onAccountChange }) {
         />
         {/* Fills the right-side gutter of the immersive lesson view with a click-away Prep Meta
             Brain (purpose:'prep'), grounded in this exact lesson's content — see PrepMetaBrain.jsx. */}
-        <PrepMetaBrain
+        <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
           user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
@@ -6171,7 +6171,7 @@ export default function App({ account, onAccountChange }) {
             completion (not just titles) plus weakest-category/due-cards/streak — so "what should
             I study next" answers reference this student's actual progress, matching what the head
             coach already knows via buildCoachSystemPrompt. */}
-        <PrepMetaBrain
+        <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
           user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
@@ -6192,11 +6192,11 @@ export default function App({ account, onAccountChange }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
-    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMetaBrain={askPortfolioMetaBrain}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMetaBrain={askPortfolioMetaBrain}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMetaBrain={askPortfolioMetaBrain}/>,
+    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
-    aid:()=><FinancialAidPanel accent={portC.aid} askMetaBrain={askPortfolioMetaBrain}/>,
+    aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
     research:()=><ResearchExperiencePanel accent={portC.research}/>,
     skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
@@ -6209,7 +6209,7 @@ export default function App({ account, onAccountChange }) {
       <div>
         <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
         {(portfolioRenders[portfolioView]||tPort)()}
-        <PortfolioMetaBrain
+        <PortfolioMedabrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
           gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
           isMobile={isMobile}

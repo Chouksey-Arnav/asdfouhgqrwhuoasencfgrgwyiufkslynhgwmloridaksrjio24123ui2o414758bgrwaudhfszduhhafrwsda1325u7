@@ -66,7 +66,7 @@ body::before {
   .msp-aurora, .msp-pulse-glow { animation: none !important; }
 }
 
-/* Meta Brain launcher (PortfolioMetaBrain / PrepMetaBrain pull-tab + mobile FAB) — a diagonal
+/* Medabrain launcher (PortfolioMedabrain / PrepMedabrain pull-tab + mobile FAB) — a diagonal
    light sweep that glides across the button on hover, on top of the ambient .msp-pulse-glow ring
    already applied to its own glow layer. isolation:isolate keeps the ::after sweep clipped to
    this element's own stacking context so it can't bleed over neighbouring UI. */
@@ -81,7 +81,7 @@ body::before {
 }
 .mb-launcher:hover::after, .mb-launcher:focus-visible::after { transform: translateX(140%); }
 
-/* Cursor-following spotlight: MetaBrainLauncher.jsx writes --mb-x/--mb-y from
+/* Cursor-following spotlight: MedabrainLauncher.jsx writes --mb-x/--mb-y from
    onMouseMove, so this radial highlight tracks the pointer across the button.
    Hidden at rest; fades in on hover so the button "lights up where you are". */
 .mb-spot {

@@ -6,7 +6,7 @@ import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint } fr
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 
 const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
 // Every activity type gets its own colour so the logged list reads as a
@@ -64,7 +64,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       });
       setActivities(prev => [...prev, row]);
       setDraft(emptyActivity());
-      showMetaBrainToast('activity_added', { position: row.position });
+      showMedabrainToast('activity_added', { position: row.position });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -84,7 +84,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       });
       setAwards(prev => [...prev, row]);
       setAwardDraft(emptyAward());
-      showMetaBrainToast('award_added', { title: row.title });
+      showMedabrainToast('award_added', { title: row.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -102,7 +102,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       const row = await createItem('gpa_entries', { ...gpaDraft, gpa: Number(gpaDraft.gpa) });
       setGpaEntries(prev => [...prev, row]);
       setGpaDraft(emptyGpa());
-      showMetaBrainToast('gpa_added');
+      showMedabrainToast('gpa_added');
     } catch (err) { toast.error(err.message); }
   }
 
@@ -138,7 +138,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
 
   function exportPdf() {
     exportPortfolioResume(null, activities, awards, gpaEntries);
-    showMetaBrainToast('resume_exported');
+    showMedabrainToast('resume_exported');
     onResumeExported?.();
   }
 

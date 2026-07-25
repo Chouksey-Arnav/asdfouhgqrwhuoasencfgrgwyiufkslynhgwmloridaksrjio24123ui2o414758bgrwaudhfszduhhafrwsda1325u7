@@ -31,7 +31,7 @@ function notesFor(s) {
   ].filter(Boolean).join(' ');
 }
 
-export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMetaBrain }) {
+export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMedabrain }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
@@ -55,10 +55,10 @@ export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMetaBra
 
   async function askAboutMissingScholarship() {
     const q = query.trim();
-    if (!q || !askMetaBrain) return;
+    if (!q || !askMedabrain) return;
     setAiLookup({ query: q, loading: true, content: null, error: null });
     try {
-      const content = await askMetaBrain(
+      const content = await askMedabrain(
         `The student searched the scholarship database for "${q}" and nothing matched. Using your general knowledge, tell them in 3-4 sentences what "${q}" is (if you recognize it) — who runs it, roughly what it's for, and typical eligibility. If you don't actually recognize this as a real scholarship, say so plainly instead of inventing details. Always end by telling them to confirm exact amount/deadline/eligibility on the program's own website since you cannot browse the web.`
       );
       setAiLookup({ query: q, loading: false, content, error: null });
@@ -151,7 +151,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMetaBra
               <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>
                 "{query.trim()}" isn't in our {SCHOLARSHIPS.length}-program curated list. Meta Brain can try to tell you what it knows from general training — or you can just add it as a custom entry below with your own notes.
               </p>
-              {askMetaBrain && (
+              {askMedabrain && (
                 <button style={btn(C.violetGrad, { fontSize: 12 })} onClick={askAboutMissingScholarship}><Sparkles size={13} />Ask Meta Brain about "{query.trim()}"</button>
               )}
             </>

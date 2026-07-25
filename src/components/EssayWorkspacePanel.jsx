@@ -4,7 +4,7 @@ import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2, Spa
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { getWhyMedicineLabel, getDreamRoleLabel } from '../lib/studentProfile';
@@ -21,7 +21,7 @@ function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMetaBrain = null }) {
+export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMedabrain = null }) {
   const [essays, setEssays] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
       setEssays(prev => [...prev, essay]);
       setNewTitle('');
       setSelected(essay);
-      showMetaBrainToast('essay_started', { title: essay.title });
+      showMedabrainToast('essay_started', { title: essay.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -123,7 +123,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
     try {
       await updateItem('essays', id, patch);
       if (patch.status === 'final' && prevEssay && prevEssay.status !== 'final') {
-        showMetaBrainToast('essay_completed', { title: prevEssay.title });
+        showMedabrainToast('essay_completed', { title: prevEssay.title });
       }
     } catch (err) { toast.error(err.message); }
   }
@@ -157,7 +157,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
   );
   const brainFetchedKeyRef = useRef(null);
   useEffect(() => {
-    if (!askMetaBrain || essays.length === 0 || !portfolioCtx) { setBrainTake(null); return; }
+    if (!askMedabrain || essays.length === 0 || !portfolioCtx) { setBrainTake(null); return; }
     const cached = getCached(brainCacheKey);
     if (cached) { setBrainTake({ loading: false, content: cached, error: null }); brainFetchedKeyRef.current = brainCacheKey; return; }
     if (brainFetchedKeyRef.current === brainCacheKey) return;
@@ -185,11 +185,11 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
       awardList ? `Awards: ${awardList}.` : '',
     ].filter(Boolean).join(' ');
 
-    askMetaBrain(`Here is this student's real essay workspace and portfolio: ${contextParts} In 2-4 concise, warm sentences, give a specific, personalized recommendation for how to start or move forward on whichever essay most needs attention right now — suggest a concrete angle or story beat drawn from their OWN logged activities/research/why-medicine answer above, not generic essay advice. Only reference essays, activities, or experiences from this exact data — never invent one.`)
+    askMedabrain(`Here is this student's real essay workspace and portfolio: ${contextParts} In 2-4 concise, warm sentences, give a specific, personalized recommendation for how to start or move forward on whichever essay most needs attention right now — suggest a concrete angle or story beat drawn from their OWN logged activities/research/why-medicine answer above, not generic essay advice. Only reference essays, activities, or experiences from this exact data — never invent one.`)
       .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
   }, [brainCacheKey, portfolioCtx]);
 
   return (

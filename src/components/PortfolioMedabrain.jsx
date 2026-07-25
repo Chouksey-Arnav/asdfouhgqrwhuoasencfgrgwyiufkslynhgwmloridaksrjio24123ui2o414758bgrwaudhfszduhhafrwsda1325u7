@@ -6,7 +6,7 @@ import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
-import MetaBrainLauncher from './MetaBrainLauncher';
+import MedabrainLauncher from './MedabrainLauncher';
 
 const SUGGESTIONS = [
   'Which colleges on my list actually fit me?',
@@ -23,7 +23,7 @@ const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activitie
 // head-coach chat state: it fetches the full Portfolio resource lists itself so it always
 // reasons over live, complete data, and its API traffic never competes with or gets mixed
 // into the main Medabrain coach's key pool/rate limits.
-export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile }) {
+export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -61,7 +61,7 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
     const trimmed = (text ?? input).trim();
     if (!trimmed || loading) return;
     const now = Date.now();
-    if (now - lastSendRef.current < 2500) { toast('Give Meta Brain a moment before asking again.', { icon: '⏳' }); return; }
+    if (now - lastSendRef.current < 2500) { toast('Give Medabrain a moment before asking again.', { icon: '⏳' }); return; }
     lastSendRef.current = now;
 
     const userMsg = { role: 'user', content: trimmed };
@@ -85,8 +85,8 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
         body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 800 }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data?.error || `Meta Brain error (${res.status})`);
-      if (!data?.content) throw new Error("Meta Brain didn't return a usable answer. Try again.");
+      if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);
+      if (!data?.content) throw new Error("Medabrain didn't return a usable answer. Try again.");
       setMessages(m => [...m, { role: 'assistant', content: data.content }]);
     } catch (err) {
       setMessages(m => [...m, { role: 'error', content: err.message }]);
@@ -109,7 +109,7 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
           bottom nav (mobile). Always visible so it reads as an ambient, always-available brain
           rather than a menu item buried in a tab. */}
       {!open && (
-        <MetaBrainLauncher onClick={toggleOpen} accent={C.violet} accent2={C.indigo} isMobile={isMobile} />
+        <MedabrainLauncher onClick={toggleOpen} accent={C.violet} accent2={C.indigo} isMobile={isMobile} />
       )}
 
       <AnimatePresence>
@@ -143,7 +143,7 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
                     <Brain size={17} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Meta Brain</div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Medabrain</div>
                     <div style={{ fontSize: 10.5, color: C.t3 }}>Portfolio Intelligence · sees your full tracker</div>
                   </div>
                   {messages.length > 0 && (
@@ -192,7 +192,7 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
                 ))}
                 {loading && (
                   <div style={{ alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: 8, color: C.t3, fontSize: 12 }}>
-                    <Loader2 size={14} className="spin" /> Meta Brain is reading your portfolio…
+                    <Loader2 size={14} className="spin" /> Medabrain is reading your portfolio…
                   </div>
                 )}
               </div>

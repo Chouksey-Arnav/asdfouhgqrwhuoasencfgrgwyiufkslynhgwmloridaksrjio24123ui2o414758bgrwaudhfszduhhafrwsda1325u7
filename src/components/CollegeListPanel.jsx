@@ -6,7 +6,7 @@ import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } fr
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import CollegeAutocomplete from './CollegeAutocomplete';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 
@@ -33,7 +33,7 @@ const DEFAULT_CHECKLIST = [
   'Interview (if applicable)',
 ];
 
-export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMetaBrain = null }) {
+export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMedabrain = null }) {
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
   const [loading, setLoading] = useState(true);
@@ -77,7 +77,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
     setColleges(prev => [...prev, college]);
     setNewName('');
     setCategoryTouched(false);
-    showMetaBrainToast('college_added', { name: college.name });
+    showMedabrainToast('college_added', { name: college.name });
     try {
       const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
         createItem('college_checklist_items', { college_id: college.id, label, sort_order: i })
@@ -122,7 +122,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
   );
   const brainFetchedKeyRef = useRef(null);
   useEffect(() => {
-    if (!askMetaBrain || colleges.length === 0) { setBrainTake(null); return; }
+    if (!askMedabrain || colleges.length === 0) { setBrainTake(null); return; }
     const cached = getCached(brainCacheKey);
     if (cached) { setBrainTake({ loading: false, content: cached, error: null }); brainFetchedKeyRef.current = brainCacheKey; return; }
     if (brainFetchedKeyRef.current === brainCacheKey) return;
@@ -130,11 +130,11 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
     let cancelled = false;
     setBrainTake({ loading: true, content: null, error: null });
     const list = colleges.map(c => `${c.name} (${c.category || 'uncategorized'}, status: ${c.status || 'researching'})`).join('; ');
-    askMetaBrain(`Here is this student's real college list: ${list}. In 2-3 concise sentences: comment on whether the reach/target/safety balance looks healthy, flag any school whose category seems off given typical selectivity for a school with that name, and name which 1-2 schools on THIS list they should prioritize finishing an application for next. Only reference schools from this exact list — never invent or suggest a school that isn't on it.`)
+    askMedabrain(`Here is this student's real college list: ${list}. In 2-3 concise sentences: comment on whether the reach/target/safety balance looks healthy, flag any school whose category seems off given typical selectivity for a school with that name, and name which 1-2 schools on THIS list they should prioritize finishing an application for next. Only reference schools from this exact list — never invent or suggest a school that isn't on it.`)
       .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, it's a fresh closure every render (see DeadlinesPanel.jsx for the same pattern)
   }, [brainCacheKey]);
 
   return (

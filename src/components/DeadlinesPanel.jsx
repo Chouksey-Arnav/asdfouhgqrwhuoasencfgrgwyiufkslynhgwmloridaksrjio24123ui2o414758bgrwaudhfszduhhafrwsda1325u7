@@ -5,7 +5,7 @@ import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '..
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { deriveSuggestedDeadlines } from '../lib/autoDeadlines';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 
@@ -69,7 +69,7 @@ export function NextDeadlineCard({ deadlines, accent = C.blue }) {
   );
 }
 
-export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaBrain }) {
+export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedabrain }) {
   const [deadlines, setDeadlines] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [scholarships, setScholarships] = useState([]);
@@ -98,7 +98,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaB
       const d = await createItem('deadlines', { title: title.trim(), due_date: date, kind });
       setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
       setTitle(''); setDate('');
-      showMetaBrainToast('deadline_added', { title: d.title });
+      showMedabrainToast('deadline_added', { title: d.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -127,7 +127,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaB
     try {
       const d = await createItem('deadlines', { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id });
       setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
-      showMetaBrainToast('deadline_auto_suggested_added', { title: d.title });
+      showMedabrainToast('deadline_auto_suggested_added', { title: d.title });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -152,7 +152,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaB
   // forbids inventing a deadline not in it). Cached per-day AND per-list-shape so it only
   // re-calls Groq when the day rolls over or the actual upcoming deadlines change.
   const cacheKey = useMemo(() => dailyKey('deadlinesPriority', upcoming.map(d=>`${d.title}:${d.due_date}`).join('|')), [upcoming]);
-  // App.jsx recreates askMetaBrain on every render (it's a plain closure, not memoized), so it
+  // App.jsx recreates askMedabrain on every render (it's a plain closure, not memoized), so it
   // must NOT be a dependency here — that would re-fire this effect (and risk a duplicate in-flight
   // Groq call) on any unrelated App.jsx re-render. cacheKey alone captures everything that should
   // actually trigger a refetch (the day rolling over, or the upcoming deadline list changing).
@@ -160,7 +160,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaB
   // resolves (e.g. React StrictMode's double-invoke in dev).
   const fetchedKeyRef = useRef(null);
   useEffect(() => {
-    if (!askMetaBrain || upcoming.length === 0) { setBrainSummary(null); return; }
+    if (!askMedabrain || upcoming.length === 0) { setBrainSummary(null); return; }
     const cached = getCached(cacheKey);
     if (cached) { setBrainSummary({ loading: false, content: cached, error: null }); fetchedKeyRef.current = cacheKey; return; }
     if (fetchedKeyRef.current === cacheKey) return;
@@ -168,11 +168,11 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMetaB
     let cancelled = false;
     setBrainSummary({ loading: true, content: null, error: null });
     const list = upcoming.slice(0, 12).map(d => `"${d.title}" in ${daysUntil(d.due_date)}d (${d.kind})`).join('; ');
-    askMetaBrain(`Here are this student's real upcoming Portfolio deadlines, soonest first: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Only reference deadlines from this exact list — never invent one.`)
+    askMedabrain(`Here are this student's real upcoming Portfolio deadlines, soonest first: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Only reference deadlines from this exact list — never invent one.`)
       .then(content => { if (!cancelled) { setCached(cacheKey, content); setBrainSummary({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { fetchedKeyRef.current = null; setBrainSummary({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMetaBrain intentionally excluded, see comment above
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- askMedabrain intentionally excluded, see comment above
   }, [cacheKey]);
 
   return (

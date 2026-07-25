@@ -4,7 +4,7 @@ import { Plus, Trash2, Clock, Stethoscope, ShieldCheck, ShieldQuestion, Building
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 
 const SITE_TYPES = [
   'Hospital', 'Outpatient Clinic', 'Physician Office', 'Dental Office',
@@ -52,7 +52,7 @@ export default function ClinicalHoursPanel({ accent = C.blue, onLogged }) {
       });
       setEntries(prev => [row, ...prev].sort((a,b)=>b.entry_date.localeCompare(a.entry_date)));
       setSiteName(''); setSupervisorName(''); setSupervisorEmail(''); setHours(''); setEntryDate(''); setNotes('');
-      showMetaBrainToast('clinical_hours_logged', { hours: h, site: row.site_name });
+      showMedabrainToast('clinical_hours_logged', { hours: h, site: row.site_name });
       onLogged?.();
     } catch (err) { toast.error(err.message); }
   }

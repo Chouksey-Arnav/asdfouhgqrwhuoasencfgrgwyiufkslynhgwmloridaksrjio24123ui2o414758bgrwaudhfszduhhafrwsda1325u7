@@ -5,7 +5,7 @@ import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '..
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import ScholarshipDatabase from './ScholarshipDatabase';
-import { showMetaBrainToast } from '../lib/metaBrainComments';
+import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = [
   { id: 'researching', label: 'Researching', color: C.t3 },
@@ -15,7 +15,7 @@ const STATUSES = [
   { id: 'denied', label: 'Denied', color: C.roseL },
 ];
 
-export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
+export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
   const [scholarships, setScholarships] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
@@ -54,7 +54,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
       const row = await createItem('scholarships', { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' });
       setScholarships(prev => [...prev, row]);
       setName(''); setAmount(''); setDeadline('');
-      showMetaBrainToast('scholarship_added', { name: row.name });
+      showMedabrainToast('scholarship_added', { name: row.name });
     } catch (err) { toast.error(err.message); }
   }
 
@@ -63,7 +63,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
   async function addFromDatabase({ name: scholarName, notes }) {
     const row = await createItem('scholarships', { name: scholarName, notes, status: 'researching' });
     setScholarships(prev => [...prev, row]);
-    showMetaBrainToast('scholarship_added', { name: row.name });
+    showMedabrainToast('scholarship_added', { name: row.name });
   }
 
   async function updateRow(id, patch) {
@@ -72,7 +72,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
     try {
       await updateItem('scholarships', id, patch);
       if (patch.status === 'awarded' && prevRow && prevRow.status !== 'awarded') {
-        showMetaBrainToast('scholarship_awarded', { name: prevRow.name });
+        showMedabrainToast('scholarship_awarded', { name: prevRow.name });
       }
     } catch (err) { toast.error(err.message); }
   }
@@ -129,7 +129,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMetaBrain }) {
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
         <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
-        <ScholarshipDatabase accent={C.violet} onAdd={addFromDatabase} askMetaBrain={askMetaBrain}/>
+        <ScholarshipDatabase accent={C.violet} onAdd={addFromDatabase} askMedabrain={askMedabrain}/>
       </div>
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>

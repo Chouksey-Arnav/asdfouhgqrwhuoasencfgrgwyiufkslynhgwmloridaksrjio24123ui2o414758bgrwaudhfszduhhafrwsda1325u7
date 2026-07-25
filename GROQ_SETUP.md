@@ -165,7 +165,7 @@ The `portfolio` purpose/key pool (table above) existed server-side in `api/groq.
 before anything on the client actually called it. It now powers three separate surfaces, all
 routed exclusively through `purpose:'portfolio'` — none of them use the shared coach pool:
 
-- **Ask Meta Brain** (`src/components/PortfolioMetaBrain.jsx`) — a slide-out panel reachable from
+- **Ask Medabrain** (`src/components/PortfolioMedabrain.jsx`) — a slide-out panel reachable from
   a small pull-tab on the right edge of the Portfolio tab (desktop) or a floating button above the
   bottom nav (mobile). Self-contained: it fetches the student's full colleges/essays/deadlines/
   scholarships/activities/research/skills/clinical-hours/recommenders/test-scores/awards/GPA lists
@@ -174,7 +174,7 @@ routed exclusively through `purpose:'portfolio'` — none of them use the shared
   `buildCoachSystemPrompt`, since this surface exists specifically to reason over the full tracker
   rather than summary counts.
 - **Scholarship database AI fallback** (`src/components/ScholarshipDatabase.jsx`, via
-  `askPortfolioMetaBrain()` in `App.jsx`) — when a search matches nothing in the curated database
+  `askPortfolioMedabrain()` in `App.jsx`) — when a search matches nothing in the curated database
   (`src/data/scholarships.js`), a button offers to ask Meta Brain from general knowledge, clearly
   labeled unverified/AI-generated in the UI rather than presented as a database result.
 - **Deadlines priority summary** (`src/components/DeadlinesPanel.jsx`) — a short, cached
@@ -186,7 +186,7 @@ routed exclusively through `purpose:'portfolio'` — none of them use the shared
   missed application, not a stylistic miss, so it's never left to a model to guess.
 
 Lighter, template-based reactions after a student updates something in Portfolio (added a college,
-logged clinical hours, etc.) are handled separately by `src/lib/metaBrainComments.jsx` and are
+logged clinical hours, etc.) are handled separately by `src/lib/medabrainComments.jsx` and are
 **not** Groq calls — see the comment at the top of that file for why.
 
 ## Flashcard generation (no Groq, no network)
