@@ -122,11 +122,17 @@ const PURPOSE_KEYS = {
 const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan']);
 
 // Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
-// falls back to the shared Medabrain pool. De-dupe in case someone points two vars at one key.
+// falls back to the shared Medabrain pool. Returns { primary, fallback } rather than one flat pool:
+// primary is what this purpose should actually be spending its traffic on (its own dedicated
+// key(s), or the shared pool if it has none of its own); fallback is the shared pool held in
+// reserve for genuine failover only, never proactively mixed into primary's rotation — otherwise a
+// purpose with a dedicated key configured would still routinely spend requests on the shared pool,
+// defeating the entire point of giving it its own key.
 function keysForPurpose(purpose) {
   const dedicated = PURPOSE_KEYS[purpose] || [];
-  const pool = dedicated.length ? [...dedicated, ...SHARED_KEYS] : SHARED_KEYS;
-  return [...new Set(pool)];
+  const primary = dedicated.length ? [...new Set(dedicated)] : [...new Set(SHARED_KEYS)];
+  const fallback = dedicated.length ? SHARED_KEYS.filter(k => !dedicated.includes(k)) : [];
+  return { primary, fallback };
 }
 
 // Every configured key anywhere — used only for the "is anything configured at all?" guard.
@@ -144,14 +150,20 @@ const PURPOSE_DEFAULT_TIER = {
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
 };
 
-let keyCursor = 0;
-// Candidate keys in the order to try them for this request: starts at the next key in the
-// rotation (spreading load evenly across accounts), then falls through the rest as failover.
-function keyOrderForThisRequest(pool) {
-  if (pool.length <= 1) return pool;
-  const start = keyCursor % pool.length;
-  keyCursor = (keyCursor + 1) % pool.length;
-  return [...pool.slice(start), ...pool.slice(0, start)];
+// One rotation cursor per purpose (not a single shared counter) — otherwise unrelated purposes'
+// request volume perturbs each other's rotation position for no reason. Only `primary` is ever
+// rotated for load-spreading; `fallback` is appended in fixed order and only reached via the
+// failover loop below, so a purpose's dedicated key(s) are always tried before the shared pool.
+const keyCursors = new Map();
+function keyOrderForThisRequest(purpose, { primary, fallback }) {
+  let orderedPrimary = primary;
+  if (primary.length > 1) {
+    const cursor = keyCursors.get(purpose) || 0;
+    const start = cursor % primary.length;
+    keyCursors.set(purpose, (cursor + 1) % primary.length);
+    orderedPrimary = [...primary.slice(start), ...primary.slice(0, start)];
+  }
+  return [...orderedPrimary, ...fallback];
 }
 
 function isDailyLimited(ip) {
@@ -395,7 +407,7 @@ export default async function handler(req, res) {
   // hits its cap. A genuine 4xx client error (bad request, auth) isn't retried on the other key
   // since it isn't account-specific and would just fail the same way twice.
   async function callGroqWithFailover(useModel, timeoutMs) {
-    const keys = keyOrderForThisRequest(keyPool);
+    const keys = keyOrderForThisRequest(purpose, keyPool);
     let last = null;
     for (const key of keys) {
       last = await callGroqOnce(useModel, key, timeoutMs);

@@ -14,7 +14,7 @@ const SUGGESTIONS = [
   'Rank my upcoming deadlines by urgency',
 ];
 
-const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders'];
+const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders', 'test_scores', 'awards', 'gpa_entries'];
 
 // The Portfolio tab's dedicated AI — a small pull-tab that opens a chat panel calling
 // /api/groq with purpose:'portfolio' EXCLUSIVELY (its own Groq key pool — see api/groq.js
@@ -22,7 +22,7 @@ const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activitie
 // head-coach chat state: it fetches the full Portfolio resource lists itself so it always
 // reasons over live, complete data, and its API traffic never competes with or gets mixed
 // into the main Medabrain coach's key pool/rate limits.
-export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile, testScore = null, testType = null }) {
+export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -35,9 +35,9 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
   const loadPortfolioData = useCallback(async () => {
     setDataLoading(true);
     try {
-      const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders] =
+      const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries] =
         await Promise.all(RESOURCES.map(r => listItems(r).catch(() => [])));
-      setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders });
+      setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries });
     } catch {
       // Non-fatal — the prompt builder treats missing arrays as empty, so a partial/failed
       // fetch degrades to "nothing tracked yet" rather than crashing the chat.
@@ -70,12 +70,13 @@ export default function PortfolioMetaBrain({ user, pathwayLabel, gradeLabel, acc
     setLoading(true);
     try {
       const sys = buildPortfolioSystemPrompt({
-        user, pathwayLabel, gradeLabel, testScore, testType,
+        user, pathwayLabel, gradeLabel,
         colleges: portfolioData?.colleges || [], essays: portfolioData?.essays || [],
         deadlines: portfolioData?.deadlines || [], scholarships: portfolioData?.scholarships || [],
         activities: portfolioData?.activities || [], research: portfolioData?.research || [],
         skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
-        recommenders: portfolioData?.recommenders || [],
+        recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
+        awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
