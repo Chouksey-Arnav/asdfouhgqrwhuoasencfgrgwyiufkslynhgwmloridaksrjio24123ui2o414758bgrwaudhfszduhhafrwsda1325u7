@@ -16,7 +16,7 @@ export function GradeScoreStep({ value, onChange, onNext }) {
 
   return (
     <>
-      <StepHeader title="Grade & current score" subtitle="This will be used to calibrate your custom plan." />
+      <StepHeader eyebrow="Your starting point" title="Where are you starting from?" subtitle="Your grade and current score set an honest baseline — every doctor's path started with one." />
       <div style={{ flex: 1 }}>
         <SegmentToggle options={[{ value: 'SAT', label: 'SAT' }, { value: 'ACT', label: 'ACT' }]} value={testTrack} onChange={setTrack} />
         <div style={{ display: 'flex', gap: 18, marginTop: 28, justifyContent: 'center' }}>
