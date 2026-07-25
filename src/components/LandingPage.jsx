@@ -263,7 +263,7 @@ function AppReplica() {
                     <Layers size={18} color={C.violetL} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>14 cards due today</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>3 decks due today</div>
                     <div style={{ fontSize: 9.5, color: C.t2, marginTop: 2 }}>Cell Biology · Organic Chemistry · SAT Math</div>
                   </div>
                   <span style={{ background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, flexShrink: 0 }}>Review</span>
@@ -279,7 +279,7 @@ function AppReplica() {
                   <span style={{ background: C.blueGrad, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '6px 11px', borderRadius: 8, flexShrink: 0 }}>Resume</span>
                 </div>
                 <div className="lp-replica-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 9 }}>
-                  <MockStat icon={Layers} color={C.violet} value="14" label="Cards due" />
+                  <MockStat icon={Layers} color={C.violet} value="3" label="Decks due" />
                   <MockStat icon={BookOpen} color={C.green} value="27" label="Lessons verified" />
                   <MockStat icon={Flame} color={C.amber} value="12d" label="Study streak" />
                 </div>

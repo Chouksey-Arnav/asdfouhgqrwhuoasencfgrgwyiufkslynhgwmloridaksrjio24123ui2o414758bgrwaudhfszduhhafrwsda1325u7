@@ -45,24 +45,22 @@ export function getLevelInfo(xp) {
   return { level, tier: tier.name, tierIcon: tier.icon, tierColor: tier.color, xpIntoLevel, xpForNext, xpRemaining: xpForNext - xpIntoLevel, pct };
 }
 
-// ── Encouraging due-card copy ─────────────────────────────────────────────────
-// A raw flashcard "due" count (FSRS naturally lets this pile up if a student takes a break) is
-// motivating when it's small — "3 cards ready" reads like a quick win — but a big bare number
-// like "285 cards due" reads like an intimidating backlog, which is the opposite of what a
-// spaced-repetition system should feel like. These stay honest (the true count still shows for
-// small, approachable numbers) while reframing larger ones around "a session," not a debt.
-export function dueCardsBadge(n) {
+// ── Encouraging due-deck copy ─────────────────────────────────────────────────
+// A raw flashcard "due" count (FSRS naturally lets this pile up if a student takes a break) can
+// balloon into a big, intimidating bare number like "285 cards due," which reads like a backlog —
+// the opposite of what a spaced-repetition system should feel like. Instead we surface how many
+// DECKS have at least one card ready (a deck counts as "due" the moment any card in it is due),
+// which stays small, honest, and approachable no matter how the underlying card count grows.
+export function dueDecksBadge(n) {
   if (n <= 0) return null;
-  if (n <= 20) return `${n} card${n === 1 ? '' : 's'} ready`;
-  if (n <= 60) return 'A review session is ready';
-  return 'Loads of cards ready — dive in anytime';
+  if (n <= 8) return `${n} deck${n === 1 ? '' : 's'} ready`;
+  return 'Several decks ready — dive in anytime';
 }
 
-export function dueCardsSub(n) {
+export function dueDecksSub(n) {
   if (n <= 0) return 'All caught up';
-  if (n <= 20) return `${n} card${n === 1 ? '' : 's'} ready to review`;
-  if (n <= 60) return 'A full session ready whenever you are';
-  return 'Plenty ready — even a few minutes helps';
+  if (n <= 8) return `${n} deck${n === 1 ? '' : 's'} ready to review`;
+  return 'Plenty of decks ready — even a few minutes helps';
 }
 
 // ── Weekly quests ─────────────────────────────────────────────────────────────

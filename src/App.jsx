@@ -34,7 +34,7 @@ import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import AnimatedLogo from './components/AnimatedLogo';
-import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueCardsBadge, dueCardsSub } from './lib/gamification';
+import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueDecksBadge, dueDecksSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
 
 import * as DB from './lib/db';
@@ -2883,6 +2883,9 @@ export default function App({ account, onAccountChange }) {
       ...Object.keys(FLASH_DECKS).map(n=>({name:n,cards:cardsForDeck(n,true),builtin:true})),
     ];
   },[cDecks,deckCreatedAt,builtinDeckNames,cardsForDeck]);
+  // How many decks have at least one card due — surfaced instead of the raw due-card count so
+  // the number stays small and approachable no matter how large the underlying library grows.
+  const dueDeckCount = useMemo(()=>allDecksList.filter(d=>getDueCards(d.cards).length>0).length,[allDecksList]);
   const deckFuse = useMemo(()=>buildDeckSearch(allDecksList),[allDecksList]);
   const newestDeckName = useMemo(()=>{
     const entries = Object.entries(deckCreatedAt);
@@ -3005,7 +3008,7 @@ export default function App({ account, onAccountChange }) {
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
-                {dueCards>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueCardsBadge(dueCards)}</span>}
+                {dueDeckCount>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
                 {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
               </div>
@@ -3087,7 +3090,7 @@ export default function App({ account, onAccountChange }) {
               {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathway',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
               {Ic:MessageCircle,lbl:'AI Coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
-              {Ic:Layers3,lbl:'Flashcards',sub:`${dueCards>0?dueCardsSub(dueCards):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueCards>0?C.violet:C.orange},
+              {Ic:Layers3,lbl:'Flashcards',sub:`${dueDeckCount>0?dueDecksSub(dueDeckCount):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueDeckCount>0?C.violet:C.orange},
               {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
             ].map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
@@ -4039,19 +4042,19 @@ export default function App({ account, onAccountChange }) {
         <div style={G(4,12,{},isMobile)}>
           <StatTile icon={Layers3} value={builtinCount+customCount} label="Total Decks" color={C.sky}/>
           <StatTile icon={ScrollText} value={allCards.length} label="Total Cards" color={C.teal}/>
-          <StatTile icon={dueCards>0?Clock:CheckCircle2} value={dueCards} label="Due Now" sub={dueCards>0?undefined:'all caught up'} color={dueCards>0?C.amber:C.green}/>
+          <StatTile icon={dueDeckCount>0?Clock:CheckCircle2} value={dueDeckCount} label="Decks Due" sub={dueDeckCount>0?undefined:'all caught up'} color={dueDeckCount>0?C.amber:C.green}/>
           <StatTile icon={Brain} value={avgRetention!==null?`${avgRetention}%`:'—'} label="Avg. Retention" color={C.violet}/>
         </div>
 
         {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
             instead of having to pick a single deck first and switch decks once it runs dry. */}
-        {dueCards>0&&(
+        {dueDeckCount>0&&(
           <motion.div whileHover={{y:-2}} style={{...glass({padding:18}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
             onClick={()=>{setAD({name:'Smart Mix',builtin:true,smartMix:true});setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
             <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Sparkles size={20} color={C.amberL}/></div>
             <div style={{flex:1,minWidth:200}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review all {dueCards} due card{dueCards===1?'':'s'} across every deck in one session — no need to pick a deck first.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review {dueDeckCount} due deck{dueDeckCount===1?'':'s'} in one session — no need to pick a deck first.</div>
             </div>
             <span style={{...btn(`linear-gradient(135deg,${C.amber},${C.amber}cc)`,{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
           </motion.div>
@@ -4915,7 +4918,7 @@ export default function App({ account, onAccountChange }) {
             <div onClick={()=>goPrep('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Layers3 size={13} color={C.violet}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Flashcards</span></div>
               <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{totalReviews}<span style={{fontSize:11,color:C.t3,fontWeight:600}}> reviews</span></div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueCardsSub(dueCards)}</div>
+              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueDecksSub(dueDeckCount)}</div>
             </div>
             <div onClick={()=>goPortfolio('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
               <div style={R({gap:6,marginBottom:6})}><Mic size={13} color={C.cyan}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Interview Prep</span></div>
@@ -5714,7 +5717,7 @@ export default function App({ account, onAccountChange }) {
         {/* Card review stats */}
         <div style={G(3,14,{},isMobile)}>
           <Stat label="Cards Reviewed" value={totalReviews} icon={<Layers3 size={16}/>} color={C.violet} sub="Total all-time" m={isMobile}/>
-          <Stat label="Due Now" value={dueCards} icon={<CalendarDays size={16}/>} color={dueCards>0?C.amber:C.green} sub={dueCards>0?'Review these today':'All caught up!'} m={isMobile}/>
+          <Stat label="Decks Due" value={dueDeckCount} icon={<CalendarDays size={16}/>} color={dueDeckCount>0?C.amber:C.green} sub={dueDeckCount>0?'Review these today':'All caught up!'} m={isMobile}/>
           <Stat label="Coach Messages" value={aiChatCount} icon={<MessageCircle size={16}/>} color={C.cyan} sub="Medabrain conversations" m={isMobile}/>
         </div>
         </>}
@@ -6158,7 +6161,7 @@ export default function App({ account, onAccountChange }) {
       <div style={{position:'relative'}}>
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
-          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueCards>0?{...n,badge:dueCards}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
+          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
           {(prepRenders[prepView]||tPath)()}
         </div>
         {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
@@ -6336,7 +6339,7 @@ export default function App({ account, onAccountChange }) {
               {NAV.map(n=>{
                 const active=tab===n.id;
                 const nc=navColor[n.id]||accent;
-                const badge=n.id==='prep'&&dueCards>0?dueCards:null;
+                const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
                 return(
                   <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s'}}>
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
@@ -6370,7 +6373,7 @@ export default function App({ account, onAccountChange }) {
           <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
             {NAV.map(n=>{
               const nc=navColor[n.id]||accent;
-              const badge=n.id==='prep'&&dueCards>0?dueCards:null;
+              const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
               return(
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
                 // was width:70 back when there were only 5 tabs; fixed widths would overflow once
