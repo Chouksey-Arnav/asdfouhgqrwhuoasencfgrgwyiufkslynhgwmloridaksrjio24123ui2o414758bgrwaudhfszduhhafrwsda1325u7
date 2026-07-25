@@ -168,10 +168,11 @@ routed exclusively through `purpose:'portfolio'` — none of them use the shared
 - **Ask Meta Brain** (`src/components/PortfolioMetaBrain.jsx`) — a slide-out panel reachable from
   a small pull-tab on the right edge of the Portfolio tab (desktop) or a floating button above the
   bottom nav (mobile). Self-contained: it fetches the student's full colleges/essays/deadlines/
-  scholarships/activities/research/skills/clinical-hours/recommenders lists itself on open and
-  grounds every answer in `buildPortfolioSystemPrompt()` (`src/lib/studentProfile.js`) — a
-  deliberately more detailed prompt than the head coach's `buildCoachSystemPrompt`, since this
-  surface exists specifically to reason over the full tracker rather than summary counts.
+  scholarships/activities/research/skills/clinical-hours/recommenders/test-scores/awards/GPA lists
+  itself on open and grounds every answer in `buildPortfolioSystemPrompt()`
+  (`src/lib/studentProfile.js`) — a deliberately more detailed prompt than the head coach's
+  `buildCoachSystemPrompt`, since this surface exists specifically to reason over the full tracker
+  rather than summary counts.
 - **Scholarship database AI fallback** (`src/components/ScholarshipDatabase.jsx`, via
   `askPortfolioMetaBrain()` in `App.jsx`) — when a search matches nothing in the curated database
   (`src/data/scholarships.js`), a button offers to ask Meta Brain from general knowledge, clearly

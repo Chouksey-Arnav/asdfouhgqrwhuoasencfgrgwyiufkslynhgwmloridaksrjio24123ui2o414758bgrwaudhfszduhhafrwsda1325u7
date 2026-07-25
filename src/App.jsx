@@ -6200,7 +6200,6 @@ export default function App({ account, onAccountChange }) {
         <PortfolioMetaBrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
           gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
-          testScore={user?.onboardingCurrentScore||null} testType={user?.testTrack||null}
           isMobile={isMobile}
         />
       </div>
