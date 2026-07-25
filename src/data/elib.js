@@ -46,6 +46,7 @@ import { ELIB_EXPANSION_A } from './elibExpansionA';
 import { ELIB_EXPANSION_B } from './elibExpansionB';
 import { ELIB_EXPANSION_C } from './elibExpansionC';
 import { ELIB_EXPANSION_D } from './elibExpansionD';
+import { ELIB_EXPANSION_E } from './elibExpansionE';
 
 const ELIB_CORE = [
   {
@@ -1376,15 +1377,32 @@ const ELIB_CORE = [
 // Life Sciences/Physical Sciences/Math & Data/Research Methods, and
 // elibExpansionB.js — Behavioral & Social Sciences/Clinical Exposure/Test
 // Prep/Admissions & Planning/Wellness & Balance) — plus elibExpansionC.js, a
-// fourth 101-entry batch spanning all nine categories, and elibExpansionD.js,
+// fourth 101-entry batch spanning all nine categories, elibExpansionD.js,
 // a fifth batch (101 entries) that closed a concrete gap (the app had zero
 // economics/health-policy resources despite the Health Administration
 // pathway's own lessons teaching economics) and rounded out every other
-// category with real, appropriately-leveled resources (see that file's own
-// header for the full rationale and verification checklist).
-// Every entry across all six modules was sourced via live search rather
+// category with real, appropriately-leveled resources, and elibExpansionE.js,
+// a sixth batch (100 entries) that closed the largest remaining gap found by
+// cross-referencing every one of the app's 10 pathway lesson-content modules
+// against the library: the PA, PT, and OT pathways each had only a single
+// professional-body link and nothing else — no centralized application
+// services (CASPA/PTCAS/OTCAS/ADEA AADSAS/AMCAS/AACOMAS/SOPHAS), no
+// certifying-exam bodies (NCCPA/PANCE, FSBPT/NPTE, NBCOT, USMLE, COMLEX-USA),
+// and no program accreditors (ARC-PA/CAPTE/ACOTE/CODA/LCME/COCA) despite
+// those pathways' own lessons naming CASPA and biomechanics directly. It also
+// added resources for the app's own MMI/CASPer Interview Prep feature
+// (which had none), the DAT and GRE (test-prep coverage stopped at
+// MCAT-adjacent content), and rounded out NIH institutes, allied-health
+// student organizations, kinesiology/biomechanics content, and
+// healthcare-specific (not generic-teen) wellness resources (see that file's
+// own header for the full rationale and verification checklist, including
+// which researched candidates were deliberately excluded as defunct or
+// already covered).
+// Every entry across all seven modules was sourced via live search rather
 // than invented, and the combined set has been programmatically checked for
-// duplicate URLs/titles. Keeping them in separate modules makes each
-// expansion easy to audit on its own while the app continues to import a
-// single `ELIB` array.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D];
+// duplicate URLs/titles — including a pass that caught and removed 21
+// pre-existing duplicate entries between this core set and elibExtra.js (see
+// elibExtra.js's own header for that fix). Keeping them in separate modules
+// makes each expansion easy to audit on its own while the app continues to
+// import a single `ELIB` array.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E];
