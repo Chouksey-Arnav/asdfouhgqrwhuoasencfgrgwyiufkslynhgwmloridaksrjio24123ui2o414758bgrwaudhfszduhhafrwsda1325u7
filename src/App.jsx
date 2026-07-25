@@ -1597,8 +1597,15 @@ export default function App({ account, onAccountChange }) {
       // family/school computer, or someone else's earlier session), wipe it before loading —
       // otherwise the newly signed-in account would silently inherit a stranger's name, XP,
       // streak, and pathway progress instead of its own clean slate or account-backed rebuild.
+      // Also wipe whenever the server-side account record says onboarding was never finished —
+      // that flag is the actual source of truth, so a leftover local profile at that point can
+      // only be stale (an old email-less row, a previous account on this device, an interrupted
+      // signup) and must not be allowed to silently skip a brand-new account past onboarding
+      // straight into the dashboard.
       const priorLocalUser = await DB.getUser();
-      if(priorLocalUser?.email && account?.email && priorLocalUser.email!==account.email){
+      const staleForDifferentAccount = priorLocalUser?.email && account?.email && priorLocalUser.email!==account.email;
+      const staleForUnonboardedAccount = priorLocalUser && account && account.onboardingComplete===false;
+      if(staleForDifferentAccount || staleForUnonboardedAccount){
         // Sync must stay off across this wipe — it belongs to whichever account is signed
         // in when the debounced push actually fires, and that's about to become this
         // (different) account, so pushing here would overwrite that account's real cloud
