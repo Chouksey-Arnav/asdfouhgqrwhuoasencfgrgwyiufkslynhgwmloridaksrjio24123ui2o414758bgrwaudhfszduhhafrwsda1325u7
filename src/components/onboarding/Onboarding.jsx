@@ -8,9 +8,12 @@
 //   2. WHERE THEY ARE — grade/score, GPA, science courses, hands-on health
 //      experience, then an insight screen that normalizes a blank slate or
 //      celebrates a head start.
-//   3. WHERE THEY'RE GOING — goal, target score, an HONEST scenario-based
-//      trajectory screen (no more "it's not hard at all" for a +500 jump),
-//      test timeline, pace, and a projection in their own numbers.
+//   3. WHERE THEY'RE GOING — goal, then ONE compact academics beat (target
+//      score + test timeline on a single screen), an HONEST timeline-aware
+//      trajectory verdict (a 1590→1600 student hears "your score is basically
+//      done"; a 600→1600-in-3-months ask gets a blunt reality check with the
+//      achievable number instead), a daily time commitment (minutes, not
+//      "points per week"), and a whole-journey projection.
 //   4. WHAT'S IN THE WAY — obstacles mirrored back with empathy, ambitions,
 //      potential.
 //   5. COMMITMENT & PAYOFF — a personal pledge, then real plan generation.
@@ -31,6 +34,7 @@ import { BirthdateStep } from './steps/BirthdateStep';
 import { TargetScoreStep } from './steps/TargetScoreStep';
 import { RealisticTargetStep, PaceForecastStep } from './steps/RealisticTargetStep';
 import { SpeedStep } from './steps/SpeedStep';
+import { FeatureShowcaseStep } from './steps/FeatureShowcaseStep';
 import { ThankYouStep } from './steps/ThankYouStep';
 import { IdentityStep, ExperienceInsightStep, ObstacleEmpathyStep, CommitmentStep } from './steps/emotional';
 import { GeneratingStep } from './steps/GeneratingStep';
@@ -63,8 +67,8 @@ function buildSteps(answers) {
     'splash', 'welcome',
     'whyMedicine', 'dreamRole', 'certainty', 'identity',
     'gradeScore', 'birthdate', 'gpa', 'sciences', 'experience', 'expInsight',
-    'studyHours', 'studyMethod', 'triedApps', 'proofPlan', 'source',
-    'goal', 'targetScore', 'realistic', 'testTimeline', 'speed', 'paceForecast',
+    'studyHours', 'studyMethod', 'triedApps', 'showcase', 'source',
+    'goal', 'targetScore', 'realistic', 'speed', 'paceForecast',
     'obstacles',
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
@@ -94,9 +98,10 @@ const DEFAULT_ANSWERS = {
 // (keyed per account so switching users doesn't leak a stranger's answers).
 // `preview` (Settings' dev-only flag) gets its own key suffix so previewing on
 // a signed-in account can't read or clobber that account's real draft. The v2
-// prefix retires drafts from the pre-redesign flow, whose step keys no longer
-// line up with this one.
-function draftKey(account, preview) { return `onboardingDraft:v2:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
+// prefix retires drafts from earlier flow shapes, whose step keys no longer
+// line up with this one (v3: testTimeline folded into targetScore, proofPlan
+// replaced by the feature showcase).
+function draftKey(account, preview) { return `onboardingDraft:v3:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
 function loadDraft(account, preview) {
   try {
     const raw = localStorage.getItem(draftKey(account, preview));
@@ -178,44 +183,51 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'expInsight':
       content = <ExperienceInsightStep answers={answers} onNext={next} />; break;
     case 'studyHours':
-      content = <SingleChoiceStep title="How many hours do you study per week?" subtitle="This will be used to calibrate your custom plan." options={STUDY_HOURS_OPTIONS} value={answers.studyHours} onChange={v => update({ studyHours: v })} onNext={next} />; break;
+      content = <SingleChoiceStep eyebrow="Your rhythm" title="How much time do you already put into your future each week?" subtitle="Studying, clubs, volunteering — it all counts. We'll build from your real life, not an ideal one." options={STUDY_HOURS_OPTIONS} value={answers.studyHours} onChange={v => update({ studyHours: v })} onNext={next} />; break;
     case 'studyMethod':
-      content = <SingleChoiceStep title="Do you follow a specific study method?" options={STUDY_METHOD_OPTIONS} value={answers.studyMethod} onChange={v => update({ studyMethod: v })} onNext={next} />; break;
+      content = <SingleChoiceStep eyebrow="Your toolkit" title="Are you using anything to prepare right now?" subtitle="Whatever you're using, your plan will fit around it — not fight it." options={STUDY_METHOD_OPTIONS} value={answers.studyMethod} onChange={v => update({ studyMethod: v })} onNext={next} />; break;
     case 'triedApps':
-      content = <SingleChoiceStep title="Have you tried other college-prep apps?" options={[{ value: 'no', label: 'No', icon: <ThumbsDown size={17} /> }, { value: 'yes', label: 'Yes', icon: <ThumbsUp size={17} /> }]} value={answers.triedApps} onChange={v => update({ triedApps: v })} onNext={next} />; break;
-    case 'proofPlan':
-      content = <ProofGraphStep title="MedSchoolPrep creates long-term results" subtitle="Generic apps drill questions. MedSchoolPrep builds your whole path — scores, science, and story." legend={[{ label: 'MedSchoolPrep', color: C.blue }, { label: 'Studying alone', color: C.t4 }]}
-        lines={[{ points: [0.1, 0.2, 0.32, 0.5, 0.72, 0.9, 0.97], color: C.blue, width: 3, fill: true, endDot: true }, { points: [0.1, 0.16, 0.24, 0.28, 0.22, 0.3, 0.34], color: C.t4, width: 2, dashed: true }]}
-        xLabels={['Month 1', 'Month 6']} statLine="92% of MedSchoolPrep students raise their score within 3 months." onNext={next} />; break;
+      content = <SingleChoiceStep eyebrow="Been here before?" title="Have you tried other prep apps?" subtitle="Most of them stop at test questions. Medicine asks for more — and so do we." options={[{ value: 'no', label: 'No', icon: <ThumbsDown size={17} /> }, { value: 'yes', label: 'Yes', icon: <ThumbsUp size={17} /> }]} value={answers.triedApps} onChange={v => update({ triedApps: v })} onNext={next} />; break;
+    case 'showcase':
+      content = <FeatureShowcaseStep onNext={next} />; break;
     case 'source':
       content = <SourceStep value={answers.source} onChange={v => update({ source: v })} onNext={next} />; break;
 
     // ── Act 3: where they're going ───────────────────────────────────────
     case 'goal':
-      content = <SingleChoiceStep title="What is your goal?" subtitle="This helps us generate a plan for your prep." options={GOAL_OPTIONS} value={answers.goal} onChange={v => update({ goal: v, targetScore: answers.testTrack === 'ACT' ? 28 : 1200 })} onNext={next} />; break;
+      // Seed a sensible target relative to where they actually are — never a
+      // flat 1200 that can sit *below* a strong student's current score.
+      content = <SingleChoiceStep eyebrow="Your mission" title="What matters most to you right now?" subtitle="Your plan leads with this — everything else supports it." options={GOAL_OPTIONS} value={answers.goal}
+        onChange={v => update({
+          goal: v,
+          targetScore: answers.testTrack === 'ACT'
+            ? Math.min(36, answers.currentScore + 4)
+            : Math.min(1600, Math.round((answers.currentScore + 150) / 10) * 10),
+        })} onNext={next} />; break;
     case 'targetScore':
-      content = <TargetScoreStep testTrack={answers.testTrack} currentScore={answers.currentScore} value={answers.targetScore} onChange={v => update({ targetScore: v })} onNext={next} />; break;
+      content = <TargetScoreStep testTrack={answers.testTrack} currentScore={answers.currentScore} value={answers.targetScore} timeline={answers.testTimeline}
+        onChange={v => update({ targetScore: v })} onTimeline={v => update({ testTimeline: v })} onNext={next} />; break;
     case 'realistic':
       content = <RealisticTargetStep answers={answers} onNext={next} />; break;
-    case 'testTimeline':
-      content = <SingleChoiceStep eyebrow="Your timeline" title={`When do you plan to take the ${answers.testTrack}?`} subtitle="Your plan's pacing depends on this more than anything else." options={TEST_TIMELINE_OPTIONS} value={answers.testTimeline} onChange={v => update({ testTimeline: v })} onNext={next} />; break;
     case 'speed':
-      content = <SpeedStep value={answers.speedLevel} testTrack={answers.testTrack} onChange={v => update({ speedLevel: v })} onNext={next} />; break;
+      content = <SpeedStep value={answers.speedLevel} answers={answers} onChange={v => update({ speedLevel: v })} onNext={next} />; break;
     case 'paceForecast':
       content = <PaceForecastStep answers={answers} onNext={next} />; break;
 
     // ── Act 4: what's in the way ─────────────────────────────────────────
     case 'obstacles':
-      content = <ChecklistStep title="What's stopping you from reaching your goals?" subtitle="Select all that apply." options={OBSTACLE_OPTIONS} value={answers.obstacles} onToggle={v => toggleInList('obstacles', v)} onNext={next} />; break;
+      content = <ChecklistStep eyebrow="The real talk" title="What's standing between you and medicine?" subtitle="Naming it is how we plan around it. Select all that apply." options={OBSTACLE_OPTIONS} value={answers.obstacles} onToggle={v => toggleInList('obstacles', v)} onNext={next} />; break;
     case 'obstacleEmpathy':
       content = <ObstacleEmpathyStep answers={answers} onNext={next} />; break;
     case 'accomplish':
-      content = <ChecklistStep title="What would you like to accomplish?" subtitle="Select all that apply." options={ACCOMPLISH_OPTIONS} value={answers.accomplish} onToggle={v => toggleInList('accomplish', v)} onNext={next} />; break;
+      content = <ChecklistStep eyebrow="Your wins" title="What do you want to walk away with?" subtitle="Select all that apply — your plan will carry each one." options={ACCOMPLISH_OPTIONS} value={answers.accomplish} onToggle={v => toggleInList('accomplish', v)} onNext={next} />; break;
     case 'potential':
-      content = <ProofGraphStep eyebrow="The honest math" title="You have real potential to get there" subtitle="Based on students with your starting point and timeline."
+      content = <ProofGraphStep eyebrow="The road ahead" title="Your road to the white coat starts exactly here."
+        subtitle="Every physician's path runs through the same early ground you're standing on — foundation, experiences, application. Yours now has a map."
         lines={[{ points: [0.08, 0.15, 0.28, 0.42, 0.6, 0.8, 0.98], color: C.green, width: 3, fill: true, endDot: true }]}
-        xLabels={['Today', 'Target date']} startLabel={String(answers.currentScore)} endLabel={String(answers.targetScore)}
-        statLine={`Students starting around ${answers.currentScore} typically reach ${answers.targetScore}+ with a structured plan — and you'll have the pre-health foundation on top.`} onNext={next} />; break;
+        xLabels={['Today', 'Application day']}
+        milestones={[{ f: 0.32, label: 'Foundation' }, { f: 0.66, label: 'Experiences' }]}
+        statLine="Students who follow a structured pre-med plan through high school apply with stronger scores, real clinical exposure, and a story that stands out — the three things admissions actually weighs." onNext={next} />; break;
 
     // ── Act 5: commitment & payoff ───────────────────────────────────────
     case 'thankYou':

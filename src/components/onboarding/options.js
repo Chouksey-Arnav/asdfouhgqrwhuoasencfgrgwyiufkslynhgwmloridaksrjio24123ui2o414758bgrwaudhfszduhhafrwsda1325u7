@@ -13,9 +13,9 @@ export const STUDY_HOURS_OPTIONS = [
 ];
 
 export const GOAL_OPTIONS = [
-  { value: 'boost_score', label: 'Boost my SAT/ACT score' },
-  { value: 'build_application', label: 'Build a standout application' },
-  { value: 'explore_pathway', label: 'Explore if medicine is right for me' },
+  { value: 'boost_score', label: 'Strengthen my academics & test readiness', sublabel: 'Build the scores a pre-med path expects' },
+  { value: 'build_application', label: 'Build a standout pre-med application', sublabel: 'Experiences, story, and a portfolio that gets noticed' },
+  { value: 'explore_pathway', label: 'Discover if medicine is right for me', sublabel: 'Explore careers, specialties, and what the life is really like' },
 ];
 
 export const STUDY_METHOD_OPTIONS = [
@@ -28,20 +28,20 @@ export const STUDY_METHOD_OPTIONS = [
 ];
 
 export const OBSTACLE_OPTIONS = [
-  { value: 'what_to_study', label: 'Not knowing what to study' },
-  { value: 'guidance', label: 'Lack of guidance or mentorship' },
-  { value: 'busy', label: 'Busy schedule' },
-  { value: 'anxiety', label: 'Test anxiety' },
+  { value: 'what_to_study', label: 'Not knowing what to focus on' },
+  { value: 'guidance', label: 'No mentor or guidance into medicine' },
+  { value: 'busy', label: 'A packed schedule' },
+  { value: 'anxiety', label: 'Test & performance anxiety' },
   { value: 'motivation', label: 'Losing motivation' },
   { value: 'no_plan', label: 'No structured plan' },
 ];
 
 export const ACCOMPLISH_OPTIONS = [
-  { value: 'score', label: 'Boost my SAT/ACT score' },
-  { value: 'application', label: 'Build a competitive application' },
-  { value: 'explore', label: 'Explore if medicine is right for me' },
+  { value: 'score', label: 'Strengthen my academics & test scores' },
+  { value: 'application', label: 'Build a competitive pre-med application' },
+  { value: 'explore', label: 'Find my fit in medicine' },
   { value: 'experience', label: 'Gain clinical or research experience' },
-  { value: 'gpa', label: 'Raise my GPA' },
+  { value: 'gpa', label: 'Raise my GPA for pre-health admissions' },
   { value: 'consistency', label: 'Stay motivated & consistent' },
 ];
 

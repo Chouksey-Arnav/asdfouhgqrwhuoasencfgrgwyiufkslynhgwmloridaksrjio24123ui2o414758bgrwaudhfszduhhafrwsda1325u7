@@ -28,9 +28,9 @@ export function SplashStep({ onNext }) {
 
 const FEATURES = [
   { icon: Stethoscope, label: 'Pathway Diagnostic', color: C.tealL },
-  { icon: LineChart, label: 'SAT/ACT Prep', color: C.blueL },
   { icon: BrainCircuit, label: 'AI Coach', color: C.violetL },
   { icon: FolderHeart, label: 'Application Portfolio', color: C.roseL },
+  { icon: LineChart, label: 'Test Prep, Built In', color: C.blueL },
 ];
 
 export function WelcomeStep({ account, onNext }) {
