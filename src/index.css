@@ -80,8 +80,57 @@ body::before {
   pointer-events: none;
 }
 .mb-launcher:hover::after, .mb-launcher:focus-visible::after { transform: translateX(140%); }
+
+/* Cursor-following spotlight: MetaBrainLauncher.jsx writes --mb-x/--mb-y from
+   onMouseMove, so this radial highlight tracks the pointer across the button.
+   Hidden at rest; fades in on hover so the button "lights up where you are". */
+.mb-spot {
+  position: absolute; inset: 0; z-index: 1;
+  opacity: 0; transition: opacity .35s ease;
+  pointer-events: none;
+}
+.mb-launcher:hover .mb-spot, .mb-launcher:focus-visible .mb-spot { opacity: 1; }
+
+/* Click ripple — spawned at the exact press point, expands and fades out. */
+@keyframes mbRipple {
+  from { transform: translate(-50%,-50%) scale(0); opacity: .9; }
+  to   { transform: translate(-50%,-50%) scale(1); opacity: 0; }
+}
+.mb-ripple {
+  position: absolute; z-index: 3;
+  width: 160px; height: 160px; border-radius: 50%;
+  animation: mbRipple .65s cubic-bezier(.2,.8,.3,1) forwards;
+  pointer-events: none;
+}
+
+/* Accent seam hugging the tab's outer edge — brightens + thickens on hover. */
+.mb-seam {
+  position: absolute; left: 0; top: 10%; bottom: 10%; width: 2px; z-index: 2;
+  border-radius: 2px; opacity: .55;
+  transition: opacity .3s ease, width .3s ease, top .3s ease, bottom .3s ease;
+  pointer-events: none;
+}
+.mb-launcher:hover .mb-seam { opacity: 1; width: 3px; top: 4%; bottom: 4%; }
+
+/* Icons wake up on hover: the sparkle twinkles, the brain gives one heartbeat. */
+@keyframes mbTwinkle {
+  0%,100% { transform: rotate(0deg) scale(1); opacity: .9; }
+  50%     { transform: rotate(28deg) scale(1.28); opacity: 1; }
+}
+@keyframes mbBeat {
+  0%,100% { transform: scale(1); }
+  30%     { transform: scale(1.16); }
+  55%     { transform: scale(1.04); }
+  75%     { transform: scale(1.1); }
+}
+.mb-sparkle, .mb-brain { transition: transform .3s ease; }
+.mb-launcher:hover .mb-sparkle { animation: mbTwinkle 1.6s ease-in-out infinite; }
+.mb-launcher:hover .mb-brain { animation: mbBeat 1.4s ease-in-out infinite; }
+
 @media (prefers-reduced-motion: reduce) {
   .mb-launcher::after { transition: none; opacity: 0; }
+  .mb-spot { transition: none; }
+  .mb-ripple, .mb-launcher:hover .mb-sparkle, .mb-launcher:hover .mb-brain { animation: none !important; }
 }
 
 .mb-group .mb-copy { opacity: 0; }
