@@ -1270,116 +1270,35 @@ export default function App({ account, onAccountChange }) {
     document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
   },[tab,prepView,portfolioView,progressView,satView]);
 
-  // ── Post-onboarding product tour — a full-depth spotlight walkthrough covering ──
-  // every pillar (Home/Prep/Portfolio/Progress/Settings), every absorbed sub-view
-  // inside Prep/Portfolio/Progress, and the ⌘K quick-switcher — offered right
-  // after a new account is created (see completeOnboarding()).
+  // ── Post-onboarding product tour — a short spotlight walkthrough hitting each ──
+  // top-level pillar once, offered right after a new account is created (see
+  // completeOnboarding()). Deliberately kept to a handful of steps: a 70-step
+  // deep-dive tour was tested and users bailed out of it before finishing — the
+  // fix isn't a better tour, it's a shorter one. One beat per pillar plus the
+  // ⌘K power-tip is enough for someone to orient themselves; everything below
+  // the nav level (sub-tabs, individual cards, settings sections) is left for
+  // them to discover on their own once they're actually inside the app, which
+  // is a better teacher than a spotlight ring ever is.
   const [tourActive, setTourActive] = useState(false);
   const startTour = useCallback(()=>setTourActive(true), []);
   const finishTour = useCallback(()=>{
     setTourActive(false);
+    celebrateAchievement();
     setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
   }, []);
   // completeOnboarding() calls startTour() directly, right after the onboarding
   // handoff — the tour's own first step (`nav-home`) already forces the tab back
   // to Home via its onEnter, so there's no separate "wait until they land on Home"
   // step needed; the whole point is the tour picks up the instant onboarding ends.
-  // Full-depth product tour — every pillar, every absorbed sub-view inside Prep/Portfolio/
-  // Progress, and every Settings section, so a brand-new student sees the entire app (not
-  // just the top-level tabs) before they're left to explore on their own. Each sub-view gets
-  // TWO steps back to back: one on its nav pill, one on the actual content anchor inside that
-  // page (data-tour="…-deep-…") — the second step is what exercises AppTour's scroll-into-view
-  // behavior, since those anchors can sit well below the fold on a long page. `section`/`color`
-  // drive the section pill + spotlight ring color so a 60+ step tour still reads as five
-  // distinct chapters instead of one undifferentiated scroll.
   const TOUR_STEPS = useMemo(()=>[
-    // ── Home ──────────────────────────────────────────────────────────────────
-    { target:'nav-home', section:'Home', color:C.blue, title:'Home — your daily dashboard', body:"Streak, XP, level, today's next lesson, and a live snapshot of your current pathway all land here first — this is where every study session should start.", onEnter:()=>setTab('home') },
-
-    // ── Prep ──────────────────────────────────────────────────────────────────
-    { target:'nav-prep', section:'Prep', color:C.violet, title:'Prep — everything academic', body:"SAT/ACT diagnostic, your personalized pathway, the quiz library, flashcards, the AI Coach, and the E-Library all live under this one tab, switched with the pill bar just below it.", onEnter:()=>setTab('prep') },
-    { target:'prep-sub-diagnostic', section:'Prep', color:C.violet, title:'Diagnostic', body:"A short adaptive diagnostic figures out your strengths and gaps by category, then recommends the pathway that matches where you're actually starting from.", onEnter:()=>goPrep('diagnostic') },
-    { target:'prep-deep-diagnostic', section:'Prep', color:C.violet, title:'Take it, or pick manually', body:"Hit \"Start Diagnostic\" for a personalized recommendation, or skip straight to a pathway yourself in the grid below — you can always retake the diagnostic or switch pathways later from Settings.", onEnter:()=>goPrep('diagnostic') },
-    { target:'prep-sub-pathway', section:'Prep', color:C.violet, title:'Pathway', body:"Your structured, unit-by-unit curriculum. Each lesson has an overview, article, video, and a verification quiz — complete them in order to level up and unlock the next unit.", onEnter:()=>goPrep('pathway') },
-    { target:'prep-deep-pathway', section:'Prep', color:C.violet, title:'Track mastery unit by unit', body:"The mastery ring and lesson counter here update live as you complete lessons — scroll down and each unit expands into its individual lessons, with a lock icon until the unit before it is done.", onEnter:()=>goPrep('pathway') },
-    { target:'prep-sub-quizzes', section:'Prep', color:C.violet, title:'Quiz Library', body:"Hundreds of practice questions you can filter by category, difficulty, and topic — use it for free practice outside the structured pathway, any time.", onEnter:()=>goPrep('quizzes') },
-    { target:'prep-deep-quizzes', section:'Prep', color:C.violet, title:'Filter by category and difficulty', body:"These stat tiles show your total quizzes and questions at a glance — scroll down to the search bar and filters to narrow by category, difficulty, or the courses you added in Settings.", onEnter:()=>goPrep('quizzes') },
-    { target:'prep-sub-flashcards', section:'Prep', color:C.violet, title:'Flashcards', body:"Spaced-repetition decks scheduled with FSRS (the same algorithm behind Anki). Generate your own cards straight from your notes, or study the built-in decks when cards come due.", onEnter:()=>goPrep('flashcards') },
-    { target:'prep-deep-flashcards', section:'Prep', color:C.violet, title:'Generate a deck from your notes', body:"Tap \"New Deck\" to turn your own notes into flashcards offline — no account or API call needed — or scroll down to study any built-in deck with cards due today.", onEnter:()=>goPrep('flashcards') },
-    { target:'prep-sub-coach', section:'Prep', color:C.violet, title:'AI Coach', body:"Medabrain — an AI tutor that knows your goals, obstacles, and study method from onboarding. Ask it to explain a concept, quiz you, or help you plan your week. You can run multiple chat threads in parallel.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach', section:'Prep', color:C.violet, title:'Multiple chats, just like a real chat app', body:"Open the sidebar (or the menu icon on mobile) to start a new thread or switch between old ones — nothing you've asked Medabrain disappears on reload.", onEnter:()=>goPrep('coach') },
-    { target:'prep-deep-coach-tier', section:'Prep', color:C.violet, title:'Pick your model — or let Medabrain choose', body:"Leave it on Auto and Medabrain routes each message itself — Scout for quick questions, Guide as the balanced default, Sage for essay feedback and deep strategy. Or tap Scout/Guide/Sage to pin every message to one model. Below the header you'll see how many answers each model has given you.", onEnter:()=>goPrep('coach') },
-    { target:'prep-sub-library', section:'Prep', color:C.violet, title:'E-Library', body:"A searchable shelf of articles, videos, and reference material by subject and difficulty — save items for later or mark them completed as you go.", onEnter:()=>goPrep('library') },
-    { target:'prep-deep-library', section:'Prep', color:C.violet, title:'Bookmark, take notes, export', body:"This card tracks your reading progress across the whole library. Bookmark resources for later, jot notes as you go, then export everything you've written as one study document.", onEnter:()=>goPrep('library') },
-
-    // ── Portfolio ─────────────────────────────────────────────────────────────
-    { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Portfolio — building your application', body:"Everything that goes into an actual med-school-track application lives here: your college list, essays, deadlines, activities, and more — all in one place so nothing falls through the cracks.", onEnter:()=>setTab('portfolio') },
-    { target:'portfolio-sub-overview', section:'Portfolio', color:C.green, title:'Overview', body:"A single glance at where your application stands — what's done, what's next, and which deadlines are approaching.", onEnter:()=>goPortfolio('overview') },
-    { target:'portfolio-deep-overview', section:'Portfolio', color:C.green, title:'One score for your whole application', body:"This readiness gauge blends academics, clinical exposure, application progress, and activities into a single number — scroll down for the category breakdown behind it and your logged activities.", onEnter:()=>goPortfolio('overview') },
-    { target:'portfolio-sub-timeline', section:'Portfolio', color:C.green, title:'Timeline', body:"A chronological view of every milestone across your whole application journey, from freshman year prep through submission.", onEnter:()=>goPortfolio('timeline') },
-    { target:'portfolio-deep-timeline', section:'Portfolio', color:C.green, title:'Upcoming and past, in one feed', body:"Deadlines, test dates, clinical hours, and recommender due dates are merged into one chronological feed here, split into Upcoming and Past.", onEnter:()=>goPortfolio('timeline') },
-    { target:'portfolio-sub-colleges', section:'Portfolio', color:C.green, title:'College List', body:"Build and organize your target schools — reach, match, and safety — with the stats you need to compare them side by side.", onEnter:()=>goPortfolio('colleges') },
-    { target:'portfolio-deep-colleges', section:'Portfolio', color:C.green, title:'Add schools, track every deadline', body:"Scroll down to add a school with its GPA/SAT requirements and acceptance rate, then set its EA/ED, RD, and financial-aid deadlines right on the same card.", onEnter:()=>goPortfolio('colleges') },
-    { target:'portfolio-sub-essays', section:'Portfolio', color:C.green, title:'Essays', body:"Draft, revise, and track every supplemental and personal statement essay in one workspace, with version history so you never lose a rewrite.", onEnter:()=>goPortfolio('essays') },
-    { target:'portfolio-deep-essays', section:'Portfolio', color:C.green, title:'Draft, link to a school, track word count', body:"Scroll down to start a new essay draft — link it to a school from your college list and set a word limit so you know exactly how much room you have left.", onEnter:()=>goPortfolio('essays') },
-    { target:'portfolio-sub-deadlines', section:'Portfolio', color:C.green, title:'Deadlines', body:"Every application, scholarship, and testing deadline in one calendar — including AP/IB exam dates if you've flagged yourself as an AP/IB student in Settings.", onEnter:()=>goPortfolio('deadlines') },
-    { target:'portfolio-deep-deadlines', section:'Portfolio', color:C.green, title:'Never miss a due date', body:"Scroll down to add any deadline — application, scholarship, or exam — and it surfaces automatically on your Home dashboard as it approaches.", onEnter:()=>goPortfolio('deadlines') },
-    { target:'portfolio-sub-aid', section:'Portfolio', color:C.green, title:'Financial Aid', body:"Track FAFSA, CSS Profile, and scholarship applications alongside the aid packages you receive, so cost comparisons are easy when decisions come in.", onEnter:()=>goPortfolio('aid') },
-    { target:'portfolio-deep-aid', section:'Portfolio', color:C.green, title:'FAFSA, CSS Profile, and scholarships', body:"Track your FAFSA and CSS Profile status up top, then scroll down to log every scholarship you apply for and the aid packages that come back.", onEnter:()=>goPortfolio('aid') },
-    { target:'portfolio-sub-resume', section:'Portfolio', color:C.green, title:'Activities & Resume', body:"Log every extracurricular, job, and leadership role with hours and impact, then export a polished resume/activities list with one click.", onEnter:()=>goPortfolio('resume') },
-    { target:'portfolio-deep-resume', section:'Portfolio', color:C.green, title:'Log activities, export a resume', body:"Scroll down to log GPA history and every activity with hours per week — once you've added a few, the export button here turns them into a polished, ready-to-submit resume.", onEnter:()=>goPortfolio('resume') },
-    { target:'portfolio-sub-research', section:'Portfolio', color:C.green, title:'Research', body:"Track research experience — labs, projects, publications, and presentations — the kind of depth admissions committees and future pre-med programs look for.", onEnter:()=>goPortfolio('research') },
-    { target:'portfolio-deep-research', section:'Portfolio', color:C.green, title:'Labs, projects, publications', body:"Scroll down to log a research project with the lab, PI, and your role — publications and presentations get their own fields so they stand out separately.", onEnter:()=>goPortfolio('research') },
-    { target:'portfolio-sub-skills', section:'Portfolio', color:C.green, title:'Skills & Certs', body:"Certifications and skills worth listing — CPR/BLS, shadowing competencies, language proficiency, and more — organized so they're ready to cite in essays and interviews.", onEnter:()=>goPortfolio('skills') },
-    { target:'portfolio-deep-skills', section:'Portfolio', color:C.green, title:'CPR/BLS, languages, and more', body:"Scroll down to log any certification with its issue and expiration date — handy for tracking renewals like CPR/BLS before they lapse.", onEnter:()=>goPortfolio('skills') },
-    { target:'portfolio-sub-clinical', section:'Portfolio', color:C.green, title:'Clinical Hours', body:"Log shadowing and patient-care hours as you accumulate them — a running total that matters for almost every med-school-track pathway.", onEnter:()=>goPortfolio('clinical') },
-    { target:'portfolio-deep-clinical', section:'Portfolio', color:C.green, title:'Log every shadowing shift', body:"Scroll down to log a site, supervisor, and hours for each shadowing day or patient-care shift — supervisor contact lets an entry eventually be marked verified instead of self-reported.", onEnter:()=>goPortfolio('clinical') },
-    { target:'portfolio-sub-recommenders', section:'Portfolio', color:C.green, title:'Recommenders', body:"Keep track of who you're asking for letters of recommendation, what you've given them, and the status of each request.", onEnter:()=>goPortfolio('recommenders') },
-    { target:'portfolio-deep-recommenders', section:'Portfolio', color:C.green, title:'Track every letter request', body:"Scroll down to add a recommender with their due date and request status, so nothing slips through as deadlines get close.", onEnter:()=>goPortfolio('recommenders') },
-    { target:'portfolio-sub-interview', section:'Portfolio', color:C.green, title:'Interview Prep', body:"Practice with realistic interview formats — including MMI and CASPer-style scenarios — and get feedback on how you'd respond.", onEnter:()=>goPortfolio('interview') },
-    { target:'portfolio-deep-interview', section:'Portfolio', color:C.green, title:'Practice real interview formats', body:"Scroll down to pick a format — traditional, MMI, or CASPer-style — and start a mock session with feedback on your answers.", onEnter:()=>goPortfolio('interview') },
-    { target:'portfolio-sub-scores', section:'Portfolio', color:C.green, title:'Test Scores', body:"Log every SAT/ACT attempt and set a target score — this feeds straight into the Admissions Calculator and your Home dashboard's countdown.", onEnter:()=>goPortfolio('scores') },
-    { target:'portfolio-deep-scores', section:'Portfolio', color:C.green, title:'Log scores, set a target', body:"Scroll down for the section-by-section breakdown of your latest score and to log a new attempt — your target score here drives the countdown gap shown on Home.", onEnter:()=>goPortfolio('scores') },
-    { target:'portfolio-sub-calc', section:'Portfolio', color:C.green, title:'Admissions Calculator', body:"Estimate your competitiveness at specific schools using your GPA, test scores, rigor, and activities — sync it straight from your Portfolio with one button.", onEnter:()=>goPortfolio('calc') },
-    { target:'portfolio-deep-calc', section:'Portfolio', color:C.green, title:'Sync your real data, one click', body:"Hit \"Sync with Portfolio\" to pull your latest GPA, test scores, and activity hours in automatically instead of retyping them here.", onEnter:()=>goPortfolio('calc') },
-
-    // ── Plans ─────────────────────────────────────────────────────────────────
-    { target:'nav-plans', section:'Plans', color:C.fuchsia, title:'Plans — your full day-by-day roadmap', body:"Medabrain's deepest planning model builds a complete plan just for you: phases and milestones for the months ahead, plus real day-by-day tasks pulled from every resource in Prep and Portfolio — and it keeps extending itself as you go.", onEnter:()=>setTab('plans') },
-    { target:'plans-deep-hero', section:'Plans', color:C.fuchsia, title:'Built from your whole profile', body:"One click builds your full plan — your goal, pace, pathway, and obstacles all shape it. Once it exists, check off each day's tasks for XP, jump straight to the resource a task points to, or flip to the Full Roadmap view for the big picture.", onEnter:()=>setTab('plans') },
-
-    // ── Progress ──────────────────────────────────────────────────────────────
-    { target:'nav-progress', section:'Progress', color:C.cyan, title:'Progress — proof of the work', body:"A full picture of everything you've actually verified, mastered, and unlocked — separate from Home's daily snapshot, this is the long-run record.", onEnter:()=>setTab('progress') },
-    { target:'progress-sub-overview', section:'Progress', color:C.cyan, title:'Overview', body:"Your big-picture stats: total XP, level, streak history, and how your onboarding goals are tracking over time.", onEnter:()=>goProgress('overview') },
-    { target:'progress-deep-overview', section:'Progress', color:C.cyan, title:'The same readiness gauge, tracked over time', body:"This is the same application-strength gauge from your Portfolio overview — watch it here as a running measure of how ready you are, updated every time you log something new.", onEnter:()=>goProgress('overview') },
-    { target:'progress-sub-verified', section:'Progress', color:C.cyan, title:'Verified Progress', body:"Lesson completion only counts here once you've passed its verification quiz — this is the trustworthy record of what you actually know, not just clicked through.", onEnter:()=>goProgress('verified') },
-    { target:'progress-deep-verified', section:'Progress', color:C.cyan, title:'A credibility score, not just a checklist', body:"Scroll down and every unit lists each lesson's verification state individually — a lesson only counts as verified once its quiz is actually passed.", onEnter:()=>goProgress('verified') },
-    { target:'progress-sub-performance', section:'Progress', color:C.cyan, title:'Performance', body:"Your accuracy broken down by category and topic, so you can see exactly where to focus your next study session.", onEnter:()=>goProgress('performance') },
-    { target:'progress-deep-performance', section:'Progress', color:C.cyan, title:'Radar chart + course mastery', body:"The radar chart maps your accuracy by section, and the donut chart next to it shows overall course mastery — both update as you complete more quizzes.", onEnter:()=>goProgress('performance') },
-    { target:'progress-sub-achievements', section:'Progress', color:C.cyan, title:'Achievements', body:"Badges and milestones you unlock for streaks, mastery, and consistency — a running record of what you've earned along the way.", onEnter:()=>goProgress('achievements') },
-    { target:'progress-deep-achievements', section:'Progress', color:C.cyan, title:'Every badge, and how close you are', body:"Locked badges here still show your live progress toward unlocking them — hover or tap any badge to see exactly what it takes.", onEnter:()=>goProgress('achievements') },
-
-    // ── Settings ──────────────────────────────────────────────────────────────
-    { target:'nav-settings', section:'Settings', color:C.amber, title:'Settings — your account, your rules', body:"Your profile, goals, test date, sound preferences, study track, course load, data export, and account controls all live here now — its own tab, not buried in a menu.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-profile', section:'Settings', color:C.amber, title:'Profile', body:"Your display name, level, current pathway, and streak — update your name here any time.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-goals', section:'Settings', color:C.amber, title:'Your Goals', body:"What you told us at signup — your top goal, obstacles, and study method — feeds Medabrain's coaching directly. Edit it any time your goals change; you're not locked into your first answer forever.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-examdate', section:'Settings', color:C.amber, title:'Test Day', body:"Set your test date here to see a live countdown and pacing guidance on Home.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-preferences', section:'Settings', color:C.amber, title:'Preferences', body:"Toggle sound effects for correct answers, level-ups, and achievements on or off.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-studytrack', section:'Settings', color:C.amber, title:'Study Track', body:"Switch your pathway here at any time — see full details on any track before committing, without retaking the diagnostic.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-courseload', section:'Settings', color:C.amber, title:'Current Course Load', body:"Tell us what you're taking so the AI Coach and Quiz Library can point you to material that's actually relevant to your classes.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-backup', section:'Settings', color:C.amber, title:'Data & Backup', body:"Export everything you've logged as a JSON file — useful for backup, or for moving to a new device.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-account', section:'Settings', color:C.amber, title:'Account', body:"See which email you're signed in with — your Portfolio data syncs to this account across devices.", onEnter:()=>setTab('settings') },
-    { target:'settings-deep-danger', section:'Settings', color:C.amber, title:'Danger Zone', body:"Resetting progress or clearing local data is permanent — these controls exist, but use them deliberately.", onEnter:()=>setTab('settings') },
-
-    // ── SAT ───────────────────────────────────────────────────────────────────
-    { target:'sat-sub-overview', section:'SAT', color:C.lime, title:'The SAT tab', body:"Everything for raising your score lives here: a skill diagnostic, adaptive practice, full-length tests with real module routing, and a review log for every question you miss.", onEnter:()=>goSat('overview') },
-    { target:'sat-deep-diagnostic', section:'SAT', color:C.cyan, title:'Start with the diagnostic', body:"About 30 minutes across all 28 tested skills. It won't hand you a score — it tells you which skills are actually costing you points, so nothing after this is guesswork.", onEnter:()=>goSat('diagnostic') },
-    { target:'sat-deep-practice', section:'SAT', color:C.blue, title:'Targeted practice', body:"Smart Set picks your questions for you, weighted toward weak skills that the exam tests heavily. Or drill one skill, or run a timed set at real exam pacing.", onEnter:()=>goSat('practice') },
-    { target:'sat-deep-tests', section:'SAT', color:C.violet, title:'Full-length adaptive tests', body:"Two sections, four modules, with the real routing: how you do on Module 1 decides whether Module 2 is the harder one — and the easier path caps that section near 600.", onEnter:()=>goSat('tests') },
-    { target:'sat-deep-review', section:'SAT', color:C.rose, title:'The review log', body:"The part almost everyone skips, and the part that actually moves scores. Every miss lands here; you say why you missed it, and it comes back for a retry on a spaced schedule.", onEnter:()=>goSat('review') },
-
-    // ── Quick Jump ────────────────────────────────────────────────────────────
-    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump (⌘K)', body:"Press ⌘K (or Ctrl+K) anytime, from anywhere in the app, to jump straight to any tab or sub-view — no clicking through menus. That's the whole tour — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[goPrep,goPortfolio,goProgress]);
+    { target:'nav-home', section:'Home', color:C.blue, title:'Your dashboard', body:"Streak, XP, and today's next lesson — every session starts here.", onEnter:()=>setTab('home') },
+    { target:'nav-sat', section:'SAT', color:C.lime, title:'Raise your score', body:"Diagnostic, adaptive practice, full-length tests, and a review log that brings back every question you missed.", onEnter:()=>goSat('overview') },
+    { target:'nav-prep', section:'Prep', color:C.violet, title:'Your curriculum', body:"A structured pathway, quiz library, flashcards, and an AI coach that knows your goals.", onEnter:()=>setTab('prep') },
+    { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Your application', body:"College list, essays, deadlines, and activities — everything admissions cares about, in one place.", onEnter:()=>setTab('portfolio') },
+    { target:'nav-plans', section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
+    { target:'nav-progress', section:'Progress', color:C.cyan, title:'Proof of the work', body:"Verified mastery, performance by topic, and every badge you've earned.", onEnter:()=>setTab('progress') },
+    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any tab. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+  ],[goSat]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
