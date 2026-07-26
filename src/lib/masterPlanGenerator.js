@@ -897,6 +897,63 @@ export function toggleTaskDone(plan, date, taskId) {
   return { plan: { ...plan, days, updatedAt: Date.now() }, justEarnedXP };
 }
 
+// Manual rescheduling — drag-and-drop, the "Move" day picker, and one-click
+// "snooze to tomorrow" all funnel through this single mutation. Moving a task
+// off a day clears its `rolledOverFrom` pointer: that field means "this was
+// carried here because it was missed", and a task the student *deliberately*
+// relocated no longer reads as behind schedule. `toDate` may land beyond
+// `plan.daysGeneratedThrough` (dragging far into the visible-but-not-yet-
+// "through" tail of the rolling window, or the window boundary itself) — in
+// that case a fresh day entry is created in place rather than silently
+// dropping the task, so the mutation can never crash or lose data regardless
+// of exactly which days already exist in the array.
+export function moveTaskToDay(plan, taskId, fromDate, toDate) {
+  if (!plan?.days?.length || !taskId || !fromDate || !toDate || fromDate === toDate) return plan;
+  const fromDay = plan.days.find(d => d.date === fromDate);
+  const task = fromDay?.tasks.find(t => t.id === taskId);
+  if (!task) return plan;
+  const movedTask = { ...task, id: `${toDate}-moved-${seedFrom(taskId + Date.now())}`, rolledOverFrom: null };
+  let days = plan.days.map(d => (d.date === fromDate ? { ...d, tasks: d.tasks.filter(t => t.id !== taskId) } : d));
+  const toIdx = days.findIndex(d => d.date === toDate);
+  if (toIdx === -1) {
+    const weekNumber = weekNumberForDate(plan, toDate);
+    const phase = phaseForWeek(plan, weekNumber);
+    const newDay = {
+      date: toDate,
+      dayIndex: days.length + 1,
+      weekday: WEEKDAY_NAMES[weekdayIdx(toDate)],
+      weekNumber,
+      phaseId: phase?.id || null,
+      theme: weeklyThemeForWeek(plan, weekNumber)?.theme || 'Steady progress this week',
+      tasks: [movedTask],
+      reflectionPrompt: null,
+    };
+    days = [...days, newDay].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  } else {
+    days = days.map((d, i) => (i === toIdx ? { ...d, tasks: [...d.tasks, movedTask] } : d));
+  }
+  const daysGeneratedThrough = plan.daysGeneratedThrough && toDate > plan.daysGeneratedThrough ? toDate : plan.daysGeneratedThrough;
+  return { ...plan, days, daysGeneratedThrough, updatedAt: Date.now() };
+}
+
+// Within-day drag-to-reorder — `orderedTaskIds` is the full new order for that
+// day (any task id it doesn't mention, e.g. one that arrived after the drag
+// started, is appended at the end rather than dropped).
+export function reorderTasksInDay(plan, date, orderedTaskIds) {
+  if (!plan?.days?.length || !date || !Array.isArray(orderedTaskIds) || !orderedTaskIds.length) return plan;
+  let changed = false;
+  const days = plan.days.map(d => {
+    if (d.date !== date) return d;
+    const byId = new Map(d.tasks.map(t => [t.id, t]));
+    const known = new Set(orderedTaskIds);
+    const reordered = orderedTaskIds.map(id => byId.get(id)).filter(Boolean);
+    for (const t of d.tasks) if (!known.has(t.id)) reordered.push(t);
+    changed = reordered.some((t, i) => t.id !== d.tasks[i]?.id);
+    return changed ? { ...d, tasks: reordered } : d;
+  });
+  return changed ? { ...plan, days, updatedAt: Date.now() } : plan;
+}
+
 // Task types the app can verify actually happened, rather than trusting a
 // self-reported checkbox — see resolveTaskResource for how resourceKind gets
 // set. Quiz/lesson/deck all have a real "completed this in the app" event to

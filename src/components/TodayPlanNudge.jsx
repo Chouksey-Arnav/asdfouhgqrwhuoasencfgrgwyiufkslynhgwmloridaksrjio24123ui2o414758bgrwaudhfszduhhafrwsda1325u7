@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarClock, ArrowRight, PartyPopper, Flame, Sunrise, Target } from 'lucide-react';
+import { CalendarClock, ArrowRight, PartyPopper, Flame, Sunrise, Target, Circle } from 'lucide-react';
 import { C, glass2, pill, R, btnSm } from '../lib/theme';
-import { getTodayPlanEntry, getNextPlanDay } from '../lib/masterPlanGenerator';
+import { getTodayPlanEntry, getNextPlanDay, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES } from '../lib/masterPlanGenerator';
 
 // Slim inline progress bar — mirrors App.jsx's local `Bar` component (not exported, so
 // reimplemented minimally here) so today's plan progress reads as a bar, not just a fraction.
@@ -19,7 +19,7 @@ function ProgressBar({ pct, color }) {
 // "what do I still need to do today" is visible without opening the Plans tab at all.
 // Renders nothing until a masterPlan actually exists (the Plans tab's own empty/locked
 // states already cover onboarding-adjacent nudging for students without one yet).
-export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, onOpenTask, planStreak = 0, isMobile }) {
+export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, onOpenTask, onToggleTask, onSnoozeTask, planStreak = 0, isMobile }) {
   const today = getTodayPlanEntry(user?.masterPlan);
   if (!today || !today.tasks?.length) return null;
   const total = today.tasks.length;
@@ -82,26 +82,45 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
           Go to Plan<ArrowRight size={12} />
         </button>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginLeft: isMobile ? 0 : 48 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: isMobile ? 0 : 48 }}>
         {nextTasks.map(t => {
           const specific = t.resourceKind && t.resourceKind !== 'view' && t.resourceLabel;
           const label = specific ? t.resourceLabel : t.title;
+          // Same accountability rule as the Plans tab's own TaskRow — quiz/lesson/deck tasks
+          // auto-verify from actually doing them (no self-report checkbox here either).
+          const autoVerify = AUTO_VERIFIABLE_KINDS.has(t.resourceKind) || AUTO_VERIFIABLE_TYPES.has(t.type);
           return (
-            <motion.button key={t.id} whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
-              onClick={() => (onOpenTask ? onOpenTask(t) : onOpenPlan?.())}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
-                border: `1px solid ${accent}45`, background: `${accent}14`, color: C.t1,
-                fontSize: 11, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%',
-              }}>
-              <Target size={11} color={accent} style={{ flexShrink: 0 }} />
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{label}</span>
-              <ArrowRight size={10} color={accent} style={{ flexShrink: 0 }} />
-            </motion.button>
+            <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6, maxWidth: '100%' }}>
+              {autoVerify ? (
+                <span title="Verifies automatically — no self-report" style={{ display: 'flex', flexShrink: 0, opacity: 0.45 }}><Circle size={13} color={C.t3} /></span>
+              ) : (
+                <button onClick={() => onToggleTask?.(today.date, t.id)} aria-label="Mark task done"
+                  style={{ all: 'unset', cursor: onToggleTask ? 'pointer' : 'default', display: 'flex', flexShrink: 0 }}>
+                  <Circle size={13} color={C.t3} />
+                </button>
+              )}
+              <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}
+                onClick={() => (onOpenTask ? onOpenTask(t) : onOpenPlan?.())}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
+                  border: `1px solid ${accent}45`, background: `${accent}14`, color: C.t1,
+                  fontSize: 11, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%', flex: 1, minWidth: 0,
+                }}>
+                <Target size={11} color={accent} style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{label}</span>
+                <ArrowRight size={10} color={accent} style={{ flexShrink: 0 }} />
+              </motion.button>
+              {onSnoozeTask && (
+                <button onClick={() => onSnoozeTask(today.date, t.id)} title="Snooze to tomorrow" aria-label="Snooze this task to tomorrow"
+                  style={{ all: 'unset', cursor: 'pointer', display: 'flex', flexShrink: 0, color: C.t3, padding: 4 }}>
+                  <Sunrise size={13} />
+                </button>
+              )}
+            </div>
           );
         })}
         {overflow > 0 && (
-          <span style={{ ...pill('rgba(255,255,255,0.04)', C.t3, { fontSize: 10.5 }), alignSelf: 'center' }}>+{overflow} more</span>
+          <span style={{ ...pill('rgba(255,255,255,0.04)', C.t3, { fontSize: 10.5 }), alignSelf: 'flex-start' }}>+{overflow} more</span>
         )}
       </div>
       <ProgressBar pct={pct} color={accent} />

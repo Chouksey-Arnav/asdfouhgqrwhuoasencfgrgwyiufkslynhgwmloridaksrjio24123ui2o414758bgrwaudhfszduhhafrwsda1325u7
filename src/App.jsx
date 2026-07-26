@@ -76,7 +76,11 @@ import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
-import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak } from './lib/masterPlanGenerator';
+import PlanTaskStrip from './components/ui/PlanTaskStrip';
+import {
+  summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
+  toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
+} from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -2082,14 +2086,15 @@ export default function App({ account, onAccountChange }) {
   // Only *undone* tasks count — once a task is done it stops competing for attention.
   const todayPlanTargets = useMemo(()=>{
     const entry = getTodayPlanEntry(user?.masterPlan);
-    const quizIds = new Set(), lessonIds = new Set(), deckNames = new Set();
+    const quizIds = new Set(), lessonIds = new Set(), deckNames = new Set(), articleTitles = new Set();
     (entry?.tasks||[]).forEach(t=>{
       if(t.done||!t.resourceId)return;
       if(t.resourceKind==='quiz')quizIds.add(t.resourceId);
       else if(t.resourceKind==='lesson')lessonIds.add(t.resourceId);
       else if(t.resourceKind==='deck')deckNames.add(t.resourceId);
+      else if(t.resourceKind==='article')articleTitles.add(t.resourceId);
     });
-    return {quizIds,lessonIds,deckNames,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0};
+    return {quizIds,lessonIds,deckNames,articleTitles,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0||articleTitles.size>0};
   },[user?.masterPlan]);
 
   // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
@@ -3073,7 +3078,7 @@ export default function App({ account, onAccountChange }) {
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
             away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -4294,9 +4299,10 @@ export default function App({ account, onAccountChange }) {
             const deckRet=(()=>{const rets=deck.cards.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
             const info=getDeckCategory(deck.name,deck.builtin);const dm=deckCatMeta(info.category);
+            const onPlan=todayPlanTargets.deckNames.has(deck.name);
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
-                whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
+                whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${onPlan?C.violet:dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={R({gap:8,marginBottom:12})}>
                     <div style={{width:36,height:36,borderRadius:10,background:`${dm.color}16`,border:`1px solid ${dm.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers3 size={17} color={dm.light}/></div>
@@ -4306,6 +4312,7 @@ export default function App({ account, onAccountChange }) {
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deck.cards.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
                   {deckRet!==null&&<div style={{marginTop:8}}><Bar pct={deckRet} color={deckRet>=80?C.green:deckRet>=50?C.amber:C.rose} h={3}/></div>}
                   <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
+                    {onPlan&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontWeight:700})}}><CalendarClock size={9} style={{marginRight:3,verticalAlign:-1}}/>Today's plan</div>}
                     {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
                     {dc>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontFamily:C.FM,fontWeight:700})}}>{dc} due now</div>}
                     {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
@@ -4699,6 +4706,7 @@ export default function App({ account, onAccountChange }) {
                 <div style={{padding:'14px 18px'}}>
                   <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 5})}>
                     <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
                     {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
@@ -4827,6 +4835,7 @@ export default function App({ account, onAccountChange }) {
                   </div>
                   <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6})}>
                     <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{r.title}</div>
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
                     {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
                   <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
@@ -6260,6 +6269,11 @@ export default function App({ account, onAccountChange }) {
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
           <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
+          {user.masterPlan&&(
+            <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
+              <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
+            </div>
+          )}
           {(prepRenders[prepView]||tPath)()}
         </div>
         {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
@@ -6305,6 +6319,11 @@ export default function App({ account, onAccountChange }) {
     return(
       <div>
         <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
+        {user.masterPlan&&(
+          <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
+            <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
+          </div>
+        )}
         {(portfolioRenders[portfolioView]||tPort)()}
         <PortfolioMedabrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
@@ -6322,6 +6341,26 @@ export default function App({ account, onAccountChange }) {
   // A quiz task launches that quiz fullscreen, a lesson task opens the lesson
   // player (unless still locked), a deck task drops straight into that deck's
   // study session, an article task lands on the E-Library pre-searched to it.
+  // Manual complete/snooze for plan tasks surfaced OUTSIDE the Plans tab itself
+  // (TodayPlanNudge on Home) — same save-through-user pattern PlansTab's own
+  // handleToggleTask uses, just placed here since TodayPlanNudge is mounted
+  // directly by App.jsx rather than by PlansTab.
+  function handlePlanToggleTask(date,taskId){
+    if(!user?.masterPlan)return;
+    const {plan:updated,justEarnedXP}=togglePlanTaskDone(user.masterPlan,date,taskId);
+    if(!justEarnedXP){saveUser({...user,masterPlan:updated});return;}
+    const {finalXP,tier}=awardXP(6);
+    saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
+    toast.success(BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`,{duration:1800});
+    if(tier==='jackpot')celebrateJackpot();else if(tier==='big'||tier==='bonus')celebrateBonusXP();else celebrateXP();
+  }
+  function handlePlanSnoozeTask(date,taskId){
+    if(!user?.masterPlan)return;
+    const updated=moveTaskToDay(user.masterPlan,taskId,date,planAddDaysStr(planTodayStr(),1));
+    if(updated===user.masterPlan)return;
+    saveUser({...user,masterPlan:updated});
+    toast('Moved to tomorrow.',{icon:'☀️'});
+  }
   function openPlanResource(task){
     const {resourceTab:tab,resourceView:view,resourceKind:kind,resourceId:id}=task||{};
     if(!tab||!view)return;
