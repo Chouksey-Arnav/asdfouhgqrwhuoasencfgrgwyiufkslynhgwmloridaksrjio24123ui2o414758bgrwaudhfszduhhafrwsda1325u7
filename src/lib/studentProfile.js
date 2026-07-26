@@ -64,6 +64,25 @@ export function computeOnboardingCompleteness(user) {
   return { pct, missing };
 }
 
+// ── Plan readiness gate ────────────────────────────────────────────────────
+// A smaller, all-or-nothing subset of ONBOARDING_FIELDS — the fields Medabrain's
+// Oracle actually needs to build a plan it can be fully confident in (goal, what's
+// in the way, pace, target score, grades, timing). Any student who completes the
+// current onboarding flow (every screen is forced, nothing skippable) already has
+// all six by construction; this only actually gates legacy accounts that onboarded
+// before these fields existed, which is exactly the intended nudge toward Settings.
+const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'onboardingTargetScore', 'gpaBand', 'testTimeline'];
+const PLAN_READINESS_LABELS = {
+  goal: 'Your top goal', obstacles: "What's in your way", studyHours: 'Weekly study time',
+  onboardingTargetScore: 'Your target score', gpaBand: 'Your grades', testTimeline: 'Your test timing',
+};
+export function computePlanReadiness(user) {
+  if (!user) return { ready: false, pct: 0, missing: PLAN_READINESS_FIELDS.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f] })) };
+  const missingFields = PLAN_READINESS_FIELDS.filter(f => !isFilled(user[f]));
+  const pct = Math.round(((PLAN_READINESS_FIELDS.length - missingFields.length) / PLAN_READINESS_FIELDS.length) * 100);
+  return { ready: missingFields.length === 0, pct, missing: missingFields.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f] })) };
+}
+
 // Human-readable recap of what onboarding captured — shown on the dashboard
 // so a student can see their own answers driving the app, not just a form
 // they filled out once and never saw again.

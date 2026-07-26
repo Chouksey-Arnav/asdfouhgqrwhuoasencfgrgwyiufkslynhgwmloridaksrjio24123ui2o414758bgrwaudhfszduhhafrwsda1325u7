@@ -120,7 +120,55 @@ export function buildResourceCatalog(specialtyKey) {
   return { text, pathwayLabel: path.label, unitTitles, quizCats };
 }
 
-function buildProfileFactsText(user, liveSignals = {}) {
+// Turns the same raw Portfolio resource lists buildPortfolioSystemPrompt reasons over
+// (src/components/PortfolioMedabrain.jsx fetches them via listItems()) into a compact
+// text block grounding plan generation in the student's ACTUAL colleges, essays,
+// deadlines, and activities — not just onboarding answers and summary counts. Trimmed
+// to a handful of named items per category (not full essay bodies) to keep prompt size
+// reasonable; every "no X yet" case is stated explicitly so the model never invents one.
+function buildPortfolioFactsText(portfolio) {
+  if (!portfolio) return null;
+  const {
+    colleges = [], essays = [], deadlines = [], scholarships = [], activities = [],
+    research = [], skills = [], clinicalHours = [], recommenders = [], testScores = [], awards = [], gpaEntries = [],
+  } = portfolio;
+  const lines = [];
+  lines.push(colleges.length
+    ? `Colleges on their list: ${colleges.slice(0, 8).map(c => `${c.name}${c.category ? ` (${c.category})` : ''}`).join(', ')}${colleges.length > 8 ? `, +${colleges.length - 8} more` : ''}.`
+    : 'No colleges on their list yet.');
+  const essaysNotStarted = essays.filter(e => e.status !== 'final').length;
+  lines.push(essays.length
+    ? `Essay drafts: ${essays.slice(0, 6).map(e => `"${e.title || 'Untitled'}"${e.status ? ` (${e.status})` : ''}`).join(', ')}${essays.length > 6 ? `, +${essays.length - 6} more` : ''}${essaysNotStarted ? ` — ${essaysNotStarted} not yet finished` : ''}.`
+    : 'No essay drafts started yet.');
+  const today = todayStr();
+  const upcoming = deadlines
+    .map(d => ({ ...d, days: daysBetween(today, d.due_date) }))
+    .filter(d => Number.isFinite(d.days) && d.days >= 0)
+    .sort((a, b) => a.days - b.days);
+  lines.push(upcoming.length
+    ? `Upcoming deadlines, soonest first: ${upcoming.slice(0, 5).map(d => `"${d.title}" in ${d.days}d`).join('; ')}.`
+    : 'No upcoming deadlines tracked.');
+  lines.push(activities.length
+    ? `Activities logged: ${activities.slice(0, 5).map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}`).join(', ')}${activities.length > 5 ? `, +${activities.length - 5} more` : ''}.`
+    : 'No activities logged yet.');
+  lines.push(research.length ? `Research: ${research.slice(0, 4).map(r => r.title).join(', ')}.` : 'No research experience logged yet.');
+  lines.push(clinicalHours.length ? `${clinicalHours.reduce((s, h) => s + (h.hours || 0), 0)} clinical/shadowing hour(s) logged.` : 'No clinical/shadowing hours logged yet.');
+  lines.push(recommenders.length ? `${recommenders.length} recommender(s) tracked.` : 'No recommenders tracked yet.');
+  lines.push(skills.length ? `Skills/certifications: ${skills.slice(0, 5).map(s => s.name).join(', ')}.` : null);
+  if (testScores.length) {
+    const latest = [...testScores].sort((a, b) => new Date(b.test_date || 0) - new Date(a.test_date || 0))[0];
+    lines.push(`Most recent logged test score: ${latest.test_type} ${latest.composite}${latest.test_date ? ` on ${latest.test_date}` : ''}.`);
+  }
+  if (gpaEntries.length) {
+    const latestGpa = [...gpaEntries].sort((a, b) => String(b.term || '').localeCompare(String(a.term || '')))[0];
+    lines.push(`Most recent logged GPA: ${latestGpa.gpa}${latestGpa.term ? ` (${latestGpa.term})` : ''}.`);
+  }
+  if (awards.length) lines.push(`${awards.length} award(s)/honor(s) logged.`);
+  if (scholarships.length) lines.push(`${scholarships.length} scholarship(s) tracked in Financial Aid.`);
+  return lines.filter(Boolean).join('\n');
+}
+
+function buildProfileFactsText(user, liveSignals = {}, portfolio = null) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(user || {});
   const gradeLabel = GRADE_STAGES[gradeIdxFromStage(user?.gradeStage)]?.label || 'high school';
   const goalLabel = labelOf(GOAL_OPTIONS, user?.goal) || 'exploring medicine';
@@ -158,6 +206,8 @@ function buildProfileFactsText(user, liveSignals = {}) {
     // constraints/requests to actually build into the plan, not just background color.
     (user?.planNotes || []).length ? `The student told Medabrain directly (treat these as real, current requests to build into the plan):\n${user.planNotes.map(n => `  • ${n}`).join('\n')}` : null,
   ].filter(Boolean);
+  const portfolioText = buildPortfolioFactsText(portfolio);
+  if (portfolioText) lines.push(`\nTheir actual Portfolio right now (reference these by name in Portfolio-pillar tasks instead of generic busywork — e.g. an essay task should name the real college/essay, a deadline-prep task should name the real deadline):\n${portfolioText}`);
   return lines.join('\n');
 }
 
@@ -516,12 +566,12 @@ function looksUsableRoadmap(p) {
   return !!str(p.overview) || (Array.isArray(p.phases) && p.phases.length > 0) || (Array.isArray(p.weeklyThemes) && p.weeklyThemes.length > 0);
 }
 
-export async function generateRoadmap(user, liveSignals, catalog) {
+export async function generateRoadmap(user, liveSignals, catalog, portfolio) {
   const horizonWeeks = computeHorizonWeeks(user);
   const fallback = heuristicRoadmap(user, horizonWeeks, catalog);
   try {
     const system = buildRoadmapSystemPrompt(horizonWeeks, catalog.text);
-    const userMsg = `Here is the student's full profile:\n${buildProfileFactsText(user, liveSignals)}\n\nBuild their ${horizonWeeks}-week roadmap now as JSON only.`;
+    const userMsg = `Here is the student's full profile:\n${buildProfileFactsText(user, liveSignals, portfolio)}\n\nBuild their ${horizonWeeks}-week roadmap now as JSON only.`;
     const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 6000, reasoningEffort: 'high' });
     const roadmap = looksUsableRoadmap(parsed) ? repairRoadmap(parsed, fallback, horizonWeeks) : fallback;
     return { ...roadmap, horizonWeeks };
@@ -636,6 +686,37 @@ export function applyRolloverPrefs(days, priorDays, prefs) {
   return [{ ...first, tasks: [...rolled, ...first.tasks] }, ...rest];
 }
 
+// Daily rollover — the day-boundary counterpart to applyRolloverPrefs above.
+// applyRolloverPrefs only ever fires when a NEW chunk is generated (every ~7
+// days), so a task missed on Monday wouldn't reach Tuesday's list until the
+// next chunk boundary, days later. This runs once per calendar day instead:
+// it merges any not-done tasks from the single most recent past day straight
+// into TODAY's already-generated day entry (today's tasks were written days
+// ago as part of a chunk — this doesn't regenerate them, only adds to them).
+// Idempotent via plan.lastRolloverDate so re-running on every render/effect
+// firing is safe and never duplicates a rolled-over task.
+export function applyDailyRollover(plan, user) {
+  if (!plan?.days?.length) return plan;
+  const today = todayStr();
+  if (plan.lastRolloverDate === today) return plan;
+  if (!user?.rollover) return { ...plan, lastRolloverDate: today };
+  const todayIdx = plan.days.findIndex(d => d.date === today);
+  if (todayIdx === -1) return { ...plan, lastRolloverDate: today };
+  const prior = [...plan.days].filter(d => d.date < today).sort((a, b) => (a.date < b.date ? -1 : 1)).slice(-1)[0];
+  if (!prior) return { ...plan, lastRolloverDate: today };
+  const missed = prior.tasks.filter(t => !t.done);
+  if (!missed.length) return { ...plan, lastRolloverDate: today };
+  const todayDay = plan.days[todayIdx];
+  const existingTitles = new Set(todayDay.tasks.map(t => t.title));
+  const rolled = missed
+    .filter(t => !existingTitles.has(t.title))
+    .slice(0, 2)
+    .map((t, i) => ({ ...t, id: `${today}-dailyrollover${i}`, done: false, doneAt: null, xpAwarded: false, autoVerified: false, rolledOverFrom: t.id }));
+  if (!rolled.length) return { ...plan, lastRolloverDate: today };
+  const days = plan.days.map((d, i) => (i === todayIdx ? { ...d, tasks: [...rolled, ...d.tasks] } : d));
+  return { ...plan, days, lastRolloverDate: today };
+}
+
 // Add-back: when the most recent already-generated day was fully completed
 // (every task done — the "studied more than planned" signal available from
 // this data model), trims one task off the new chunk's first day as a lighter
@@ -653,7 +734,7 @@ export function applyAddBackPrefs(days, priorDays, prefs) {
 
 // Generates the next `numDays` of daily tasks starting the day after
 // plan.daysGeneratedThrough (or `fromDate` for the very first chunk).
-export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = 7) {
+export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = 7, portfolio) {
   const fallback = heuristicDays(plan, fromDate, numDays, catalog, user);
   // Final belt-and-braces pass: EVERY task — AI-written or fallback — leaves
   // here resolved to a concrete launchable resource (see resolveTaskResource),
@@ -675,7 +756,7 @@ export async function generateDayChunk(plan, user, liveSignals, catalog, fromDat
   try {
     const dayTable = fallback.map(d => `Day ${d.dayIndex}: ${d.date} (${d.weekday}) — Week ${d.weekNumber}, phase "${phaseForWeek(plan, d.weekNumber)?.title || ''}", week theme: "${weeklyThemeForWeek(plan, d.weekNumber)?.theme || d.theme}"`).join('\n');
     const system = buildDayChunkSystemPrompt(numDays, catalog.text, prefsNote);
-    const userMsg = `Roadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals)}\n\nDays to fill in:\n${dayTable}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
+    const userMsg = `Roadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals, portfolio)}\n\nDays to fill in:\n${dayTable}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
     const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 5500, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
     return applyPrefs(linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback));
   } catch {
@@ -690,13 +771,13 @@ const CHUNK_DAYS = 7;
 const ROLLING_WINDOW_DAYS = 14; // how many days of full detail to keep generated ahead of today
 const EXTEND_THRESHOLD_DAYS = 3; // trigger the next chunk once this many days of window remain
 
-export async function createMasterPlan(user, liveSignals) {
+export async function createMasterPlan(user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring');
-  const roadmap = await generateRoadmap(user, liveSignals, catalog);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
   const startDate = todayStr();
   const planShell = { ...roadmap, startDate, days: [] };
-  const firstChunk = await generateDayChunk(planShell, user, liveSignals, catalog, startDate, CHUNK_DAYS);
-  const secondChunk = await generateDayChunk({ ...planShell, days: firstChunk }, user, liveSignals, catalog, addDaysStr(startDate, CHUNK_DAYS), CHUNK_DAYS);
+  const firstChunk = await generateDayChunk(planShell, user, liveSignals, catalog, startDate, CHUNK_DAYS, portfolio);
+  const secondChunk = await generateDayChunk({ ...planShell, days: firstChunk }, user, liveSignals, catalog, addDaysStr(startDate, CHUNK_DAYS), CHUNK_DAYS, portfolio);
   const days = [...firstChunk, ...secondChunk];
   const now = Date.now();
   return {
@@ -709,10 +790,10 @@ export async function createMasterPlan(user, liveSignals) {
 // Rolls the window forward by one chunk — called when the plan is close to
 // running out of generated days. This is the mechanism that keeps the plan
 // "continuing to plan" indefinitely instead of going stale.
-export async function extendMasterPlan(plan, user, liveSignals) {
+export async function extendMasterPlan(plan, user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring');
   const from = addDaysStr(plan.daysGeneratedThrough, 1);
-  const nextChunk = await generateDayChunk(plan, user, liveSignals, catalog, from, CHUNK_DAYS);
+  const nextChunk = await generateDayChunk(plan, user, liveSignals, catalog, from, CHUNK_DAYS, portfolio);
   const merged = pruneRollingWindow({
     ...plan,
     days: [...plan.days, ...nextChunk],
@@ -726,11 +807,44 @@ export async function extendMasterPlan(plan, user, liveSignals) {
 // a fresh spine) but keeps the already-generated near-term days untouched so
 // in-progress work isn't lost, and re-derives their week/phase linkage
 // against the new roadmap.
-export async function regenerateRoadmap(plan, user, liveSignals) {
+export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring');
-  const roadmap = await generateRoadmap(user, liveSignals, catalog);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
   const startDate = plan?.startDate || todayStr();
   const days = (plan?.days || []).map(d => {
+    const weekNumber = weekNumberForDate({ startDate }, d.date);
+    const phase = phaseForWeek(roadmap, weekNumber);
+    return { ...d, weekNumber, phaseId: phase?.id || null };
+  });
+  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now() };
+}
+
+// The real "Add to plan" mechanism — regenerates the roadmap spine (as
+// regenerateRoadmap does) AND rewrites the not-yet-elapsed, not-yet-finished
+// portion of the day-by-day window, so a note like "I have a dentist
+// appointment tomorrow" visibly changes actual tomorrow tasks, not just the
+// roadmap's narrative overview. Any day before today, or any day (today or
+// later) whose tasks are already fully done, is left completely untouched —
+// only the first still-open day onward gets a fresh, note-aware generation.
+export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
+  const catalog = buildResourceCatalog(user?.specialty || 'exploring');
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
+  const today = todayStr();
+  const startDate = plan?.startDate || today;
+  const sorted = [...(plan?.days || [])].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+  const firstOpenIdx = sorted.findIndex(d => d.date >= today && !(d.tasks.length && d.tasks.every(t => t.done)));
+  const keep = firstOpenIdx === -1 ? sorted : sorted.slice(0, firstOpenIdx);
+  const regenFrom = firstOpenIdx === -1 ? null : sorted[firstOpenIdx].date;
+  const through = plan?.daysGeneratedThrough || regenFrom;
+  let freshDays = [];
+  if (regenFrom && through) {
+    const numDays = daysBetween(regenFrom, through) + 1;
+    if (numDays > 0) {
+      const shell = { ...plan, ...roadmap, startDate };
+      freshDays = await generateDayChunk(shell, user, liveSignals, catalog, regenFrom, numDays, portfolio);
+    }
+  }
+  const days = [...keep, ...freshDays].map(d => {
     const weekNumber = weekNumberForDate({ startDate }, d.date);
     const phase = phaseForWeek(roadmap, weekNumber);
     return { ...d, weekNumber, phaseId: phase?.id || null };

@@ -406,6 +406,14 @@ export const SCENARIOS = {
     `Whatever's left before your exam, a little review today keeps you ahead of it.`,
     `Test prep works best in small daily doses right about now — don't skip today's.`,
   ]},
+  plan_tasks_remaining: { tone: 'urgent', cores: [
+    `You've got {count} task{plural} left on today's plan.`,
+    `{count} task{plural} still open on today's plan.`,
+    `Today's plan has {count} task{plural} waiting on you.`,
+    `{count} task{plural} left to check off today's plan.`,
+    `Your plan for today isn't done yet — {count} task{plural} to go.`,
+    `Still {count} task{plural} on today's plan.`,
+  ]},
   inactivity_nudge: { tone: 'urgent', cores: [
     `It's been a bit since your last session. A short one today gets things moving again.`,
     `No pressure, but your pathway is exactly where you left it whenever you're ready.`,
