@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarClock, ArrowRight, PartyPopper, Flame, Sunrise } from 'lucide-react';
+import { CalendarClock, ArrowRight, PartyPopper, Flame, Sunrise, Target } from 'lucide-react';
 import { C, glass2, pill, R, btnSm } from '../lib/theme';
 import { getTodayPlanEntry, getNextPlanDay } from '../lib/masterPlanGenerator';
 
@@ -19,7 +19,7 @@ function ProgressBar({ pct, color }) {
 // "what do I still need to do today" is visible without opening the Plans tab at all.
 // Renders nothing until a masterPlan actually exists (the Plans tab's own empty/locked
 // states already cover onboarding-adjacent nudging for students without one yet).
-export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, planStreak = 0, isMobile }) {
+export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, onOpenTask, planStreak = 0, isMobile }) {
   const today = getTodayPlanEntry(user?.masterPlan);
   if (!today || !today.tasks?.length) return null;
   const total = today.tasks.length;
@@ -54,10 +54,15 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
     );
   }
 
-  const nextTitles = today.tasks.filter(t => !t.done).slice(0, 2).map(t => t.title);
+  const nextTasks = today.tasks.filter(t => !t.done).slice(0, 3);
+  const overflow = remaining - nextTasks.length;
+  // Each remaining task is its own tappable chip — straight to the exact quiz/lesson/deck it
+  // names (via onOpenTask, same deep-link opener PlansTab uses) — rather than plain text the
+  // student has to go find themselves. Tasks with no addressable resource (rest, reflection…)
+  // still open the right tab as a fallback.
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-      style={{ ...glass2({ padding: 16 }), display: 'flex', flexDirection: 'column', gap: 10, borderLeft: `2px solid ${accent}` }}>
+      style={{ ...glass2({ padding: 16 }), display: 'flex', flexDirection: 'column', gap: 12, borderLeft: `2px solid ${accent}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ width: 34, height: 34, borderRadius: 10, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <CalendarClock size={16} color={accent} />
@@ -72,13 +77,32 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
               </span>
             )}
           </div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 3 }}>
-            {nextTitles.join(' · ')}{remaining > nextTitles.length ? ` +${remaining - nextTitles.length} more` : ''}
-          </div>
         </div>
         <button style={btnSm(accent, { color: '#fff' })} onClick={onOpenPlan}>
           Go to Plan<ArrowRight size={12} />
         </button>
+      </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginLeft: isMobile ? 0 : 48 }}>
+        {nextTasks.map(t => {
+          const specific = t.resourceKind && t.resourceKind !== 'view' && t.resourceLabel;
+          const label = specific ? t.resourceLabel : t.title;
+          return (
+            <motion.button key={t.id} whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }}
+              onClick={() => (onOpenTask ? onOpenTask(t) : onOpenPlan?.())}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
+                border: `1px solid ${accent}45`, background: `${accent}14`, color: C.t1,
+                fontSize: 11, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%',
+              }}>
+              <Target size={11} color={accent} style={{ flexShrink: 0 }} />
+              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 220 }}>{label}</span>
+              <ArrowRight size={10} color={accent} style={{ flexShrink: 0 }} />
+            </motion.button>
+          );
+        })}
+        {overflow > 0 && (
+          <span style={{ ...pill('rgba(255,255,255,0.04)', C.t3, { fontSize: 10.5 }), alignSelf: 'center' }}>+{overflow} more</span>
+        )}
       </div>
       <ProgressBar pct={pct} color={accent} />
     </motion.div>
