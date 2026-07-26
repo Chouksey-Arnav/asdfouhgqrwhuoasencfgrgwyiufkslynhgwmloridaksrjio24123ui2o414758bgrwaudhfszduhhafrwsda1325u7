@@ -74,8 +74,9 @@ import PrepMedabrain from './components/PrepMedabrain';
 import OpportunitiesDatabase from './components/OpportunitiesDatabase';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
+import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
-import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch } from './lib/masterPlanGenerator';
+import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, getTodayPlanEntry } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -1255,6 +1256,8 @@ export default function App({ account, onAccountChange }) {
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
+  const goSettings = useCallback(()=>{ setTab('settings'); }, []);
+  const goPlans = useCallback(()=>{ setTab('plans'); }, []);
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
@@ -2208,6 +2211,25 @@ export default function App({ account, onAccountChange }) {
     })();
   },[dbReady,user,streak]);
 
+  // ── Today's-plan-remaining nudge — once per day, app-wide (not just inside the
+  // Plans tab), same evening-only/localStorage-gated pattern as the streak-at-risk
+  // nudge above so it can't re-fire on every reload the same day.
+  const planNudgeRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||!user?.masterPlan||planNudgeRef.current)return;
+    if(new Date().getHours()<18)return; // evening only
+    const today = getTodayPlanEntry(user.masterPlan);
+    if(!today?.tasks?.length)return;
+    const remaining = today.tasks.filter(t=>!t.done).length;
+    if(remaining<=0)return;
+    const todayKey = localDateStr();
+    const nudgeKey = `planNudge:${todayKey}`;
+    if(localStorage.getItem(nudgeKey))return;
+    localStorage.setItem(nudgeKey,'1');
+    planNudgeRef.current=true;
+    toast(pickNudge('plan_tasks_remaining',{count:remaining,plural:remaining===1?'':'s'}),{icon:<CalendarClock size={14} color={C.violetL}/>,duration:5000});
+  },[dbReady,user?.masterPlan]);
+
   // ── Streak milestone / personal-best nudges — fires once per session, compares
   // against a cross-session localStorage baseline so it only celebrates a genuine
   // new milestone/record rather than re-firing every time the app is reopened at
@@ -3016,6 +3038,11 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
+
+        {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
+            inside the Plans tab, so "what do I still need to do today" is always one glance
+            away regardless of which tab a student opens the app to. */}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} isMobile={isMobile}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -6267,7 +6294,7 @@ export default function App({ account, onAccountChange }) {
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
     };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} openResource={openPlanResource} liveSignals={liveSignals}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals}/>;
   }
   const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 

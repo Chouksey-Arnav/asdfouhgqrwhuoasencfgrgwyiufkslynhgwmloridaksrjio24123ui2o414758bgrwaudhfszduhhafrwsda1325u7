@@ -5,17 +5,39 @@ import {
   Sparkles, Target, Flag, TrendingUp, ChevronDown, CheckCircle2, Circle, RefreshCw,
   CalendarClock, Map, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
   MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
-  FlaskConical, UserCheck, Moon, Mic, Compass, X,
+  FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, R, CC, G, pill } from '../lib/theme';
 import { awardXP, BONUS_COPY } from '../lib/rewards';
 import { celebrateXP, celebrateBonusXP, celebrateJackpot } from '../lib/celebrate';
 import * as speech from '../lib/speech';
+import { listItems } from '../lib/dataApi';
+import { computePlanReadiness } from '../lib/studentProfile';
 import {
-  createMasterPlan, extendMasterPlan, regenerateRoadmap, pruneRollingWindow, toggleTaskDone,
+  createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, resolveAllTaskLinks,
-  AUTO_VERIFIABLE_KINDS,
+  applyDailyRollover, AUTO_VERIFIABLE_KINDS,
 } from '../lib/masterPlanGenerator';
+
+// Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
+// generation ground itself in the student's ACTUAL colleges/essays/deadlines/activities
+// instead of just onboarding answers and summary counts.
+const PORTFOLIO_RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders', 'test_scores', 'awards', 'gpa_entries'];
+function usePortfolioData() {
+  const [portfolioData, setPortfolioData] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries] =
+          await Promise.all(PORTFOLIO_RESOURCES.map(r => listItems(r).catch(() => [])));
+        if (!cancelled) setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries });
+      } catch { /* prompt builder treats a missing portfolio as "nothing tracked yet" */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+  return portfolioData;
+}
 
 const PILLAR_META = {
   prep: { color: C.violet, label: 'Prep' },
@@ -50,14 +72,29 @@ function relTime(ts) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, openResource, liveSignals }) {
+export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals }) {
   const plan = user?.masterPlan || null;
+  const portfolioData = usePortfolioData();
   const [view, setView] = useState('week'); // 'week' | 'roadmap'
   const [generating, setGenerating] = useState(false);
   const [stageLabel, setStageLabel] = useState(LOADING_STAGES[0].label);
   const [extending, setExtending] = useState(false);
   const [expandedDay, setExpandedDay] = useState(null);
   const [expandedPhase, setExpandedPhase] = useState(null);
+
+  // Daily rollover — runs once per calendar day (guarded by plan.lastRolloverDate inside
+  // applyDailyRollover itself), independent of the ~7-day chunk-extension cycle below. This is
+  // what actually gets a task missed yesterday onto today's list instead of waiting for the next
+  // chunk boundary.
+  useEffect(() => {
+    if (!plan) return;
+    const rolled = applyDailyRollover(plan, user);
+    if (rolled !== plan) {
+      saveUser({ ...user, masterPlan: rolled });
+      const carried = rolled.days.find(d => d.date === todayStr())?.tasks.filter(t => t.rolledOverFrom && t.id.includes('dailyrollover')).length || 0;
+      if (carried > 0) toast(`${carried} task${carried > 1 ? 's' : ''} carried over from yesterday.`, { icon: '↻' });
+    }
+  }, [plan?.days?.length, todayStr()]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Compact old days into progressLog on load so the synced blob never grows
   // unbounded — and upgrade any plan generated before deep links existed so
@@ -95,7 +132,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       if (stage) setStageLabel(stage.label);
     }, 700);
     try {
-      const built = await createMasterPlan(user, liveSignals || {});
+      const built = await createMasterPlan(user, liveSignals || {}, portfolioData);
       saveUser({ ...user, masterPlan: built });
       toast.success('Your full plan is ready.');
     } catch {
@@ -111,7 +148,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     setGenerating(true);
     setStageLabel("Medabrain's Oracle is rebuilding your roadmap…");
     try {
-      const updated = await regenerateRoadmap(plan, user, liveSignals || {});
+      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolioData);
       saveUser({ ...user, masterPlan: updated });
       toast.success('Roadmap refreshed.');
     } catch {
@@ -150,7 +187,11 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   }
 
   if (generating) return <GeneratingCard label={stageLabel} accent={accent} />;
-  if (!plan) return <EmptyState onBuild={handleBuild} accent={accent} isMobile={isMobile} />;
+  if (!plan) {
+    const readiness = computePlanReadiness(user);
+    if (!readiness.ready) return <LockedState readiness={readiness} accent={accent} isMobile={isMobile} goSettings={goSettings} />;
+    return <EmptyState onBuild={handleBuild} accent={accent} isMobile={isMobile} />;
+  }
 
   const weekNumber = getCurrentWeekNumber(plan);
   const phase = getCurrentPhase(plan);
@@ -160,7 +201,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     <div style={CC({ gap: 22 })}>
       <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} />
 
-      <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} accent={accent} />
+      <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} portfolioData={portfolioData} accent={accent} />
 
       <div style={{ display: 'flex', gap: 6 }}>
         {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: Map }].map(v => {
@@ -185,6 +226,43 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       ) : (
         <RoadmapView plan={plan} accent={accent} isMobile={isMobile} expandedPhase={expandedPhase} setExpandedPhase={setExpandedPhase} />
       )}
+    </div>
+  );
+}
+
+// ── Locked state ───────────────────────────────────────────────────────────
+// Shown instead of the "Build" CTA when the student is missing one of the six
+// core facts (see computePlanReadiness) Medabrain's Oracle needs to build a
+// plan it can actually be confident in. Anyone who's been through the current
+// onboarding flow already has all six by construction — this only actually
+// gates legacy accounts, which is exactly the intended nudge toward Settings.
+function LockedState({ readiness, accent, isMobile, goSettings }) {
+  return (
+    <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.amber}30` }}>
+      <div style={{ position: 'absolute', inset: 0, background: C.auroraGrad, opacity: 0.05, pointerEvents: 'none' }} />
+      <div style={{ position: 'relative', padding: isMobile ? '28px 20px' : '46px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: `${C.amber}20`, border: `1.5px solid ${C.amber}45`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Lock size={26} color={C.amberL} />
+        </div>
+        <div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.amberL, marginBottom: 8 }}>Almost ready</div>
+          <h2 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>A few things first</h2>
+        </div>
+        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 460, margin: 0 }}>
+          Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Fill these in and your plan unlocks:
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 320 }}>
+          {readiness.missing.map(m => (
+            <div key={m.field} style={{ ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+              <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{m.label}</span>
+            </div>
+          ))}
+        </div>
+        <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.()}>
+          Update My Profile
+        </button>
+      </div>
     </div>
   );
 }
@@ -267,7 +345,7 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate }) {
 // generation — extend, regenerate, the next rolling day chunk — sees it too, not just this one
 // rebuild) and immediately used to refresh the roadmap right now, so it's visibly "in" the plan
 // rather than a note that silently waits for the next scheduled rebuild.
-function PlanVoiceNotes({ user, saveUser, plan, liveSignals, accent }) {
+function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, accent }) {
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -299,12 +377,14 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, accent }) {
     const nextNotes = [...notes, text].slice(-8); // bounded so the profile-facts prompt never grows unbounded
     const updatedUser = { ...user, planNotes: nextNotes };
     try {
-      const updated = await regenerateRoadmap(plan, updatedUser, liveSignals || {});
+      // adaptPlanToNotes (not just regenerateRoadmap) — rewrites today-forward, still-open days
+      // too, so this note visibly changes actual tasks, not just the roadmap's narrative overview.
+      const updated = await adaptPlanToNotes(plan, updatedUser, liveSignals || {}, portfolioData);
       saveUser({ ...updatedUser, masterPlan: updated });
-      toast.success("Got it — Medabrain folded that into your plan.");
+      toast.success('Got it — today and the days ahead now reflect that.');
     } catch {
       saveUser(updatedUser); // note is kept even if the live refresh call fails — it'll be included next time the plan regenerates
-      toast.error("Saved — but couldn't refresh your roadmap right now. It'll be included next time your plan updates.");
+      toast.error("Saved — but couldn't refresh your plan right now. It'll be included next time your plan updates.");
     }
     setDraft('');
     setSubmitting(false);
@@ -359,6 +439,8 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, accent }) {
 // ── This Week / rolling day-by-day view ──────────────────────────────────
 function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending }) {
   const today = todayStr();
+  const todayEntry = upcoming.find(d => d.date === today) || null;
+  const restOfWeek = upcoming.filter(d => d.date !== today);
   return (
     <div style={CC({ gap: 14 })}>
       <div style={G(3, 12, {}, isMobile)}>
@@ -373,10 +455,15 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
         </div>
       )}
 
-      {upcoming.map(day => (
+      {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} />}
+
+      {restOfWeek.length > 0 && (
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Coming up</div>
+      )}
+      {restOfWeek.map(day => (
         <DayCard
-          key={day.date} day={day} isToday={day.date === today} accent={accent}
-          expanded={expandedDay === day.date || day.date === today}
+          key={day.date} day={day} isToday={false} accent={accent}
+          expanded={expandedDay === day.date}
           onToggleExpand={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
           onToggleTask={onToggleTask} jumpTo={jumpTo}
         />
@@ -384,6 +471,46 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
 
       <div style={{ fontSize: 11, color: C.t3, textAlign: 'center', padding: '4px 0' }}>
         {extending ? <span style={R({ gap: 6, justifyContent: 'center' })}><RefreshCw size={11} className="spin" />Extending your plan for the days ahead…</span> : `Planned day-by-day through ${fmtDateLabel(plan.daysGeneratedThrough)} — it keeps rolling forward automatically.`}
+      </div>
+    </div>
+  );
+}
+
+// ── Today hero — pulled out of the rolling day list and given its own
+// prominent, always-expanded treatment so "what do I do right now" never
+// requires a click. A conic-gradient ring gives an at-a-glance sense of
+// completion without pulling in a charting dependency.
+function TodayHero({ day, accent, onToggleTask, jumpTo }) {
+  const total = day.tasks.length;
+  const done = day.tasks.filter(t => t.done).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return (
+    <div style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${accent}55`, background: `linear-gradient(135deg,${accent}14,transparent 60%)` }}>
+      <div style={{ padding: '18px 20px 6px', display: 'flex', gap: 16, alignItems: 'center' }}>
+        <div style={{
+          width: 54, height: 54, borderRadius: '50%', flexShrink: 0,
+          background: `conic-gradient(${accent} ${pct * 3.6}deg, rgba(255,255,255,0.08) 0deg)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <div style={{ width: 42, height: 42, borderRadius: '50%', background: C.s1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: C.t1, fontFamily: C.FM }}>
+            {done}/{total}
+          </div>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>
+          <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 5 }}>{fmtDateLabel(day.date)}</div>
+          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>{day.theme}</div>
+        </div>
+      </div>
+      <div style={{ padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {day.tasks.map(t => (
+          <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
+        ))}
+        {day.reflectionPrompt && (
+          <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>
+            {day.reflectionPrompt}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -485,6 +612,11 @@ function TaskRow({ task, onToggle, onJump }) {
         {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
         <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
+          {task.rolledOverFrom && (
+            <span style={{ ...pill(`${C.amber}18`, C.amberL, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <Undo2 size={9} />Carried over
+            </span>
+          )}
           {autoVerify && (task.done
             ? <span style={pill(C.greenDim || `${C.green}18`, C.green, { fontSize: 9 })}><ShieldCheck size={9} style={{ marginRight: 3, verticalAlign: -1 }} />Verified</span>
             : <span style={pill('rgba(255,255,255,0.04)', C.t4, { fontSize: 9 })}>Auto-verifies</span>)}
