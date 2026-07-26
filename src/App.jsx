@@ -76,7 +76,7 @@ import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
-import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, getTodayPlanEntry } from './lib/masterPlanGenerator';
+import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -1257,7 +1257,8 @@ export default function App({ account, onAccountChange }) {
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
   const goSettings = useCallback(()=>{ setTab('settings'); }, []);
-  const goPlans = useCallback(()=>{ setTab('plans'); }, []);
+  const [plansOpenDate,setPlansOpenDate]=useState(null);
+  const goPlans = useCallback((dateStr)=>{ setTab('plans'); setPlansOpenDate(dateStr||null); }, []);
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
@@ -1826,6 +1827,19 @@ export default function App({ account, onAccountChange }) {
     if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(tier==='big'||tier==='bonus')celebrateBonusXP();
     else celebrateXP();
+    // If this completion just finished off TODAY's entire day, that's worth calling out on its
+    // own — the concrete "stay on track" reinforcement the plan is meant to give, wired through
+    // this one shared choke point so every auto-complete source (quiz, lesson, deck, coach,
+    // interview, clinical, activity, college, essay, research) gets it for free.
+    const wasTodayDone=(t)=>{const d=getTodayPlanEntry(t);return !!d&&d.tasks.length>0&&d.tasks.every(x=>x.done);};
+    if(!wasTodayDone(plan)&&wasTodayDone(updatedPlan)){
+      const planStreak=getPlanStreak(updatedPlan);
+      const nextDay=getNextPlanDay(updatedPlan);
+      setTimeout(()=>toast.success(
+        `Today's plan complete${planStreak>1?` — ${planStreak} day streak on track!`:'!'}${nextDay?.tasks?.length?' You can start tomorrow\'s tasks early.':''}`,
+        {icon:<Flame size={16}/>,duration:4500}
+      ),600);
+    }
     return {...baseUser,masterPlan:updatedPlan,xp:(baseUser.xp||0)+finalXP};
   }
   // Runs once the full ~30-screen onboarding flow (src/components/onboarding/Onboarding.jsx)
@@ -2406,7 +2420,7 @@ export default function App({ account, onAccountChange }) {
     setMsgs(next);setCi('');
     DB.addCoachMessage(threadId,'user',message).catch(console.error);
     bumpThreadLocally(threadId);
-    const newCount=aiChatCount+1;setAiChatCount(newCount);saveUser({...user,aiChatCount:newCount});bumpWeeklyCoachCount(getIsoWeekKey());
+    const newCount=aiChatCount+1;setAiChatCount(newCount);saveUser(applyPlanAutoComplete({...user,aiChatCount:newCount},typeMatch('coach')));bumpWeeklyCoachCount(getIsoWeekKey());
     await requestAIResponse(next,threadId,newCount);
   }
 
@@ -3042,7 +3056,7 @@ export default function App({ account, onAccountChange }) {
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
             away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} isMobile={isMobile}/>}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -6220,15 +6234,15 @@ export default function App({ account, onAccountChange }) {
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
     deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>saveUser(applyPlanAutoComplete(user,typeMatch('college')))}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>saveUser(applyPlanAutoComplete(user,typeMatch('essay')))}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
-    resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}/>,
-    research:()=><ResearchExperiencePanel accent={portC.research}/>,
+    resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>saveUser(applyPlanAutoComplete(user,typeMatch('activity')))}/>,
+    research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>saveUser(applyPlanAutoComplete(user,typeMatch('research')))}/>,
     skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
-    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});}}/>,
-    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});}}/>,
+    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}/>,
+    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
     interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
@@ -6294,7 +6308,7 @@ export default function App({ account, onAccountChange }) {
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
     };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate}/>;
   }
   const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 

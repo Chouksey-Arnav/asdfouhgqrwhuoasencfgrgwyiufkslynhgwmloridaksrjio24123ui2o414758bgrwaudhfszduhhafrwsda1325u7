@@ -33,7 +33,7 @@ const DEFAULT_CHECKLIST = [
   'Interview (if applicable)',
 ];
 
-export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMedabrain = null }) {
+export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMedabrain = null, onAdded = null }) {
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
   const [loading, setLoading] = useState(true);
@@ -78,6 +78,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
     setNewName('');
     setCategoryTouched(false);
     showMedabrainToast('college_added', { name: college.name });
+    onAdded?.();
     try {
       const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
         createItem('college_checklist_items', { college_id: college.id, label, sort_order: i })

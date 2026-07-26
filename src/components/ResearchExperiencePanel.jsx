@@ -13,7 +13,7 @@ const STATUS_COLORS = { Ongoing: C.amber, Completed: C.blue, Published: C.green 
 // supabase/migrations/0001_portfolio_credibility_expansion.sql). Research is one of the most
 // differentiating things a pre-health applicant can show, so it gets its own tracked table
 // instead of being crammed into the generic activities list.
-export default function ResearchExperiencePanel({ accent = C.blue }) {
+export default function ResearchExperiencePanel({ accent = C.blue, onLogged = null }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [title, setTitle] = useState('');
@@ -44,6 +44,7 @@ export default function ResearchExperiencePanel({ accent = C.blue }) {
       setEntries(prev => [row, ...prev]);
       setTitle(''); setMentorName(''); setInstitution(''); setDescription(''); setPublicationUrl(''); setHours('');
       showMedabrainToast('research_added', { title: row.title });
+      onLogged?.();
     } catch (err) { toast.error(err.message); }
   }
 
