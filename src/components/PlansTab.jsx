@@ -3,7 +3,7 @@ import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Sparkles, Target, Flag, TrendingUp, ChevronDown, CheckCircle2, Circle, RefreshCw,
-  CalendarClock, Map, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
+  CalendarClock, Map as MapIcon, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
   MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
   FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2, GripVertical, Sunrise, CalendarPlus,
 } from 'lucide-react';
@@ -243,7 +243,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} portfolioData={portfolioData} accent={accent} />
 
       <div style={{ display: 'flex', gap: 6 }}>
-        {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: Map }].map(v => {
+        {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
           const active = view === v.id;
           return (
             <button key={v.id} onClick={() => setView(v.id)} style={{
@@ -874,7 +874,7 @@ function RoadmapView({ plan, accent, isMobile, expandedPhase, setExpandedPhase }
   return (
     <div style={CC({ gap: 18 })}>
       <div style={glass({ padding: 18 })}>
-        <SectionLabel icon={Map} title="Phases" color={C.violet} />
+        <SectionLabel icon={MapIcon} title="Phases" color={C.violet} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
           {plan.phases.map((ph, i) => (
             <PhaseCard key={ph.id} phase={ph} index={i} plan={plan} accent={accent}
