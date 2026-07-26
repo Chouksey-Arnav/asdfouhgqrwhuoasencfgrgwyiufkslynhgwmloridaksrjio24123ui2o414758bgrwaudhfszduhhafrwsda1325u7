@@ -10,13 +10,11 @@ import { C, btn, btnG } from '../lib/theme';
 // because the app has no router — everything is driven by the `tab` state in
 // App.jsx, and a custom overlay can call setTab directly per step.
 //
-// Steps span every pillar (Home, Prep, Portfolio, Progress, Settings) plus every
-// sub-view absorbed under Prep/Portfolio/Progress, each paired with a second
-// "deep" step that targets real content further down the page (data-tour
-// ending in "-deep-…") rather than just the nav pill — 60+ steps total. Each
-// step carries a `section` label + `color` so a long tour still reads as a
-// handful of distinct chapters (a colored pill + matching spotlight ring)
-// instead of one undifferentiated scroll.
+// Deliberately short — one step per top-level pillar plus the ⌘K tip, so
+// someone can finish the whole thing in under a minute instead of bailing
+// out partway through. Each step carries a `section` label + `color` so it
+// still reads as a sequence of distinct chapters (a colored pill + matching
+// spotlight ring) rather than one undifferentiated scroll.
 //
 // Scrolling: the dim backdrop sits on top of the whole app and would otherwise
 // swallow every wheel/touch event, making the real page underneath un-scrollable
@@ -186,12 +184,16 @@ export default function AppTour({ steps, onFinish, onSkip }) {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, fontFamily: C.FB }}>
-      <div ref={backdropRef} style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,10,0.78)', touchAction: 'none' }} />
+      <motion.div
+        ref={backdropRef}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.25 }}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(2,4,10,0.78)', touchAction: 'none' }}
+      />
       {rect && (
         <motion.div
-          animate={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-          style={{ position: 'fixed', borderRadius: 12, border: `2px solid ${color}`, boxShadow: `0 0 0 4px ${color}48, 0 0 26px ${color}48`, pointerEvents: 'none', transition: 'border-color .2s, box-shadow .2s' }}
+          animate={{ top: rect.top - pad, left: rect.left - pad, width: rect.width + pad * 2, height: rect.height + pad * 2, boxShadow: [`0 0 0 4px ${color}48, 0 0 22px ${color}40`, `0 0 0 6px ${color}30, 0 0 34px ${color}5c`, `0 0 0 4px ${color}48, 0 0 22px ${color}40`] }}
+          transition={{ top: { type: 'spring', stiffness: 320, damping: 32 }, left: { type: 'spring', stiffness: 320, damping: 32 }, width: { type: 'spring', stiffness: 320, damping: 32 }, height: { type: 'spring', stiffness: 320, damping: 32 }, boxShadow: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' } }}
+          style={{ position: 'fixed', borderRadius: 12, border: `2px solid ${color}`, pointerEvents: 'none', transition: 'border-color .2s' }}
         />
       )}
       {/* Plain anchor div owns the placement transform (translateX/Y(-100%)) — a nested
@@ -202,14 +204,14 @@ export default function AppTour({ steps, onFinish, onSkip }) {
           <motion.div
             key={i}
             ref={cardRef}
-            initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.97 }} transition={{ duration: 0.18 }}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.98 }} transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             style={{ background: C.s1, border: `1px solid ${C.b2}`, borderRadius: 14, padding: 18, boxShadow: `0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px ${color}22` }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, background: `${color}1e`, border: `1px solid ${color}40`, color, fontSize: 9.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
+              <motion.div initial={{ opacity: 0, x: -4 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.06, duration: 0.2 }} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 9px', borderRadius: 20, background: `${color}1e`, border: `1px solid ${color}40`, color, fontSize: 9.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase' }}>
                 <Sparkles size={10} />{step.section || 'Tour'}
-              </div>
-              <button onClick={onSkip} aria-label="Skip tour" style={{ background: 'none', border: 'none', color: C.t3, cursor: 'pointer', padding: 2, display: 'flex' }}><X size={16} /></button>
+              </motion.div>
+              <button onClick={onSkip} aria-label="Skip tour" style={{ background: 'none', border: 'none', color: C.t3, cursor: 'pointer', padding: 6, display: 'flex', minWidth: 28, minHeight: 28, alignItems: 'center', justifyContent: 'center' }}><X size={16} /></button>
             </div>
             <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>{step.title}</div>
             <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>{step.body}</div>
@@ -221,11 +223,17 @@ export default function AppTour({ steps, onFinish, onSkip }) {
               <span style={{ fontSize: 10, color: C.t4, fontFamily: C.FM }}>{Math.round(pct)}%</span>
             </div>
             <div style={{ height: 4, borderRadius: 2, background: C.b2, overflow: 'hidden', marginBottom: 16 }}>
-              <motion.div animate={{ width: `${pct}%` }} transition={{ type: 'spring', stiffness: 200, damping: 30 }} style={{ height: '100%', borderRadius: 2, background: color }} />
+              <motion.div animate={{ width: `${pct}%` }} transition={{ type: 'spring', stiffness: 220, damping: 26 }} style={{ height: '100%', borderRadius: 2, background: color }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8 }}>
-              {i > 0 && <button onClick={back} style={{ ...btnG({ fontSize: 12, padding: '7px 12px' }), display: 'inline-flex', alignItems: 'center', gap: 4 }}><ChevronLeft size={13} />Back</button>}
-              <button onClick={next} style={{ ...btn(color, { fontSize: 12, padding: '7px 14px' }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>{i === steps.length - 1 ? 'Finish' : 'Next'}<ChevronRight size={13} /></button>
+              {i > 0 && (
+                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }} onClick={back} style={{ ...btnG({ fontSize: 12, padding: '9px 14px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
+                  <ChevronLeft size={13} />Back
+                </motion.button>
+              )}
+              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.94 }} onClick={next} style={{ ...btn(color, { fontSize: 12, padding: '9px 16px' }), display: 'inline-flex', alignItems: 'center', gap: 4, minHeight: 36 }}>
+                {i === steps.length - 1 ? 'Finish' : 'Next'}<ChevronRight size={13} />
+              </motion.button>
             </div>
           </motion.div>
         </AnimatePresence>
