@@ -120,7 +120,8 @@ export function cancelSpeech() {
 
 function getSpeechRecognition() {
   if (typeof window === 'undefined') return null;
-  return window.SpeechRecognition || window.webkitSpeechRecognition || null;
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  return typeof SR === 'function' ? SR : null;
 }
 
 export function isSTTSupported() {
