@@ -78,6 +78,7 @@ import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
+import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
   toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
@@ -3666,17 +3667,12 @@ export default function App({ account, onAccountChange }) {
         </div>
         {/* Medabrain ranked quiz recommendations — full top-6 list */}
         {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}/>}
-        {/* Today's Plan callout — only the exact quizzes today's plan actually named, so it never
-            competes with the broader "Medabrain Picks" ranking above; this is "do these, today,
-            because your plan said so," not a general recommendation. */}
-        {planQuizzesShown.length>0&&(
-          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.amber}14,transparent 65%)`,border:`1px solid ${C.amber}35`}),display:'flex',alignItems:'center',gap:10}}>
-            <Target size={15} color={C.amberL} style={{flexShrink:0}}/>
-            <div style={{fontSize:12,color:C.t1}}>
-              <strong>{planQuizzesShown.length} quiz{planQuizzesShown.length===1?'':'zes'} on your plan today</strong> — highlighted and moved to the top below.
-            </div>
-          </div>
-        )}
+        {/* Today's Plan — collapsible, previews 2-3 upcoming plan-assigned quizzes (this
+            week, not just today) with a direct deep-link to each; the quiz grid below
+            still stable-partitions today's exact targets to the front (see onPlan/
+            orderedQuiz above), so this section and that ordering reinforce each other
+            instead of duplicating the same one-line count this used to be. */}
+        {user.masterPlan&&<QuizPlanToday user={user} accent={C.amber} onOpenTask={openPlanResource}/>}
         <div style={R({justifyContent:'space-between'})}>
           <SectionTitle icon={Layers} color={C.greenL} extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SectionTitle>
         </div>
