@@ -10,7 +10,9 @@
     "start": "node server.js",
     "audit:lessons": "node scripts/auditLessonsCompleteness.mjs",
     "audit:videos": "node scripts/auditVideoIds.mjs",
-    "audit:all": "npm run audit:lessons && npm run audit:videos"
+    "audit:sat": "node scripts/auditSatBank.mjs",
+    "verify:sat-scoring": "node scripts/verifySatScoring.mjs",
+    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
