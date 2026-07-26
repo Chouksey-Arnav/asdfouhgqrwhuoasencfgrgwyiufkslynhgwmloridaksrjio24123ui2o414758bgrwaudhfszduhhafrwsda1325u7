@@ -2075,6 +2075,23 @@ export default function App({ account, onAccountChange }) {
     return null;
   },[curPath,pathway,isLessonComplete]);
 
+  // Today's Plan resource targets — which exact quizzes/lessons/decks today's plan
+  // wants done, so the Quiz Library and Pathway can highlight those specific items
+  // in place (not just recommend from scratch) instead of leaving the student to
+  // hunt for "the two quizzes my plan mentioned" inside a library of hundreds.
+  // Only *undone* tasks count — once a task is done it stops competing for attention.
+  const todayPlanTargets = useMemo(()=>{
+    const entry = getTodayPlanEntry(user?.masterPlan);
+    const quizIds = new Set(), lessonIds = new Set(), deckNames = new Set();
+    (entry?.tasks||[]).forEach(t=>{
+      if(t.done||!t.resourceId)return;
+      if(t.resourceKind==='quiz')quizIds.add(t.resourceId);
+      else if(t.resourceKind==='lesson')lessonIds.add(t.resourceId);
+      else if(t.resourceKind==='deck')deckNames.add(t.resourceId);
+    });
+    return {quizIds,lessonIds,deckNames,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0};
+  },[user?.masterPlan]);
+
   // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
@@ -3056,7 +3073,7 @@ export default function App({ account, onAccountChange }) {
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
             away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -3489,19 +3506,29 @@ export default function App({ account, onAccountChange }) {
                   const state=lessonState(lesson,ui,units);
                   const isDone=state==='done';const isVerified=state==='verified';const isStudying=state==='studying';
                   const avail=state==='available';
+                  // Lessons named by today's plan get the same "on your plan today" treatment
+                  // quizzes get — a warm glow + badge, right in place inside the pathway, so the
+                  // exact 1-2 lessons the plan wants are unmistakable while scrolling units.
+                  const planned=state!=='locked'&&todayPlanTargets.lessonIds.has(lesson.id);
                   return(
-                    <motion.div key={lesson.id} whileHover={state==='locked'?{}:{borderColor:`${isVerified||isDone?C.green:accent}35`,background:`${isVerified||isDone?C.green:accent}08`}} style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1,transition:'background .15s'}),display:'flex',flexDirection:'column',gap:8}}>
+                    <motion.div key={lesson.id} whileHover={state==='locked'?{}:{borderColor:`${planned?C.amber:isVerified||isDone?C.green:accent}35`,background:`${planned?C.amber:isVerified||isDone?C.green:accent}08`}}
+                      style={{...glass2({padding:'12px 16px',opacity:state==='locked'?.4:1,transition:'background .15s',background:planned?`linear-gradient(120deg,${C.amber}14,transparent 70%)`:undefined,border:planned?`1px solid ${C.amber}40`:undefined,boxShadow:planned?`0 0 0 1px ${C.amber}20,0 4px 16px ${C.amber}18`:undefined}),display:'flex',flexDirection:'column',gap:8}}>
+                      {planned&&(
+                        <div style={{...pill(C.amberDim,C.amberL,{fontSize:9.5,fontWeight:800}),display:'inline-flex',alignItems:'center',gap:4,alignSelf:'flex-start'}}>
+                          <Target size={9}/>On your plan today
+                        </div>
+                      )}
                       <div style={{display:'flex',alignItems:'center',gap:12}}>
                         <Dot state={state}/>
                         <div style={{flex:1}}>
-                          <div style={{fontSize:13,fontWeight:(isDone||isVerified)?700:400,color:isVerified?C.green:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
+                          <div style={{fontSize:13,fontWeight:(isDone||isVerified||planned)?700:400,color:planned?C.amberL:isVerified?C.green:isDone?C.green:C.t1,fontFamily:C.FB}}>{lesson.title}</div>
                           <div style={R({gap:6,marginTop:1})}>
                             <span style={{fontSize:11,color:C.t3}}>{lesson.src}</span>
                             {isVerified&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}><ShieldCheck size={9} style={{marginRight:3}}/>Verified{pathway[lesson.id]?.quizScore!=null?` (${pathway[lesson.id].quizScore}%)`:''}</span>}
                             {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — continue when ready</span>}
                           </div>
                         </div>
-                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(`linear-gradient(135deg,${accent},${accent}cc)`,{fontSize:11,boxShadow:`0 2px 8px ${accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{isStudying?'Continue':'Start Lesson'}</motion.button>}
+                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${C.amber},${C.rose})`:`linear-gradient(135deg,${accent},${accent}cc)`,{fontSize:11,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
                         {isVerified&&<button onClick={()=>openLesson(lesson,unit)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
                         {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
                         {state==='locked'&&<Lock size={12} color={C.t4}/>}
@@ -3548,6 +3575,11 @@ export default function App({ account, onAccountChange }) {
     const myCourseCats=new Set((user.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean));
     const filtersActive = qSrch.trim()!==''||qCat!=='All'||qDiff!=='All'||qSort!=='default';
     const clearFilters = ()=>{setQSrch('');setQC('All');setQD('All');setQSort('default');};
+    // Stable-partition today's plan quizzes to the very front, ahead of whatever sort/filter
+    // is active — "the two quizzes my plan asked for" should never be buried in a 342-quiz grid.
+    const onPlan=(q)=>todayPlanTargets.quizIds.has(q.id);
+    const planQuizzesShown=fQuiz.filter(onPlan);
+    const orderedQuiz=planQuizzesShown.length?[...planQuizzesShown,...fQuiz.filter(q=>!onPlan(q))]:fQuiz;
     return(
       <div style={CC({gap:22})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
@@ -3605,16 +3637,36 @@ export default function App({ account, onAccountChange }) {
         </div>
         {/* Medabrain ranked quiz recommendations — full top-6 list */}
         {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick}/>}
+        {/* Today's Plan callout — only the exact quizzes today's plan actually named, so it never
+            competes with the broader "Medabrain Picks" ranking above; this is "do these, today,
+            because your plan said so," not a general recommendation. */}
+        {planQuizzesShown.length>0&&(
+          <div style={{...glass2({padding:14,background:`linear-gradient(120deg,${C.amber}14,transparent 65%)`,border:`1px solid ${C.amber}35`}),display:'flex',alignItems:'center',gap:10}}>
+            <Target size={15} color={C.amberL} style={{flexShrink:0}}/>
+            <div style={{fontSize:12,color:C.t1}}>
+              <strong>{planQuizzesShown.length} quiz{planQuizzesShown.length===1?'':'zes'} on your plan today</strong> — highlighted and moved to the top below.
+            </div>
+          </div>
+        )}
         <div style={R({justifyContent:'space-between'})}>
           <SectionTitle icon={Layers} color={C.greenL} extra={{marginBottom:0}}>{fQuiz.length} {fQuiz.length===1?'Quiz':'Quizzes'}</SectionTitle>
         </div>
         <div style={G(2,14,{},isMobile)}>
-          {fQuiz.map((q,qi)=>{
+          {orderedQuiz.map((q,qi)=>{
             const sc=qScores[q.id];const taken=sc!==undefined;const dc=dColors[q.diff]||C.t2;const scc=taken?scCol(sc):null;const cm=catMeta(q.cat);
+            const planned=onPlan(q);
+            const glowColor=planned?C.amber:cm.color;
             return(
-              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}} whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${cm.color}25`}} style={{...glass({padding:0,overflow:'hidden',background:`linear-gradient(160deg,${cm.color}0d,transparent 55%)`,borderLeft:`3px solid ${cm.color}55`}),transition:'box-shadow .2s'}}>
-                <div style={{height:3,background:`linear-gradient(90deg,${taken?scc:dc},${(taken?scc:dc)}77)`}}/>
+              <motion.div key={q.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:Math.min(qi,10)*.03}}
+                whileHover={{y:-2,boxShadow:`0 12px 40px rgba(0,0,0,0.6),0 0 0 1px ${glowColor}${planned?'55':'25'}`}}
+                style={{...glass({padding:0,overflow:'hidden',background:planned?`linear-gradient(160deg,${C.amber}16,transparent 60%)`:`linear-gradient(160deg,${cm.color}0d,transparent 55%)`,borderLeft:`3px solid ${glowColor}${planned?'':'55'}`,border:planned?`1px solid ${C.amber}45`:undefined,boxShadow:planned?`0 0 0 1px ${C.amber}25,0 8px 28px ${C.amber}18`:undefined}),transition:'box-shadow .2s'}}>
+                <div style={{height:3,background:`linear-gradient(90deg,${planned?C.amber:(taken?scc:dc)},${(planned?C.amber:(taken?scc:dc))}77)`}}/>
                 <div style={{padding:22}}>
+                  {planned&&(
+                    <motion.div initial={{opacity:0,y:-4}} animate={{opacity:1,y:0}} style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontWeight:800,marginBottom:12}),display:'inline-flex',alignItems:'center',gap:5}}>
+                      <Target size={10}/>On your plan today
+                    </motion.div>
+                  )}
                   <div style={R({marginBottom:14,flexWrap:'wrap'})}>
                     <span style={{...pill(`${dc}18`,dc,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:5}}><span style={{width:6,height:6,borderRadius:'50%',background:dc,flexShrink:0}}/>{q.diff}</span>
                     {myCourseCats.has(q.cat)&&<span style={pill(C.greenDim,C.greenL,{fontSize:9})}>Matches your courses</span>}
@@ -3630,6 +3682,10 @@ export default function App({ account, onAccountChange }) {
                         </motion.button>
                         <div style={{fontSize:18,fontWeight:800,color:scc,fontFamily:C.FM,minWidth:52,textAlign:'right'}}>{sc}%</div>
                       </>
+                    ):planned?(
+                      <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(`linear-gradient(135deg,${C.amber},${C.rose})`,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${C.amber}45,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
+                        <Target size={13}/>Do it — today's plan<ChevronRight size={14}/>
+                      </motion.button>
                     ):(
                       <motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(cm.grad,{flex:1,fontSize:12,boxShadow:`0 4px 14px ${cm.color}35,inset 0 1px 0 rgba(255,255,255,0.12)`}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6}} onClick={()=>{setAQ(q);play('click');}}>
                         Start Quiz<ChevronRight size={14}/>
