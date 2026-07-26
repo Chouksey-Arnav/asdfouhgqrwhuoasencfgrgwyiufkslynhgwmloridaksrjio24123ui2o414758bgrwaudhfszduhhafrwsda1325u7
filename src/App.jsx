@@ -21,6 +21,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
+  Highlighter,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -71,6 +72,8 @@ import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 import PortfolioTimeline from './components/PortfolioTimeline';
 import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
+import HighlightableArticle from './components/HighlightableArticle';
+import LessonNotesPanel from './components/LessonNotesPanel';
 import OpportunitiesDatabase from './components/OpportunitiesDatabase';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
@@ -643,7 +646,7 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
 // pathway lesson never bounces the student out of the app. The Quiz step
 // hands off to the app's existing aQuiz/QuizEngine fullscreen gate (reusing
 // openVerifyQuiz/finishQuiz as-is) rather than duplicating quiz logic here.
-function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false}){
+function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false,highlights=[],onAddHighlight,onRemoveHighlight}){
   const content = LESSON_CONTENT[lesson.id];
   const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
   const hasArticle = !!content?.article;
@@ -743,12 +746,8 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
           {step==='article'&&hasArticle&&(
             <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(100vh - 210px)':'calc(100vh - 230px)',overflowY:'auto',paddingRight:4}}>
               <div style={CC({gap:22})}>
-                {content.article.sections.map((sec,i)=>(
-                  <div key={i}>
-                    <h3 style={{fontSize:m?15:17,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{sec.heading}</h3>
-                    <p style={{fontSize:m?13.5:14.5,color:C.t2,lineHeight:1.75,margin:0}}>{sec.body}</p>
-                  </div>
-                ))}
+                {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:6}}><Highlighter size={12}/>Select any passage to highlight it</div>}
+                <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m}/>
                 {content.article.keyTakeaways?.length>0&&(
                   <div style={{...glass2({padding:16,background:`${accent}0a`,border:`1px solid ${accent}25`})}}>
                     <div style={{fontSize:9.5,fontWeight:700,color:accent,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>Key takeaways</div>
@@ -1213,6 +1212,12 @@ export default function App({ account, onAccountChange }) {
   // open/closed state survives a student entering or exiting a lesson, instead of resetting.
   const [prepBrainOpen, setPrepBrainOpen] = useState(false);
   const [prepBrainMessages, setPrepBrainMessages] = useState([]);
+  // ── Lesson notes + highlights — loaded fresh for whichever lesson is active, so switching
+  // lessons never bleeds one lesson's notes/highlights into another's UI, even for an instant.
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [lessonNote, setLessonNote] = useState('');
+  const [lessonHighlights, setLessonHighlightsState] = useState([]);
+  const [reviewMode, setReviewMode] = useState(false); // true while browsing an already-verified lesson via the "Review" button, so it opens on Overview instead of snapping to Complete
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
@@ -2700,7 +2705,48 @@ export default function App({ account, onAccountChange }) {
       toast(pickNudge(scenario,{lesson:lesson.title}),{icon:<BookOpen size={16}/>,duration:2600});
     }
   }
-  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); }
+  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); setNotesOpen(false); setLessonNote(''); setLessonHighlightsState([]); setReviewMode(false); }
+
+  // Re-opens an already-verified lesson so the student can actually browse its article/video
+  // content again, instead of the normal openLesson() behavior which (via the auto-complete
+  // effect below) snaps a verified lesson straight to the Complete screen. Bypasses the
+  // "studying" bookkeeping and nudge toast entirely — this isn't new study progress, just a
+  // read of something already mastered.
+  function reviewLesson(lesson,unit){
+    setReviewMode(true);
+    setActiveLesson({lesson,unit});
+    setArticleRead(true);
+    setVideoWatched(true);
+    setArticleScrollPct(0);
+    setLessonStep('overview');
+  }
+
+  // Loads this lesson's saved note + highlights fresh every time a different lesson opens, so
+  // Meta Brain and the highlighter always reflect the lesson actually on screen.
+  useEffect(()=>{
+    if(!activeLesson){ setLessonNote(''); setLessonHighlightsState([]); return; }
+    let cancelled=false;
+    DB.getLessonNote(activeLesson.lesson.id).then(text=>{ if(!cancelled)setLessonNote(text); }).catch(console.error);
+    DB.getLessonHighlights(activeLesson.lesson.id).then(rows=>{ if(!cancelled)setLessonHighlightsState(rows); }).catch(console.error);
+    return ()=>{ cancelled=true; };
+  },[activeLesson?.lesson?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function saveLessonNoteText(text){
+    setLessonNote(text);
+    if(activeLesson)DB.saveLessonNote(activeLesson.lesson.id,text).catch(console.error);
+  }
+  async function addLessonHighlight({sectionIdx,start,end,color}){
+    if(!activeLesson)return;
+    const content=LESSON_CONTENT[activeLesson.lesson.id];
+    const body=content?.article?.sections?.[sectionIdx]?.body||'';
+    const text=body.slice(start,end);
+    const id=await DB.addLessonHighlight(activeLesson.lesson.id,{sectionIdx,start,end,text,color});
+    setLessonHighlightsState(hs=>[...hs,{id,lessonId:activeLesson.lesson.id,sectionIdx,start,end,text,color,createdAt:Date.now()}]);
+  }
+  function removeLessonHighlight(id){
+    DB.deleteLessonHighlight(id).catch(console.error);
+    setLessonHighlightsState(hs=>hs.filter(h=>h.id!==id));
+  }
 
   // Resume a lesson that was mid-read/mid-video when the page reloaded — same pattern as the
   // flashcard-session resume below, restoring not just which lesson but the exact step, whether
@@ -2738,9 +2784,9 @@ export default function App({ account, onAccountChange }) {
   // aQuiz/QuizEngine fullscreen gate and have control cleanly return to LessonPlayer afterward
   // instead of duplicating quiz-scoring logic inside the player itself.
   useEffect(()=>{
-    if(!activeLesson)return;
+    if(!activeLesson||reviewMode)return;
     if(pathway[activeLesson.lesson.id]?.verified&&lessonStep!=='complete')setLessonStep('complete');
-  },[pathway,activeLesson,lessonStep]);
+  },[pathway,activeLesson,lessonStep,reviewMode]);
   function openVerifyQuiz(lesson,unit){
     const quiz=ALL_QUIZZES.find(q=>lesson.quizIds?.includes(q.id));
     if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
@@ -3608,7 +3654,7 @@ export default function App({ account, onAccountChange }) {
                           </div>
                         </div>
                         {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${C.amber},${C.rose})`:`linear-gradient(135deg,${accent},${accent}cc)`,{fontSize:11,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
-                        {isVerified&&<button onClick={()=>openLesson(lesson,unit)} style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
+                        {isVerified&&<button onClick={()=>reviewLesson(lesson,unit)} title="Re-read this lesson's article and video" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
                         {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
                         {state==='locked'&&<Lock size={12} color={C.t4}/>}
                       </div>
@@ -6325,10 +6371,11 @@ export default function App({ account, onAccountChange }) {
           videoWatched={videoWatched} onVideoWatched={()=>setVideoWatched(true)}
           initialScrollPct={articleScrollPct} onScrollProgress={setArticleScrollPct}
           onClose={closeLesson}
-          onStartQuiz={()=>openVerifyQuiz(lesson,unit)}
+          onStartQuiz={()=>{ setReviewMode(false); openVerifyQuiz(lesson,unit); }}
           onNextLesson={()=>{ if(nextInfo)openLesson(nextInfo.lesson,nextInfo.unit); }}
           hasNextLesson={!!nextInfo}
           accent={curPath?.accent||C.blue} m={isMobile}
+          highlights={lessonHighlights} onAddHighlight={addLessonHighlight} onRemoveHighlight={removeLessonHighlight}
         />
         {/* Fills the right-side gutter of the immersive lesson view with a click-away Prep Meta
             Brain (purpose:'prep'), grounded in this exact lesson's content — see PrepMetaBrain.jsx. */}
@@ -6341,6 +6388,14 @@ export default function App({ account, onAccountChange }) {
           articleSections={lessonContent?.article?.sections||[]}
           keyTakeaways={lessonContent?.article?.keyTakeaways||[]}
           objectives={lesson.objectives||[]}
+          lessonNote={lessonNote}
+        />
+        {/* Left-side notes panel — per-lesson free-text notes, autosaved and fully readable by
+            Meta Brain above (see buildPrepSystemPrompt's lessonNote block). */}
+        <LessonNotesPanel
+          open={notesOpen} onOpenChange={setNotesOpen}
+          lessonTitle={lesson.title} value={lessonNote} onSave={saveLessonNoteText}
+          accent={curPath?.accent||C.blue} isMobile={isMobile}
         />
       </ErrorBoundary>
     );

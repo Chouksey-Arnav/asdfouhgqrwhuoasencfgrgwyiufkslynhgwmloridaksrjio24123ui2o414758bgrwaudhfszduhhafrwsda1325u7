@@ -309,6 +309,41 @@ export const INTERVIEW_TIPS = {
     "Talk about the concrete steps you're taking to figure out if a path fits.",
     "Curiosity is your best asset here — let it show.",
   ],
+  physicianAssistant: [
+    "Show you understand the PA role is its own path, not a fallback from medicine — explain what specifically draws you to team-based, flexible practice.",
+    "Emphasize collaboration over solo leadership — stories where you supported someone else's plan well land strongly here.",
+    "It's fine that this is exploratory; name the concrete steps (shadowing, research) you're taking to test the fit.",
+  ],
+  pharmacy: [
+    "Precision stories land well — a time a small detail mattered shows you understand the stakes of the field.",
+    "Balance the technical (chemistry, accuracy) with the human side — pharmacists talk to patients too.",
+    "Show you've looked past the stereotype of 'just dispensing pills' into counseling and safety.",
+  ],
+  dentistry: [
+    "Hands-on precision stories — art, an instrument, a craft — are especially persuasive for this pathway.",
+    "Pair technical carefulness with warmth; dentistry is both a fine-motor-skill field and a people field.",
+    "Long-term patient relationships are a real draw here — mention it if it's genuinely true for you.",
+  ],
+  biomedResearch: [
+    "Lead with your actual role in a project, not just the topic — specificity about what YOU did matters most.",
+    "Show comfort with failure and iteration; research questions almost always reward 'it didn't work, and then...' stories.",
+    "Curiosity about the 'why' behind a result is more convincing than reciting facts.",
+  ],
+  physicalOccupTherapy: [
+    "Stories about helping someone improve gradually, over weeks not minutes, are the clearest fit signal for this field.",
+    "Show patience and encouragement, especially with someone who wanted to give up.",
+    "It's okay to draw on sports, dance, or coaching experience even outside a clinical setting — the skills transfer.",
+  ],
+  publicHealth: [
+    "Think in terms of groups and systems, not just individuals — 'this helped my whole club/school/neighborhood' beats a one-person story.",
+    "Data and evidence matter here; mention any time you interpreted numbers or research to understand a pattern.",
+    "Show you can hold empathy for a community alongside a systems-level view of a problem.",
+  ],
+  healthAdmin: [
+    "Lead with a leadership or operations story — a budget, a schedule, a process you improved.",
+    "Show you understand healthcare's business side serves patients, not the reverse — tie logistics back to people.",
+    "Decisiveness under incomplete information is a strong signal for this pathway; name a time you had to act without knowing everything.",
+  ],
 };
 
 // Fallback tips for any pathway without a bespoke list.
