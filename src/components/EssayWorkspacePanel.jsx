@@ -21,7 +21,7 @@ function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMedabrain = null }) {
+export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMedabrain = null, onCreated = null }) {
   const [essays, setEssays] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -102,6 +102,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
       setNewTitle('');
       setSelected(essay);
       showMedabrainToast('essay_started', { title: essay.title });
+      onCreated?.();
     } catch (err) { toast.error(err.message); }
   }
 

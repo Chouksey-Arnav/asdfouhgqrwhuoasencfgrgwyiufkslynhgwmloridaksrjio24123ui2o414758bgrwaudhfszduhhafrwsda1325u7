@@ -16,7 +16,7 @@ import { computePlanReadiness } from '../lib/studentProfile';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, resolveAllTaskLinks,
-  applyDailyRollover, AUTO_VERIFIABLE_KINDS,
+  applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES,
 } from '../lib/masterPlanGenerator';
 
 // Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
@@ -72,15 +72,23 @@ function relTime(ts) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals }) {
+export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate }) {
   const plan = user?.masterPlan || null;
   const portfolioData = usePortfolioData();
   const [view, setView] = useState('week'); // 'week' | 'roadmap'
   const [generating, setGenerating] = useState(false);
   const [stageLabel, setStageLabel] = useState(LOADING_STAGES[0].label);
   const [extending, setExtending] = useState(false);
-  const [expandedDay, setExpandedDay] = useState(null);
+  const [expandedDay, setExpandedDay] = useState(initialExpandedDate || null);
   const [expandedPhase, setExpandedPhase] = useState(null);
+
+  // PlansTab can stay mounted across a Home → Plans navigation (tab switch alone doesn't
+  // remount it), so a fresh initialExpandedDate (e.g. "get a head start on tomorrow") needs to
+  // re-apply even when it isn't the very first render.
+  useEffect(() => {
+    if (initialExpandedDate) setExpandedDay(initialExpandedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialExpandedDate]);
 
   // Daily rollover — runs once per calendar day (guarded by plan.lastRolloverDate inside
   // applyDailyRollover itself), independent of the ~7-day chunk-extension cycle below. This is
@@ -583,7 +591,7 @@ function TaskRow({ task, onToggle, onJump }) {
   // all, so there's no self-report path to game — see AUTO_VERIFIABLE_KINDS in
   // masterPlanGenerator.js. Everything else (activities, essays, deadlines, reflection, rest…)
   // has no in-app "this really happened" signal, so it stays an honest, manually-toggled checkbox.
-  const autoVerify = AUTO_VERIFIABLE_KINDS.has(task.resourceKind);
+  const autoVerify = AUTO_VERIFIABLE_KINDS.has(task.resourceKind) || AUTO_VERIFIABLE_TYPES.has(task.type);
   // Label the link with the EXACT resource it opens ("Open: Linear Equations
   // Practice") so the student knows the click lands on the real thing, not a
   // generic tab. Specific resources (quiz/lesson/deck/article) read "Open:",

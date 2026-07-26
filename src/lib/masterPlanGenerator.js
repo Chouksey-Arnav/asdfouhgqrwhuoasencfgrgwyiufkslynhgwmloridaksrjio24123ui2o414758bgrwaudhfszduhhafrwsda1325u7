@@ -914,6 +914,14 @@ export function resourceMatch(kind, id) {
   return (t) => t.resourceKind === kind && ids.includes(t.resourceId);
 }
 
+// Task types with no addressable resourceId (Portfolio actions like logging an
+// activity, adding a college, sending a coach message) but still a real,
+// unambiguous in-app "this happened" signal — matched by task type instead of
+// a specific resource. `interview` is included for consistency even though its
+// call site predates this helper and in-lines the same predicate.
+export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'clinical', 'research', 'recommender', 'coach', 'interview']);
+export function typeMatch(type) { return (t) => t.type === type; }
+
 // Auto-checks off every not-yet-done task across the whole plan (not just
 // today — a student who works ahead should still get credit) that `isMatch`
 // accepts. This is the real accountability mechanism: for auto-verifiable
@@ -948,6 +956,37 @@ export function getWeekTheme(plan, week) { return weeklyThemeForWeek(plan, week)
 export function getUpcomingDays(plan, n = 7) {
   const today = todayStr();
   return (plan?.days || []).filter(d => d.date >= today).slice(0, n);
+}
+export function getPlanDay(plan, dateStr) { return plan?.days?.find(d => d.date === dateStr) || null; }
+export function getNextPlanDay(plan) {
+  const today = todayStr();
+  return (plan?.days || []).filter(d => d.date > today).sort((a, b) => (a.date < b.date ? -1 : 1))[0] || null;
+}
+
+// Plan-specific "on track" streak — distinct from the general study streak in
+// db.js — counting consecutive fully-completed days walking backward from
+// today. Reads both the live `plan.days` window and the compacted
+// `progressLog` (pruneRollingWindow archives older days into
+// {date, tasksTotal, tasksDone} entries there) so the streak survives the
+// rolling window pruning older days out of full detail. Today doesn't have to
+// be finished yet to keep the streak alive — only a fully-elapsed day with
+// unfinished tasks breaks it.
+export function getPlanStreak(plan) {
+  if (!plan) return 0;
+  const byDate = new Map();
+  for (const d of (plan.days || [])) byDate.set(d.date, { total: d.tasks.length, done: d.tasks.filter(t => t.done).length });
+  for (const l of (plan.progressLog || [])) if (!byDate.has(l.date)) byDate.set(l.date, { total: l.tasksTotal, done: l.tasksDone });
+  let streak = 0;
+  let date = todayStr();
+  const todayEntry = byDate.get(date);
+  if (todayEntry && todayEntry.total > 0 && todayEntry.done === todayEntry.total) streak++;
+  date = addDaysStr(date, -1);
+  while (byDate.has(date)) {
+    const e = byDate.get(date);
+    if (e.total > 0 && e.done === e.total) { streak++; date = addDaysStr(date, -1); }
+    else break;
+  }
+  return streak;
 }
 
 // Compact summary folded into buildCoachSystemPrompt so Scout/Guide/Sage all

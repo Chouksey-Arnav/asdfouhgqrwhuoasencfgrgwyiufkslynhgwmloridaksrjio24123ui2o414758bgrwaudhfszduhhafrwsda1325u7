@@ -29,7 +29,7 @@ function emptyAward() {
   return { title: '', grade_level: '', level: '', issuing_organization: '', category: '', certificate_url: '' };
 }
 
-export default function ActivitiesResumePanel({ accent = C.blue, onResumeExported }) {
+export default function ActivitiesResumePanel({ accent = C.blue, onResumeExported, onActivityLogged }) {
   const [activities, setActivities] = useState([]);
   const [awards, setAwards] = useState([]);
   const [gpaEntries, setGpaEntries] = useState([]);
@@ -65,6 +65,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
       setActivities(prev => [...prev, row]);
       setDraft(emptyActivity());
       showMedabrainToast('activity_added', { position: row.position });
+      onActivityLogged?.();
     } catch (err) { toast.error(err.message); }
   }
 
