@@ -82,6 +82,12 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
           Go to Plan<ArrowRight size={12} />
         </button>
       </div>
+      {planStreak > 1 && (
+        <div style={{ fontSize: 11.5, color: C.t2, marginLeft: isMobile ? 0 : 48, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Flame size={12} color={C.amberL} style={{ flexShrink: 0 }} />
+          <span>You're on a {planStreak}-day streak — finish today's {remaining} remaining task{remaining === 1 ? '' : 's'} to keep it.</span>
+        </div>
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: isMobile ? 0 : 48 }}>
         {nextTasks.map(t => {
           const specific = t.resourceKind && t.resourceKind !== 'view' && t.resourceLabel;

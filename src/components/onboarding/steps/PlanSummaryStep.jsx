@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, BookOpenCheck, Target, Sparkles, Flag, CheckCircle2, Rocket, CalendarRange, TrendingUp, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Clock, BookOpenCheck, Target, Sparkles, Flag, CheckCircle2, Rocket, CalendarRange, TrendingUp, ShieldCheck, AlertTriangle, Unlock } from 'lucide-react';
 import { StepHeader, ContinueButton, RadialRing, C, glass } from '../primitives';
 import { heuristicPlan } from '../../../lib/planGenerator';
 
@@ -107,6 +107,23 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
               {p.weeklyRhythm.map((a, i) => (
                 <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.cyan, flexShrink: 0, boxShadow: `0 0 6px ${C.cyan}` }} />
+                  <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
+                </div>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        {/* Unlock the full day-by-day plan */}
+        {p.unlockSteps?.length > 0 && (
+          <Section icon={<Unlock size={13} color={C.amberL} />} title="Unlock your full day-by-day plan">
+            <div style={{ ...glass({ padding: '12px 14px' }), backdropFilter: 'none', borderColor: `${C.amber}30`, background: `linear-gradient(135deg, ${C.amber}12, transparent)` }}>
+              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginBottom: 8 }}>
+                This is your day-one plan. Do these three things inside the app and Medabrain's Oracle builds your full day-by-day roadmap — grounded in real signal, not just what you told us here:
+              </div>
+              {p.unlockSteps.map((a, i) => (
+                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 6, background: `${C.amber}22`, color: C.amberL, fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
                 </div>
               ))}

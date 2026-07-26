@@ -78,6 +78,15 @@ export function heuristicPlan(profile) {
     encouragement: roleLabel
       ? `Every ${roleLabel.toLowerCase().replace(/ \/.*$/, '')} started exactly where you are — a student with a goal and a plan. Small, steady days compound. We've got you.`
       : `You're starting earlier than most — that's a real advantage. Small, steady days compound. We've got you.`,
+    // Deterministic, never AI-generated — these are the exact three activity gates
+    // computePlanReadiness() (studentProfile.js) checks before unlocking the full
+    // day-by-day plan in the Plans tab, so this starter plan always points at the
+    // real unlock criteria instead of vague "keep using the app" language.
+    unlockSteps: [
+      'Take the Pathway Diagnostic',
+      'Try one practice quiz',
+      'Add one item to your Portfolio',
+    ],
     source: 'fallback',
   };
 }
@@ -117,6 +126,12 @@ Rules:
 - Respect their planned test timing: a test within 3 months means front-loading highest-impact prep; an unscheduled test means the plan should include choosing a date.
 - Keep the study load consistent with the pace they chose (≈${dailyMinutes} min/day, ${weeklyQuestions} questions/week).
 - Reference their ACTUAL goal, grade, and obstacle in the copy so it feels personal, not templated.
+
+Confidence & calibration — this matters as much as tone:
+- Every fact below is SELF-REPORTED at signup, before this student has done a single quiz, lesson, or diagnostic inside the app. Treat that as a floor of confidence, not a ceiling: this is a first-draft, day-one plan, not a data-rich verdict on their level.
+- Only state something as settled fact if it is directly grounded in a field below. Never invent a specific weakness, strength, or score trajectory that isn't implied by an actual answer — when a field says "not shared" or "unsure," acknowledge the gap honestly (e.g. "once you've tried a few questions we'll know exactly where to focus") rather than papering over it with generic confidence.
+- Calibrate certainty language to how much they told you: a student who filled in every field (clear goal, specific target score, named obstacle) earns more specific, assertive language ("your plan targets X"); a student with several "not shared" answers earns more provisional, inviting language ("let's find out together") — the plan should never sound more certain about this student than the data supports.
+- This starter plan is intentionally NOT the full day-by-day roadmap — that only unlocks once the student has given the app real signal beyond onboarding answers (taking the Pathway Diagnostic, trying one quiz, logging one Portfolio item). Frame this plan as the confident first step that leads there, not as the finished product — but don't undersell it either; it should stand on its own as genuinely useful today.
 
 Respond with ONLY a valid JSON object (no markdown, no code fences, no prose before or after) matching exactly this schema:
 {
@@ -207,6 +222,10 @@ function repairPlan(parsed, fallback) {
     watchOut: coerceStrList(p.watchOut, 2, fallback.watchOut, 3),
     ninetyDayGoal: str(p.ninetyDayGoal) || fallback.ninetyDayGoal,
     encouragement: str(p.encouragement) || fallback.encouragement,
+    // Never sourced from the model — always the same three real unlock gates (see
+    // heuristicPlan above), so onboarding and any later regeneration stay in sync
+    // with computePlanReadiness() no matter what the AI did or didn't return.
+    unlockSteps: fallback.unlockSteps,
     source: 'ai',
     generatedAt: Date.now(),
   };

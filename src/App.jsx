@@ -1827,7 +1827,19 @@ export default function App({ account, onAccountChange }) {
     const {plan:updatedPlan,completed}=autoCompleteResourceTasks(plan,isMatch);
     if(!completed.length)return baseUser;
     const {finalXP,tier}=awardXP(6*completed.length);
-    toast.success(`${completed.length>1?`${completed.length} plan tasks`:`"${completed[0].title}"`} auto-verified on your plan · ${BONUS_COPY[tier](finalXP)}`,{icon:<ShieldCheck size={16}/>,duration:2800});
+    // Contextual "staying on track" nudge — fires the moment a Plan-linked quiz/lesson/deck is
+    // actually completed (not just when the whole day wraps up), so the reinforcement lands right
+    // where the student is working, not only back on Home. Wording and the live plan streak vary
+    // by what just got checked off, so it reads as "I noticed exactly what you did" rather than a
+    // generic completion toast.
+    const liveStreak=getPlanStreak(updatedPlan);
+    const streakBit=liveStreak>1?` ${liveStreak}-day streak — keep it up!`:'';
+    const single=completed.length===1?completed[0]:null;
+    const isQuiz=single&&(single.type==='quiz'||single.resourceKind==='quiz');
+    const nudgeHeadline=single
+      ? (isQuiz?`Great! You're staying on track.${streakBit||' Keep it up.'}`:`✓ Daily task complete: ${single.title}`)
+      : `${completed.length} plan tasks auto-verified on your plan.${streakBit}`;
+    toast.success(`${nudgeHeadline} · ${BONUS_COPY[tier](finalXP)}`,{icon:<ShieldCheck size={16}/>,duration:3200});
     if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(tier==='big'||tier==='bonus')celebrateBonusXP();
     else celebrateXP();
@@ -3082,7 +3094,7 @@ export default function App({ account, onAccountChange }) {
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
-        {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent}/>}
+        {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent} onGoUnlock={()=>goPlans()}/>}
 
         {/* Continue where you left off */}
         {(nextLesson||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
@@ -3113,7 +3125,11 @@ export default function App({ account, onAccountChange }) {
         </div>}
 
         {/* Medabrain ranked quiz recommendations — top 3 on the dashboard */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes.slice(0,3)} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} compact/>}
+        {/* Plan-named picks pulled to the front before slicing to 3, so a plan quiz ranked #5
+            overall still makes it into this compact Home card instead of being cut off. */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel
+          ranked={[...rankedQuizzes.filter(p=>todayPlanTargets.quizIds.has(p.quiz.id)),...rankedQuizzes.filter(p=>!todayPlanTargets.quizIds.has(p.quiz.id))].slice(0,3)}
+          onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds} compact/>}
 
         {/* Deadline countdown */}
         {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
@@ -3641,7 +3657,7 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
         {/* Medabrain ranked quiz recommendations — full top-6 list */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick}/>}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}/>}
         {/* Today's Plan callout — only the exact quizzes today's plan actually named, so it never
             competes with the broader "Medabrain Picks" ranking above; this is "do these, today,
             because your plan said so," not a general recommendation. */}
@@ -6403,7 +6419,7 @@ export default function App({ account, onAccountChange }) {
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
     };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken}/>;
   }
   const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
@@ -6433,6 +6449,7 @@ export default function App({ account, onAccountChange }) {
             </div>
             <div style={R({gap:10})}>
               <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
+              {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Flame size={10}/>{streak}d</span>}
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
