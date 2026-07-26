@@ -76,7 +76,11 @@ import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
-import { summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak } from './lib/masterPlanGenerator';
+import PlanTaskStrip from './components/ui/PlanTaskStrip';
+import {
+  summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
+  toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
+} from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import AppTour from './components/AppTour';
@@ -3073,7 +3077,7 @@ export default function App({ account, onAccountChange }) {
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
             away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -6260,6 +6264,11 @@ export default function App({ account, onAccountChange }) {
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
           <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
+          {user.masterPlan&&(
+            <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
+              <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
+            </div>
+          )}
           {(prepRenders[prepView]||tPath)()}
         </div>
         {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
@@ -6305,6 +6314,11 @@ export default function App({ account, onAccountChange }) {
     return(
       <div>
         <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
+        {user.masterPlan&&(
+          <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
+            <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
+          </div>
+        )}
         {(portfolioRenders[portfolioView]||tPort)()}
         <PortfolioMedabrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
@@ -6322,6 +6336,26 @@ export default function App({ account, onAccountChange }) {
   // A quiz task launches that quiz fullscreen, a lesson task opens the lesson
   // player (unless still locked), a deck task drops straight into that deck's
   // study session, an article task lands on the E-Library pre-searched to it.
+  // Manual complete/snooze for plan tasks surfaced OUTSIDE the Plans tab itself
+  // (TodayPlanNudge on Home) — same save-through-user pattern PlansTab's own
+  // handleToggleTask uses, just placed here since TodayPlanNudge is mounted
+  // directly by App.jsx rather than by PlansTab.
+  function handlePlanToggleTask(date,taskId){
+    if(!user?.masterPlan)return;
+    const {plan:updated,justEarnedXP}=togglePlanTaskDone(user.masterPlan,date,taskId);
+    if(!justEarnedXP){saveUser({...user,masterPlan:updated});return;}
+    const {finalXP,tier}=awardXP(6);
+    saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
+    toast.success(BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`,{duration:1800});
+    if(tier==='jackpot')celebrateJackpot();else if(tier==='big'||tier==='bonus')celebrateBonusXP();else celebrateXP();
+  }
+  function handlePlanSnoozeTask(date,taskId){
+    if(!user?.masterPlan)return;
+    const updated=moveTaskToDay(user.masterPlan,taskId,date,planAddDaysStr(planTodayStr(),1));
+    if(updated===user.masterPlan)return;
+    saveUser({...user,masterPlan:updated});
+    toast('Moved to tomorrow.',{icon:'☀️'});
+  }
   function openPlanResource(task){
     const {resourceTab:tab,resourceView:view,resourceKind:kind,resourceId:id}=task||{};
     if(!tab||!view)return;

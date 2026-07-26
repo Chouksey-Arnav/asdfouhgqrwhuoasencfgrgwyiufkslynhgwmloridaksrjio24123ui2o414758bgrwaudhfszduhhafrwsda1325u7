@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Sparkles, Target, Flag, TrendingUp, ChevronDown, CheckCircle2, Circle, RefreshCw,
   CalendarClock, Map, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
   MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
-  FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2,
+  FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2, GripVertical, Sunrise, CalendarPlus,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, R, CC, G, pill } from '../lib/theme';
 import { awardXP, BONUS_COPY } from '../lib/rewards';
@@ -15,8 +15,8 @@ import { listItems } from '../lib/dataApi';
 import { computePlanReadiness } from '../lib/studentProfile';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
-  needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, resolveAllTaskLinks,
-  applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES,
+  needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, addDaysStr, resolveAllTaskLinks,
+  applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES, moveTaskToDay, reorderTasksInDay,
 } from '../lib/masterPlanGenerator';
 
 // Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
@@ -183,6 +183,26 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     else celebrateXP();
   }
 
+  // Manual rescheduling — the single mutation behind drag-and-drop, the "Move" day
+  // picker, and one-click snooze, all following the same save-through-user pattern
+  // as handleToggleTask above.
+  function handleMoveTask(taskId, fromDate, toDate) {
+    if (!taskId || !fromDate || !toDate || fromDate === toDate) return;
+    const updated = moveTaskToDay(plan, taskId, fromDate, toDate);
+    if (updated === plan) return;
+    saveUser({ ...user, masterPlan: updated });
+    toast(toDate === todayStr() ? 'Moved to today.' : toDate === addDaysStr(todayStr(), 1) ? 'Moved to tomorrow.' : `Moved to ${fmtDateLabel(toDate)}.`, { icon: '↪' });
+  }
+
+  function handleReorderTasks(date, orderedTaskIds) {
+    const updated = reorderTasksInDay(plan, date, orderedTaskIds);
+    if (updated !== plan) saveUser({ ...user, masterPlan: updated });
+  }
+
+  function handleSnoozeTask(date, taskId) {
+    handleMoveTask(taskId, date, addDaysStr(todayStr(), 1));
+  }
+
   // Prefer the app-provided deep-link opener (launches the exact quiz/lesson/
   // deck/article the task names); plain tab navigation is the fallback.
   function jumpTo(task) {
@@ -230,6 +250,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
         <WeekView
           plan={plan} upcoming={upcoming} accent={accent} isMobile={isMobile} expandedDay={expandedDay} setExpandedDay={setExpandedDay}
           onToggleTask={handleToggleTask} jumpTo={jumpTo} extending={extending}
+          onMoveTask={handleMoveTask} onReorderTasks={handleReorderTasks} onSnoozeTask={handleSnoozeTask}
         />
       ) : (
         <RoadmapView plan={plan} accent={accent} isMobile={isMobile} expandedPhase={expandedPhase} setExpandedPhase={setExpandedPhase} />
@@ -445,10 +466,64 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, acce
 }
 
 // ── This Week / rolling day-by-day view ──────────────────────────────────
-function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending }) {
+// Rescheduling has two parallel input paths so it works for every input method:
+// physical drag (mouse/trackpad — framer-motion `drag`, hit-tested against each
+// day column's registered bounding rect on every drag frame) and the "Move"
+// button's day-picker (keyboard/touch/screen-reader friendly, works regardless
+// of which days are currently expanded). Both funnel into the same
+// onMoveTask/onReorderTasks props, which is the only thing that actually
+// mutates the plan.
+function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending, onMoveTask, onReorderTasks, onSnoozeTask }) {
   const today = todayStr();
   const todayEntry = upcoming.find(d => d.date === today) || null;
   const restOfWeek = upcoming.filter(d => d.date !== today);
+
+  const dayElRef = useRef(new Map());
+  const taskElRef = useRef(new Map());
+  const [drag, setDrag] = useState(null); // { taskId, fromDate }
+  const [hoverDate, setHoverDate] = useState(null);
+  const [moveFor, setMoveFor] = useState(null); // { taskId, fromDate, taskTitle }
+
+  const registerDayEl = (date, el) => { if (el) dayElRef.current.set(date, el); else dayElRef.current.delete(date); };
+  const registerTaskEl = (taskId, el) => { if (el) taskElRef.current.set(taskId, el); else taskElRef.current.delete(taskId); };
+
+  function handleDragStart(taskId, fromDate) { setDrag({ taskId, fromDate }); }
+  function handleDragMove(point) {
+    let hit = null;
+    for (const [date, el] of dayElRef.current) {
+      const r = el.getBoundingClientRect();
+      const top = r.top + window.scrollY, bottom = r.bottom + window.scrollY, left = r.left + window.scrollX, right = r.right + window.scrollX;
+      if (point.x >= left && point.x <= right && point.y >= top && point.y <= bottom) { hit = date; break; }
+    }
+    setHoverDate(prev => (prev === hit ? prev : hit));
+  }
+  function handleDragEnd() {
+    if (drag && hoverDate) {
+      if (hoverDate === drag.fromDate) {
+        const dayTasks = (plan.days.find(d => d.date === drag.fromDate)?.tasks) || [];
+        const order = [...dayTasks]
+          .sort((a, b) => {
+            const ea = taskElRef.current.get(a.id), eb = taskElRef.current.get(b.id);
+            if (!ea || !eb) return 0;
+            return ea.getBoundingClientRect().top - eb.getBoundingClientRect().top;
+          })
+          .map(t => t.id);
+        onReorderTasks(drag.fromDate, order);
+      } else {
+        onMoveTask(drag.taskId, drag.fromDate, hoverDate);
+      }
+    }
+    setDrag(null); setHoverDate(null);
+  }
+
+  function openMoveMenu(taskId, fromDate, taskTitle) { setMoveFor({ taskId, fromDate, taskTitle }); }
+  function pickMoveDate(toDate) {
+    if (moveFor) onMoveTask(moveFor.taskId, moveFor.fromDate, toDate);
+    setMoveFor(null);
+  }
+
+  const dragCtx = { drag, hoverDate, registerDayEl, registerTaskEl, onDragStart: handleDragStart, onDragMove: handleDragMove, onDragEnd: handleDragEnd, onSnooze: onSnoozeTask, onMoveClick: openMoveMenu };
+
   return (
     <div style={CC({ gap: 14 })}>
       <div style={G(3, 12, {}, isMobile)}>
@@ -463,24 +538,110 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
         </div>
       )}
 
-      {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} />}
+      {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx} />}
 
       {restOfWeek.length > 0 && (
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Coming up</div>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Coming up — drag a task onto a day to reschedule it</div>
       )}
       {restOfWeek.map(day => (
         <DayCard
           key={day.date} day={day} isToday={false} accent={accent}
           expanded={expandedDay === day.date}
           onToggleExpand={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
-          onToggleTask={onToggleTask} jumpTo={jumpTo}
+          onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx}
         />
       ))}
 
       <div style={{ fontSize: 11, color: C.t3, textAlign: 'center', padding: '4px 0' }}>
         {extending ? <span style={R({ gap: 6, justifyContent: 'center' })}><RefreshCw size={11} className="spin" />Extending your plan for the days ahead…</span> : `Planned day-by-day through ${fmtDateLabel(plan.daysGeneratedThrough)} — it keeps rolling forward automatically.`}
       </div>
+
+      <MoveDayPicker moveFor={moveFor} upcoming={upcoming} accent={accent} onPick={pickMoveDate} onClose={() => setMoveFor(null)} />
     </div>
+  );
+}
+
+// ── "Move" day picker — the accessible, always-available alternative to
+// physical dragging. Chips for Today/Tomorrow plus every other visible day in
+// the rolling window, so a keyboard or touch user can reschedule a task in one
+// tap without needing to drag anything.
+function MoveDayPicker({ moveFor, upcoming, accent, onPick, onClose }) {
+  const today = todayStr();
+  const tomorrow = addDaysStr(today, 1);
+  return (
+    <AnimatePresence>
+      {moveFor && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, backdropFilter: 'blur(6px)' }}
+          onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+          <motion.div initial={{ opacity: 0, y: 12, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            style={{ ...glass({ padding: 18, maxWidth: 380, width: '100%' }), border: `1px solid ${accent}35` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 12 })}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 3 }}>Move task</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{moveFor.taskTitle}</div>
+              </div>
+              <button onClick={onClose} style={{ all: 'unset', cursor: 'pointer', display: 'flex', color: C.t3 }} aria-label="Close"><X size={16} /></button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+              {upcoming.map(day => {
+                const isFrom = day.date === moveFor.fromDate;
+                const label = day.date === today ? 'Today' : day.date === tomorrow ? 'Tomorrow' : fmtDateLabel(day.date);
+                return (
+                  <button key={day.date} disabled={isFrom} onClick={() => onPick(day.date)}
+                    style={{
+                      ...pill(isFrom ? 'rgba(255,255,255,0.02)' : `${accent}16`, isFrom ? C.t4 : accent, { fontSize: 11.5, fontWeight: 700 }),
+                      border: `1px solid ${isFrom ? C.b1 : `${accent}40`}`, cursor: isFrom ? 'default' : 'pointer', opacity: isFrom ? 0.5 : 1,
+                    }}>
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// A task card, made draggable via a dedicated grip handle (drag listener is off
+// by default and started manually from the handle's pointerdown — the standard
+// framer-motion "handle-only drag" pattern — so the rest of the row, including
+// its own buttons, stays perfectly clickable). Registers itself into the parent
+// WeekView's task-position map (used to compute a same-day drop order) and
+// reports live pointer position while dragging so WeekView can hit-test it
+// against every day column's bounding rect.
+function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx }) {
+  const controls = useDragControls();
+  const isDragging = dragCtx.drag?.taskId === task.id;
+  return (
+    <motion.div
+      layout="position"
+      drag
+      dragListener={false}
+      dragControls={controls}
+      dragMomentum={false}
+      dragElastic={0.05}
+      onDragStart={() => dragCtx.onDragStart(task.id, date)}
+      onDrag={(_e, info) => dragCtx.onDragMove(info.point)}
+      onDragEnd={dragCtx.onDragEnd}
+      whileDrag={{ scale: 1.025, zIndex: 60, boxShadow: '0 16px 40px rgba(0,0,0,0.55)' }}
+      animate={{ opacity: isDragging ? 0.9 : 1 }}
+      style={{ position: 'relative', touchAction: 'none' }}
+      ref={el => dragCtx.registerTaskEl(task.id, el)}
+    >
+      <TaskRow
+        task={task} onToggle={onToggle} onJump={onJump}
+        onSnooze={() => dragCtx.onSnooze(date, task.id)}
+        onMoveClick={() => dragCtx.onMoveClick(task.id, date, task.title)}
+        dragHandle={
+          <span onPointerDown={e => controls.start(e)} style={{ cursor: 'grab', touchAction: 'none', display: 'flex', flexShrink: 0, marginTop: 2, color: C.t4 }} aria-hidden="true">
+            <GripVertical size={14} />
+          </span>
+        }
+      />
+    </motion.div>
   );
 }
 
@@ -488,12 +649,18 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
 // prominent, always-expanded treatment so "what do I do right now" never
 // requires a click. A conic-gradient ring gives an at-a-glance sense of
 // completion without pulling in a charting dependency.
-function TodayHero({ day, accent, onToggleTask, jumpTo }) {
+function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx }) {
   const total = day.tasks.length;
   const done = day.tasks.filter(t => t.done).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
+  const isDropTarget = dragCtx?.drag && dragCtx.hoverDate === day.date && dragCtx.drag.fromDate !== day.date;
   return (
-    <div style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${accent}55`, background: `linear-gradient(135deg,${accent}14,transparent 60%)` }}>
+    <div ref={el => dragCtx?.registerDayEl(day.date, el)} style={{
+      ...glass({ padding: 0, overflow: 'hidden' }),
+      border: isDropTarget ? `1.5px dashed ${accent}` : `1px solid ${accent}55`,
+      background: isDropTarget ? `linear-gradient(135deg,${accent}22,transparent 60%)` : `linear-gradient(135deg,${accent}14,transparent 60%)`,
+      transition: 'background .15s, border-color .15s',
+    }}>
       <div style={{ padding: '18px 20px 6px', display: 'flex', gap: 16, alignItems: 'center' }}>
         <div style={{
           width: 54, height: 54, borderRadius: '50%', flexShrink: 0,
@@ -512,7 +679,9 @@ function TodayHero({ day, accent, onToggleTask, jumpTo }) {
       </div>
       <div style={{ padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {day.tasks.map(t => (
-          <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
+          dragCtx
+            ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} />
+            : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
         ))}
         {day.reflectionPrompt && (
           <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>
@@ -537,14 +706,19 @@ function PillarCard({ icon: Icon, title, text, color }) {
   );
 }
 
-function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask, jumpTo }) {
+function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask, jumpTo, dragCtx }) {
   const doneCount = day.tasks.filter(t => t.done).length;
   const total = day.tasks.length;
+  // Registered as a drop target even while collapsed — dropping a dragged task
+  // onto a collapsed day's header still works, it just doesn't require
+  // expanding the day first.
+  const isDropTarget = dragCtx?.drag && dragCtx.hoverDate === day.date && dragCtx.drag.fromDate !== day.date;
   return (
-    <div style={{
+    <div ref={el => dragCtx?.registerDayEl(day.date, el)} style={{
       ...glass({ padding: 0, overflow: 'hidden' }),
-      border: isToday ? `1px solid ${accent}55` : `1px solid ${C.b1}`,
-      background: isToday ? `linear-gradient(135deg,${accent}10,transparent 60%)` : undefined,
+      border: isDropTarget ? `1.5px dashed ${accent}` : isToday ? `1px solid ${accent}55` : `1px solid ${C.b1}`,
+      background: isDropTarget ? `linear-gradient(135deg,${accent}20,transparent 60%)` : isToday ? `linear-gradient(135deg,${accent}10,transparent 60%)` : undefined,
+      transition: 'background .15s, border-color .15s',
     }}>
       <button onClick={onToggleExpand} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '14px 18px' }}>
         <div style={R({ justifyContent: 'space-between', gap: 10 })}>
@@ -556,6 +730,7 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
             </div>
           </div>
           <div style={R({ gap: 10 })}>
+            {isDropTarget && <span style={{ fontSize: 10.5, color: accent, fontWeight: 700 }}>Drop here</span>}
             <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{doneCount}/{total}</span>
             <motion.div animate={{ rotate: expanded ? 180 : 0 }} style={{ display: 'flex', color: C.t3 }}><ChevronDown size={16} /></motion.div>
           </div>
@@ -566,7 +741,9 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
             <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {day.tasks.map(t => (
-                <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
+                dragCtx
+                  ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} />
+                  : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
               ))}
               {day.reflectionPrompt && (
                 <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>
@@ -581,10 +758,11 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
   );
 }
 
-function TaskRow({ task, onToggle, onJump }) {
+function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle }) {
   const meta = PILLAR_META[task.pillar] || PILLAR_META.prep;
   const Icon = TYPE_ICON[task.type] || BookOpen;
   const canJump = task.resourceTab && task.resourceView;
+  const canReschedule = !task.done && (onSnooze || onMoveClick);
   // Accountability: quiz/lesson/deck tasks can only ever be checked off by actually doing them —
   // App.jsx's applyPlanAutoComplete flips `done` (and `autoVerified`) the moment the real quiz is
   // submitted, lesson verified, or deck session finished. No checkbox is rendered for these at
@@ -602,6 +780,7 @@ function TaskRow({ task, onToggle, onJump }) {
     : (task.resourceLabel ? `Go to ${task.resourceLabel}` : 'Open');
   return (
     <div style={{ ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }), opacity: task.done ? 0.55 : 1, borderLeft: `2px solid ${meta.color}45` }}>
+      {dragHandle}
       {autoVerify ? (
         <span title={task.done ? 'Verified automatically — you actually did this' : 'Checks off automatically when you complete it — no self-report'}
           style={{ marginTop: 1, flexShrink: 0, display: 'flex', cursor: 'default' }} aria-label={task.done ? 'Verified' : 'Verifies automatically'}>
@@ -629,6 +808,18 @@ function TaskRow({ task, onToggle, onJump }) {
             ? <span style={pill(C.greenDim || `${C.green}18`, C.green, { fontSize: 9 })}><ShieldCheck size={9} style={{ marginRight: 3, verticalAlign: -1 }} />Verified</span>
             : <span style={pill('rgba(255,255,255,0.04)', C.t4, { fontSize: 9 })}>Auto-verifies</span>)}
           {task.estMinutes > 0 && <span style={R({ gap: 3 })}><Clock size={10} color={C.t3} /><span style={{ fontSize: 10, color: C.t3 }}>{task.estMinutes}m</span></span>}
+          {canReschedule && onSnooze && (
+            <button onClick={onSnooze} title="Snooze to tomorrow" aria-label="Snooze this task to tomorrow"
+              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
+              <Sunrise size={10} />Snooze
+            </button>
+          )}
+          {canReschedule && onMoveClick && (
+            <button onClick={onMoveClick} title="Move to another day" aria-label="Move this task to another day"
+              style={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, padding: '3px 8px', borderRadius: 999, border: `1px solid ${C.b1}`, color: C.t3, fontSize: 10 }}>
+              <CalendarPlus size={10} />Move
+            </button>
+          )}
           {canJump && (
             <motion.button whileHover={{ scale: 1.03, y: -1 }} whileTap={{ scale: 0.97 }} onClick={onJump} aria-label="Open this task's resource"
               style={{
