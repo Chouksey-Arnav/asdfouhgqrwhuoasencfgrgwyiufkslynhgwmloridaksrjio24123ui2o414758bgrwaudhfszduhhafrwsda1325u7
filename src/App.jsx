@@ -2086,14 +2086,15 @@ export default function App({ account, onAccountChange }) {
   // Only *undone* tasks count — once a task is done it stops competing for attention.
   const todayPlanTargets = useMemo(()=>{
     const entry = getTodayPlanEntry(user?.masterPlan);
-    const quizIds = new Set(), lessonIds = new Set(), deckNames = new Set();
+    const quizIds = new Set(), lessonIds = new Set(), deckNames = new Set(), articleTitles = new Set();
     (entry?.tasks||[]).forEach(t=>{
       if(t.done||!t.resourceId)return;
       if(t.resourceKind==='quiz')quizIds.add(t.resourceId);
       else if(t.resourceKind==='lesson')lessonIds.add(t.resourceId);
       else if(t.resourceKind==='deck')deckNames.add(t.resourceId);
+      else if(t.resourceKind==='article')articleTitles.add(t.resourceId);
     });
-    return {quizIds,lessonIds,deckNames,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0};
+    return {quizIds,lessonIds,deckNames,articleTitles,hasAny:quizIds.size>0||lessonIds.size>0||deckNames.size>0||articleTitles.size>0};
   },[user?.masterPlan]);
 
   // Medabrain Quiz Recommendations — ranked #1..#N picks driven by real performance
@@ -4298,9 +4299,10 @@ export default function App({ account, onAccountChange }) {
             const deckRet=(()=>{const rets=deck.cards.map(c=>getRetainability(c)).filter(r=>r!==null);return rets.length?Math.round(rets.reduce((s,r)=>s+r,0)/rets.length):null;})();
             const isNewest=!deck.builtin&&deck.name===newestDeckName;
             const info=getDeckCategory(deck.name,deck.builtin);const dm=deckCatMeta(info.category);
+            const onPlan=todayPlanTargets.deckNames.has(deck.name);
             return(
               <motion.div key={deck.name} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{duration:.22,delay:Math.min(i,10)*0.025}}
-                whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
+                whileHover={{y:-2,borderColor:`${dm.color}40`,boxShadow:`0 8px 32px rgba(0,0,0,0.5),0 0 0 1px ${dm.color}25`}} style={{...glass({padding:20,cursor:'pointer',transition:'border-color .2s',position:'relative',borderLeft:`3px solid ${onPlan?C.violet:dm.color}55`}),background:`linear-gradient(120deg,${dm.color}0a,transparent 45%)`}}>
                 <div onClick={()=>{setAD(deck);setCIdx(0);setFlip(false);setStudyMode(dc>0?'due':'all');setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
                   <div style={R({gap:8,marginBottom:12})}>
                     <div style={{width:36,height:36,borderRadius:10,background:`${dm.color}16`,border:`1px solid ${dm.color}30`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Layers3 size={17} color={dm.light}/></div>
@@ -4310,6 +4312,7 @@ export default function App({ account, onAccountChange }) {
                   <div style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{deck.cards.length} cards{deckRet!==null?` · ${deckRet}% retention`:''}</div>
                   {deckRet!==null&&<div style={{marginTop:8}}><Bar pct={deckRet} color={deckRet>=80?C.green:deckRet>=50?C.amber:C.rose} h={3}/></div>}
                   <div style={R({gap:6,marginTop:8,flexWrap:'wrap'})}>
+                    {onPlan&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10,fontWeight:700})}}><CalendarClock size={9} style={{marginRight:3,verticalAlign:-1}}/>Today's plan</div>}
                     {isNewest&&<div style={{...pill(C.greenDim,C.greenL,{fontSize:10,fontWeight:700})}}>New</div>}
                     {dc>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:10,fontFamily:C.FM,fontWeight:700})}}>{dc} due now</div>}
                     {!deck.builtin&&<div style={{...pill(C.violetDim,C.violetL,{fontSize:10})}}>My deck</div>}
@@ -4703,6 +4706,7 @@ export default function App({ account, onAccountChange }) {
                 <div style={{padding:'14px 18px'}}>
                   <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 5})}>
                     <div style={{fontSize:13,fontWeight:700,color:C.t1,lineHeight:1.4,fontFamily:C.FD}}>{r.title}</div>
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
                     {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
                   <div style={{fontSize:11,color:C.t3,lineHeight:1.55,marginBottom:12}}>{r.desc}</div>
@@ -4831,6 +4835,7 @@ export default function App({ account, onAccountChange }) {
                   </div>
                   <div style={R({gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 6})}>
                     <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{r.title}</div>
+                    {todayPlanTargets.articleTitles.has(r.title) && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, fontWeight:700, display: 'inline-flex', alignItems: 'center', gap: 3})}><CalendarClock size={10}/>Today's plan</span>}
                     {hasNotes && <span style={pill(C.violetDim, C.violetL, {fontSize: 9, display: 'inline-flex', alignItems: 'center', gap: 3})}><ScrollText size={10}/>Has Notes</span>}
                   </div>
                   <div style={{fontSize:12,color:C.t2,lineHeight:1.65,marginBottom:14}}>{r.desc}</div>
