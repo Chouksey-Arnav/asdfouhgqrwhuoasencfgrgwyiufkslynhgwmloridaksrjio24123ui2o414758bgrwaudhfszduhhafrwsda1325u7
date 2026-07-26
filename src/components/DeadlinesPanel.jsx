@@ -69,7 +69,7 @@ export function NextDeadlineCard({ deadlines, accent = C.blue }) {
   );
 }
 
-export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedabrain }) {
+export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedabrain, onAdded }) {
   const [deadlines, setDeadlines] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [scholarships, setScholarships] = useState([]);
@@ -99,6 +99,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
       setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
       setTitle(''); setDate('');
       showMedabrainToast('deadline_added', { title: d.title });
+      onAdded?.();
     } catch (err) { toast.error(err.message); }
   }
 
@@ -107,6 +108,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
       const created = await Promise.all(DEFAULT_DEADLINES.map(d => createItem('deadlines', d)));
       setDeadlines(prev => [...prev, ...created].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
       toast.success('Added common admissions deadlines');
+      onAdded?.();
     } catch (err) { toast.error(err.message); }
   }
 
@@ -128,6 +130,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
       const d = await createItem('deadlines', { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id });
       setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
       showMedabrainToast('deadline_auto_suggested_added', { title: d.title });
+      onAdded?.();
     } catch (err) { toast.error(err.message); }
   }
 
@@ -137,6 +140,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
       const created = await Promise.all(suggestions.map(s => createItem('deadlines', { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id })));
       setDeadlines(prev => [...prev, ...created].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
       toast.success(`Added ${created.length} suggested deadline${created.length===1?'':'s'}`);
+      onAdded?.();
     } catch (err) { toast.error(err.message); }
     finally { setAddingAll(false); }
   }

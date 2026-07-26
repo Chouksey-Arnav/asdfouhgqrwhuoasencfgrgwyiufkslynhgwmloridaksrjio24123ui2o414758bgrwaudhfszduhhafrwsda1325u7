@@ -976,7 +976,7 @@ export function resourceMatch(kind, id) {
 // unambiguous in-app "this happened" signal — matched by task type instead of
 // a specific resource. `interview` is included for consistency even though its
 // call site predates this helper and in-lines the same predicate.
-export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'clinical', 'research', 'recommender', 'coach', 'interview']);
+export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'coach', 'interview']);
 export function typeMatch(type) { return (t) => t.type === type; }
 
 // Auto-checks off every not-yet-done task across the whole plan (not just
