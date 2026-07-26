@@ -91,10 +91,13 @@ export function PaceForecastStep({ answers, onNext }) {
                 </div>
               ))}
             </div>
+            {/* A single projected trajectory. There used to be a second,
+                dashed "without a plan" line flattening at 0.42x — an invented
+                comparison we have no data for, drawn next to a real number so
+                it read as measured. Removed rather than restyled. */}
             <MiniLineChart height={148}
               lines={[
                 { points: [0.06, 0.24, 0.42, 0.6, 0.76, 0.9, 1], color: C.blue, width: 3, fill: true, endDot: true },
-                { points: [0.06, 0.12, 0.2, 0.26, 0.3, 0.36, 0.42], color: C.t4, width: 2, dashed: true },
               ]}
               xLabels={['Today', `~${f.months} month${f.months === 1 ? '' : 's'}`]}
               startLabel={String(f.currentScore)}
@@ -114,7 +117,12 @@ export function PaceForecastStep({ answers, onNext }) {
         ))}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1 }}
           style={{ marginTop: 12, padding: '13px 16px', borderRadius: 12, background: C.greenDim, border: '1px solid rgba(16,185,129,0.25)', fontSize: 13, color: C.greenL, fontWeight: 600, lineHeight: 1.5 }}>
-          Students following a structured plan progress about twice as fast as students putting in the same hours without one.
+          {/* Was: "Students following a structured plan progress about twice as
+              fast as students putting in the same hours without one." That is an
+              unsourced quantitative claim about our own product. Replaced with
+              what the evidence on test prep actually supports, and with what the
+              app now genuinely does. */}
+          Practice tests plus honest review of every mistake is what reliably moves a score — not hours logged. That is exactly what the SAT tab is built around.
         </motion.div>
       </div>
       <ContinueButton onClick={onNext}>Continue</ContinueButton>

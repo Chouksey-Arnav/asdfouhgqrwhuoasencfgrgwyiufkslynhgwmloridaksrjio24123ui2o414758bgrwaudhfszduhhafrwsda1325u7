@@ -269,13 +269,17 @@ const VALID_DESTINATIONS = new Set([
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
   'portfolio:recommenders', 'portfolio:interview', 'portfolio:scores', 'portfolio:calc',
   'progress:overview', 'progress:verified', 'progress:performance', 'progress:achievements',
+  'sat:overview', 'sat:diagnostic', 'sat:practice', 'sat:tests', 'sat:review', 'sat:skills', 'sat:scores',
 ]);
 function sanitizeDestination(tab, view) {
   if (!tab || !view || !VALID_DESTINATIONS.has(`${tab}:${view}`)) return { resourceTab: null, resourceView: null };
   return { resourceTab: tab, resourceView: view };
 }
-const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'rest']);
-const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'coach', 'activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'interview', 'reflection', 'rest']);
+const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'sat', 'rest']);
+// sat_practice / sat_review / sat_test route into the SAT tab. Before these
+// existed, plans emitted tasks literally titled "SAT practice set" that linked
+// to prep/quizzes — a quiz library containing no SAT content whatsoever.
+const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'coach', 'activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'interview', 'reflection', 'rest', 'sat_practice', 'sat_review', 'sat_test']);
 
 // ── Specific-resource resolution — the "give me the actual link" layer ─────
 // A task saying "SAT practice set" is only useful if clicking it opens THE
@@ -294,10 +298,14 @@ const TYPE_DEFAULT_DEST = {
   deadline: ['portfolio', 'deadlines'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
   recommender: ['portfolio', 'recommenders'], interview: ['portfolio', 'interview'],
   reflection: ['progress', 'overview'], rest: null,
+  sat_practice: ['sat', 'practice'], sat_review: ['sat', 'review'], sat_test: ['sat', 'tests'],
 };
 const VIEW_LABELS = {
   'prep:diagnostic': 'Pathway Diagnostic', 'prep:pathway': 'Your Pathway', 'prep:quizzes': 'Quiz Library',
   'prep:flashcards': 'Flashcards', 'prep:coach': 'AI Coach', 'prep:library': 'E-Library',
+  'sat:overview': 'SAT Overview', 'sat:diagnostic': 'SAT Diagnostic', 'sat:practice': 'SAT Practice',
+  'sat:tests': 'Full-Length Test', 'sat:review': 'SAT Review Log', 'sat:skills': 'SAT Skill Mastery',
+  'sat:scores': 'Test Scores',
   'portfolio:overview': 'Portfolio Overview', 'portfolio:timeline': 'Timeline', 'portfolio:colleges': 'College List',
   'portfolio:essays': 'Essay Workspace', 'portfolio:deadlines': 'Deadlines Tracker', 'portfolio:aid': 'Financial Aid',
   'portfolio:resume': 'Activities & Resume', 'portfolio:research': 'Research Log', 'portfolio:skills': 'Skills & Certs',
@@ -599,7 +607,10 @@ function heuristicDays(plan, fromDate, numDays, catalog, user) {
     const phase = phaseForWeek(plan, weekNumber);
     const tasks = [];
     if (!isWeekend) {
-      tasks.push({ pillar: 'prep', type: 'quiz', title: `${track} practice set`, detail: `Quiz Library — ${catalog.quizCats[i % catalog.quizCats.length]}`, estMinutes: 20, ...sanitizeDestination('prep', 'quizzes') });
+      // Previously: pillar 'prep', type 'quiz', linked to prep/quizzes — a task
+      // promising SAT practice that opened a library of MCAT-style science
+      // quizzes. Now it opens the SAT tab's adaptive practice.
+      tasks.push({ pillar: 'sat', type: 'sat_practice', title: `${track} practice set`, detail: 'Smart Set — weighted to your weakest skills', estMinutes: 20, ...sanitizeDestination('sat', 'practice') });
       tasks.push({ pillar: 'prep', type: 'lesson', title: 'Continue your pathway', detail: `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, estMinutes: 15, ...sanitizeDestination('prep', 'pathway') });
       tasks.push({ pillar: 'prep', type: 'flashcards', title: 'Flashcard review', detail: 'Clear any cards due today', estMinutes: 10, ...sanitizeDestination('prep', 'flashcards') });
       if (i % 3 === 2) tasks.push({ pillar: 'portfolio', type: 'activity', title: 'Portfolio check-in', detail: 'Log any new activity, clinical, or research hours', estMinutes: 10, ...sanitizeDestination('portfolio', 'resume') });
@@ -976,7 +987,7 @@ export function resourceMatch(kind, id) {
 // unambiguous in-app "this happened" signal — matched by task type instead of
 // a specific resource. `interview` is included for consistency even though its
 // call site predates this helper and in-lines the same predicate.
-export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'coach', 'interview']);
+export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'coach', 'interview', 'sat_practice', 'sat_review', 'sat_test']);
 export function typeMatch(type) { return (t) => t.type === type; }
 
 // Auto-checks off every not-yet-done task across the whole plan (not just

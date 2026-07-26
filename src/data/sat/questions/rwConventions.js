@@ -1,0 +1,166 @@
+// Standard English Conventions — 26% of Reading & Writing.
+// Skills: boundaries, form_structure_sense.
+//
+// Every question carries a `distractorExp` entry for each choice (the entry at
+// the correct index explains why it is right). This is the single most valuable
+// field in the bank: it is what the Review Log shows a student after a miss.
+export const RW_CONVENTIONS_QUESTIONS = [
+  // ── Boundaries ────────────────────────────────────────────────────────────
+  {
+    id: 'sat-rw-bnd-0001', section: 'rw', domain: 'conventions', skill: 'boundaries',
+    difficulty: 'E', format: 'mcq', trap: 'comma_splice', targetSeconds: 45,
+    stimulus: 'The Antikythera mechanism was recovered from a shipwreck in 1901. Its purpose remained obscure for decades ______ modern imaging finally revealed a gear train built to predict eclipses.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: [', and', ',', 'and,', ';and'],
+    ans: 0,
+    exp: 'Both halves are independent clauses ("Its purpose remained obscure for decades" / "modern imaging finally revealed a gear train"). A comma plus a coordinating conjunction is the standard way to join two independent clauses.',
+    distractorExp: [
+      'Correct. Comma + "and" is a legal join between two independent clauses.',
+      'A comma alone between two independent clauses is a comma splice — the most-tested error on the SAT.',
+      '"and," reverses the required order. The conjunction follows the comma, never precedes it.',
+      'A semicolon already joins independent clauses on its own; adding "and" is redundant, and there is no space after the semicolon.',
+    ],
+  },
+  {
+    id: 'sat-rw-bnd-0002', section: 'rw', domain: 'conventions', skill: 'boundaries',
+    difficulty: 'M', format: 'mcq', trap: 'run_on', targetSeconds: 45,
+    stimulus: 'Mycorrhizal fungi trade phosphorus for plant sugars ______ the exchange is so finely balanced that a plant will cut off carbon to a fungus that underdelivers.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['and', 'in fact,', '; in fact,', 'in fact'],
+    ans: 2,
+    exp: 'Two independent clauses need a full stop between them. A semicolon does that, and the transitional phrase "in fact," then introduces the second clause.',
+    distractorExp: [
+      '"and" alone, with no comma, cannot join two independent clauses of this length — this is a run-on.',
+      'A comma before an independent clause is a comma splice, regardless of the transitional phrase.',
+      'Correct. Semicolon separates the clauses; "in fact," modifies the second.',
+      'No punctuation at all between two independent clauses is a run-on (fused sentence).',
+    ],
+  },
+  {
+    id: 'sat-rw-bnd-0003', section: 'rw', domain: 'conventions', skill: 'boundaries',
+    difficulty: 'M', format: 'mcq', trap: 'fragment', targetSeconds: 50,
+    stimulus: 'Choreographer Pina Bausch built her pieces out of questions she posed to her dancers ______ answers they gave with their bodies rather than their voices.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['. Recording the', ', recording the', '; she recorded the', 'and recording the'],
+    ans: 1,
+    exp: 'A participial phrase ("recording the answers…") set off by a comma attaches cleanly to the main clause and describes how Bausch built her pieces.',
+    distractorExp: [
+      'A period creates a fragment: "Recording the answers they gave with their bodies rather than their voices" has no subject or main verb.',
+      'Correct. The comma attaches a participial phrase to the independent clause before it.',
+      'Grammatically legal, but "she recorded" repeats the subject unnecessarily and breaks the causal link the sentence is building.',
+      '"and recording" implies a parallel with an earlier -ing verb that does not exist — "built" is the only main verb.',
+    ],
+  },
+  {
+    id: 'sat-rw-bnd-0004', section: 'rw', domain: 'conventions', skill: 'boundaries',
+    difficulty: 'H', format: 'mcq', trap: 'comma_splice', targetSeconds: 55,
+    stimulus: 'The archive holds three items historians had assumed were lost ______ a ledger, a shipping manifest, and a letter signed only with an initial.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: [':', ';', ',', ', that is'],
+    ans: 0,
+    exp: 'A colon introduces a list that specifies what the preceding independent clause has just announced ("three items"). The clause before the colon is complete, which is the requirement.',
+    distractorExp: [
+      'Correct. Complete clause + colon + the list it promised.',
+      'A semicolon joins two independent clauses. What follows here is a list, not a clause.',
+      'A bare comma before an appositive list of this kind is too weak, and invites reading "a ledger" as a fourth item in a list with "three items".',
+      '"that is" needs to be followed by a full explanation and preceded by stronger punctuation; the comma still leaves the boundary too weak.',
+    ],
+  },
+  {
+    id: 'sat-rw-bnd-0005', section: 'rw', domain: 'conventions', skill: 'boundaries',
+    difficulty: 'H', format: 'mcq', trap: 'comma_splice', targetSeconds: 55,
+    stimulus: 'Botanist Ynes Mexia began collecting specimens at fifty-one ______ by her death sixteen years later she had gathered around 145,000 of them, including some five hundred species new to science.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: [', yet', ' yet', '; yet,', ', yet,'],
+    ans: 0,
+    exp: 'Two independent clauses joined by the coordinating conjunction "yet" require a comma before the conjunction and nothing after it.',
+    distractorExp: [
+      'Correct. Comma + coordinating conjunction, the standard join.',
+      'No comma before a coordinating conjunction linking two independent clauses of this length is a run-on.',
+      'A semicolon already ends the first clause; "yet," afterwards is redundant and the trailing comma is unmotivated.',
+      'The comma after "yet" wrongly separates the conjunction from the clause it introduces.',
+    ],
+  },
+
+  // ── Form, Structure and Sense ─────────────────────────────────────────────
+  {
+    id: 'sat-rw-fss-0001', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
+    difficulty: 'E', format: 'mcq', trap: 'subject_verb', targetSeconds: 45,
+    stimulus: 'The collection of letters exchanged between the two mathematicians over forty years ______ now held at the university library.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['are', 'is', 'were', 'have been'],
+    ans: 1,
+    exp: 'The subject is "collection" (singular), not "letters" or "mathematicians". Everything between the subject and the verb is a prepositional phrase and cannot change the verb.',
+    distractorExp: [
+      '"are" agrees with "letters", which is inside a prepositional phrase and therefore cannot be the subject.',
+      'Correct. Singular subject "collection" takes the singular verb "is".',
+      '"were" is both plural and past tense; "now" requires the present.',
+      '"have been" is plural, and again agrees with the wrong noun.',
+    ],
+  },
+  {
+    id: 'sat-rw-fss-0002', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
+    difficulty: 'M', format: 'mcq', trap: 'dangling_modifier', targetSeconds: 55,
+    stimulus: 'Trained as a physicist before turning to molecular biology, ______',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: [
+      'the double helix was described by Francis Crick using X-ray diffraction data.',
+      "Crick's background gave him an unusual grasp of X-ray diffraction data.",
+      'Francis Crick brought an unusual grasp of X-ray diffraction data to the problem.',
+      'it was X-ray diffraction data that Francis Crick understood unusually well.',
+    ],
+    ans: 2,
+    exp: 'An opening participial phrase must modify the subject of the main clause. The person trained as a physicist is Francis Crick, so "Francis Crick" has to be the subject.',
+    distractorExp: [
+      'This says the double helix was trained as a physicist.',
+      "Close, but the subject is \"Crick's background\" — a background cannot be trained as a physicist.",
+      'Correct. "Francis Crick" is the subject, and he is the one who was trained as a physicist.',
+      'The subject is the dummy "it", which the opening phrase cannot logically modify.',
+    ],
+  },
+  {
+    id: 'sat-rw-fss-0003', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
+    difficulty: 'M', format: 'mcq', trap: 'tense_shift', targetSeconds: 50,
+    stimulus: 'By the time the survey team reached the summit ridge in 1953, the monsoon ______ already for two days, and the window for a safe descent was closing.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['blew', 'has blown', 'had been blowing', 'is blowing'],
+    ans: 2,
+    exp: 'The monsoon started before the team arrived and was still going. An action ongoing before a past reference point takes the past perfect progressive: "had been blowing".',
+    distractorExp: [
+      'Simple past "blew" loses the sequencing — it does not show the blowing began before the team arrived.',
+      'Present perfect connects to the present, but the whole sentence is anchored in 1953.',
+      'Correct. Past perfect progressive marks an action already underway at a past reference point.',
+      'Present progressive contradicts the past-tense frame of the sentence.',
+    ],
+  },
+  {
+    id: 'sat-rw-fss-0004', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
+    difficulty: 'M', format: 'mcq', trap: 'pronoun_ambiguity', targetSeconds: 50,
+    stimulus: 'Neither the curator nor the conservators ______ willing to say which pigment had been used before the analysis was complete.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['was', 'were', 'is', 'has been'],
+    ans: 1,
+    exp: 'With "neither…nor", the verb agrees with the nearer subject. "Conservators" is plural and sits closest to the verb, so the verb is plural.',
+    distractorExp: [
+      '"was" would be right if the nearer subject were singular, but "conservators" is plural.',
+      'Correct. Proximity rule: agree with "conservators".',
+      '"is" is singular and also shifts to the present, clashing with "had been used".',
+      '"has been" is singular; the nearer subject is plural.',
+    ],
+  },
+  {
+    id: 'sat-rw-fss-0005', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
+    difficulty: 'H', format: 'mcq', trap: 'subject_verb', targetSeconds: 55,
+    stimulus: 'What most surprised the researchers about the octopuses’ behaviour ______ that individuals appeared to recognise particular keepers on sight.',
+    q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
+    ch: ['were', 'was', 'have been', 'are'],
+    ans: 1,
+    exp: 'The subject is the noun clause "What most surprised the researchers…", which is singular regardless of the plural nouns inside it.',
+    distractorExp: [
+      '"were" agrees with "octopuses" or "researchers", neither of which is the subject.',
+      'Correct. A "what…" noun clause acting as a subject is singular.',
+      'Plural and in the wrong tense for a single completed observation.',
+      'Plural, and present tense clashes with "appeared".',
+    ],
+  },
+];

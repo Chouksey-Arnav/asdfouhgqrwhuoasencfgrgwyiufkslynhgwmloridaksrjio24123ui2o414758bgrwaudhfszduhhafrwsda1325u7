@@ -167,10 +167,13 @@ export function buildCoachSystemPrompt({
   skillsCount = 0,
   streak = 0,
   planSummary = null,
+  satProjection = null,
+  satWeakSkills = [],
+  satOpenReviews = 0,
 } = {}) {
   const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
-The platform is organized around three areas: Prep (a pathway diagnostic, pathway study units, a quiz library, spaced-repetition flashcards, and a curated e-library), Portfolio (SAT/ACT score tracking, an admissions calculator, college application tracking, essay workspace, deadlines, financial aid, an activities/clinical-hours resume builder, and mock interview practice), and Progress (XP, achievements, and readiness analytics) — point students at the right one when it's the natural next step.
+The platform is organized around four areas: SAT (a skill diagnostic, adaptive practice drills, full-length adaptive practice tests with real module routing, a review log for analysing every missed question, and per-skill mastery tracking across the 28 tested skills), Prep (a pathway diagnostic, pathway study units, a quiz library, spaced-repetition flashcards, and a curated e-library), Portfolio (SAT/ACT score tracking, an admissions calculator, college application tracking, essay workspace, deadlines, financial aid, an activities/clinical-hours resume builder, and mock interview practice), and Progress (XP, achievements, and readiness analytics) — point students at the right one when it's the natural next step. For anything about raising an SAT score, the SAT tab is the answer, not the Prep quiz library (which is science content, not SAT content).
 
 You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel}` : ''} on the ${pathwayLabel} pathway. Use their name occasionally, not every message. ${pathCoachNote}${gradeLabel === 'Senior' ? " As a senior, application deadlines are the most time-sensitive thing in their life right now — weight advice accordingly." : ''}${gradeLabel === 'Freshman' ? ' As a freshman, they have years of runway — prioritize building strong habits and exploring interests over deadline pressure.' : ''}`;
 
@@ -209,6 +212,21 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
 
   // ── Live/current-state signals ────────────────────────────────────────────
   const liveParts = [];
+  // SAT facts come first: they are the most concrete, most actionable thing we
+  // know, and "what should I work on for the SAT" is the single most common
+  // question this coach gets. Note the projection is a measured RANGE with a
+  // confidence level — never restate it as a single confident number.
+  if (satProjection) {
+    liveParts.push(`Measured SAT estimate: ${satProjection.low}-${satProjection.high} (midpoint ${satProjection.mid}, ${satProjection.confidence} confidence, based on ${satProjection.basis === 'full_test' ? 'a full-length practice test' : satProjection.basis === 'diagnostic' ? 'their diagnostic' : 'practice questions only'}). Always present this as a range, never a single number, and never promise a specific future score.`);
+  } else {
+    liveParts.push('They have not done enough SAT practice for a score estimate yet — if they ask what they will score, say honestly that we cannot tell them yet and point them at the SAT diagnostic.');
+  }
+  if (satWeakSkills?.length) {
+    liveParts.push(`Their weakest SAT skills by leverage (weakness x how heavily the exam tests it): ${satWeakSkills.slice(0, 4).map(s => `${s.label} (${Math.round((s.mastery || 0) * 100)}% from ${s.attempts || 0} questions)`).join(', ')}. Recommend these by name when they ask what to study.`);
+  }
+  if (satOpenReviews > 0) {
+    liveParts.push(`They have ${satOpenReviews} unreviewed SAT mistakes sitting in their review log. Reviewing those beats answering new questions — say so if they ask what to do next.`);
+  }
   if (courses?.length) liveParts.push(`Currently taking: ${courses.join(', ')}${apIb ? ' (AP/IB student)' : ''} — tailor examples to these courses when relevant.`);
   if (weakestCategory && weakestScore != null) liveParts.push(`Their weakest quiz section is ${weakestCategory} at ${weakestScore}% — proactively bring this up if it's relevant to what they ask.`);
   if (dueCards > 0) liveParts.push(`They have ${dueCards} flashcard(s) due for review.`);
