@@ -85,6 +85,11 @@ import {
 } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
+import { useMediaQuery, Arc, Bar, Stat } from './components/ui/primitives';
+import SatTab from './components/sat/SatTab';
+import { projectScore } from './lib/sat/projection';
+import { computeAllMastery } from './lib/sat/mastery';
+import { SCORE_DISCLAIMER } from './data/sat/scoring';
 import AppTour from './components/AppTour';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
@@ -194,8 +199,10 @@ const scCol  = p => p>=80?C.green:p>=60?C.blue:C.amber;
 const tierC  = t => ({Likely:C.green,Target:C.blue,Reach:C.amber,Stretch:C.rose}[t]||C.t2);
 const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Vercel environment variables.';
 
-// Quiz performance % → predicted SAT score (400–1600)
-const scoreToSection = p => Math.round(400+(Math.max(0,Math.min(100,p))/100)*1200);
+// NOTE: a `scoreToSection` helper used to live here, mapping a science-quiz
+// percentage onto a 400-1600 "predicted SAT score". It was removed — see the
+// satProjection comment below. Real SAT estimates come from
+// src/lib/sat/projection.js, driven by actual SAT practice data.
 
 function scoreSchool(s, gpa, sat, lead, ec, vol, st, specialty = 'exploring', rigor = '2', clinicalHours = 0) {
   let sc = 100;
@@ -318,11 +325,24 @@ function scoreSchool(s, gpa, sat, lead, ec, vol, st, specialty = 'exploring', ri
 // Settings lives in the account menu (avatar click), not the main nav.
 const NAV = [
   {id:'home',ic:Home,label:'Home'},
+  {id:'sat',ic:Target,label:'SAT'},
   {id:'prep',ic:Compass,label:'Prep'},
   {id:'portfolio',ic:Building2,label:'Portfolio'},
   {id:'plans',ic:CalendarClock,label:'Plans'},
   {id:'progress',ic:LineChart,label:'Progress'},
   {id:'settings',ic:Settings,label:'Settings'},
+];
+// The SAT pillar. Sits second because onboarding sells score improvement harder
+// than anything else in the product, and until now nothing behind that promise
+// existed — see src/data/sat/taxonomy.js for the content model it runs on.
+const SAT_SUBNAV = [
+  {id:'overview',ic:Target,label:'Overview',color:C.lime},
+  {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
+  {id:'practice',ic:Layers,label:'Practice',color:C.blue},
+  {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.violet},
+  {id:'review',ic:AlertTriangle,label:'Review Log',color:C.rose},
+  {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.amber},
+  {id:'scores',ic:LineChart,label:'Scores',color:C.green},
 ];
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
@@ -375,17 +395,9 @@ const COURSE_GROUPS = [
   { group:'World Language', items:['Spanish','French','Mandarin','Other Language'] },
 ];
 // ── Responsive hook ───────────────────────────────────────────────────────────
-function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false);
-  useEffect(() => {
-    const m = window.matchMedia(query);
-    setMatches(m.matches);
-    const l = (e) => setMatches(e.matches);
-    m.addEventListener('change', l);
-    return () => m.removeEventListener('change', l);
-  }, [query]);
-  return matches;
-}
+// useMediaQuery, Arc, Bar and Stat now live in src/components/ui/primitives.jsx
+// so the SAT panels (and any future standalone panel) can use them without
+// importing this file. Imported at the top; re-exported nowhere.
 
 // ── KaTeX math renderer ───────────────────────────────────────────────────────
 function MathText({ text, style }) {
@@ -437,31 +449,6 @@ function LoadingScreen() {
 }
 
 // ── Arc (circular progress) ───────────────────────────────────────────────────
-function Arc({pct=0,size=52,stroke=4,color=C.blue,label='',sub=''}){
-  const r=(size-stroke*2)/2,circ=2*Math.PI*r,off=circ-(Math.min(100,Math.max(0,pct))/100)*circ;
-  return(
-    <div style={{position:'relative',width:size,height:size,flexShrink:0}}>
-      <svg width={size} height={size} style={{transform:'rotate(-90deg)'}}>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.s4} strokeWidth={stroke}/>
-        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeDasharray={circ} strokeDashoffset={off} strokeLinecap="round" style={{transition:'stroke-dashoffset .6s cubic-bezier(.16,1,.3,1)',filter:`drop-shadow(0 0 4px ${color}80)`}}/>
-      </svg>
-      {label&&<div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-        <span style={{fontSize:size>60?14:10,fontWeight:700,color,fontFamily:C.FM,lineHeight:1}}>{label}</span>
-        {sub&&<span style={{fontSize:9,color:C.t3,lineHeight:1,marginTop:1}}>{sub}</span>}
-      </div>}
-    </div>
-  );
-}
-
-// ── Bar ───────────────────────────────────────────────────────────────────────
-function Bar({pct=0,color=C.blue,h=4,glow=false}){
-  return(
-    <div style={{height:h,background:'rgba(255,255,255,0.06)',borderRadius:h,overflow:'hidden'}}>
-      <div style={{height:'100%',width:`${Math.min(100,Math.max(0,pct))}%`,background:color,borderRadius:h,transition:'width .6s cubic-bezier(.16,1,.3,1)',boxShadow:glow?`0 0 12px ${color}70`:undefined}}/>
-    </div>
-  );
-}
-
 // ── Dot (mastery status) ──────────────────────────────────────────────────────
 function Dot({state='locked'}){
   const cfg={
@@ -475,22 +462,6 @@ function Dot({state='locked'}){
   return<span style={{width:22,height:22,borderRadius:'50%',background:d.bg,border:`1.5px solid ${d.brd||C.green}`,display:'inline-flex',alignItems:'center',justifyContent:'center',color:d.c,flexShrink:0,boxShadow:(state==='done'||state==='verified')?`0 0 8px ${C.green}60`:undefined}}><d.Ic size={d.sz} strokeWidth={state==='available'||state==='studying'?0:2.5} fill={state==='available'||state==='studying'?d.c:'none'}/></span>;
 }
 
-// ── Stat card ─────────────────────────────────────────────────────────────────
-function Stat({label,value,icon,color=C.blue,sub,onClick,m=false}){
-  return(
-    <div onClick={onClick} style={{...glass({padding:m?16:20}),position:'relative',overflow:'hidden',cursor:onClick?'pointer':undefined,transition:'all .2s'}}>
-      <div style={{position:'absolute',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,${color},transparent)`}}/>
-      <div style={R({gap:m?10:12,alignItems:'flex-start'})}>
-        <div style={{width:m?32:36,height:m?32:36,borderRadius:10,background:`${color}18`,border:`1px solid ${color}25`,display:'flex',alignItems:'center',justifyContent:'center',color,flexShrink:0,boxShadow:`0 4px 12px ${color}20`}}>{icon}</div>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{fontSize:m?20:26,fontWeight:800,fontFamily:C.FM,lineHeight:1,marginBottom:4,background:`linear-gradient(135deg,${color},${color}aa)`,WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',backgroundClip:'text'}}>{value}</div>
-          <div style={{fontSize:m?11:12,color:C.t2,fontWeight:600}}>{label}</div>
-          {sub&&<div style={{fontSize:10,color:C.t3,marginTop:2}}>{sub}</div>}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Page header (colored icon badge + eyebrow/title/sub) ─────────────────────
 // A single reusable header pattern applied across Progress/Portfolio/Flashcards
@@ -1259,7 +1230,13 @@ export default function App({ account, onAccountChange }) {
   const [prepView, setPrepView] = useState(()=>loadViewState().prepView||'pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
   const [portfolioView, setPortfolioView] = useState(()=>loadViewState().portfolioView||'overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
   const [progressView, setProgressView] = useState(()=>loadViewState().progressView||'overview'); // overview|verified|performance|achievements
+  const [satView, setSatView] = useState(()=>loadViewState().satView||'overview'); // overview|diagnostic|practice|tests|review|skills|scores
+  // Deep-link params for the SAT tab (e.g. "drill this specific skill", "resume
+  // this attempt"), set by the Overview's next-best-action card and by the
+  // Review Log. Cleared by the receiving panel once consumed.
+  const [satParams, setSatParams] = useState(null);
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
+  const goSat = useCallback((view, params=null)=>{ setTab('sat'); if(view) setSatView(view); setSatParams(params); }, []);
   const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
   const goSettings = useCallback(()=>{ setTab('settings'); }, []);
@@ -1268,7 +1245,7 @@ export default function App({ account, onAccountChange }) {
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
-  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView }); },[tab, prepView, portfolioView, progressView]);
+  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView, satView }); },[tab, prepView, portfolioView, progressView, satView]);
 
   // Keep the browser tab title in sync with where the student actually is — previously the
   // <title> in index.html ("MedSchoolPrep — Your Path Into Medicine") never changed after load,
@@ -1283,9 +1260,10 @@ export default function App({ account, onAccountChange }) {
       tab==='prep'?PREP_SUBNAV.find(n=>n.id===prepView)?.label:
       tab==='portfolio'?PORTFOLIO_SUBNAV.find(n=>n.id===portfolioView)?.label:
       tab==='progress'?PROGRESS_SUBNAV.find(n=>n.id===progressView)?.label:
+      tab==='sat'?SAT_SUBNAV.find(n=>n.id===satView)?.label:
       null;
     document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
-  },[tab,prepView,portfolioView,progressView]);
+  },[tab,prepView,portfolioView,progressView,satView]);
 
   // ── Post-onboarding product tour — a full-depth spotlight walkthrough covering ──
   // every pillar (Home/Prep/Portfolio/Progress/Settings), every absorbed sub-view
@@ -1399,6 +1377,7 @@ export default function App({ account, onAccountChange }) {
     ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
     ...PROGRESS_SUBNAV.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
+    ...SAT_SUBNAV.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
   ],[goPrep,goPortfolio,goProgress]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
@@ -1993,11 +1972,12 @@ export default function App({ account, onAccountChange }) {
   const progressAccent = C.cyan;
   const settingsAccent = C.amber;
   const plansAccent = C.fuchsia;
+  const satAccent = C.lime;
   // Same identity, applied to the nav itself — so the active tab actually highlights in its own
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
   // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
   // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
-  const navColor = { home: C.blue, prep: C.violet, portfolio: portfolioAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
+  const navColor = { home: C.blue, sat: satAccent, prep: C.violet, portfolio: portfolioAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -2050,10 +2030,37 @@ export default function App({ account, onAccountChange }) {
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
   const daysToExam = user?.examDate ? Math.ceil((new Date(user.examDate+'T00:00:00') - new Date(new Date().toDateString())) / 86400000) : null;
 
-  // Predicted SAT score
+  // Science-quiz category averages. These are legitimate measures of quiz
+  // performance and feed the coach, the radar chart and the insight callouts —
+  // what was wrong was mapping them onto a fake SAT score, not the averages.
   const cats3   = ['Life Sciences','Physical Sciences','Behavioral & Social Sciences'];
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
-  const predSAT = secAvgs.every(v=>v!==null) ? Math.round(secAvgs.reduce((s,v)=>s+scoreToSection(v),0)/secAvgs.length) : null;
+
+  // ── SAT score projection ──────────────────────────────────────────────────
+  // This REPLACES the app's old `predSAT`, which averaged the student's scores
+  // on the three MCAT-style science quiz categories (Life Sciences / Physical
+  // Sciences / Behavioral & Social) and mapped the percentage through
+  // `400 + (pct/100)*1200`. That number had no relationship to the SAT at all,
+  // yet was rendered on Home and Progress as a confident single figure and even
+  // offered as a fill-in for the admissions calculator.
+  //
+  // The replacement reads only real SAT practice data (src/lib/sat/projection.js)
+  // and returns a RANGE with an explicit confidence level, or null when there is
+  // not enough evidence to say anything honest — in which case the UI points the
+  // student at the diagnostic instead of inventing a number.
+  const [satProjection,setSatProjection]=useState(null);
+  useEffect(()=>{
+    let cancelled=false;
+    (async()=>{
+      try{
+        const [attempts,responses]=await Promise.all([DB.getSatAttempts(),DB.getSatResponses()]);
+        if(cancelled) return;
+        const masteryMap=computeAllMastery(responses);
+        setSatProjection(projectScore({masteryMap,attempts,responses}));
+      }catch{ if(!cancelled) setSatProjection(null); }
+    })();
+    return()=>{cancelled=true;};
+  },[tab,satView]);
 
   // A built-in deck's cards get a progressed (FSRS-scheduled) copy saved into cDecks under the
   // same name the first time it's actually reviewed — see rateCard() below, which persists
@@ -2086,7 +2093,7 @@ export default function App({ account, onAccountChange }) {
     const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);
     const taken=cQ.filter(q=>qScores[q.id]!==undefined);
     const avg=taken.length?Math.round(taken.reduce((s,q)=>s+qScores[q.id],0)/taken.length):null;
-    return{cat,avg,taken:taken.length,total:cQ.length,predicted:avg!==null?scoreToSection(avg):null};
+    return{cat,avg,taken:taken.length,total:cQ.length};
   }),[qScores]);
   const benchmarks = curPath?.benchmarks||{};
   const insights = useMemo(()=>buildInsights({
@@ -3090,7 +3097,7 @@ export default function App({ account, onAccountChange }) {
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
                 {dueDeckCount>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
-                {predSAT&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>~{predSAT} predicted</span>}
+                {satProjection&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>SAT {satProjection.low}–{satProjection.high}</span>}
               </div>
             </div>
           </div>
@@ -3223,22 +3230,33 @@ export default function App({ account, onAccountChange }) {
           </div>
         </div>
 
-        {/* Predicted score */}
-        {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
+        {/* SAT score estimate — a measured range, or a prompt to go measure. */}
+        <div onClick={()=>goSat(satProjection?'overview':'diagnostic')} style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`,cursor:'pointer'}}>
           <div style={R({gap:14})}>
             <div style={{width:52,height:52,borderRadius:12,background:`${C.green}15`,border:`1px solid ${C.green}25`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predSAT}</div>
-              <div style={{fontSize:9,color:C.greenL,letterSpacing:'.05em'}}>SAT</div>
+              {satProjection
+                ? <><div style={{fontSize:14,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1.1}}>{satProjection.low}</div><div style={{fontSize:14,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1.1}}>{satProjection.high}</div></>
+                : <Target size={22} color={C.green}/>}
             </div>
-            <div>
-              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Predicted SAT Score</div>
-              <div style={{fontSize:12,color:C.t2,lineHeight:1.5}}>Based on your quiz performance across all 3 subject areas. Keep practicing to improve this estimate.</div>
-              <div style={{...R({gap:8,marginTop:8})}}>
-                {cats3.map((cat,i)=>secAvgs[i]!==null&&<span key={cat} style={pill(`${scCol(secAvgs[i])}18`,scCol(secAvgs[i]),{fontSize:10})}>{cat.split('/')[0]}: {scoreToSection(secAvgs[i])}</span>)}
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>
+                {satProjection?'SAT score estimate':'No SAT estimate yet'}
               </div>
+              <div style={{fontSize:12,color:C.t2,lineHeight:1.5}}>
+                {satProjection
+                  ? satProjection.note
+                  : 'Take the diagnostic in the SAT tab and we will show you where you actually stand — measured from real SAT questions, not guessed.'}
+              </div>
+              {satProjection&&(
+                <div style={{...R({gap:8,marginTop:8,flexWrap:'wrap'})}}>
+                  <span style={pill(`${C.green}18`,C.greenL,{fontSize:10})}>{satProjection.confidence} confidence</span>
+                  <span style={pill(`${C.blue}18`,C.blueL,{fontSize:10})}>~{satProjection.percentile}th percentile</span>
+                </div>
+              )}
             </div>
+            <ChevronRight size={16} color={C.t3} style={{flexShrink:0}}/>
           </div>
-        </div>}
+        </div>
 
         {/* Pathway preview */}
         <div style={glass()}>
@@ -5182,7 +5200,10 @@ export default function App({ account, onAccountChange }) {
                 <span style={lbl({marginBottom:0})}>SAT Score (or ACT converted)</span>
                 {/* Pulls the score Prep already predicted from real quiz performance instead of
                     making the student re-derive/retype a number the app can already estimate. */}
-                {predSAT&&!cSAT&&<button style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`,fontSize:10}),whiteSpace:'nowrap'}} onClick={()=>setCSAT(String(predSAT))}>Use predicted: {predSAT}</button>}
+                {/* Only offers a real, measured estimate — the old version prefilled a
+                    number derived from science-quiz averages, which then propagated
+                    into admissions-chance calculations as if it were a test score. */}
+                {satProjection&&!cSAT&&<button title={satProjection.note} style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`,fontSize:10}),whiteSpace:'nowrap'}} onClick={()=>setCSAT(String(satProjection.mid))}>Use estimate: {satProjection.mid}</button>}
               </div>
               <input type="number" min="400" max="1600" style={inp()} placeholder="1350" value={cSAT} onChange={e=>setCSAT(e.target.value)}/>
             </div>
@@ -5715,27 +5736,32 @@ export default function App({ account, onAccountChange }) {
         </>}
 
         {progressView==='performance'&&<>
-        {/* Predicted SAT */}
-        {predSAT&&<div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
-          <SL extra={{marginBottom:12}}>Predicted SAT Score</SL>
-          <div style={R({gap:20,flexWrap:'wrap'})}>
-            <div style={{textAlign:'center'}}>
-              <div style={{fontSize:48,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{predSAT}</div>
-              <div style={{fontSize:12,color:C.t3,marginTop:4}}>Total Score</div>
+        {/* SAT score estimate — measured from real SAT practice, or absent. */}
+        <div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
+          <SL extra={{marginBottom:12}}>SAT Score Estimate</SL>
+          {satProjection?(
+            <div style={R({gap:20,flexWrap:'wrap'})}>
+              <div style={{textAlign:'center'}}>
+                <div style={{fontSize:38,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{satProjection.low}–{satProjection.high}</div>
+                <div style={{fontSize:12,color:C.t3,marginTop:6}}>midpoint {satProjection.mid} · ~{satProjection.percentile}th percentile</div>
+              </div>
+              <div style={{flex:1,minWidth:200}}>
+                <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:10}}>{satProjection.note}</div>
+                <span style={pill(`${C.green}18`,C.greenL,{fontSize:10})}>{satProjection.confidence} confidence</span>
+                <div style={{fontSize:10,color:C.t4,marginTop:10,lineHeight:1.55}}>{SCORE_DISCLAIMER}</div>
+              </div>
             </div>
-            <div style={{flex:1,minWidth:200}}>
-              {catStats.map(({cat,predicted,avg})=>predicted&&(
-                <div key={cat} style={{marginBottom:10}}>
-                  <div style={R({justifyContent:'space-between',marginBottom:5})}>
-                    <span style={{fontSize:12,color:C.t2}}>{cat}</span>
-                    <span style={{fontSize:13,fontFamily:C.FM,fontWeight:700,color:scCol(avg||0)}}>{predicted}</span>
-                  </div>
-                  <Bar pct={((predicted-118)/14)*100} color={scCol(avg||0)} h={5} glow/>
-                </div>
-              ))}
+          ):(
+            <div>
+              <div style={{fontSize:13,color:C.t2,lineHeight:1.6,maxWidth:520}}>
+                We do not have enough SAT practice data to estimate a score yet. Guessing one from your science quizzes — which is what this card used to do — would not tell you anything real.
+              </div>
+              <button onClick={()=>goSat('diagnostic')} style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`}),marginTop:12}}>
+                Take the SAT diagnostic <ChevronRight size={12}/>
+              </button>
             </div>
-          </div>
-        </div>}
+          )}
+        </div>
 
         {/* Charts row */}
         <div data-tour="progress-deep-performance" style={G(2,14,{},isMobile)}>
@@ -6430,7 +6456,27 @@ export default function App({ account, onAccountChange }) {
     };
     return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken}/>;
   }
-  const tRenders={ home:tHome, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
+  // ── SAT: the test-prep pillar (src/components/sat/) ──
+  function tSatWrap(){
+    return(
+      <SatTab
+        view={satView}
+        onViewChange={(v,p)=>{ setSatView(v); setSatParams(p||null); }}
+        params={satParams}
+        onConsumeParams={()=>setSatParams(null)}
+        subnavItems={SAT_SUBNAV}
+        accent={satAccent}
+        user={user}
+        isMobile={isMobile}
+        planStrip={user.masterPlan?(
+          <div style={{padding:isMobile?'0 0 12px':'0 0 14px'}}>
+            <PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>
+          </div>
+        ):null}
+      />
+    );
+  }
+  const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
     <ErrorBoundary>
@@ -6567,7 +6613,7 @@ export default function App({ account, onAccountChange }) {
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>
                   {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
-                  {['Jump to','Prep','Portfolio','Progress'].map(group=>{
+                  {['Jump to','SAT','Prep','Portfolio','Progress'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(

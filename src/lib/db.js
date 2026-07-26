@@ -114,6 +114,28 @@ db.version(10).stores({
   coachMessages: '++id, threadId, ts',
 });
 
+// v11: the SAT tab. Note `satResponses` — unlike `quizScores`, which keeps only
+// one best score per quiz and discards the answers, this records EVERY response
+// with the choice made, whether it was right, and how long it took. Skill
+// mastery, pacing analysis, the error log and the score projection are all
+// impossible without per-response data, which is why this is a new store rather
+// than an extension of the existing quiz tables.
+//
+//   satAttempts   one row per diagnostic / drill / timed set / full test
+//   satResponses  one row per question answered, joined to an attempt
+//   satSkillStats rolling per-skill cache so the heat map doesn't recompute
+//                 over the whole response history on every render
+//   satReviewLog  missed (or lucky-guess) questions, FSRS-scheduled for retry
+//   satAiCache    AI-generated drill questions, persisted so a student doesn't
+//                 lose generated content on reload and we don't re-spend quota
+db.version(11).stores({
+  satAttempts:   '++id, kind, section, status, startedAt',
+  satResponses:  '++id, attemptId, questionId, skill, answeredAt',
+  satSkillStats: 'skill',
+  satReviewLog:  '++id, questionId, due, resolved',
+  satAiCache:    'key, createdAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -489,7 +511,15 @@ export async function addCoachMessage(threadId, role, content) {
 // flow) and raw per-card review identifiers (a card's local auto-increment id means nothing on
 // another device) — reviews fold into a per-date count instead, which is all "reviewed this
 // week" style stats actually need.
-const SYNC_VERSION = 1;
+const SYNC_VERSION = 2;
+
+// api/progress-sync.js rejects payloads over 2 MB, and a heavy SAT user can
+// accumulate thousands of responses. Only the most recent slice travels; the
+// full history stays local, the same compromise `studyEvents` already makes.
+// Skill stats are derived from responses but are synced separately and cheaply,
+// so a new device still gets an accurate heat map even beyond the cap.
+const SYNC_RESPONSE_CAP = 2000;
+const SYNC_ATTEMPT_CAP = 200;
 
 function dateKeyOf(ms) { return localDateStr(new Date(ms)); }
 
@@ -498,6 +528,7 @@ export async function buildSyncSnapshot() {
     user, lessons, quizScores, flashCards, deckMetaRows, catPerf, achievements,
     studyDays, cardReviews, streakFreezes, checkins, cosmetics, unitMastery,
     pathwayGoals, coachThreads, coachMessages,
+    satAttempts, satResponses, satSkillStats, satReviewLog,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -505,7 +536,22 @@ export async function buildSyncSnapshot() {
     db.streakFreezes.toArray(), db.checkins.toArray(), db.cosmetics.toArray(),
     db.unitMastery.toArray(), db.pathwayGoals.toArray(), db.coachThreads.toArray(),
     db.coachMessages.toArray(),
+    db.satAttempts.toArray(), db.satResponses.toArray(), db.satSkillStats.toArray(),
+    db.satReviewLog.toArray(),
   ]);
+
+  // SAT attempts travel keyed by `startedAt` rather than by Dexie's autoincrement
+  // id, which is per-device and would collide across browsers. Responses carry
+  // the same key so they can be re-joined on the receiving device.
+  const completedAttempts = satAttempts
+    .filter(a => a.status === 'complete')
+    .sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0))
+    .slice(0, SYNC_ATTEMPT_CAP);
+  const attemptKeyById = new Map(completedAttempts.map(a => [a.id, a.startedAt]));
+  const syncedResponses = satResponses
+    .filter(r => attemptKeyById.has(r.attemptId))
+    .sort((a, b) => (b.answeredAt || 0) - (a.answeredAt || 0))
+    .slice(0, SYNC_RESPONSE_CAP);
 
   const reviewCountsByDate = {};
   for (const r of cardReviews) {
@@ -542,6 +588,22 @@ export async function buildSyncSnapshot() {
     coachThreads: coachThreads.map(t => ({
       key: t.createdAt, title: t.title, createdAt: t.createdAt, updatedAt: t.updatedAt,
       messages: messagesByThread[t.id] || [],
+    })),
+    satAttempts: completedAttempts.map(a => ({
+      key: a.startedAt, kind: a.kind, section: a.section, startedAt: a.startedAt,
+      finishedAt: a.finishedAt || null, questionIds: a.questionIds || [],
+      result: a.result || null, meta: a.meta || {},
+    })),
+    satResponses: syncedResponses.map(r => ({
+      attemptKey: attemptKeyById.get(r.attemptId), questionId: r.questionId,
+      skill: r.skill, correct: !!r.correct, choice: r.choice ?? null,
+      seconds: r.seconds ?? null, flagged: !!r.flagged, answeredAt: r.answeredAt,
+    })),
+    satSkillStats: satSkillStats.map(({ skill, ...rest }) => ({ skill, ...rest })),
+    satReviewLog: satReviewLog.map(r => ({
+      questionId: r.questionId, errorType: r.errorType || null, resolved: r.resolved ? 1 : 0,
+      missCount: r.missCount || 1, createdAt: r.createdAt, lastMissedAt: r.lastMissedAt || null,
+      resolvedAt: r.resolvedAt || null, due: r.due || null, fsrsState: r.fsrsState || null,
     })),
   };
 }
@@ -586,6 +648,7 @@ export async function applyRemoteSnapshot(remote) {
     localCatPerf, localAchievements, localStudyDays, localCardReviews,
     localStreakFreezes, localCheckins, localCosmetics, localUnitMastery,
     localPathwayGoals, localCoachThreads, localCoachMessages,
+    localSatAttempts, localSatSkillStats, localSatReviewLog,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -593,6 +656,7 @@ export async function applyRemoteSnapshot(remote) {
     db.streakFreezes.toArray(), db.checkins.toArray(), db.cosmetics.toArray(),
     db.unitMastery.toArray(), db.pathwayGoals.toArray(), db.coachThreads.toArray(),
     db.coachMessages.toArray(),
+    db.satAttempts.toArray(), db.satSkillStats.toArray(), db.satReviewLog.toArray(),
   ]);
 
   // ── profile / XP ──
@@ -759,6 +823,202 @@ export async function applyRemoteSnapshot(remote) {
       }
     }
   }
+
+  // ── SAT attempts + responses ──
+  // Attempts are additive and immutable once complete, so merging is just
+  // "insert anything this device has not seen", keyed by startedAt. Responses
+  // follow their attempt: we only insert responses for attempts we actually
+  // created here, which keeps them from being orphaned by the sync cap.
+  const localAttemptKeys = new Set(localSatAttempts.map(a => a.startedAt));
+  const remoteResponsesByAttempt = {};
+  for (const r of (remote.satResponses || [])) {
+    (remoteResponsesByAttempt[r.attemptKey] ||= []).push(r);
+  }
+  for (const ra of (remote.satAttempts || [])) {
+    if (localAttemptKeys.has(ra.key)) continue;
+    const newId = await db.satAttempts.add({
+      kind: ra.kind, section: ra.section, status: 'complete',
+      startedAt: ra.startedAt, finishedAt: ra.finishedAt,
+      questionIds: ra.questionIds || [], result: ra.result || null, meta: ra.meta || {},
+    });
+    const responses = remoteResponsesByAttempt[ra.key] || [];
+    if (responses.length) {
+      await db.satResponses.bulkAdd(responses.map(r => ({
+        attemptId: newId, questionId: r.questionId, skill: r.skill,
+        correct: !!r.correct, choice: r.choice, seconds: r.seconds,
+        flagged: !!r.flagged, answeredAt: r.answeredAt,
+      })));
+    }
+  }
+
+  // ── SAT skill stats ──
+  // Keep whichever copy is backed by more attempts; a device that has answered
+  // more questions holds the better estimate.
+  const statMap = new Map(localSatSkillStats.map(s => [s.skill, s]));
+  for (const rs of (remote.satSkillStats || [])) {
+    const local = statMap.get(rs.skill);
+    if (!local || (rs.attempts || 0) > (local.attempts || 0)) statMap.set(rs.skill, rs);
+  }
+  if (statMap.size) await db.satSkillStats.bulkPut([...statMap.values()]);
+
+  // ── SAT review log ──
+  // Resolved wins over unresolved (the student did the work somewhere), and
+  // miss counts take the larger of the two.
+  const reviewMap = new Map(localSatReviewLog.map(r => [r.questionId, r]));
+  for (const rr of (remote.satReviewLog || [])) {
+    const local = reviewMap.get(rr.questionId);
+    if (!local) { reviewMap.set(rr.questionId, rr); continue; }
+    reviewMap.set(rr.questionId, {
+      ...local,
+      missCount: Math.max(local.missCount || 1, rr.missCount || 1),
+      resolved: (local.resolved || rr.resolved) ? 1 : 0,
+      resolvedAt: local.resolvedAt || rr.resolvedAt || null,
+      errorType: local.errorType || rr.errorType || null,
+      // The further-out due date reflects the more advanced FSRS state.
+      due: Math.max(local.due || 0, rr.due || 0) || null,
+      fsrsState: (rr.due || 0) > (local.due || 0) ? rr.fsrsState : local.fsrsState,
+    });
+  }
+  await db.satReviewLog.clear();
+  if (reviewMap.size) {
+    await db.satReviewLog.bulkAdd([...reviewMap.values()].map(({ id, ...rest }) => rest));
+  }
+}
+
+// ── SAT ───────────────────────────────────────────────────────────────────────
+// Attempt lifecycle: createSatAttempt() -> recordSatResponse()* -> finishSatAttempt().
+// An attempt left in 'in_progress' is resumable; the full-test player relies on
+// that to survive a refresh mid-module (see `deadline` on the attempt row, which
+// is stored as an absolute wall-clock timestamp, NOT a remaining-seconds
+// countdown — a countdown would silently gain the student time on every reload).
+
+/** kind: 'diagnostic' | 'drill' | 'timed' | 'full' | 'review' */
+export async function createSatAttempt(attempt) {
+  const id = await db.satAttempts.add({
+    kind: 'drill', status: 'in_progress', startedAt: Date.now(),
+    section: null, questionIds: [], meta: {}, ...attempt,
+  });
+  pushDirty();
+  return id;
+}
+
+export async function getSatAttempt(id) {
+  return db.satAttempts.get(id);
+}
+
+export async function updateSatAttempt(id, patch) {
+  await db.satAttempts.update(id, patch);
+  pushDirty();
+}
+
+export async function finishSatAttempt(id, result = {}) {
+  await db.satAttempts.update(id, { status: 'complete', finishedAt: Date.now(), ...result });
+  pushDirty();
+}
+
+export async function getSatAttempts({ kind, status, limit } = {}) {
+  let rows = await db.satAttempts.toArray();
+  if (kind) rows = rows.filter(r => r.kind === kind);
+  if (status) rows = rows.filter(r => r.status === status);
+  rows.sort((a, b) => (b.startedAt || 0) - (a.startedAt || 0));
+  return limit ? rows.slice(0, limit) : rows;
+}
+
+/** The single resumable attempt, if one exists. Used by the full-test panel. */
+export async function getResumableSatAttempt() {
+  const rows = await getSatAttempts({ status: 'in_progress' });
+  return rows[0] || null;
+}
+
+/** Abandon any stale in-progress attempts (e.g. a test started weeks ago). */
+export async function abandonSatAttempt(id) {
+  await db.satAttempts.update(id, { status: 'abandoned', finishedAt: Date.now() });
+  pushDirty();
+}
+
+export async function recordSatResponse(response) {
+  const id = await db.satResponses.add({ answeredAt: Date.now(), ...response });
+  pushDirty();
+  return id;
+}
+
+export async function getSatResponses({ attemptId, skill, since } = {}) {
+  let rows;
+  if (attemptId != null) rows = await db.satResponses.where('attemptId').equals(attemptId).toArray();
+  else if (skill) rows = await db.satResponses.where('skill').equals(skill).toArray();
+  else rows = await db.satResponses.toArray();
+  if (since) rows = rows.filter(r => (r.answeredAt || 0) >= since);
+  return rows.sort((a, b) => (a.answeredAt || 0) - (b.answeredAt || 0));
+}
+
+/** Question ids the student has already seen — so drills don't repeat them. */
+export async function getSeenSatQuestionIds() {
+  const rows = await db.satResponses.toArray();
+  return new Set(rows.map(r => r.questionId));
+}
+
+export async function getSatSkillStats() {
+  return db.satSkillStats.toArray();
+}
+
+export async function saveSatSkillStat(stat) {
+  await db.satSkillStats.put(stat);
+  pushDirty();
+}
+
+export async function saveSatSkillStats(stats) {
+  if (!stats?.length) return;
+  await db.satSkillStats.bulkPut(stats);
+  pushDirty();
+}
+
+// ── Review log ──
+// One row per missed question. `resolved` is 0/1 rather than a boolean because
+// IndexedDB cannot index booleans, and this store is queried by `resolved`.
+export async function addSatReviewEntry(entry) {
+  const existing = await db.satReviewLog.where('questionId').equals(entry.questionId).first();
+  if (existing) {
+    // Missing the same question twice is a stronger signal, not a duplicate row.
+    await db.satReviewLog.update(existing.id, {
+      missCount: (existing.missCount || 1) + 1,
+      resolved: 0,
+      due: entry.due ?? existing.due,
+      lastMissedAt: Date.now(),
+      errorType: entry.errorType ?? existing.errorType,
+    });
+    pushDirty();
+    return existing.id;
+  }
+  const id = await db.satReviewLog.add({
+    resolved: 0, missCount: 1, createdAt: Date.now(), lastMissedAt: Date.now(),
+    errorType: null, due: Date.now(), fsrsState: null, ...entry,
+  });
+  pushDirty();
+  return id;
+}
+
+export async function getSatReviewLog({ includeResolved = false } = {}) {
+  const rows = await db.satReviewLog.toArray();
+  const filtered = includeResolved ? rows : rows.filter(r => !r.resolved);
+  return filtered.sort((a, b) => (a.due || 0) - (b.due || 0));
+}
+
+export async function updateSatReviewEntry(id, patch) {
+  await db.satReviewLog.update(id, patch);
+  pushDirty();
+}
+
+export async function resolveSatReviewEntry(id) {
+  await db.satReviewLog.update(id, { resolved: 1, resolvedAt: Date.now() });
+  pushDirty();
+}
+
+// ── AI question cache (local-only; regenerable, so excluded from sync) ──
+export async function getSatAiCache(key) {
+  return db.satAiCache.get(key);
+}
+export async function putSatAiCache(key, questions) {
+  await db.satAiCache.put({ key, questions, createdAt: Date.now() });
 }
 
 // ── Sync push scheduling ──────────────────────────────────────────────────────
@@ -806,5 +1066,7 @@ export async function clearAllData() {
     db.streakFreezes.clear(), db.checkins.clear(), db.cosmetics.clear(),
     db.deckMeta.clear(), db.unitMastery.clear(), db.studyEvents.clear(),
     db.pathwayGoals.clear(), db.coachThreads.clear(), db.coachMessages.clear(),
+    db.satAttempts.clear(), db.satResponses.clear(), db.satSkillStats.clear(),
+    db.satReviewLog.clear(), db.satAiCache.clear(),
   ]);
 }

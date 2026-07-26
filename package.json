@@ -2,7 +2,7 @@
   "name": "medschoolprep",
   "version": "3.0.0",
   "type": "module",
-  "description": "A personalized path into medicine for high schoolers — pathway diagnostic, SAT/ACT prep, and application portfolio",
+  "description": "A personalized path into medicine for high schoolers \u2014 pathway diagnostic, SAT/ACT prep, and application portfolio",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,8 @@
     "audit:videos": "node scripts/auditVideoIds.mjs",
     "audit:sat": "node scripts/auditSatBank.mjs",
     "verify:sat-scoring": "node scripts/verifySatScoring.mjs",
-    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring"
+    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring",
+    "verify:sat-tab": "node scripts/verifySatTab.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
+    "playwright": "^1.62.0",
     "vite": "^5.0.8",
     "vite-plugin-pwa": "^0.20.5"
   },
