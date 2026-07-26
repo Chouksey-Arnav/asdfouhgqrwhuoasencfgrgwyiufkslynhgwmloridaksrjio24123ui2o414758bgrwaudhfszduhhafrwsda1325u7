@@ -22,7 +22,7 @@ import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatDiagnosticPanel({
-  accent = C.cyan, satData, isMobile = false, onNavigate,
+  accent = C.cyan, satData, isMobile = false, onNavigate, onSessionComplete,
 }) {
   const { attempts, reload } = satData;
   const [session, setSession] = useState(null);
@@ -55,6 +55,7 @@ export default function SatDiagnosticPanel({
     await finish(session.attemptId, responses, { kind: 'diagnostic' });
     setResult({ responses, ranked, bySection });
     setSession(null);
+    onSessionComplete?.('sat_practice');
     reload();
   }
 

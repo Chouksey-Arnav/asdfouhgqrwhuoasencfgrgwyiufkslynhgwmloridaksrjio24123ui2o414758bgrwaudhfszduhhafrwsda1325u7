@@ -88,7 +88,7 @@ import EmptyState from './components/ui/EmptyState';
 import { useMediaQuery, Arc, Bar, Stat } from './components/ui/primitives';
 import SatTab from './components/sat/SatTab';
 import { projectScore } from './lib/sat/projection';
-import { computeAllMastery } from './lib/sat/mastery';
+import { computeAllMastery, rankSkillsByLeverage } from './lib/sat/mastery';
 import { SCORE_DISCLAIMER } from './data/sat/scoring';
 import AppTour from './components/AppTour';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
@@ -1365,6 +1365,13 @@ export default function App({ account, onAccountChange }) {
     { target:'settings-deep-account', section:'Settings', color:C.amber, title:'Account', body:"See which email you're signed in with — your Portfolio data syncs to this account across devices.", onEnter:()=>setTab('settings') },
     { target:'settings-deep-danger', section:'Settings', color:C.amber, title:'Danger Zone', body:"Resetting progress or clearing local data is permanent — these controls exist, but use them deliberately.", onEnter:()=>setTab('settings') },
 
+    // ── SAT ───────────────────────────────────────────────────────────────────
+    { target:'sat-sub-overview', section:'SAT', color:C.lime, title:'The SAT tab', body:"Everything for raising your score lives here: a skill diagnostic, adaptive practice, full-length tests with real module routing, and a review log for every question you miss.", onEnter:()=>goSat('overview') },
+    { target:'sat-deep-diagnostic', section:'SAT', color:C.cyan, title:'Start with the diagnostic', body:"About 30 minutes across all 28 tested skills. It won't hand you a score — it tells you which skills are actually costing you points, so nothing after this is guesswork.", onEnter:()=>goSat('diagnostic') },
+    { target:'sat-deep-practice', section:'SAT', color:C.blue, title:'Targeted practice', body:"Smart Set picks your questions for you, weighted toward weak skills that the exam tests heavily. Or drill one skill, or run a timed set at real exam pacing.", onEnter:()=>goSat('practice') },
+    { target:'sat-deep-tests', section:'SAT', color:C.violet, title:'Full-length adaptive tests', body:"Two sections, four modules, with the real routing: how you do on Module 1 decides whether Module 2 is the harder one — and the easier path caps that section near 600.", onEnter:()=>goSat('tests') },
+    { target:'sat-deep-review', section:'SAT', color:C.rose, title:'The review log', body:"The part almost everyone skips, and the part that actually moves scores. Every miss lands here; you say why you missed it, and it comes back for a retry on a spaced schedule.", onEnter:()=>goSat('review') },
+
     // ── Quick Jump ────────────────────────────────────────────────────────────
     { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump (⌘K)', body:"Press ⌘K (or Ctrl+K) anytime, from anywhere in the app, to jump straight to any tab or sub-view — no clicking through menus. That's the whole tour — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
   ],[goPrep,goPortfolio,goProgress]);
@@ -2049,15 +2056,31 @@ export default function App({ account, onAccountChange }) {
   // not enough evidence to say anything honest — in which case the UI points the
   // student at the diagnostic instead of inventing a number.
   const [satProjection,setSatProjection]=useState(null);
+  const [satWeakSkills,setSatWeakSkills]=useState([]);
+  const [satOpenReviews,setSatOpenReviews]=useState(0);
+  const [satStats,setSatStats]=useState({diagnosticDone:false,fullTests:0,questions:0,logCleared:false,masteredSkills:0});
   useEffect(()=>{
     let cancelled=false;
     (async()=>{
       try{
-        const [attempts,responses]=await Promise.all([DB.getSatAttempts(),DB.getSatResponses()]);
+        const [attempts,responses,reviewLog]=await Promise.all([
+          DB.getSatAttempts(),DB.getSatResponses(),DB.getSatReviewLog({includeResolved:true}),
+        ]);
         if(cancelled) return;
         const masteryMap=computeAllMastery(responses);
+        const open=reviewLog.filter(r=>!r.resolved);
         setSatProjection(projectScore({masteryMap,attempts,responses}));
-      }catch{ if(!cancelled) setSatProjection(null); }
+        setSatWeakSkills(rankSkillsByLeverage(masteryMap).filter(s=>s.attempts>0).slice(0,4));
+        setSatOpenReviews(open.length);
+        setSatStats({
+          diagnosticDone:attempts.some(a=>a.kind==='diagnostic'&&a.status==='complete'),
+          fullTests:attempts.filter(a=>a.kind==='full'&&a.status==='complete').length,
+          questions:responses.length,
+          // Only counts as "cleared" if there was ever anything to clear.
+          logCleared:reviewLog.length>0&&open.length===0,
+          masteredSkills:Object.values(masteryMap).filter(m=>m.mastery>=0.8&&m.attempts>=8).length,
+        });
+      }catch{ if(!cancelled){ setSatProjection(null); setSatWeakSkills([]); setSatOpenReviews(0); } }
     })();
     return()=>{cancelled=true;};
   },[tab,satView]);
@@ -2197,6 +2220,11 @@ export default function App({ account, onAccountChange }) {
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
+      satDiagnosticDone: extra.satDiagnosticDone??satStats.diagnosticDone,
+      satFullTests: extra.satFullTests??satStats.fullTests,
+      satQuestions: extra.satQuestions??satStats.questions,
+      satLogCleared: extra.satLogCleared??satStats.logCleared,
+      satMasteredSkills: extra.satMasteredSkills??satStats.masteredSkills,
       pathwayCompletions,
       unlocked,
     });
@@ -2216,7 +2244,7 @@ export default function App({ account, onAccountChange }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount,satStats]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
@@ -2417,6 +2445,9 @@ export default function App({ account, onAccountChange }) {
         apIb:!!user?.apIb,
         weakestCategory:weakIdx?cats3[weakIdx.i]:null,
         weakestScore:weakIdx?weakIdx.v:null,
+        satProjection,
+        satWeakSkills:satWeakSkills,
+        satOpenReviews:satOpenReviews,
         dueCards,
         nextDeadlineTitle:nextDeadline?.title||null,
         nextDeadlineDays:nextDeadline?.days??null,
@@ -3633,6 +3664,17 @@ export default function App({ account, onAccountChange }) {
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
           eyebrow="Quiz Library" title="Practice Quizzes"
           sub="Exam-style questions across every subject — filter by category and difficulty, or let Medabrain rank what to take next."/>
+        {/* This library is science content, not SAT content — a distinction that
+            used to be invisible, since plan tasks labelled "SAT practice set"
+            linked straight here. Say it plainly and point at the real thing. */}
+        <div onClick={()=>goSat('practice')} style={{...glass2({padding:'12px 16px'}),border:`1px solid ${C.lime}30`,background:`linear-gradient(120deg,${C.limeDim},rgba(255,255,255,0.015))`,cursor:'pointer',display:'flex',alignItems:'center',gap:12}}>
+          <Target size={16} color={C.limeL} style={{flexShrink:0}}/>
+          <div style={{flex:1,minWidth:0}}>
+            <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Looking for SAT practice?</div>
+            <div style={{fontSize:11.5,color:C.t2,marginTop:2,lineHeight:1.5}}>These quizzes are science content. SAT questions, full-length adaptive tests and your review log live in the SAT tab.</div>
+          </div>
+          <ChevronRight size={15} color={C.t3} style={{flexShrink:0}}/>
+        </div>
         {/* Stat tiles */}
         <div style={G(3,12,{},isMobile)}>
           <StatTile icon={Layers} value={ALL_QUIZZES.length} label={`quizzes · ${TOTAL_QUESTIONS} questions`} color={C.sky}/>
@@ -6415,7 +6457,9 @@ export default function App({ account, onAccountChange }) {
   function openPlanResource(task){
     const {resourceTab:tab,resourceView:view,resourceKind:kind,resourceId:id}=task||{};
     if(!tab||!view)return;
-    if(tab==='prep')goPrep(view);else if(tab==='portfolio')goPortfolio(view);else goProgress(view);
+    // Without the explicit `sat` branch, a SAT task would fall through to the
+    // final else and land the student on Progress.
+    if(tab==='prep')goPrep(view);else if(tab==='portfolio')goPortfolio(view);else if(tab==='sat')goSat(view);else goProgress(view);
     play('click');
     if(!kind||kind==='view'||!id)return;
     if(kind==='quiz'){
@@ -6464,6 +6508,7 @@ export default function App({ account, onAccountChange }) {
         onViewChange={(v,p)=>{ setSatView(v); setSatParams(p||null); }}
         params={satParams}
         onConsumeParams={()=>setSatParams(null)}
+        onSessionComplete={(taskType)=>saveUser(applyPlanAutoComplete(user,typeMatch(taskType)))}
         subnavItems={SAT_SUBNAV}
         accent={satAccent}
         user={user}

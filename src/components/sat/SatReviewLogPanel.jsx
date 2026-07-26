@@ -12,6 +12,8 @@ import { detectPatterns } from '../../lib/sat/errorPatterns';
 import { getQuestion } from '../../data/sat/questions/index.js';
 import { ERROR_TYPES, ERROR_TYPE_IDS, TRAP_TAGS, skillMeta } from '../../data/sat/taxonomy';
 import { nextReviewLabel } from '../../lib/fsrs';
+import { explainQuestion } from '../../lib/sat/aiQuestions';
+import { renderMarkdown } from '../../lib/renderMarkdown';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Review Log — a first-class tab, not a results footnote.
@@ -33,11 +35,14 @@ const FILTERS = [
   { id: 'resolved', label: 'Cleared' },
 ];
 
-export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile = false, onNavigate }) {
+export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile = false, onNavigate, onSessionComplete,
+}) {
   const { reviewLog, reload } = satData;
   const [filter, setFilter] = useState('untriaged');
   const [expanded, setExpanded] = useState(null);
   const [retrySession, setRetrySession] = useState(null);
+  // questionId -> { loading, text } for the on-demand AI explanations.
+  const [explanations, setExplanations] = useState({});
   const { start, recordResponse, finish } = useSatSession();
 
   const open = useMemo(() => reviewLog.filter(r => !r.resolved), [reviewLog]);
@@ -66,6 +71,18 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
     reload();
   }, [reload]);
 
+  // Grounded re-explanation: the model is given the question and the official
+  // rationale and told not to contradict it, so it rephrases rather than invents.
+  const askForExplanation = useCallback(async (entry) => {
+    const qid = entry.questionId;
+    setExplanations(prev => ({ ...prev, [qid]: { loading: true, text: null } }));
+    const text = await explainQuestion(entry.question, entry.chosenIndex);
+    setExplanations(prev => ({
+      ...prev,
+      [qid]: { loading: false, text: text || 'Could not reach the tutor right now — the written explanation above still stands.' },
+    }));
+  }, []);
+
   async function startRetry() {
     const questions = due.map(r => getQuestion(r.questionId)).filter(Boolean).slice(0, 10);
     if (!questions.length) { toast('Nothing is due for retry yet.'); return; }
@@ -81,6 +98,7 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
     }
     await finish(retrySession.attemptId, responses);
     setRetrySession(null);
+    onSessionComplete?.('sat_review');
     reload();
   }
 
@@ -244,6 +262,28 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
                               </div>
                             )}
                           </div>
+
+                          {/* Grounded AI re-explanation, on demand only — one
+                              request per question, never preloaded. */}
+                          {explanations[entry.questionId]?.text ? (
+                            <div style={{ ...glass2({ padding: 12 }), marginBottom: 12, borderColor: tint(C.violet, 0.25) }}>
+                              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+                                <Sparkles size={12} color={C.violetL} />
+                                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.08em' }}>Explained another way</span>
+                              </div>
+                              <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}
+                                dangerouslySetInnerHTML={{ __html: renderMarkdown(explanations[entry.questionId].text) }} />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => askForExplanation(entry)}
+                              disabled={explanations[entry.questionId]?.loading}
+                              style={{ ...btnG({ padding: '7px 13px', fontSize: 11.5 }), marginBottom: 12 }}
+                            >
+                              <Sparkles size={12} />
+                              {explanations[entry.questionId]?.loading ? 'Thinking…' : 'Explain this differently'}
+                            </button>
+                          )}
 
                           {!entry.resolved && (
                             <>

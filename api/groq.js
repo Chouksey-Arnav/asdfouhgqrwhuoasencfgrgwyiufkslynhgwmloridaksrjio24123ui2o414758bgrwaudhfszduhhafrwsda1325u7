@@ -111,6 +111,7 @@ const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss
 //   GROQ_API_KEY_PREP                               → in-context prep help
 //   GROQ_API_KEY_PLAN                               → onboarding max-out plan generation
 //   GROQ_API_KEY_MASTERPLAN                         → Plans tab full day-by-day plan generation
+//   GROQ_API_KEY_SAT                                → SAT tab: generated drills + question explanations
 const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
 const PURPOSE_KEYS = {
   interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
@@ -118,8 +119,9 @@ const PURPOSE_KEYS = {
   prep: [process.env.GROQ_API_KEY_PREP].filter(Boolean),
   plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   masterplan: [process.env.GROQ_API_KEY_MASTERPLAN].filter(Boolean),
+  sat: [process.env.GROQ_API_KEY_SAT].filter(Boolean),
 };
-const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan']);
+const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat']);
 
 // Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
 // falls back to the shared Medabrain pool. Returns { primary, fallback } rather than one flat pool:
@@ -148,6 +150,7 @@ const PURPOSE_DEFAULT_TIER = {
   interview: 'guide',  // conversational, low-latency for spoken turns
   plan: 'sage',        // one-time, max-quality — worth the 70B model
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
+  sat: 'sage',         // generated practice questions must be correct; the 70B tier earns its cost here
 };
 
 // One rotation cursor per purpose (not a single shared counter) — otherwise unrelated purposes'

@@ -28,11 +28,22 @@ const denorm = (testTrack, n) => (testTrack === 'ACT' ? Math.round(n / 30) : Mat
 const TIMELINE_MONTHS = { lt3: 2.5, '3-6': 4.5, '6-12': 9, unscheduled: null };
 export const timelineMonths = (t) => TIMELINE_MONTHS[t] ?? null;
 
-// The honest ceiling on score improvement: with structured daily prep, a
-// sustained ~70 normalized points/month plus ~40 points of quick early wins
-// (pacing, format familiarity) is the upper edge of what real students do.
-const maxPlausibleGain = (months) => Math.round(months * 70 + 40);
-const monthsNeededFor = (n) => Math.max(1, Math.ceil((n - 40) / 70));
+// The honest ceiling on score improvement.
+//
+// Anchored to the commonly cited figures for quality practice: roughly 20 hours
+// of focused prep is associated with average gains around +115 points, and
+// gains flatten well before the theoretical maximum. At a realistic ~5 hours a
+// week, that puts a month of genuine work near +60 points, plus about 40 points
+// of quick early wins available to almost everyone (pacing, format familiarity,
+// knowing the answer-elimination habits).
+//
+// This is a CEILING used to reject impossible targets, not a promise. Nothing in
+// the app should present it as an expected outcome — see scoreScenario below,
+// which bands the gap rather than quoting this number to the student.
+const POINTS_PER_MONTH = 60;
+const EARLY_WINS = 40;
+const maxPlausibleGain = (months) => Math.round(months * POINTS_PER_MONTH + EARLY_WINS);
+const monthsNeededFor = (n) => Math.max(1, Math.ceil((n - EARLY_WINS) / POINTS_PER_MONTH));
 
 // ── Target-score scenario ────────────────────────────────────────────────────
 // Bands the current→target gap into one of six honest scenarios — including

@@ -7,7 +7,8 @@ import EmptyState from '../ui/EmptyState';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import { useSatSession } from './useSatSession';
-import { buildSmartSet, buildSkillDrill, buildTimedSet, estimateMinutes } from '../../lib/sat/selector';
+import { buildSmartSet, buildSkillDrill, buildTimedSet, estimateMinutes, targetDifficulty } from '../../lib/sat/selector';
+import { generateQuestions } from '../../lib/sat/aiQuestions';
 import { SAT_SECTIONS, skillMeta } from '../../data/sat/taxonomy';
 import { questionCountForSkill } from '../../data/sat/questions/index.js';
 
@@ -32,7 +33,7 @@ const MODES = [
 ];
 
 export default function SatPracticePanel({
-  accent = C.blue, satData, params, onConsumeParams, isMobile = false, onNavigate,
+  accent = C.blue, satData, params, onConsumeParams, isMobile = false, onNavigate, onSessionComplete,
 }) {
   const { masteryMap, ranked, openReviews, seenIds, reload } = satData;
   const [mode, setMode] = useState('smart');
@@ -40,6 +41,7 @@ export default function SatPracticePanel({
   const [timedSection, setTimedSection] = useState('rw');
   const [session, setSession] = useState(null); // {questions, mode, kind, rationale, deadline}
   const [summary, setSummary] = useState(null);
+  const [generating, setGenerating] = useState(false);
   const { attemptId, setAttemptId, start, recordResponse, finish, abandon } = useSatSession();
 
   // Deep link from the Overview's next-best-action, or the Review Log.
@@ -73,8 +75,29 @@ export default function SatPracticePanel({
     startSession({ questions, rationale, mode: 'tutor', kind: 'drill' });
   }
 
-  function beginDrill(skillId) {
-    const questions = buildSkillDrill(skillId, { count: 10, seen: seenIds, seed: Date.now() });
+  async function beginDrill(skillId) {
+    let questions = buildSkillDrill(skillId, { count: 10, seen: seenIds, seed: Date.now() });
+
+    // Top up from the AI when the static bank cannot fill a drill without
+    // repeating. The bank is always primary; generated items are validated in
+    // aiQuestions.js and silently dropped if they fail, so a thin skill yields
+    // a shorter drill rather than a wrong one.
+    const unseenCount = questions.filter(q => !seenIds.has(q.id)).length;
+    if (unseenCount < 6) {
+      setGenerating(true);
+      try {
+        const extra = await generateQuestions(skillId, {
+          difficulty: targetDifficulty(masteryMap[skillId]?.mastery ?? 0),
+          count: 4,
+        });
+        if (extra.length) {
+          const existing = new Set(questions.map(q => q.id));
+          questions = [...questions, ...extra.filter(q => !existing.has(q.id))].slice(0, 12);
+        }
+      } finally {
+        setGenerating(false);
+      }
+    }
     startSession({ questions, mode: 'tutor', kind: 'drill', skill: skillId });
   }
 
@@ -89,6 +112,7 @@ export default function SatPracticePanel({
     const res = await finish(session.attemptId, responses);
     setSummary({ responses, ...res, questions: session.questions });
     setSession(null);
+    onSessionComplete?.('sat_practice');
     reload();
   }
 
@@ -286,10 +310,10 @@ export default function SatPracticePanel({
           </div>
           <button
             onClick={() => drillSkill && beginDrill(drillSkill)}
-            disabled={!drillSkill}
-            style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { marginTop: 18, opacity: drillSkill ? 1 : 0.4, cursor: drillSkill ? 'pointer' : 'not-allowed' })}
+            disabled={!drillSkill || generating}
+            style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { marginTop: 18, opacity: drillSkill && !generating ? 1 : 0.4, cursor: drillSkill && !generating ? 'pointer' : 'not-allowed' })}
           >
-            Start drill <ChevronRight size={14} />
+            {generating ? 'Building your drill…' : <>Start drill <ChevronRight size={14} /></>}
           </button>
         </div>
       )}

@@ -28,7 +28,7 @@ import { SCORE_DISCLAIMER, MODULE_PATHS } from '../../data/sat/scoring';
 const STAGES = buildTestPlan();
 
 export default function SatFullTestPanel({
-  accent = C.violet, satData, isMobile = false, onNavigate,
+  accent = C.violet, satData, isMobile = false, onNavigate, onSessionComplete,
 }) {
   const { attempts, reload } = satData;
   const [state, setState] = useState(null); // {attemptId, stageIdx, questions, deadline, responses}
@@ -163,6 +163,7 @@ export default function SatFullTestPanel({
     });
     setReport({ scored, responsesByStage, allResponses });
     setState(null);
+    onSessionComplete?.('sat_test');
     reload();
   }
 

@@ -20,7 +20,7 @@ import ScoreTrackerPanel from '../ScoreTrackerPanel';
 
 export default function SatTab({
   view, onViewChange, params, onConsumeParams, subnavItems,
-  accent = C.lime, user, isMobile = false, planStrip = null,
+  accent = C.lime, user, isMobile = false, planStrip = null, onSessionComplete,
 }) {
   // Keyed on the active view so moving between panels re-reads Dexie and every
   // panel agrees on the same snapshot.
@@ -31,7 +31,10 @@ export default function SatTab({
     onViewChange(nextView, nextParams);
   }, [onViewChange]);
 
-  const shared = { satData, isMobile, onNavigate: navigate, user };
+  // Finishing a session ticks the matching plan task (sat_practice / sat_review
+  // / sat_test) via AUTO_VERIFIABLE_TYPES, so "SAT practice set" on the Plans
+  // tab completes itself instead of needing a manual checkbox.
+  const shared = { satData, isMobile, onNavigate: navigate, user, onSessionComplete };
 
   const panels = {
     overview: () => <SatOverviewPanel accent={C.lime} {...shared} />,
