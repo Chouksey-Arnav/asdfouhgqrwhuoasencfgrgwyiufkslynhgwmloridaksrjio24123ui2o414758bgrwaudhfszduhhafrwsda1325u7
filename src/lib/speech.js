@@ -58,9 +58,77 @@ const PREFERRED_VOICES = [
   'Google español',
 ];
 
+// ── Voice selection (persisted student preference) ──────────────────────────
+// The catalogue of voices is whatever the OS/browser ships, so we can't offer a
+// fixed roster — instead we let the student pick from whatever's actually
+// available on their device and remember that choice (by voiceURI, which is
+// stable across reloads on the same browser/device, unlike array index).
+const VOICE_PREF_KEY = 'msp_interviewer_voice_uri';
+
+export function getSavedVoiceURI() {
+  try { return localStorage.getItem(VOICE_PREF_KEY) || null; } catch { return null; }
+}
+export function setSavedVoiceURI(uri) {
+  try {
+    if (uri) localStorage.setItem(VOICE_PREF_KEY, uri);
+    else localStorage.removeItem(VOICE_PREF_KEY);
+  } catch { /* private browsing / storage disabled — preference just won't persist */ }
+}
+
+// Rough gender/style guess from voice name, purely for grouping the picker UI
+// into friendlier buckets — best-effort, not authoritative (browsers don't
+// expose real metadata for Web Speech voices).
+const FEMALE_HINTS = /female|samantha|karen|moira|tessa|serena|zira|aria|jenny|susan|victoria|allison|ava|kate|fiona|amelie|ellen|joana|kyoko|mei-?jia|milena|paulina|satu|zosia|luciana|monica|sara|anna|catherine/i;
+const MALE_HINTS = /male|daniel|alex|fred|david|mark|james|thomas|guy|ryan|george|oliver|arthur|diego|jorge|carlos|felix|jorge|luca|xander|yuri/i;
+
+function guessGender(name) {
+  if (FEMALE_HINTS.test(name)) return 'Female-leaning';
+  if (MALE_HINTS.test(name)) return 'Male-leaning';
+  return 'Neutral';
+}
+
+// Enhanced/"Natural"/Online voices are noticeably higher quality on most
+// platforms (macOS "Enhanced", Windows "Online (Natural)", Chrome network
+// voices) — tag them so the picker can surface the good ones first.
+function guessQuality(voice) {
+  if (/natural|enhanced|premium/i.test(voice.name)) return 'Enhanced';
+  if (!voice.localService) return 'Online';
+  return 'Standard';
+}
+
+// Builds the list the voice picker renders: every voice the browser exposes,
+// tagged with friendly metadata and sorted English-first / enhanced-first /
+// alphabetically, so the best options are at the top without hiding anything.
+export function getVoiceOptions(voices) {
+  const list = voices && voices.length ? voices : voicesCache;
+  if (!list || !list.length) return [];
+  const qualityRank = { Enhanced: 0, Online: 1, Standard: 2 };
+  return list
+    .map(v => ({
+      voice: v,
+      voiceURI: v.voiceURI,
+      name: v.name,
+      lang: v.lang,
+      isEnglish: /^en/i.test(v.lang),
+      gender: guessGender(v.name),
+      quality: guessQuality(v),
+    }))
+    .sort((a, b) => {
+      if (a.isEnglish !== b.isEnglish) return a.isEnglish ? -1 : 1;
+      const q = qualityRank[a.quality] - qualityRank[b.quality];
+      if (q !== 0) return q;
+      return a.name.localeCompare(b.name);
+    });
+}
+
 export function pickInterviewerVoice(voices) {
   const list = voices && voices.length ? voices : voicesCache;
   if (!list || !list.length) return null;
+  const savedURI = getSavedVoiceURI();
+  if (savedURI) {
+    const saved = list.find(v => v.voiceURI === savedURI);
+    if (saved) return saved;
+  }
   for (const name of PREFERRED_VOICES) {
     const hit = list.find(v => v.name === name);
     if (hit) return hit;

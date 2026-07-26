@@ -409,6 +409,7 @@ export function buildPrepSystemPrompt({
   keyTakeaways = [],
   objectives = [],
   unitTitles = [],
+  lessonNote = '',
   // ── Pathway-level progress (only used when no `lesson` is open) — lets
   // "what should I study next" answers reference this student's actual
   // completion state instead of just the pathway's static unit list.
@@ -428,7 +429,7 @@ If asked about anything outside Prep (Portfolio tracking, the day-by-day study p
 
   let scopeBlock;
   if (lesson) {
-    scopeBlock = `\n\n── The lesson they're currently studying ──\nLesson: "${lesson.title}"${unit?.title ? ` (unit: "${unit.title}")` : ''}\n${objectives.length ? `What this lesson is supposed to teach: ${objectives.join('; ')}\n` : ''}${articleSections.length ? `Article content, section by section:\n${articleSections.map(s => `- ${s.heading}: ${s.body}`).join('\n')}\n` : ''}${keyTakeaways.length ? `Key takeaways: ${keyTakeaways.join('; ')}` : ''}`;
+    scopeBlock = `\n\n── The lesson they're currently studying ──\nLesson: "${lesson.title}"${unit?.title ? ` (unit: "${unit.title}")` : ''}\n${objectives.length ? `What this lesson is supposed to teach: ${objectives.join('; ')}\n` : ''}${articleSections.length ? `Article content, section by section:\n${articleSections.map(s => `- ${s.heading}: ${s.body}`).join('\n')}\n` : ''}${keyTakeaways.length ? `Key takeaways: ${keyTakeaways.join('; ')}` : ''}${lessonNote.trim() ? `\n\n── The student's own notes on this lesson (written by them, in their own words — you have full access) ──\n"${lessonNote.trim()}"\n\nUse these notes actively: reference them by name when relevant, answer questions about what they wrote, help them expand on something they flagged as confusing, quiz them on their own notes, or help turn them into a cleaner summary or flashcards if asked. Treat these as a first-class part of what you know about their study of this lesson, not an afterthought.` : ''}`;
   } else {
     const unitLines = units.length
       ? units.map(u => `- "${u.title}": ${u.done}/${u.total} lesson(s) verified${u.done >= u.total && u.total > 0 ? ' — complete' : ''}`).join('\n')

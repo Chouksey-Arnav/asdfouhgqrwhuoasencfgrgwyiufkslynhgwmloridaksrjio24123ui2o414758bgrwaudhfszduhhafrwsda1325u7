@@ -136,6 +136,18 @@ db.version(11).stores({
   satAiCache:    'key, createdAt',
 });
 
+// v12: Pathway lesson notes + article highlights. Distinct from the existing E-Library
+// `resourceNotes` (a flat string on the user profile, keyed by resource title) — these are
+// per-lesson, structured enough for cross-device sync, and explicitly threaded into Meta Brain's
+// context (buildPrepSystemPrompt) so the student can ask it about what they wrote down.
+// `lessonHighlights` stores one row per highlighted passage (section index + character offsets
+// into that section's article body) rather than raw HTML, so re-rendering the article with
+// updated content later can't corrupt a saved highlight's position within a section.
+db.version(12).stores({
+  lessonNotes:      'lessonId, updatedAt',
+  lessonHighlights: '++id, lessonId, createdAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -461,6 +473,41 @@ export async function addInterviewSession(entry) {
   return db.interviewSessions.add({ ...entry, completedAt: Date.now() });
 }
 
+// ── Pathway Lesson Notes ──────────────────────────────────────────────────────
+// One free-text note per lesson (keyed by lessonId, so writing a new note for the same lesson
+// simply overwrites — a student doesn't need multiple notes per lesson, just one evolving one).
+export async function getLessonNote(lessonId) {
+  const row = await db.lessonNotes.get(lessonId);
+  return row?.text || '';
+}
+export async function getAllLessonNotes() {
+  const rows = await db.lessonNotes.toArray();
+  return Object.fromEntries(rows.map(r => [r.lessonId, r.text]));
+}
+export async function saveLessonNote(lessonId, text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed) { await db.lessonNotes.delete(lessonId); pushDirty(); return; }
+  await db.lessonNotes.put({ lessonId, text, updatedAt: Date.now() });
+  pushDirty();
+}
+
+// ── Pathway Lesson Highlights ─────────────────────────────────────────────────
+// One row per highlighted passage. `sectionIdx` + `start`/`end` are character offsets into that
+// article section's plain-text body (see components/HighlightableArticle.jsx), NOT DOM offsets —
+// DOM structure can change (e.g. overlapping highlights) but the underlying text doesn't.
+export async function getLessonHighlights(lessonId) {
+  return db.lessonHighlights.where('lessonId').equals(lessonId).sortBy('createdAt');
+}
+export async function addLessonHighlight(lessonId, { sectionIdx, start, end, text, color }) {
+  const id = await db.lessonHighlights.add({ lessonId, sectionIdx, start, end, text, color: color || 'yellow', createdAt: Date.now() });
+  pushDirty();
+  return id;
+}
+export async function deleteLessonHighlight(id) {
+  await db.lessonHighlights.delete(id);
+  pushDirty();
+}
+
 // ── Medabrain Chat Threads ────────────────────────────────────────────────
 // A student can run as many parallel Medabrain conversations as they want —
 // each is its own row here plus a run of rows in coachMessages, so switching
@@ -529,6 +576,7 @@ export async function buildSyncSnapshot() {
     studyDays, cardReviews, streakFreezes, checkins, cosmetics, unitMastery,
     pathwayGoals, coachThreads, coachMessages,
     satAttempts, satResponses, satSkillStats, satReviewLog,
+    lessonNotes, lessonHighlights,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -538,6 +586,7 @@ export async function buildSyncSnapshot() {
     db.coachMessages.toArray(),
     db.satAttempts.toArray(), db.satResponses.toArray(), db.satSkillStats.toArray(),
     db.satReviewLog.toArray(),
+    db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
   ]);
 
   // SAT attempts travel keyed by `startedAt` rather than by Dexie's autoincrement
@@ -605,6 +654,9 @@ export async function buildSyncSnapshot() {
       missCount: r.missCount || 1, createdAt: r.createdAt, lastMissedAt: r.lastMissedAt || null,
       resolvedAt: r.resolvedAt || null, due: r.due || null, fsrsState: r.fsrsState || null,
     })),
+    lessonNotes: lessonNotes.map(({ lessonId, text, updatedAt }) => ({ lessonId, text, updatedAt })),
+    lessonHighlights: lessonHighlights.map(({ lessonId, sectionIdx, start, end, text, color, createdAt }) =>
+      ({ lessonId, sectionIdx, start, end, text, color, createdAt })),
   };
 }
 
@@ -649,6 +701,7 @@ export async function applyRemoteSnapshot(remote) {
     localStreakFreezes, localCheckins, localCosmetics, localUnitMastery,
     localPathwayGoals, localCoachThreads, localCoachMessages,
     localSatAttempts, localSatSkillStats, localSatReviewLog,
+    localLessonNotes, localLessonHighlights,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -657,6 +710,7 @@ export async function applyRemoteSnapshot(remote) {
     db.unitMastery.toArray(), db.pathwayGoals.toArray(), db.coachThreads.toArray(),
     db.coachMessages.toArray(),
     db.satAttempts.toArray(), db.satSkillStats.toArray(), db.satReviewLog.toArray(),
+    db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
   ]);
 
   // ── profile / XP ──
@@ -883,6 +937,25 @@ export async function applyRemoteSnapshot(remote) {
   if (reviewMap.size) {
     await db.satReviewLog.bulkAdd([...reviewMap.values()].map(({ id, ...rest }) => rest));
   }
+
+  // ── lesson notes (newer edit wins per lesson) ──
+  const noteMap = new Map(localLessonNotes.map(r => [r.lessonId, r]));
+  for (const r of (remote.lessonNotes || [])) {
+    const l = noteMap.get(r.lessonId);
+    if (!l || (r.updatedAt || 0) > (l.updatedAt || 0)) noteMap.set(r.lessonId, r);
+  }
+  await db.lessonNotes.clear();
+  if (noteMap.size) await db.lessonNotes.bulkPut([...noteMap.values()]);
+
+  // ── lesson highlights (union, de-duped by lesson+section+range) ──
+  const hlSig = (h) => `${h.lessonId}::${h.sectionIdx}::${h.start}::${h.end}`;
+  const hlMap = new Map(localLessonHighlights.map(r => [hlSig(r), r]));
+  for (const r of (remote.lessonHighlights || [])) {
+    const sig = hlSig(r);
+    if (!hlMap.has(sig)) hlMap.set(sig, r);
+  }
+  await db.lessonHighlights.clear();
+  if (hlMap.size) await db.lessonHighlights.bulkAdd([...hlMap.values()].map(({ id, ...rest }) => rest));
 }
 
 // ── SAT ───────────────────────────────────────────────────────────────────────
@@ -1068,5 +1141,6 @@ export async function clearAllData() {
     db.pathwayGoals.clear(), db.coachThreads.clear(), db.coachMessages.clear(),
     db.satAttempts.clear(), db.satResponses.clear(), db.satSkillStats.clear(),
     db.satReviewLog.clear(), db.satAiCache.clear(),
+    db.lessonNotes.clear(), db.lessonHighlights.clear(),
   ]);
 }

@@ -13,6 +13,11 @@ const LESSON_SUGGESTIONS = [
   'Quiz me on this lesson',
   "I'm confused about part of this — can you help?",
 ];
+const NOTE_SUGGESTIONS = [
+  'Summarize my notes into a few clean bullet points',
+  'Turn my notes into flashcard-style questions',
+  "What did I say I found confusing?",
+];
 const PATHWAY_SUGGESTIONS = [
   'What should I study next in my pathway?',
   'Which unit is most important to master first?',
@@ -36,7 +41,7 @@ const PATHWAY_SUGGESTIONS = [
 export default function PrepMedabrain({
   open, onOpenChange, messages, onMessagesChange,
   user, pathwayLabel, gradeLabel, accent = C.blue, isMobile,
-  lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [],
+  lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [], lessonNote = '',
   units = [], totalDone = null, totalLessons = null, weakestCategory = null, weakestScore = null, dueCards = 0, streak = 0,
 }) {
   const [input, setInput] = React.useState('');
@@ -65,7 +70,7 @@ export default function PrepMedabrain({
     try {
       const sys = buildPrepSystemPrompt({
         user, pathwayLabel, gradeLabel,
-        lesson, unit, articleSections, keyTakeaways, objectives, unitTitles,
+        lesson, unit, articleSections, keyTakeaways, objectives, unitTitles, lessonNote,
         units, totalDone, totalLessons, weakestCategory, weakestScore, dueCards, streak,
       });
       const res = await fetch('/api/groq', {
@@ -85,7 +90,7 @@ export default function PrepMedabrain({
     }
   }
 
-  const suggestions = lesson ? LESSON_SUGGESTIONS : PATHWAY_SUGGESTIONS;
+  const suggestions = lesson ? (lessonNote.trim() ? [...NOTE_SUGGESTIONS, ...LESSON_SUGGESTIONS.slice(0, 2)] : LESSON_SUGGESTIONS) : PATHWAY_SUGGESTIONS;
   const subtitle = lesson ? `Lesson Helper · "${lesson.title}"` : `Pathway Helper · ${pathwayLabel}`;
 
   return (

@@ -12,6 +12,7 @@ import { C, glass, glass2, btn, btnG, R, CC, pill } from '../lib/theme';
 import * as speech from '../lib/speech';
 import * as DB from '../lib/db';
 import { parseInterviewScore } from '../lib/interviewScore';
+import VoiceSelector from './VoiceSelector';
 
 // A rotating pool of focus areas the interviewer can draw on — passed as *inspiration*, with an
 // explicit instruction to craft its own fresh questions and never repeat, so no two sessions feel
@@ -86,13 +87,16 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   const [questionCount, setQuestionCount] = useState(0);
   const [style, setStyle] = useState('warm');         // 'warm' | 'balanced' | 'rigorous' — picked on the idle screen
   const [chosenFocus, setChosenFocus] = useState([]);  // areas explicitly picked on the idle screen; empty = let the interviewer pick at random
+  const [interviewerVoice, setInterviewerVoice] = useState(null); // SpeechSynthesisVoice — picked via VoiceSelector, defaults to pickInterviewerVoice()
 
   const sessionRef = useRef({ system: '', history: [] }); // history in OpenAI role format for the API
   const recognizerRef = useRef(null);
   const cancelSpeakRef = useRef(() => {});
   const scrollRef = useRef(null);
   const mutedRef = useRef(muted);
+  const voiceRef = useRef(null);
   useEffect(() => { mutedRef.current = muted; }, [muted]);
+  useEffect(() => { voiceRef.current = interviewerVoice; }, [interviewerVoice]);
 
   const ttsSupported = speech.isTTSSupported();
   const sttSupported = speech.isSTTSupported();
@@ -109,6 +113,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     if (!ttsSupported || mutedRef.current) return;
     setSpeaking(true);
     cancelSpeakRef.current = speech.speak(text, {
+      voice: voiceRef.current,
       onEnd: () => setSpeaking(false),
       onError: () => setSpeaking(false),
     });
@@ -239,9 +244,16 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
           <span style={pill(C.s3, C.t3, { fontSize: 11 })}>~{MAX_QUESTIONS} questions</span>
         </div>
 
-        {/* Customize this session — interviewer tone + optional focus areas, picked before Start
-            so the same simulator can be a gentle warm-up or a real stress-test on demand. */}
+        {/* Customize this session — voice, interviewer tone, and optional focus areas, picked
+            before Start so the same simulator can be a gentle warm-up or a real stress-test on
+            demand, and always sounds like a voice the student actually chose. */}
         <div style={{ ...glass2({ padding: 16, marginTop: 20, textAlign: 'left' }) }}>
+          {ttsSupported && (
+            <div style={{ marginBottom: 18 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Interviewer Voice</div>
+              <VoiceSelector accent={accent} value={interviewerVoice} onChange={setInterviewerVoice} />
+            </div>
+          )}
           <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Interviewer Style</div>
           <div style={R({ gap: 7, flexWrap: 'wrap', marginBottom: 16 })}>
             {INTERVIEW_STYLES.map(s => (
