@@ -72,7 +72,7 @@ function relTime(ts) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate }) {
+export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate, quizzesTaken = null }) {
   const plan = user?.masterPlan || null;
   const portfolioData = usePortfolioData();
   const [view, setView] = useState('week'); // 'week' | 'roadmap'
@@ -216,8 +216,19 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 
   if (generating) return <GeneratingCard label={stageLabel} accent={accent} />;
   if (!plan) {
-    const readiness = computePlanReadiness(user);
-    if (!readiness.ready) return <LockedState readiness={readiness} accent={accent} isMobile={isMobile} goSettings={goSettings} />;
+    // portfolioData is null while its own fetch is in flight — pass null (not 0) through so
+    // computePlanReadiness treats that one gate as provisionally satisfied rather than flashing
+    // "locked" for a student who actually has Portfolio items, only to unlock a beat later.
+    const portfolioItemCount = portfolioData ? Object.values(portfolioData).reduce((s, arr) => s + (arr?.length || 0), 0) : null;
+    const readiness = computePlanReadiness(user, { quizzesTaken, portfolioItemCount });
+    if (!readiness.ready) {
+      return (
+        <LockedState
+          readiness={readiness} accent={accent} isMobile={isMobile} goSettings={goSettings}
+          onGoActivity={(m) => { if (m.goTab === 'prep') goPrep?.(m.goView); else if (m.goTab === 'portfolio') goPortfolio?.(m.goView); }}
+        />
+      );
+    }
     return <EmptyState onBuild={handleBuild} accent={accent} isMobile={isMobile} />;
   }
 
@@ -265,7 +276,9 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 // plan it can actually be confident in. Anyone who's been through the current
 // onboarding flow already has all six by construction — this only actually
 // gates legacy accounts, which is exactly the intended nudge toward Settings.
-function LockedState({ readiness, accent, isMobile, goSettings }) {
+function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) {
+  const missingProfile = readiness.missing.filter(m => m.kind === 'profile');
+  const missingActivity = readiness.missing.filter(m => m.kind === 'activity');
   return (
     <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.amber}30` }}>
       <div style={{ position: 'absolute', inset: 0, background: C.auroraGrad, opacity: 0.05, pointerEvents: 'none' }} />
@@ -280,17 +293,35 @@ function LockedState({ readiness, accent, isMobile, goSettings }) {
         <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 460, margin: 0 }}>
           Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Fill these in and your plan unlocks:
         </p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 320 }}>
-          {readiness.missing.map(m => (
-            <div key={m.field} style={{ ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
-              <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{m.label}</span>
-            </div>
-          ))}
-        </div>
-        <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.()}>
-          Update My Profile
-        </button>
+        {missingProfile.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Your profile</div>
+            {missingProfile.map(m => (
+              <div key={m.field} style={{ ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
+                <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{m.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        {missingActivity.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Show us where you stand</div>
+            {missingActivity.map(m => (
+              <button key={m.field} onClick={() => onGoActivity?.(m)}
+                style={{ all: 'unset', cursor: onGoActivity ? 'pointer' : 'default', ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', boxSizing: 'border-box', width: '100%' }}>
+                <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600, flex: 1 }}>{m.label}</span>
+                {onGoActivity && <ArrowRight size={13} color={C.amberL} style={{ flexShrink: 0 }} />}
+              </button>
+            ))}
+          </div>
+        )}
+        {missingProfile.length > 0 && (
+          <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.()}>
+            Update My Profile
+          </button>
+        )}
       </div>
     </div>
   );

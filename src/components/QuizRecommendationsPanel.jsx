@@ -7,7 +7,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2 } from 'lucide-react';
+import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Target } from 'lucide-react';
 import { C, glass, glass2, btn, pill } from '../lib/theme';
 import { rankLabel } from '../lib/recommend';
 
@@ -40,12 +40,24 @@ function RankBadge({ rank }) {
  * @param {Array}    ranked        output of rankQuizzes()
  * @param {Function} onStart       (quiz) => void — launch the quiz
  * @param {Function} [onAskMedabrain] async (pick) => string — optional Groq narration for #1
+ * @param {Set|Array} [planQuizIds] quiz ids today's Plan specifically asked for — these are
+ *   pulled to the front of the list (ahead of the normal ranking) and get a "Do for today"
+ *   highlight, so the two quizzes the plan named are never buried in a ranked-by-weakness list.
  */
-export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabrain, compact = false }) {
+export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabrain, compact = false, planQuizIds }) {
   const [brainNote, setBrainNote] = useState(null); // { rank, text }
   const [brainLoading, setBrainLoading] = useState(false);
 
-  if (!ranked || !ranked.length) {
+  const planIdSet = planQuizIds instanceof Set ? planQuizIds : new Set(planQuizIds || []);
+  const isPlanPick = (p) => planIdSet.has(p.quiz.id);
+  // Stable-partition: plan-named quizzes first (in their original relative order), then
+  // everything else in its original ranked order — re-numbered 1..N afterward so the hero
+  // card and rank badges stay consistent with what's actually shown first.
+  const orderedRanked = planIdSet.size
+    ? [...(ranked || []).filter(isPlanPick), ...(ranked || []).filter(p => !isPlanPick(p))].map((p, i) => ({ ...p, rank: i + 1 }))
+    : ranked;
+
+  if (!orderedRanked || !orderedRanked.length) {
     return (
       <div style={{ ...glass({ padding: 24, background: C.greenDim, border: `1px solid ${C.green}30` }), display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, background: `${C.green}18`, border: `1px solid ${C.green}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -59,8 +71,9 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
     );
   }
 
-  const [top, ...rest] = ranked;
+  const [top, ...rest] = orderedRanked;
   const topColor = dColors[top.quiz.diff] || C.blue;
+  const topIsPlanPick = isPlanPick(top);
 
   async function askMedabrain(pick) {
     if (!onAskMedabrain || brainLoading) return;
@@ -87,9 +100,11 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
         whileHover={{ y: -2 }}
         style={{
           position: 'relative', overflow: 'hidden', borderRadius: 18,
-          background: `linear-gradient(135deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))`,
-          border: `1px solid ${C.amber}35`, padding: compact ? 18 : 24,
-          boxShadow: `0 8px 32px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,255,255,0.05)`,
+          background: topIsPlanPick
+            ? `linear-gradient(135deg, rgba(45,127,255,0.12), rgba(245,158,11,0.05))`
+            : `linear-gradient(135deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))`,
+          border: topIsPlanPick ? `1.5px solid ${C.blue}55` : `1px solid ${C.amber}35`, padding: compact ? 18 : 24,
+          boxShadow: topIsPlanPick ? `0 8px 32px rgba(45,127,255,0.18), inset 0 1px 0 rgba(255,255,255,0.05)` : `0 8px 32px rgba(245,158,11,0.12), inset 0 1px 0 rgba(255,255,255,0.05)`,
         }}
       >
         <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle,rgba(245,158,11,0.18),transparent 70%)', pointerEvents: 'none' }} />
@@ -97,6 +112,11 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
           <RankBadge rank={1} />
           <div style={{ flex: 1, minWidth: 200 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+              {topIsPlanPick && (
+                <span style={{ ...pill(`${C.blue}22`, C.blueL, { fontSize: 10, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  <Target size={10} />DO FOR YOUR PLAN TODAY
+                </span>
+              )}
               <span style={pill(`${C.amber}20`, C.amberL, { fontSize: 10, fontWeight: 800 })}>{rankLabel(1).toUpperCase()}</span>
               <span style={pill(`${topColor}18`, topColor, { fontSize: 10 })}>{top.quiz.diff}</span>
               <span style={{ fontSize: 11, color: C.t3 }}>{top.quiz.cat}</span>
@@ -147,18 +167,24 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rest.map((p, i) => {
             const dc = dColors[p.quiz.diff] || C.t2;
+            const planPick = isPlanPick(p);
             return (
               <motion.div
                 key={p.quiz.id}
                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.05 }}
                 whileHover={{ x: 2 }}
-                style={{ ...glass2({ padding: '12px 14px' }), display: 'flex', alignItems: 'center', gap: 12 }}
+                style={{ ...glass2({ padding: '12px 14px' }), display: 'flex', alignItems: 'center', gap: 12, border: planPick ? `1px solid ${C.blue}45` : undefined, background: planPick ? `${C.blue}0c` : undefined }}
               >
                 <RankBadge rank={p.rank} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.quiz.title}</span>
                     <span style={pill(`${dc}18`, dc, { fontSize: 9 })}>{p.quiz.diff}</span>
+                    {planPick && (
+                      <span style={{ ...pill(`${C.blue}20`, C.blueL, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                        <Target size={9} />DO FOR TODAY
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: 11, color: C.t3 }}>{p.reason}</div>
                 </div>

@@ -65,22 +65,50 @@ export function computeOnboardingCompleteness(user) {
 }
 
 // ── Plan readiness gate ────────────────────────────────────────────────────
-// A smaller, all-or-nothing subset of ONBOARDING_FIELDS — the fields Medabrain's
-// Oracle actually needs to build a plan it can be fully confident in (goal, what's
-// in the way, pace, target score, grades, timing). Any student who completes the
-// current onboarding flow (every screen is forced, nothing skippable) already has
-// all six by construction; this only actually gates legacy accounts that onboarded
-// before these fields existed, which is exactly the intended nudge toward Settings.
+// Two layers, both required before Medabrain's Oracle will build the full day-by-day
+// plan: (1) PROFILE — the onboarding facts it needs to reason about the student at all
+// (goal, what's in the way, pace, target score, grades, timing). Any student who
+// completes the current onboarding flow (every screen is forced, nothing skippable)
+// already has all six by construction; this only actually gates legacy accounts that
+// onboarded before these fields existed. (2) ACTIVITY — real signal beyond self-report,
+// so the plan is grounded in something the student has actually DONE, not just
+// answered. This is deliberately a low bar (one of each) — "not too much, so the AI is
+// fully confident, but not so much it becomes a wall." A student who's taken the
+// diagnostic, tried one quiz, and logged one Portfolio item has given the Oracle real
+// signal on their level, habits, and what they're already building — enough to be
+// confident without asking for more than a first-day's worth of engagement.
 const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'onboardingTargetScore', 'gpaBand', 'testTimeline'];
 const PLAN_READINESS_LABELS = {
   goal: 'Your top goal', obstacles: "What's in your way", studyHours: 'Weekly study time',
   onboardingTargetScore: 'Your target score', gpaBand: 'Your grades', testTimeline: 'Your test timing',
 };
-export function computePlanReadiness(user) {
-  if (!user) return { ready: false, pct: 0, missing: PLAN_READINESS_FIELDS.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f] })) };
+// signals: { quizzesTaken, portfolioItemCount } — live counts the caller gathers from
+// wherever they actually live (quiz scores and Portfolio resources aren't on the user
+// record itself). Passing `null` for a count (vs. 0) means "still loading" and that
+// gate is provisionally treated as satisfied so the lock screen doesn't flash true
+// while its own data is still in flight.
+const ACTIVITY_GATES = [
+  { field: 'diagnosticTaken', label: 'Take the Pathway Diagnostic', goTab: 'prep', goView: 'diagnostic', ok: (user) => !!user.diagnosticResult },
+  { field: 'quizAttempted', label: 'Try one practice quiz', goTab: 'prep', goView: 'quizzes', ok: (_user, s) => s.quizzesTaken == null || s.quizzesTaken >= 1 },
+  { field: 'portfolioTracked', label: 'Add one item to your Portfolio', goTab: 'portfolio', goView: null, ok: (_user, s) => s.portfolioItemCount == null || s.portfolioItemCount >= 1 },
+];
+export function computePlanReadiness(user, signals = {}) {
+  const totalChecks = PLAN_READINESS_FIELDS.length + ACTIVITY_GATES.length;
+  if (!user) {
+    const missing = [
+      ...PLAN_READINESS_FIELDS.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile' })),
+      ...ACTIVITY_GATES.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
+    ];
+    return { ready: false, pct: 0, missing };
+  }
   const missingFields = PLAN_READINESS_FIELDS.filter(f => !isFilled(user[f]));
-  const pct = Math.round(((PLAN_READINESS_FIELDS.length - missingFields.length) / PLAN_READINESS_FIELDS.length) * 100);
-  return { ready: missingFields.length === 0, pct, missing: missingFields.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f] })) };
+  const missingActivity = ACTIVITY_GATES.filter(g => !g.ok(user, signals));
+  const missing = [
+    ...missingFields.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile' })),
+    ...missingActivity.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
+  ];
+  const pct = Math.round(((totalChecks - missing.length) / totalChecks) * 100);
+  return { ready: missing.length === 0, pct, missing };
 }
 
 // Human-readable recap of what onboarding captured — shown on the dashboard

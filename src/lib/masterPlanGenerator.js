@@ -997,7 +997,7 @@ export function autoCompleteResourceTasks(plan, isMatch) {
     tasks: d.tasks.map(t => {
       if (t.done || !isMatch(t)) return t;
       changed = true;
-      completed.push({ date: d.date, id: t.id, title: t.title });
+      completed.push({ date: d.date, id: t.id, title: t.title, type: t.type, resourceKind: t.resourceKind });
       return { ...t, done: true, doneAt: Date.now(), xpAwarded: true, autoVerified: true };
     }),
   }));

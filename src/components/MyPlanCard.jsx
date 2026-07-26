@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Target, Flag, Rocket, CalendarRange, TrendingUp, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Sparkles, Target, Flag, Rocket, CalendarRange, TrendingUp, ChevronDown, CheckCircle2, Unlock } from 'lucide-react';
 import { C, glass, glass2, pill, R } from '../lib/theme';
 
 // Surfaces the personalized "max-out plan" built during onboarding (stored on
 // user.generatedPlan) permanently inside the app, so a student can revisit the
 // plan Medabrain wrote for them any time — not just once during signup. Starts
 // collapsed to a colorful summary strip and expands to the full breakdown.
-export default function MyPlanCard({ plan, accent = C.blue }) {
+export default function MyPlanCard({ plan, accent = C.blue, onGoUnlock }) {
   const [open, setOpen] = useState(false);
   if (!plan || !plan.summary) return null;
 
@@ -134,6 +134,27 @@ export default function MyPlanCard({ plan, accent = C.blue }) {
                         <span style={{ fontSize: 12, color: C.t2 }}>{a}</span>
                       </div>
                     ))}
+                  </div>
+                </Block>
+              )}
+
+              {plan.unlockSteps?.length > 0 && (
+                <Block icon={<Unlock size={13} color={C.amberL} />} title="Unlock your full day-by-day plan" color={C.amber}>
+                  <div style={{ ...glass2({ padding: '10px 13px' }), borderLeft: `2px solid ${C.amber}` }}>
+                    <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginBottom: 8 }}>
+                      This is your day-one starter plan. Do these three things and Medabrain's Oracle builds your full day-by-day roadmap, fully confident in where you stand:
+                    </div>
+                    {plan.unlockSteps.map((s, i) => (
+                      <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '4px 0' }}>
+                        <span style={{ width: 18, height: 18, borderRadius: 6, background: `${C.amber}22`, color: C.amberL, fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                        <span style={{ fontSize: 12, color: C.t2 }}>{s}</span>
+                      </div>
+                    ))}
+                    {onGoUnlock && (
+                      <button onClick={onGoUnlock} style={{ ...pill(`${C.amber}18`, C.amberL, { fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `1px solid ${C.amber}35`, marginTop: 8 }) }}>
+                        Get started
+                      </button>
+                    )}
                   </div>
                 </Block>
               )}
