@@ -77,6 +77,7 @@ import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
+import PortfolioPlanWeek from './components/PortfolioPlanWeek';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
   toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
@@ -1826,7 +1827,13 @@ export default function App({ account, onAccountChange }) {
     if(!plan)return baseUser;
     const {plan:updatedPlan,completed}=autoCompleteResourceTasks(plan,isMatch);
     if(!completed.length)return baseUser;
-    const {finalXP,tier}=awardXP(6*completed.length);
+    // Getting ahead — finishing a task dated after today (e.g. tomorrow's plan, started early
+    // off a "get a head start" nudge) earns a +25% XP bonus on top of the normal 6/task, to
+    // actually reward the early-start behavior TodayPlanNudge invites rather than just permit it.
+    const today=planTodayStr();
+    const earlyCount=completed.filter(c=>c.date>today).length;
+    const rawXP=6*completed.length+Math.round(6*earlyCount*0.25);
+    const {finalXP,tier}=awardXP(rawXP);
     // Contextual "staying on track" nudge — fires the moment a Plan-linked quiz/lesson/deck is
     // actually completed (not just when the whole day wraps up), so the reinforcement lands right
     // where the student is working, not only back on Home. Wording and the live plan streak vary
@@ -1839,7 +1846,8 @@ export default function App({ account, onAccountChange }) {
     const nudgeHeadline=single
       ? (isQuiz?`Great! You're staying on track.${streakBit||' Keep it up.'}`:`✓ Daily task complete: ${single.title}`)
       : `${completed.length} plan tasks auto-verified on your plan.${streakBit}`;
-    toast.success(`${nudgeHeadline} · ${BONUS_COPY[tier](finalXP)}`,{icon:<ShieldCheck size={16}/>,duration:3200});
+    const earlyBit=earlyCount>0?` · +25% early-start bonus (${earlyCount} task${earlyCount===1?'':'s'} done ahead of schedule)`:'';
+    toast.success(`${nudgeHeadline} · ${BONUS_COPY[tier](finalXP)}${earlyBit}`,{icon:<ShieldCheck size={16}/>,duration:3200});
     if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(tier==='big'||tier==='bonus')celebrateBonusXP();
     else celebrateXP();
@@ -4988,6 +4996,8 @@ export default function App({ account, onAccountChange }) {
             {value:clinicalHoursTotal,label:'clinical hrs',color:C.pinkL},
           ]}/>
 
+        {user.masterPlan&&<PortfolioPlanWeek user={user} accent={C.blue} onOpenTask={openPlanResource}/>}
+
         {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
         <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
           <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
@@ -6319,7 +6329,7 @@ export default function App({ account, onAccountChange }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
-    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}/>,
+    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} onAdded={()=>saveUser(applyPlanAutoComplete(user,typeMatch('deadline')))}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>saveUser(applyPlanAutoComplete(user,typeMatch('college')))}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>saveUser(applyPlanAutoComplete(user,typeMatch('essay')))}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
@@ -6365,9 +6375,12 @@ export default function App({ account, onAccountChange }) {
     if(!user?.masterPlan)return;
     const {plan:updated,justEarnedXP}=togglePlanTaskDone(user.masterPlan,date,taskId);
     if(!justEarnedXP){saveUser({...user,masterPlan:updated});return;}
-    const {finalXP,tier}=awardXP(6);
+    // Same early-start bonus as applyPlanAutoComplete — manually checking off a task dated
+    // after today (working ahead in the WeekView) earns +25% XP on top of the base 6.
+    const isEarly=date>planTodayStr();
+    const {finalXP,tier}=awardXP(isEarly?6+Math.round(6*0.25):6);
     saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
-    toast.success(BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`,{duration:1800});
+    toast.success(`${BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`}${isEarly?' · +25% early-start bonus!':''}`,{duration:1800});
     if(tier==='jackpot')celebrateJackpot();else if(tier==='big'||tier==='bonus')celebrateBonusXP();else celebrateXP();
   }
   function handlePlanSnoozeTask(date,taskId){

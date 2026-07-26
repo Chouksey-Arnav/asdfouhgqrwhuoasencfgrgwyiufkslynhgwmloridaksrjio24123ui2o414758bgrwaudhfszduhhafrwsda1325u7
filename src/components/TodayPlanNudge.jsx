@@ -54,6 +54,12 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
     );
   }
 
+  // "Get ahead" isn't only for a fully-finished day — a student ≥90% done by mid-afternoon
+  // is clearly on pace and still has time left in the day, so nudge them toward tomorrow's
+  // tasks here too rather than waiting for the very last one to be checked off.
+  const showEarlyNudge = remaining > 0 && pct >= 90 && new Date().getHours() >= 15;
+  const earlyNudgeNextDay = showEarlyNudge ? getNextPlanDay(user?.masterPlan) : null;
+
   const nextTasks = today.tasks.filter(t => !t.done).slice(0, 3);
   const overflow = remaining - nextTasks.length;
   // Each remaining task is its own tappable chip — straight to the exact quiz/lesson/deck it
@@ -130,6 +136,17 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
         )}
       </div>
       <ProgressBar pct={pct} color={accent} />
+      {earlyNudgeNextDay?.tasks?.length > 0 && (
+        <div style={{ ...R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }), marginLeft: isMobile ? 0 : 48, paddingTop: 2 }}>
+          <span style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <Sunrise size={12} color={C.amberL} style={{ flexShrink: 0 }} />
+            You're on pace today ({pct}% done) — want to start tomorrow's tasks early?
+          </span>
+          <button style={btnSm(accent, { color: '#fff' })} onClick={() => onOpenNextDay?.(earlyNudgeNextDay.date)}>
+            <Sunrise size={12} />Get a head start
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }
