@@ -6628,7 +6628,10 @@ export default function App({ account, onAccountChange }) {
         )}
 
         {/* ══ MAIN CONTENT ═════════════════════════════════════════════════════ */}
-        <main style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
+        {/* data-app-content: the SAT tool rail is position:fixed and measures this
+            element's left edge to sit flush against the content column instead of
+            hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
+        <main data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on

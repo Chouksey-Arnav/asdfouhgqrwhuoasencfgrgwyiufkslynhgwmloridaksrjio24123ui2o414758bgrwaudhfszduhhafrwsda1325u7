@@ -159,3 +159,70 @@ body::before {
 .subnav-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
 .subnav-scroll::-webkit-scrollbar-thumb { background: var(--subnav-accent, #3d5580); border-radius: 4px; border: 1px solid rgba(255,255,255,0.08); }
 .subnav-scroll::-webkit-scrollbar-thumb:hover { background: var(--subnav-accent-hover, #5a7bb5); }
+
+/* ══ SAT tab ═══════════════════════════════════════════════════════════════
+   The SAT pillar is the one part of the app a student uses for two hours at a
+   stretch, on whatever device is nearest, so it carries a few rules the rest
+   of the app does not need. Everything here is cross-platform on purpose:
+   dynamic viewport units for iOS Safari's collapsing toolbar, safe-area insets
+   for notched phones and Android gesture bars, and no reliance on hover. */
+
+/* Answer choices. The visual feedback is a border and a lift on pointer
+   devices; on touch it is the press state, because a :hover that sticks after
+   a tap (every mobile browser does this) makes it look like a choice is
+   selected when it is not. */
+.sat-choice {
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color .15s ease, background-color .15s ease, transform .12s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .sat-choice:not(:disabled):hover { border-color: rgba(255,255,255,0.28); }
+}
+.sat-choice:not(:disabled):active { transform: scale(0.995); }
+
+/* Comfortable thumb targets. Apple and Google both put the floor around
+   44px/48dp; the desktop sizes are noticeably below that. */
+@media (max-width: 768px) {
+  .sat-choice { min-height: 52px; }
+  .sat-tap { min-height: 44px; min-width: 44px; }
+}
+
+/* The question header (index, skill, timer) pins to the top of the scroll
+   container while working through a set. During a timed module the countdown
+   is the single most important thing on screen and scrolling a long passage
+   should never take it away. */
+.sat-question-header {
+  position: sticky; top: 0; z-index: 6;
+  padding: 8px 0;
+  background: linear-gradient(180deg, #04060b 72%, rgba(4,6,11,0));
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+
+/* The mobile action bar. On a phone the choices plus an explanation routinely
+   run past a screen height, which on the old layout meant scrolling to the
+   bottom to find "Check answer" after every single question. Pinning it costs
+   nothing and removes one scroll per question over a two-hour session. */
+.sat-action-bar {
+  position: sticky;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  z-index: 7;
+  padding: 10px 0 2px;
+  background: linear-gradient(0deg, #04060b 68%, rgba(4,6,11,0));
+}
+
+/* Bottom sheets (calculator, formula sheet, Medabrain) must not rubber-band the
+   page behind them, and must clear the home indicator. */
+.sat-sheet {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Wide tables and formula rows scroll inside themselves rather than pushing the
+   page sideways — a horizontally scrolling app on a phone is always a bug. */
+.sat-scroll-x { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sat-choice { transition: none; }
+  .sat-choice:not(:disabled):active { transform: none; }
+}

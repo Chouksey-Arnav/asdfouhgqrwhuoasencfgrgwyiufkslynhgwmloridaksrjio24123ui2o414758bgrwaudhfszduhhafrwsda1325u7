@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain } from 'lucide-react';
+import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain, Sparkles } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
 import SatSkillHeatmap from './SatSkillHeatmap';
+import SatStudyPlanCard from './SatStudyPlanCard';
+import { loadSatStudyPlan, generateSatStudyPlan } from '../../lib/sat/aiStudyPlan';
 import { nextAction, secondaryActions } from '../../lib/sat/nextAction';
 import { projectionEmptyState, targetProgress } from '../../lib/sat/projection';
 import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
@@ -23,10 +25,39 @@ import { useSatTools } from './SatToolsContext';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatOverviewPanel({
-  accent = C.lime, satData, user, isMobile = false, onNavigate, onAskMedabrain,
+  accent = C.lime, satData, profile = null, user, isMobile = false, onNavigate, onAskMedabrain,
 }) {
   const { attempts, responses, reviewLog, masteryMap, projection, ranked, summary } = satData;
   const tools = useSatTools();
+
+  // ── The study plan, if one has been built ──
+  // Loaded rather than generated: the Diagnostic writes it, the Overview keeps
+  // showing it. A plan that only exists on the screen where it was created is a
+  // demo. Nothing is generated here without the student pressing the button.
+  const [plan, setPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState(null);
+  const planAbort = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadSatStudyPlan().then(stored => { if (!cancelled) setPlan(stored?.plan || null); });
+    return () => { cancelled = true; planAbort.current?.abort(); };
+  }, []);
+
+  const buildPlan = useCallback(async ({ fresh = false } = {}) => {
+    if (!profile) return;
+    planAbort.current?.abort();
+    const controller = new AbortController();
+    planAbort.current = controller;
+    setPlanLoading(true);
+    setPlanError(null);
+    const { plan: built, reason } = await generateSatStudyPlan(profile, { fresh, signal: controller.signal });
+    if (controller.signal.aborted) return;
+    setPlan(built);
+    setPlanError(built ? null : reason);
+    setPlanLoading(false);
+  }, [profile]);
 
   const daysToExam = useMemo(() => {
     if (!user?.examDate) return null;
@@ -167,6 +198,42 @@ export default function SatOverviewPanel({
         </div>
       </motion.div>
 
+      {/* ── Study plan ──
+          Sits under the next action, not above it: the next action is what to do
+          in the next twenty minutes, the plan is what to do over the next month,
+          and a student opening this tab needs the first one first. */}
+      {(plan || planLoading || planError) ? (
+        <SatStudyPlanCard
+          plan={plan} loading={planLoading} error={planError}
+          accent={accent} isMobile={isMobile}
+          onNavigate={onNavigate}
+          onRegenerate={() => buildPlan({ fresh: true })}
+          generatedFromLabel={plan ? `built ${relativeDay(plan.createdAt)}` : null}
+        />
+      ) : responses.length >= 15 && (
+        // Offered only once there is enough measured data for a plan to be worth
+        // anything. Below that the honest answer is "take the diagnostic", which
+        // the next-action card above is already saying.
+        <div style={{
+          ...glass({ padding: isMobile ? 16 : 20 }),
+          border: `1px dashed ${tint(accent, 0.3)}`,
+          background: 'rgba(255,255,255,0.015)',
+        }}>
+          <div style={R({ gap: 12, flexWrap: 'wrap' })}>
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>Want this turned into a plan?</div>
+              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 4 }}>
+                Medabrain will read your mastery, your review log and your pacing, and write you a few
+                specific weeks of work.
+              </div>
+            </div>
+            <button onClick={() => buildPlan()} style={btnG({ padding: '9px 16px', fontSize: 12.5, flexShrink: 0 })}>
+              <Sparkles size={13} /> Build my plan
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Quick stats ── */}
       <div style={G(3, 12, {}, isMobile)}>
         <StatTile
@@ -262,4 +329,14 @@ export default function SatOverviewPanel({
       </div>
     </div>
   );
+}
+
+/** "today" / "yesterday" / "6 days ago" — a date stamp reads as noise here. */
+function relativeDay(ts) {
+  if (!ts) return '';
+  const days = Math.floor((Date.now() - ts) / 86400000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  return new Date(ts).toLocaleDateString();
 }

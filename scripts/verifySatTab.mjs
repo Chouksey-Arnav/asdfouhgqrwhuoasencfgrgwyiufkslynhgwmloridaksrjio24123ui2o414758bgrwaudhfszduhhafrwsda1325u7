@@ -182,12 +182,45 @@ await step('Review Log renders', async () => {
 });
 await p.screenshot({ path: 'shots/sat-review.png', fullPage: true });
 
-await step('Practice panel renders all three modes', async () => {
+await step('Practice panel renders all four modes', async () => {
   await p.locator('button:has-text("Practice")').first().click();
   await p.waitForTimeout(900);
   const t = await p.textContent('body');
-  for (const m of ['Smart Set', 'Skill Drill', 'Timed Set']) {
+  for (const m of ['Smart Set', 'AI Set', 'Skill Drill', 'Timed Set']) {
     if (!t.includes(m)) throw new Error(`missing mode: ${m}`);
+  }
+});
+
+// ── AI Set ──────────────────────────────────────────────────────────────────
+// The blueprint is computed locally from the student's own measured data, with
+// no network call, and is shown BEFORE anything is generated. That is the whole
+// claim the mode makes — that the questions are aimed rather than generic — so
+// it is worth asserting that the student can actually see what will be asked
+// for, and that every skill named is one they have really been measured on.
+await step('AI Set previews its blueprint from measured data before generating', async () => {
+  await p.locator('button:has-text("AI Set")').first().click();
+  await p.waitForTimeout(700);
+  const t = await p.textContent('body');
+  if (!/Questions written for you/.test(t)) throw new Error('AI Set body did not render');
+  if (!/Generate my set/.test(t)) throw new Error('no generate action');
+  // Every blueprint row states its own justification with a sample size or an
+  // explicit "never practised" — the same honesty rule the rest of the tab
+  // follows. A bare skill name with no evidence behind it is the failure.
+  const rows = await p.locator('text=/mastery from \\d+ question|never practised/').count();
+  if (!rows) throw new Error('blueprint rows carry no evidence for why each skill was chosen');
+  // And nothing may be generated until the student asks.
+  if (/Writing your questions|Checking the answer keys/.test(t)) {
+    throw new Error('AI Set started generating without being asked');
+  }
+});
+
+await step('AI Set states its provenance and licensing position', async () => {
+  const t = await p.textContent('body');
+  if (!/original questions written to the published Digital SAT blueprint/.test(t)) {
+    throw new Error('the originality/licensing note is missing');
+  }
+  if (!/re-derived by a second, different model/.test(t)) {
+    throw new Error('the answer-key verification claim is not stated to the student');
   }
 });
 await p.screenshot({ path: 'shots/sat-practice.png', fullPage: true });

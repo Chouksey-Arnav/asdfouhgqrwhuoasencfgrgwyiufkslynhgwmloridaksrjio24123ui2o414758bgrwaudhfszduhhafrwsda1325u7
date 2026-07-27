@@ -13,10 +13,20 @@ import { C, glass, R } from '../../lib/theme';
  * '(max-width: 768px)'. Previously copy-pasted into App.jsx and
  * ScoreTrackerPanel.jsx; both now import this.
  */
+// Initialised synchronously from matchMedia rather than starting at `false` and
+// correcting in the effect. The old version made every phone paint one frame of
+// the desktop layout before snapping to mobile — harmless for a grid column
+// count, very visible for anything `position: fixed` (the SAT calculator /
+// formula rail flips from the desktop left edge to the mobile bottom corner).
 export function useMediaQuery(query) {
-  const [matches, setMatches] = useState(false);
+  const read = () => (typeof window !== 'undefined' && window.matchMedia
+    ? window.matchMedia(query).matches
+    : false);
+  const [matches, setMatches] = useState(read);
   useEffect(() => {
     const m = window.matchMedia(query);
+    // Re-read on (re)subscribe: the query may have changed, or the viewport may
+    // have moved between the initial render and this effect running.
     setMatches(m.matches);
     const l = (e) => setMatches(e.matches);
     m.addEventListener('change', l);

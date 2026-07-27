@@ -63,11 +63,15 @@ function setCachedResponse(key, content, model) {
 //           the deepest feedback available (e.g. a full essay critique) and is fine trading
 //           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
 // 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
-//   Oracle — openai/gpt-oss-120b, server-side only (never offered in the student-facing Scout/
-//            Guide/Sage picker). Reserved for the Plans tab's "master plan" generation: a 128K-
-//            context, 32,768-max-output reasoning model with native Structured Outputs and a
-//            tunable reasoning_effort — the deepest, largest-output model Groq hosts, worth the
-//            extra latency for a generation that happens rarely and matters a lot.
+//   Oracle — openai/gpt-oss-120b, never offered in the student-facing Scout/Guide/Sage picker;
+//            selected by code, for two generation jobs where the output has to be *correct*
+//            rather than merely fluent: the Plans tab's "master plan" and the SAT tab's practice
+//            item generation. It is a 128K-context, 32,768-max-output reasoning model with
+//            native Structured Outputs and a tunable reasoning_effort — the deepest,
+//            largest-output model Groq hosts, worth the extra latency for a generation that
+//            happens rarely and matters a lot. Authoring an SAT question is exactly that shape:
+//            the model must actually solve the problem it just wrote in order to key it, which
+//            is a reasoning task, not a writing task.
 const MODELS = {
   scout: 'llama-3.1-8b-instant',
   guide: 'openai/gpt-oss-20b',
@@ -111,7 +115,9 @@ const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss
 //   GROQ_API_KEY_PREP                               → in-context prep help
 //   GROQ_API_KEY_PLAN                               → onboarding max-out plan generation
 //   GROQ_API_KEY_MASTERPLAN                         → Plans tab full day-by-day plan generation
-//   GROQ_API_KEY_SAT                                → SAT tab: generated drills + question explanations
+//   GROQ_API_KEY_SAT                                → SAT tab: generated practice, answer-key
+//                                                      verification, study plans, hints,
+//                                                      explanations and the SAT coach
 const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
 const PURPOSE_KEYS = {
   interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
@@ -150,7 +156,13 @@ const PURPOSE_DEFAULT_TIER = {
   interview: 'guide',  // conversational, low-latency for spoken turns
   plan: 'sage',        // one-time, max-quality — worth the 70B model
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
-  sat: 'sage',         // generated practice questions must be correct; the 70B tier earns its cost here
+  // The SAT tab pins its tier per call rather than leaning on this default,
+  // because its three call shapes want three different models (see
+  // src/lib/sat/aiPractice.js): Oracle + high reasoning_effort to AUTHOR items,
+  // Sage to independently VERIFY the answer keys those items were given, and
+  // Guide for conversational coaching. Sage is the safe middle if a caller
+  // forgets — never Scout, because a wrong answer key teaches something false.
+  sat: 'sage',
 };
 
 // One rotation cursor per purpose (not a single shared counter) — otherwise unrelated purposes'
@@ -215,7 +227,13 @@ function isMinuteLimited(ip) {
 // 'masterplan' prompts carry a resource catalog (real pathway/quiz/library/portfolio names) plus
 // the full onboarding profile and live app-state signals, so they routinely run several thousand
 // characters longer than a chat turn.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000 };
+// 'sat' sits alongside them: an item-generation request carries the student's
+// measured skill profile (weak skills with sample sizes, their triaged error
+// mix, the specific traps they keep falling for) plus a per-skill blueprint for
+// every item being asked for. That is the whole point of the feature — a
+// generator that only sees "make 6 Boundaries questions" cannot personalise
+// anything — and it does not fit in a chat-sized 2500-char budget.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000, sat: 9000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 
@@ -269,7 +287,7 @@ export default async function handler(req, res) {
 
   const {
     system, message, messages: rawMessages, maxTokens = 700, tier: rawTier, purpose: rawPurpose,
-    jsonMode, reasoningEffort: rawReasoningEffort,
+    jsonMode, reasoningEffort: rawReasoningEffort, temperature: rawTemperature, noCache,
   } = body || {};
 
   if (!message && !rawMessages) {
@@ -302,7 +320,13 @@ export default async function handler(req, res) {
   // in a condensed summary of the student's Plans-tab master plan (today's tasks, week theme),
   // and that block is appended near the end, right before the behavioral guardrail paragraph — a
   // cap that's too tight would truncate the guardrails themselves before the model ever sees them.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 9000 };
+  // 'sat' matches masterplan's headroom: the item-authoring system prompt is the
+  // longest in the app (blueprint fidelity rules, the distractor-design
+  // contract, the answer-key discipline rules, the licensing prohibition and
+  // the JSON schema), and truncating it would cut the safety rules at the end
+  // while leaving the "write questions" instruction at the top intact — the
+  // worst possible failure mode for this particular prompt.
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 9000, sat: 9000 };
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 4800;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
@@ -324,9 +348,16 @@ export default async function handler(req, res) {
   // Keyed on the exact prompt shape actually sent to Groq (post-sanitization), so a repeat of
   // the same tier/system/last-message combo — from this user or any other — is served from
   // cache without touching the daily/minute limits or the Groq API at all.
+  //
+  // `noCache` opts a caller out entirely. Generation is the case that needs it:
+  // "give me another set" with the same profile and the same skill hashes to the
+  // same key, so a cached response would hand the student the exact questions
+  // they just finished. Correctness-critical verification calls opt out too —
+  // a verifier that can be served a stale verdict is not a verifier.
   const lastUserMsg = [...groqMessages].reverse().find(m => m.role === 'user')?.content || '';
+  const cacheable = !noCache;
   const cacheKey = hashKey(`${purpose}|${tier}|${systemPrompt}|${lastUserMsg}`);
-  const cached = getCachedResponse(cacheKey);
+  const cached = cacheable ? getCachedResponse(cacheKey) : null;
   if (cached) {
     return res.status(200).json({
       content: cached.content,
@@ -356,7 +387,11 @@ export default async function handler(req, res) {
   // 'masterplan' is the biggest: a week-by-week roadmap or a week of day-by-day tasks, each a
   // structured JSON array — comfortably under Oracle's 32,768-token ceiling but far above every
   // other purpose here.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000 };
+  // 'sat': a batch of eight generated items, each with a passage, four choices,
+  // a rationale and four per-distractor rationales, runs a few thousand tokens.
+  // Below this ceiling the JSON gets truncated mid-object and the whole batch is
+  // discarded by the parser — expensive silence rather than a short set.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000, sat: 8000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -371,9 +406,19 @@ export default async function handler(req, res) {
   const reasoningEffort = (['low', 'medium', 'high'].includes(rawReasoningEffort) && REASONING_CAPABLE_MODELS.has(model))
     ? rawReasoningEffort : undefined;
 
+  // Temperature is a per-task choice, not an app-wide constant. 0.7 is right for
+  // a coach that should sound human; it is wrong for authoring a question whose
+  // answer key has to be defensible, and wrong again for a verifier re-solving
+  // that question, where any sampling noise is pure downside. Callers that know
+  // which of those they are doing may say so; everything else keeps 0.7.
+  const DEFAULT_TEMPERATURE = 0.7;
+  const temperature = Number.isFinite(Number(rawTemperature))
+    ? Math.min(1.5, Math.max(0, Number(rawTemperature)))
+    : DEFAULT_TEMPERATURE;
+
   // Heavier purposes get more time before we give up — a multi-thousand-token structured
   // generation on the 120B model legitimately takes longer than a chat reply.
-  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000 };
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000, sat: 45000 };
   const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
   const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
 
@@ -390,7 +435,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           model: useModel,
           max_tokens: clampedTokens,
-          temperature: 0.7,
+          temperature,
           messages: groqMessages,
           ...(responseFormat ? { response_format: responseFormat } : {}),
           ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
@@ -463,7 +508,7 @@ export default async function handler(req, res) {
     }
 
     addRequestToday(ip);
-    setCachedResponse(cacheKey, content, data?.model || model);
+    if (cacheable) setCachedResponse(cacheKey, content, data?.model || model);
     const requestsUsedToday = getRequestsUsedToday(ip);
     const requestsRemaining = Math.max(0, DAILY_LIMIT - requestsUsedToday);
 
