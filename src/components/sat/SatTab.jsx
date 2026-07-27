@@ -4,6 +4,7 @@ import SubNav from '../ui/SubNav';
 import { useSatData } from '../../lib/sat/useSatData';
 import SatOverviewPanel from './SatOverviewPanel';
 import SatDiagnosticPanel from './SatDiagnosticPanel';
+import SatBaselinePanel from './SatBaselinePanel';
 import SatPracticePanel from './SatPracticePanel';
 import SatFullTestPanel from './SatFullTestPanel';
 import SatReviewLogPanel from './SatReviewLogPanel';
@@ -79,6 +80,7 @@ export default function SatTab({
 
   const panels = {
     overview: () => <SatOverviewPanel accent={C.lime} {...shared} />,
+    baseline: () => <SatBaselinePanel accent={C.gold} {...shared} />,
     diagnostic: () => <SatDiagnosticPanel accent={C.cyan} {...shared} />,
     practice: () => <SatPracticePanel accent={C.blue} params={params} onConsumeParams={onConsumeParams} {...shared} />,
     tests: () => <SatFullTestPanel accent={C.violet} {...shared} />,

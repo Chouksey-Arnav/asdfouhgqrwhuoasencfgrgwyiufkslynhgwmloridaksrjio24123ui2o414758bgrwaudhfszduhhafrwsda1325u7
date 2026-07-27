@@ -580,6 +580,92 @@ export async function generatePracticeSet({
 }
 
 /**
+ * ONE item, authored for a specific (skill, difficulty) slot in an adaptive
+ * baseline. See src/lib/sat/baseline.js for why the baseline generates rather
+ * than selects: a staircase needs a question at whatever difficulty the last
+ * answer implied, in the skill the blueprint asked for, that this student has
+ * not already seen — and an 83-item static bank cannot serve that for one
+ * student, let alone for a retake a week later.
+ *
+ * Differs from generatePracticeSet() in four ways that all follow from being
+ * one item inside a live test:
+ *
+ *   1. NEVER CACHED, in either direction. A baseline is a measurement. Serving
+ *      a cached item would hand a student a question they may have already
+ *      seen and score them on it, and caching the result would leak this run's
+ *      questions into the next one. Both destroy the thing being measured.
+ *   2. `avoid` carries the stems already used in this session, so the model
+ *      cannot circle back to a scenario it just wrote.
+ *   3. Verification is mandatory and non-optional. In practice a mis-keyed item
+ *      costs a student one confusing explanation; in a baseline it moves the
+ *      ability estimate the wrong way and every subsequent question is chosen
+ *      off that error.
+ *   4. It falls back to the static bank rather than returning nothing. A test
+ *      that stalls at question 19 because of a rate limit has wasted the
+ *      student's afternoon; a bank item at roughly the right difficulty is a
+ *      far better outcome than an error dialog.
+ */
+export async function generateBaselineItem({
+  skill, difficulty = 'M', profile = null, avoid = [], signal = null,
+} = {}) {
+  const meta = SAT_SKILLS[skill] ? skillMeta(skill) : null;
+  if (!meta) return null;
+
+  const blueprint = [{
+    skill,
+    label: meta.label,
+    sectionLabel: meta.sectionLabel,
+    difficulty: DIFFICULTY_IDS.includes(difficulty) ? difficulty : 'M',
+    count: 1,
+    why: 'This is one question inside an adaptive placement test. Its difficulty was chosen from how the student '
+      + 'has answered so far, so it must land squarely at the stated difficulty — an item that is secretly easier '
+      + 'or harder than requested corrupts the estimate and every question chosen after it.',
+  }];
+
+  const avoidBlock = avoid.length
+    ? '\n\n── ALREADY USED IN THIS TEST (do not reuse these scenarios, subjects, or framings) ──\n'
+      + avoid.slice(-14).map(t => `  - ${String(t).slice(0, 110)}`).join('\n')
+    : '';
+
+  let parsed;
+  try {
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        system: buildAuthorPrompt({ profile, blueprint, mode: 'drill' }) + avoidBlock,
+        message: `Write exactly 1 question following the blueprint above, at difficulty ${blueprint[0].difficulty}. Return the JSON object and nothing else.`,
+        purpose: 'sat',
+        tier: 'oracle',
+        reasoningEffort: 'high',
+        jsonMode: true,
+        // Slightly warmer than a practice set. One item at a time, 35 times,
+        // with the same skill recurring: at 0.45 the model converges on the
+        // same scenario shape over and over.
+        temperature: 0.6,
+        noCache: true,
+        maxTokens: 1800,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    parsed = parseJsonLoosely(data?.content);
+  } catch {
+    return null;
+  }
+
+  const raw = Array.isArray(parsed?.questions) ? parsed.questions[0] : parsed;
+  const item = validateItem(raw, { skill, difficulty: blueprint[0].difficulty });
+  if (!item || !numericSanity(item)) return null;
+
+  const outcome = await verifyItems([item], { signal });
+  if (!outcome.items.length) return null;
+
+  return { ...outcome.items[0], generated: true, baseline: true };
+}
+
+/**
  * Single-skill top-up, used when the static bank cannot fill a drill without
  * repeating itself. Thin wrapper over generatePracticeSet() so there is exactly
  * one authoring prompt in the codebase to keep correct.

@@ -21,7 +21,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility,
+  Highlighter, Accessibility, Gauge,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -301,6 +301,11 @@ const NAV = [
 // existed — see src/data/sat/taxonomy.js for the content model it runs on.
 const SAT_SUBNAV = [
   {id:'overview',ic:Target,label:'Overview',color:C.lime},
+  // Sits directly after Overview, ahead of the Diagnostic, because it is the
+  // first thing a new student should do: the Diagnostic tells them WHAT to work
+  // on, but only the Baseline tells them roughly where they currently score,
+  // and every other panel's advice reads differently at 1050 than at 1400.
+  {id:'baseline',ic:Gauge,label:'Baseline',color:C.gold},
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
   {id:'practice',ic:Layers,label:'Practice',color:C.blue},
   {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.violet},

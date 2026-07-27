@@ -13,11 +13,12 @@
     "audit:sat": "node scripts/auditSatBank.mjs",
     "verify:sat-scoring": "node scripts/verifySatScoring.mjs",
     "verify:tracking": "node scripts/verifyTracking.mjs",
-    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring && npm run verify:tracking",
+    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring && npm run verify:sat-baseline && npm run verify:tracking",
     "verify:sat-tab": "node scripts/verifySatTab.mjs",
     "verify:sat-tools": "node scripts/verifySatDesmos.mjs",
     "verify:sat-generation": "node scripts/verifySatGeneration.mjs",
-    "verify:sat-e2e": "npm run verify:sat-tab && npm run verify:sat-tools && npm run verify:sat-generation"
+    "verify:sat-e2e": "npm run verify:sat-tab && npm run verify:sat-tools && npm run verify:sat-generation && npm run verify:sat-baseline",
+    "verify:sat-baseline": "node scripts/verifySatBaseline.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

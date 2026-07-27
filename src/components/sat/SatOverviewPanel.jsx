@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain, Sparkles } from 'lucide-react';
+import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain, Sparkles, Gauge } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
@@ -8,6 +8,8 @@ import SatSkillHeatmap from './SatSkillHeatmap';
 import SatStudyPlanCard from './SatStudyPlanCard';
 import { loadSatStudyPlan, generateSatStudyPlan } from '../../lib/sat/aiStudyPlan';
 import { nextAction, secondaryActions } from '../../lib/sat/nextAction';
+import * as DB from '../../lib/db';
+import { canStartBaseline, cooldownLabel, compareBaselines, BASELINE_LENGTH } from '../../lib/sat/baseline';
 import { projectionEmptyState, targetProgress } from '../../lib/sat/projection';
 import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 import { SAT_SECTIONS } from '../../data/sat/taxonomy';
@@ -68,6 +70,24 @@ export default function SatOverviewPanel({
     () => nextAction({ attempts, reviewLog, masteryMap, responseCount: responses.length, daysToExam }),
     [attempts, reviewLog, masteryMap, responses.length, daysToExam],
   );
+
+  // The baseline lives in its own store rather than satAttempts (its questions
+  // are generated and exist nowhere else), so it is loaded separately here to
+  // surface on Overview — a placement test nobody discovers is a placement test
+  // nobody takes.
+  const [baselines, setBaselines] = useState([]);
+  useEffect(() => {
+    let live = true;
+    DB.getSatBaselines({ limit: 2 })
+      .then(rows => { if (live) setBaselines(rows); })
+      .catch(() => {});
+    return () => { live = false; };
+  }, [responses.length]);
+
+  const latestBaseline = baselines[0]?.result || null;
+  const baselineDelta = compareBaselines(latestBaseline, baselines[1]?.result || null);
+  const baselineOpen = canStartBaseline(baselines[0]?.finishedAt || null);
+  const baselineWait = cooldownLabel(baselines[0]?.finishedAt || null);
   const secondary = useMemo(
     () => secondaryActions({ attempts, reviewLog, masteryMap }),
     [attempts, reviewLog, masteryMap],
@@ -91,6 +111,57 @@ export default function SatOverviewPanel({
         m={isMobile}
         tourTag="sat-deep-overview"
       />
+
+      {/* ── Baseline ──
+          Placed above the rolling score estimate because the two answer
+          different questions and students conflate them. The estimate below is
+          a running average over everything they have ever answered, which lags
+          badly after a good week of work; the baseline is a single clean
+          measurement taken under adaptive conditions. When both exist the
+          baseline is the one to plan against. */}
+      <div style={{
+        ...glass({ padding: isMobile ? 16 : 20 }),
+        border: `1px solid ${tint(latestBaseline ? C.gold : accent, 0.3)}`,
+        background: latestBaseline ? undefined : `linear-gradient(135deg,${tint(C.gold, 0.1)},transparent)`,
+      }}>
+        <div style={{ ...R({ justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }) }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <SectionTitle icon={Gauge} color={C.gold}>Adaptive baseline</SectionTitle>
+            {latestBaseline ? (
+              <>
+                <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
+                  <span style={{ fontSize: isMobile ? 26 : 32, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: '-.03em' }}>
+                    {latestBaseline.low}–{latestBaseline.high}
+                  </span>
+                  <span style={pill(tint(C.gold, 0.15), C.gold, { fontSize: 10 })}>{latestBaseline.confidence} confidence</span>
+                  {baselineDelta?.significant && (
+                    <span style={pill(tint(baselineDelta.direction === 'up' ? C.green : C.rose, 0.14), baselineDelta.direction === 'up' ? C.greenL : C.roseL, { fontSize: 10 })}>
+                      {baselineDelta.delta > 0 ? '+' : ''}{baselineDelta.delta} since last
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11.5, color: C.t3, marginTop: 7, lineHeight: 1.6 }}>
+                  From a single {BASELINE_LENGTH}-question adaptive run — a clean measurement, unlike the running
+                  estimate below which averages everything you have ever answered.
+                  {baselineOpen ? ' You can take a new one now.' : ` Next one in ${baselineWait}.`}
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.65, maxWidth: 560 }}>
+                You have not set a baseline yet. {BASELINE_LENGTH} questions, each written for you and each one
+                harder or easier depending on how the last went — it is the fastest honest answer to
+                &ldquo;where am I actually scoring right now?&rdquo;, and everything else here plans against it.
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => onNavigate?.('baseline')}
+            style={btn(`linear-gradient(135deg,${C.gold},${C.orange})`, { fontSize: 12.5, padding: '10px 20px', flexShrink: 0 })}
+          >
+            {latestBaseline ? (baselineOpen ? 'Retake baseline' : 'See breakdown') : 'Set your baseline'}
+          </button>
+        </div>
+      </div>
 
       {/* ── Score projection ── */}
       <div style={glass({ padding: isMobile ? 18 : 24 })}>
