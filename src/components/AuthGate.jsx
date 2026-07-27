@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { C, applyTheme, getStoredMode } from '../lib/theme';
 import { getToken, setToken, clearToken, fetchMe } from '../lib/authApi';
+import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath } from '../lib/routes';
+import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
 import AuthShell from './auth/AuthShell';
 import LoginView from './auth/LoginView';
@@ -12,8 +14,16 @@ import ForgotPasswordView from './auth/ForgotPasswordView';
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
   const [user, setUser] = useState(null);
-  const [view, setView] = useState('landing'); // landing | login | signup | forgot
+  // The signed-out screens are addressable (/login, /signup, /forgot-password), so the
+  // back button steps back through them the same way it steps through the app's tabs —
+  // out of the login form to the landing page, not out of the site.
+  const [view, setView] = useState(() => parseAuthPath(window.location.pathname) || 'landing');
   const [prefillEmail, setPrefillEmail] = useState('');
+  // Where "landing" lives. Normally "/", but someone who followed a deep link while
+  // signed out (e.g. /portfolio/essays) should keep that URL: it's what they'll be
+  // dropped into the moment they sign in.
+  const landingPathRef = useRef(isAuthPath(window.location.pathname) ? '/' : normalizePath(window.location.pathname));
+  const firstSyncRef = useRef(true);
 
   const restore = useCallback(async () => {
     if (!getToken()) { setStatus('signedOut'); return; }
@@ -53,6 +63,32 @@ export default function AuthGate({ children }) {
     // on this page, and should see it in the brand's dark, not their light.
     return () => { if (preAuth) applyTheme(getStoredMode()); };
   }, [preAuth]);
+
+  // ── view → URL ────────────────────────────────────────────────────────────
+  // Same invariant the app-side router uses (src/lib/useAppRouter.js): push only when
+  // the address bar disagrees with the state, so a back press can never bounce forward.
+  // Once signed in, App.jsx owns the URL and this stops touching it.
+  useEffect(() => {
+    if (status === 'signedIn') return;
+    const current = normalizePath(window.location.pathname);
+    const want = view === 'landing'
+      ? (isAuthPath(current) ? landingPathRef.current : current)
+      : AUTH_VIEWS[view];
+    const first = firstSyncRef.current;
+    firstSyncRef.current = false;
+    applySeoMeta(want);
+    if (current === want) return;
+    if (first) window.history.replaceState(window.history.state, '', want);
+    else window.history.pushState({}, '', want);
+  }, [view, status]);
+
+  // ── URL → view ────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (status === 'signedIn') return undefined;
+    function onPop() { setView(parseAuthPath(window.location.pathname) || 'landing'); }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [status]);
 
   function handleAuthed(token, authedUser) {
     setToken(token);

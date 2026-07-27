@@ -41,6 +41,8 @@ import InterviewPrepPanel from './components/InterviewPrepPanel';
 import * as DB from './lib/db';
 import * as ProgressSync from './lib/progressSync';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
+import { SUBVIEWS, bootRoute, routeFromState, formatPath } from './lib/routes';
+import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { trackItem, installTrackQueueLifecycle } from './lib/trackQueue';
@@ -1167,10 +1169,15 @@ export default function App({ account, onAccountChange }) {
   const [pathwayGoal, setPathwayGoalState] = useState(null); // { pathwayKey, startedAt, targetWeeks } | null
 
   // ── UI state ────────────────────────────────────────────────────────────────
-  // Tab/sub-view start from whatever was last persisted (src/lib/viewState.js) so a reload
-  // resumes on the same screen instead of dropping back to Home — see the restore/persist
-  // effects near the flashcards state below for the deeper "resume mid-deck" case.
-  const [tab,   setTab]   = useState(()=>loadViewState().tab||'home');
+  // Where this session of the app starts. The URL wins when it names a real screen — a
+  // bookmark, a shared link, a reload after the back button, a PWA cold start on a deep
+  // link — and the last-persisted view state (src/lib/viewState.js) fills in everything
+  // the URL didn't say. Computed once, on mount: after this, state leads and the address
+  // bar follows (see the useAppRouter block below). The persisted half is what already
+  // made a reload resume on the same screen instead of dropping back to Home — see the
+  // restore/persist effects near the flashcards state below for the "resume mid-deck" case.
+  const [boot] = useState(()=>bootRoute(loadViewState()));
+  const [tab,   setTab]   = useState(boot.tab);
   const [vidM,  setVM]    = useState(null);
   // ── Lesson Player state (immersive Overview->Article->Video->Quiz->Complete) ─
   const [activeLesson, setActiveLesson] = useState(null); // { lesson, unit } while the player is open
@@ -1213,10 +1220,13 @@ export default function App({ account, onAccountChange }) {
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
   // Prep and Portfolio each absorb several formerly-top-level tabs; these track
   // which absorbed view is active, switched via the SubNav pill bar.
-  const [prepView, setPrepView] = useState(()=>loadViewState().prepView||'pathway'); // diagnostic|pathway|quizzes|flashcards|coach|library
-  const [portfolioView, setPortfolioView] = useState(()=>loadViewState().portfolioView||'overview'); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
-  const [progressView, setProgressView] = useState(()=>loadViewState().progressView||'overview'); // overview|verified|performance|achievements
-  const [satView, setSatView] = useState(()=>loadViewState().satView||'overview'); // overview|diagnostic|practice|tests|review|skills|scores
+  // Sub-view ids are also URL segments (/prep/flashcards, /portfolio/deadlines …) — the
+  // canonical list of each lives in src/lib/routes.js, which `npm run verify:routing`
+  // pins to the *_SUBNAV arrays above so a new sub-tab can't ship without a URL.
+  const [prepView, setPrepView] = useState(boot.prepView); // diagnostic|pathway|quizzes|flashcards|coach|library
+  const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
+  const [progressView, setProgressView] = useState(boot.progressView); // overview|verified|performance|achievements
+  const [satView, setSatView] = useState(boot.satView); // overview|diagnostic|practice|tests|review|skills|scores
   // Deep-link params for the SAT tab (e.g. "drill this specific skill", "resume
   // this attempt"), set by the Overview's next-best-action card and by the
   // Review Log. Cleared by the receiving panel once consumed.
@@ -1325,6 +1335,85 @@ export default function App({ account, onAccountChange }) {
   // Set when a quiz is launched from a pathway lesson's "Verify" button (rather than the Quiz
   // Library) so finishQuiz() knows to grade it as a verification attempt instead of a plain quiz.
   const [verifyCtx,setVerifyCtx]=useState(null); // { lesson, unit }
+
+  // ══ BROWSER HISTORY ═══════════════════════════════════════════════════════════
+  // Everything above is navigation state; this is what makes the browser's back and
+  // forward buttons (and the Android/iOS back gesture) move through it instead of
+  // straight out of the app.
+  //
+  // Two full-screen surfaces get URLs of their own: the lesson player and the quiz
+  // runner. They early-return over the entire shell, so if history only tracked the
+  // tab, a back press inside a lesson would swap the tab *underneath* the overlay and
+  // leave the student staring at the same lesson with no way back.
+  //
+  // The tab/sub-view is derived, never stored twice — see routeFromState.
+  const overlayRoute = useMemo(()=>(
+    activeLesson ? { kind:'lesson', unitId:activeLesson.unit.id, lessonId:activeLesson.lesson.id }
+    : aQuiz      ? { kind:'quiz', quizId:aQuiz.id }
+    : null
+  ),[activeLesson,aQuiz]);
+  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, progressView, overlay:overlayRoute }),
+    [tab,satView,prepView,portfolioView,progressView,overlayRoute]);
+
+  // Flat [{lesson,unit}] for the active pathway, so a lesson URL can be resolved back
+  // to the lesson it names. A ref (filled by an effect further down) rather than a
+  // dependency, because the resolver below runs from a history event, not a render.
+  const lessonIndexRef = useRef([]);
+  const lessonBootRef = useRef(false); // has the boot URL's lesson (if any) been consumed?
+
+  // Applies a route that came *from* history (a back/forward press). Held in a ref and
+  // rewritten every render so it always closes over current props/state — a useCallback
+  // with a dependency list would either go stale or churn the popstate listener.
+  const applyRouteRef = useRef(null);
+  applyRouteRef.current = (next) => {
+    setTab(next.tab);
+    const sub = SUBVIEWS[next.tab];
+    if (sub && next.view) {
+      if (next.tab === 'sat') setSatView(next.view);
+      else if (next.tab === 'prep') setPrepView(next.view);
+      else if (next.tab === 'portfolio') setPortfolioView(next.view);
+      else if (next.tab === 'progress') setProgressView(next.view);
+    }
+
+    const ov = next.overlay;
+    // Leaving a lesson/quiz via the back button has to run the same teardown the
+    // Close button does, or the next lesson opens carrying the last one's notes.
+    if (ov?.kind !== 'lesson' && activeLesson) closeLesson();
+    if (ov?.kind !== 'quiz' && aQuiz) { setAQ(null); setVerifyCtx(null); }
+
+    if (ov?.kind === 'lesson' && activeLesson?.lesson?.id !== ov.lessonId) {
+      // Forward button back into a lesson, or a shared lesson link. Resolvable only
+      // within the student's current pathway; if it isn't there any more, we simply
+      // don't open it and the effect below rewrites the URL to the tab underneath.
+      const match = lessonIndexRef.current.find(x => x.lesson.id === ov.lessonId && x.unit.id === ov.unitId);
+      if (match) openLessonFromHistory(match.lesson, match.unit);
+    }
+    // A quiz is a live attempt, not a document: re-entering one from a URL would
+    // fabricate a session that was never saved. Deliberately not restored — the
+    // router replaces the stale /quiz/… URL with the tab it was launched from.
+  };
+  const applyRoute = useCallback((next)=>applyRouteRef.current(next),[]);
+
+  const { replaceNext: replaceHistoryEntryNext } = useAppRouter({ route, onNavigate: applyRoute });
+
+  // Real hrefs for the nav. The click is still handled in-app (no reload); the href is
+  // what makes the nav behave like navigation — ⌘/middle-click opens a tab, the browser
+  // shows the destination on hover, and a copied link actually lands where it says.
+  // Each points at the sub-view the student last had open in that tab, matching exactly
+  // where clicking will take them.
+  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView}),
+    [satView,prepView,portfolioView,progressView]);
+  const tabHref = useCallback((id)=>formatPath({tab:id,view:subViewOf[id]}),[subViewOf]);
+  const satHref = useCallback((v)=>formatPath({tab:'sat',view:v}),[]);
+  const prepHref = useCallback((v)=>formatPath({tab:'prep',view:v}),[]);
+  const portfolioHref = useCallback((v)=>formatPath({tab:'portfolio',view:v}),[]);
+  const progressHref = useCallback((v)=>formatPath({tab:'progress',view:v}),[]);
+  // Shared by every nav item: keep modified clicks with the browser, handle plain ones.
+  const onNavLinkClick = useCallback((e,go)=>{
+    if(!isPlainLeftClick(e))return;
+    e.preventDefault();
+    go();
+  },[]);
 
   // ── AI Coach (Medabrain — multi-chat) ────────────────────────────────────
   const [msgs,setMsgs]=useState([]);const [ci,setCi]=useState('');const [cLoad,setCLoad]=useState(false);const chatEnd=useRef(null);
@@ -2706,6 +2795,22 @@ export default function App({ account, onAccountChange }) {
   }
   function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); setNotesOpen(false); setLessonNote(''); setLessonHighlightsState([]); setReviewMode(false); }
 
+  // Re-opens a lesson the student is navigating *back into* with the forward button (or
+  // landing on from a shared /prep/…/lesson/… link). Same screen as openLesson, minus
+  // everything openLesson does because the student just *started* studying: no
+  // startLessonStudy write, no 'lesson_video_watched' event, no motivational toast.
+  // Replaying those on a history move would inflate their study log with sessions they
+  // never had.
+  function openLessonFromHistory(lesson,unit){
+    const already=pathway[lesson.id];
+    setActiveLesson({lesson,unit});
+    setArticleRead(!!already?.verified);
+    setVideoWatched(!!already?.verified);
+    setArticleScrollPct(0);
+    setLessonStep(already?.verified?'complete':'overview');
+    setReviewMode(!!already?.verified);
+  }
+
   // Re-opens an already-verified lesson so the student can actually browse its article/video
   // content again, instead of the normal openLesson() behavior which (via the auto-complete
   // effect below) snaps a verified lesson straight to the Complete screen. Bypasses the
@@ -2754,14 +2859,29 @@ export default function App({ account, onAccountChange }) {
   // through. Only resumes if the persisted tab was actually 'prep' (mirrors the flashcard guard)
   // and the lesson still resolves within the CURRENT pathway (a pathway switch since then means
   // the old in-progress lesson isn't necessarily relevant anymore, so it's safe to just drop it).
+  //
+  // The URL takes precedence over the persisted session when it names a lesson itself
+  // (someone opened a /prep/…/lesson/… link, or reloaded while a lesson was open), in
+  // which case there's no saved step to resume — just the lesson.
   useEffect(()=>{
     if(!dbReady||!curPath)return;
-    const persisted=loadViewState();
-    const al=persisted.activeLesson;
-    if(!al?.lessonId||persisted.tab!=='prep')return;
     const flat=(curPath.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
+    lessonIndexRef.current=flat;
+
+    const persisted=loadViewState();
+    // The boot URL is only ever honoured once — a later pathway switch re-runs this
+    // effect, and re-opening the lesson from the original URL then would fight the
+    // student instead of helping them.
+    const fromUrl=(!lessonBootRef.current&&boot.overlay?.kind==='lesson')?boot.overlay:null;
+    lessonBootRef.current=true;
+    const al=fromUrl?{lessonId:fromUrl.lessonId,unitId:fromUrl.unitId}:persisted.activeLesson;
+    if(!al?.lessonId)return;
+    if(!fromUrl&&persisted.tab!=='prep')return;
     const match=flat.find(x=>x.lesson.id===al.lessonId&&x.unit.id===al.unitId);
     if(!match)return; // lesson/unit no longer exists in the current pathway — nothing safe to resume
+    // Resuming isn't a navigation the student made, so it belongs in the history entry
+    // they're already on: a back press should leave the lesson, not replay opening it.
+    replaceHistoryEntryNext();
     setActiveLesson({lesson:match.lesson,unit:match.unit});
     setLessonStep(al.step||'overview');
     setArticleRead(!!al.articleRead);
@@ -5723,7 +5843,7 @@ export default function App({ account, onAccountChange }) {
             </div>
           )}/>
         <div style={{marginTop:18}}>
-          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub"/>
+          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub" hrefFor={progressHref}/>
         </div>
         <div style={{...CC({gap:22}),marginTop:18}}>
         {progressView==='overview'&&<>
@@ -6509,7 +6629,7 @@ export default function App({ account, onAccountChange }) {
       <div style={{position:'relative'}}>
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
-          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub"/>
+          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref}/>
           {user.masterPlan&&(
             <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
               <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
@@ -6559,7 +6679,7 @@ export default function App({ account, onAccountChange }) {
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub"/>
+        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub" hrefFor={portfolioHref}/>
         {user.masterPlan&&(
           <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
             <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
@@ -6661,6 +6781,7 @@ export default function App({ account, onAccountChange }) {
         onConsumeParams={()=>setSatParams(null)}
         onSessionComplete={(taskType)=>saveUser(applyPlanAutoComplete(user,typeMatch(taskType)))}
         subnavItems={SAT_SUBNAV}
+        subnavHrefFor={satHref}
         accent={satAccent}
         user={user}
         gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
@@ -6754,10 +6875,13 @@ export default function App({ account, onAccountChange }) {
                 const nc=navColor[n.id]||accent;
                 const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
                 return(
-                  <motion.div key={n.id} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={()=>{setTab(n.id);play('click');}} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s'}}>
+                  // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
+                  // the destination shows in the status bar on hover, and screen readers get
+                  // a link with aria-current instead of an unlabelled clickable box.
+                  <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
-                  </motion.div>
+                  </motion.a>
                 );
               })}
             </nav>
@@ -6796,13 +6920,13 @@ export default function App({ account, onAccountChange }) {
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
                 // was width:70 back when there were only 5 tabs; fixed widths would overflow once
                 // Plans made it 6.
-                <div key={n.id} data-tour={`nav-${n.id}`} onClick={()=>setTab(n.id)} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0 2px'}}>
+                <a key={n.id} href={tabHref(n.id)} aria-current={tab===n.id?'page':undefined} data-tour={`nav-${n.id}`} onClick={e=>onNavLinkClick(e,()=>setTab(n.id))} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0 2px',textDecoration:'none'}}>
                   <div style={{position:'relative',display:'flex'}}>
                     <n.ic size={19} color={tab===n.id?nc:C.t3}/>
                     {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
                   </div>
                   <span style={{fontSize:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
-                </div>
+                </a>
               );
             })}
           </nav>
