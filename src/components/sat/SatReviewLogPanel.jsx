@@ -35,7 +35,7 @@ const FILTERS = [
   { id: 'resolved', label: 'Cleared' },
 ];
 
-export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile = false, onNavigate, onSessionComplete,
+export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { reviewLog, reload } = satData;
   const [filter, setFilter] = useState('untriaged');
@@ -111,6 +111,7 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
         onAnswer={(r) => recordResponse(retrySession.attemptId, r)}
         onComplete={handleRetryComplete}
         onExit={() => { setRetrySession(null); reload(); }}
+        onAskMedabrain={onAskMedabrain}
       />
     );
   }

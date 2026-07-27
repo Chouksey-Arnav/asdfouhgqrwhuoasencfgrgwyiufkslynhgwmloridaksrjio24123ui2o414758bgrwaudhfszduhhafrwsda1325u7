@@ -83,8 +83,8 @@ await step('SAT tab is reachable in the nav', async () => {
   if (!(await nav.count())) throw new Error('no SAT entry in nav');
 });
 
-await step('SAT sub-nav renders all seven views', async () => {
-  for (const label of ['Overview', 'Diagnostic', 'Practice', 'Full Tests', 'Review Log', 'Skill Mastery', 'Scores']) {
+await step('SAT sub-nav renders all eight views', async () => {
+  for (const label of ['Overview', 'Diagnostic', 'Practice', 'Full Tests', 'Review Log', 'Skill Mastery', 'Calculator', 'Scores']) {
     if (!(await p.locator(`text="${label}"`).count())) throw new Error(`missing sub-nav item: ${label}`);
   }
 });

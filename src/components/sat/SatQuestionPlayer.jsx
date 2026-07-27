@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Flag, ChevronRight, ChevronLeft, Clock, Ban, Sparkles, ArrowRight } from 'lucide-react';
+import {
+  Check, X, Flag, ChevronRight, ChevronLeft, Clock, Ban, Sparkles, ArrowRight,
+  Calculator, BookOpen, LineChart, Brain, Lightbulb, Loader2, Eye, EyeOff, Keyboard,
+} from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, R, CC, tint, pill } from '../../lib/theme';
 import { skillMeta, DIFFICULTIES } from '../../data/sat/taxonomy';
+import { strategyFor } from '../../data/sat/strategies';
 import { shuffleChoices } from '../../lib/sat/shuffle';
+import { hintForQuestion } from '../../lib/sat/aiQuestions';
+import { canGraph } from '../../lib/sat/desmosSeed';
+import { useSatTools } from './SatToolsContext';
+import MathText from '../ui/MathText';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The SAT question player.
@@ -16,9 +24,20 @@ import { shuffleChoices } from '../../lib/sat/shuffle';
 //   'tutor'  explanation shown immediately after each answer (drills)
 //   'timed'  answers locked in silently, explanations withheld to the end
 //   'exam'   as 'timed', plus module lock — no going back once submitted
+//
+// TEST-DAY FIDELITY. Everything a student can reach from this screen is
+// something Bluebook also gives them: the Desmos calculator, the reference
+// sheet, flag-for-review, cross-out, a hideable timer, and a two-pane layout
+// with the passage beside the question. The two additions the real exam does
+// NOT have — an AI hint and "ask Medabrain" — are gated on mode, because a hint
+// available during a timed module would make the timing data meaningless.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const LETTERS = ['A', 'B', 'C', 'D'];
+
+// A passage long enough that reading it and the question in one column means
+// scrolling between them — the exact friction Bluebook's split view removes.
+const SPLIT_STIMULUS_CHARS = 240;
 
 /** Normalise a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
 function sprMatches(input, accept) {
@@ -83,6 +102,23 @@ function FigureTable({ figure }) {
   );
 }
 
+/** One button in the on-question tool strip. */
+function ToolButton({ icon: Icon, label, onClick, color = C.t2, active = false, disabled = false, title }) {
+  return (
+    <button
+      onClick={onClick} disabled={disabled} title={title || label}
+      style={btnSm(active ? tint(color, 0.2) : 'rgba(255,255,255,0.035)', {
+        border: `1px solid ${active ? tint(color, 0.42) : C.b1}`,
+        color: disabled ? C.t4 : active ? '#fff' : C.t2,
+        fontSize: 11.5, padding: '6px 11px', gap: 5,
+        cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.55 : 1,
+      })}
+    >
+      <Icon size={12} color={disabled ? C.t4 : color} /> {label}
+    </button>
+  );
+}
+
 /**
  * @param {object}   props
  * @param {Array}    props.questions     the assembled set
@@ -92,13 +128,14 @@ function FigureTable({ figure }) {
  * @param {function} props.onAnswer      ({question, choice, correct, seconds, flagged}) => void
  * @param {function} props.onComplete    (responses) => void
  * @param {function} [props.onExit]
+ * @param {function} [props.onAskMedabrain] ({question, answered, studentChoice, wasCorrect}) => void
  * @param {string}   [props.title]
  * @param {string}   [props.accent]
  * @param {boolean}  [props.isMobile]
  */
 export default function SatQuestionPlayer({
   questions = [], mode = 'tutor', seedKey = 'session', deadline = null,
-  onAnswer, onComplete, onExit, title = 'Practice', accent = C.blue,
+  onAnswer, onComplete, onExit, onAskMedabrain, title = 'Practice', accent = C.blue,
   isMobile = false, initialIndex = 0, initialResponses = [],
 }) {
   // Shuffle once per mounted session. Choices must not reorder between renders
@@ -108,6 +145,7 @@ export default function SatQuestionPlayer({
     [questions, seedKey],
   );
 
+  const tools = useSatTools();
   const [idx, setIdx] = useState(initialIndex);
   const [responses, setResponses] = useState(initialResponses);
   const [selected, setSelected] = useState(null);
@@ -117,11 +155,16 @@ export default function SatQuestionPlayer({
   const [eliminated, setEliminated] = useState(() => new Set());
   const [reviewing, setReviewing] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [timerHidden, setTimerHidden] = useState(false);
+  // questionId -> { loading, text } — one AI hint per question, on request only.
+  const [hints, setHints] = useState({});
+  const [showStrategy, setShowStrategy] = useState(false);
   const questionStart = useRef(Date.now());
 
   const q = deck[idx];
   const meta = q ? skillMeta(q.skill) : null;
   const isTutor = mode === 'tutor';
+  const isExam = mode === 'exam';
   const answeredIds = useMemo(() => new Set(responses.map(r => r.questionId)), [responses]);
 
   // Countdown ticks off an absolute deadline, never a decrementing counter — a
@@ -148,6 +191,7 @@ export default function SatQuestionPlayer({
   useEffect(() => {
     questionStart.current = Date.now();
     setEliminated(new Set());
+    setShowStrategy(false);
     const prior = responses.find(r => r.questionId === deck[idx]?.id);
     if (prior) {
       setSelected(prior.choice);
@@ -160,6 +204,18 @@ export default function SatQuestionPlayer({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, deck]);
+
+  // The calculator's header carries the one honest caveat: it exists on Math,
+  // not on Reading & Writing. Set from here because this is the only place that
+  // knows which section the student is actually looking at.
+  useEffect(() => {
+    if (!q || !tools.available) return;
+    tools.setCalculatorNote(
+      q.section === 'math'
+        ? null
+        : 'The real exam gives you no calculator on Reading & Writing. It is here so you can use it freely while you practise — just do not build a habit that test day will take away.',
+    );
+  }, [q?.section, tools.available]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function recordAndAdvance(choice, correct, input) {
     const seconds = Math.round((Date.now() - questionStart.current) / 1000);
@@ -175,7 +231,10 @@ export default function SatQuestionPlayer({
     return next;
   }
 
-  function submitAnswer() {
+  const canSubmit = q?.format === 'spr' ? sprInput.trim().length > 0 : selected != null;
+  const answeredCount = responses.length;
+
+  const submitAnswer = useCallback(() => {
     if (!q) return;
     let correct, choice, input = null;
     if (q.format === 'spr') {
@@ -197,15 +256,83 @@ export default function SatQuestionPlayer({
       setReviewing(true);
       void next;
     }
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, sprInput, selected, isTutor, idx, deck.length, responses, flagged]);
 
-  function goNext() {
+  const goNext = useCallback(() => {
     if (idx < deck.length - 1) setIdx(idx + 1);
     else setReviewing(true);
-  }
+  }, [idx, deck.length]);
 
-  const canSubmit = q?.format === 'spr' ? sprInput.trim().length > 0 : selected != null;
-  const answeredCount = responses.length;
+  const toggleFlag = useCallback(() => {
+    if (!q) return;
+    setFlagged(prev => { const n = new Set(prev); n.has(q.id) ? n.delete(q.id) : n.add(q.id); return n; });
+  }, [q]);
+
+  // ── Keyboard ───────────────────────────────────────────────────────────────
+  // The real exam is a keyboard-and-mouse test and fast students drive it from
+  // the keyboard. Typing into the grid-in box is exempted so digits still reach
+  // the input, and Alt-chords are left alone for the tools (see SatToolsContext).
+  useEffect(() => {
+    function onKey(e) {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const el = e.target;
+      const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+      if (typing) {
+        if (e.key === 'Enter' && canSubmit && !revealed) { e.preventDefault(); submitAnswer(); }
+        return;
+      }
+      if (reviewing || !q) return;
+
+      const k = e.key.toLowerCase();
+      if (!revealed && q.format === 'mcq') {
+        const byLetter = LETTERS.findIndex(l => l.toLowerCase() === k);
+        const byNumber = /^[1-4]$/.test(k) ? Number(k) - 1 : -1;
+        const pick = byLetter >= 0 ? byLetter : byNumber;
+        if (pick >= 0 && pick < q.ch.length) {
+          e.preventDefault();
+          if (!eliminated.has(pick)) setSelected(pick);
+          return;
+        }
+      }
+      if (k === 'f') { e.preventDefault(); toggleFlag(); return; }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (revealed) goNext();
+        else if (canSubmit) submitAnswer();
+        return;
+      }
+      if (e.key === 'ArrowRight' && (revealed || mode !== 'tutor')) { e.preventDefault(); goNext(); }
+      if (e.key === 'ArrowLeft' && !isExam && idx > 0) { e.preventDefault(); setIdx(idx - 1); }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [q, revealed, canSubmit, reviewing, eliminated, idx, isExam, mode, submitAnswer, goNext, toggleFlag]);
+
+  // ── AI hint ────────────────────────────────────────────────────────────────
+  const askForHint = useCallback(async () => {
+    if (!q || hints[q.id]?.loading) return;
+    setHints(h => ({ ...h, [q.id]: { loading: true, text: null } }));
+    const text = await hintForQuestion(q);
+    setHints(h => ({
+      ...h,
+      [q.id]: {
+        loading: false,
+        text: text || 'Could not reach the tutor right now — the strategy card below still applies.',
+      },
+    }));
+    if (!text) setShowStrategy(true);
+  }, [q, hints]);
+
+  const askMedabrain = useCallback(() => {
+    if (!q) return;
+    onAskMedabrain?.({
+      question: q,
+      answered: revealed || answeredIds.has(q.id),
+      studentChoice: q.format === 'spr' ? sprInput : (selected != null ? LETTERS[selected] : null),
+      wasCorrect: responses.find(r => r.questionId === q.id)?.correct ?? null,
+    });
+  }, [q, revealed, answeredIds, sprInput, selected, responses, onAskMedabrain]);
 
   // ── Review screen (before final submit, and after a tutor run) ──
   if (reviewing || !q) {
@@ -245,16 +372,21 @@ export default function SatQuestionPlayer({
 
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
             <button onClick={() => finish(responses)} style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)}>
-              Submit {mode === 'exam' ? 'module' : 'set'} <ArrowRight size={14} />
+              Submit {isExam ? 'module' : 'set'} <ArrowRight size={14} />
             </button>
             {unanswered.length > 0 && (
               <button onClick={() => { const first = deck.findIndex(d => !answeredIds.has(d.id)); setReviewing(false); setIdx(first); }} style={btnG()}>
                 Go to first unanswered
               </button>
             )}
+            {flaggedList.length > 0 && (
+              <button onClick={() => { const first = deck.findIndex(d => flagged.has(d.id)); setReviewing(false); setIdx(first); }} style={btnG()}>
+                Go to first flagged
+              </button>
+            )}
             {onExit && <button onClick={onExit} style={btnG()}>Leave</button>}
           </div>
-          {mode === 'exam' && (
+          {isExam && (
             <div style={{ fontSize: 11, color: C.t3, marginTop: 12 }}>
               Once you submit this module you cannot return to it — same as the real test.
             </div>
@@ -266,11 +398,201 @@ export default function SatQuestionPlayer({
 
   // ── Question screen ──
   const diff = DIFFICULTIES[q.difficulty];
+  const strategy = strategyFor(q.skill);
+  const graphable = q.section === 'math' && canGraph(q);
+  const hint = hints[q.id];
+  // A hint mid-module would corrupt the timing and accuracy data the whole tab
+  // is built on, so it exists in tutor mode only.
+  const hintsAllowed = isTutor && !revealed;
+  const splitLayout = !isMobile && !!q.stimulus && q.stimulus.length > SPLIT_STIMULUS_CHARS;
+  const lowTime = secondsLeft != null && secondsLeft <= 300;
+
+  const stimulusBlock = (
+    <>
+      {q.figure && <FigureTable figure={q.figure} />}
+      {q.notes && (
+        <div style={{ ...glass2({ padding: 16 }), marginBottom: 14 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>
+            Student notes
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 18, color: C.t2, fontSize: 13, lineHeight: 1.75 }}>
+            {q.notes.map((n, i) => <li key={i}>{n}</li>)}
+          </ul>
+        </div>
+      )}
+      {q.stimulus && (
+        <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.8, marginBottom: splitLayout ? 0 : 18, whiteSpace: 'pre-wrap' }}>
+          <MathText text={q.stimulus} />
+        </div>
+      )}
+    </>
+  );
+
+  const answerBlock = (
+    <>
+      <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.7, fontWeight: 600, marginBottom: 18 }}>
+        <MathText text={q.q} />
+      </div>
+
+      {q.format === 'spr' ? (
+        <div>
+          <div style={{ fontSize: 11, color: C.t3, marginBottom: 8 }}>
+            Type your answer. Fractions like 3/4 and decimals like 0.75 are both accepted.
+          </div>
+          <input
+            data-sat-spr="1"
+            value={sprInput}
+            onChange={e => setSprInput(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter' && canSubmit && !revealed) submitAnswer(); }}
+            placeholder="Your answer"
+            disabled={revealed}
+            style={inp({ maxWidth: 220, fontFamily: C.FM, fontSize: 16, textAlign: 'center' })}
+          />
+        </div>
+      ) : (
+        <div style={CC({ gap: 9 })}>
+          {q.ch.map((choice, i) => {
+            const isSel = selected === i;
+            const isCorrect = revealed && i === q.ans;
+            const isWrongPick = revealed && isSel && i !== q.ans;
+            const isElim = eliminated.has(i);
+            const borderColor = isCorrect ? C.green : isWrongPick ? C.rose : isSel ? accent : C.b2;
+            const bg = isCorrect ? tint(C.green, 0.12) : isWrongPick ? tint(C.rose, 0.12) : isSel ? tint(accent, 0.1) : 'rgba(255,255,255,0.02)';
+            return (
+              <div key={i} style={R({ gap: 8, alignItems: 'stretch' })}>
+                <button
+                  data-sat-choice={i}
+                  onClick={() => !revealed && !isElim && setSelected(i)}
+                  disabled={revealed || isElim}
+                  style={{
+                    flex: 1, display: 'flex', alignItems: 'flex-start', gap: 12, textAlign: 'left',
+                    padding: '13px 16px', borderRadius: 11, border: `1px solid ${borderColor}`,
+                    background: bg, cursor: revealed || isElim ? 'default' : 'pointer',
+                    opacity: isElim ? 0.35 : 1, textDecoration: isElim ? 'line-through' : 'none',
+                    transition: 'all .15s', fontFamily: C.FB,
+                  }}
+                >
+                  <span style={{
+                    flexShrink: 0, width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    border: `1px solid ${borderColor}`, background: isSel || isCorrect ? borderColor : 'transparent',
+                    color: isSel || isCorrect ? '#fff' : C.t3, fontSize: 11.5, fontWeight: 700, fontFamily: C.FM,
+                  }}>
+                    {isCorrect ? <Check size={13} /> : isWrongPick ? <X size={13} /> : LETTERS[i]}
+                  </span>
+                  <span style={{ fontSize: isMobile ? 13 : 13.5, color: C.t1, lineHeight: 1.65 }}>
+                    <MathText text={choice} />
+                  </span>
+                </button>
+                {!revealed && (
+                  <button
+                    onClick={() => setEliminated(prev => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); if (selected === i) setSelected(null); return n; })}
+                    title="Cross out"
+                    style={{
+                      flexShrink: 0, width: 34, borderRadius: 9, cursor: 'pointer',
+                      border: `1px solid ${isElim ? tint(C.rose, 0.35) : C.b1}`,
+                      background: isElim ? tint(C.rose, 0.12) : 'rgba(255,255,255,0.02)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}
+                  >
+                    <Ban size={12} color={isElim ? C.roseL : C.t4} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Hint (tutor mode, before answering) ── */}
+      <AnimatePresence>
+        {hint?.text && !revealed && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+            <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.amber, 0.3), background: `linear-gradient(120deg,${tint(C.amber, 0.08)},rgba(255,255,255,0.015))` }}>
+              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+                <Lightbulb size={12} color={C.amberL} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.amberL, textTransform: 'uppercase', letterSpacing: '.08em' }}>Hint — not the answer</span>
+              </div>
+              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.7 }}>{hint.text}</div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Strategy card (always available, no network needed) ── */}
+      <AnimatePresence>
+        {showStrategy && strategy && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+            <div style={{ ...glass2({ padding: 14 }), marginTop: 14, borderColor: tint(C.violet, 0.25) }}>
+              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+                <Sparkles size={12} color={C.violetL} />
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                  How to attack {meta.label}
+                </span>
+              </div>
+              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.7, fontWeight: 600 }}>{strategy.approach}</div>
+              <ol style={{ margin: '9px 0 0', paddingLeft: 17, color: C.t2, fontSize: 12, lineHeight: 1.8 }}>
+                {strategy.steps.map((s, i) => <li key={i}>{s}</li>)}
+              </ol>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Explanation — tutor mode only ── */}
+      <AnimatePresence>
+        {revealed && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <div style={{ ...glass2({ padding: 16 }), marginTop: 18, borderColor: tint(accent, 0.25) }}>
+              <div style={{ ...R({ gap: 6 }), marginBottom: 8 }}>
+                <Sparkles size={13} color={accent} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                  Why
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.75 }}><MathText text={q.exp} /></div>
+
+              {/* The rationale for the choice they actually picked — the single
+                  most useful thing to show after a miss. */}
+              {q.format === 'mcq' && selected != null && selected !== q.ans && q.distractorExp?.[selected] && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: C.roseL, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                    You chose {LETTERS[selected]}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}><MathText text={q.distractorExp[selected]} /></div>
+                </div>
+              )}
+              {q.format === 'spr' && q.hint && (
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
+                  {q.hint}
+                </div>
+              )}
+              {q.trap && (
+                <div style={{ marginTop: 12 }}>
+                  <span style={pill(tint(C.amber, 0.12), C.amberL, { fontSize: 10.5, border: `1px solid ${tint(C.amber, 0.25)}` })}>
+                    Trap: {q.trap.replace(/_/g, ' ')}
+                  </span>
+                </div>
+              )}
+              {onAskMedabrain && (
+                <button onClick={askMedabrain} style={{ ...btnG({ padding: '7px 13px', fontSize: 11.5 }), marginTop: 14 }}>
+                  <Brain size={12} /> Ask Medabrain about this one
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+
   return (
     <div style={CC({ gap: 14 })}>
       {/* Header: progress, timer, flag */}
       <div style={{ ...R({ gap: 12, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
-        <div style={R({ gap: 10 })}>
+        <div style={R({ gap: 10, flexWrap: 'wrap' })}>
           <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FM }}>
             {idx + 1} <span style={{ color: C.t3, fontWeight: 500 }}>/ {deck.length}</span>
           </span>
@@ -285,17 +607,26 @@ export default function SatQuestionPlayer({
         </div>
         <div style={R({ gap: 8 })}>
           {secondsLeft != null && (
-            <span style={{
-              ...pill(secondsLeft <= 300 ? tint(C.rose, 0.16) : 'rgba(255,255,255,0.05)', secondsLeft <= 300 ? C.roseL : C.t2,
-                { fontSize: 12, fontFamily: C.FM, fontWeight: 700, gap: 5, padding: '5px 12px' }),
-            }}>
-              <Clock size={12} />
-              {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
-            </span>
+            <button
+              onClick={() => setTimerHidden(v => !v)}
+              title={timerHidden ? 'Show the timer' : 'Hide the timer — Bluebook lets you do this too'}
+              style={{
+                ...pill(lowTime && !timerHidden ? tint(C.rose, 0.16) : 'rgba(255,255,255,0.05)',
+                  lowTime && !timerHidden ? C.roseL : C.t2,
+                  { fontSize: 12, fontFamily: C.FM, fontWeight: 700, gap: 5, padding: '5px 12px' }),
+                border: `1px solid ${lowTime && !timerHidden ? tint(C.rose, 0.3) : C.b1}`,
+                cursor: 'pointer',
+              }}
+            >
+              {timerHidden ? <EyeOff size={12} /> : <Clock size={12} />}
+              {timerHidden
+                ? 'Timer hidden'
+                : `${Math.floor(secondsLeft / 60)}:${String(secondsLeft % 60).padStart(2, '0')}`}
+            </button>
           )}
           <button
-            onClick={() => setFlagged(prev => { const n = new Set(prev); n.has(q.id) ? n.delete(q.id) : n.add(q.id); return n; })}
-            title="Flag for review"
+            onClick={toggleFlag}
+            title="Flag for review (F)"
             style={btnSm(flagged.has(q.id) ? tint(C.amber, 0.2) : 'rgba(255,255,255,0.05)', {
               border: `1px solid ${flagged.has(q.id) ? tint(C.amber, 0.4) : C.b1}`, padding: '6px 10px',
             })}
@@ -310,147 +641,78 @@ export default function SatQuestionPlayer({
         <div style={{ height: '100%', width: `${((idx + 1) / deck.length) * 100}%`, background: accent, transition: 'width .3s' }} />
       </div>
 
-      {/* Stimulus + question */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        {q.figure && <FigureTable figure={q.figure} />}
-
-        {q.notes && (
-          <div style={{ ...glass2({ padding: 16 }), marginBottom: 14 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>
-              Student notes
-            </div>
-            <ul style={{ margin: 0, paddingLeft: 18, color: C.t2, fontSize: 13, lineHeight: 1.75 }}>
-              {q.notes.map((n, i) => <li key={i}>{n}</li>)}
-            </ul>
-          </div>
-        )}
-
-        {q.stimulus && (
-          <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.8, marginBottom: 18, whiteSpace: 'pre-wrap' }}>
-            {q.stimulus}
-          </div>
-        )}
-
-        <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.7, fontWeight: 600, marginBottom: 18 }}>
-          {q.q}
-        </div>
-
-        {/* Answer input */}
-        {q.format === 'spr' ? (
-          <div>
-            <div style={{ fontSize: 11, color: C.t3, marginBottom: 8 }}>
-              Type your answer. Fractions like 3/4 and decimals like 0.75 are both accepted.
-            </div>
-            <input
-              data-sat-spr="1"
-              value={sprInput}
-              onChange={e => setSprInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && canSubmit && !revealed) submitAnswer(); }}
-              placeholder="Your answer"
-              disabled={revealed}
-              style={inp({ maxWidth: 220, fontFamily: C.FM, fontSize: 16, textAlign: 'center' })}
+      {/* ── Test-day tool strip ── */}
+      <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+        {tools.available && (
+          <>
+            <ToolButton
+              icon={Calculator} label="Calculator" color={C.teal}
+              active={tools.calculatorOpen} onClick={tools.toggleCalculator}
+              title="Desmos — Alt+C"
             />
-          </div>
-        ) : (
-          <div style={CC({ gap: 9 })}>
-            {q.ch.map((choice, i) => {
-              const isSel = selected === i;
-              const isCorrect = revealed && i === q.ans;
-              const isWrongPick = revealed && isSel && i !== q.ans;
-              const isElim = eliminated.has(i);
-              const borderColor = isCorrect ? C.green : isWrongPick ? C.rose : isSel ? accent : C.b2;
-              const bg = isCorrect ? tint(C.green, 0.12) : isWrongPick ? tint(C.rose, 0.12) : isSel ? tint(accent, 0.1) : 'rgba(255,255,255,0.02)';
-              return (
-                <div key={i} style={R({ gap: 8, alignItems: 'stretch' })}>
-                  <button
-                    data-sat-choice={i}
-                    onClick={() => !revealed && !isElim && setSelected(i)}
-                    disabled={revealed || isElim}
-                    style={{
-                      flex: 1, display: 'flex', alignItems: 'flex-start', gap: 12, textAlign: 'left',
-                      padding: '13px 16px', borderRadius: 11, border: `1px solid ${borderColor}`,
-                      background: bg, cursor: revealed || isElim ? 'default' : 'pointer',
-                      opacity: isElim ? 0.35 : 1, textDecoration: isElim ? 'line-through' : 'none',
-                      transition: 'all .15s', fontFamily: C.FB,
-                    }}
-                  >
-                    <span style={{
-                      flexShrink: 0, width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      border: `1px solid ${borderColor}`, background: isSel || isCorrect ? borderColor : 'transparent',
-                      color: isSel || isCorrect ? '#fff' : C.t3, fontSize: 11.5, fontWeight: 700, fontFamily: C.FM,
-                    }}>
-                      {isCorrect ? <Check size={13} /> : isWrongPick ? <X size={13} /> : LETTERS[i]}
-                    </span>
-                    <span style={{ fontSize: isMobile ? 13 : 13.5, color: C.t1, lineHeight: 1.65 }}>{choice}</span>
-                  </button>
-                  {!revealed && (
-                    <button
-                      onClick={() => setEliminated(prev => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); if (selected === i) setSelected(null); return n; })}
-                      title="Cross out"
-                      style={{
-                        flexShrink: 0, width: 34, borderRadius: 9, cursor: 'pointer',
-                        border: `1px solid ${isElim ? tint(C.rose, 0.35) : C.b1}`,
-                        background: isElim ? tint(C.rose, 0.12) : 'rgba(255,255,255,0.02)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >
-                      <Ban size={12} color={isElim ? C.roseL : C.t4} />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+            <ToolButton
+              icon={BookOpen} label="Formulas" color={C.emerald}
+              active={tools.referenceOpen} onClick={tools.toggleReference}
+              title="Reference sheet — Alt+R"
+            />
+            {graphable && (
+              <ToolButton
+                icon={LineChart} label="Graph this" color={C.cyan}
+                onClick={() => tools.graphQuestion(q)}
+                title="Load this question's equations into Desmos"
+              />
+            )}
+          </>
         )}
-
-        {/* Explanation — tutor mode only */}
-        <AnimatePresence>
-          {revealed && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-              style={{ overflow: 'hidden' }}
-            >
-              <div style={{ ...glass2({ padding: 16 }), marginTop: 18, borderColor: tint(accent, 0.25) }}>
-                <div style={{ ...R({ gap: 6 }), marginBottom: 8 }}>
-                  <Sparkles size={13} color={accent} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '.08em' }}>
-                    Why
-                  </span>
-                </div>
-                <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.75 }}>{q.exp}</div>
-
-                {/* The rationale for the choice they actually picked — the single
-                    most useful thing to show after a miss. */}
-                {q.format === 'mcq' && selected != null && selected !== q.ans && q.distractorExp?.[selected] && (
-                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
-                    <div style={{ fontSize: 10.5, fontWeight: 700, color: C.roseL, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
-                      You chose {LETTERS[selected]}
-                    </div>
-                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>{q.distractorExp[selected]}</div>
-                  </div>
-                )}
-                {q.format === 'spr' && q.hint && (
-                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
-                    {q.hint}
-                  </div>
-                )}
-                {q.trap && (
-                  <div style={{ marginTop: 12 }}>
-                    <span style={pill(tint(C.amber, 0.12), C.amberL, { fontSize: 10.5, border: `1px solid ${tint(C.amber, 0.25)}` })}>
-                      Trap: {q.trap.replace(/_/g, ' ')}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {hintsAllowed && (
+          <ToolButton
+            icon={hint?.loading ? Loader2 : Lightbulb}
+            label={hint?.loading ? 'Thinking…' : hint?.text ? 'Hint shown' : 'Hint'}
+            color={C.amber}
+            disabled={!!hint?.loading || !!hint?.text}
+            onClick={askForHint}
+            title="One nudge — never the answer"
+          />
+        )}
+        {isTutor && strategy && (
+          <ToolButton
+            icon={showStrategy ? Eye : Sparkles} label="Strategy" color={C.violet}
+            active={showStrategy} onClick={() => setShowStrategy(v => !v)}
+            title={`How to attack ${meta.label}`}
+          />
+        )}
+        {onAskMedabrain && !isExam && (
+          <ToolButton icon={Brain} label="Ask Medabrain" color={C.lime} onClick={askMedabrain} />
+        )}
+        {!isMobile && (
+          <span style={{ ...R({ gap: 5 }), marginLeft: 'auto', fontSize: 10, color: C.t4 }}>
+            <Keyboard size={11} />
+            {q.format === 'mcq' ? 'A–D select · ' : ''}Enter {revealed ? 'next' : 'submit'} · F flag
+          </span>
+        )}
       </div>
+
+      {/* Stimulus + question */}
+      {splitLayout ? (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
+          <div style={{ ...glass({ padding: 22 }), position: 'sticky', top: 12, maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
+            {stimulusBlock}
+          </div>
+          <div style={glass({ padding: 22 })}>
+            {answerBlock}
+          </div>
+        </div>
+      ) : (
+        <div style={glass({ padding: isMobile ? 18 : 24 })}>
+          {stimulusBlock}
+          {answerBlock}
+        </div>
+      )}
 
       {/* Footer controls */}
       <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
         <div style={R({ gap: 8 })}>
-          {mode !== 'exam' && idx > 0 && (
+          {!isExam && idx > 0 && (
             <button onClick={() => setIdx(idx - 1)} style={btnG({ padding: '9px 14px' })}>
               <ChevronLeft size={14} /> Back
             </button>
@@ -458,7 +720,7 @@ export default function SatQuestionPlayer({
           {onExit && <button onClick={onExit} style={btnG({ padding: '9px 14px' })}>Leave</button>}
         </div>
         <div style={R({ gap: 8 })}>
-          {mode !== 'tutor' && (
+          {!isTutor && (
             <button onClick={goNext} style={btnG({ padding: '9px 16px' })}>
               Skip <ChevronRight size={14} />
             </button>

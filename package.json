@@ -13,7 +13,8 @@
     "audit:sat": "node scripts/auditSatBank.mjs",
     "verify:sat-scoring": "node scripts/verifySatScoring.mjs",
     "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run verify:sat-scoring",
-    "verify:sat-tab": "node scripts/verifySatTab.mjs"
+    "verify:sat-tab": "node scripts/verifySatTab.mjs",
+    "verify:sat-tools": "node scripts/verifySatDesmos.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

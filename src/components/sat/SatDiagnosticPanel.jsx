@@ -22,7 +22,7 @@ import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatDiagnosticPanel({
-  accent = C.cyan, satData, isMobile = false, onNavigate, onSessionComplete,
+  accent = C.cyan, satData, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { attempts, reload } = satData;
   const [session, setSession] = useState(null);
@@ -73,6 +73,7 @@ export default function SatDiagnosticPanel({
         seedKey={`attempt-${session.attemptId}`} accent={accent} isMobile={isMobile}
         onAnswer={(r) => recordResponse(session.attemptId, r)}
         onComplete={handleComplete} onExit={handleLeave}
+        onAskMedabrain={onAskMedabrain}
       />
     );
   }
