@@ -4,8 +4,8 @@ import {
   Layers, Zap, Target, Clock, ChevronRight, Sparkles, RotateCcw, Check,
   Wand2, ShieldCheck, Loader2, AlertTriangle, Info,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented } from './satUi';
 import EmptyState from '../ui/EmptyState';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
@@ -33,11 +33,11 @@ const MODES = [
     blurb: 'Mixed questions weighted toward your weakest high-value skills, with due retries folded in. Explanations after each one.',
   },
   {
-    id: 'ai', label: 'AI Set', icon: Wand2, color: C.lime,
+    id: 'ai', label: 'AI Set', icon: Wand2, color: C.violet,
     blurb: 'Fresh questions written for your data — your weakest skills, at your level, built around the traps you keep falling for.',
   },
   {
-    id: 'drill', label: 'Skill Drill', icon: Target, color: C.violet,
+    id: 'drill', label: 'Skill Drill', icon: Target, color: C.teal,
     blurb: 'One skill, easy to hard, untimed. Use this when you know what is broken.',
   },
   {
@@ -242,18 +242,17 @@ export default function SatPracticePanel({
     }
     return (
       <div style={CC({ gap: 18 })}>
-        <PanelHero
-          icon={Check} color={pct >= 70 ? C.green : C.amber} color2={accent}
+        <SatPageHeader
+          accent={pct >= 70 ? C.green : C.amber}
           eyebrow="Set complete" title={`${summary.correct} of ${summary.responses.length} correct`}
           sub={missed.length
             ? `${missed.length} question${missed.length === 1 ? '' : 's'} went to your review log. Sorting why you missed them is worth more than answering another set.`
             : 'Clean sweep. Nothing added to your review log.'}
-          stats={[{ value: `${pct}%`, label: 'accuracy' }, { value: `+${summary.xp}`, label: 'XP' }]}
+          meta={[{ value: `${pct}%`, label: 'accuracy', color: pct >= 70 ? C.green : C.amber }, { value: `+${summary.xp}`, label: 'XP' }]}
           m={isMobile}
         />
 
-        <div style={glass({ padding: isMobile ? 18 : 22 })}>
-          <SectionTitle icon={Layers} color={accent}>How each skill went</SectionTitle>
+        <SatCard title="How each skill went" icon={Layers} iconColor={accent} m={isMobile}>
           <div style={CC({ gap: 12 })}>
             {Object.values(bySkill).sort((a, b) => (a.correct / a.total) - (b.correct / b.total)).map(s => {
               const meta = skillMeta(s.skill);
@@ -280,7 +279,7 @@ export default function SatPracticePanel({
             </button>
             <button onClick={() => setSummary(null)} style={btnG()}>Back to practice</button>
           </div>
-        </div>
+        </SatCard>
       </div>
     );
   }
@@ -290,11 +289,11 @@ export default function SatPracticePanel({
 
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={Layers} color={accent} color2={C.violet}
-        eyebrow="Practice" title="Targeted practice"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Practice" title="Targeted practice"
         sub="Answering questions is not the same as improving. These modes aim your time at the skills that are actually costing you points."
-        stats={[
+        meta={[
           { value: dueReviewIds.length, label: 'due retries' },
           { value: weakest.length ? `${Math.round(weakest[0].mastery * 100)}%` : '—', label: 'weakest skill' },
         ]}
@@ -334,8 +333,7 @@ export default function SatPracticePanel({
 
       {/* Mode body */}
       {mode === 'smart' && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Sparkles} color={C.blue}>What this set will cover</SectionTitle>
+        <SatCard title="What this set will cover" icon={Sparkles} iconColor={C.blue} m={isMobile}>
           {smartPreview.rationale.length === 0 ? (
             <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
               We have no performance data yet, so this first set spreads across the whole test to find out where you stand.
@@ -359,28 +357,20 @@ export default function SatPracticePanel({
               {dueReviewIds.length > 0 && ` · includes ${Math.min(3, dueReviewIds.length)} retries`}
             </span>
           </div>
-        </div>
+        </SatCard>
       )}
 
       {mode === 'ai' && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Wand2} color={C.lime}>Questions written for you</SectionTitle>
+        <SatCard title="Questions written for you" icon={Wand2} iconColor={C.violet} m={isMobile}>
 
           {/* Section filter — a student two days from a Math retake does not
               want a third of their set spent on Transitions. */}
-          <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginBottom: 16 }}>
-            {[{ id: 'all', label: 'Both sections' }, ...Object.values(SAT_SECTIONS).map(s => ({ id: s.id, label: s.label }))].map(f => (
-              <button
-                key={f.id} onClick={() => { setAiSection(f.id); setAiResult(null); setAiError(null); }}
-                style={btnSm(aiSection === f.id ? tint(C.lime, 0.2) : 'rgba(255,255,255,0.03)', {
-                  border: `1px solid ${aiSection === f.id ? tint(C.lime, 0.4) : C.b1}`,
-                  color: aiSection === f.id ? '#fff' : C.t2, fontSize: 11.5,
-                  minHeight: 34, // comfortable thumb target on a phone
-                })}
-              >
-                {f.label}
-              </button>
-            ))}
+          <div style={{ marginBottom: 16 }}>
+            <Segmented
+              label="Section" accent={C.violet} value={aiSection}
+              onChange={(id) => { setAiSection(id); setAiResult(null); setAiError(null); }}
+              options={[{ id: 'all', label: 'Both' }, ...Object.values(SAT_SECTIONS).map(s => ({ id: s.id, label: s.label }))]}
+            />
           </div>
 
           {/* ── The blueprint, shown before anything is generated ── */}
@@ -395,7 +385,7 @@ export default function SatPracticePanel({
                 ...glass2({ padding: '11px 14px' }),
                 display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap',
               }}>
-                <span style={pill(tint(C.lime, 0.14), C.limeL, { fontSize: 10, fontFamily: C.FM, flexShrink: 0 })}>
+                <span style={pill(tint(C.violet, 0.14), C.violetL, { fontSize: 10, fontFamily: C.FM, flexShrink: 0 })}>
                   {b.count}x
                 </span>
                 <div style={{ flex: 1, minWidth: 150 }}>
@@ -426,11 +416,11 @@ export default function SatPracticePanel({
               >
                 <div style={{
                   ...glass2({ padding: 15 }), marginTop: 16,
-                  borderColor: tint(C.lime, 0.3),
-                  background: `linear-gradient(120deg,${tint(C.lime, 0.09)},rgba(255,255,255,0.015))`,
+                  borderColor: tint(C.violet, 0.3),
+                  background: `linear-gradient(120deg,${tint(C.violet, 0.09)},rgba(255,255,255,0.015))`,
                 }}>
                   <div style={R({ gap: 10, alignItems: 'flex-start' })}>
-                    <Loader2 size={15} color={C.limeL} className="spin" style={{ marginTop: 1, flexShrink: 0 }} />
+                    <Loader2 size={15} color={C.violetL} className="spin" style={{ marginTop: 1, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{STAGE_COPY[aiStage].title}</div>
                       <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65, marginTop: 3 }}>
@@ -518,7 +508,7 @@ export default function SatPracticePanel({
                     onClick={() => startSession({
                       questions: aiResult.questions, mode: 'tutor', kind: 'drill', generated: true,
                     })}
-                    style={btn(`linear-gradient(135deg,${C.lime},${C.green})`)}
+                    style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`)}
                   >
                     Start this set <ChevronRight size={14} />
                   </button>
@@ -537,7 +527,7 @@ export default function SatPracticePanel({
               <button
                 onClick={() => buildAiSet()}
                 disabled={!aiBlueprint.length}
-                style={btn(`linear-gradient(135deg,${C.lime},${C.green})`, {
+                style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, {
                   opacity: aiBlueprint.length ? 1 : 0.4,
                   cursor: aiBlueprint.length ? 'pointer' : 'not-allowed',
                 })}
@@ -563,12 +553,11 @@ export default function SatPracticePanel({
               generated material: if a question looks wrong to you, trust yourself and flag it with Medabrain.
             </span>
           </div>
-        </div>
+        </SatCard>
       )}
 
       {mode === 'drill' && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Target} color={C.violet}>Pick a skill</SectionTitle>
+        <SatCard title="Pick a skill" icon={Target} iconColor={C.teal} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
             Ordered by leverage — how weak you are, multiplied by how heavily the exam tests it.
           </div>
@@ -606,12 +595,11 @@ export default function SatPracticePanel({
           >
             {generating ? 'Building your drill…' : <>Start drill <ChevronRight size={14} /></>}
           </button>
-        </div>
+        </SatCard>
       )}
 
       {mode === 'timed' && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Clock} color={C.amber}>Choose a section</SectionTitle>
+        <SatCard title="Choose a section" icon={Clock} iconColor={C.amber} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
             One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practise committing under time.
           </div>
@@ -633,7 +621,7 @@ export default function SatPracticePanel({
           <button onClick={() => beginTimed(timedSection)} style={btn(`linear-gradient(135deg,${C.amber},${C.orange})`, { marginTop: 18 })}>
             Start timed set <ChevronRight size={14} />
           </button>
-        </div>
+        </SatCard>
       )}
 
       {weakest.length === 0 && (

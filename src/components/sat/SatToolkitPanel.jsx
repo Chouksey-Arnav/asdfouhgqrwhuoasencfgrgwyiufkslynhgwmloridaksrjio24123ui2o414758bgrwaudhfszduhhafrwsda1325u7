@@ -6,7 +6,7 @@ import {
   AlertTriangle, PlayCircle, Keyboard,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle } from '../ui/PanelHero';
+import { SatPageHeader, SatCard } from './satUi';
 import DesmosSurface, { resetCalculator, calcChromeButton } from './DesmosSurface';
 import { useSatTools } from './SatToolsContext';
 import { CALC_MODES, USING_DEMO_KEY } from '../../lib/sat/desmos';
@@ -55,11 +55,11 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
 
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={Calculator} color={accent} color2={C.emerald}
-        eyebrow="Calculator" title="Desmos, the same one the exam gives you"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Calculator" title="Desmos, the same one the exam gives you"
         sub="The Digital SAT builds Desmos into every Math question — both modules, no time limit on using it. It is here on every SAT screen too, and it keeps your work between questions."
-        stats={[{ value: DESMOS_PLAYS.length, label: 'techniques' }]}
+        meta={[{ value: DESMOS_PLAYS.length, label: 'techniques' }]}
         m={isMobile}
         tourTag="sat-deep-toolkit"
       />
@@ -110,8 +110,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
       </div>
 
       {/* ── Policy facts ── */}
-      <div style={glass({ padding: isMobile ? 18 : 22 })}>
-        <SectionTitle icon={Info} color={C.blue}>What the exam actually allows</SectionTitle>
+      <SatCard title="What the exam actually allows" icon={Info} iconColor={C.blue} m={isMobile}>
         <div style={CC({ gap: 9 })}>
           {CALCULATOR_FACTS.map((f, i) => (
             <div key={i} style={{ ...R({ gap: 10, alignItems: 'flex-start' }), ...glass2({ padding: '11px 13px' }) }}>
@@ -124,11 +123,10 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
             </div>
           ))}
         </div>
-      </div>
+      </SatCard>
 
       {/* ── The playbook ── */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Sparkles} color={accent}>The Desmos playbook</SectionTitle>
+      <SatCard title="The Desmos playbook" icon={Sparkles} iconColor={accent} m={isMobile}>
         <div style={{ fontSize: 12, color: C.t3, marginBottom: 14, lineHeight: 1.65 }}>
           Ten techniques, ranked by how often they save time on a real Math module. Press
           "Show me" on any of them and the expressions load into the calculator above.
@@ -197,7 +195,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
             );
           })}
         </div>
-      </div>
+      </SatCard>
     </div>
   );
 }

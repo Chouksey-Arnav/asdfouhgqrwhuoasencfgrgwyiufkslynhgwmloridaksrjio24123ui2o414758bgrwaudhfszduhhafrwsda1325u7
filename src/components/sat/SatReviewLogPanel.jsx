@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2, Filter } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { StatTile } from '../ui/PanelHero';
+import { SatPageHeader, SatCard, Segmented } from './satUi';
 import EmptyState from '../ui/EmptyState';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import { useSatSession, scheduleReviewRetry } from './useSatSession';
@@ -121,11 +122,11 @@ export default function SatReviewLogPanel({
 
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={AlertTriangle} color={accent} color2={C.orange}
-        eyebrow="Review log" title="Your mistakes, organised"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Review log" title="Your mistakes, organised"
         sub="Questions only find your gaps. Working out why you missed them is what closes them — and it is the step almost everyone skips."
-        stats={[
+        meta={[
           { value: open.length, label: 'open' },
           { value: due.length, label: 'due to retry', color: due.length ? C.amber : undefined },
         ]}
@@ -137,14 +138,15 @@ export default function SatReviewLogPanel({
         <EmptyState
           icon={Check} title="Nothing to review"
           body="Your review log is clear. It fills up as you miss questions in practice and on full tests — which is the point, so do not aim to keep it empty."
-          actionLabel="Go practise" onAction={() => onNavigate?.('practice')} accent={accent}
+          // Green, not the panel's rose: an empty review log is the good state,
+          // and a rose badge around a tick reads as an error at a glance.
+          actionLabel="Go practise" onAction={() => onNavigate?.('practice')} accent={C.green}
         />
       ) : (
         <>
           {/* ── Patterns ── */}
           {patterns.length > 0 && (
-            <div style={glass({ padding: isMobile ? 18 : 24 })}>
-              <SectionTitle icon={Sparkles} color={C.violet}>Patterns we can see</SectionTitle>
+            <SatCard title="Patterns we can see" icon={Sparkles} iconColor={C.violet} m={isMobile}>
               <div style={CC({ gap: 11 })}>
                 {patterns.slice(0, 3).map(p => (
                   <div key={p.id} style={{
@@ -169,7 +171,7 @@ export default function SatReviewLogPanel({
                   </div>
                 ))}
               </div>
-            </div>
+            </SatCard>
           )}
 
           {/* ── Actions ── */}
@@ -186,20 +188,7 @@ export default function SatReviewLogPanel({
           )}
 
           {/* ── Filters ── */}
-          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-            <Filter size={13} color={C.t3} />
-            {FILTERS.map(f => (
-              <button
-                key={f.id} onClick={() => setFilter(f.id)}
-                style={btnSm(filter === f.id ? tint(accent, 0.2) : 'rgba(255,255,255,0.03)', {
-                  border: `1px solid ${filter === f.id ? tint(accent, 0.4) : C.b1}`,
-                  color: filter === f.id ? '#fff' : C.t2, fontSize: 11.5,
-                })}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <Segmented options={FILTERS} value={filter} onChange={setFilter} accent={accent} label="Show" />
 
           {/* ── Entries ── */}
           <div style={CC({ gap: 11 })}>

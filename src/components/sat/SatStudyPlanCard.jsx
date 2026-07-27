@@ -20,7 +20,7 @@ import { SectionTitle } from '../ui/PanelHero';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatStudyPlanCard({
-  plan, loading = false, error = null, accent = C.lime, isMobile = false,
+  plan, loading = false, error = null, accent = C.sky, isMobile = false,
   onNavigate, onRegenerate, generatedFromLabel = null,
 }) {
   if (loading) {

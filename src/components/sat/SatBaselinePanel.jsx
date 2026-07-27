@@ -26,8 +26,9 @@ import {
   AlertTriangle, CheckCircle2, XCircle, Loader, Target, Lock, RotateCcw,
   BarChart3, Brain, ArrowRight, ShieldCheck, Zap,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill, lbl, inp } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp } from '../../lib/theme';
+import { StatTile } from '../ui/PanelHero';
+import { SatPageHeader, SatCard } from './satUi';
 import { Bar } from '../ui/primitives';
 import MathText from '../ui/MathText';
 import * as DB from '../../lib/db';
@@ -298,13 +299,13 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
 
   return (
     <div style={CC({ gap: 18 })}>
-      <PanelHero
-        icon={Gauge} color={accent} color2={C.orange} m={isMobile}
-        eyebrow="Adaptive placement"
+      <SatPageHeader
+        accent={C.gold} m={isMobile}
+        eyebrow="SAT · Adaptive placement"
         title="Your baseline"
         sub={`${BASELINE_LENGTH} questions, written for you one at a time. Get one right and the next gets harder; miss one and it eases off. That is how it finds your real level instead of guessing.`}
-        stats={last ? [
-          { label: 'Latest estimate', value: `${last.low}–${last.high}`, color: accent },
+        meta={last ? [
+          { label: 'Latest estimate', value: `${last.low}–${last.high}`, color: C.gold },
           { label: 'Confidence', value: last.confidence, color: last.confidence === 'good' ? C.green : last.confidence === 'moderate' ? C.amber : C.rose },
           { label: 'Taken', value: new Date(history[0].finishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), color: C.t2 },
         ] : []}
@@ -312,8 +313,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
 
       {/* ── Previous result + movement ─────────────────────────────────── */}
       {last && (
-        <div style={glass({ padding: isMobile ? 16 : 20 })}>
-          <SectionTitle icon={BarChart3} color={accent}>Where you stand</SectionTitle>
+        <SatCard title="Where you stand" icon={BarChart3} iconColor={accent} m={isMobile}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
             <StatTile icon={Target} value={`${last.low}–${last.high}`} label="Composite range" sub={`midpoint ${last.mid}`} color={accent} />
             <StatTile icon={Sparkles} value={last.sections?.rw?.scaled ?? '—'} label="Reading & Writing" color={C.blue} />
@@ -331,12 +331,11 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
               </span>
             </div>
           )}
-        </div>
+        </SatCard>
       )}
 
       {/* ── How it works ───────────────────────────────────────────────── */}
-      <div style={glass({ padding: isMobile ? 16 : 20 })}>
-        <SectionTitle icon={Brain} color={C.violet}>How this one is different</SectionTitle>
+      <SatCard title="How this one is different" icon={Brain} iconColor={C.violet} m={isMobile}>
         <div style={CC({ gap: 12 })}>
           {[
             { icon: Sparkles, hue: C.violet, title: 'Every question is written for you', body: 'Nothing is pulled off a shelf. Each item is authored against the exact skill and difficulty the last answer called for, using what the app already knows about you — and a second model re-solves it before you see it, so the answer key is checked, not assumed.' },
@@ -355,7 +354,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
             </div>
           ))}
         </div>
-      </div>
+      </SatCard>
 
       {/* ── Start / gate ───────────────────────────────────────────────── */}
       <div style={{
@@ -596,8 +595,7 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
 
       {/* ── What to work on ────────────────────────────────────────────── */}
       {result.weakest.length > 0 && (
-        <div style={glass({ padding: isMobile ? 16 : 20 })}>
-          <SectionTitle icon={Target} color={C.rose}>Where the points are</SectionTitle>
+        <SatCard title="Where the points are" icon={Target} iconColor={C.rose} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
             Ranked by leverage — how far off you were, multiplied by how heavily the real exam tests it.
             Your single worst skill is often worth two questions on test day; starting there would waste a week.
@@ -617,13 +615,12 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
               </div>
             ))}
           </div>
-        </div>
+        </SatCard>
       )}
 
       {/* ── The misses ─────────────────────────────────────────────────── */}
       {result.flagged.length > 0 && (
-        <div style={glass({ padding: isMobile ? 16 : 20 })}>
-          <SectionTitle icon={XCircle} color={C.amber}>The {result.flagged.length} you missed</SectionTitle>
+        <SatCard title="The {result.flagged.length} you missed" icon={XCircle} iconColor={C.amber} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
             All of these are already in your Review Log on a spaced schedule. Work through them there — a miss nobody
             diagnoses simply repeats.
@@ -687,7 +684,7 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
               );
             })}
           </div>
-        </div>
+        </SatCard>
       )}
 
       {/* ── Next ───────────────────────────────────────────────────────── */}

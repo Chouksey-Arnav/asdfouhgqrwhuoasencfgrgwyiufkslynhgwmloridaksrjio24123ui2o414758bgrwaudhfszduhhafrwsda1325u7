@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
 import { Trophy, ChevronRight, Info, Clock, Layers, AlertTriangle, TrendingUp } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { StatTile } from '../ui/PanelHero';
+import { SatPageHeader, SatCard } from './satUi';
 import { Bar } from '../ui/primitives';
 import { domainBreakdown, pacingAnalysis, routingNarrative } from '../../lib/sat/adaptive';
 import { SAT_SECTIONS, skillMeta } from '../../data/sat/taxonomy';
@@ -31,19 +32,18 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
 
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={Trophy} color={C.green} color2={accent}
+      <SatPageHeader
+        accent={C.green}
         eyebrow="Practice test complete" title={`${scored.composite}`}
         sub={`Roughly the ${scored.percentile}th percentile nationally. ${SCORE_DISCLAIMER}`}
-        stats={Object.entries(scored.sections).map(([sec, s]) => ({
+        meta={Object.entries(scored.sections).map(([sec, s]) => ({
           value: s.scaled, label: SAT_SECTIONS[sec].short, color: SAT_SECTIONS[sec].color,
         }))}
         m={isMobile}
       />
 
       {/* ── Routing explanation — the most instructive part of an adaptive test ── */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Info} color={accent}>How the adaptive format shaped this</SectionTitle>
+      <SatCard title="How the adaptive format shaped this" icon={Info} iconColor={accent} m={isMobile}>
         <div style={CC({ gap: 12 })}>
           {Object.entries(scored.sections).map(([sec, s]) => {
             const path = MODULE_PATHS[s.path];
@@ -72,11 +72,10 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
             );
           })}
         </div>
-      </div>
+      </SatCard>
 
       {/* ── Domain breakdown ── */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Layers} color={C.blue}>Where the points went</SectionTitle>
+      <SatCard title="Where the points went" icon={Layers} iconColor={C.blue} m={isMobile}>
         <div style={CC({ gap: 12 })}>
           {domains.map(d => (
             <div key={d.domain}>
@@ -91,12 +90,11 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
             </div>
           ))}
         </div>
-      </div>
+      </SatCard>
 
       {/* ── Pacing ── */}
       {pacing && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Clock} color={C.amber}>Pacing</SectionTitle>
+        <SatCard title="Pacing" icon={Clock} iconColor={C.amber} m={isMobile}>
           <div style={G(3, 12, {}, isMobile)}>
             <StatTile
               icon={Clock} color={pacing.avgRatio > 1.15 ? C.rose : C.green}
@@ -124,13 +122,12 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
               </div>
             </div>
           )}
-        </div>
+        </SatCard>
       )}
 
       {/* ── Weakest skills ── */}
       {worstSkills.length > 0 && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={AlertTriangle} color={C.rose}>Skills to attack first</SectionTitle>
+        <SatCard title="Skills to attack first" icon={AlertTriangle} iconColor={C.rose} m={isMobile}>
           <div style={CC({ gap: 10 })}>
             {worstSkills.map(s => {
               const meta = skillMeta(s.skill);
@@ -149,7 +146,7 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
               );
             })}
           </div>
-        </div>
+        </SatCard>
       )}
 
       <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }) }}>

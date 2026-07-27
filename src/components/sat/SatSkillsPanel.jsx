@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, ChevronDown, ChevronRight, Target, Lightbulb, AlertTriangle, Clock } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle } from '../ui/PanelHero';
+import { C, glass2, btn, R, CC, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented } from './satUi';
 import { Bar } from '../ui/primitives';
 import SatSkillHeatmap from './SatSkillHeatmap';
 import { strategyFor } from '../../data/sat/strategies';
@@ -23,7 +23,7 @@ const SORTS = [
   { id: 'unpractised', label: 'Not practised' },
 ];
 
-export default function SatSkillsPanel({ accent = C.amber, satData, isMobile = false, onNavigate }) {
+export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = false, onNavigate }) {
   const { ranked, masteryMap } = satData;
   const [sort, setSort] = useState('leverage');
   const [sectionFilter, setSectionFilter] = useState('all');
@@ -41,47 +41,28 @@ export default function SatSkillsPanel({ accent = C.amber, satData, isMobile = f
 
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={TrendingUp} color={accent} color2={C.orange}
-        eyebrow="Skill mastery" title="All 28 tested skills"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Skill mastery" title="All 28 tested skills"
         sub="Every skill the Digital SAT tests, with what we have actually measured about yours. Numbers you have barely any data for say so."
-        stats={[
+        meta={[
           { value: measured, label: `of ${Object.keys(masteryMap).length} measured` },
         ]}
         m={isMobile}
         tourTag="sat-deep-skills"
       />
 
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Target} color={accent}>Heat map</SectionTitle>
+      <SatCard title="Heat map" icon={Target} iconColor={accent} m={isMobile}>
         <SatSkillHeatmap masteryMap={masteryMap} isMobile={isMobile} onSelect={(s) => setExpanded(s)} />
-      </div>
+      </SatCard>
 
       {/* Filters */}
-      <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-        {SORTS.map(s => (
-          <button
-            key={s.id} onClick={() => setSort(s.id)}
-            style={btnSm(sort === s.id ? tint(accent, 0.2) : 'rgba(255,255,255,0.03)', {
-              border: `1px solid ${sort === s.id ? tint(accent, 0.4) : C.b1}`,
-              color: sort === s.id ? '#fff' : C.t2, fontSize: 11.5,
-            })}
-          >
-            {s.label}
-          </button>
-        ))}
-        <span style={{ width: 1, height: 20, background: C.b2, margin: '0 4px' }} />
-        {[{ id: 'all', label: 'Both sections' }, ...Object.values(SAT_SECTIONS).map(s => ({ id: s.id, label: s.label }))].map(f => (
-          <button
-            key={f.id} onClick={() => setSectionFilter(f.id)}
-            style={btnSm(sectionFilter === f.id ? tint(C.blue, 0.2) : 'rgba(255,255,255,0.03)', {
-              border: `1px solid ${sectionFilter === f.id ? tint(C.blue, 0.4) : C.b1}`,
-              color: sectionFilter === f.id ? '#fff' : C.t2, fontSize: 11.5,
-            })}
-          >
-            {f.label}
-          </button>
-        ))}
+      <div style={R({ gap: 14, flexWrap: 'wrap' })}>
+        <Segmented label="Sort" options={SORTS} value={sort} onChange={setSort} accent={accent} />
+        <Segmented
+          label="Section" accent={accent} value={sectionFilter} onChange={setSectionFilter}
+          options={[{ id: 'all', label: 'Both' }, ...Object.values(SAT_SECTIONS).map(s => ({ id: s.id, label: s.label }))]}
+        />
       </div>
 
       {/* Skill rows */}
@@ -93,7 +74,10 @@ export default function SatSkillsPanel({ accent = C.amber, satData, isMobile = f
           const band = confidenceBand(s.confidence);
           const pacingOff = s.pacingRatio && s.pacingRatio > 1.3;
           return (
-            <div key={s.skill} style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${C.b1}` }}>
+            <div key={s.skill} style={{
+              background: C.surf, border: `1px solid ${isOpen ? tint(accent, 0.35) : C.b1}`,
+              borderRadius: 14, overflow: 'hidden', boxShadow: C.shadowSm, transition: 'border-color .18s ease',
+            }}>
               <button
                 onClick={() => setExpanded(isOpen ? null : s.skill)}
                 style={{ width: '100%', textAlign: 'left', padding: isMobile ? 14 : 16, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: C.FB }}

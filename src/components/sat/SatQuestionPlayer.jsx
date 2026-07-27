@@ -642,9 +642,9 @@ export default function SatQuestionPlayer({
                 ? 'Written for you by Medabrain. A second, different model solved it without seeing the answer and agreed with the key.'
                 : 'Written for you by Medabrain. It passed the structural checks, but the independent key check could not be completed.'}
               style={pill(
-                tint(q.verified ? C.green : C.lime, 0.12),
-                q.verified ? C.greenL : C.limeL,
-                { fontSize: 10, gap: 4, border: `1px solid ${tint(q.verified ? C.green : C.lime, 0.25)}` },
+                tint(q.verified ? C.green : C.violet, 0.12),
+                q.verified ? C.greenL : C.violetL,
+                { fontSize: 10, gap: 4, border: `1px solid ${tint(q.verified ? C.green : C.violet, 0.25)}` },
               )}
             >
               {q.verified ? <ShieldCheck size={9} /> : <Wand2 size={9} />}
@@ -729,7 +729,7 @@ export default function SatQuestionPlayer({
           />
         )}
         {onAskMedabrain && !isExam && (
-          <ToolButton icon={Brain} label="Ask Medabrain" color={C.lime} onClick={askMedabrain} />
+          <ToolButton icon={Brain} label="Ask Medabrain" color={C.sky} onClick={askMedabrain} />
         )}
         {!isMobile && (
           <span style={{ ...R({ gap: 5 }), marginLeft: 'auto', fontSize: 10, color: C.t4 }}>
