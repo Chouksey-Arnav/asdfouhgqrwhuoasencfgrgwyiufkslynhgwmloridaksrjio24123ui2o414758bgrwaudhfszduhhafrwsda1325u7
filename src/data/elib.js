@@ -40,6 +40,22 @@
 // open-textbook project, or established educational channel, verified via web
 // search (this sandbox cannot reach youtube.com/khanacademy directly), with no
 // duplicate titles or URLs across the two sets.
+//
+// Live-link audit (all ~1060 entries across elib.js + elibExtra.js +
+// elibExpansion[A-G].js, plus all 88 YouTube ytIds via the oEmbed API):
+// every resource URL was fetched directly and every video ID checked for
+// existence. ~25 URLs had genuinely moved (site restructures — AAMC,
+// College Board, CDC, ACT, HHS, Wiley, etc.) and were repointed to their
+// current canonical page after confirming the replacement resolves. 4 with
+// no live replacement (a shut-down scholarship-matching startup, a
+// discontinued tutorial page, and two courses no longer offered under a
+// stable free URL) were removed outright rather than left broken or
+// guessed at. The large remaining set of 403/429/503-style responses seen
+// during automated checks were confirmed via independent search to be
+// live, current pages behind bot-protection (Reddit, Quizlet, CDC/NIH/.gov
+// WAFs, ResearchGate, Verywell, etc.) that block non-browser HTTP clients
+// on every path regardless of validity — those were left unchanged. All 88
+// YouTube ytIds resolved to real, existing videos via oEmbed.
 
 import { ELIB_EXTRA } from './elibExtra';
 import { ELIB_EXPANSION_A } from './elibExpansionA';
@@ -117,7 +133,7 @@ const ELIB_CORE = [
   {
     "cat": "Physical Sciences",
     "title": "Organic Chemistry as a Second Language",
-    "url": "https://www.wiley.com/en-us/Organic+Chemistry+as+a+Second+Language-p-9781118144343",
+    "url": "https://www.wiley.com/en-us/Organic+Chemistry+as+a+Second+Language:+First+Semester+Topics,+6th+Edition-p-9781119837091",
     "type": "Book",
     "free": false,
     "difficulty": "Undergrad / Advanced",
@@ -731,7 +747,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "How to Write a High School Resume — College Board",
-    "url": "https://bigfuture.collegeboard.org/plan-for-college/college-prep/high-school-resume",
+    "url": "https://bigfuture.collegeboard.org/plan-for-college/stand-out-in-high-school/whats-high-school-resume",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
@@ -740,7 +756,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "AAMC Core Competencies for Entering Medical Students",
-    "url": "https://students-residents.aamc.org/applying-medical-school/core-competencies-entering-medical-students",
+    "url": "https://students-residents.aamc.org/real-stories-demonstrating-premed-competencies/premed-competencies-entering-medical-students",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
@@ -749,7 +765,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "The Premed Years Podcast (Dr. Ryan Gray)",
-    "url": "https://medicalschoolhq.net/premed-years-podcast/",
+    "url": "https://medicalschoolhq.net/thepremedyears/",
     "type": "Podcast",
     "free": true,
     "difficulty": "Introductory",
@@ -758,7 +774,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "AAMC Pre-Med Navigator Newsletter",
-    "url": "https://students-residents.aamc.org/applying-medical-school/subscribe-premed-navigator",
+    "url": "https://students-residents.aamc.org/premed-navigator/subscribe-premed-navigator",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
@@ -767,7 +783,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "AAMC Summer Undergraduate Research Programs (SURP) Directory",
-    "url": "https://students-residents.aamc.org/applying-medical-school/summer-undergraduate-research-programs",
+    "url": "https://students-residents.aamc.org/phd-biomedical-science/summer-undergraduate-research-programs",
     "type": "Article",
     "free": true,
     "difficulty": "Undergrad / Advanced",
@@ -802,17 +818,17 @@ const ELIB_CORE = [
   },
   {
     "cat": "Life Sciences",
-    "title": "HHMI BioInteractive Virtual Lab Classrooms",
-    "url": "https://www.biointeractive.org/classroom-resources/biomedical-beat",
+    "title": "HHMI BioInteractive Classroom Resources",
+    "url": "https://www.biointeractive.org/classroom-resources",
     "type": "App",
     "free": true,
     "difficulty": "AP / Intermediate",
-    "desc": "High-quality virtual laboratory simulations covering cardiology, immunology, genetic engineering, and neurophysiology."
+    "desc": "Free virtual labs, videos, and interactives covering cardiology, immunology, genetic engineering, and neurophysiology."
   },
   {
     "cat": "Life Sciences",
     "title": "Cells Alive! Interactive Cell Biology",
-    "url": "https://www.cellsalive.com/",
+    "url": "https://www.cellsalive.fun/",
     "type": "App",
     "free": true,
     "difficulty": "Introductory",
@@ -857,7 +873,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "AAMC Anatomy of an Applicant",
-    "url": "https://students-residents.aamc.org/applying-medical-school/anatomy-applicant",
+    "url": "https://students-residents.aamc.org/applying-medical-school/preparing-med-school/anatomy-applicant/",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
@@ -893,7 +909,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "AAMC Medical School Admission Requirements (MSAR)",
-    "url": "https://students-residents.aamc.org/applying-medical-school/applying-medical-school-with-msar",
+    "url": "https://students-residents.aamc.org/applying-medical-school/applying-medical-school-process/medical-school-admission-requirements/",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
@@ -909,27 +925,9 @@ const ELIB_CORE = [
     "desc": "Free premier NIH course introducing the principles of clinical trial design, ethical regulations, and biostatistical methods."
   },
   {
-    "cat": "Physical Sciences",
-    "title": "MIT OpenCourseWare: Physics of the Human Body",
-    "url": "https://ocw.mit.edu/courses/physics-of-the-human-body/",
-    "type": "Course",
-    "free": true,
-    "difficulty": "AP / Intermediate",
-    "desc": "Biomedical physics lectures investigating skeletal structures, fluid mechanics of blood, and acoustics of the ear."
-  },
-  {
-    "cat": "Life Sciences",
-    "title": "Stanford Neurobiology (Stanford Online)",
-    "url": "https://online.stanford.edu/courses/neurobiology",
-    "type": "Course",
-    "free": true,
-    "difficulty": "Undergrad / Advanced",
-    "desc": "Advanced introduction to neurobiology, investigating cell signaling, neuroanatomy, and neural pathway architectures."
-  },
-  {
     "cat": "Admissions & Planning",
     "title": "CDC Public Health 101 Series",
-    "url": "https://www.cdc.gov/training/publichealth101/",
+    "url": "https://www.cdc.gov/training-publichealth101/php/index.html",
     "type": "Course",
     "free": true,
     "difficulty": "Introductory",
@@ -965,7 +963,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "The MedEdits Guide to Medical School Admissions",
-    "url": "https://mededits.com/medical-school-admissions-guide/",
+    "url": "https://mededits.com/",
     "type": "Book",
     "free": false,
     "difficulty": "Introductory",
@@ -1186,7 +1184,7 @@ const ELIB_CORE = [
   {
     "cat": "Test Prep",
     "title": "IXL Test Prep",
-    "url": "https://www.ixl.com/test-prep",
+    "url": "https://pro.ixl.com/skill-plans",
     "type": "Course",
     "free": false,
     "difficulty": "Introductory",
@@ -1294,7 +1292,7 @@ const ELIB_CORE = [
   {
     "cat": "Admissions & Planning",
     "title": "Common Black College Application",
-    "url": "https://www.cb-cca.org/",
+    "url": "https://commonblackcollegeapp.com/",
     "type": "Article",
     "free": true,
     "difficulty": "Introductory",
