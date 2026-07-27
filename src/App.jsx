@@ -21,7 +21,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter,
+  Highlighter, Eraser,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -829,7 +829,13 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
   const [answers,setAnswers]=useState([]);const [phase,setPhase]=useState('quiz');const [ri,setRi]=useState(0);
   const [scrambledQs]=useState(()=>readonly?quiz.qs:scrambleQuiz(quiz));
   const [elapsed,setElapsed]=useState(0);
+  const [elim,setElim]=useState(()=>new Set());
   const tot=scrambledQs.length,q=scrambledQs[qi],prog=Math.round(((qi+(conf?1:0))/tot)*100);
+
+  function toggleElim(ci){
+    if(conf)return;
+    setElim(s=>{const n=new Set(s);if(n.has(ci))n.delete(ci);else{n.add(ci);if(sel===ci)setSel(null);}return n;});
+  }
 
   useEffect(()=>{
     if(readonly||phase!=='quiz')return;
@@ -844,7 +850,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
     setAnswers(a=>[...a,{q:q.q,choices:q.ch,sel,correct:q.ans,exp:q.exp,ok}]);
     setConf(true);
   }
-  function next(){if(qi<tot-1){setQi(i=>i+1);setSel(null);setConf(false);}else setPhase('review');}
+  function next(){if(qi<tot-1){setQi(i=>i+1);setSel(null);setConf(false);setElim(new Set());}else setPhase('review');}
 
   if(phase==='review'){
     const pct=tot>0?Math.round((scoreRef.current/tot)*100):0;
@@ -906,16 +912,19 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
       <MathText text={q.q} style={{fontSize:m?15:17,fontWeight:600,lineHeight:1.75,marginBottom:m?18:24,color:C.t1,fontFamily:C.FB,display:'block'}}/>
       <div style={CC({gap:m?8:10})}>
         {q.ch.map((ch,ci)=>{
+          const isElim=elim.has(ci)&&!conf;
           let bg='rgba(255,255,255,0.025)',brd=C.b1,tc=C.t2;
           if(sel===ci&&!conf){bg=C.blueDim;brd=`${C.blue}60`;tc=C.t1;}
           if(conf){if(ci===q.ans){bg=C.greenDim;brd=`${C.green}50`;tc=C.green;}else if(ci===sel){bg=C.roseDim;brd=`${C.rose}50`;tc=C.rose;}}
+          if(isElim){bg='rgba(255,255,255,0.012)';tc=C.t3;}
           return(
-            <motion.div key={ci} whileHover={!conf?{scale:1.01}:{}} whileTap={!conf?{scale:.99}:{}} onClick={()=>{if(!conf){setSel(ci);play('select');}}}
-              style={{...glass2({background:bg,border:`1px solid ${brd}30`,padding:m?'12px 14px':'14px 18px'}),cursor:conf?'default':'pointer',display:'flex',alignItems:'center',gap:m?10:14,transition:'background .15s,border-color .15s'}}>
+            <motion.div key={ci} whileHover={!conf&&!isElim?{scale:1.01}:{}} whileTap={!conf&&!isElim?{scale:.99}:{}} onClick={()=>{if(!conf&&!isElim){setSel(ci);play('select');}}}
+              style={{...glass2({background:bg,border:`1px solid ${brd}30`,padding:m?'12px 14px':'14px 18px'}),cursor:conf?'default':isElim?'default':'pointer',display:'flex',alignItems:'center',gap:m?10:14,transition:'background .15s,border-color .15s',opacity:isElim?0.55:1}}>
               <span style={{width:m?24:28,height:m?24:28,borderRadius:8,background:conf&&ci===q.ans?`${C.green}20`:conf&&ci===sel?`${C.rose}20`:sel===ci?C.blueDim:C.s4,border:`1px solid ${conf&&ci===q.ans?`${C.green}40`:conf&&ci===sel?`${C.rose}40`:sel===ci?`${C.blue}50`:C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,fontWeight:700,color:tc,flexShrink:0,fontFamily:C.FM}}>{String.fromCharCode(65+ci)}</span>
-              <span style={{fontSize:m?13:14,lineHeight:1.6,color:conf?tc:sel===ci?C.t1:C.t2,fontFamily:C.FB}}>{ch}</span>
-              {conf&&ci===q.ans&&<motion.span initial={{scale:0}} animate={{scale:1}} style={{marginLeft:'auto',color:C.green,display:'flex'}}><Check size={18}/></motion.span>}
-              {conf&&ci===sel&&ci!==q.ans&&<motion.span initial={{scale:0}} animate={{scale:1}} style={{marginLeft:'auto',color:C.rose,display:'flex'}}><X size={18}/></motion.span>}
+              <span style={{fontSize:m?13:14,lineHeight:1.6,color:conf?tc:isElim?C.t3:sel===ci?C.t1:C.t2,fontFamily:C.FB,textDecoration:isElim?'line-through':'none',flex:1}}>{ch}</span>
+              {conf&&ci===q.ans&&<motion.span initial={{scale:0}} animate={{scale:1}} style={{marginLeft:'auto',color:C.green,display:'flex',flexShrink:0}}><Check size={18}/></motion.span>}
+              {conf&&ci===sel&&ci!==q.ans&&<motion.span initial={{scale:0}} animate={{scale:1}} style={{marginLeft:'auto',color:C.rose,display:'flex',flexShrink:0}}><X size={18}/></motion.span>}
+              {!conf&&<button title={isElim?'Restore this choice':'Cross out this choice'} onClick={e=>{e.stopPropagation();toggleElim(ci);}} style={{marginLeft:'auto',flexShrink:0,width:26,height:26,borderRadius:7,border:`1px solid ${isElim?`${C.blue}50`:C.b1}`,background:isElim?C.blueDim:'transparent',color:isElim?C.blueL:C.t3,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer'}}><Eraser size={12}/></button>}
             </motion.div>
           );
         })}
