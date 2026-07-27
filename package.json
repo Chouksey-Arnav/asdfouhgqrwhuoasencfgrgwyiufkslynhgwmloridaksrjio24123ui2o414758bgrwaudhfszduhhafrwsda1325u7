@@ -5,7 +5,8 @@
   "description": "A personalized path into medicine for high schoolers \u2014 pathway diagnostic, SAT/ACT prep, and application portfolio",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run sitemap && vite build",
+    "sitemap": "node scripts/generateSitemap.mjs",
     "preview": "vite preview",
     "start": "node server.js",
     "audit:lessons": "node scripts/auditLessonsCompleteness.mjs",

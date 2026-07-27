@@ -1,0 +1,13 @@
+# MedSchoolPrep — https://medschoolprep.cloud
+#
+# The public site is a single landing page; everything else is behind sign-in
+# and has no crawlable URL. Crawlers are welcome on all of it.
+
+User-agent: *
+Allow: /
+
+# The API is JSON endpoints only — nothing to index, and crawling it just
+# burns rate limit on functions students are actively using.
+Disallow: /api/
+
+Sitemap: https://medschoolprep.cloud/sitemap.xml
