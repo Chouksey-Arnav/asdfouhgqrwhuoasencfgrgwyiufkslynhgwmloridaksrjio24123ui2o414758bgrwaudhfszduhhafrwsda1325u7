@@ -127,7 +127,7 @@ export default function DesmosCalculator({
       borderRadius: '18px 18px 0 0', borderTop: `1px solid ${tint(accent, 0.35)}`,
     }
     : maximised
-      ? { position: 'fixed', left: 16, top: 16, width: 'calc(100vw - 32px)', height: 'calc(100vh - 32px)', zIndex: Z, borderRadius: 14, border: `1px solid ${tint(accent, 0.35)}` }
+      ? { position: 'fixed', left: 16, top: 16, width: 'calc(100vw - 32px)', height: 'calc(var(--msp-vh) - 32px)', zIndex: Z, borderRadius: 14, border: `1px solid ${tint(accent, 0.35)}` }
       : { position: 'fixed', left: geo.x, top: geo.y, width: geo.w, height: minimised ? HEADER_H : geo.h, zIndex: Z, borderRadius: 14, border: `1px solid ${tint(accent, 0.35)}` };
 
   return (

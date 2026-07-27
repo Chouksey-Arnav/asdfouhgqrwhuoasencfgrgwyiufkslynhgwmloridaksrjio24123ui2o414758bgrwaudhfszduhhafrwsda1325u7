@@ -151,8 +151,16 @@ const ALL_KEYS = [...new Set([...SHARED_KEYS, ...Object.values(PURPOSE_KEYS).fla
 // high-volume surfaces cheap while reserving the 70B tier for the rare, high-value plan generation).
 const PURPOSE_DEFAULT_TIER = {
   coach: 'guide',
-  prep: 'scout',       // quick in-context "explain this" — cheapest, fastest
-  portfolio: 'guide',  // structured reasoning over a tracker, still cheap
+  // Prep was on Scout (8B) purely for cost. But this surface is a tutor: a
+  // student asking "why does the loop of Henle work like that" gets an answer
+  // that is either right or quietly wrong, and 8B is where quietly wrong lives.
+  // Guide is the cheapest tier that reliably teaches rather than paraphrases.
+  prep: 'guide',
+  // Portfolio answers admissions questions with real-world specifics —
+  // deadlines, ED/EA mechanics, what particular schools want. That is factual
+  // recall under a reasoning task, which is exactly where the 70B tier earns
+  // its latency. This surface is also low-volume compared to the head coach.
+  portfolio: 'sage',
   interview: 'guide',  // conversational, low-latency for spoken turns
   plan: 'sage',        // one-time, max-quality — worth the 70B model
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
@@ -326,8 +334,16 @@ export default async function handler(req, res) {
   // the JSON schema), and truncating it would cut the safety rules at the end
   // while leaving the "write questions" instruction at the top intact — the
   // worst possible failure mode for this particular prompt.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 9000, sat: 9000 };
-  const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 4800;
+  // Raised across the board when the prompts gained two large blocks: the
+  // student's personal brief ("Tell Medabrain about yourself" — their own words,
+  // treated as ground truth) and the shared knowledge policy that tells the
+  // model to use its full world knowledge rather than refusing anything outside
+  // the student's tracked data. Both are appended near the end, and truncation
+  // here would silently cut the behavioural rules while leaving the raw data in
+  // place — the exact inversion of what a cap is for. Input tokens are the cheap
+  // half of a request, so headroom is the right trade.
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000 };
+  const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
     : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';

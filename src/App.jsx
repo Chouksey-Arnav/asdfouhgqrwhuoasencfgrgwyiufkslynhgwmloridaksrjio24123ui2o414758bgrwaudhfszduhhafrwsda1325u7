@@ -102,82 +102,38 @@ import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOM
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
+import {
+  C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
+  applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES,
+} from './lib/theme';
+import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
+import AboutMePanel from './components/AboutMePanel';
+import { getBriefEntries, briefStats } from './lib/personalBrief';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const C = {
-  bg:'#04060b', s0:'#060a15', s1:'#0a1020', s2:'#0f1828', s3:'#162032', s4:'#1d2a40', s5:'#253350',
-  b0:'rgba(255,255,255,0.04)', b1:'rgba(255,255,255,0.07)', b2:'rgba(255,255,255,0.11)', b3:'rgba(255,255,255,0.18)',
-  t1:'#eef2ff', t2:'#94a3c0', t3:'#506080', t4:'#2d3f58',
-  blue:'#2d7fff', blueL:'#5da0ff', blueLL:'#93c5fd', blueD:'#1d5fd9',
-  blueDim:'rgba(45,127,255,0.10)', blueGlow:'rgba(45,127,255,0.28)',
-  blueGrad:'linear-gradient(135deg,#2d7fff 0%,#1d5fd9 100%)',
-  green:'#10b981', greenL:'#34d399', greenDim:'rgba(16,185,129,0.10)',
-  amber:'#f59e0b', amberL:'#fbbf24', amberDim:'rgba(245,158,11,0.10)',
-  rose:'#f43f5e', roseL:'#fb7185', roseDim:'rgba(244,63,94,0.10)',
-  violet:'#8b5cf6', violetL:'#a78bfa', violetDim:'rgba(139,92,246,0.10)',
-  cyan:'#06b6d4', cyanDim:'rgba(6,182,212,0.10)', orange:'#f97316',
-  // Extended palette — gives each surface its own identity instead of blue-everywhere.
-  cyanL:'#22d3ee', orangeL:'#fb923c', orangeDim:'rgba(249,115,22,0.10)',
-  teal:'#14b8a6', tealL:'#2dd4bf', tealDim:'rgba(20,184,166,0.10)',
-  indigo:'#6366f1', indigoL:'#818cf8', indigoDim:'rgba(99,102,241,0.10)',
-  pink:'#ec4899', pinkL:'#f472b6', pinkDim:'rgba(236,72,153,0.10)',
-  fuchsia:'#d946ef', fuchsiaL:'#e879f9', fuchsiaDim:'rgba(217,70,239,0.10)',
-  lime:'#84cc16', limeL:'#a3e635', limeDim:'rgba(132,204,22,0.10)',
-  sky:'#0ea5e9', skyL:'#38bdf8', skyDim:'rgba(14,165,233,0.10)',
-  emerald:'#059669', emeraldL:'#34d399', emeraldDim:'rgba(5,150,105,0.10)',
-  red:'#ef4444', redL:'#f87171', redDim:'rgba(239,68,68,0.10)',
-  gold:'#eab308', goldL:'#facc15', goldDim:'rgba(234,179,8,0.10)',
-  auroraGrad:'linear-gradient(120deg,#2d7fff 0%,#8b5cf6 45%,#ec4899 100%)',
-  oceanGrad:'linear-gradient(135deg,#06b6d4 0%,#2d7fff 60%,#6366f1 100%)',
-  sunsetGrad:'linear-gradient(135deg,#f59e0b 0%,#f43f5e 55%,#d946ef 100%)',
-  forestGrad:'linear-gradient(135deg,#10b981 0%,#14b8a6 55%,#0ea5e9 100%)',
-  violetGrad:'linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%)',
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
+// ── Design tokens & style helpers ────────────────────────────────────────────
+// All of this used to be defined inline here, duplicating src/lib/theme.js
+// token for token. It now lives in that one module, because a palette that
+// exists in two places cannot be switched at runtime — and light mode needs
+// exactly that. See the header of theme.js for why `C` is a mutable object
+// rather than a set of CSS custom properties.
+//
+// `deckCatMeta` stays local (it's keyed to DECK_CATEGORY_ORDER, which is a
+// flashcard concern) but is now built per call for the same reason catMeta is:
+// a module-level object literal would freeze the dark palette at import time
+// and never follow a theme change.
+const DECK_CAT_HUES = {
+  'SAT':            ['sky',    'oceanGrad',  '\u270f\ufe0f'],
+  'Science':        ['green',  'forestGrad', '\ud83e\uddea'],
+  'Social Studies': ['pink',   'sunsetGrad', '\ud83c\udfdb\ufe0f'],
+  'Study Skills':   ['teal',   'forestGrad', '\ud83e\udde0'],
+  'My Decks':       ['violet', 'violetGrad', '\ud83d\uddc2\ufe0f'],
 };
-
-// ── Category identity map — each study category carries its own colour,
-// tint and gradient so cards/badges are recognisable at a glance. ──
-const CAT_META = {
-  'Life Sciences':                { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad, emoji:'🧬' },
-  'Physical Sciences':            { color:C.cyan,   light:C.cyanL,   dim:C.cyanDim,   grad:C.oceanGrad,  emoji:'⚗️' },
-  'Behavioral & Social Sciences': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad, emoji:'🧠' },
-  'Research Methods':             { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad, emoji:'🔬' },
-  'Test Prep':                    { color:C.amber,  light:C.amberL,  dim:C.amberDim,  grad:C.sunsetGrad, emoji:'📝' },
-  'Admissions & Planning':        { color:C.blue,   light:C.blueL,   dim:C.blueDim,   grad:C.blueGrad,   emoji:'🎯' },
-  'Clinical Exposure':            { color:C.rose,   light:C.roseL,   dim:C.roseDim,   grad:C.sunsetGrad, emoji:'🩺' },
-  'Wellness & Balance':           { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad, emoji:'🌱' },
-  'Math & Data':                  { color:C.indigo, light:C.indigoL, dim:C.indigoDim, grad:C.oceanGrad,  emoji:'📊' },
+const deckCatMeta = (cat) => {
+  const [hue, grad, emoji] = DECK_CAT_HUES[cat] || ['amber', 'sunsetGrad', '\ud83d\udcda'];
+  return { color:C[hue], light:C[`${hue}L`], dim:C[`${hue}Dim`], grad:C[grad], emoji };
 };
-const catMeta = (cat) => CAT_META[cat] || { color:C.blue, light:C.blueL, dim:C.blueDim, grad:C.blueGrad, emoji:'📚' };
-
-// ── Flashcard deck-category identity map — same idea as CAT_META but keyed to
-// DECK_CATEGORY_ORDER, so every deck card/pill/mastery bar carries its subject's
-// colour instead of the whole library rendering in one flat accent. ──
-const DECK_CAT_META = {
-  'SAT':            { color:C.sky,    light:C.skyL,    dim:C.skyDim,    grad:C.oceanGrad,   emoji:'✏️' },
-  'Science':        { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad,  emoji:'🧪' },
-  'Social Studies': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad,  emoji:'🏛️' },
-  'Study Skills':   { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad,  emoji:'🧠' },
-  'My Decks':       { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad,  emoji:'🗂️' },
-};
-const deckCatMeta = (cat) => DECK_CAT_META[cat] || { color:C.amber, light:C.amberL, dim:C.amberDim, grad:C.sunsetGrad, emoji:'📚' };
-
-// ── Style helpers ─────────────────────────────────────────────────────────────
-const glass  = (x={}) => ({ background:'rgba(255,255,255,0.03)', border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:'0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
-const glass2 = (x={}) => ({ background:'rgba(255,255,255,0.025)', border:`1px solid ${C.b1}`, borderRadius:10, padding:14, ...x });
-const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 20px', borderRadius:9, border:'none', background:bg, color:'#fff', fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', letterSpacing:'.01em', boxShadow:bg===C.blueGrad?'0 4px 16px rgba(45,127,255,0.35),inset 0 1px 0 rgba(255,255,255,0.12)':'0 2px 8px rgba(0,0,0,0.3)', transition:'all .18s cubic-bezier(.16,1,.3,1)', ...x });
-const btnSm  = (bg='rgba(255,255,255,0.08)',x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 14px', borderRadius:7, border:`1px solid ${C.b1}`, background:bg, color:'#fff', fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 18px', borderRadius:9, border:`1px solid rgba(255,255,255,0.1)`, background:'transparent', color:C.t2, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-const inp    = (x={}) => ({ background:'rgba(255,255,255,0.04)', border:`1px solid rgba(255,255,255,0.1)`, borderRadius:10, padding:'10px 14px', color:C.t1, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:'border-color .15s,box-shadow .15s', ...x });
-const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.t3, letterSpacing:'.1em', textTransform:'uppercase', display:'block', marginBottom:7, ...x });
-const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x });
-const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
-const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });
-const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'3px 11px', borderRadius:20, fontSize:11, fontWeight:600, letterSpacing:'.04em', background:bg, color, ...x });
 
 // ── Quiz scrambling ───────────────────────────────────────────────────────────
 function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -439,7 +395,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(e,i){console.error('MSP:',e,i);}
   render(){
     if(this.state.err) return(
-      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
+      <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
         <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
         <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Something went wrong</h2>
         <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>{this.state.msg}</p>
@@ -453,7 +409,7 @@ class ErrorBoundary extends React.Component {
 // ── Loading Screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
   return (
-    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
+    <div style={{minHeight:'var(--msp-vh)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
       <AnimatedLogo size={64} variant="pop"/>
       <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
     </div>
@@ -701,7 +657,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   const canContinueVideo = !hasVideo || videoWatched;
 
   return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
       {/* Thin pathway-colored top rule so the immersive lesson view still reads as "this pathway" at a glance */}
       <div style={{height:3,width:'100%',flexShrink:0,background:`linear-gradient(90deg,${accent},${accent}55,transparent)`}}/>
       {/* Header — progress dots + close */}
@@ -753,7 +709,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
           )}
 
           {step==='article'&&hasArticle&&(
-            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(100vh - 210px)':'calc(100vh - 230px)',overflowY:'auto',paddingRight:4}}>
+            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(var(--msp-vh) - 210px)':'calc(var(--msp-vh) - 230px)',overflowY:'auto',paddingRight:4}}>
               <div style={CC({gap:22})}>
                 {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:6}}><Highlighter size={12}/>Select any passage to highlight it</div>}
                 <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m}/>
@@ -1381,6 +1337,40 @@ export default function App({ account, onAccountChange }) {
   // classifyCoachTier() below (the "meta brain"), not by the student. This state is purely for
   // display (the small badge in the coach header showing which tier just responded).
   const [coachTier,setCoachTier]=useState('guide');
+  // ── Appearance & accessibility ───────────────────────────────────────────
+  // `a11y` holds every appearance/accessibility preference (see src/lib/a11y.js).
+  // `themeEpoch` is the mechanism that makes a palette change actually visible:
+  // the app styles itself with inline style objects built from the mutable `C`
+  // token object, so switching palettes has to force those objects to be rebuilt.
+  // Bumping the epoch and using it as a `key` on the rendered subtree remounts
+  // the view — App's own state (which tab you're on, your chat, your draft) lives
+  // above the key and survives, while every descendant recomputes its styles.
+  const [a11y,setA11y]=useState(()=>loadA11y());
+  const [themeEpoch,setThemeEpoch]=useState(0);
+
+  // Apply on mount and on every change. applyA11y is fully declarative, so
+  // running it repeatedly is safe and always converges on the same DOM state.
+  useEffect(()=>{
+    applyA11y(a11y);
+    saveA11y(a11y);
+    storeMode(a11y.themeMode);
+    setThemeEpoch(e=>e+1);
+  },[a11y]);
+
+  // Follow the OS while the student has chosen "match my device". Nothing to do
+  // in the other two modes — an explicit choice should not be overridden.
+  useEffect(()=>{
+    if(a11y.themeMode!=='system') return;
+    return watchSystemTheme(()=>{ applyA11y(a11y); setThemeEpoch(e=>e+1); });
+  },[a11y]);
+
+  const updateA11y=useCallback((patch)=>{setA11y(s=>({...s,...patch}));},[]);
+  // Framer Motion is driven from JS, so the CSS reduced-motion rules can't reach
+  // it. Every animated surface that matters reads this and collapses its
+  // transition to zero.
+  const reducedMotion=motionReduced(a11y);
+  const motionT=useMemo(()=>(reducedMotion?{duration:0}:undefined),[reducedMotion]);
+
   const COACH_TIERS=[
     {id:'scout',label:'Scout',desc:'Fastest — quick answers and everyday questions',color:C.cyan},
     {id:'guide',label:'Guide',desc:'Balanced — the default for most coaching',color:C.violet},
@@ -2324,13 +2314,50 @@ export default function App({ account, onAccountChange }) {
   // from the message itself — no manual switcher, no extra model call to classify (keeps it free
   // and instant). Deep/strategic asks (essays, MMI/CASPer, comparing schools, long messages) get
   // Sage; short/simple asks get Scout; everything else gets Guide, the balanced default.
+  // Ordering matters here, and it used to be wrong in a way that produced the
+  // single worst Medabrain failure in the app. `quickSignals` matched anything
+  // starting "when is"/"who is", and any message under 42 characters, and sent
+  // it to Scout — llama-3.1-8b-instant, the smallest model available. So
+  // "When do I apply to Duke?" (24 chars) and "Who was president in 1954?"
+  // (26 chars) were routed to the model least able to recall a real-world fact,
+  // and the answer came back as a shrug or a redirect. Those are exactly the
+  // questions a student most needs answered correctly.
+  //
+  // So knowledge-recall is now checked BEFORE brevity, and it wins: a question
+  // whose answer is a fact about the world (a named university, a deadline, a
+  // date, a historical figure, a policy, a required score) goes to Sage, the
+  // 70B tier, regardless of how short it is. Scout is left with what it is
+  // genuinely good at — restating, defining a term, quick arithmetic, chit-chat
+  // — and only when nothing in the message suggests a fact needs to be right.
   function classifyCoachTier(message) {
     const text = (message || '').trim();
     const lower = text.toLowerCase();
+
     const deepSignals = /\b(essay|personal statement|statement of purpose|critique|feedback on|review my|rewrite|revise|edit my|supplement|application strategy|which (school|college)s? should|compare .*(school|college|program)|trade-?off|mmi|casper|interview answer|scholarship essay)\b/;
-    const quickSignals = /^(what is|what's|define|meaning of|spell|when is|who is|convert|formula for|how do you say)\b/;
-    if (deepSignals.test(lower) || text.length > 260) return 'sage';
-    if (text.length <= 42 || quickSignals.test(lower)) return 'scout';
+
+    // Anything whose answer is a verifiable fact about the world rather than a
+    // restatement of something the student already knows. Deliberately broad:
+    // the cost of over-routing to Sage is a little latency; the cost of
+    // under-routing is a confidently wrong answer about a college deadline.
+    const knowledgeSignals = new RegExp([
+      // Named institutions and program types the student might ask about.
+      /\b(duke|harvard|yale|princeton|stanford|mit|columbia|cornell|brown|dartmouth|penn|upenn|johns hopkins|hopkins|nyu|ucla|berkeley|michigan|emory|vanderbilt|rice|northwestern|wustl|case western|ivy|ivies|university of|college of|bs\/?md|ba\/?md|direct med)\b/,
+      // Admissions mechanics whose specifics change year to year.
+      /\b(deadline|due date|when (do|should|does|can|is|are)|application opens?|early decision|early action|\bed\b|\bea\b|\brea\b|\bed ?ii\b|regular decision|rolling admission|common app|coalition app|supplement|fafsa|css profile|superscore|score choice|test.?optional|test.?blind|acceptance rate|admit rate|average sat|median sat|what sat score|need for|requirements? for|prereq)\b/,
+      // General world knowledge — history, science, geography, civics.
+      /\b(who (is|was|were)|what year|in \d{4}|president|prime minister|capital of|discovered|invented|history of|why does|how does .* work|difference between)\b/,
+      // Explicit requests for facts/numbers.
+      /\b(statistics?|percentile|ranking|ranked|tuition|cost of attendance|average|typical|how much does)\b/,
+    ].map(r => r.source).join('|'));
+
+    if (deepSignals.test(lower) || knowledgeSignals.test(lower) || text.length > 260) return 'sage';
+
+    // Scout only gets the genuinely cheap turns now: short messages with no
+    // factual load at all.
+    const chattySignals = /^(hi|hey|hello|thanks|thank you|ok|okay|got it|yes|no|cool|nice|sure)\b/;
+    const restateSignals = /^(explain that again|say that (again|simpler)|shorter|tl;?dr|summari[sz]e that|in simpler terms)\b/;
+    if (chattySignals.test(lower) || restateSignals.test(lower) || text.length <= 28) return 'scout';
+
     return 'guide';
   }
   // `purpose` selects which Medabrain subsystem key-pool the server routes this call through
@@ -3878,7 +3905,7 @@ export default function App({ account, onAccountChange }) {
     const rankedTiers=[...COACH_TIERS].sort((a,b)=>(coachTierCounts[b.id]||0)-(coachTierCounts[a.id]||0));
     const activePinned=coachModelPref!=='auto';
     return(
-      <div style={{display:'flex',height:'calc(100vh - 64px)',position:'relative'}}>
+      <div style={{display:'flex',height:'calc(var(--msp-vh) - 64px)',position:'relative'}}>
         {/* ── Chat sidebar (desktop: fixed column · mobile: slide-over) ────── */}
         {!isMobile&&(
           <div style={{width:216,flexShrink:0,marginRight:18,borderRight:`1px solid ${C.b1}`,paddingRight:16}}>
@@ -6300,7 +6327,7 @@ export default function App({ account, onAccountChange }) {
   if(aQuiz){
     return(
       <ErrorBoundary>
-        <div style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
+        <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
           <div style={{maxWidth:780,margin:'0 auto',padding:'24px 24px 60px'}}>
             <div style={{...glass({padding:'14px 22px',marginBottom:18}),...R()}}>
@@ -6560,7 +6587,10 @@ export default function App({ account, onAccountChange }) {
         onOpen={()=>{ chest?.onOpen?.(); }}
         onClose={closeChest}
       />
-      <div style={{display:'flex',flexDirection:isMobile?'column':'row',width:'100%',minWidth:0,height:'100dvh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
+      {/* First focusable thing on the page. Without it a keyboard or switch user
+          has to tab through an eleven-item sidebar on every single navigation. */}
+      <a href="#msp-main" className="msp-skip-link">Skip to main content</a>
+      <div key={themeEpoch} style={{display:'flex',flexDirection:isMobile?'column':'row',width:'100%',minWidth:0,height:'var(--msp-vh)',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
@@ -6631,7 +6661,9 @@ export default function App({ account, onAccountChange }) {
         {/* data-app-content: the SAT tool rail is position:fixed and measures this
             element's left edge to sit flush against the content column instead of
             hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
-        <main data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
+        {/* tabIndex={-1} so the skip link can move focus here; without it the
+            anchor scrolls but the next Tab press starts from the top again. */}
+        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0,outline:'none'}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
@@ -6640,7 +6672,7 @@ export default function App({ account, onAccountChange }) {
               editor, etc.) already caps itself internally rather than relying on this wrapper. */}
           <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
             <AnimatePresence mode="wait">
-              <motion.div key={tab} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.22}}>
+              <motion.div key={tab} initial={reducedMotion?false:{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={reducedMotion?{opacity:1}:{opacity:0,y:-6}} transition={{duration:reducedMotion?0:.22}}>
                 {(tRenders[tab]||tHome)()}
               </motion.div>
             </AnimatePresence>

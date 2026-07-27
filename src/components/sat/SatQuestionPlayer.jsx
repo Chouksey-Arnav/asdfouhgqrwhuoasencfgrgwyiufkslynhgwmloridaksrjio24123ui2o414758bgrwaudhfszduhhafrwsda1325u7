@@ -742,7 +742,7 @@ export default function SatQuestionPlayer({
       {/* Stimulus + question */}
       {splitLayout ? (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
-          <div style={{ ...glass({ padding: 22 }), position: 'sticky', top: 12, maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' }}>
+          <div style={{ ...glass({ padding: 22 }), position: 'sticky', top: 12, maxHeight: 'calc(var(--msp-vh) - 180px)', overflowY: 'auto' }}>
             {stimulusBlock}
           </div>
           <div style={glass({ padding: 22 })}>

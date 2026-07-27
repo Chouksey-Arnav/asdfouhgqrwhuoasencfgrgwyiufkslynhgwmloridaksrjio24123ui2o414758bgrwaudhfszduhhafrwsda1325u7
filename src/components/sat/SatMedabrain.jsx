@@ -158,10 +158,14 @@ export default function SatMedabrain({
           system,
           messages: nextMsgs.slice(-10),
           purpose: 'sat',
-          // Guide, not Sage: this is a conversational surface and the deepest
-          // tier is reserved for question generation, where a wrong answer key
-          // teaches something false. Chat can afford the cheaper model.
-          tier: 'guide',
+          // Two different jobs wearing one name. With a question on screen this
+          // is a hint machine working from a rationale it was already handed —
+          // Guide is plenty, and it keeps the turn fast while the student is
+          // mid-set. With no question open it becomes the place students ask
+          // "what score do I need for Duke" or "how does the adaptive module
+          // actually work", where the answer is real-world recall and the 70B
+          // tier is measurably better at getting it right.
+          tier: question ? 'guide' : 'sage',
           maxTokens: 650,
         }),
       });

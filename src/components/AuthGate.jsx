@@ -42,7 +42,7 @@ export default function AuthGate({ children }) {
 
   if (status === 'checking') {
     return (
-      <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
+      <div style={{ height: 'var(--msp-vh)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
         <Loader2 className="spin" size={22} color={C.blueL} />
       </div>
     );
