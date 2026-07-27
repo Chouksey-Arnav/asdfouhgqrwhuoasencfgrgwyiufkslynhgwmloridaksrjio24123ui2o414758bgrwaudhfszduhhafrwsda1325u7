@@ -152,7 +152,7 @@ export const MATH_PSDA_QUESTIONS = [
     q: 'A researcher surveyed 500 randomly selected residents of a city and found that 62 percent supported a proposed transit levy, with a margin of error of 4 percent at the 95 percent confidence level. Which conclusion is best supported?',
     ch: [
       'Exactly 62 percent of all city residents support the levy.',
-      'It is plausible that between 58 and 66 percent of all city residents support the levy.',
+      'About 58 to 66 percent of all city residents plausibly support it.',
       'Between 58 and 66 percent of the 500 surveyed residents support the levy.',
       'If the survey were repeated, the result would always fall between 58 and 66 percent.',
     ],

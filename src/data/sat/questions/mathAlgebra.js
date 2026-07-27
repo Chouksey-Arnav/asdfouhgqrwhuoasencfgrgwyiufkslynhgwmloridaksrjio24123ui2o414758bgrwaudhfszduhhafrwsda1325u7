@@ -100,8 +100,8 @@ export const MATH_ALGEBRA_QUESTIONS = [
     difficulty: 'E', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 60,
     q: 'A repair service charges a fixed call-out fee plus an hourly rate. The total cost, in dollars, for h hours of work is given by C(h) = 45h + 75. Which statement best interprets the number 75 in this context?',
     ch: [
-      'The service charges $75 for each hour of work.',
-      'The service charges $75 before any hours of work are billed.',
+      'The service charges $75 for each hour of work performed.',
+      'There is a flat $75 charge before any hours.',
       'The total cost is $75 when 1 hour of work is done.',
       'The cost increases by $75 for each additional hour.',
     ],

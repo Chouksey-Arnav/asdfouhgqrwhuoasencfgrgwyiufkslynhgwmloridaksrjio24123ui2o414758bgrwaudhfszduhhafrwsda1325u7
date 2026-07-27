@@ -50,6 +50,7 @@ import {
 import { strategyFor } from '../../data/sat/strategies';
 import { renderProfileForPrompt, profileFingerprint } from './learnerProfile';
 import * as DB from '../db';
+import { isBalanced, CHOICE_LENGTH_CONTRACT } from './answerBalance';
 
 /** Hard ceiling on items per generation request, whatever the caller asks for. */
 const MAX_ITEMS = 10;
@@ -113,8 +114,9 @@ const DISTRACTOR_CONTRACT = [
   '  * No filler choices. If you cannot name the mistake behind a choice, replace the choice.',
   '  * Exactly one choice is defensibly correct. If a second choice could be argued for under any reasonable',
   '    reading, the item is broken — rewrite it rather than shipping it.',
-  '  * Choice lengths must be similar, and the correct answer must not be the longest or the most hedged.',
   '  * No "all of the above", "none of the above", or choices that reference other choices.',
+  '',
+  CHOICE_LENGTH_CONTRACT,
 ].join('\n');
 
 const AUTHENTICITY_RULES = [
@@ -272,23 +274,16 @@ function validateItem(raw, { skill, difficulty }) {
   if (!de || de.length !== 4) return null;
   if (de.some(d => typeof d !== 'string' || d.trim().length < 10)) return null;
 
-  // The length tell. scripts/auditSatBank.mjs enforces this on the hand-written
-  // bank; a generated set must not reintroduce the bias we removed by hand. A
-  // test-wise student who has noticed that the longest, most-qualified choice is
-  // usually right is being trained to game the practice rather than read it.
+  // The length tell. A student who has noticed that the longest, most-qualified
+  // choice is usually right can score above chance without reading anything,
+  // and practice that rewards that habit actively harms them — the real exam
+  // does not reward it, and they find that out on test day.
   //
-  // Two rules, because one is not enough. The RATIO rule catches the ordinary
-  // case, but it is gated on the distractors being substantial — otherwise a
-  // one-word wrong answer makes every ratio look alarming. That gate leaves the
-  // most blatant version of the tell wide open: a 150-character correct answer
-  // against three 12-character distractors has a mean below the gate and sails
-  // through. So an ABSOLUTE gap rule sits alongside it.
-  const lengths = trimmed.map(c => c.length);
-  const others = lengths.filter((_, i) => i !== ans);
-  const meanOthers = others.reduce((s, l) => s + l, 0) / others.length;
-  const longestOther = Math.max(...others);
-  if (meanOthers >= 20 && lengths[ans] > meanOthers * 1.4) return null;
-  if (lengths[ans] - longestOther > 30) return null;
+  // The rule now lives in src/lib/sat/answerBalance.js, shared verbatim with
+  // the bank audit and with the CHOICE_LENGTH_CONTRACT this model was given.
+  // A validator whose threshold has drifted from the instruction the generator
+  // received is a validator that rejects compliant output at random.
+  if (!isBalanced(trimmed, ans)) return null;
 
   return { ...base, ch: trimmed, ans, distractorExp: de.map(d => d.trim()) };
 }

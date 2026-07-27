@@ -23,6 +23,7 @@
 //   9.  Difficulty spread per section.
 //  10.  Unknown trap tags (warning only — the taxonomy is meant to grow).
 import { SAT_QUESTIONS, QUESTIONS_BY_SKILL, bankCoverage } from '../src/data/sat/questions/index.js';
+import { bankBalanceStats } from '../src/lib/sat/answerBalance.js';
 import {
   SAT_SKILLS, SAT_DOMAINS, SAT_SECTIONS, SKILL_IDS, DOMAIN_IDS, SECTION_IDS,
   DIFFICULTY_IDS, TRAP_TAGS,
@@ -106,38 +107,61 @@ posCounts.forEach((count, i) => {
   }
 });
 
-// ── 6. Longest-answer bias ──────────────────────────────────────────────────
-// Two measures, because the naive one lies. Counting "is the correct choice the
-// argmax length" treats a four-way tie (e.g. choices "2","4","6","8") as bias,
-// which it plainly is not. So we count only STRICT maxima, and separately track
-// the margin — a correct choice materially longer than the others is the thing
-// a student can actually game.
-const LONG_MARGIN = 1.25; // correct choice >25% longer than the mean of the rest
-let strictLongestCorrect = 0;
-const wordy = [];
-for (const q of mcqs) {
-  const lengths = q.ch.map(c => String(c).length);
-  const max = Math.max(...lengths);
-  const isStrictMax = lengths[q.ans] === max && lengths.filter(l => l === max).length === 1;
-  if (isStrictMax) strictLongestCorrect++;
+// ── 6. Answer-shape bias ────────────────────────────────────────────────────
+// This is a GATE, not a report. It was a warning, and the warning did not fire:
+// its threshold was a 40% whole-bank rate, and the bank sat at 32% — while
+// Reading & Writing on its own was at 47.5% against a 25% baseline, and the
+// correct choice was the SHORTEST in 5.6% of items bank-wide. A student who
+// adopted "pick the longest" would have beaten this practice set. Averaging
+// R&W together with maths (where numeric choices are naturally the same length)
+// is what hid it, so the rate is now checked per section as well as overall.
+//
+// The per-item rule is imported rather than reimplemented: the generator in
+// src/lib/sat/aiPractice.js validates AI-authored items against exactly this,
+// and two copies of a heuristic become two different heuristics.
+const SECTION_LABELS = { rw: 'Reading & Writing', math: 'Math' };
+// Chance is 25%. The ceiling allows real sampling noise on a small bank without
+// admitting a systematic tell.
+const MAX_LONGEST_RATE = 0.36;
+// The mirror check. A bank can pass the longest test while never once making
+// the correct choice the shortest — which is the same tell wearing a hat, and
+// teaches the same "the terse one is a trap" reflex.
+const MIN_SHORTEST_RATE = 0.12;
+const MIN_SECTION_N = 18; // textual MCQs below this are too noisy to gate on
 
-  const others = lengths.filter((_, i) => i !== q.ans);
-  const meanOthers = others.reduce((s, l) => s + l, 0) / others.length;
-  // Ignore very short choice sets — "2.8" vs "3" is noise, not a tell.
-  if (meanOthers >= 20 && lengths[q.ans] > meanOthers * LONG_MARGIN) {
-    wordy.push({ id: q.id, ratio: lengths[q.ans] / meanOthers });
+const bankStats = bankBalanceStats(SAT_QUESTIONS);
+if (bankStats.n) {
+  const check = (label, stats, hard) => {
+    if (stats.textualN < MIN_SECTION_N) return;
+    const report = hard ? err : warn;
+    if (stats.longestRate > MAX_LONGEST_RATE) {
+      report(`${label}: the correct choice is the single longest in ${Math.round(stats.longestRate * 100)}% of MCQs (${stats.longest}/${stats.textualN}) — chance is 25%, ceiling is ${Math.round(MAX_LONGEST_RATE * 100)}%`);
+    }
+    if (stats.shortestRate < MIN_SHORTEST_RATE) {
+      report(`${label}: the correct choice is the single shortest in only ${Math.round(stats.shortestRate * 100)}% of MCQs (${stats.shortest}/${stats.textualN}) — it should happen about as often as being longest (floor is ${Math.round(MIN_SHORTEST_RATE * 100)}%)`);
+    }
+  };
+
+  check('bank-wide', bankStats, true);
+  for (const sec of SECTION_IDS) {
+    const secStats = bankBalanceStats(SAT_QUESTIONS.filter(q => q.section === sec));
+    check(SECTION_LABELS[sec] || sec, secStats, true);
+  }
+
+  // Per-item violations are errors too. One badly balanced item is a bug in
+  // that item, and there is no reason to let it through just because the
+  // aggregate happens to look healthy.
+  if (bankStats.violations.length) {
+    err(`${bankStats.violations.length} MCQ item(s) fail the per-item choice-balance rule:`);
+    bankStats.violations
+      .sort((a, b) => b.ratio - a.ratio)
+      .slice(0, 20)
+      .forEach(v => err(`    ${v.id} — ${v.reasons[0]}`));
+    if (bankStats.violations.length > 20) err(`    …and ${bankStats.violations.length - 20} more`);
   }
 }
-const strictRate = mcqs.length ? strictLongestCorrect / mcqs.length : 0;
-// Chance for a strict maximum among 4 distinct lengths is ~25%.
-if (mcqs.length >= 40 && strictRate > 0.4) {
-  warn(`the correct choice is the single longest in ${Math.round(strictRate * 100)}% of MCQs — chance is ~25%`);
-}
-if (wordy.length > mcqs.length * 0.15) {
-  warn(`${wordy.length}/${mcqs.length} MCQs have a correct choice >25% longer than its distractors — trim these or pad the distractors:`);
-  wordy.sort((a, b) => b.ratio - a.ratio).slice(0, 12)
-    .forEach(w => warn(`    ${w.id} (${w.ratio.toFixed(2)}x)`));
-}
+const strictLongestCorrect = bankStats.longest || 0;
+const strictRate = bankStats.longestRate || 0;
 
 // ── 7. Per-skill coverage ───────────────────────────────────────────────────
 const thin = [];
@@ -180,9 +204,19 @@ for (const sec of SECTION_IDS) {
   const spr = inSection.filter(q => q.format === 'spr').length;
   console.log(`  ${SAT_SECTIONS[sec].label.padEnd(20)} ${String(inSection.length).padStart(4)} questions   ${byDiff}${sec === 'math' ? `   SPR:${spr}` : ''}`);
 }
-console.log(`\n  MCQ answer positions  A:${posCounts[0]}  B:${posCounts[1]}  C:${posCounts[2]}  D:${posCounts[3]}   (of ${mcqs.length})`);
-console.log(`  Correct is single longest  ${strictLongestCorrect}/${mcqs.length} (${Math.round(strictRate * 100)}%, chance ~25%)`);
-console.log(`  Correct >25% longer than distractors  ${wordy.length}/${mcqs.length}`);
+// Stored answer position is deliberately NOT balanced by hand — every question
+// goes through shuffleChoices() before a student sees it (see src/lib/sat/
+// shuffle.js), so the stored index is an implementation detail. Choice LENGTH
+// is the opposite: shuffling moves it around but cannot make it stop being a
+// tell, which is exactly why it needs a gate here.
+console.log(`\n  MCQ answer positions  A:${posCounts[0]}  B:${posCounts[1]}  C:${posCounts[2]}  D:${posCounts[3]}   (of ${mcqs.length}, shuffled at runtime)`);
+console.log(`  Correct is single longest   ${strictLongestCorrect}/${bankStats.textualN} (${Math.round(strictRate * 100)}%, chance ~25%, ceiling ${Math.round(MAX_LONGEST_RATE * 100)}%)`);
+console.log(`  Correct is single shortest  ${bankStats.shortest}/${bankStats.textualN} (${Math.round(bankStats.shortestRate * 100)}%, floor ${Math.round(MIN_SHORTEST_RATE * 100)}%)`);
+for (const sec of SECTION_IDS) {
+  const st = bankBalanceStats(SAT_QUESTIONS.filter(q => q.section === sec));
+  if (st.n) console.log(`    ${(SAT_SECTIONS[sec].label + ':').padEnd(22)} longest ${String(Math.round(st.longestRate * 100)).padStart(3)}%   shortest ${String(Math.round(st.shortestRate * 100)).padStart(3)}%   (${st.textualN} textual MCQs)`);
+}
+console.log(`  Per-item balance failures   ${bankStats.violations.length}/${mcqs.length}`);
 
 if (VERBOSE) {
   console.log('\n  Per-skill coverage (thinnest first):');

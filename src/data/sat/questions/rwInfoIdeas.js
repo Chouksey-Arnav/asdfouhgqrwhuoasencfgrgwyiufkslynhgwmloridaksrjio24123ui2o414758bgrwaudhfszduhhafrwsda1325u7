@@ -33,7 +33,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Waring showed that household labour can be measured accurately using existing methods.',
-      'Waring argued that national accounting conventions reflect political choices rather than neutral description.',
+      'Waring argued that what a country counts is a political choice.',
       'Waring believed oil spills should be excluded from measures of economic growth.',
       'Standard economic models were mathematically flawed in ways Waring corrected.',
     ],
@@ -115,7 +115,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     q: 'Which quotation from the novel would best support the critic’s argument?',
     ch: [
       '“The house was older than anyone in the village could account for.”',
-      '“I learned to give directions by what was no longer there: turn where the elm stood.”',
+      '“I gave directions by what was gone: turn where the elm stood.”',
       '“In the summers the light came through the west windows until nearly ten.”',
       '“My mother had grown up in the same rooms, and her mother before her.”',
     ],
@@ -147,7 +147,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     stimulus: 'A seed bank tested whether storage temperature affects long-term viability across four prairie species. Researchers concluded that freezing offers the largest benefit for species that store poorly at room temperature, while species that already tolerate room-temperature storage gain comparatively little from it.',
     q: 'Which choice best describes data from the table that support the researchers’ conclusion?',
     ch: [
-      'Wild rye and coneflower rise from 12% and 8% to 81% and 88% when frozen; bluestem rises only 44% to 60%.',
+      'Wild rye and coneflower rise from 12% and 8% to 81% and 88%, but bluestem only 44% to 60%.',
       'All four of the species tested show higher germination when frozen than when kept at room temperature.',
       'Prairie clover germinates at 31% at room temperature and at 52% once it has been frozen.',
       'Purple coneflower records the single highest frozen germination rate of the four species tested.',
@@ -179,7 +179,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     q: 'Which choice most effectively uses data from the table to support Ostrowski’s argument?',
     ch: [
       'Foraging distances in intensive cropland rose each year, from 3.1 km in 2018 to 3.6 km in 2020.',
-      'Bees in suburban gardens foraged 1.2–1.4 km, closer to continuous meadow (0.9–1.0 km) than to fragmented meadow (2.4–2.9 km).',
+      'Suburban bees foraged 1.2–1.4 km — nearer continuous meadow than fragmented.',
       'Continuous meadow produced the shortest foraging distances in every year measured.',
       'Fragmented meadow and intensive cropland both showed increases between 2018 and 2020.',
     ],
@@ -240,7 +240,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     stimulus: 'Restorers cleaning a seventeenth-century panel found that the varnish they removed had yellowed enough to shift the apparent colour of the sky from grey-green to warm brown. Contemporary written descriptions of the painting consistently praise its "cold northern light" — a description that matches the cleaned surface but not the state of the painting as it appeared for most of the intervening centuries. This implies that ______',
     q: 'Which choice most logically completes the text?',
     ch: [
-      'the written descriptions were composed before the varnish had substantially yellowed.',
+      'the written descriptions were composed before the varnish yellowed much.',
       'the restorers removed original paint along with the varnish.',
       'seventeenth-century viewers preferred cooler colour palettes than later viewers did.',
       'the painting was repainted at some point after the seventeenth century.',

@@ -168,7 +168,7 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
     q: 'Based on the texts, how would Ruiz (Text 2) most likely respond to the claim in the last sentence of Text 1?',
     ch: [
       'By agreeing, since her study also traces dialects to copying errors.',
-      'By disputing it, since her data suggest dialects also convey information about local fitness.',
+      'By disputing it: her data tie dialects to local fitness.',
       'By dismissing it, since she found no regional variation in sparrow song.',
       'By qualifying it, since she believes dialects matter only outside the breeding season.',
     ],
