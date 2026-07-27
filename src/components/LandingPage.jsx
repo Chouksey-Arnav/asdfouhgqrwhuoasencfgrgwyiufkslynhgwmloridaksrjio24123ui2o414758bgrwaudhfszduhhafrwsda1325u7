@@ -786,7 +786,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
   const navLinks = [['#pathways', 'Pathways'], ['#learn', 'Prep'], ['#portfolio', 'Portfolio'], ['#faq', 'FAQ']];
 
   return (
-    <div ref={rootRef} style={{ position: 'relative', minHeight: '100vh', overflowX: 'hidden', color: C.t1, fontFamily: C.FB }}>
+    <div ref={rootRef} style={{ position: 'relative', minHeight: 'var(--msp-vh)', overflowX: 'hidden', color: C.t1, fontFamily: C.FB }}>
       <style>{`
         .lp * { box-sizing: border-box; }
         .lp a { color: inherit; text-decoration: none; }
@@ -795,7 +795,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
         .lp-sec { width: 100%; max-width: 1560px; margin: 0 auto; padding-left: clamp(20px, 4.5vw, 64px); padding-right: clamp(20px, 4.5vw, 64px); }
 
         /* ── Hero: immersive two-column on desktop, stacked on mobile ──── */
-        .lp-hero-grid { display: grid; grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.12fr); gap: clamp(36px, 4vw, 72px); align-items: center; min-height: calc(100vh - 66px); padding-top: clamp(28px, 4vh, 56px); padding-bottom: clamp(40px, 6vh, 72px); }
+        .lp-hero-grid { display: grid; grid-template-columns: minmax(0, 0.94fr) minmax(0, 1.12fr); gap: clamp(36px, 4vw, 72px); align-items: center; min-height: calc(var(--msp-vh) - 66px); padding-top: clamp(28px, 4vh, 56px); padding-bottom: clamp(40px, 6vh, 72px); }
         .lp-hero-copy { text-align: left; }
         .lp-hero-visual { position: relative; }
         .lp-replica-frame { transform: perspective(1600px) rotateY(-5deg) rotateX(1.5deg); transition: transform .6s cubic-bezier(.16,1,.3,1); }

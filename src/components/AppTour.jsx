@@ -199,7 +199,7 @@ export default function AppTour({ steps, onFinish, onSkip }) {
       {/* Plain anchor div owns the placement transform (translateX/Y(-100%)) — a nested
           motion.div is used for the fade-in below because framer-motion writes its own
           `transform` for animated x/y, which would silently clobber a manual one here. */}
-      <div style={{ position: 'fixed', top: `${tip.top}px`, left: `${tip.left}px`, width: `${tip.width}px`, transform: tip.transform, maxHeight: `calc(100vh - ${MARGIN * 2}px)`, overflowY: 'auto' }}>
+      <div style={{ position: 'fixed', top: `${tip.top}px`, left: `${tip.left}px`, width: `${tip.width}px`, transform: tip.transform, maxHeight: `calc(var(--msp-vh) - ${MARGIN * 2}px)`, overflowY: 'auto' }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={i}

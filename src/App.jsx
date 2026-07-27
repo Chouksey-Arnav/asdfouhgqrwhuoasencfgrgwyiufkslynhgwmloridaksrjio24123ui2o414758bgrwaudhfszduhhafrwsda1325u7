@@ -21,7 +21,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter,
+  Highlighter, Accessibility, Gauge,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -102,82 +102,39 @@ import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOM
 import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
+import {
+  C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
+  applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES,
+} from './lib/theme';
+import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
+import AboutMePanel from './components/AboutMePanel';
+import AppearanceSettings from './components/AppearanceSettings';
+import { getBriefEntries, briefStats } from './lib/personalBrief';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
-const C = {
-  bg:'#04060b', s0:'#060a15', s1:'#0a1020', s2:'#0f1828', s3:'#162032', s4:'#1d2a40', s5:'#253350',
-  b0:'rgba(255,255,255,0.04)', b1:'rgba(255,255,255,0.07)', b2:'rgba(255,255,255,0.11)', b3:'rgba(255,255,255,0.18)',
-  t1:'#eef2ff', t2:'#94a3c0', t3:'#506080', t4:'#2d3f58',
-  blue:'#2d7fff', blueL:'#5da0ff', blueLL:'#93c5fd', blueD:'#1d5fd9',
-  blueDim:'rgba(45,127,255,0.10)', blueGlow:'rgba(45,127,255,0.28)',
-  blueGrad:'linear-gradient(135deg,#2d7fff 0%,#1d5fd9 100%)',
-  green:'#10b981', greenL:'#34d399', greenDim:'rgba(16,185,129,0.10)',
-  amber:'#f59e0b', amberL:'#fbbf24', amberDim:'rgba(245,158,11,0.10)',
-  rose:'#f43f5e', roseL:'#fb7185', roseDim:'rgba(244,63,94,0.10)',
-  violet:'#8b5cf6', violetL:'#a78bfa', violetDim:'rgba(139,92,246,0.10)',
-  cyan:'#06b6d4', cyanDim:'rgba(6,182,212,0.10)', orange:'#f97316',
-  // Extended palette — gives each surface its own identity instead of blue-everywhere.
-  cyanL:'#22d3ee', orangeL:'#fb923c', orangeDim:'rgba(249,115,22,0.10)',
-  teal:'#14b8a6', tealL:'#2dd4bf', tealDim:'rgba(20,184,166,0.10)',
-  indigo:'#6366f1', indigoL:'#818cf8', indigoDim:'rgba(99,102,241,0.10)',
-  pink:'#ec4899', pinkL:'#f472b6', pinkDim:'rgba(236,72,153,0.10)',
-  fuchsia:'#d946ef', fuchsiaL:'#e879f9', fuchsiaDim:'rgba(217,70,239,0.10)',
-  lime:'#84cc16', limeL:'#a3e635', limeDim:'rgba(132,204,22,0.10)',
-  sky:'#0ea5e9', skyL:'#38bdf8', skyDim:'rgba(14,165,233,0.10)',
-  emerald:'#059669', emeraldL:'#34d399', emeraldDim:'rgba(5,150,105,0.10)',
-  red:'#ef4444', redL:'#f87171', redDim:'rgba(239,68,68,0.10)',
-  gold:'#eab308', goldL:'#facc15', goldDim:'rgba(234,179,8,0.10)',
-  auroraGrad:'linear-gradient(120deg,#2d7fff 0%,#8b5cf6 45%,#ec4899 100%)',
-  oceanGrad:'linear-gradient(135deg,#06b6d4 0%,#2d7fff 60%,#6366f1 100%)',
-  sunsetGrad:'linear-gradient(135deg,#f59e0b 0%,#f43f5e 55%,#d946ef 100%)',
-  forestGrad:'linear-gradient(135deg,#10b981 0%,#14b8a6 55%,#0ea5e9 100%)',
-  violetGrad:'linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%)',
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
+// ── Design tokens & style helpers ────────────────────────────────────────────
+// All of this used to be defined inline here, duplicating src/lib/theme.js
+// token for token. It now lives in that one module, because a palette that
+// exists in two places cannot be switched at runtime — and light mode needs
+// exactly that. See the header of theme.js for why `C` is a mutable object
+// rather than a set of CSS custom properties.
+//
+// `deckCatMeta` stays local (it's keyed to DECK_CATEGORY_ORDER, which is a
+// flashcard concern) but is now built per call for the same reason catMeta is:
+// a module-level object literal would freeze the dark palette at import time
+// and never follow a theme change.
+const DECK_CAT_HUES = {
+  'SAT':            ['sky',    'oceanGrad',  '\u270f\ufe0f'],
+  'Science':        ['green',  'forestGrad', '\ud83e\uddea'],
+  'Social Studies': ['pink',   'sunsetGrad', '\ud83c\udfdb\ufe0f'],
+  'Study Skills':   ['teal',   'forestGrad', '\ud83e\udde0'],
+  'My Decks':       ['violet', 'violetGrad', '\ud83d\uddc2\ufe0f'],
 };
-
-// ── Category identity map — each study category carries its own colour,
-// tint and gradient so cards/badges are recognisable at a glance. ──
-const CAT_META = {
-  'Life Sciences':                { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad, emoji:'🧬' },
-  'Physical Sciences':            { color:C.cyan,   light:C.cyanL,   dim:C.cyanDim,   grad:C.oceanGrad,  emoji:'⚗️' },
-  'Behavioral & Social Sciences': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad, emoji:'🧠' },
-  'Research Methods':             { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad, emoji:'🔬' },
-  'Test Prep':                    { color:C.amber,  light:C.amberL,  dim:C.amberDim,  grad:C.sunsetGrad, emoji:'📝' },
-  'Admissions & Planning':        { color:C.blue,   light:C.blueL,   dim:C.blueDim,   grad:C.blueGrad,   emoji:'🎯' },
-  'Clinical Exposure':            { color:C.rose,   light:C.roseL,   dim:C.roseDim,   grad:C.sunsetGrad, emoji:'🩺' },
-  'Wellness & Balance':           { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad, emoji:'🌱' },
-  'Math & Data':                  { color:C.indigo, light:C.indigoL, dim:C.indigoDim, grad:C.oceanGrad,  emoji:'📊' },
+const deckCatMeta = (cat) => {
+  const [hue, grad, emoji] = DECK_CAT_HUES[cat] || ['amber', 'sunsetGrad', '\ud83d\udcda'];
+  return { color:C[hue], light:C[`${hue}L`], dim:C[`${hue}Dim`], grad:C[grad], emoji };
 };
-const catMeta = (cat) => CAT_META[cat] || { color:C.blue, light:C.blueL, dim:C.blueDim, grad:C.blueGrad, emoji:'📚' };
-
-// ── Flashcard deck-category identity map — same idea as CAT_META but keyed to
-// DECK_CATEGORY_ORDER, so every deck card/pill/mastery bar carries its subject's
-// colour instead of the whole library rendering in one flat accent. ──
-const DECK_CAT_META = {
-  'SAT':            { color:C.sky,    light:C.skyL,    dim:C.skyDim,    grad:C.oceanGrad,   emoji:'✏️' },
-  'Science':        { color:C.green,  light:C.greenL,  dim:C.greenDim,  grad:C.forestGrad,  emoji:'🧪' },
-  'Social Studies': { color:C.pink,   light:C.pinkL,   dim:C.pinkDim,   grad:C.sunsetGrad,  emoji:'🏛️' },
-  'Study Skills':   { color:C.teal,   light:C.tealL,   dim:C.tealDim,   grad:C.forestGrad,  emoji:'🧠' },
-  'My Decks':       { color:C.violet, light:C.violetL, dim:C.violetDim, grad:C.violetGrad,  emoji:'🗂️' },
-};
-const deckCatMeta = (cat) => DECK_CAT_META[cat] || { color:C.amber, light:C.amberL, dim:C.amberDim, grad:C.sunsetGrad, emoji:'📚' };
-
-// ── Style helpers ─────────────────────────────────────────────────────────────
-const glass  = (x={}) => ({ background:'rgba(255,255,255,0.03)', border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:'0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)', backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
-const glass2 = (x={}) => ({ background:'rgba(255,255,255,0.025)', border:`1px solid ${C.b1}`, borderRadius:10, padding:14, ...x });
-const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 20px', borderRadius:9, border:'none', background:bg, color:'#fff', fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', letterSpacing:'.01em', boxShadow:bg===C.blueGrad?'0 4px 16px rgba(45,127,255,0.35),inset 0 1px 0 rgba(255,255,255,0.12)':'0 2px 8px rgba(0,0,0,0.3)', transition:'all .18s cubic-bezier(.16,1,.3,1)', ...x });
-const btnSm  = (bg='rgba(255,255,255,0.08)',x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 14px', borderRadius:7, border:`1px solid ${C.b1}`, background:bg, color:'#fff', fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 18px', borderRadius:9, border:`1px solid rgba(255,255,255,0.1)`, background:'transparent', color:C.t2, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-const inp    = (x={}) => ({ background:'rgba(255,255,255,0.04)', border:`1px solid rgba(255,255,255,0.1)`, borderRadius:10, padding:'10px 14px', color:C.t1, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:'border-color .15s,box-shadow .15s', ...x });
-const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.t3, letterSpacing:'.1em', textTransform:'uppercase', display:'block', marginBottom:7, ...x });
-const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x });
-const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
-const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });
-const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'3px 11px', borderRadius:20, fontSize:11, fontWeight:600, letterSpacing:'.04em', background:bg, color, ...x });
 
 // ── Quiz scrambling ───────────────────────────────────────────────────────────
 function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
@@ -344,6 +301,11 @@ const NAV = [
 // existed — see src/data/sat/taxonomy.js for the content model it runs on.
 const SAT_SUBNAV = [
   {id:'overview',ic:Target,label:'Overview',color:C.lime},
+  // Sits directly after Overview, ahead of the Diagnostic, because it is the
+  // first thing a new student should do: the Diagnostic tells them WHAT to work
+  // on, but only the Baseline tells them roughly where they currently score,
+  // and every other panel's advice reads differently at 1050 than at 1400.
+  {id:'baseline',ic:Gauge,label:'Baseline',color:C.gold},
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
   {id:'practice',ic:Layers,label:'Practice',color:C.blue},
   {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.violet},
@@ -439,7 +401,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(e,i){console.error('MSP:',e,i);}
   render(){
     if(this.state.err) return(
-      <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
+      <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
         <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
         <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Something went wrong</h2>
         <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>{this.state.msg}</p>
@@ -453,7 +415,7 @@ class ErrorBoundary extends React.Component {
 // ── Loading Screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
   return (
-    <div style={{minHeight:'100vh',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
+    <div style={{minHeight:'var(--msp-vh)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
       <AnimatedLogo size={64} variant="pop"/>
       <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
     </div>
@@ -701,7 +663,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   const canContinueVideo = !hasVideo || videoWatched;
 
   return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
+    <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
       {/* Thin pathway-colored top rule so the immersive lesson view still reads as "this pathway" at a glance */}
       <div style={{height:3,width:'100%',flexShrink:0,background:`linear-gradient(90deg,${accent},${accent}55,transparent)`}}/>
       {/* Header — progress dots + close */}
@@ -753,7 +715,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
           )}
 
           {step==='article'&&hasArticle&&(
-            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(100vh - 210px)':'calc(100vh - 230px)',overflowY:'auto',paddingRight:4}}>
+            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(var(--msp-vh) - 210px)':'calc(var(--msp-vh) - 230px)',overflowY:'auto',paddingRight:4}}>
               <div style={CC({gap:22})}>
                 {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:6}}><Highlighter size={12}/>Select any passage to highlight it</div>}
                 <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m}/>
@@ -1381,6 +1343,40 @@ export default function App({ account, onAccountChange }) {
   // classifyCoachTier() below (the "meta brain"), not by the student. This state is purely for
   // display (the small badge in the coach header showing which tier just responded).
   const [coachTier,setCoachTier]=useState('guide');
+  // ── Appearance & accessibility ───────────────────────────────────────────
+  // `a11y` holds every appearance/accessibility preference (see src/lib/a11y.js).
+  // `themeEpoch` is the mechanism that makes a palette change actually visible:
+  // the app styles itself with inline style objects built from the mutable `C`
+  // token object, so switching palettes has to force those objects to be rebuilt.
+  // Bumping the epoch and using it as a `key` on the rendered subtree remounts
+  // the view — App's own state (which tab you're on, your chat, your draft) lives
+  // above the key and survives, while every descendant recomputes its styles.
+  const [a11y,setA11y]=useState(()=>loadA11y());
+  const [themeEpoch,setThemeEpoch]=useState(0);
+
+  // Apply on mount and on every change. applyA11y is fully declarative, so
+  // running it repeatedly is safe and always converges on the same DOM state.
+  useEffect(()=>{
+    applyA11y(a11y);
+    saveA11y(a11y);
+    storeMode(a11y.themeMode);
+    setThemeEpoch(e=>e+1);
+  },[a11y]);
+
+  // Follow the OS while the student has chosen "match my device". Nothing to do
+  // in the other two modes — an explicit choice should not be overridden.
+  useEffect(()=>{
+    if(a11y.themeMode!=='system') return;
+    return watchSystemTheme(()=>{ applyA11y(a11y); setThemeEpoch(e=>e+1); });
+  },[a11y]);
+
+  const updateA11y=useCallback((patch)=>{setA11y(s=>({...s,...patch}));},[]);
+  // Framer Motion is driven from JS, so the CSS reduced-motion rules can't reach
+  // it. Every animated surface that matters reads this and collapses its
+  // transition to zero.
+  const reducedMotion=motionReduced(a11y);
+  const motionT=useMemo(()=>(reducedMotion?{duration:0}:undefined),[reducedMotion]);
+
   const COACH_TIERS=[
     {id:'scout',label:'Scout',desc:'Fastest — quick answers and everyday questions',color:C.cyan},
     {id:'guide',label:'Guide',desc:'Balanced — the default for most coaching',color:C.violet},
@@ -1389,6 +1385,15 @@ export default function App({ account, onAccountChange }) {
   // Model preference: 'auto' lets Medabrain route each message itself (classifyCoachTier);
   // 'scout'/'guide'/'sage' pins every message to that model. Device-local so it survives reloads
   // without touching the synced profile schema.
+  // Which half of the Medabrain page is showing: the conversation, or the
+  // personal brief ("About you"). They live on one page rather than in separate
+  // tabs because the brief is not a settings screen — it is the other half of
+  // talking to Medabrain, and a student should be able to add to it the moment
+  // an answer makes them realise it doesn't know something.
+  const [coachView,setCoachView]=useState('chat'); // 'chat' | 'about'
+  // Model picker + quota breakdown, collapsed by default. This used to be
+  // permanently pinned above the thread and cost ~180px of the conversation.
+  const [coachMetaOpen,setCoachMetaOpen]=useState(false);
   const [coachModelPref,setCoachModelPref]=useState(()=>{try{return localStorage.getItem('msp_coachModelPref')||'auto';}catch{return 'auto';}});
   useEffect(()=>{try{localStorage.setItem('msp_coachModelPref',coachModelPref);}catch{/* private mode */}},[coachModelPref]);
   // How many answers each model has produced — powers the usage breakdown (which model you lean on
@@ -2324,13 +2329,50 @@ export default function App({ account, onAccountChange }) {
   // from the message itself — no manual switcher, no extra model call to classify (keeps it free
   // and instant). Deep/strategic asks (essays, MMI/CASPer, comparing schools, long messages) get
   // Sage; short/simple asks get Scout; everything else gets Guide, the balanced default.
+  // Ordering matters here, and it used to be wrong in a way that produced the
+  // single worst Medabrain failure in the app. `quickSignals` matched anything
+  // starting "when is"/"who is", and any message under 42 characters, and sent
+  // it to Scout — llama-3.1-8b-instant, the smallest model available. So
+  // "When do I apply to Duke?" (24 chars) and "Who was president in 1954?"
+  // (26 chars) were routed to the model least able to recall a real-world fact,
+  // and the answer came back as a shrug or a redirect. Those are exactly the
+  // questions a student most needs answered correctly.
+  //
+  // So knowledge-recall is now checked BEFORE brevity, and it wins: a question
+  // whose answer is a fact about the world (a named university, a deadline, a
+  // date, a historical figure, a policy, a required score) goes to Sage, the
+  // 70B tier, regardless of how short it is. Scout is left with what it is
+  // genuinely good at — restating, defining a term, quick arithmetic, chit-chat
+  // — and only when nothing in the message suggests a fact needs to be right.
   function classifyCoachTier(message) {
     const text = (message || '').trim();
     const lower = text.toLowerCase();
+
     const deepSignals = /\b(essay|personal statement|statement of purpose|critique|feedback on|review my|rewrite|revise|edit my|supplement|application strategy|which (school|college)s? should|compare .*(school|college|program)|trade-?off|mmi|casper|interview answer|scholarship essay)\b/;
-    const quickSignals = /^(what is|what's|define|meaning of|spell|when is|who is|convert|formula for|how do you say)\b/;
-    if (deepSignals.test(lower) || text.length > 260) return 'sage';
-    if (text.length <= 42 || quickSignals.test(lower)) return 'scout';
+
+    // Anything whose answer is a verifiable fact about the world rather than a
+    // restatement of something the student already knows. Deliberately broad:
+    // the cost of over-routing to Sage is a little latency; the cost of
+    // under-routing is a confidently wrong answer about a college deadline.
+    const knowledgeSignals = new RegExp([
+      // Named institutions and program types the student might ask about.
+      /\b(duke|harvard|yale|princeton|stanford|mit|columbia|cornell|brown|dartmouth|penn|upenn|johns hopkins|hopkins|nyu|ucla|berkeley|michigan|emory|vanderbilt|rice|northwestern|wustl|case western|ivy|ivies|university of|college of|bs\/?md|ba\/?md|direct med)\b/,
+      // Admissions mechanics whose specifics change year to year.
+      /\b(deadline|due date|when (do|should|does|can|is|are)|application opens?|early decision|early action|\bed\b|\bea\b|\brea\b|\bed ?ii\b|regular decision|rolling admission|common app|coalition app|supplement|fafsa|css profile|superscore|score choice|test.?optional|test.?blind|acceptance rate|admit rate|average sat|median sat|what sat score|need for|requirements? for|prereq)\b/,
+      // General world knowledge — history, science, geography, civics.
+      /\b(who (is|was|were)|what year|in \d{4}|president|prime minister|capital of|discovered|invented|history of|why does|how does .* work|difference between)\b/,
+      // Explicit requests for facts/numbers.
+      /\b(statistics?|percentile|ranking|ranked|tuition|cost of attendance|average|typical|how much does)\b/,
+    ].map(r => r.source).join('|'));
+
+    if (deepSignals.test(lower) || knowledgeSignals.test(lower) || text.length > 260) return 'sage';
+
+    // Scout only gets the genuinely cheap turns now: short messages with no
+    // factual load at all.
+    const chattySignals = /^(hi|hey|hello|thanks|thank you|ok|okay|got it|yes|no|cool|nice|sure)\b/;
+    const restateSignals = /^(explain that again|say that (again|simpler)|shorter|tl;?dr|summari[sz]e that|in simpler terms)\b/;
+    if (chattySignals.test(lower) || restateSignals.test(lower) || text.length <= 28) return 'scout';
+
     return 'guide';
   }
   // `purpose` selects which Medabrain subsystem key-pool the server routes this call through
@@ -3871,140 +3913,204 @@ export default function App({ account, onAccountChange }) {
       </div>
     );
   }
+  // ══ MEDABRAIN COACH ═══════════════════════════════════════════════════════
+  //
+  // Layout note. This panel used to set `height: calc(100vh - 64px)` while
+  // living inside <main>'s padded wrapper — so it was sized against the whole
+  // viewport while actually starting 30px down and ending 70px early, and the
+  // composer sat below the fold on every screen. The chrome made it worse: a
+  // model-usage breakdown and a daily-quota bar were pinned above the thread,
+  // costing ~180px of vertical space permanently to information a student looks
+  // at roughly once.
+  //
+  // So: the height now subtracts the real chrome around it, and everything that
+  // isn't the conversation collapses into a disclosure. What's left is a single
+  // 52px header bar, a thread that takes all remaining height, and a composer
+  // pinned to the bottom of the panel rather than the bottom of the document.
+  const COACH_CHROME_PX = isMobile
+    ? 190   // mobile header (50) + wrapper padding (20+40) + main's bottom-nav gutter (80)
+    : 106;  // wrapper padding only (30 top + 70 bottom), plus a hairline
   function tCoach(){
     const usagePct=Math.round(((coachDailyLimit-coachRequestsRemaining)/coachDailyLimit)*100);
     const usageColor=usagePct>=100?C.rose:usagePct>=80?C.amber:C.violet;
     const tierTotal=(coachTierCounts.scout||0)+(coachTierCounts.guide||0)+(coachTierCounts.sage||0);
     const rankedTiers=[...COACH_TIERS].sort((a,b)=>(coachTierCounts[b.id]||0)-(coachTierCounts[a.id]||0));
     const activePinned=coachModelPref!=='auto';
+    const briefCount=getBriefEntries(user).length;
+
+    const segBtn=(id,label,Icon,count)=>{
+      const on=coachView===id;
+      return(
+        <button key={id} role="tab" aria-selected={on} onClick={()=>{setCoachView(id);play('click');}}
+          style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 13px',borderRadius:8,border:'none',cursor:'pointer',
+            background:on?`${accent}22`:'transparent',color:on?C.t1:C.t3,fontSize:12,fontWeight:on?700:600,fontFamily:C.FB,transition:'all .15s'}}>
+          <Icon size={13}/>{!isMobile&&label}
+          {count>0&&<span style={{fontSize:9.5,fontFamily:C.FM,color:on?accent:C.t4}}>{count}</span>}
+        </button>
+      );
+    };
+
     return(
-      <div style={{display:'flex',height:'calc(100vh - 64px)',position:'relative'}}>
+      <div style={{display:'flex',height:`calc(var(--msp-vh) - ${COACH_CHROME_PX}px)`,minHeight:isMobile?420:480,position:'relative'}}>
         {/* ── Chat sidebar (desktop: fixed column · mobile: slide-over) ────── */}
-        {!isMobile&&(
-          <div style={{width:216,flexShrink:0,marginRight:18,borderRight:`1px solid ${C.b1}`,paddingRight:16}}>
+        {!isMobile&&coachView==='chat'&&(
+          <div style={{width:216,flexShrink:0,marginRight:18,borderRight:`1px solid ${C.b1}`,paddingRight:16,overflowY:'auto'}}>
             <ChatThreadList/>
           </div>
         )}
         <AnimatePresence>
           {isMobile&&coachSidebarOpen&&(
             <React.Fragment key="mb-sidebar">
-              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} onClick={()=>setCoachSidebarOpen(false)} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.55)',zIndex:40}}/>
-              <motion.div initial={{x:-280}} animate={{x:0}} exit={{x:-280}} transition={{type:'spring',damping:30,stiffness:300}}
+              <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={motionT} onClick={()=>setCoachSidebarOpen(false)} style={{position:'fixed',inset:0,background:C.scrim,zIndex:40}}/>
+              <motion.div initial={reducedMotion?false:{x:-280}} animate={{x:0}} exit={reducedMotion?{opacity:0}:{x:-280}} transition={reducedMotion?{duration:0}:{type:'spring',damping:30,stiffness:300}}
+                role="dialog" aria-label="Your chats"
                 style={{position:'fixed',top:0,left:0,bottom:0,width:260,background:C.s1,borderRight:`1px solid ${C.b1}`,padding:'16px 12px',zIndex:41,overflowY:'auto'}}>
                 <ChatThreadList/>
               </motion.div>
             </React.Fragment>
           )}
         </AnimatePresence>
-        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
-        {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div data-tour="prep-deep-coach" style={{padding:'16px 18px',marginBottom:18,flexShrink:0,borderRadius:16,background:`linear-gradient(120deg,${C.violetDim},${C.blueDim} 55%,transparent)`,border:`1px solid ${C.violet}28`,position:'relative',overflow:'hidden'}}>
-          <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${C.violet},${C.fuchsia}00)`}}/>
-          <div style={{display:'flex',flexDirection:isMobile?'column':'row',justifyContent:'space-between',alignItems:isMobile?'flex-start':'flex-start',gap:isMobile?10:12}}>
-            <div style={R({gap:isMobile?10:12,alignItems:'flex-start'})}>
-              {isMobile&&(
-                <button onClick={()=>setCoachSidebarOpen(true)} title="Your chats" style={{width:34,height:34,borderRadius:10,flexShrink:0,background:'rgba(255,255,255,0.05)',border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}>
-                  <Menu size={16}/>
-                </button>
-              )}
-              <div style={{width:isMobile?34:40,height:isMobile?34:40,borderRadius:12,flexShrink:0,background:C.violetGrad,border:`1px solid ${C.violet}45`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 6px 16px ${C.violet}40`}}>
-                <Brain size={isMobile?16:19} color="#fff"/>
-              </div>
-              <div>
-                <div style={R({gap:7,marginBottom:1})}>
-                  <h2 style={{fontSize:isMobile?18:22,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Medabrain</h2>
-                  <Sparkles size={13} color={C.amberL}/>
-                </div>
-                <div style={{fontSize:isMobile?11:12,color:C.t3}}>Your SAT/ACT content and study-strategy assistant</div>
-              </div>
-            </div>
-            <div style={{display:'flex',flexDirection:isMobile?'row':'column',alignItems:isMobile?'center':'flex-end',flexWrap:'wrap',gap:isMobile?6:6,flexShrink:0}}>
-              <div style={R({gap:8})}>
-                {aiChatCount>0&&<span style={pill(C.violetDim,C.violetL,{fontSize:10,fontFamily:C.FM})}>{aiChatCount} messages</span>}
-                <span style={pill(`${accent}22`,accent)}>{curPath?.label} focus</span>
-              </div>
-              {/* Interactive model switcher — Auto (Medabrain routes) or pin a specific model. */}
-              <div data-tour="prep-deep-coach-tier" style={{display:'flex',gap:3,padding:3,borderRadius:11,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center'}}>
-                <button onClick={()=>{setCoachModelPref('auto');play('click');}} title="Let Medabrain pick the best model for each message"
-                  style={{display:'inline-flex',alignItems:'center',gap:4,padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:coachModelPref==='auto'?`${C.greenL}22`:'transparent',transition:'all .15s'}}>
-                  {coachModelPref==='auto'&&<motion.span animate={{opacity:[1,.4,1]}} transition={{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:5,height:5,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`}}/>}
-                  <span style={{fontSize:10,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase',color:coachModelPref==='auto'?C.greenL:C.t4}}>Auto</span>
-                </button>
-                {COACH_TIERS.map(t=>{const on=coachModelPref===t.id;return(
-                  <button key={t.id} onClick={()=>{setCoachModelPref(t.id);play('click');}} title={t.desc}
-                    style={{padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:on?`${t.color}26`:'transparent',transition:'all .15s'}}>
-                    <span style={{fontSize:10.5,fontWeight:700,fontFamily:C.FB,color:on?t.color:C.t4}}>{t.label}</span>
-                  </button>
-                );})}
-              </div>
-            </div>
-          </div>
-          <div style={{marginTop:8,fontSize:10.5,color:C.t4,textAlign:isMobile?'left':'right'}}>{activePinned?<>Pinned to <span style={{color:COACH_TIERS.find(t=>t.id===coachModelPref)?.color,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachModelPref)?.label}</span> — every message uses this model. Switch back to Auto to let Medabrain choose.</>:<>Auto mode — Medabrain matched <span style={{color:accent,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachTier)?.label}</span> to your last message.</>}</div>
 
-          {/* Per-model usage breakdown — which model you lean on most vs least. */}
-          {tierTotal>0&&(
-            <div style={{marginTop:14,padding:'12px 14px',borderRadius:12,background:C.s2,border:`1px solid ${C.b1}`,maxWidth:isMobile?'100%':420}}>
-              <div style={R({justifyContent:'space-between',marginBottom:9})}>
-                <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Model usage</span>
-                <span style={{fontSize:10,color:C.t4,fontFamily:C.FM}}>{tierTotal} answer{tierTotal!==1?'s':''}</span>
-              </div>
-              {/* Stacked proportion bar */}
-              <div style={{display:'flex',height:7,borderRadius:6,overflow:'hidden',background:C.s4,marginBottom:9}}>
-                {COACH_TIERS.map(t=>{const pct=tierTotal?((coachTierCounts[t.id]||0)/tierTotal*100):0;return pct>0?<div key={t.id} title={`${t.label}: ${coachTierCounts[t.id]||0}`} style={{width:`${pct}%`,background:t.color,transition:'width .3s'}}/>:null;})}
-              </div>
-              <div style={R({gap:isMobile?8:14,flexWrap:'wrap'})}>
-                {rankedTiers.map((t,i)=>(
-                  <div key={t.id} style={R({gap:5})}>
-                    <span style={{width:8,height:8,borderRadius:2,background:t.color,flexShrink:0}}/>
-                    <span style={{fontSize:11,fontWeight:700,color:C.t2}}>{t.label}</span>
-                    <span style={{fontSize:11,color:C.t3,fontFamily:C.FM}}>{coachTierCounts[t.id]||0}</span>
-                    {tierTotal>=3&&i===0&&<span style={pill(`${t.color}22`,t.color,{fontSize:8.5,padding:'1px 6px'})}>MOST</span>}
-                    {tierTotal>=3&&i===rankedTiers.length-1&&(coachTierCounts[t.id]||0)<(coachTierCounts[rankedTiers[0].id]||0)&&<span style={pill(C.s4,C.t3,{fontSize:8.5,padding:'1px 6px'})}>LEAST</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div style={{flex:1,minWidth:0,display:'flex',flexDirection:'column'}}>
+
+        {/* ── Header bar — one row, always 52px ──────────────────────────── */}
+        <div data-tour="prep-deep-coach" style={{flexShrink:0,display:'flex',alignItems:'center',gap:10,padding:isMobile?'0 2px 12px':'0 2px 14px',borderBottom:`1px solid ${C.b1}`,marginBottom:14}}>
+          {isMobile&&coachView==='chat'&&(
+            <button onClick={()=>setCoachSidebarOpen(true)} aria-label="Your chats" style={{width:34,height:34,borderRadius:10,flexShrink:0,background:C.surfHi,border:`1px solid ${C.b1}`,display:'grid',placeItems:'center',color:C.t2,cursor:'pointer'}}>
+              <Menu size={16}/>
+            </button>
           )}
-          <div style={{marginTop:16,maxWidth:320}}>
-            <div style={R({justifyContent:'space-between',marginBottom:5})}>
-              <div style={R({gap:5})}>
-                <Zap size={11} color={C.t3}/>
-                <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Daily coaching usage</span>
-              </div>
-              <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{coachRequestsUsedToday}<span style={{color:C.t4}}> / {coachDailyLimit}</span></span>
-            </div>
-            <Bar pct={usagePct} color={usageColor} h={4}/>
+          <div style={{width:isMobile?32:36,height:isMobile?32:36,borderRadius:11,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 6px 16px ${tint(C.violet,0.35)}`}}>
+            <Brain size={isMobile?15:18} color="#fff"/>
           </div>
+          <div style={{minWidth:0,flex:1}}>
+            <div style={R({gap:6,marginBottom:0})}>
+              <h2 style={{fontSize:isMobile?16:19,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0,whiteSpace:'nowrap'}}>Medabrain</h2>
+              <Sparkles size={12} color={C.amberL}/>
+            </div>
+            {!isMobile&&<div style={{fontSize:11.5,color:C.t3,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+              {coachView==='chat'?'Ask anything — your prep, your applications, or the world beyond them':'What you tell it here outranks everything else it knows about you'}
+            </div>}
+          </div>
+
+          {/* Chat / About you */}
+          <div role="tablist" aria-label="Medabrain sections" style={{display:'flex',gap:3,padding:3,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,flexShrink:0}}>
+            {segBtn('chat','Chat',MessageCircle,0)}
+            {segBtn('about','About you',UserCog,briefCount)}
+          </div>
+
+          {/* Everything that isn't the conversation lives behind this. */}
+          {coachView==='chat'&&(
+            <button onClick={()=>setCoachMetaOpen(o=>!o)} aria-expanded={coachMetaOpen} aria-controls="coach-meta"
+              title="Model and daily usage"
+              style={{width:34,height:34,borderRadius:10,flexShrink:0,background:coachMetaOpen?`${accent}1e`:C.surfHi,border:`1px solid ${coachMetaOpen?accent+'40':C.b1}`,display:'grid',placeItems:'center',color:coachMetaOpen?accent:C.t3,cursor:'pointer'}}>
+              <Wand2 size={15}/>
+            </button>
+          )}
         </div>
 
-        {coachRequestsRemaining<=0&&(
-          <div style={{...R({gap:10}),flexShrink:0,marginBottom:14,padding:'12px 16px',borderRadius:12,background:C.roseDim,border:`1px solid ${C.rose}30`}}>
+        {/* ── Model + usage disclosure ───────────────────────────────────── */}
+        <AnimatePresence initial={false}>
+          {coachView==='chat'&&coachMetaOpen&&(
+            <motion.div id="coach-meta" key="meta"
+              initial={reducedMotion?false:{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={reducedMotion?{opacity:0}:{height:0,opacity:0}}
+              transition={motionT} style={{overflow:'hidden',flexShrink:0}}>
+              <div style={{...glass2({padding:14}),marginBottom:14}}>
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1fr',gap:16}}>
+                  <div>
+                    <span style={lbl()}>Which model answers</span>
+                    <div style={{display:'flex',gap:3,padding:3,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,alignItems:'center',flexWrap:'wrap'}}>
+                      <button onClick={()=>{setCoachModelPref('auto');play('click');}} title="Let Medabrain pick the best model for each message"
+                        style={{display:'inline-flex',alignItems:'center',gap:4,padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:coachModelPref==='auto'?tint(C.green,0.14):'transparent'}}>
+                        {coachModelPref==='auto'&&<motion.span animate={reducedMotion?undefined:{opacity:[1,.4,1]}} transition={reducedMotion?undefined:{duration:1.8,repeat:Infinity,ease:'easeInOut'}} style={{width:5,height:5,borderRadius:'50%',background:C.greenL,boxShadow:`0 0 8px ${C.greenL}`}}/>}
+                        <span style={{fontSize:10,fontWeight:800,letterSpacing:'.06em',textTransform:'uppercase',color:coachModelPref==='auto'?C.greenL:C.t4}}>Auto</span>
+                      </button>
+                      {COACH_TIERS.map(t=>{const on=coachModelPref===t.id;return(
+                        <button key={t.id} onClick={()=>{setCoachModelPref(t.id);play('click');}} title={t.desc}
+                          style={{padding:'5px 9px',borderRadius:8,border:'none',cursor:'pointer',background:on?tint(t.color,0.16):'transparent'}}>
+                          <span style={{fontSize:10.5,fontWeight:700,fontFamily:C.FB,color:on?t.color:C.t4}}>{t.label}</span>
+                        </button>
+                      );})}
+                    </div>
+                    <div style={{marginTop:7,fontSize:10.5,color:C.t4,lineHeight:1.5}}>
+                      {activePinned
+                        ?<>Pinned to <span style={{color:COACH_TIERS.find(t=>t.id===coachModelPref)?.color,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachModelPref)?.label}</span> for every message.</>
+                        :<>Auto — Medabrain matched <span style={{color:accent,fontWeight:700}}>{COACH_TIERS.find(t=>t.id===coachTier)?.label}</span> to your last message. Factual questions always get the deepest model.</>}
+                    </div>
+                  </div>
+                  <div>
+                    <span style={lbl()}>Daily coaching usage</span>
+                    <div style={R({justifyContent:'space-between',marginBottom:5})}>
+                      <span style={{fontSize:11,color:C.t3}}>{coachRequestsUsedToday} of {coachDailyLimit} today</span>
+                      <span style={{fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{tierTotal} answer{tierTotal!==1?'s':''} total</span>
+                    </div>
+                    <Bar pct={usagePct} color={usageColor} h={4}/>
+                    {tierTotal>0&&(
+                      <>
+                        <div style={{display:'flex',height:6,borderRadius:6,overflow:'hidden',background:C.s4,margin:'10px 0 8px'}}>
+                          {COACH_TIERS.map(t=>{const pct=tierTotal?((coachTierCounts[t.id]||0)/tierTotal*100):0;return pct>0?<div key={t.id} title={`${t.label}: ${coachTierCounts[t.id]||0}`} style={{width:`${pct}%`,background:t.color}}/>:null;})}
+                        </div>
+                        <div style={R({gap:12,flexWrap:'wrap'})}>
+                          {rankedTiers.map(t=>(
+                            <div key={t.id} style={R({gap:5})}>
+                              <span style={{width:7,height:7,borderRadius:2,background:t.color,flexShrink:0}}/>
+                              <span style={{fontSize:10.5,color:C.t3}}>{t.label}</span>
+                              <span style={{fontSize:10.5,color:C.t4,fontFamily:C.FM}}>{coachTierCounts[t.id]||0}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {coachRequestsRemaining<=0&&coachView==='chat'&&(
+          <div role="alert" style={{...R({gap:10}),flexShrink:0,marginBottom:12,padding:'11px 15px',borderRadius:12,background:C.roseDim,border:`1px solid ${tint(C.rose,0.3)}`}}>
             <AlertTriangle size={15} color={C.roseL} style={{flexShrink:0}}/>
             <span style={{fontSize:13,color:C.t1}}>You've reached today's coaching limit. It resets tomorrow.</span>
           </div>
         )}
 
+        {/* ══ ABOUT YOU ═══════════════════════════════════════════════════ */}
+        {coachView==='about'&&(
+          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:2}}>
+            <AboutMePanel user={user} onSaveUser={saveUser} isMobile={isMobile} accent={C.violet}/>
+          </div>
+        )}
+
+        {/* ══ CHAT ════════════════════════════════════════════════════════ */}
+        {coachView==='chat'&&(
+        <>
         {/* ── Empty state / suggestions ──────────────────────────────────── */}
         {msgs.length===0&&(
-          <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column'}}>
-            <div style={{...glass2({padding:isMobile?16:20,background:`linear-gradient(120deg,${C.violetDim},transparent 60%)`,border:`1px solid ${C.violet}22`}),marginBottom:20,display:'flex',gap:14,alignItems:'flex-start'}}>
-              <div style={{width:36,height:36,borderRadius:10,flexShrink:0,background:C.violetGrad,border:`1px solid ${C.violet}45`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:`0 4px 12px ${C.violet}35`}}>
-                <MessageCircle size={16} color="#fff"/>
+          <div style={{flex:1,minHeight:0,overflowY:'auto',paddingRight:2}}>
+            <div style={{...glass2({padding:isMobile?15:18,background:`linear-gradient(120deg,${C.violetDim},transparent 60%)`,border:`1px solid ${tint(C.violet,0.22)}`}),marginBottom:16,display:'flex',gap:13,alignItems:'flex-start'}}>
+              <div style={{width:34,height:34,borderRadius:10,flexShrink:0,background:C.violetGrad,display:'grid',placeItems:'center',boxShadow:`0 4px 12px ${tint(C.violet,0.35)}`}}>
+                <MessageCircle size={15} color="#fff"/>
               </div>
               <div>
                 <div style={{fontSize:14,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>Hey — I'm Medabrain.</div>
-                <div style={{fontSize:13,color:C.t3,lineHeight:1.6}}>Ask me to explain a concept, build a study plan, or work through a tough problem. I know where you stand in {curPath?.label||'your pathway'} and can tailor answers to it. Pick a prompt below or just start typing.</div>
+                <div style={{fontSize:12.5,color:C.t3,lineHeight:1.6}}>
+                  Ask me anything. A concept you're stuck on, a deadline you need to know, what a college
+                  actually looks for, or how to plan your week — I know where you stand in {curPath?.label||'your pathway'} and
+                  I'm not limited to it.
+                  {briefCount===0&&<> Want much better answers? <button onClick={()=>setCoachView('about')} style={{background:'none',border:'none',padding:0,color:C.violetL,fontWeight:700,fontFamily:C.FB,fontSize:12.5,cursor:'pointer',textDecoration:'underline'}}>Tell me about yourself</button> first.</>}
+                </div>
               </div>
             </div>
             {personalizedQuickPrompts().map(group=>{const GIc=COACH_ICONS[group.icon];const personal=group.label==='For You Right Now';return(
-              <div key={group.label} style={{marginBottom:18}}>
-                <div style={{...R({gap:6}),marginBottom:10}}>
+              <div key={group.label} style={{marginBottom:16}}>
+                <div style={{...R({gap:6}),marginBottom:9}}>
                   <GIc size={12} color={personal?C.amberL:C.t3}/><span style={{...lbl({marginBottom:0}),color:personal?C.amberL:undefined}}>{group.label}</span>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:10}}>
+                <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(auto-fill,minmax(240px,1fr))',gap:9}}>
                   {group.prompts.map((p,i)=>(
-                    <motion.button key={i} whileHover={{y:-2,borderColor:`${personal?C.amber:accent}50`,background:'rgba(255,255,255,0.045)'}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
-                      style={{textAlign:'left',padding:'12px 14px',borderRadius:12,border:`1px solid ${personal?C.amber+'30':C.b1}`,background:personal?C.amberDim:'rgba(255,255,255,0.025)',color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
+                    <motion.button key={i} whileHover={reducedMotion?undefined:{y:-2}} whileTap={{scale:.98}} onClick={()=>sendChat(p)}
+                      style={{textAlign:'left',padding:'11px 13px',borderRadius:12,border:`1px solid ${personal?tint(C.amber,0.3):C.b1}`,background:personal?C.amberDim:C.surf2,color:C.t2,fontSize:12.5,lineHeight:1.5,fontFamily:C.FB,cursor:'pointer',transition:'background .15s,border-color .15s'}}>
                       {p}
                     </motion.button>
                   ))}
@@ -4016,25 +4122,25 @@ export default function App({ account, onAccountChange }) {
 
         {/* ── Message thread ─────────────────────────────────────────────── */}
         {msgs.length>0&&(
-        <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:14,paddingRight:2}}>
+        <div role="log" aria-label="Conversation with Medabrain" aria-live="polite" style={{flex:1,minHeight:0,overflowY:'auto',display:'flex',flexDirection:'column',gap:14,paddingRight:2}}>
           <AnimatePresence initial={false}>
             {msgs.map((m,i)=>(
-              <motion.div key={i} layout initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
-                {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${C.violet}35,${C.indigo}22)`,border:`1px solid ${m.role==='error'?C.rose+'40':C.violet+'35'}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <motion.div key={i} layout={!reducedMotion} initial={reducedMotion?false:{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={motionT} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start',alignItems:'flex-end',gap:isMobile?6:10}}>
+                {m.role!=='user'&&<div style={{width:isMobile?24:30,height:isMobile?24:30,borderRadius:'50%',background:m.role==='error'?C.roseDim:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${m.role==='error'?tint(C.rose,0.28):tint(C.violet,0.24)}`,display:'grid',placeItems:'center',flexShrink:0}}>
                   {m.role==='error'?<AlertTriangle size={isMobile?12:14} color={C.roseL}/>:<Brain size={isMobile?12:14} color={C.violetL}/>}
                 </div>}
                 <div className="mb-group" style={{maxWidth:isMobile?'85%':'78%',position:'relative'}}>
-                  <div style={{padding:isMobile?'10px 14px':'13px 18px',borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.role==='user'?`linear-gradient(135deg,${accent},${C.blueD})`:m.role==='error'?C.roseDim:C.s2,border:m.role==='user'?'none':m.role==='error'?`1px solid ${C.rose}30`:`1px solid ${C.b1}`,fontSize:isMobile?13:14,lineHeight:1.75,color:C.t1,fontFamily:C.FB,boxShadow:m.role==='user'?`0 4px 16px ${accent}30`:'0 2px 8px rgba(0,0,0,0.3)'}}>
+                  <div className={m.role==='assistant'?'msp-md':undefined} style={{padding:isMobile?'10px 14px':'13px 18px',borderRadius:m.role==='user'?'18px 18px 4px 18px':'18px 18px 18px 4px',background:m.role==='user'?`linear-gradient(135deg,${accent},${C.blueD})`:m.role==='error'?C.roseDim:C.s2,border:m.role==='user'?'none':m.role==='error'?`1px solid ${tint(C.rose,0.3)}`:`1px solid ${C.b1}`,fontSize:isMobile?13:14,lineHeight:1.75,color:m.role==='user'?C.onAccent:C.t1,fontFamily:C.FB,boxShadow:m.role==='user'?`0 4px 16px ${tint(accent,0.3)}`:C.shadowSm}}>
                     {m.role==='assistant'?<div dangerouslySetInnerHTML={{__html:renderMarkdown(m.content)}}/>:m.content}
                     {m.role==='error'&&(
-                      <motion.button whileHover={{borderColor:`${C.rose}50`}} whileTap={{scale:.96}} onClick={retryChat} style={{...btnG({fontSize:11,padding:'5px 12px',marginTop:8,borderRadius:8,color:C.roseL}),border:`1px solid ${C.rose}30`}}>
+                      <motion.button whileTap={{scale:.96}} onClick={retryChat} style={{...btnG({fontSize:11,padding:'5px 12px',marginTop:8,borderRadius:8,color:C.roseL}),border:`1px solid ${tint(C.rose,0.3)}`}}>
                         <RotateCcw size={11}/> Try again
                       </motion.button>
                     )}
                   </div>
                   {m.role==='assistant'&&(
-                    <button className="mb-copy" onClick={()=>copyMsg(m.content,i)} title="Copy response"
-                      style={{position:'absolute',top:-10,right:-8,width:24,height:24,borderRadius:'50%',border:`1px solid ${C.b2}`,background:C.s3,color:C.t3,display:'flex',alignItems:'center',justifyContent:'center',cursor:'pointer',transition:'opacity .15s'}}>
+                    <button className="mb-copy" onClick={()=>copyMsg(m.content,i)} title="Copy response" aria-label="Copy this response"
+                      style={{position:'absolute',top:-10,right:-8,width:24,height:24,borderRadius:'50%',border:`1px solid ${C.b2}`,background:C.s3,color:C.t3,display:'grid',placeItems:'center',cursor:'pointer',transition:'opacity .15s'}}>
                       {copiedIdx===i?<Check size={11} color={C.greenL}/>:<Copy size={11}/>}
                     </button>
                   )}
@@ -4042,27 +4148,30 @@ export default function App({ account, onAccountChange }) {
               </motion.div>
             ))}
           </AnimatePresence>
-          {cLoad&&<motion.div initial={{opacity:0}} animate={{opacity:1}} style={{display:'flex',alignItems:'flex-end',gap:10}}>
-            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${C.violet}35,${C.indigo}22)`,border:`1px solid ${C.violet}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Brain size={14} color={C.violetL}/></div>
+          {cLoad&&<motion.div initial={reducedMotion?false:{opacity:0}} animate={{opacity:1}} transition={motionT} style={{display:'flex',alignItems:'flex-end',gap:10}}>
+            <div style={{width:30,height:30,borderRadius:'50%',background:`linear-gradient(135deg,${tint(C.violet,0.28)},${tint(C.indigo,0.16)})`,border:`1px solid ${tint(C.violet,0.24)}`,display:'grid',placeItems:'center'}}><Brain size={14} color={C.violetL}/></div>
             <div style={{padding:'11px 18px',background:C.s2,border:`1px solid ${C.b1}`,borderRadius:'18px 18px 18px 4px'}}><TypingDots/></div>
           </motion.div>}
           <div ref={chatEnd}/>
         </div>
         )}
 
-        {/* ── Composer ────────────────────────────────────────────────────── */}
-        <div style={{flexShrink:0,marginTop:14}}>
-          <div style={R({gap:isMobile?6:10})}>
-            <textarea style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:isMobile?'10px 14px':'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain…":"Ask Medabrain about SAT/ACT content, admissions, or study strategies…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
-            <motion.button whileHover={{scale:1.05}} whileTap={{scale:.95}} style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',alignSelf:'flex-end',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${C.violet}40`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
+        {/* ── Composer — pinned to the bottom of the panel ─────────────────── */}
+        <div style={{flexShrink:0,paddingTop:12}}>
+          <div style={R({gap:isMobile?6:10,alignItems:'flex-end'})}>
+            <label htmlFor="msp-coach-input" className="msp-sr-only">Ask Medabrain a question</label>
+            <textarea id="msp-coach-input" style={{...inp({resize:'none',minHeight:isMobile?44:52,maxHeight:120,lineHeight:1.6,fontFamily:C.FB,borderRadius:14,padding:'10px 14px'}),flex:1,opacity:coachRequestsRemaining<=0?.5:1}} placeholder={isMobile?"Ask Medabrain anything…":"Ask Medabrain anything — a concept, a college, a deadline, a plan…"} value={ci} onChange={e=>setCi(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat(ci);}}} disabled={coachRequestsRemaining<=0}/>
+            <motion.button whileHover={reducedMotion?undefined:{scale:1.05}} whileTap={{scale:.95}} aria-label="Send message" style={{...btn(C.violetGrad,{padding:isMobile?'0 16px':'0 22px',height:isMobile?44:52,flexShrink:0,borderRadius:14,boxShadow:`0 4px 16px ${tint(C.violet,0.35)}`,opacity:cLoad||coachRequestsRemaining<=0?.6:1}),display:'inline-flex',alignItems:'center',justifyContent:'center'}} onClick={()=>sendChat(ci)} disabled={cLoad||coachRequestsRemaining<=0}>
               {cLoad?<RefreshCw size={isMobile?16:19} className="spin"/>:<ArrowUp size={isMobile?16:19}/>}
             </motion.button>
           </div>
-          <div style={R({justifyContent:'space-between',marginTop:8})}>
-            {activeThreadId?<button style={btnG({fontSize:11,padding:'5px 14px',borderRadius:20,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
+          <div style={R({justifyContent:'space-between',marginTop:7})}>
+            {activeThreadId?<button style={btnG({fontSize:11,padding:'4px 12px',borderRadius:20,color:C.roseL})} onClick={()=>deleteChatThread(activeThreadId)}><Trash2 size={11}/>Delete this chat</button>:<span/>}
             {!isMobile&&<span style={{fontSize:10.5,color:C.t4}}>Medabrain can make mistakes — double-check anything important.</span>}
           </div>
         </div>
+        </>
+        )}
         </div>
       </div>
     );
@@ -5958,7 +6067,8 @@ export default function App({ account, onAccountChange }) {
 
   // ── SETTINGS ──────────────────────────────────────────────────────────────────
   function tSettings(){
-    const accent=settingsAccent; // shadows the pathway accent — Settings has its own fixed color identity
+    const accent=settingsAccent;
+    const briefEntryCount=getBriefEntries(user).length; // shadows the pathway accent — Settings has its own fixed color identity
     // Small section-group label used to chunk the long list of cards below into scannable
     // groups (Profile & Goals / Study Setup / Preferences & Data / Account) instead of one
     // undifferentiated stack — the actual cards inside are unchanged.
@@ -6002,6 +6112,30 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
+
+        {/* ── Appearance & Accessibility ──────────────────────────────────────── */}
+        {/* Deliberately the first group. A student who needs larger text or less
+            motion needs it before they can comfortably read anything else on
+            this page, and burying it under four groups of profile fields is a
+            small cruelty. */}
+        <Group icon={Accessibility} title="Appearance & Accessibility">
+          <AppearanceSettings settings={a11y} onChange={updateA11y} isMobile={isMobile} accent={accent}/>
+        </Group>
+
+        {/* ── What Medabrain knows about you ─────────────────────────────────── */}
+        <Group icon={Brain} title="What Medabrain Knows About You">
+          <div style={glass({padding:18})}>
+            <SL>Your personal brief</SL>
+            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+              {briefEntryCount>0
+                ? <>You've told Medabrain <strong style={{color:C.t1}}>{briefEntryCount} thing{briefEntryCount===1?'':'s'}</strong> about yourself in your own words. Every answer you get — in the coach, in Portfolio, in Prep and in the SAT tab — is shaped by this first, ahead of your sign-up answers and your tracked data.</>
+                : <>Medabrain currently only knows the boxes you ticked when you signed up. Talk to it about your family, your school, what worries you and where you want to end up, and it will use that everywhere in the app — and treat it as more authoritative than anything else it has.</>}
+            </p>
+            <button style={{...btn(C.violetGrad,{fontSize:12,padding:'9px 18px'})}} onClick={()=>{setTab('prep');setPrepView('coach');setCoachView('about');}}>
+              <Volume2 size={14}/>{briefEntryCount>0?'Add or edit what it knows':'Tell Medabrain about yourself'}
+            </button>
+          </div>
+        </Group>
 
         {/* ── Profile & Goals ─────────────────────────────────────────────────── */}
         <Group icon={UserCog} title="Profile & Goals">
@@ -6300,7 +6434,7 @@ export default function App({ account, onAccountChange }) {
   if(aQuiz){
     return(
       <ErrorBoundary>
-        <div style={{minHeight:'100vh',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
+        <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
           <div style={{maxWidth:780,margin:'0 auto',padding:'24px 24px 60px'}}>
             <div style={{...glass({padding:'14px 22px',marginBottom:18}),...R()}}>
@@ -6560,7 +6694,10 @@ export default function App({ account, onAccountChange }) {
         onOpen={()=>{ chest?.onOpen?.(); }}
         onClose={closeChest}
       />
-      <div style={{display:'flex',flexDirection:isMobile?'column':'row',width:'100%',minWidth:0,height:'100dvh',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
+      {/* First focusable thing on the page. Without it a keyboard or switch user
+          has to tab through an eleven-item sidebar on every single navigation. */}
+      <a href="#msp-main" className="msp-skip-link">Skip to main content</a>
+      <div key={themeEpoch} style={{display:'flex',flexDirection:isMobile?'column':'row',width:'100%',minWidth:0,height:'var(--msp-vh)',overflow:'hidden',background:C.bg,color:C.t1,fontFamily:C.FB,position:'relative'}}>
 
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
@@ -6631,7 +6768,9 @@ export default function App({ account, onAccountChange }) {
         {/* data-app-content: the SAT tool rail is position:fixed and measures this
             element's left edge to sit flush against the content column instead of
             hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
-        <main data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0}}>
+        {/* tabIndex={-1} so the skip link can move focus here; without it the
+            anchor scrolls but the next Tab press starts from the top again. */}
+        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0,outline:'none'}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
@@ -6640,7 +6779,7 @@ export default function App({ account, onAccountChange }) {
               editor, etc.) already caps itself internally rather than relying on this wrapper. */}
           <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
             <AnimatePresence mode="wait">
-              <motion.div key={tab} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:.22}}>
+              <motion.div key={tab} initial={reducedMotion?false:{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={reducedMotion?{opacity:1}:{opacity:0,y:-6}} transition={{duration:reducedMotion?0:.22}}>
                 {(tRenders[tab]||tHome)()}
               </motion.div>
             </AnimatePresence>

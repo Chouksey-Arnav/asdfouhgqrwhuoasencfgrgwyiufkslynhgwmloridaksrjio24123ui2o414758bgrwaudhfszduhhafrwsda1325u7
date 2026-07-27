@@ -50,6 +50,7 @@ import {
 import { strategyFor } from '../../data/sat/strategies';
 import { renderProfileForPrompt, profileFingerprint } from './learnerProfile';
 import * as DB from '../db';
+import { isBalanced, CHOICE_LENGTH_CONTRACT } from './answerBalance';
 
 /** Hard ceiling on items per generation request, whatever the caller asks for. */
 const MAX_ITEMS = 10;
@@ -113,8 +114,9 @@ const DISTRACTOR_CONTRACT = [
   '  * No filler choices. If you cannot name the mistake behind a choice, replace the choice.',
   '  * Exactly one choice is defensibly correct. If a second choice could be argued for under any reasonable',
   '    reading, the item is broken — rewrite it rather than shipping it.',
-  '  * Choice lengths must be similar, and the correct answer must not be the longest or the most hedged.',
   '  * No "all of the above", "none of the above", or choices that reference other choices.',
+  '',
+  CHOICE_LENGTH_CONTRACT,
 ].join('\n');
 
 const AUTHENTICITY_RULES = [
@@ -272,23 +274,16 @@ function validateItem(raw, { skill, difficulty }) {
   if (!de || de.length !== 4) return null;
   if (de.some(d => typeof d !== 'string' || d.trim().length < 10)) return null;
 
-  // The length tell. scripts/auditSatBank.mjs enforces this on the hand-written
-  // bank; a generated set must not reintroduce the bias we removed by hand. A
-  // test-wise student who has noticed that the longest, most-qualified choice is
-  // usually right is being trained to game the practice rather than read it.
+  // The length tell. A student who has noticed that the longest, most-qualified
+  // choice is usually right can score above chance without reading anything,
+  // and practice that rewards that habit actively harms them — the real exam
+  // does not reward it, and they find that out on test day.
   //
-  // Two rules, because one is not enough. The RATIO rule catches the ordinary
-  // case, but it is gated on the distractors being substantial — otherwise a
-  // one-word wrong answer makes every ratio look alarming. That gate leaves the
-  // most blatant version of the tell wide open: a 150-character correct answer
-  // against three 12-character distractors has a mean below the gate and sails
-  // through. So an ABSOLUTE gap rule sits alongside it.
-  const lengths = trimmed.map(c => c.length);
-  const others = lengths.filter((_, i) => i !== ans);
-  const meanOthers = others.reduce((s, l) => s + l, 0) / others.length;
-  const longestOther = Math.max(...others);
-  if (meanOthers >= 20 && lengths[ans] > meanOthers * 1.4) return null;
-  if (lengths[ans] - longestOther > 30) return null;
+  // The rule now lives in src/lib/sat/answerBalance.js, shared verbatim with
+  // the bank audit and with the CHOICE_LENGTH_CONTRACT this model was given.
+  // A validator whose threshold has drifted from the instruction the generator
+  // received is a validator that rejects compliant output at random.
+  if (!isBalanced(trimmed, ans)) return null;
 
   return { ...base, ch: trimmed, ans, distractorExp: de.map(d => d.trim()) };
 }
@@ -582,6 +577,92 @@ export async function generatePracticeSet({
     reason: null,
     cached: false,
   };
+}
+
+/**
+ * ONE item, authored for a specific (skill, difficulty) slot in an adaptive
+ * baseline. See src/lib/sat/baseline.js for why the baseline generates rather
+ * than selects: a staircase needs a question at whatever difficulty the last
+ * answer implied, in the skill the blueprint asked for, that this student has
+ * not already seen — and an 83-item static bank cannot serve that for one
+ * student, let alone for a retake a week later.
+ *
+ * Differs from generatePracticeSet() in four ways that all follow from being
+ * one item inside a live test:
+ *
+ *   1. NEVER CACHED, in either direction. A baseline is a measurement. Serving
+ *      a cached item would hand a student a question they may have already
+ *      seen and score them on it, and caching the result would leak this run's
+ *      questions into the next one. Both destroy the thing being measured.
+ *   2. `avoid` carries the stems already used in this session, so the model
+ *      cannot circle back to a scenario it just wrote.
+ *   3. Verification is mandatory and non-optional. In practice a mis-keyed item
+ *      costs a student one confusing explanation; in a baseline it moves the
+ *      ability estimate the wrong way and every subsequent question is chosen
+ *      off that error.
+ *   4. It falls back to the static bank rather than returning nothing. A test
+ *      that stalls at question 19 because of a rate limit has wasted the
+ *      student's afternoon; a bank item at roughly the right difficulty is a
+ *      far better outcome than an error dialog.
+ */
+export async function generateBaselineItem({
+  skill, difficulty = 'M', profile = null, avoid = [], signal = null,
+} = {}) {
+  const meta = SAT_SKILLS[skill] ? skillMeta(skill) : null;
+  if (!meta) return null;
+
+  const blueprint = [{
+    skill,
+    label: meta.label,
+    sectionLabel: meta.sectionLabel,
+    difficulty: DIFFICULTY_IDS.includes(difficulty) ? difficulty : 'M',
+    count: 1,
+    why: 'This is one question inside an adaptive placement test. Its difficulty was chosen from how the student '
+      + 'has answered so far, so it must land squarely at the stated difficulty — an item that is secretly easier '
+      + 'or harder than requested corrupts the estimate and every question chosen after it.',
+  }];
+
+  const avoidBlock = avoid.length
+    ? '\n\n── ALREADY USED IN THIS TEST (do not reuse these scenarios, subjects, or framings) ──\n'
+      + avoid.slice(-14).map(t => `  - ${String(t).slice(0, 110)}`).join('\n')
+    : '';
+
+  let parsed;
+  try {
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        system: buildAuthorPrompt({ profile, blueprint, mode: 'drill' }) + avoidBlock,
+        message: `Write exactly 1 question following the blueprint above, at difficulty ${blueprint[0].difficulty}. Return the JSON object and nothing else.`,
+        purpose: 'sat',
+        tier: 'oracle',
+        reasoningEffort: 'high',
+        jsonMode: true,
+        // Slightly warmer than a practice set. One item at a time, 35 times,
+        // with the same skill recurring: at 0.45 the model converges on the
+        // same scenario shape over and over.
+        temperature: 0.6,
+        noCache: true,
+        maxTokens: 1800,
+      }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    parsed = parseJsonLoosely(data?.content);
+  } catch {
+    return null;
+  }
+
+  const raw = Array.isArray(parsed?.questions) ? parsed.questions[0] : parsed;
+  const item = validateItem(raw, { skill, difficulty: blueprint[0].difficulty });
+  if (!item || !numericSanity(item)) return null;
+
+  const outcome = await verifyItems([item], { signal });
+  if (!outcome.items.length) return null;
+
+  return { ...outcome.items[0], generated: true, baseline: true };
 }
 
 /**

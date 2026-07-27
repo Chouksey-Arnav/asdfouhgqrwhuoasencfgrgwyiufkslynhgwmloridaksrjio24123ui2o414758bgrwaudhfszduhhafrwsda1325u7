@@ -1,29 +1,72 @@
+/* ── Token defaults ──────────────────────────────────────────────────────────
+   applyTheme() in src/lib/theme.js overwrites these on <html> at boot and on
+   every theme change. They're duplicated here (dark values) purely so the very
+   first paint — before any JS runs — isn't a flash of unstyled white. */
+:root {
+  --c-bg: #04060b; --c-s0: #060a15; --c-s1: #0a1020; --c-s2: #0f1828;
+  --c-s3: #162032; --c-s4: #1d2a40; --c-s5: #253350;
+  --c-b1: rgba(255,255,255,0.07); --c-b2: rgba(255,255,255,0.11); --c-b3: rgba(255,255,255,0.18);
+  --c-t1: #eef2ff; --c-t2: #94a3c0; --c-t3: #506080; --c-t4: #2d3f58;
+  --c-blue: #2d7fff; --c-blueL: #5da0ff; --c-blueDim: rgba(45,127,255,0.10);
+  --c-violet: #8b5cf6; --c-rose: #f43f5e; --c-green: #10b981; --c-amber: #f59e0b;
+  --c-surf: rgba(255,255,255,0.03); --c-surfHi: rgba(255,255,255,0.06);
+  --c-inputBg: rgba(255,255,255,0.04); --c-inputBorder: rgba(255,255,255,0.10);
+  --c-scrim: rgba(0,0,0,0.55);
+  --c-noiseOpacity: 0.02;
+  --c-pageGlow: none;
+  --c-FD: 'Bricolage Grotesque', -apple-system, sans-serif;
+  --c-FB: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
+  --c-FM: 'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Accessibility knobs — written by applyA11y() in src/lib/a11y.js. */
+  --msp-font-scale: 1;
+  --msp-line-scale: 1;
+  --msp-letter-spacing: 0em;
+  --msp-tap-min: 0px;
+  --msp-reading-width: none;
+
+  /* Viewport height, corrected for UI scaling.
+     The app sizes almost everything in absolute px through inline style
+     objects, so scaling text through font-size alone would move body copy and
+     leave every button, icon and card exactly where it was. `zoom` on #root is
+     the one mechanism that scales an inline-styled tree uniformly.
+     Its one side effect: `100vh` inside a zoomed subtree still resolves against
+     the *unzoomed* viewport, so a full-height panel overflows by exactly the
+     zoom factor. Everything that wants "one screen tall" uses this instead. */
+  --msp-vh: calc(100dvh / var(--msp-font-scale));
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html, body, #root { height: 100%; width: 100%; }
 body {
-  background: #04060b;
-  background-image:
-    radial-gradient(ellipse 70% 55% at 72% -5%, rgba(45,127,255,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 5% 8%, rgba(139,92,246,0.07) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 100% 55%, rgba(236,72,153,0.05) 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at -5% 100%, rgba(6,182,212,0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 50% 40% at 90% 105%, rgba(16,185,129,0.045) 0%, transparent 55%);
+  background: var(--c-bg);
+  background-image: var(--c-pageGlow);
   background-attachment: fixed;
-  color: #eef2ff;
-  font-family: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
+  color: var(--c-t1);
+  font-family: var(--c-FB);
+  /* The base size every rem/em in the app scales from, so one setting resizes
+     the whole interface rather than just body copy. */
+  font-size: calc(14px * var(--msp-font-scale));
+  line-height: calc(1.6 * var(--msp-line-scale));
+  letter-spacing: var(--msp-letter-spacing);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   touch-action: manipulation;
+  transition: background-color .25s ease, color .25s ease;
 }
-#root { display: flex; height: 100vh; height: 100dvh; overflow: hidden; }
+#root {
+  display: flex;
+  zoom: var(--msp-font-scale);
+  height: var(--msp-vh);
+  width: calc(100% / var(--msp-font-scale));
+  overflow: hidden;
+}
 
 /* The marketing landing page is a normal scrolling document, unlike the fixed-viewport
    app shell above — toggled on while AuthGate shows LandingPage instead of the app/sign-in card. */
 body.msp-landing-active { overflow: auto; }
-body.msp-landing-active #root { display: block; height: auto; min-height: 100vh; overflow: visible; }
+body.msp-landing-active #root { display: block; height: auto; min-height: var(--msp-vh); overflow: visible; }
 
 /* iOS Safari auto-zooms the viewport when a focused input's computed font-size is under 16px.
    Force every form field to 16px on small screens so tapping a field never triggers that zoom
@@ -34,21 +77,23 @@ body.msp-landing-active #root { display: block; height: auto; min-height: 100vh;
 
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1d2a40; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
-::selection { background: rgba(45,127,255,0.3); color: #eef2ff; }
-*:focus-visible { outline: 2px solid #2d7fff; outline-offset: 2px; border-radius: 6px; }
-input, select, textarea { color-scheme: dark; font-family: 'Onest', sans-serif; }
+::-webkit-scrollbar-thumb { background: var(--c-s4); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--c-b3); }
+::selection { background: var(--c-blueDim); color: var(--c-t1); }
+/* 3px, not 2px: the old ring was the bare WCAG minimum and disappeared against
+   a same-hue border. offset keeps it clear of the control's own edge. */
+*:focus-visible { outline: 3px solid var(--c-blue); outline-offset: 2px; border-radius: 6px; }
+input, select, textarea { font-family: var(--c-FB); }
 input:focus, select:focus, textarea:focus {
-  border-color: rgba(45,127,255,0.5) !important;
-  box-shadow: 0 0 0 3px rgba(45,127,255,0.12) !important;
+  border-color: var(--c-blue) !important;
+  box-shadow: 0 0 0 3px var(--c-blueDim) !important;
 }
 body::before {
   content: '';
   position: fixed; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px 200px;
-  opacity: 0.02;
+  opacity: var(--c-noiseOpacity);
   pointer-events: none;
   z-index: 0;
 }
@@ -135,13 +180,13 @@ body::before {
 
 .mb-group .mb-copy { opacity: 0; }
 .mb-group:hover .mb-copy { opacity: 1; }
-.mb-copy:hover { border-color: rgba(255,255,255,0.24) !important; color: #eef2ff !important; }
+.mb-copy:hover { border-color: rgba(255,255,255,0.24) !important; color: var(--c-t1) !important; }
 
 /* Auth screens (sign in / sign up / forgot password): split-screen brand panel + form.
    The brand panel collapses below 900px so the form gets the full (small) viewport,
    and the form column scrolls independently so multi-step content never gets clipped
    by 100dvh on short/rotated phone screens. */
-.msp-auth-shell { min-height: 100dvh; width: 100%; max-width: 1560px; margin: 0 auto; display: flex; }
+.msp-auth-shell { min-height: var(--msp-vh); width: 100%; max-width: 1560px; margin: 0 auto; display: flex; }
 .msp-auth-brand { flex: 1 1 44%; max-width: 640px; }
 .msp-auth-form-col { flex: 1 1 56%; min-width: 0; overflow-y: auto; }
 @media (max-width: 900px) {
@@ -194,7 +239,7 @@ body::before {
 .sat-question-header {
   position: sticky; top: 0; z-index: 6;
   padding: 8px 0;
-  background: linear-gradient(180deg, #04060b 72%, rgba(4,6,11,0));
+  background: linear-gradient(180deg, var(--c-bg) 72%, transparent);
   backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
 }
 
@@ -207,7 +252,7 @@ body::before {
   bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
   z-index: 7;
   padding: 10px 0 2px;
-  background: linear-gradient(0deg, #04060b 68%, rgba(4,6,11,0));
+  background: linear-gradient(0deg, var(--c-bg) 68%, transparent);
 }
 
 /* Bottom sheets (calculator, formula sheet, Medabrain) must not rubber-band the
@@ -226,3 +271,185 @@ body::before {
   .sat-choice { transition: none; }
   .sat-choice:not(:disabled):active { transform: none; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ACCESSIBILITY
+   Every rule below keys off a data-* attribute or custom property that
+   applyA11y() (src/lib/a11y.js) writes onto <html>. Styling from the root is
+   what lets one setting reach the whole app, including markdown Medabrain
+   returns through dangerouslySetInnerHTML — which no amount of React prop
+   threading would ever touch.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Screen-reader-only text ──────────────────────────────────────────────
+   The classic clip-rect pattern. Not display:none, which removes the node
+   from the accessibility tree entirely — the whole point is that it stays
+   announced while being invisible. */
+.msp-sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ── Skip link ────────────────────────────────────────────────────────────
+   First focusable element on the page. A keyboard or switch user should not
+   have to tab through an eleven-item sidebar to reach the content. */
+.msp-skip-link {
+  position: fixed;
+  top: 8px; left: 8px;
+  z-index: 9999;
+  padding: 10px 18px;
+  border-radius: 10px;
+  background: var(--c-blue);
+  color: #fff;
+  font-family: var(--c-FB);
+  font-weight: 700;
+  font-size: 13px;
+  text-decoration: none;
+  transform: translateY(-160%);
+  transition: transform .18s cubic-bezier(.16,1,.3,1);
+}
+.msp-skip-link:focus { transform: translateY(0); }
+
+/* ── Reduced motion ───────────────────────────────────────────────────────
+   Honours the OS setting AND the in-app override, which matters because a
+   student on a school Chromebook often can't change the OS setting.
+   Framer Motion animations are driven from JS, so App.jsx also reads
+   motionReduced() and passes a zero transition; this handles CSS. */
+:root[data-reduce-motion] *,
+:root[data-reduce-motion] *::before,
+:root[data-reduce-motion] *::after {
+  animation-duration: .001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: .001ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-reduce-motion] .msp-aurora,
+:root[data-reduce-motion] .msp-pulse-glow,
+:root[data-reduce-motion] .spin { animation: none !important; }
+/* The spinner is the one exception worth keeping — with no animation at all a
+   loading state looks like a frozen app. Slowed and de-emphasised instead. */
+:root[data-reduce-motion] .spin { animation: spin 2.4s linear infinite !important; opacity: .6; }
+
+/* ── Reduced transparency ─────────────────────────────────────────────────
+   Backdrop blur over a busy gradient is the single worst thing in this UI for
+   low-vision readers: text sits on a surface whose contrast changes as the
+   page scrolls underneath it. This makes every glass surface opaque. */
+:root[data-reduce-transparency] * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+:root[data-reduce-transparency] body { background-image: none !important; }
+:root[data-reduce-transparency] body::before { display: none !important; }
+
+/* ── Decorative layers off ────────────────────────────────────────────────
+   Separate from reduced transparency: some students want the glass, just not
+   the drifting glow and film grain behind it (motion sickness, or a low-power
+   device where the fixed gradients cost real frames). */
+:root[data-hide-decorative] body { background-image: none !important; }
+:root[data-hide-decorative] body::before { display: none !important; }
+
+/* ── Larger tap targets ───────────────────────────────────────────────────
+   44px is the Apple HIG floor and close to Google's 48dp. Applied with
+   inline-flex centring so a small icon button grows around its icon instead
+   of the icon drifting to a corner. */
+:root[data-large-targets] button,
+:root[data-large-targets] a[role="button"],
+:root[data-large-targets] [role="tab"],
+:root[data-large-targets] input[type="checkbox"],
+:root[data-large-targets] input[type="radio"],
+:root[data-large-targets] select {
+  min-height: var(--msp-tap-min);
+  min-width: var(--msp-tap-min);
+}
+
+/* ── Always-visible focus ─────────────────────────────────────────────────
+   :focus-visible deliberately hides the ring for mouse users. Some students —
+   particularly those using head/eye trackers or switch access, which the
+   browser reports as pointer input — need it always. */
+:root[data-always-show-focus] *:focus {
+  outline: 3px solid var(--c-blue) !important;
+  outline-offset: 2px !important;
+}
+
+/* ── Underlined links ─────────────────────────────────────────────────────
+   Colour alone is not a sufficient signal (WCAG 1.4.1), and this app's links
+   are frequently accent-coloured text inside a paragraph. */
+:root[data-underline-links] a,
+:root[data-underline-links] .msp-auth-link,
+:root[data-underline-links] .msp-md a {
+  text-decoration: underline !important;
+  text-underline-offset: 2px;
+}
+
+/* ── Bold text ────────────────────────────────────────────────────────────
+   Mirrors the iOS setting. Only lifts genuinely light weights — bumping an
+   already-800 heading gains nothing and costs legibility. */
+:root[data-bold-text] body { font-weight: 500; }
+:root[data-bold-text] p,
+:root[data-bold-text] span,
+:root[data-bold-text] div,
+:root[data-bold-text] li,
+:root[data-bold-text] label { font-weight: 500; }
+
+/* ── Easier-to-read typeface ──────────────────────────────────────────────
+   The JS side swaps C.FB/C.FD for inline styles; this covers everything
+   styled by stylesheet, including injected markdown. */
+:root[data-readable-font] body,
+:root[data-readable-font] input,
+:root[data-readable-font] textarea,
+:root[data-readable-font] select,
+:root[data-readable-font] button {
+  font-family: 'Atkinson Hyperlegible', 'Lexend', Verdana, Tahoma, -apple-system, sans-serif !important;
+}
+/* Word spacing does as much for dyslexic reading as the letterforms do. */
+:root[data-readable-font] { word-spacing: 0.08em; }
+
+/* ── Comfortable reading measure ──────────────────────────────────────────
+   Long prose only. Applied to article/markdown containers rather than
+   globally, so it can't squeeze a dashboard grid into a column. */
+:root[data-reading-width] .msp-prose,
+:root[data-reading-width] .msp-md {
+  max-width: var(--msp-reading-width);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Large cursor ─────────────────────────────────────────────────────────
+   A 48px crosshair-free arrow, inlined as SVG so it needs no asset. */
+:root[data-cursor-size="large"], :root[data-cursor-size="large"] * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M5 2l14 9-6 1.5L16 20l-3 1.2-3-7.4L5 18z' fill='%23fff' stroke='%23000' stroke-width='1.2'/%3E%3C/svg%3E") 4 2, auto;
+}
+:root[data-cursor-size="large"] button,
+:root[data-cursor-size="large"] a {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24'%3E%3Cpath d='M9 11V5.5a1.5 1.5 0 013 0V11m0-1.5a1.5 1.5 0 013 0V12m0-1a1.5 1.5 0 013 0v5a5 5 0 01-5 5h-2.5a5 5 0 01-4.3-2.5L6 15.5a1.6 1.6 0 012.6-1.8L9 14V5.5' fill='%23fff' stroke='%23000' stroke-width='1.2'/%3E%3C/svg%3E") 10 2, pointer;
+}
+
+/* ── High contrast extras ─────────────────────────────────────────────────
+   The palette swap happens in theme.js (it has to — inline styles win over
+   stylesheets). These are the bits a palette can't express. */
+:root[data-high-contrast] * {
+  text-shadow: none !important;
+}
+:root[data-high-contrast] body { background-image: none !important; }
+:root[data-high-contrast] body::before { display: none !important; }
+:root[data-high-contrast] *:focus-visible {
+  outline: 4px solid var(--c-blue) !important;
+  outline-offset: 3px !important;
+}
+
+/* Light-theme corrections for rules that assumed a dark backdrop. */
+:root[data-theme="light"] .mb-launcher::after {
+  background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.65) 48%, rgba(255,255,255,0.1) 58%, transparent 75%);
+}
+:root[data-theme="light"] .mb-copy:hover {
+  border-color: var(--c-b3) !important;
+  color: var(--c-t1) !important;
+}
+:root[data-theme="light"] .subnav-scroll::-webkit-scrollbar-track { background: rgba(15,23,42,0.06); }
+:root[data-theme="light"] .subnav-scroll::-webkit-scrollbar-thumb { border-color: rgba(15,23,42,0.08); }
+:root[data-theme="light"] .sat-choice:not(:disabled):hover { border-color: rgba(15,23,42,0.3); }

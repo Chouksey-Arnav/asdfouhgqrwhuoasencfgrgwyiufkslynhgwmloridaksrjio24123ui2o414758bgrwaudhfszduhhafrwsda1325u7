@@ -21,7 +21,7 @@ export const RW_EXPRESSION_QUESTIONS = [
     q: 'The student wants to explain the mechanism behind the kelp decline. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'Kelp forests off California declined sharply after 2014, and researchers are now breeding disease-resistant sea stars for release.',
-      'A wasting disease killed sunflower sea stars, allowing purple urchins to increase roughly 60-fold and destroy kelp by grazing its holdfasts.',
+      'A wasting disease killed sunflower sea stars, letting purple urchins boom 60-fold and graze kelp away.',
       'Purple urchins, which grew roughly 60-fold in number, are a serious problem for California kelp forests.',
       'Sunflower sea stars eat purple urchins, and kelp forests off the California coast declined sharply after 2014.',
     ],
@@ -75,7 +75,7 @@ export const RW_EXPRESSION_QUESTIONS = [
     q: 'The student wants to introduce the Haber-Bosch process and its energy cost to an audience unfamiliar with it. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'Chemists are working to design new catalysts that mimic the nitrogenase enzymes soil bacteria rely on.',
-      'Haber-Bosch, the industrial process that makes ammonia, needs 450 °C and 200 atmospheres, and uses 1–2 percent of world energy.',
+      'Haber-Bosch makes ammonia at 450 °C and 200 atmospheres, using 1–2 percent of world energy.',
       'Unlike the Haber-Bosch process, soil bacteria manage to fix nitrogen at ordinary temperature and pressure.',
       'Ammonia can be produced either industrially or biologically, by soil bacteria carrying nitrogenase enzymes.',
     ],

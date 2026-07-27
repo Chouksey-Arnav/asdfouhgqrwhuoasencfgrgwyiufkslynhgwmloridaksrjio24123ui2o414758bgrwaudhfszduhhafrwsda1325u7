@@ -161,6 +161,32 @@ db.version(13).stores({
   trackQueue: '++id, resource, status, dedupeKey, queuedAt',
 });
 
+// v14: `satBaselines` — the adaptive placement test (see src/lib/sat/baseline.js).
+//
+// A separate store rather than another `satAttempts` kind, for one structural
+// reason: a baseline's questions are GENERATED, so unlike every other attempt
+// they exist nowhere but inside their own row. A satAttempts row stores
+// questionIds and resolves them against the static bank; do that for a baseline
+// and the student can never review the questions they just missed, because
+// those ids point at nothing. So the session — blueprint, every response, and
+// the full item that was shown — is stored whole.
+//
+// `status` is indexed because there is exactly one query that matters on a slow
+// path: "is there a baseline to resume?", asked on every mount of the panel.
+//
+// KNOWN LIMITATION — this store is NOT in buildSyncSnapshot(), so baselines are
+// device-local. Two consequences worth being upfront about: a baseline taken on
+// a phone will not show on a laptop, and the once-a-week gate is per device
+// rather than per account. It is excluded because each row carries the full
+// text of 35 generated questions (tens of KB), and pushing that through the
+// snapshot would multiply the payload of every sync for data that is read on
+// exactly one screen. The right fix is to sync the result summary while leaving
+// the question bodies local; that needs a snapshot schema change, so it is
+// deliberately left for its own commit rather than smuggled into this one.
+db.version(14).stores({
+  satBaselines: '++id, status, startedAt, finishedAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -1107,6 +1133,61 @@ export async function putSatAiCache(key, questions) {
   await db.satAiCache.put({ key, questions, createdAt: Date.now() });
 }
 
+// ── SAT baseline (adaptive placement test) ────────────────────────────────────
+// Written on EVERY answer, not just at the end. A baseline is 35 generated
+// questions and roughly forty minutes of a student's afternoon; losing it to a
+// closed tab or a dead battery is not an acceptable failure, and the whole
+// session object is small enough (a few tens of KB) that persisting it per
+// answer costs nothing measurable.
+
+export async function createSatBaseline(session) {
+  const id = await db.satBaselines.add({ status: 'in_progress', ...session, startedAt: session.startedAt || Date.now() });
+  pushDirty();
+  return id;
+}
+
+export async function updateSatBaseline(id, patch) {
+  await db.satBaselines.update(id, patch);
+  pushDirty();
+}
+
+export async function finishSatBaseline(id, result) {
+  await db.satBaselines.update(id, { status: 'complete', finishedAt: Date.now(), result });
+  pushDirty();
+}
+
+export async function abandonSatBaseline(id) {
+  await db.satBaselines.update(id, { status: 'abandoned', finishedAt: Date.now() });
+  pushDirty();
+}
+
+/** Completed baselines, newest first. */
+export async function getSatBaselines({ limit } = {}) {
+  const rows = (await db.satBaselines.toArray())
+    .filter(r => r.status === 'complete')
+    .sort((a, b) => (b.finishedAt || 0) - (a.finishedAt || 0));
+  return limit ? rows.slice(0, limit) : rows;
+}
+
+/**
+ * The one resumable baseline, if any.
+ *
+ * An in-progress row older than a day is abandoned rather than offered: the
+ * adaptive estimate is built from a continuous run, and a student picking up
+ * question 20 a week later is a different student answering under different
+ * conditions. Resuming that would produce a number neither of them earned.
+ */
+export async function getResumableSatBaseline() {
+  const rows = (await db.satBaselines.toArray()).filter(r => r.status === 'in_progress');
+  let live = null;
+  for (const row of rows) {
+    const stale = Date.now() - (row.startedAt || 0) > 24 * 60 * 60 * 1000;
+    if (stale) await db.satBaselines.update(row.id, { status: 'abandoned', finishedAt: Date.now() });
+    else if (!live || (row.startedAt || 0) > (live.startedAt || 0)) live = row;
+  }
+  return live;
+}
+
 // ── Track outbox (durable "Track" intents) ────────────────────────────────────
 // Plain CRUD only — the retry/dedupe/flush policy lives in src/lib/trackQueue.js. None of these
 // call pushDirty(): this store is deliberately device-local (see the v13 comment above).
@@ -1172,7 +1253,7 @@ export async function clearAllData() {
     db.deckMeta.clear(), db.unitMastery.clear(), db.studyEvents.clear(),
     db.pathwayGoals.clear(), db.coachThreads.clear(), db.coachMessages.clear(),
     db.satAttempts.clear(), db.satResponses.clear(), db.satSkillStats.clear(),
-    db.satReviewLog.clear(), db.satAiCache.clear(),
+    db.satReviewLog.clear(), db.satAiCache.clear(), db.satBaselines.clear(),
     db.lessonNotes.clear(), db.lessonHighlights.clear(),
     db.trackQueue.clear(),
   ]);
