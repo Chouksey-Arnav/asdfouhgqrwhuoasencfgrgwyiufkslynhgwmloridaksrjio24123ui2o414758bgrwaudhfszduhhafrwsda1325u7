@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { C, tint } from '../../lib/theme';
+import { isPlainLeftClick } from '../../lib/useAppRouter';
 
 // Pill/segmented sub-navigation bar used inside the Prep and Portfolio shells
 // so several absorbed features can live under one top-level tab and switch
@@ -12,7 +13,11 @@ import { C, tint } from '../../lib/theme';
 // more to scroll to, wheel-to-horizontal so a mouse (not just trackpad/touch)
 // can scroll it, and auto-scrolling the active tab into view when it changes
 // programmatically (e.g. the app tour or a deep link jumping straight to a tab).
-export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix }) {
+// `hrefFor` (optional) turns each pill into a real link to that sub-view's URL. The
+// click still switches views in place — the href exists so the row behaves like
+// navigation actually is: ⌘-click opens a sub-tab in a new tab, the status bar shows
+// where a pill goes, and "Copy link address" produces a URL that works.
+export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix, hrefFor }) {
   const scrollRef = useRef(null);
   const btnRefs = useRef({});
   const [canLeft, setCanLeft] = useState(false);
@@ -92,15 +97,26 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
           // recognisable spectrum of sections rather than one flat accent.
           const c = it.color || accent;
           const Icon = it.icon || it.ic; // NAV configs use `ic`, older callers `icon`
+          const href = hrefFor ? hrefFor(it.id) : null;
+          const Pill = href ? motion.a : motion.button;
           return (
-            <motion.button
+            <Pill
               key={it.id}
               ref={el => { btnRefs.current[it.id] = el; }}
               data-tour={tourPrefix ? `${tourPrefix}-${it.id}` : undefined}
+              href={href || undefined}
+              aria-current={href && isActive ? 'page' : undefined}
               whileHover={{ y: -1 }}
               whileTap={{ scale: 0.97 }}
-              onClick={() => onChange(it.id)}
+              onClick={e => {
+                if (href) {
+                  if (!isPlainLeftClick(e)) return; // ⌘/middle click → let the browser open a tab
+                  e.preventDefault();
+                }
+                onChange(it.id);
+              }}
               style={{
+                textDecoration: 'none',
                 display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
                 scrollSnapAlign: 'start',
                 padding: m ? '8px 12px' : '8px 14px', borderRadius: 999,
@@ -117,7 +133,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
               {!!it.badge && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accent : C.s4, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '0 4px' }}>{it.badge}</span>
               )}
-            </motion.button>
+            </Pill>
           );
         })}
       </div>

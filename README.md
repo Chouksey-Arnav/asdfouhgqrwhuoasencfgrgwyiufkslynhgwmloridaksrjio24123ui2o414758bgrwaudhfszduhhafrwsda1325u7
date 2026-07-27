@@ -58,3 +58,17 @@ unsupported. Get a free key at <https://www.desmos.com/api>.
 npm run build   # builds dist/
 npm run start   # node server.js — serves dist/ + mounts /api routes
 ```
+
+## URLs and the back button
+
+Every tab, sub-tab and full-screen surface has its own URL (`/sat/practice`,
+`/portfolio/deadlines`, `/prep/pathway/lesson/<unit>/<lesson>`), so the browser's
+back and forward buttons walk through the app the way a student actually moved
+through it, deep links work, and the sitemap/robots files stay in step with the
+real routes. See **docs/ROUTING.md** — including what to check first if
+`/sitemap.xml` ever renders the app instead of the XML.
+
+```
+npm run verify:routing       # static checks; also runs as part of npm run build
+npm run verify:routing-e2e   # drives a real browser against dist/ (build first)
+```

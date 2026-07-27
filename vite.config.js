@@ -24,12 +24,24 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        // The service worker treats a navigation to /sitemap.xml as an app
-        // route and hands back index.html from cache. Crawlers never run a
-        // service worker so indexing is unaffected either way, but anyone
-        // checking the sitemap in a browser that has the PWA installed would
-        // see the landing page instead of the XML. Let these two through.
-        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/robots\.txt$/],
+        // A service worker turns every navigation into "serve index.html from
+        // cache", which is exactly right for /sat/practice and exactly wrong for
+        // /sitemap.xml — anyone with the PWA installed (or who has simply
+        // visited before) gets the landing page instead of the XML, which is the
+        // single most common way a sitemap looks "unregistered" while the server
+        // is serving it perfectly. Crawlers never run a service worker, so this
+        // only ever affected humans checking the file — but that includes us.
+        //
+        // Denied by shape rather than by name: anything with a file extension is
+        // a FILE, never an app route (app routes are /sat/practice, /login — no
+        // dots anywhere), so this also covers whatever static file lands next.
+        navigateFallbackDenylist: [/\/[^/?]+\.[^/?]+$/, /^\/api\//],
+        // An outdated precache is the other half of the same failure: without
+        // this, a browser that cached index.html under an old revision can keep
+        // serving it after a deploy.
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         // Quiz library data is precached offline-first, so it easily exceeds
         // Workbox's 2 MiB default as the library grows — raise the ceiling
         // rather than excluding it from the offline cache.

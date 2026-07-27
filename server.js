@@ -48,7 +48,26 @@ app.all('/api/data/:resource', (req, res) => {
 
 const distDir = path.join(__dirname, 'dist');
 app.use(express.static(distDir));
-app.get('*', (req, res) => res.sendFile(path.join(distDir, 'index.html')));
+
+// SPA fallback — but only for app routes.
+//
+// The old catch-all answered EVERYTHING with index.html, which meant a missing
+// file didn't 404, it 200'd with the landing page in it. For /sitemap.xml that
+// is the worst possible failure: a browser shows the app instead of the XML,
+// and Google fetches the sitemap, gets HTML, and quietly refuses to register it
+// — with no error anywhere, because as far as the server was concerned it was a
+// success. If the file isn't in dist/ (a build that skipped `npm run sitemap`),
+// we want to hear about it.
+//
+// Anything with a file extension is a file request, and files are express.static's
+// job; if it didn't have one, it doesn't exist. Every real app route
+// (/sat/practice, /prep/pathway/lesson/ex1/ex1l1, /login) is extension-free —
+// see src/lib/routes.js.
+const FILE_REQUEST = /\.[a-zA-Z0-9]+$/;
+app.get('*', (req, res) => {
+  if (FILE_REQUEST.test(req.path)) return res.status(404).type('text/plain').send('Not found');
+  return res.sendFile(path.join(distDir, 'index.html'));
+});
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`MedSchoolPrep listening on :${port}`));
