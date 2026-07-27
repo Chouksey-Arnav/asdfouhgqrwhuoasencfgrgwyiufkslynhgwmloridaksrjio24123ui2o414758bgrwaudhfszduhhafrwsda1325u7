@@ -148,6 +148,19 @@ db.version(12).stores({
   lessonHighlights: '++id, lessonId, createdAt',
 });
 
+// v13: `trackQueue` — the durable outbox behind every "Track" button (see src/lib/trackQueue.js).
+// Tracking a school / scholarship / program used to be a bare `createItem()` POST: if the request
+// failed (offline, flaky wifi, cold serverless function, expired session) the student got a red
+// toast and the thing they chose to track simply never existed. The intent is now written HERE
+// first, before any network call, so a failed track is a queued track rather than a lost one.
+//
+// Deliberately NOT part of buildSyncSnapshot(): a queue row is an unsent network intent, not
+// progress. Syncing it to another device would let both devices flush the same intent and create
+// the row twice — the exact duplicate this queue's dedupe keys exist to prevent.
+db.version(13).stores({
+  trackQueue: '++id, resource, status, dedupeKey, queuedAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -1094,6 +1107,25 @@ export async function putSatAiCache(key, questions) {
   await db.satAiCache.put({ key, questions, createdAt: Date.now() });
 }
 
+// ── Track outbox (durable "Track" intents) ────────────────────────────────────
+// Plain CRUD only — the retry/dedupe/flush policy lives in src/lib/trackQueue.js. None of these
+// call pushDirty(): this store is deliberately device-local (see the v13 comment above).
+export async function getTrackQueue() {
+  return db.trackQueue.orderBy('queuedAt').toArray();
+}
+export async function findTrackQueueEntry(resource, dedupeKey) {
+  return db.trackQueue.where('dedupeKey').equals(dedupeKey).filter(e => e.resource === resource).first();
+}
+export async function addTrackQueueEntry(entry) {
+  return db.trackQueue.add({ status: 'pending', attempts: 0, lastError: null, queuedAt: Date.now(), ...entry });
+}
+export async function updateTrackQueueEntry(id, patch) {
+  await db.trackQueue.update(id, patch);
+}
+export async function deleteTrackQueueEntry(id) {
+  await db.trackQueue.delete(id);
+}
+
 // ── Sync push scheduling ──────────────────────────────────────────────────────
 // src/lib/progressSync.js registers a listener here once at app start; every exported mutator
 // below that touches a synced table calls pushDirty() so a debounced push follows automatically
@@ -1142,5 +1174,6 @@ export async function clearAllData() {
     db.satAttempts.clear(), db.satResponses.clear(), db.satSkillStats.clear(),
     db.satReviewLog.clear(), db.satAiCache.clear(),
     db.lessonNotes.clear(), db.lessonHighlights.clear(),
+    db.trackQueue.clear(),
   ]);
 }

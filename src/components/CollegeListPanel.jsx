@@ -4,6 +4,10 @@ import toast from 'react-hot-toast';
 import { Plus, Trash2, ChevronDown, ChevronUp, School, Check, GraduationCap, Send, Sparkles, Loader2 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
+import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
+import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
+import { normalizeKey, rowDedupeKey } from '../lib/trackingCatalog';
+import TrackQueueNotice from './ui/TrackQueueNotice';
 import CollegeAutocomplete from './CollegeAutocomplete';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMedabrainToast } from '../lib/medabrainComments';
@@ -33,7 +37,23 @@ const DEFAULT_CHECKLIST = [
   'Interview (if applicable)',
 ];
 
+// Seeds the default application checklist for any college that has none. Fire-and-forget: a
+// failure here just means the next load tries again, which is strictly better than the school
+// permanently having no checklist. See the call site in load() for when this happens.
+async function ensureChecklists(colleges, grouped, setChecklists) {
+  const missing = (colleges || []).filter(c => !(grouped[c.id] || []).length);
+  for (const college of missing) {
+    try {
+      const items = await Promise.all(DEFAULT_CHECKLIST.map((label, i) =>
+        createItem('college_checklist_items', { college_id: college.id, label, sort_order: i })
+      ));
+      setChecklists(prev => ({ ...prev, [college.id]: items }));
+    } catch { /* retried on the next load */ }
+  }
+}
+
 export default function CollegeListPanel({ accent = C.blue, studentSAT = null, askMedabrain = null, onAdded = null }) {
+  const { entries: pendingEntries, status: trackStatus } = usePendingTrackKeys();
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
   const [loading, setLoading] = useState(true);
@@ -51,6 +71,12 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
       const grouped = {};
       items.forEach(i => { (grouped[i.college_id] ||= []).push(i); });
       setChecklists(grouped);
+      // A college whose row exists but whose checklist doesn't is a half-finished add — either
+      // the checklist request failed after the college itself succeeded, or the college arrived
+      // via a queued Track that flushed in the background (where there was no college_id yet to
+      // attach a checklist to). Either way the student ends up looking at a school with no
+      // application checklist and no way to get one back; seeding here makes that self-repairing.
+      ensureChecklists(cols, grouped, setChecklists);
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -60,6 +86,10 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
 
   useEffect(() => { load(); }, [load]);
 
+  // A school added while offline lands here once the outbox flushes — reload so it appears
+  // (and so ensureChecklists() gives it the checklist it couldn't have been given while queued).
+  useTrackQueueDrain(load);
+
   async function addCollege() {
     if (!newName.trim()) return;
     // The college row and its checklist are created in two separate steps below on purpose: if
@@ -67,13 +97,33 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
     // the college succeeds and only the checklist fails, the college already exists server-side
     // — reflecting that in the UI immediately (instead of only after the checklist too) stops a
     // retry from creating a second, duplicate row for the same school.
-    let college;
-    try {
-      college = await createItem('colleges', { name: newName.trim(), category: newCategory, status: 'researching' });
-    } catch (err) {
-      toast.error(err.message);
+    //
+    // The college row itself goes through the Track outbox (src/lib/trackQueue.js): adding a
+    // school on a dropped connection now queues it (and flushes automatically later) instead of
+    // showing an error and forgetting the student ever asked. The checklist deliberately does NOT
+    // — its rows are keyed to a college_id that doesn't exist yet when the college is queued, so
+    // there's nothing valid to enqueue; it's seeded on the next load instead (see ensureChecklists).
+    const name = newName.trim();
+    const res = await trackItem('colleges', { name, category: newCategory, status: 'researching' },
+      { dedupeKey: normalizeKey(name), label: name, existing: colleges });
+
+    if (res.status === 'duplicate') {
+      toast(`${res.row.name} is already on your college list`, { icon: '✓' });
+      setNewName('');
+      setCategoryTouched(false);
       return;
     }
+    if (res.status === 'queued') {
+      toast(res.reason === 'auth'
+        ? `${name} is saved on this device — sign in to finish adding it to your list.`
+        : `${name} is saved on this device and will be added to your list once you're back online.`,
+      { icon: '📥', duration: 6000 });
+      setNewName('');
+      setCategoryTouched(false);
+      return;
+    }
+
+    const college = res.row;
     setColleges(prev => [...prev, college]);
     setNewName('');
     setCategoryTouched(false);
@@ -96,7 +146,10 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
 
   async function removeCollege(id) {
     if (!window.confirm('Remove this school from your list? This also deletes its checklist.')) return;
+    const row = colleges.find(c => c.id === id);
     setColleges(prev => prev.filter(c => c.id !== id));
+    // Without this, a still-queued track for the same school would flush later and put it back.
+    if (row) await cancelQueuedTrack('colleges', rowDedupeKey('colleges', row));
     try { await deleteItem('colleges', id); } catch (err) { toast.error(err.message); }
   }
 
@@ -144,6 +197,8 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
         eyebrow="Applications" title="College List & Application Tracker"
         sub="Build a balanced list of reach, target, and safety schools — with per-school deadlines and a checklist so every application actually gets finished."
         stats={colleges.length > 0 ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }] : []}/>
+
+      <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'colleges')} status={trackStatus} onRetried={load}/>
 
       {colleges.length > 0 && (
         <div style={G(4,12,{},true)}>

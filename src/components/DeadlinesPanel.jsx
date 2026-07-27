@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, CalendarClock, CalendarDays, Hourglass, AlertTriangle, History, Sparkles, Loader2, ListChecks } from 'lucide-react';
+import { Plus, Trash2, CalendarClock, CalendarDays, CalendarX, Hourglass, AlertTriangle, History, Sparkles, Loader2, ListChecks } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
+import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
+import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
+import { rowDedupeKey, needsDeadlineDate } from '../lib/trackingCatalog';
+import TrackQueueNotice from './ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { deriveSuggestedDeadlines } from '../lib/autoDeadlines';
 import { showMedabrainToast } from '../lib/medabrainComments';
@@ -70,6 +74,7 @@ export function NextDeadlineCard({ deadlines, accent = C.blue }) {
 }
 
 export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedabrain, onAdded }) {
+  const { entries: pendingEntries, status: trackStatus } = usePendingTrackKeys();
   const [deadlines, setDeadlines] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [scholarships, setScholarships] = useState([]);
@@ -91,16 +96,23 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // Anything that flushed in the background needs to appear here without a manual reload.
+  useTrackQueueDrain(load);
+
   async function addDeadline(e) {
     e?.preventDefault();
     if (!title.trim() || !date) return;
-    try {
-      const d = await createItem('deadlines', { title: title.trim(), due_date: date, kind });
-      setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
-      setTitle(''); setDate('');
-      showMedabrainToast('deadline_added', { title: d.title });
+    const row = { title: title.trim(), due_date: date, kind };
+    const res = await trackItem('deadlines', row, { dedupeKey: rowDedupeKey('deadlines', row), label: row.title, existing: deadlines });
+    if (res.status === 'duplicate') { toast('That deadline is already on your list', { icon: '✓' }); return; }
+    setTitle(''); setDate('');
+    if (res.status === 'created') {
+      setDeadlines(prev => [...prev, res.row].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
+      showMedabrainToast('deadline_added', { title: res.row.title });
       onAdded?.();
-    } catch (err) { toast.error(err.message); }
+    } else {
+      toast(`${row.title} is saved on this device and will finish saving shortly.`, { icon: '📥', duration: 6000 });
+    }
   }
 
   async function seedDefaults() {
@@ -114,7 +126,9 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
 
   async function removeDeadline(id) {
     if (!window.confirm('Remove this deadline?')) return;
+    const row = deadlines.find(d => d.id === id);
     setDeadlines(prev => prev.filter(d => d.id !== id));
+    if (row) await cancelQueuedTrack('deadlines', rowDedupeKey('deadlines', row));
     try { await deleteItem('deadlines', id); } catch (err) { toast.error(err.message); }
   }
 
@@ -124,25 +138,40 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
     () => deriveSuggestedDeadlines({ colleges, scholarships, apIb, existingDeadlines: deadlines }),
     [colleges, scholarships, apIb, deadlines]
   );
+  const dateless = useMemo(() => needsDeadlineDate(scholarships), [scholarships]);
 
   async function addSuggestion(s) {
-    try {
-      const d = await createItem('deadlines', { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id });
-      setDeadlines(prev => [...prev, d].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
-      showMedabrainToast('deadline_auto_suggested_added', { title: d.title });
+    const row = { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id };
+    const res = await trackItem('deadlines', row, { dedupeKey: rowDedupeKey('deadlines', row), label: s.title, existing: deadlines });
+    if (res.status === 'duplicate') { toast('Already on your deadline list', { icon: '✓' }); return; }
+    if (res.status === 'created') {
+      setDeadlines(prev => [...prev, res.row].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
+      showMedabrainToast('deadline_auto_suggested_added', { title: res.row.title });
       onAdded?.();
-    } catch (err) { toast.error(err.message); }
+    } else {
+      toast(`${s.title} is saved on this device and will finish saving shortly.`, { icon: '📥', duration: 6000 });
+    }
   }
 
+  // Sequential rather than Promise.all: a partial failure used to reject the whole batch and lose
+  // every successfully-created row from local state, leaving the list out of sync with the server
+  // until a reload. Now each one is tracked independently and anything that fails is queued.
   async function addAllSuggestions() {
     setAddingAll(true);
+    let created = 0;
+    let queued = 0;
     try {
-      const created = await Promise.all(suggestions.map(s => createItem('deadlines', { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id })));
-      setDeadlines(prev => [...prev, ...created].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
-      toast.success(`Added ${created.length} suggested deadline${created.length===1?'':'s'}`);
-      onAdded?.();
-    } catch (err) { toast.error(err.message); }
-    finally { setAddingAll(false); }
+      for (const s of suggestions) {
+        const row = { title: s.title, due_date: s.due_date, kind: s.kind, college_id: s.college_id };
+        const res = await trackItem('deadlines', row, { dedupeKey: rowDedupeKey('deadlines', row), label: s.title, existing: deadlines });
+        if (res.status === 'created') {
+          created++;
+          setDeadlines(prev => [...prev, res.row].sort((a,b)=>a.due_date.localeCompare(b.due_date)));
+        } else if (res.status === 'queued') queued++;
+      }
+      if (created) { toast.success(`Added ${created} suggested deadline${created===1?'':'s'}`); onAdded?.(); }
+      if (queued) toast(`${queued} saved on this device — they'll finish saving automatically.`, { icon: '📥', duration: 6000 });
+    } finally { setAddingAll(false); }
   }
 
   const sorted = [...deadlines].sort((a,b)=>a.due_date.localeCompare(b.due_date));
@@ -186,6 +215,8 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
         sub="Every application, scholarship, and exam date in one countdown — deadlines you add here also surface on your Home dashboard as they approach."
         stats={deadlines.length > 0 ? [{ value: upcoming.length, label: 'upcoming', color: accent }] : []}/>
 
+      <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'deadlines')} status={trackStatus} onRetried={load}/>
+
       {deadlines.length > 0 && (
         <div style={G(3,12,{},true)}>
           <StatTile icon={Hourglass} value={next ? (daysUntil(next.due_date) === 0 ? 'Today' : `${daysUntil(next.due_date)}d`) : '—'} label={next ? `until ${next.title.slice(0, 26)}${next.title.length > 26 ? '…' : ''}` : 'nothing upcoming'} color={next && daysUntil(next.due_date) <= 14 ? C.rose : C.sky}/>
@@ -203,6 +234,27 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
           {brainSummary.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Weighing what's most urgent…</div>}
           {brainSummary.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — the countdown below is still accurate.</div>}
           {brainSummary.content && !brainSummary.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainSummary.content)}}/>}
+        </div>
+      )}
+
+      {/* Tracked scholarships that can never produce a deadline because they have no date.
+          deriveSuggestedDeadlines() skips them by design (see autoDeadlines.js), which used to
+          mean a student who tracked six scholarships from the database saw an empty suggestions
+          list and reasonably concluded their deadlines were handled. Name the gap instead. */}
+      {dateless.length > 0 && (
+        <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.amber,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.amber,0.24)}`}}>
+          <SectionTitle icon={CalendarX} color={C.amberL}>
+            {dateless.length} tracked scholarship{dateless.length===1?'':'s'} can't count down yet
+          </SectionTitle>
+          <p style={{fontSize:11.5,color:C.t2,marginBottom:12,lineHeight:1.55}}>
+            {dateless.length===1?'This one is':'These are'} tracked on your Financial Aid tab but {dateless.length===1?'has':'have'} no deadline date, so {dateless.length===1?'it':'they'} can't appear in the countdown above. Add the real date from the program's site on the Financial Aid tab — we don't guess deadlines.
+          </p>
+          <div style={CC({gap:6})}>
+            {dateless.slice(0,8).map(s => (
+              <div key={s.id} style={{...glass2({padding:'9px 12px'}),fontSize:12.5,color:C.t2}}>{s.name}</div>
+            ))}
+            {dateless.length>8 && <div style={{fontSize:11,color:C.t3}}>…and {dateless.length-8} more</div>}
+          </div>
         </div>
       )}
 

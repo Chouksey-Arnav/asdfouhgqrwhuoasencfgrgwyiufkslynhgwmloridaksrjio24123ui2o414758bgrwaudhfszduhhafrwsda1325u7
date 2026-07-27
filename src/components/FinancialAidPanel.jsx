@@ -1,8 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon } from 'lucide-react';
+import { Plus, Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
-import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
+import { listItems, updateItem, deleteItem } from '../lib/dataApi';
+import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
+import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
+import { trackedKeySet, rowDedupeKey, needsDeadlineDate, normalizeKey } from '../lib/trackingCatalog';
+import TrackQueueNotice from './ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import ScholarshipDatabase from './ScholarshipDatabase';
 import { showMedabrainToast } from '../lib/medabrainComments';
@@ -24,6 +28,8 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
   const [amount, setAmount] = useState('');
   const [deadline, setDeadline] = useState('');
 
+  const { byResource: pendingByResource, entries: pendingEntries, status: trackStatus, refresh: refreshPending } = usePendingTrackKeys();
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -36,12 +42,23 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
   }, []);
   useEffect(() => { load(); }, [load]);
 
+  // A queued track that flushes in the background has to become visible without a reload —
+  // otherwise the student is staring at a scholarship list that doesn't contain the thing they
+  // just tracked.
+  useTrackQueueDrain(load);
+
+  const trackedScholarshipKeys = useMemo(() => trackedKeySet('scholarships', scholarships), [scholarships]);
+  const pendingScholarshipKeys = pendingByResource.scholarships || new Set();
+  const missingDeadlines = useMemo(() => needsDeadlineDate(scholarships), [scholarships]);
+
   async function addAidDeadline(college) {
-    try {
-      await createItem('deadlines', { college_id: college.id, title: `${college.name} — Financial Aid Deadline`, due_date: college.financial_aid_deadline, kind: 'css_profile' });
-      setDeadlineCollegeIds(prev => new Set([...prev, college.id]));
-      toast.success('Added to Deadlines');
-    } catch (err) { toast.error(err.message); }
+    const title = `${college.name} — Financial Aid Deadline`;
+    const row = { college_id: college.id, title, due_date: college.financial_aid_deadline, kind: 'css_profile' };
+    const res = await trackItem('deadlines', row, { dedupeKey: rowDedupeKey('deadlines', row), label: title });
+    setDeadlineCollegeIds(prev => new Set([...prev, college.id]));
+    if (res.status === 'queued') toast('Saved on this device — it\'ll reach your Deadlines tab once you reconnect.', { icon: '📥', duration: 6000 });
+    else if (res.status === 'duplicate') toast('Already on your Deadlines tab', { icon: '✓' });
+    else toast.success('Added to Deadlines');
   }
 
   const aidSchools = colleges.filter(c => c.css_profile_required || c.financial_aid_deadline);
@@ -50,20 +67,30 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
     e.preventDefault();
     if (!name.trim()) return;
     if (amount && Number(amount) < 0) { toast.error('Amount can\'t be negative.'); return; }
-    try {
-      const row = await createItem('scholarships', { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' });
-      setScholarships(prev => [...prev, row]);
-      setName(''); setAmount(''); setDeadline('');
-      showMedabrainToast('scholarship_added', { name: row.name });
-    } catch (err) { toast.error(err.message); }
+    const draft = { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' };
+    const res = await trackItem('scholarships', draft, { dedupeKey: normalizeKey(draft.name), label: draft.name, existing: scholarships });
+    if (res.status === 'duplicate') { toast(`${draft.name} is already in your tracker`, { icon: '✓' }); return; }
+    setName(''); setAmount(''); setDeadline('');
+    if (res.status === 'created') {
+      setScholarships(prev => [...prev, res.row]);
+      showMedabrainToast('scholarship_added', { name: res.row.name });
+    } else {
+      toast(`${draft.name} is saved on this device and will finish saving to your account shortly.`, { icon: '📥', duration: 6000 });
+    }
   }
 
-  // Used by the ScholarshipDatabase search below — a curated-database pick or an AI-fallback
-  // result both land here as a plain { name, notes } row (see ScholarshipDatabase.jsx notesFor()).
-  async function addFromDatabase({ name: scholarName, notes }) {
-    const row = await createItem('scholarships', { name: scholarName, notes, status: 'researching' });
-    setScholarships(prev => [...prev, row]);
-    showMedabrainToast('scholarship_added', { name: row.name });
+  // Used by the ScholarshipDatabase search below. The row itself is built by
+  // src/lib/trackingCatalog.js (shared with the opportunities database) and saved through the
+  // durable Track outbox, so a dropped connection queues it instead of losing it.
+  async function trackScholarship(row, opts) {
+    const res = await trackItem('scholarships', row, { ...opts, existing: scholarships });
+    if (res.status === 'created') {
+      setScholarships(prev => [...prev, res.row]);
+      showMedabrainToast('scholarship_added', { name: res.row.name });
+    } else {
+      refreshPending();
+    }
+    return res;
   }
 
   async function updateRow(id, patch) {
@@ -79,7 +106,11 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
 
   async function removeRow(id) {
     if (!window.confirm('Remove this scholarship?')) return;
+    const row = scholarships.find(s => s.id === id);
     setScholarships(prev => prev.filter(s => s.id !== id));
+    // A queued track for the same scholarship would otherwise flush later and resurrect the row
+    // the student just deleted.
+    if (row) await cancelQueuedTrack('scholarships', rowDedupeKey('scholarships', row));
     try { await deleteItem('scholarships', id); } catch (err) { toast.error(err.message); }
   }
 
@@ -93,6 +124,34 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
         eyebrow="Applications" title="Financial Aid & Scholarships"
         sub="Track FAFSA, CSS Profile, and every scholarship you apply for — so when decisions come in, comparing real costs is easy."
         stats={scholarships.length > 0 ? [{ value: scholarships.length, label: 'tracked' }] : []}/>
+
+      <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'scholarships' || e.resource === 'deadlines')} status={trackStatus} onRetried={load}/>
+
+      {/* Every curated scholarship arrives without a usable deadline date — the database records
+          deadlines as prose seasons ("opens late summer, due mid-fall") because the real dates
+          move every year, and inventing one would put a fake countdown in front of the student
+          (see src/lib/trackingCatalog.js). That honesty has a cost: with `deadline` null, the
+          scholarship silently never reaches the Deadlines tab or its auto-suggestions. This
+          closes that loop by naming the gap and putting the date field right here. */}
+      {missingDeadlines.length > 0 && (
+        <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.amber,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.amber,0.24)}`}}>
+          <SectionTitle icon={CalendarX} color={C.amberL}>
+            {missingDeadlines.length} tracked scholarship{missingDeadlines.length === 1 ? '' : 's'} without a deadline
+          </SectionTitle>
+          <p style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:12}}>
+            These are tracked, but they can't count down or show up on your Deadlines tab until they have a real date. Look the current deadline up on the program's official site and add it here — we deliberately don't guess it for you.
+          </p>
+          <div style={CC({gap:8})}>
+            {missingDeadlines.map(s => (
+              <div key={s.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+                <span style={{flex:1,minWidth:140,fontSize:12.5,fontWeight:600,color:C.t1}}>{s.name}</span>
+                <input type="date" style={inp({width:'auto',fontSize:12,padding:'6px 10px'})}
+                  onChange={e => { if (e.target.value) updateRow(s.id, { deadline: e.target.value }); }}/>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {scholarships.length > 0 && (
         <div style={G(3,12,{},true)}>
@@ -129,7 +188,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
         <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
-        <ScholarshipDatabase accent={C.violet} onAdd={addFromDatabase} askMedabrain={askMedabrain}/>
+        <ScholarshipDatabase accent={C.violet} onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys} askMedabrain={askMedabrain}/>
       </div>
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>

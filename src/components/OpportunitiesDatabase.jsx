@@ -3,13 +3,15 @@ import Fuse from 'fuse.js';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Search, Compass, Plus, Sparkles, Loader2, Info, ChevronDown, ChevronUp, Trophy, Medal } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, R, CC, pill, tint } from '../lib/theme';
+import { C, glass, glass2, btn, inp, R, CC, pill, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../data/opportunities';
 import { rankOpportunities } from '../lib/recommendOpportunities';
 import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
+import { trackTargetForOpportunity, resourceForOpportunity, catalogDedupeKey, normalizeKey } from '../lib/trackingCatalog';
+import TrackButton from './ui/TrackButton';
 
 const fuse = new Fuse(OPPORTUNITIES, {
   keys: [
@@ -38,10 +40,16 @@ const RANK_STYLE = {
 // deterministic "Recommended for you" ranking (rankOpportunities(), same
 // shape as the Prep tab's quiz recommender) and a daily-cached Meta Brain
 // blurb grounded in the student's real Portfolio activities.
-export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedabrain, pathwayKey = null, pathwayLabel = 'college prep', user = null }) {
+// `onTrack(resource, row, { dedupeKey, label })` is the durable tracking entry point (see
+// src/lib/trackQueue.js); `trackedKeys`/`pendingKeys` are `{ activities, scholarships }` maps of
+// dedupe-key Sets so each row can show whether it's already saved. Both trackers are represented
+// because a type:'Scholarship' entry here belongs in the Financial Aid tracker, not the activity
+// list — see resourceForOpportunity().
+export default function OpportunitiesDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain, pathwayKey = null, pathwayLabel = 'college prep', user = null, activityCount = 0 }) {
   const [query, setQuery] = useState('');
   const [type, setType] = useState('All');
   const [expandedId, setExpandedId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [aiLookup, setAiLookup] = useState(null); // { query, loading, content, error }
   const [portfolioSignals, setPortfolioSignals] = useState(null); // { activityTypeCounts, clinicalHours, researchCount }
   const [brainSummary, setBrainSummary] = useState(null); // { loading, content, error }
@@ -106,12 +114,34 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedab
 
   const showAiFallback = query.trim().length >= 3 && results.length === 0;
 
+  const stateOf = (o) => {
+    const resource = resourceForOpportunity(o);
+    const key = catalogDedupeKey(resource, o);
+    if (trackedKeys?.[resource]?.has(key)) return 'tracked';
+    if (pendingKeys?.[resource]?.has(key)) return 'pending';
+    return 'idle';
+  };
+
   async function handleAdd(o) {
+    setBusyId(o.id);
     try {
-      await onAdd({ type: o.type, name: o.name, desc: o.desc });
-      showMedabrainToast('opportunity_added', { name: o.name, type: o.type });
-      toast.success(`Added: ${o.name.slice(0, 40)}`);
+      const { resource, row } = trackTargetForOpportunity(o, { sortOrder: activityCount });
+      const res = await onTrack(resource, row, { dedupeKey: catalogDedupeKey(resource, o), label: o.name });
+      if (res?.status === 'duplicate') {
+        toast(`${o.name.slice(0, 40)} is already tracked`, { icon: '✓' });
+      } else if (res?.status === 'queued') {
+        toast(res.reason === 'auth'
+          ? `${o.name.slice(0, 40)} is saved on this device — sign in to finish saving it to your account.`
+          : `${o.name.slice(0, 40)} is saved on this device and will finish saving when you're back online.`,
+        { icon: '📥', duration: 6000 });
+      } else {
+        showMedabrainToast('opportunity_added', { name: o.name, type: o.type });
+        toast.success(resource === 'scholarships'
+          ? `Added to your scholarship tracker: ${o.name.slice(0, 40)}`
+          : `Added: ${o.name.slice(0, 40)}`);
+      }
     } catch (err) { toast.error(err.message); }
+    finally { setBusyId(null); }
   }
 
   async function askAboutMissingOpportunity() {
@@ -131,8 +161,15 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedab
   async function addAiResultAsCustom() {
     if (!aiLookup?.content) return;
     try {
-      await onAdd({ type: 'Other', name: aiLookup.query, desc: `${aiLookup.content}\n\n(AI-generated summary, unverified — confirm independently.)` });
-      toast.success(`${aiLookup.query} added to your tracker`);
+      const row = {
+        activity_type: 'Other', position: aiLookup.query, organization: '',
+        description: `${aiLookup.content}\n\n(AI-generated summary, unverified — confirm independently.)`,
+        status: 'ongoing', hours_per_week: 0, weeks_per_year: 0, grade_levels: [], sort_order: activityCount,
+      };
+      const res = await onTrack('activities', row, { dedupeKey: normalizeKey(aiLookup.query), label: aiLookup.query });
+      if (res?.status === 'duplicate') toast(`${aiLookup.query} is already tracked`, { icon: '✓' });
+      else if (res?.status === 'queued') toast(`${aiLookup.query} is saved on this device and will finish saving shortly.`, { icon: '📥', duration: 6000 });
+      else toast.success(`${aiLookup.query} added to your tracker`);
       setAiLookup(null); setQuery('');
     } catch (err) { toast.error(err.message); }
   }
@@ -189,7 +226,9 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedab
                   </div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{r.item.name}</div>
                   <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5, marginBottom: 8 }}>{r.reason}</div>
-                  <button style={{ ...btnSm(tint(accent, 0.18), { color: '#fff' }), display: 'inline-flex', alignItems: 'center', gap: 5 }} onClick={() => handleAdd(r.item)}><Plus size={12} />Add to Portfolio</button>
+                  <TrackButton state={stateOf(r.item)} busy={busyId === r.item.id} accent={accent}
+                    label={resourceForOpportunity(r.item) === 'scholarships' ? 'Track scholarship' : 'Add to Portfolio'}
+                    trackedLabel="In your Portfolio" onClick={() => handleAdd(r.item)} />
                 </motion.div>
               );
             })}
@@ -207,14 +246,16 @@ export default function OpportunitiesDatabase({ accent = C.blue, onAdd, askMedab
           {results.slice(0, 60).map(o => {
             const isOpen = expandedId === o.id;
             const ec = EFFORT_COLOR[o.effort] || C.t2;
+            const state = stateOf(o);
             return (
-              <div key={o.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${ec}` }}>
+              <div key={o.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : ec}` }}>
                 <div style={{ ...R({ gap: 12, padding: 14, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : o.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{o.name}</div>
                     <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{o.org} · {o.type} · {o.level}</div>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); handleAdd(o); }} style={btnSm(tint(accent, 0.18), { color: '#fff' })}><Plus size={12} />Track</button>
+                  <TrackButton state={state} busy={busyId === o.id} accent={accent}
+                    onClick={e => { e.stopPropagation(); handleAdd(o); }} />
                   {isOpen ? <ChevronUp size={15} color={C.t3} /> : <ChevronDown size={15} color={C.t3} />}
                 </div>
                 {isOpen && (

@@ -43,6 +43,9 @@ import * as ProgressSync from './lib/progressSync';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
+import { trackItem, installTrackQueueLifecycle } from './lib/trackQueue';
+import { usePendingTrackKeys } from './lib/useTrackQueue';
+import { trackedKeySet } from './lib/trackingCatalog';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
 import { play, setSFX, isSFXEnabled } from './lib/sounds';
@@ -75,6 +78,7 @@ import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
 import LessonNotesPanel from './components/LessonNotesPanel';
 import OpportunitiesDatabase from './components/OpportunitiesDatabase';
+import TrackQueueNotice from './components/ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
@@ -1190,6 +1194,9 @@ export default function App({ account, onAccountChange }) {
   // resources lives in the Portfolio tab's "Ask Meta Brain" sidebar (purpose:'portfolio'), which
   // fetches the complete lists itself rather than relying on these summary counts.
   const [scholarshipCount, setScholarshipCount] = useState(0);
+  // The tracked scholarship rows themselves (not just the count) — the Opportunities database
+  // needs them to mark type:'Scholarship' entries as already-tracked and to dedupe a repeat tap.
+  const [portScholarships, setPortScholarships] = useState([]);
   const [researchCount, setResearchCount] = useState(0);
   const [skillsCount, setSkillsCount] = useState(0);
   const [mmiCasperCount, setMmiCasperCount] = useState(0);
@@ -1628,6 +1635,9 @@ export default function App({ account, onAccountChange }) {
       DB.setSyncDirtyListener(ProgressSync.scheduleSyncPush);
       DB.setSyncEnabled(true);
       ProgressSync.installLifecycleFlush();
+      // Flushes anything the student tracked in a previous session that never reached the server
+      // (tracked offline, or while signed out), and re-flushes on reconnect/refocus from here on.
+      installTrackQueueLifecycle();
       setDbReady(true);
     }
     init();
@@ -1705,6 +1715,7 @@ export default function App({ account, onAccountChange }) {
       }catch(e){/* non-critical */}
       try{
         const [scholarships,research,skills]=await Promise.all([listItems('scholarships'),listItems('research_experience'),listItems('skills_certifications')]);
+        setPortScholarships(scholarships||[]);
         setScholarshipCount((scholarships||[]).length);
         setResearchCount((research||[]).length);
         setSkillsCount((skills||[]).length);
@@ -1723,11 +1734,26 @@ export default function App({ account, onAccountChange }) {
     DB.getCardReviewsSince(getStartOfWeek().getTime()).then(setWeekCardReviews).catch(()=>{});
   },[tab,totalReviews]);
 
-  const addPortActivity = useCallback(async(fields)=>{
-    const row=await createItem('activities',{activity_type:fields.type,position:fields.name,description:fields.desc||'',status:'ongoing',hours_per_week:0,weeks_per_year:0,grade_levels:[],sort_order:portActivities.length,...fields.overrides});
-    setPortActivities(p=>[...p,row]);
-    return row;
-  },[portActivities.length]);
+  // Live view of the Track outbox, so an opportunity queued offline reads as "Queued" (and flips
+  // to "Tracked" on its own once the flush lands) instead of looking untracked.
+  const pendingTracks = usePendingTrackKeys();
+  const trackedActivityKeys = useMemo(()=>trackedKeySet('activities',portActivities),[portActivities]);
+  const trackedScholarshipKeys = useMemo(()=>trackedKeySet('scholarships',portScholarships),[portScholarships]);
+
+  // Durable tracking for anything the student picks out of the Opportunities database. Routes
+  // through the Track outbox (src/lib/trackQueue.js) rather than a bare createItem(), so a failed
+  // request queues the intent instead of discarding it, and a second tap on something already
+  // tracked returns 'duplicate' instead of creating a second row. `resource` is 'activities' for
+  // most entries and 'scholarships' for type:'Scholarship' ones — see resourceForOpportunity().
+  const trackOpportunity = useCallback(async(resource,row,opts)=>{
+    const existing=resource==='activities'?portActivities:portScholarships;
+    const res=await trackItem(resource,row,{...opts,existing});
+    if(res.status==='created'){
+      if(resource==='activities')setPortActivities(p=>[...p,res.row]);
+      else setPortScholarships(p=>[...p,res.row]);
+    }
+    return res;
+  },[portActivities,portScholarships]);
 
   // ── Reward chest (unwrap/reveal ceremony for quest claims + daily check-in) ──
   const openChest = useCallback((opts)=>{ setChest(opts); },[]);
@@ -5178,7 +5204,12 @@ export default function App({ account, onAccountChange }) {
             log; see src/components/OpportunitiesDatabase.jsx. */}
         <div>
           <SL extra={{marginBottom:16}}>Opportunities & Competitions</SL>
-          <OpportunitiesDatabase accent={accent} onAdd={addPortActivity} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
+          <TrackQueueNotice entries={pendingTracks.entries.filter(e=>e.resource==='activities'||e.resource==='scholarships')} status={pendingTracks.status}/>
+          <OpportunitiesDatabase accent={accent} onTrack={trackOpportunity}
+            trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
+            pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
+            activityCount={portActivities.length}
+            askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
         </div>
       </div>
     );
