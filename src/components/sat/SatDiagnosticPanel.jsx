@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Compass, ChevronRight, Clock, Target, TrendingUp, RotateCcw, Sparkles } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { StatTile } from '../ui/PanelHero';
+import { SatPageHeader, SatCard } from './satUi';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import SatStudyPlanCard from './SatStudyPlanCard';
@@ -123,8 +124,8 @@ export default function SatDiagnosticPanel({
     const strongest = [...result.ranked].reverse().filter(r => r.mastery >= 0.6).slice(0, 3);
     return (
       <div style={CC({ gap: 20 })}>
-        <PanelHero
-          icon={Target} color={C.green} color2={accent}
+        <SatPageHeader
+          accent={C.green}
           eyebrow="Diagnostic complete" title={`${correct} of ${total} correct`}
           sub="This is a starting map, not a score. It is deliberately wide and shallow — enough to aim your prep, not enough to predict a test result. Take a full-length test when you want a real estimate."
           m={isMobile}
@@ -148,7 +149,7 @@ export default function SatDiagnosticPanel({
         {(plan || planLoading || planError) ? (
           <SatStudyPlanCard
             plan={plan} loading={planLoading} error={planError}
-            accent={C.lime} isMobile={isMobile}
+            accent={C.sky} isMobile={isMobile}
             onNavigate={onNavigate}
             onRegenerate={() => buildPlan({ fresh: true })}
             generatedFromLabel={`from this diagnostic · ${total} questions`}
@@ -156,8 +157,8 @@ export default function SatDiagnosticPanel({
         ) : (
           <div style={{
             ...glass({ padding: isMobile ? 18 : 22 }),
-            border: `1px solid ${tint(C.lime, 0.28)}`,
-            background: `linear-gradient(120deg,${tint(C.lime, 0.1)},rgba(255,255,255,0.02))`,
+            border: `1px solid ${tint(C.sky, 0.28)}`,
+            background: `linear-gradient(120deg,${tint(C.sky, 0.1)},rgba(255,255,255,0.02))`,
           }}>
             <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }) }}>
               <div style={{ flex: 1, minWidth: 220 }}>
@@ -170,15 +171,14 @@ export default function SatDiagnosticPanel({
                   work. It runs on the deepest model available, so give it a moment.
                 </div>
               </div>
-              <button onClick={() => buildPlan()} style={btn(`linear-gradient(135deg,${C.lime},${C.green})`, { flexShrink: 0 })}>
+              <button onClick={() => buildPlan()} style={btn(`linear-gradient(135deg,${C.sky},${C.blue})`, { flexShrink: 0 })}>
                 <Sparkles size={14} /> Build my plan
               </button>
             </div>
           </div>
         )}
 
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Target} color={C.rose}>Your prescription</SectionTitle>
+        <SatCard title="Your prescription" icon={Target} iconColor={C.rose} m={isMobile}>
           <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 16 }}>
             Ranked by leverage — how weak you were, multiplied by how heavily the real exam tests it.
             Each of these was measured from only a question or two, so treat the order as a starting hypothesis.
@@ -227,7 +227,7 @@ export default function SatDiagnosticPanel({
             </button>
             <button onClick={() => onNavigate?.('overview')} style={btnG()}>See your overview</button>
           </div>
-        </div>
+        </SatCard>
       </div>
     );
   }
@@ -236,11 +236,11 @@ export default function SatDiagnosticPanel({
   const last = previous[0];
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={Compass} color={accent} color2={C.blue}
-        eyebrow="Diagnostic" title="Find out where you actually stand"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Diagnostic" title="Find out where you actually stand"
         sub="About 30 questions spread across all 28 tested skills. It will not give you a score — it gives you a map of which skills are costing you points, so the rest of your prep is aimed instead of scattered."
-        stats={[
+        meta={[
           { value: preview.length, label: 'questions' },
           { value: `~${estimateMinutes(preview)}`, label: 'minutes' },
         ]}
@@ -259,8 +259,7 @@ export default function SatDiagnosticPanel({
         </div>
       )}
 
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Clock} color={accent}>What to expect</SectionTitle>
+      <SatCard title="What to expect" icon={Clock} iconColor={accent} m={isMobile}>
         <div style={CC({ gap: 12 })}>
           {[
             ['Untimed, with explanations', 'You see why each answer is right immediately. This is a measurement, not a race.'],
@@ -281,7 +280,7 @@ export default function SatDiagnosticPanel({
           {last ? <><RotateCcw size={14} /> Retake diagnostic</> : <>Start the diagnostic <ChevronRight size={14} /></>}
         </button>
         <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>
-      </div>
+      </SatCard>
     </div>
   );
 }

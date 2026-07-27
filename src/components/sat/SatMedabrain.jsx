@@ -50,7 +50,7 @@ const ANSWERED_SUGGESTIONS = [
 
 export default function SatMedabrain({
   open, onOpenChange, messages, onMessagesChange,
-  user, gradeLabel, accent = C.lime, isMobile = false,
+  user, gradeLabel, accent = C.sky, isMobile = false,
   satData = null,
   /** The shared learner profile built in SatTab — see lib/sat/learnerProfile.js. */
   profile = null,

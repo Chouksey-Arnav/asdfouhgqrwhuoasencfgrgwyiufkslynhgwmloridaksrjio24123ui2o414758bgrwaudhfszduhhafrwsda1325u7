@@ -1,6 +1,6 @@
 import React, { useCallback, useState, useMemo } from 'react';
 import { C } from '../../lib/theme';
-import SubNav from '../ui/SubNav';
+import { SatNav } from './satUi';
 import { useSatData } from '../../lib/sat/useSatData';
 import SatOverviewPanel from './SatOverviewPanel';
 import SatDiagnosticPanel from './SatDiagnosticPanel';
@@ -28,7 +28,7 @@ import { buildLearnerProfile } from '../../lib/sat/learnerProfile';
 
 export default function SatTab({
   view, onViewChange, params, onConsumeParams, subnavItems, subnavHrefFor,
-  accent = C.lime, user, gradeLabel = null, isMobile = false, planStrip = null, onSessionComplete,
+  accent = C.sky, user, gradeLabel = null, isMobile = false, planStrip = null, onSessionComplete,
   medabrainOpen = false, onMedabrainOpenChange, medabrainMessages = [], onMedabrainMessagesChange,
 }) {
   // Keyed on the active view so moving between panels re-reads Dexie and every
@@ -78,24 +78,29 @@ export default function SatTab({
     onAskMedabrain: openMedabrain,
   };
 
+  // One identity colour for the whole pillar. The old per-panel rainbow (lime
+  // overview, gold baseline, cyan diagnostic, …) read as nine small apps;
+  // colour inside the SAT tab is now reserved for MEANING — green for measured
+  // strength, rose for work owed (the Review Log keeps it as its accent),
+  // sky for everything that is simply "the SAT product".
   const panels = {
-    overview: () => <SatOverviewPanel accent={C.lime} {...shared} />,
-    baseline: () => <SatBaselinePanel accent={C.gold} {...shared} />,
-    diagnostic: () => <SatDiagnosticPanel accent={C.cyan} {...shared} />,
-    practice: () => <SatPracticePanel accent={C.blue} params={params} onConsumeParams={onConsumeParams} {...shared} />,
-    tests: () => <SatFullTestPanel accent={C.violet} {...shared} />,
+    overview: () => <SatOverviewPanel accent={C.sky} {...shared} />,
+    baseline: () => <SatBaselinePanel accent={C.sky} {...shared} />,
+    diagnostic: () => <SatDiagnosticPanel accent={C.sky} {...shared} />,
+    practice: () => <SatPracticePanel accent={C.sky} params={params} onConsumeParams={onConsumeParams} {...shared} />,
+    tests: () => <SatFullTestPanel accent={C.sky} {...shared} />,
     review: () => <SatReviewLogPanel accent={C.rose} {...shared} />,
-    skills: () => <SatSkillsPanel accent={C.amber} {...shared} />,
-    toolkit: () => <SatToolkitPanel accent={C.teal} isMobile={isMobile} />,
+    skills: () => <SatSkillsPanel accent={C.sky} {...shared} />,
+    toolkit: () => <SatToolkitPanel accent={C.sky} isMobile={isMobile} />,
     // Reuses the existing Portfolio score tracker rather than duplicating a
     // second SAT/ACT score log against the same test_scores table.
-    scores: () => <ScoreTrackerPanel accent={C.green} />,
+    scores: () => <ScoreTrackerPanel accent={C.sky} />,
   };
 
   return (
-    <SatToolsProvider accent={C.teal} isMobile={isMobile}>
+    <SatToolsProvider accent={C.sky} isMobile={isMobile}>
       <div>
-        <SubNav
+        <SatNav
           items={subnavItems} active={view} onChange={(v) => onViewChange(v, null)}
           accent={accent} m={isMobile} tourPrefix="sat-sub" hrefFor={subnavHrefFor}
         />

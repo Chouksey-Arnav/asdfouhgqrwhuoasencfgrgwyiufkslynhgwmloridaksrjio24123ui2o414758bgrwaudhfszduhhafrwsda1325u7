@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { ClipboardList, Coffee, ChevronRight, Play, Clock, AlertTriangle, TrendingUp, Calculator } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { C, glass, glass2, btn, btnG, R, CC, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard } from './satUi';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import SatScoreReport from './SatScoreReport';
 import { useSatSession } from './useSatSession';
@@ -234,11 +234,11 @@ export default function SatFullTestPanel({
   const best = completed.reduce((b, a) => (!b || (a.result?.composite || 0) > (b.result?.composite || 0) ? a : b), null);
   return (
     <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={ClipboardList} color={accent} color2={C.indigo}
-        eyebrow="Full-length test" title="Adaptive practice test"
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Full-length test" title="Adaptive practice test"
         sub="Two sections, four modules, with real routing: how you do on Module 1 decides whether you get the harder or easier Module 2 — and the easier one caps that section near 600, exactly like the real exam."
-        stats={[
+        meta={[
           { value: completed.length, label: completed.length === 1 ? 'test taken' : 'tests taken' },
           ...(best ? [{ value: best.result.composite, label: 'best score', color: C.green }] : []),
         ]}
@@ -262,8 +262,7 @@ export default function SatFullTestPanel({
         </div>
       )}
 
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Clock} color={accent}>Structure</SectionTitle>
+      <SatCard title="Structure" icon={Clock} iconColor={accent} m={isMobile}>
         <div style={CC({ gap: 10 })}>
           {[
             ['Reading & Writing · Module 1', '27 questions · 32 minutes', 'Mixed difficulty. Your performance here decides your Module 2.'],
@@ -310,11 +309,10 @@ export default function SatFullTestPanel({
           <Play size={14} /> Start full test · about 2h 15m
         </button>
         <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>
-      </div>
+      </SatCard>
 
       {completed.length > 0 && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={TrendingUp} color={C.green}>Your tests</SectionTitle>
+        <SatCard title="Your tests" icon={TrendingUp} iconColor={C.green} m={isMobile}>
           <div style={CC({ gap: 9 })}>
             {completed.map(a => (
               <div key={a.id} style={{ ...glass2({ padding: 13 }), ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
@@ -335,7 +333,7 @@ export default function SatFullTestPanel({
               </div>
             ))}
           </div>
-        </div>
+        </SatCard>
       )}
     </div>
   );

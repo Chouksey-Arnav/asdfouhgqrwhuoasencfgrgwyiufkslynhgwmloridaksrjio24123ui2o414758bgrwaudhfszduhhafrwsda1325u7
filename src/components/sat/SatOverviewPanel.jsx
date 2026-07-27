@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain, Sparkles, Gauge } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
+import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
+import { SatPageHeader, SatCard } from './satUi';
 import SatSkillHeatmap from './SatSkillHeatmap';
 import SatStudyPlanCard from './SatStudyPlanCard';
 import { loadSatStudyPlan, generateSatStudyPlan } from '../../lib/sat/aiStudyPlan';
@@ -24,10 +25,16 @@ import { useSatTools } from './SatToolsContext';
 //   1. No number appears without its evidence base and confidence.
 //   2. A projection is a RANGE, and shows nothing at all until measured.
 //   3. One primary action, chosen for the student, not a wall of options.
+//
+// Visually it is composed as a command center rather than a stack of
+// look-alike cards: one score band that answers "where am I?" (estimate +
+// baseline side by side, because students conflate them and the layout itself
+// should teach the difference), one action band that answers "what now?", and
+// the evidence below.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatOverviewPanel({
-  accent = C.lime, satData, profile = null, user, isMobile = false, onNavigate, onAskMedabrain,
+  accent = C.sky, satData, profile = null, user, isMobile = false, onNavigate, onAskMedabrain,
 }) {
   const { attempts, responses, reviewLog, masteryMap, projection, ranked, summary } = satData;
   const tools = useSatTools();
@@ -98,176 +105,196 @@ export default function SatOverviewPanel({
   const empty = projectionEmptyState(responses.length);
   const topWeak = ranked.filter(r => r.attempts > 0).slice(0, 4);
 
+  const confColor = projection?.confidence === 'high' ? C.green : projection?.confidence === 'moderate' ? C.amber : C.orange;
+  const urgent = action.tone === 'urgent';
+
   return (
-    <div style={CC({ gap: 20 })}>
-      <PanelHero
-        icon={Target} color={accent} color2={C.green}
-        eyebrow="SAT" title="Your SAT"
+    <div style={CC({ gap: isMobile ? 14 : 18 })}>
+      <SatPageHeader
+        eyebrow="SAT · Digital" title="Score center"
         sub="Everything here is measured from SAT questions you have actually answered. Nothing is inferred from other parts of the app."
-        stats={[
-          ...(daysToExam != null ? [{ value: daysToExam, label: daysToExam === 1 ? 'day to test' : 'days to test', color: daysToExam <= 30 ? C.rose : undefined }] : []),
-          { value: responses.length, label: 'questions answered' },
+        meta={[
+          ...(daysToExam != null ? [{ value: daysToExam, label: daysToExam === 1 ? 'day to test' : 'days to test', color: daysToExam <= 30 ? C.rose : accent }] : []),
+          { value: responses.length, label: 'answered' },
         ]}
         m={isMobile}
         tourTag="sat-deep-overview"
       />
 
-      {/* ── Baseline ──
-          Placed above the rolling score estimate because the two answer
-          different questions and students conflate them. The estimate below is
-          a running average over everything they have ever answered, which lags
-          badly after a good week of work; the baseline is a single clean
-          measurement taken under adaptive conditions. When both exist the
-          baseline is the one to plan against. */}
-      <div style={{
-        ...glass({ padding: isMobile ? 16 : 20 }),
-        border: `1px solid ${tint(latestBaseline ? C.gold : accent, 0.3)}`,
-        background: latestBaseline ? undefined : `linear-gradient(135deg,${tint(C.gold, 0.1)},transparent)`,
+      {/* ── The score band ──
+          Estimate and baseline side by side, because the two answer different
+          questions and students conflate them: the estimate is a running
+          average over everything ever answered (it lags after a good week);
+          the baseline is one clean adaptive measurement. When both exist,
+          the baseline is the one to plan against — the layout says so by
+          giving them equal billing rather than burying one below the other. */}
+      <section style={{
+        background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 14, boxShadow: C.shadow,
+        overflow: 'hidden', display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.35fr) minmax(0,1fr)',
       }}>
-        <div style={{ ...R({ justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }) }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <SectionTitle icon={Gauge} color={C.gold}>Adaptive baseline</SectionTitle>
-            {latestBaseline ? (
-              <>
-                <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
-                  <span style={{ fontSize: isMobile ? 26 : 32, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: '-.03em' }}>
-                    {latestBaseline.low}–{latestBaseline.high}
-                  </span>
-                  <span style={pill(tint(C.gold, 0.15), C.gold, { fontSize: 10 })}>{latestBaseline.confidence} confidence</span>
-                  {baselineDelta?.significant && (
-                    <span style={pill(tint(baselineDelta.direction === 'up' ? C.green : C.rose, 0.14), baselineDelta.direction === 'up' ? C.greenL : C.roseL, { fontSize: 10 })}>
-                      {baselineDelta.delta > 0 ? '+' : ''}{baselineDelta.delta} since last
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: 11.5, color: C.t3, marginTop: 7, lineHeight: 1.6 }}>
-                  From a single {BASELINE_LENGTH}-question adaptive run — a clean measurement, unlike the running
-                  estimate below which averages everything you have ever answered.
-                  {baselineOpen ? ' You can take a new one now.' : ` Next one in ${baselineWait}.`}
-                </div>
-              </>
-            ) : (
-              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.65, maxWidth: 560 }}>
-                You have not set a baseline yet. {BASELINE_LENGTH} questions, each written for you and each one
-                harder or easier depending on how the last went — it is the fastest honest answer to
-                &ldquo;where am I actually scoring right now?&rdquo;, and everything else here plans against it.
-              </div>
+        {/* Estimate */}
+        <div style={{ padding: isMobile ? 18 : 26, minWidth: 0 }}>
+          <div style={{ ...R({ gap: 8 }), marginBottom: 14 }}>
+            <TrendingUp size={13} color={accent} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: 'uppercase', letterSpacing: '.09em' }}>Score estimate</span>
+            {projection && (
+              <span style={pill(tint(confColor, 0.13), confColor, { fontSize: 10, fontWeight: 700, border: `1px solid ${tint(confColor, 0.3)}` })}>
+                {projection.confidence} confidence
+              </span>
             )}
           </div>
+          {projection ? (
+            <>
+              <div style={{ ...R({ gap: 14, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
+                <span style={{
+                  fontSize: isMobile ? 38 : 48, fontWeight: 800, fontFamily: C.FD, lineHeight: 1,
+                  color: C.t1, letterSpacing: '-.035em', fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {projection.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0 2px' }}>–</span>{projection.high}
+                </span>
+                <span style={{ fontSize: 11.5, color: C.t3 }}>
+                  midpoint <b style={{ color: C.t2, fontFamily: C.FM }}>{projection.mid}</b> · ~{projection.percentile}th percentile
+                </span>
+              </div>
+
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 12, lineHeight: 1.65, maxWidth: 520 }}>{projection.note}</div>
+
+              {projection.sections && (
+                <div style={{ ...G(2, 10, {}, isMobile), marginTop: 16 }}>
+                  {Object.entries(SAT_SECTIONS).map(([id, sec]) => {
+                    const s = projection.sections[id];
+                    if (!s) return null;
+                    return (
+                      <div key={id} style={{ ...glass2({ padding: '11px 14px' }), ...R({ gap: 10, justifyContent: 'space-between' }) }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{sec.label}</div>
+                          {s.attempts ? <div style={{ fontSize: 9.5, color: C.t4, marginTop: 2 }}>from {s.attempts} questions</div> : null}
+                        </div>
+                        <span style={{ fontSize: 20, fontWeight: 800, fontFamily: C.FM, color: sec.color, lineHeight: 1 }}>{s.scaled}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {progress && (
+                <div style={{ marginTop: 18 }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontSize: 11.5, color: C.t2, fontWeight: 600 }}>
+                      Toward your {progress.target} target
+                    </span>
+                    <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM }}>
+                      {progress.reached ? 'at target' : progress.withinRange ? 'within range' : `${progress.gap} to go`}
+                    </span>
+                  </div>
+                  <Bar pct={progress.pct} color={progress.reached ? C.green : accent} h={6} glow />
+                </div>
+              )}
+
+              <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 16, paddingTop: 13, borderTop: `1px solid ${C.b0}` }}>
+                <Info size={12} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
+                <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</span>
+              </div>
+            </>
+          ) : (
+            <div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, marginBottom: 6 }}>{empty.title}</div>
+              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, maxWidth: 520 }}>{empty.body}</div>
+              <button onClick={() => onNavigate?.(empty.view)} style={{ ...btnG({ padding: '8px 16px' }), marginTop: 14 }}>
+                {empty.cta} <ChevronRight size={13} />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Baseline */}
+        <div style={{
+          padding: isMobile ? 18 : 26, minWidth: 0,
+          borderTop: isMobile ? `1px solid ${C.b1}` : 'none',
+          borderLeft: isMobile ? 'none' : `1px solid ${C.b1}`,
+          background: `linear-gradient(160deg,${tint(C.gold, 0.06)},transparent 65%)`,
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <div style={{ ...R({ gap: 8 }), marginBottom: 14 }}>
+            <Gauge size={13} color={C.gold} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: 'uppercase', letterSpacing: '.09em' }}>Adaptive baseline</span>
+          </div>
+          {latestBaseline ? (
+            <>
+              <div style={{ ...R({ gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
+                <span style={{
+                  fontSize: isMobile ? 28 : 34, fontWeight: 800, fontFamily: C.FD, color: C.t1,
+                  letterSpacing: '-.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+                }}>
+                  {latestBaseline.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0 1px' }}>–</span>{latestBaseline.high}
+                </span>
+                <span style={pill(tint(C.gold, 0.14), C.gold, { fontSize: 10 })}>{latestBaseline.confidence} confidence</span>
+                {baselineDelta?.significant && (
+                  <span style={pill(tint(baselineDelta.direction === 'up' ? C.green : C.rose, 0.14), baselineDelta.direction === 'up' ? C.greenL : C.roseL, { fontSize: 10 })}>
+                    {baselineDelta.delta > 0 ? '+' : ''}{baselineDelta.delta} since last
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 10, lineHeight: 1.65, flex: 1 }}>
+                One clean {BASELINE_LENGTH}-question adaptive measurement — unlike the running estimate,
+                which averages everything you have ever answered.
+                {baselineOpen ? ' You can take a new one now.' : ` Next one in ${baselineWait}.`}
+              </div>
+            </>
+          ) : (
+            <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, flex: 1 }}>
+              You have not set a baseline yet. {BASELINE_LENGTH} questions, each written for you and each one
+              harder or easier depending on how the last went — the fastest honest answer to
+              &ldquo;where am I actually scoring right now?&rdquo;. Everything else here plans against it.
+            </div>
+          )}
           <button
             onClick={() => onNavigate?.('baseline')}
-            style={btn(`linear-gradient(135deg,${C.gold},${C.orange})`, { fontSize: 12.5, padding: '10px 20px', flexShrink: 0 })}
+            style={btn(`linear-gradient(135deg,${C.gold},${C.orange})`, { fontSize: 12.5, padding: '10px 20px', marginTop: 16, alignSelf: 'flex-start' })}
           >
             {latestBaseline ? (baselineOpen ? 'Retake baseline' : 'See breakdown') : 'Set your baseline'}
           </button>
         </div>
-      </div>
+      </section>
 
-      {/* ── Score projection ── */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={TrendingUp} color={accent}>Score estimate</SectionTitle>
-        {projection ? (
-          <>
-            <div style={{ ...R({ gap: 16, flexWrap: 'wrap', alignItems: 'flex-end' }) }}>
-              <div>
-                <div style={{
-                  fontSize: isMobile ? 34 : 44, fontWeight: 800, fontFamily: C.FM, lineHeight: 1,
-                  background: `linear-gradient(135deg,${accent},${C.green})`, WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                }}>
-                  {projection.low}–{projection.high}
-                </div>
-                <div style={{ fontSize: 11.5, color: C.t3, marginTop: 6 }}>
-                  midpoint {projection.mid} · roughly the {projection.percentile}th percentile
-                </div>
-              </div>
-              <span style={pill(
-                tint(projection.confidence === 'high' ? C.green : projection.confidence === 'moderate' ? C.amber : C.orange, 0.14),
-                projection.confidence === 'high' ? C.greenL : projection.confidence === 'moderate' ? C.amberL : C.orangeL,
-                { fontSize: 10.5, fontWeight: 700, border: `1px solid ${tint(projection.confidence === 'high' ? C.green : C.amber, 0.28)}` },
-              )}>
-                {projection.confidence} confidence
-              </span>
-            </div>
-
-            <div style={{ fontSize: 12, color: C.t2, marginTop: 12, lineHeight: 1.65 }}>{projection.note}</div>
-
-            {projection.sections && (
-              <div style={{ ...G(2, 12, {}, isMobile), marginTop: 16 }}>
-                {Object.entries(SAT_SECTIONS).map(([id, sec]) => {
-                  const s = projection.sections[id];
-                  if (!s) return null;
-                  return (
-                    <StatTile
-                      key={id} icon={Layers} color={sec.color}
-                      value={s.scaled} label={sec.label}
-                      sub={s.attempts ? `from ${s.attempts} questions` : undefined}
-                    />
-                  );
-                })}
-              </div>
-            )}
-
-            {progress && (
-              <div style={{ marginTop: 18 }}>
-                <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 11.5, color: C.t2, fontWeight: 600 }}>
-                    Toward your {progress.target} target
-                  </span>
-                  <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM }}>
-                    {progress.reached ? 'at target' : progress.withinRange ? 'within range' : `${progress.gap} to go`}
-                  </span>
-                </div>
-                <Bar pct={progress.pct} color={progress.reached ? C.green : accent} h={6} glow />
-              </div>
-            )}
-
-            <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 16, paddingTop: 14, borderTop: `1px solid ${C.b1}` }}>
-              <Info size={12} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
-              <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</span>
-            </div>
-          </>
-        ) : (
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, marginBottom: 6 }}>{empty.title}</div>
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, maxWidth: 560 }}>{empty.body}</div>
-            <button onClick={() => onNavigate?.(empty.view)} style={{ ...btnG({ padding: '8px 16px' }), marginTop: 14 }}>
-              {empty.cta} <ChevronRight size={13} />
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* ── Next best action ── */}
-      <motion.div
+      {/* ── Next best action ──
+          A left-rule banner, not another gradient card: one clear directive
+          with the primary button, secondaries kept quiet beside it. */}
+      <motion.section
         initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
         style={{
-          ...glass({ padding: isMobile ? 18 : 24 }),
-          background: `linear-gradient(120deg,${tint(action.tone === 'urgent' ? C.rose : accent, 0.13)},rgba(255,255,255,0.02))`,
-          border: `1px solid ${tint(action.tone === 'urgent' ? C.rose : accent, 0.3)}`,
+          background: C.surf, border: `1px solid ${C.b1}`,
+          borderLeft: `3px solid ${urgent ? C.rose : accent}`,
+          borderRadius: 14, boxShadow: C.shadowSm,
+          padding: isMobile ? 16 : '20px 24px',
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 800, color: action.tone === 'urgent' ? C.roseL : accent, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: urgent ? C.roseL : accent, letterSpacing: '.13em', textTransform: 'uppercase', marginBottom: 7 }}>
           Do this next
         </div>
-        <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
-          {action.title}
-        </div>
-        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 8, maxWidth: 620 }}>{action.body}</div>
-        <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginTop: 16 }}>
-          <button
-            onClick={() => onNavigate?.(action.view, action.params)}
-            style={btn(`linear-gradient(135deg,${action.tone === 'urgent' ? C.rose : accent},${action.tone === 'urgent' ? C.roseL : C.green})`)}
-          >
-            {action.ctaLabel} <ChevronRight size={14} />
-          </button>
-          {secondary.map(s => (
-            <button key={s.id} onClick={() => onNavigate?.(s.view, s.params)} style={btnG({ padding: '8px 14px', fontSize: 12 })}>
-              {s.label}
+        <div style={{ ...R({ gap: 18, flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between' }) }}>
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+              {action.title}
+            </div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 6, maxWidth: 620 }}>{action.body}</div>
+          </div>
+          <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+            {secondary.map(s => (
+              <button key={s.id} onClick={() => onNavigate?.(s.view, s.params)} style={btnG({ padding: '8px 14px', fontSize: 12 })}>
+                {s.label}
+              </button>
+            ))}
+            <button
+              onClick={() => onNavigate?.(action.view, action.params)}
+              style={btn(urgent ? `linear-gradient(135deg,${C.rose},${C.roseL})` : `linear-gradient(135deg,${accent},${C.blue})`)}
+            >
+              {action.ctaLabel} <ChevronRight size={14} />
             </button>
-          ))}
+          </div>
         </div>
-      </motion.div>
+      </motion.section>
 
       {/* ── Study plan ──
           Sits under the next action, not above it: the next action is what to do
@@ -286,9 +313,8 @@ export default function SatOverviewPanel({
         // anything. Below that the honest answer is "take the diagnostic", which
         // the next-action card above is already saying.
         <div style={{
-          ...glass({ padding: isMobile ? 16 : 20 }),
-          border: `1px dashed ${tint(accent, 0.3)}`,
-          background: 'rgba(255,255,255,0.015)',
+          border: `1px dashed ${tint(accent, 0.35)}`, borderRadius: 14,
+          background: C.surf2, padding: isMobile ? 16 : '18px 22px',
         }}>
           <div style={R({ gap: 12, flexWrap: 'wrap' })}>
             <div style={{ flex: 1, minWidth: 200 }}>
@@ -313,14 +339,14 @@ export default function SatOverviewPanel({
           onClick={() => onNavigate?.('review')}
         />
         <StatTile
-          icon={CalendarClock} color={C.violet}
+          icon={CalendarClock} color={accent}
           value={attempts.filter(a => a.kind === 'full' && a.status === 'complete').length}
           label="full tests taken"
           sub={attempts.some(a => a.kind === 'full') ? undefined : 'none yet'}
           onClick={() => onNavigate?.('tests')}
         />
         <StatTile
-          icon={TrendingUp} color={C.amber}
+          icon={TrendingUp} color={accent}
           value={Object.values(masteryMap).filter(m => m.attempts > 0).length}
           label="skills measured"
           sub={`of ${Object.keys(masteryMap).length}`}
@@ -330,16 +356,19 @@ export default function SatOverviewPanel({
 
       {/* ── Biggest opportunities ── */}
       {topWeak.length > 0 && (
-        <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <SectionTitle icon={Target} color={C.rose}>Where your points are</SectionTitle>
+        <SatCard
+          title="Where your points are" icon={Target} iconColor={C.rose} m={isMobile}
+          action={<span style={{ fontSize: 10.5, color: C.t4 }}>ranked by leverage</span>}
+        >
           <div style={{ fontSize: 12, color: C.t3, marginBottom: 14, lineHeight: 1.6 }}>
-            Ranked by leverage: how far from mastered you are, multiplied by how many questions the real exam spends on it.
+            How far from mastered you are, multiplied by how many questions the real exam spends on it.
           </div>
-          <div style={CC({ gap: 11 })}>
+          <div style={CC({ gap: 10 })}>
             {topWeak.map(s => (
               <button
                 key={s.skill} onClick={() => onNavigate?.('practice', { skill: s.skill })}
-                style={{ ...glass2({ padding: 13 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}` }}
+                className="sat-choice sat-tap"
+                style={{ ...glass2({ padding: 13 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}`, width: '100%' }}
               >
                 <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between', marginBottom: 7 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{s.label}</span>
@@ -356,25 +385,23 @@ export default function SatOverviewPanel({
               </button>
             ))}
           </div>
-        </div>
+        </SatCard>
       )}
 
       {/* ── Heat map ── */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Layers} color={accent}>All 28 tested skills</SectionTitle>
+      <SatCard title="All 28 tested skills" icon={Layers} iconColor={accent} m={isMobile}>
         <SatSkillHeatmap
           masteryMap={masteryMap}
           isMobile={isMobile}
           onSelect={(skill) => onNavigate?.('practice', { skill })}
         />
-      </div>
+      </SatCard>
 
       {/* ── Test-day tools ──
           Discoverability, not decoration: a calculator nobody knows is there is
           worth exactly as much as no calculator. The rail on the left edge is
           always available, but the first visit needs to be told. */}
-      <div style={glass({ padding: isMobile ? 18 : 24 })}>
-        <SectionTitle icon={Calculator} color={C.teal}>Your test-day tools</SectionTitle>
+      <SatCard title="Your test-day tools" icon={Calculator} iconColor={C.teal} m={isMobile}>
         <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 14, maxWidth: 620 }}>
           The Digital SAT gives you Desmos on every Math question and keeps a formula sheet on
           screen for the whole section. Both are here, on every SAT screen — including mid-question
@@ -397,7 +424,7 @@ export default function SatOverviewPanel({
             onClick={() => onAskMedabrain?.()}
           />
         </div>
-      </div>
+      </SatCard>
     </div>
   );
 }

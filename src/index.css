@@ -212,6 +212,31 @@ body::before {
    dynamic viewport units for iOS Safari's collapsing toolbar, safe-area insets
    for notched phones and Android gesture bars, and no reliance on hover. */
 
+/* The SAT sub-navigation (satUi.jsx). An underline tab rail, so the scrollbar
+   the shared SubNav shows would read as clutter here — the rail's own bottom
+   border already marks the track, and the active-tab auto-scroll plus touch
+   panning cover navigation. Hover simply brightens the label; the moving ink
+   underline (framer-motion layoutId) is the only decorated state. */
+.sat-nav-scroll { scrollbar-width: none; }
+.sat-nav-scroll::-webkit-scrollbar { display: none; }
+.sat-nav-tab { -webkit-tap-highlight-color: transparent; transition: color .15s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .sat-nav-tab:hover { color: var(--c-t1) !important; }
+}
+.sat-nav-tab:focus-visible { outline: 2px solid var(--c-blue); outline-offset: -2px; border-radius: 6px; }
+
+/* Segmented control segments. Same restraint as the tabs: hover only lifts the
+   label colour, the selected fill does the rest. */
+.sat-seg { -webkit-tap-highlight-color: transparent; transition: background-color .14s ease, color .14s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .sat-seg:not([aria-pressed="true"]):hover { color: var(--c-t1); background: var(--c-surf); }
+}
+.sat-seg:focus-visible { outline: 2px solid var(--c-blue); outline-offset: 1px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sat-nav-tab, .sat-seg { transition: none; }
+}
+
 /* Answer choices. The visual feedback is a border and a lift on pointer
    devices; on touch it is the press state, because a :hover that sticks after
    a tap (every mobile browser does this) makes it look like a choice is

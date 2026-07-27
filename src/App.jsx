@@ -301,24 +301,28 @@ const NAV = [
 // The SAT pillar. Sits second because onboarding sells score improvement harder
 // than anything else in the product, and until now nothing behind that promise
 // existed — see src/data/sat/taxonomy.js for the content model it runs on.
+// One identity colour across the whole pillar (see SatTab.jsx) — the SAT tab
+// holds itself to a stricter, assessment-grade visual standard than the rest
+// of the app, so its sub-views share C.sky rather than a per-view rainbow.
+// Review Log keeps rose because there the colour MEANS something: work owed.
 const SAT_SUBNAV = [
-  {id:'overview',ic:Target,label:'Overview',color:C.lime},
+  {id:'overview',ic:Target,label:'Overview',color:C.sky},
   // Sits directly after Overview, ahead of the Diagnostic, because it is the
   // first thing a new student should do: the Diagnostic tells them WHAT to work
   // on, but only the Baseline tells them roughly where they currently score,
   // and every other panel's advice reads differently at 1050 than at 1400.
-  {id:'baseline',ic:Gauge,label:'Baseline',color:C.gold},
-  {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
-  {id:'practice',ic:Layers,label:'Practice',color:C.blue},
-  {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.violet},
+  {id:'baseline',ic:Gauge,label:'Baseline',color:C.sky},
+  {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.sky},
+  {id:'practice',ic:Layers,label:'Practice',color:C.sky},
+  {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.sky},
   {id:'review',ic:AlertTriangle,label:'Review Log',color:C.rose},
-  {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.amber},
+  {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.sky},
   // The Digital SAT hands every student the Desmos graphing calculator on every
   // Math question. This is its home: the real calculator at full size, the
   // formula sheet the exam does (and does not) give you, and the technique list
   // that turns "there is a calculator" into points.
-  {id:'toolkit',ic:Calculator,label:'Calculator',color:C.teal},
-  {id:'scores',ic:LineChart,label:'Scores',color:C.green},
+  {id:'toolkit',ic:Calculator,label:'Calculator',color:C.sky},
+  {id:'scores',ic:LineChart,label:'Scores',color:C.sky},
 ];
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
@@ -1283,7 +1287,7 @@ export default function App({ account, onAccountChange }) {
   // step needed; the whole point is the tour picks up the instant onboarding ends.
   const TOUR_STEPS = useMemo(()=>[
     { target:'nav-home', section:'Home', color:C.blue, title:'Your dashboard', body:"Streak, XP, and today's next lesson — every session starts here.", onEnter:()=>setTab('home') },
-    { target:'nav-sat', section:'SAT', color:C.lime, title:'Raise your score', body:"Diagnostic, adaptive practice, full-length tests, and a review log that brings back every question you missed.", onEnter:()=>goSat('overview') },
+    { target:'nav-sat', section:'SAT', color:C.sky, title:'Raise your score', body:"Diagnostic, adaptive practice, full-length tests, and a review log that brings back every question you missed.", onEnter:()=>goSat('overview') },
     { target:'nav-prep', section:'Prep', color:C.violet, title:'Your curriculum', body:"A structured pathway, quiz library, flashcards, and an AI coach that knows your goals.", onEnter:()=>setTab('prep') },
     { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Your application', body:"College list, essays, deadlines, and activities — everything admissions cares about, in one place.", onEnter:()=>setTab('portfolio') },
     { target:'nav-plans', section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
@@ -2035,7 +2039,7 @@ export default function App({ account, onAccountChange }) {
   const progressAccent = C.cyan;
   const settingsAccent = C.amber;
   const plansAccent = C.fuchsia;
-  const satAccent = C.lime;
+  const satAccent = C.sky;
   // Same identity, applied to the nav itself — so the active tab actually highlights in its own
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
   // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
