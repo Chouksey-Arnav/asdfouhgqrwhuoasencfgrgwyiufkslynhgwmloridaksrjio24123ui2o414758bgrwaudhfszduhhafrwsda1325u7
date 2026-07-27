@@ -24,6 +24,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // The service worker treats a navigation to /sitemap.xml as an app
+        // route and hands back index.html from cache. Crawlers never run a
+        // service worker so indexing is unaffected either way, but anyone
+        // checking the sitemap in a browser that has the PWA installed would
+        // see the landing page instead of the XML. Let these two through.
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/, /^\/robots\.txt$/],
         // Quiz library data is precached offline-first, so it easily exceeds
         // Workbox's 2 MiB default as the library grows — raise the ceiling
         // rather than excluding it from the offline cache.

@@ -13,6 +13,13 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
     <title>MedSchoolPrep — Your Path Into Medicine</title>
 
+    <!--
+      Canonical is pinned to the production origin on purpose: the same build
+      also serves the preview domain, and without this both would be indexable
+      as duplicates of the one URL in /sitemap.xml.
+    -->
+    <link rel="canonical" href="https://medschoolprep.cloud/" />
+
     <!-- Fonts: Bricolage Grotesque (display) + Onest (body) + JetBrains Mono (data) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -26,6 +33,8 @@
     <meta property="og:title" content="MedSchoolPrep — Your Path Into Medicine" />
     <meta property="og:description" content="A personalized path into medicine for high schoolers — pathway diagnostic, SAT/ACT prep, and a full application portfolio in one place." />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://medschoolprep.cloud/" />
+    <meta property="og:site_name" content="MedSchoolPrep" />
   </head>
   <body>
     <div id="root"></div>
