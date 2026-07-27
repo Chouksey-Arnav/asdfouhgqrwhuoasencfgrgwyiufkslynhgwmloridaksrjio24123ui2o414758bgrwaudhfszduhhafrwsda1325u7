@@ -2,9 +2,11 @@ import React, { useState, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import toast from 'react-hot-toast';
 import { Search, Landmark, Plus, Sparkles, Loader2, ExternalLink, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { C, glass2, btn, btnSm, inp, R, CC, pill, tint } from '../lib/theme';
+import { C, glass2, btn, inp, R, CC, pill, tint } from '../lib/theme';
 import { SCHOLARSHIPS, SCHOLARSHIP_CATEGORIES } from '../data/scholarships';
 import { renderMarkdown } from '../lib/renderMarkdown';
+import TrackButton from './ui/TrackButton';
+import { scholarshipRowFromCatalog, scholarshipRowFromCustom, normalizeKey } from '../lib/trackingCatalog';
 
 const fuse = new Fuse(SCHOLARSHIPS, {
   keys: [
@@ -18,23 +20,20 @@ const fuse = new Fuse(SCHOLARSHIPS, {
   ignoreLocation: true,
 });
 
-// Turns a curated database entry into the free-text `notes` field the `scholarships` table
-// actually has room for (see api/data/[resource].js — no separate columns for org/eligibility/
-// amount-as-string), so nothing the student found gets dropped when they track it.
-function notesFor(s) {
-  return [
-    `${s.org}`,
-    s.eligibility ? `Eligibility: ${s.eligibility}` : null,
-    s.description,
-    `Typical amount: ${s.amount}. Typical deadline: ${s.deadline}.`,
-    'Sourced from the MedSchoolPrep scholarship database — confirm current amount/deadline/eligibility on the official program site before applying.',
-  ].filter(Boolean).join(' ');
-}
+// Row construction (and the deliberate choice not to parse the prose amount/deadline into typed
+// columns) lives in src/lib/trackingCatalog.js, shared with the opportunities database so both
+// Track buttons capture entries the same way.
 
-export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMedabrain }) {
+// `trackedKeys` / `pendingKeys` are Sets of dedupe keys (trackingCatalog.normalizeKey of the
+// scholarship name) for what's already saved and what's queued but not yet confirmed. Without
+// them every entry rendered an identical "Track" button forever — a student who tracked something
+// last week had no way to tell, so the honest thing to do was tap it again, which is exactly how
+// duplicate rows got created.
+export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedKeys, pendingKeys, askMedabrain }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [expandedId, setExpandedId] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [aiLookup, setAiLookup] = useState(null); // { query, loading, content, error }
 
   const results = useMemo(() => {
@@ -46,11 +45,26 @@ export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMedabra
 
   const showAiFallback = query.trim().length >= 3 && results.length === 0;
 
+  const stateOf = (name) => {
+    const key = normalizeKey(name);
+    if (trackedKeys?.has(key)) return 'tracked';
+    if (pendingKeys?.has(key)) return 'pending';
+    return 'idle';
+  };
+
   async function handleAdd(s) {
+    setBusyId(s.id);
     try {
-      await onAdd({ name: s.name, notes: notesFor(s) });
-      toast.success(`${s.name} added to your tracker`);
+      const res = await onTrack(scholarshipRowFromCatalog(s), { dedupeKey: normalizeKey(s.name), label: s.name });
+      if (res?.status === 'duplicate') toast(`${s.name} is already in your tracker`, { icon: '✓' });
+      else if (res?.status === 'queued') {
+        toast(res.reason === 'auth'
+          ? `${s.name} is saved on this device — sign in to finish saving it to your account.`
+          : `${s.name} is saved on this device and will finish saving when you're back online.`,
+        { icon: '📥', duration: 6000 });
+      } else toast.success(`${s.name} added to your tracker`);
     } catch (err) { toast.error(err.message); }
+    finally { setBusyId(null); }
   }
 
   async function askAboutMissingScholarship() {
@@ -70,8 +84,14 @@ export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMedabra
   async function addAiResultAsCustom() {
     if (!aiLookup?.content) return;
     try {
-      await onAdd({ name: aiLookup.query, notes: `${aiLookup.content}\n\n(AI-generated summary, unverified — confirm independently before applying.)` });
-      toast.success(`${aiLookup.query} added to your tracker`);
+      const row = scholarshipRowFromCustom(
+        aiLookup.query,
+        `${aiLookup.content}\n\n(AI-generated summary, unverified — confirm independently before applying.)`,
+      );
+      const res = await onTrack(row, { dedupeKey: normalizeKey(aiLookup.query), label: aiLookup.query });
+      if (res?.status === 'duplicate') toast(`${aiLookup.query} is already in your tracker`, { icon: '✓' });
+      else if (res?.status === 'queued') toast(`${aiLookup.query} is saved on this device and will finish saving shortly.`, { icon: '📥', duration: 6000 });
+      else toast.success(`${aiLookup.query} added to your tracker`);
       setAiLookup(null); setQuery('');
     } catch (err) { toast.error(err.message); }
   }
@@ -107,14 +127,16 @@ export default function ScholarshipDatabase({ accent = C.blue, onAdd, askMedabra
         <div style={CC({ gap: 8 })}>
           {results.slice(0, 60).map(s => {
             const isOpen = expandedId === s.id;
+            const state = stateOf(s.name);
             return (
-              <div key={s.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${accent}` }}>
+              <div key={s.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : accent}` }}>
                 <div style={{ ...R({ gap: 12, padding: 14, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : s.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{s.name}</div>
                     <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{s.org} · {s.amount}</div>
                   </div>
-                  <button onClick={e => { e.stopPropagation(); handleAdd(s); }} style={btnSm(tint(accent, 0.18), { color: '#fff' })}><Plus size={12} />Track</button>
+                  <TrackButton state={state} busy={busyId === s.id} accent={accent}
+                    onClick={e => { e.stopPropagation(); handleAdd(s); }} />
                   {isOpen ? <ChevronUp size={15} color={C.t3} /> : <ChevronDown size={15} color={C.t3} />}
                 </div>
                 {isOpen && (

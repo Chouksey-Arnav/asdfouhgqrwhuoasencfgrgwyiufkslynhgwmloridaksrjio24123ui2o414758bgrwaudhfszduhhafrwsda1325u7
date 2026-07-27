@@ -52,6 +52,12 @@ export function deriveSuggestedDeadlines({ colleges = [], scholarships = [], apI
     }
   });
 
+  // Only scholarships with a real date can become a deadline. A scholarship tracked from the
+  // curated database arrives with `deadline` null on purpose (its published deadline is a prose
+  // season, and inventing a date would put a fake countdown in front of the student — see
+  // src/lib/trackingCatalog.js). Those aren't silently skipped any more: FinancialAidPanel lists
+  // them under "tracked scholarships without a deadline" with a date field, and DeadlinesPanel
+  // shows the same gap, so the student is told what's missing rather than left assuming it's handled.
   scholarships.forEach(s => {
     if (s.deadline && !['awarded', 'denied'].includes(s.status)) {
       const title = `${s.name} — Scholarship Deadline`;
