@@ -120,6 +120,95 @@ await step('Calculator and Formulas rails are present on every SAT screen', asyn
   assert(await p.locator('button[aria-label="Formulas"]').count(), 'no formulas rail button');
 });
 
+// ── REGRESSION: the rail must not move while the tab transition runs ────────
+// The rail is position:fixed, and App.jsx animates each top-level tab inside a
+// transformed <motion.div>. A transformed ancestor becomes the containing block
+// for its fixed descendants, so while that ~220ms animation played the rail was
+// laid out from inside the padded content column and then visibly snapped to
+// the viewport edge when Framer cleared the transform. The fix is to portal it
+// out of the animated subtree (src/components/ui/Portal.jsx); this samples the
+// rail's position mid-transition and at rest and asserts they are the same.
+await step('Tool rail does not jump while switching onto the SAT tab', async () => {
+  const railBox = () => p.locator('button[aria-label="Formulas"]').first().boundingBox();
+
+  // Leave the SAT tab, then come back — this is the transition students see.
+  await p.locator('[data-tour="nav-home"]').click();
+  await p.waitForTimeout(500);
+  await p.locator('[data-tour="nav-sat"]').click();
+
+  // Mid-transition: early enough that the wrapper still carries a transform.
+  await p.waitForTimeout(60);
+  const during = await railBox();
+  // At rest, well after the 220ms tab animation has finished.
+  await p.waitForTimeout(700);
+  const after = await railBox();
+
+  assert(during && after, 'rail not rendered across the tab transition');
+  const dx = Math.abs(during.x - after.x);
+  const dy = Math.abs(during.y - after.y);
+  // A couple of pixels of tolerance for the rail's own hover/spring styling;
+  // the bug being guarded against moved it by well over a hundred.
+  assert(dx <= 3 && dy <= 3, `rail moved ${Math.round(dx)}x${Math.round(dy)}px during the tab transition`);
+
+  // And it must actually be flush with the content column, not floating inside
+  // it — the symptom the student described as "somewhere else".
+  const contentLeft = await p.evaluate(() => document.querySelector('[data-app-content]')?.getBoundingClientRect().left ?? null);
+  assert(contentLeft != null, 'content column is not tagged with data-app-content');
+  assert(Math.abs(after.x - contentLeft) <= 3, `rail sits ${Math.round(after.x - contentLeft)}px from the content edge`);
+
+  // The portal is what makes all of the above true — assert the mechanism too,
+  // so a future refactor that moves these back inline fails loudly here rather
+  // than reintroducing a flicker nobody notices in code review.
+  const portalled = await p.evaluate(() => {
+    const btn = document.querySelector('button[aria-label="Formulas"]');
+    return !!btn && !document.getElementById('root').contains(btn);
+  });
+  assert(portalled, 'the tool rail is rendering inside #root instead of the overlay portal');
+});
+
+// ── The same guarantee on a phone ───────────────────────────────────────────
+// The mobile rail is a different layout (bottom-left bubbles above the nav bar
+// rather than a left-edge strip), and it was the more visible half of the bug:
+// useMediaQuery used to start at `false`, so a phone painted one frame of the
+// desktop rail before correcting. Checked in a real phone viewport rather than
+// inferred from the desktop pass.
+await step('Rail lands in the right place on a phone, first frame included', async () => {
+  const mob = await b.newContext({
+    viewport: { width: 390, height: 844 },
+    deviceScaleFactor: 3, isMobile: true, hasTouch: true,
+  });
+  const mp = await mob.newPage();
+  await mp.addInitScript(() => {
+    localStorage.setItem('msp_session_token', '00000000-0000-4000-8000-000000000000');
+    localStorage.setItem('mspViewState', JSON.stringify({ tab: 'sat', satView: 'overview' }));
+    localStorage.setItem('mspTourSeen', '1');
+  });
+  await mp.route('**/api/auth/me', r => r.fulfill({
+    json: { user: { id: 'test-user', email: 'test@example.com', name: 'Test Student', gradeLevel: 'hs_11', testTrack: 'SAT', onboardingComplete: true } },
+  }));
+  await mp.route('**/api/data/**', r => r.fulfill({ json: { data: [] } }));
+  await mp.route('**/api/progress-sync**', r => r.fulfill({ json: { data: null } }));
+  try {
+    await mp.goto(BASE, { waitUntil: 'networkidle', timeout: 45000 });
+    await mp.waitForTimeout(1500);
+    const close = mp.locator('button[aria-label="Close"]').first();
+    if (await mp.locator('text=Check-in').count()) await close.click({ timeout: 4000 }).catch(() => {});
+    await mp.waitForTimeout(400);
+
+    const box = await mp.locator('button[aria-label="Formulas"]').first().boundingBox();
+    assert(box, 'no formulas rail on mobile');
+    // Bottom-left bubble: hugging the left edge, sitting above the 64px nav bar,
+    // and never wearing the desktop rail's ~236px content-column offset.
+    assert(box.x < 40, `mobile rail is ${Math.round(box.x)}px from the left edge — desktop layout leaked onto a phone`);
+    assert(box.y + box.height < 844 - 64, 'mobile rail overlaps the bottom nav');
+    // And it must clear the Medabrain launcher, which owns the opposite corner.
+    const mb = await mp.locator('.mb-launcher').first().boundingBox().catch(() => null);
+    if (mb) assert(box.x + box.width < mb.x, 'the tool rail and the Medabrain launcher overlap on a phone');
+  } finally {
+    await mob.close();
+  }
+});
+
 await step('Alt+R opens the formula sheet, memorise-these list first', async () => {
   await p.keyboard.press('Alt+r');
   await p.waitForTimeout(500);
@@ -156,13 +245,26 @@ await step('Alt+C opens the floating window and builds a calculator', async () =
 
 await step('Switching to Scientific tears the old calculator down (one live instance)', async () => {
   if (LIVE) return;
-  await p.locator('button[title*="scientific calculator" i], button:has-text("Scientific")').first().click();
+  // Targeted by data-calc-mode, not by button text. `has-text` is a substring
+  // match over the whole page, so "Graphing" also matched the Overview's
+  // "graphing calculator" tile the moment that tile became a real <button> —
+  // the switch-back below then silently clicked the wrong thing and left the
+  // calculator stuck in scientific mode for every later step.
+  await p.locator('button[data-calc-mode="scientific"]').first().click();
   await p.waitForTimeout(900);
   const l = await log();
   assert(l.built.includes('scientific'), 'scientific calculator was not built');
   assert(l.destroyed >= 1, 'the previous calculator was never destroyed');
-  await p.locator('button:has-text("Graphing")').first().click();
+
+  await p.locator('button[data-calc-mode="graphing"]').first().click();
   await p.waitForTimeout(900);
+  // Assert the switch back actually happened. Without this the step passed
+  // while leaving the calculator in the wrong mode, and the real failure
+  // surfaced three steps later as "graph this did not seed anything".
+  const after = await log();
+  assert(after.built.filter(m => m === 'graphing').length >= 2, 'switching back to graphing did not rebuild the graphing calculator');
+  const ui = await p.evaluate(() => JSON.parse(localStorage.getItem('msp.sat.desmos.ui.v1') || 'null'));
+  assert(ui?.mode === 'graphing', `calculator mode persisted as "${ui?.mode}" after switching back to graphing`);
 });
 
 await step('Graph state is written to localStorage so work survives navigation', async () => {

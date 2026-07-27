@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from 'react';
-import { Compass, ChevronRight, Clock, Target, TrendingUp, RotateCcw } from 'lucide-react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import { Compass, ChevronRight, Clock, Target, TrendingUp, RotateCcw, Sparkles } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
+import SatStudyPlanCard from './SatStudyPlanCard';
 import { useSatSession } from './useSatSession';
 import { buildDiagnostic, estimateMinutes } from '../../lib/sat/selector';
 import { computeAllMastery, rankSkillsByLeverage } from '../../lib/sat/mastery';
+import { buildLearnerProfile } from '../../lib/sat/learnerProfile';
+import { generateSatStudyPlan } from '../../lib/sat/aiStudyPlan';
 import { SAT_SECTIONS, skillMeta } from '../../data/sat/taxonomy';
 import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 
@@ -22,12 +25,45 @@ import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatDiagnosticPanel({
-  accent = C.cyan, satData, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
+  accent = C.cyan, satData, profile = null, user = null, daysToExam = null,
+  isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { attempts, reload } = satData;
   const [session, setSession] = useState(null);
   const [result, setResult] = useState(null);
   const { start, recordResponse, finish, abandon, attemptId } = useSatSession();
+
+  // ── The AI prescription ──
+  // Requested explicitly rather than fired automatically the instant the last
+  // question is answered: this is the deepest (and slowest) model in the app,
+  // and a student who just finished 30 questions deserves to see their result
+  // immediately rather than watching a spinner. The deterministic ranked
+  // prescription below renders instantly and is complete on its own; the plan
+  // is an enhancement on top of it.
+  const [plan, setPlan] = useState(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState(null);
+  const planAbort = useRef(null);
+
+  useEffect(() => () => planAbort.current?.abort(), []);
+
+  const buildPlan = useCallback(async ({ fresh = false } = {}) => {
+    planAbort.current?.abort();
+    const controller = new AbortController();
+    planAbort.current = controller;
+    setPlanLoading(true);
+    setPlanError(null);
+    // SatTab's profile is built from the same snapshot every panel renders, but
+    // it can lag by one render right after handleComplete() calls reload(). So
+    // rebuild it here from the live satData rather than planning against the
+    // state as it was *before* the diagnostic that just finished.
+    const freshProfile = buildLearnerProfile({ satData, user, daysToExam }) || profile;
+    const { plan: built, reason } = await generateSatStudyPlan(freshProfile, { fresh, signal: controller.signal });
+    if (controller.signal.aborted) return;
+    setPlan(built);
+    setPlanError(built ? null : reason);
+    setPlanLoading(false);
+  }, [satData, user, daysToExam, profile]);
 
   const previous = useMemo(
     () => attempts.filter(a => a.kind === 'diagnostic' && a.status === 'complete'),
@@ -69,6 +105,7 @@ export default function SatDiagnosticPanel({
   if (session) {
     return (
       <SatQuestionPlayer
+        profile={profile}
         questions={session.questions} mode="tutor"
         seedKey={`attempt-${session.attemptId}`} accent={accent} isMobile={isMobile}
         onAnswer={(r) => recordResponse(session.attemptId, r)}
@@ -103,6 +140,42 @@ export default function SatDiagnosticPanel({
             />
           ))}
         </div>
+
+        {/* ── The AI plan ──
+            Offered above the ranked list because a plan is what a student came
+            here for; the ranked list underneath is the evidence it was built
+            from, and stands on its own if the AI is unavailable. */}
+        {(plan || planLoading || planError) ? (
+          <SatStudyPlanCard
+            plan={plan} loading={planLoading} error={planError}
+            accent={C.lime} isMobile={isMobile}
+            onNavigate={onNavigate}
+            onRegenerate={() => buildPlan({ fresh: true })}
+            generatedFromLabel={`from this diagnostic · ${total} questions`}
+          />
+        ) : (
+          <div style={{
+            ...glass({ padding: isMobile ? 18 : 22 }),
+            border: `1px solid ${tint(C.lime, 0.28)}`,
+            background: `linear-gradient(120deg,${tint(C.lime, 0.1)},rgba(255,255,255,0.02))`,
+          }}>
+            <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }) }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+                  Turn this into a plan
+                </div>
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 6, maxWidth: 620 }}>
+                  Medabrain will read everything below — your skill-by-skill result, how heavily the exam
+                  tests each of them, your pacing and your target — and write you a specific few weeks of
+                  work. It runs on the deepest model available, so give it a moment.
+                </div>
+              </div>
+              <button onClick={() => buildPlan()} style={btn(`linear-gradient(135deg,${C.lime},${C.green})`, { flexShrink: 0 })}>
+                <Sparkles size={14} /> Build my plan
+              </button>
+            </div>
+          </div>
+        )}
 
         <div style={glass({ padding: isMobile ? 18 : 24 })}>
           <SectionTitle icon={Target} color={C.rose}>Your prescription</SectionTitle>

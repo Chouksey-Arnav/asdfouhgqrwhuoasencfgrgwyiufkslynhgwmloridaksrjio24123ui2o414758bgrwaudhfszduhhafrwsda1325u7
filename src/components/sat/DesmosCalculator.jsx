@@ -121,7 +121,9 @@ export default function DesmosCalculator({
 
   const frame = isMobile
     ? {
-      position: 'fixed', left: 0, right: 0, bottom: 0, height: '78vh', zIndex: Z,
+      // dvh, not vh: on iOS Safari a vh-sized sheet extends under the collapsing
+      // toolbar, which would put the calculator's own keypad off screen.
+      position: 'fixed', left: 0, right: 0, bottom: 0, height: '78dvh', zIndex: Z,
       borderRadius: '18px 18px 0 0', borderTop: `1px solid ${tint(accent, 0.35)}`,
     }
     : maximised
@@ -132,6 +134,7 @@ export default function DesmosCalculator({
     <AnimatePresence>
       <motion.div
         key="desmos-window"
+        className={isMobile ? 'sat-sheet' : undefined}
         initial={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97 }}
         animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
         exit={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.97 }}
@@ -170,6 +173,14 @@ export default function DesmosCalculator({
             {Object.values(CALC_MODES).map(m => (
               <button
                 key={m.id} onClick={() => setMode(m.id)} title={m.blurb}
+                // A stable handle and a real accessible name. On mobile the
+                // label is hidden to save header width, which left these
+                // buttons announced as nothing at all to a screen reader — and
+                // left anything looking for them by text matching whatever else
+                // on the page happened to contain the word.
+                data-calc-mode={m.id}
+                aria-label={`${m.label} calculator`}
+                aria-pressed={mode === m.id}
                 style={calcChromeButton(mode === m.id, accent)}
               >
                 {m.id === 'graphing' ? <LineChart size={11} /> : <Calculator size={11} />}

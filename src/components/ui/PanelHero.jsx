@@ -65,12 +65,23 @@ export function SectionTitle({ icon: Icon, color = C.t3, children, extra = {} })
 // Compact coloured stat tile ({ icon, value, label, sub?, color }) — the
 // "numbers at a glance" strip under a hero. Use inside a CSS grid.
 export function StatTile({ icon: Icon, value, label, sub, color = C.blue, onClick }) {
+  // A clickable tile renders as a real <button>, not a <div> with an onClick:
+  // several of these are the only route to a panel (the Overview's "open review
+  // items" tile, for one), and as a div they were unreachable by keyboard and
+  // announced as static text by a screen reader.
+  const Tag = onClick ? 'button' : 'div';
   return (
-    <div onClick={onClick} style={{
-      background: `linear-gradient(120deg,${tint(color, 0.1)},rgba(255,255,255,0.015))`,
-      border: `1px solid ${tint(color, 0.22)}`, borderRadius: 12, padding: '14px 16px',
-      display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : undefined,
-    }}>
+    <Tag
+      onClick={onClick}
+      type={onClick ? 'button' : undefined}
+      className={onClick ? 'sat-choice sat-tap' : undefined}
+      style={{
+        background: `linear-gradient(120deg,${tint(color, 0.1)},rgba(255,255,255,0.015))`,
+        border: `1px solid ${tint(color, 0.22)}`, borderRadius: 12, padding: '14px 16px',
+        display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : undefined,
+        textAlign: 'left', font: 'inherit', color: 'inherit', width: '100%',
+      }}
+    >
       {Icon && (
         <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(color, 0.14), border: `1px solid ${tint(color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon size={15} color={color} />
@@ -81,6 +92,6 @@ export function StatTile({ icon: Icon, value, label, sub, color = C.blue, onClic
         <div style={{ fontSize: 10, color: C.t3, marginTop: 3 }}>{label}</div>
         {sub && <div style={{ fontSize: 9.5, color: C.t4, marginTop: 1 }}>{sub}</div>}
       </div>
-    </div>
+    </Tag>
   );
 }

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Check, X, Flag, ChevronRight, ChevronLeft, Clock, Ban, Sparkles, ArrowRight,
   Calculator, BookOpen, LineChart, Brain, Lightbulb, Loader2, Eye, EyeOff, Keyboard,
+  ShieldCheck, Wand2,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, inp, R, CC, tint, pill } from '../../lib/theme';
 import { skillMeta, DIFFICULTIES } from '../../data/sat/taxonomy';
@@ -11,6 +12,7 @@ import { shuffleChoices } from '../../lib/sat/shuffle';
 import { hintForQuestion } from '../../lib/sat/aiQuestions';
 import { canGraph } from '../../lib/sat/desmosSeed';
 import { useSatTools } from './SatToolsContext';
+import { useMediaQuery } from '../ui/primitives';
 import MathText from '../ui/MathText';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -38,6 +40,11 @@ const LETTERS = ['A', 'B', 'C', 'D'];
 // A passage long enough that reading it and the question in one column means
 // scrolling between them — the exact friction Bluebook's split view removes.
 const SPLIT_STIMULUS_CHARS = 240;
+
+// And the narrowest total width at which two panes are still comfortably
+// readable. Below this the split is a downgrade: two cramped columns, each
+// needing its own scroll, instead of one that reads cleanly.
+const SPLIT_MIN_WIDTH = 1080;
 
 /** Normalise a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
 function sprMatches(input, accept) {
@@ -78,7 +85,7 @@ function FigureTable({ figure }) {
           {figure.title}
         </div>
       )}
-      <div style={{ overflowX: 'auto' }}>
+      <div className="sat-scroll-x">
         <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: 12.5 }}>
           <thead>
             <tr>
@@ -137,6 +144,8 @@ export default function SatQuestionPlayer({
   questions = [], mode = 'tutor', seedKey = 'session', deadline = null,
   onAnswer, onComplete, onExit, onAskMedabrain, title = 'Practice', accent = C.blue,
   isMobile = false, initialIndex = 0, initialResponses = [],
+  /** The learner profile, so a hint can be pitched at this student. */
+  profile = null,
 }) {
   // Shuffle once per mounted session. Choices must not reorder between renders
   // or "you picked B" stops meaning anything.
@@ -146,6 +155,10 @@ export default function SatQuestionPlayer({
   );
 
   const tools = useSatTools();
+  // Measured against the real viewport rather than derived from `isMobile`, so
+  // a half-width desktop window and a landscape tablet both get the layout that
+  // actually fits them. See `splitLayout` below.
+  const canSplit = useMediaQuery(`(min-width: ${SPLIT_MIN_WIDTH}px)`);
   const [idx, setIdx] = useState(initialIndex);
   const [responses, setResponses] = useState(initialResponses);
   const [selected, setSelected] = useState(null);
@@ -313,7 +326,7 @@ export default function SatQuestionPlayer({
   const askForHint = useCallback(async () => {
     if (!q || hints[q.id]?.loading) return;
     setHints(h => ({ ...h, [q.id]: { loading: true, text: null } }));
-    const text = await hintForQuestion(q);
+    const text = await hintForQuestion(q, { profile });
     setHints(h => ({
       ...h,
       [q.id]: {
@@ -322,7 +335,7 @@ export default function SatQuestionPlayer({
       },
     }));
     if (!text) setShowStrategy(true);
-  }, [q, hints]);
+  }, [q, hints, profile]);
 
   const askMedabrain = useCallback(() => {
     if (!q) return;
@@ -348,7 +361,7 @@ export default function SatQuestionPlayer({
             {unanswered.length > 0 && ` · ${unanswered.length} left blank`}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 40 : 44}px,1fr))`, gap: 8, marginTop: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 44 : 44}px,1fr))`, gap: 8, marginTop: 18 }}>
             {deck.map((d, i) => {
               const isAnswered = answeredIds.has(d.id);
               const isFlagged = flagged.has(d.id);
@@ -356,8 +369,10 @@ export default function SatQuestionPlayer({
                 <button
                   key={d.id}
                   onClick={() => { setReviewing(false); setIdx(i); }}
+                  className="sat-tap"
+                  aria-label={`Question ${i + 1}${isAnswered ? ', answered' : ', not answered'}${isFlagged ? ', flagged' : ''}`}
                   style={{
-                    position: 'relative', height: 40, borderRadius: 9, cursor: 'pointer',
+                    position: 'relative', height: isMobile ? 44 : 40, borderRadius: 9, cursor: 'pointer',
                     border: `1px solid ${isFlagged ? C.amber : isAnswered ? tint(accent, 0.4) : C.b2}`,
                     background: isAnswered ? tint(accent, 0.16) : 'rgba(255,255,255,0.02)',
                     color: isAnswered ? C.t1 : C.t3, fontWeight: 700, fontSize: 12.5, fontFamily: C.FM,
@@ -404,7 +419,11 @@ export default function SatQuestionPlayer({
   // A hint mid-module would corrupt the timing and accuracy data the whole tab
   // is built on, so it exists in tutor mode only.
   const hintsAllowed = isTutor && !revealed;
-  const splitLayout = !isMobile && !!q.stimulus && q.stimulus.length > SPLIT_STIMULUS_CHARS;
+  // Bluebook's two-pane view only helps when both panes are wide enough to read
+  // without their own horizontal scroll. `!isMobile` alone put two ~360px
+  // columns on an 800px tablet or a half-width desktop window, which is worse
+  // than one column — hence a real width gate rather than the phone breakpoint.
+  const splitLayout = canSplit && !!q.stimulus && q.stimulus.length > SPLIT_STIMULUS_CHARS;
   const lowTime = secondsLeft != null && secondsLeft <= 300;
 
   const stimulusBlock = (
@@ -462,14 +481,17 @@ export default function SatQuestionPlayer({
               <div key={i} style={R({ gap: 8, alignItems: 'stretch' })}>
                 <button
                   data-sat-choice={i}
+                  className="sat-choice"
+                  aria-pressed={isSel}
                   onClick={() => !revealed && !isElim && setSelected(i)}
                   disabled={revealed || isElim}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'flex-start', gap: 12, textAlign: 'left',
-                    padding: '13px 16px', borderRadius: 11, border: `1px solid ${borderColor}`,
+                    padding: isMobile ? '14px 15px' : '13px 16px', borderRadius: 11,
+                    border: `1px solid ${borderColor}`,
                     background: bg, cursor: revealed || isElim ? 'default' : 'pointer',
                     opacity: isElim ? 0.35 : 1, textDecoration: isElim ? 'line-through' : 'none',
-                    transition: 'all .15s', fontFamily: C.FB,
+                    fontFamily: C.FB,
                   }}
                 >
                   <span style={{
@@ -487,8 +509,11 @@ export default function SatQuestionPlayer({
                   <button
                     onClick={() => setEliminated(prev => { const n = new Set(prev); n.has(i) ? n.delete(i) : n.add(i); if (selected === i) setSelected(null); return n; })}
                     title="Cross out"
+                    className="sat-tap"
+                    aria-label={`Cross out choice ${LETTERS[i]}`}
+                    aria-pressed={isElim}
                     style={{
-                      flexShrink: 0, width: 34, borderRadius: 9, cursor: 'pointer',
+                      flexShrink: 0, width: isMobile ? 44 : 34, borderRadius: 9, cursor: 'pointer',
                       border: `1px solid ${isElim ? tint(C.rose, 0.35) : C.b1}`,
                       background: isElim ? tint(C.rose, 0.12) : 'rgba(255,255,255,0.02)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -590,8 +615,11 @@ export default function SatQuestionPlayer({
 
   return (
     <div style={CC({ gap: 14 })}>
-      {/* Header: progress, timer, flag */}
-      <div style={{ ...R({ gap: 12, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
+      {/* Header: progress, timer, flag.
+          Sticky so the countdown stays on screen through a long passage — on a
+          timed module that is the difference between pacing yourself and
+          discovering the clock ran out. */}
+      <div className="sat-question-header" style={{ ...R({ gap: 12, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
         <div style={R({ gap: 10, flexWrap: 'wrap' })}>
           <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FM }}>
             {idx + 1} <span style={{ color: C.t3, fontWeight: 500 }}>/ {deck.length}</span>
@@ -602,6 +630,25 @@ export default function SatQuestionPlayer({
           {isTutor && (
             <span style={pill(tint(diff.color, 0.12), diff.color, { fontSize: 10, border: `1px solid ${tint(diff.color, 0.25)}` })}>
               {diff.label}
+            </span>
+          )}
+          {/* Provenance, stated on the question itself rather than only on the
+              screen that generated it. A student who scrolls back to a set two
+              days later should still be able to tell where an item came from —
+              and whether its key survived the independent check. */}
+          {q.generated && (
+            <span
+              title={q.verified
+                ? 'Written for you by Medabrain. A second, different model solved it without seeing the answer and agreed with the key.'
+                : 'Written for you by Medabrain. It passed the structural checks, but the independent key check could not be completed.'}
+              style={pill(
+                tint(q.verified ? C.green : C.lime, 0.12),
+                q.verified ? C.greenL : C.limeL,
+                { fontSize: 10, gap: 4, border: `1px solid ${tint(q.verified ? C.green : C.lime, 0.25)}` },
+              )}
+            >
+              {q.verified ? <ShieldCheck size={9} /> : <Wand2 size={9} />}
+              {q.verified ? 'AI · key checked' : 'AI-written'}
             </span>
           )}
         </div>
@@ -709,30 +756,43 @@ export default function SatQuestionPlayer({
         </div>
       )}
 
-      {/* Footer controls */}
-      <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
+      {/* Footer controls.
+          Sticky on a phone: choices plus an explanation run past a screen
+          height, and hunting for "Check answer" at the bottom of every question
+          is a scroll per question across a two-hour session. On desktop it
+          stays in flow — there is no scrolling to save. */}
+      <div
+        className={isMobile ? 'sat-action-bar' : undefined}
+        style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}
+      >
         <div style={R({ gap: 8 })}>
           {!isExam && idx > 0 && (
-            <button onClick={() => setIdx(idx - 1)} style={btnG({ padding: '9px 14px' })}>
+            <button onClick={() => setIdx(idx - 1)} className="sat-tap" style={btnG({ padding: '9px 14px' })}>
               <ChevronLeft size={14} /> Back
             </button>
           )}
-          {onExit && <button onClick={onExit} style={btnG({ padding: '9px 14px' })}>Leave</button>}
+          {onExit && <button onClick={onExit} className="sat-tap" style={btnG({ padding: '9px 14px' })}>Leave</button>}
         </div>
-        <div style={R({ gap: 8 })}>
+        <div style={{ ...R({ gap: 8 }), flex: isMobile ? '1 1 100%' : '0 0 auto', justifyContent: 'flex-end' }}>
           {!isTutor && (
-            <button onClick={goNext} style={btnG({ padding: '9px 16px' })}>
+            <button onClick={goNext} className="sat-tap" style={btnG({ padding: '9px 16px' })}>
               Skip <ChevronRight size={14} />
             </button>
           )}
           {revealed ? (
-            <button onClick={goNext} style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)}>
+            <button
+              onClick={goNext} className="sat-tap"
+              style={btn(`linear-gradient(135deg,${accent},${accent}cc)`, isMobile ? { flex: 1, padding: '13px 20px' } : {})}
+            >
               {idx < deck.length - 1 ? 'Next question' : 'See results'} <ChevronRight size={14} />
             </button>
           ) : (
             <button
-              onClick={submitAnswer} disabled={!canSubmit}
-              style={btn(`linear-gradient(135deg,${accent},${accent}cc)`, { opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed' })}
+              onClick={submitAnswer} disabled={!canSubmit} className="sat-tap"
+              style={btn(`linear-gradient(135deg,${accent},${accent}cc)`, {
+                opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed',
+                ...(isMobile ? { flex: 1, padding: '13px 20px' } : {}),
+              })}
             >
               {isTutor ? 'Check answer' : idx < deck.length - 1 ? 'Save & next' : 'Save & review'}
               <ChevronRight size={14} />

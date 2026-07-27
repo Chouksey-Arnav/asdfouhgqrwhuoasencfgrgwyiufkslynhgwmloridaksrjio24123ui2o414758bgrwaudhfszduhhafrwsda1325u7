@@ -12,6 +12,7 @@ import SatToolkitPanel from './SatToolkitPanel';
 import ScoreTrackerPanel from '../ScoreTrackerPanel';
 import { SatToolsProvider } from './SatToolsContext';
 import SatMedabrain from './SatMedabrain';
+import { buildLearnerProfile } from '../../lib/sat/learnerProfile';
 
 // The SAT pillar shell.
 //
@@ -61,8 +62,18 @@ export default function SatTab({
   // Finishing a session ticks the matching plan task (sat_practice / sat_review
   // / sat_test) via AUTO_VERIFIABLE_TYPES, so "SAT practice set" on the Plans
   // tab completes itself instead of needing a manual checkbox.
+  // The learner profile is built once here, from the same snapshot every panel
+  // renders, and handed down. Three surfaces send it to a model (the coach, the
+  // practice generator, the plan generator) and they must be describing the same
+  // student — a coach saying "your Boundaries is fine" beside a generated set
+  // built on the opposite assumption is exactly the incoherence this prevents.
+  const profile = useMemo(
+    () => buildLearnerProfile({ satData, user, daysToExam }),
+    [satData, user, daysToExam],
+  );
+
   const shared = {
-    satData, isMobile, onNavigate: navigate, user, onSessionComplete,
+    satData, profile, isMobile, onNavigate: navigate, user, daysToExam, onSessionComplete,
     onAskMedabrain: openMedabrain,
   };
 
@@ -100,6 +111,7 @@ export default function SatTab({
         accent={accent}
         isMobile={isMobile}
         satData={satData}
+        profile={profile}
         daysToExam={daysToExam}
         question={askContext?.question || null}
         answered={!!askContext?.answered}

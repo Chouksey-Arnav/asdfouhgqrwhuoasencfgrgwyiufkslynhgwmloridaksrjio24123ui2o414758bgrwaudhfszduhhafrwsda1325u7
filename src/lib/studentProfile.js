@@ -485,6 +485,13 @@ export function buildSatSystemPrompt({
   untriagedReviews = 0,
   errorMix = [],              // [{ label, count }] from the review log triage
   pacingNote = null,
+  // Pre-rendered grounding from renderProfileForPrompt() in
+  // src/lib/sat/learnerProfile.js. When supplied it REPLACES the ad-hoc summary
+  // assembled below, so the coach, the practice generator and the study-plan
+  // generator all describe the student in exactly the same words. The
+  // field-by-field arguments above remain for callers that have not been moved
+  // over, and as the fallback when no profile could be built.
+  profileText = null,
   // ── In-question context (only when a question is open) ──
   question = null,            // the live question object
   strategy = null,            // strategyFor(question.skill)
@@ -497,13 +504,15 @@ export function buildSatSystemPrompt({
 
 ${name} is a high school student${gradeLabel ? ` (${gradeLabel})` : ''} preparing for the Digital SAT — the adaptive, two-module-per-section format, not the old paper test. Never reference the MCAT, the GRE, or anything past undergraduate admissions.
 
-You also know the app they are using: the SAT tab has an Overview (score estimate), a Diagnostic, Practice (Smart Set / Skill Drill / Timed Set), full-length adaptive tests, a Review Log where every miss gets triaged by WHY it was missed, a Skill Mastery heat map across all 28 tested skills, and a Calculator tab with the real Desmos calculator plus a formula sheet. Point them at the specific one by name when it is the right next step.
+You also know the app they are using: the SAT tab has an Overview (score estimate and the single next action), a Diagnostic that ends by writing them a study plan, Practice (Smart Set / Skill Drill / Timed Set / AI Set — the AI Set writes fresh questions aimed at their own weakest skills and checks every answer key with a second model before showing it), full-length adaptive tests, a Review Log where every miss gets triaged by WHY it was missed and comes back on a spaced schedule, a Skill Mastery heat map across all 28 tested skills with a strategy card for each, and a Calculator tab with the real Desmos calculator plus a formula sheet. Point them at the specific one by name when it is the right next step — never at "more practice" in the abstract.
 
 If asked about anything outside the SAT (their Prep pathway, the application Portfolio, the day-by-day plan), say that belongs to Medabrain's other branches rather than answering it yourself.`;
 
   // ── What we have actually measured ──
   const dataLines = [];
-  if (projection) {
+  if (profileText) {
+    dataLines.push(profileText);
+  } else if (projection) {
     dataLines.push(`Current score estimate: ${projection.low}–${projection.high} (midpoint ${projection.mid}), ${projection.confidence} confidence, based on ${questionsAnswered} SAT questions answered in this app.`);
     if (projection.sections) {
       const secs = Object.values(projection.sections)
@@ -514,24 +523,31 @@ If asked about anything outside the SAT (their Prep pathway, the application Por
   } else {
     dataLines.push(`No score estimate exists yet: ${questionsAnswered} question(s) answered, which is not enough to say anything honest about their score. Do NOT guess one.`);
   }
-  if (targetScore) dataLines.push(`Their stated target score is ${targetScore}.`);
-  if (daysToExam != null) dataLines.push(`Test day is ${daysToExam} day(s) away.`);
-  dataLines.push(`Diagnostic ${diagnosticDone ? 'completed' : 'NOT taken yet'}. Full-length tests taken: ${fullTestsTaken}.`);
-  if (openReviews) {
-    dataLines.push(`Review Log: ${openReviews} open item(s)${untriagedReviews ? `, ${untriagedReviews} of them not yet triaged (they have not said why they missed them)` : ''}.`);
-  } else {
-    dataLines.push('Review Log is currently clear.');
+  // Everything below is the legacy field-by-field summary. renderProfileForPrompt
+  // already covers all of it (and more) in its own words, so it is skipped
+  // entirely when a rendered profile was supplied — running both would state the
+  // same facts twice in two slightly different phrasings, which is how a model
+  // ends up hedging one of them and asserting the other.
+  if (!profileText) {
+    if (targetScore) dataLines.push(`Their stated target score is ${targetScore}.`);
+    if (daysToExam != null) dataLines.push(`Test day is ${daysToExam} day(s) away.`);
+    dataLines.push(`Diagnostic ${diagnosticDone ? 'completed' : 'NOT taken yet'}. Full-length tests taken: ${fullTestsTaken}.`);
+    if (openReviews) {
+      dataLines.push(`Review Log: ${openReviews} open item(s)${untriagedReviews ? `, ${untriagedReviews} of them not yet triaged (they have not said why they missed them)` : ''}.`);
+    } else {
+      dataLines.push('Review Log is currently clear.');
+    }
+    if (errorMix.length) {
+      dataLines.push(`How their misses break down: ${errorMix.map(e => `${e.label} ×${e.count}`).join(', ')}.`);
+    }
+    if (weakSkills.length) {
+      dataLines.push(`Weakest measured skills, ranked by leverage (weakness × how heavily the exam tests it):\n${weakSkills.map(s => `- ${s.label} (${s.sectionLabel}): ${Math.round((s.mastery || 0) * 100)}% mastery from ${s.attempts} question(s), ~${((s.examShare || 0) * 98).toFixed(1)} questions per exam`).join('\n')}`);
+    }
+    if (strongSkills.length) {
+      dataLines.push(`Already strong: ${strongSkills.map(s => `${s.label} (${Math.round((s.mastery || 0) * 100)}%)`).join(', ')}.`);
+    }
+    if (pacingNote) dataLines.push(pacingNote);
   }
-  if (errorMix.length) {
-    dataLines.push(`How their misses break down: ${errorMix.map(e => `${e.label} ×${e.count}`).join(', ')}.`);
-  }
-  if (weakSkills.length) {
-    dataLines.push(`Weakest measured skills, ranked by leverage (weakness × how heavily the exam tests it):\n${weakSkills.map(s => `- ${s.label} (${s.sectionLabel}): ${Math.round((s.mastery || 0) * 100)}% mastery from ${s.attempts} question(s), ~${((s.examShare || 0) * 98).toFixed(1)} questions per exam`).join('\n')}`);
-  }
-  if (strongSkills.length) {
-    dataLines.push(`Already strong: ${strongSkills.map(s => `${s.label} (${Math.round((s.mastery || 0) * 100)}%)`).join(', ')}.`);
-  }
-  if (pacingNote) dataLines.push(pacingNote);
 
   const dataBlock = `\n\n── What has actually been measured about ${name} ──\n${dataLines.join('\n')}`;
 

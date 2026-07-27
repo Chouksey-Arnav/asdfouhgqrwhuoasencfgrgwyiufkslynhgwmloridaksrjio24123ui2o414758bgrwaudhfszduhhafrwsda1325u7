@@ -4,8 +4,10 @@ import toast from 'react-hot-toast';
 import { Brain, X, Send, Loader2, RotateCcw, Target, Lock } from 'lucide-react';
 import { C, glass, tint, pill } from '../../lib/theme';
 import { buildSatSystemPrompt } from '../../lib/studentProfile';
+import { renderProfileForPrompt } from '../../lib/sat/learnerProfile';
 import { renderMarkdown } from '../../lib/renderMarkdown';
 import MedabrainLauncher from '../MedabrainLauncher';
+import Portal from '../ui/Portal';
 import { skillMeta, ERROR_TYPES } from '../../data/sat/taxonomy';
 import { strategyFor } from '../../data/sat/strategies';
 
@@ -50,6 +52,8 @@ export default function SatMedabrain({
   open, onOpenChange, messages, onMessagesChange,
   user, gradeLabel, accent = C.lime, isMobile = false,
   satData = null,
+  /** The shared learner profile built in SatTab — see lib/sat/learnerProfile.js. */
+  profile = null,
   daysToExam = null,
   /** The live question, when a set is open. */
   question = null,
@@ -138,6 +142,11 @@ export default function SatMedabrain({
         user, gradeLabel, daysToExam,
         targetScore: user?.onboardingTargetScore || null,
         ...grounding,
+        // When SatTab supplied a profile, its rendering wins: it is the same
+        // text the practice generator and the study-plan generator were given,
+        // so the coach cannot describe this student differently from the plan
+        // sitting on their Overview. `grounding` above stays as the fallback.
+        profileText: profile ? renderProfileForPrompt(profile) : null,
         question: questionContext,
         strategy: question ? strategyFor(question.skill) : null,
         answered, studentChoice, wasCorrect,
@@ -166,7 +175,7 @@ export default function SatMedabrain({
     } finally {
       setLoading(false);
     }
-  }, [input, loading, messages, onMessagesChange, user, gradeLabel, daysToExam, grounding, questionContext, question, answered, studentChoice, wasCorrect]);
+  }, [input, loading, messages, onMessagesChange, user, gradeLabel, daysToExam, grounding, profile, questionContext, question, answered, studentChoice, wasCorrect]);
 
   const suggestions = question
     ? (answered ? ANSWERED_SUGGESTIONS : UNANSWERED_SUGGESTIONS)
@@ -177,7 +186,11 @@ export default function SatMedabrain({
     : 'SAT Coach · grounded in your own data';
 
   return (
-    <>
+    // Portalled to <body> for the same reason the tool rail is: App.jsx animates
+    // each tab inside a transformed <motion.div>, and a transformed ancestor
+    // makes `position: fixed` resolve against itself, so the launcher and the
+    // slide-out would render offset for the length of the tab transition.
+    <Portal>
       {!open && (
         <MedabrainLauncher onClick={() => onOpenChange(true)} accent={accent} accent2={C.green} isMobile={isMobile} label="Ask Medabrain" />
       )}
@@ -196,8 +209,10 @@ export default function SatMedabrain({
               animate={isMobile ? { y: 0 } : { x: 0 }}
               exit={isMobile ? { y: '100%' } : { x: '100%' }}
               transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+              className="sat-sheet"
               style={isMobile ? {
-                position: 'fixed', left: 0, right: 0, bottom: 0, height: '82vh', zIndex: 330,
+                // dvh rather than vh — see the note in SatReferenceSheet.jsx.
+                position: 'fixed', left: 0, right: 0, bottom: 0, height: '82dvh', zIndex: 330,
                 background: C.s0, borderTop: `1px solid ${tint(accent, 0.3)}`, borderRadius: '20px 20px 0 0',
                 display: 'flex', flexDirection: 'column', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
               } : {
@@ -318,7 +333,7 @@ export default function SatMedabrain({
           </>
         )}
       </AnimatePresence>
-    </>
+    </Portal>
   );
 }
 

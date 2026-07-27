@@ -35,7 +35,9 @@ const FILTERS = [
   { id: 'resolved', label: 'Cleared' },
 ];
 
-export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
+export default function SatReviewLogPanel({
+  accent = C.rose, satData, profile = null, isMobile = false,
+  onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { reviewLog, reload } = satData;
   const [filter, setFilter] = useState('untriaged');
@@ -76,7 +78,7 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
   const askForExplanation = useCallback(async (entry) => {
     const qid = entry.questionId;
     setExplanations(prev => ({ ...prev, [qid]: { loading: true, text: null } }));
-    const text = await explainQuestion(entry.question, entry.chosenIndex);
+    const text = await explainQuestion(entry.question, entry.chosenIndex, { profile });
     setExplanations(prev => ({
       ...prev,
       [qid]: { loading: false, text: text || 'Could not reach the tutor right now — the written explanation above still stands.' },
@@ -106,6 +108,7 @@ export default function SatReviewLogPanel({ accent = C.rose, satData, isMobile =
   if (retrySession) {
     return (
       <SatQuestionPlayer
+        profile={profile}
         questions={retrySession.questions} mode="tutor"
         seedKey={`retry-${retrySession.attemptId}`} accent={accent} isMobile={isMobile}
         onAnswer={(r) => recordResponse(retrySession.attemptId, r)}

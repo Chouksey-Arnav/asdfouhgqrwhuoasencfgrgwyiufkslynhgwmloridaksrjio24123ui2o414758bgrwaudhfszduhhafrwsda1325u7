@@ -6,6 +6,7 @@ import { Calculator, BookOpen } from 'lucide-react';
 import { C, tint } from '../../lib/theme';
 import DesmosCalculator from './DesmosCalculator';
 import SatReferenceSheet from './SatReferenceSheet';
+import Portal from '../ui/Portal';
 import { seedForQuestion } from '../../lib/sat/desmosSeed';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -103,31 +104,39 @@ export function SatToolsProvider({ children, accent = C.teal, isMobile = false, 
     <SatToolsContext.Provider value={value}>
       {children}
 
-      {showRail && (
-        <ToolRail
-          accent={accent} isMobile={isMobile}
-          calculatorOpen={calculatorOpen || embedded}
-          referenceOpen={referenceOpen}
-          onCalculator={embedded ? null : toggleCalculator}
-          onReference={toggleReference}
+      {/* Every viewport-anchored surface goes through the portal. App.jsx
+          animates each top-level tab with a transformed <motion.div>, and a
+          transformed ancestor re-parents `position: fixed` to itself — so
+          rendering these inline made the rail and the calculator appear inside
+          the content column for the length of the tab transition and then jump.
+          See src/components/ui/Portal.jsx. */}
+      <Portal>
+        {showRail && (
+          <ToolRail
+            accent={accent} isMobile={isMobile}
+            calculatorOpen={calculatorOpen || embedded}
+            referenceOpen={referenceOpen}
+            onCalculator={embedded ? null : toggleCalculator}
+            onReference={toggleReference}
+          />
+        )}
+
+        <DesmosCalculator
+          open={calculatorOpen && !embedded}
+          onClose={closeCalculator}
+          seed={seed}
+          accent={accent}
+          isMobile={isMobile}
+          note={note}
         />
-      )}
 
-      <DesmosCalculator
-        open={calculatorOpen && !embedded}
-        onClose={closeCalculator}
-        seed={seed}
-        accent={accent}
-        isMobile={isMobile}
-        note={note}
-      />
-
-      <SatReferenceSheet
-        open={referenceOpen}
-        onClose={closeReference}
-        accent={accent}
-        isMobile={isMobile}
-      />
+        <SatReferenceSheet
+          open={referenceOpen}
+          onClose={closeReference}
+          accent={accent}
+          isMobile={isMobile}
+        />
+      </Portal>
     </SatToolsContext.Provider>
   );
 }
@@ -138,12 +147,37 @@ export function SatToolsProvider({ children, accent = C.teal, isMobile = false, 
 // on any viewport.
 //
 // The rail is `position: fixed`, so it has to be told where the content area
-// starts or it lands on top of the app's left navigation. This is the width of
-// the desktop <aside> in App.jsx's main layout; the sidebar is not rendered at
-// all on mobile, where the rail sits above the bottom nav instead.
-const DESKTOP_SIDEBAR_W = 236;
+// starts or it lands on top of the app's left navigation. Rather than hard-code
+// the sidebar's width, it measures where <main data-app-content> actually
+// begins — so it stays correct if the sidebar is resized, the browser is
+// zoomed, or the layout changes, instead of drifting silently.
+const DESKTOP_SIDEBAR_W = 236; // fallback only, matches App.jsx's <aside>
+
+/** Live left edge of the app's content column, in CSS pixels. */
+function useContentLeft(enabled) {
+  const [left, setLeft] = useState(() => {
+    if (typeof document === 'undefined') return DESKTOP_SIDEBAR_W;
+    const el = document.querySelector('[data-app-content]');
+    return el ? Math.round(el.getBoundingClientRect().left) : DESKTOP_SIDEBAR_W;
+  });
+
+  useEffect(() => {
+    if (!enabled || typeof document === 'undefined') return undefined;
+    const el = document.querySelector('[data-app-content]');
+    if (!el) return undefined;
+    const measure = () => setLeft(Math.round(el.getBoundingClientRect().left));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
+  }, [enabled]);
+
+  return left;
+}
 
 function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculator, onReference }) {
+  const contentLeft = useContentLeft(!isMobile);
   const buttons = [
     onCalculator && { id: 'calc', icon: Calculator, label: 'Calculator', hint: 'Alt+C', active: calculatorOpen, onClick: onCalculator, color: accent },
     { id: 'ref', icon: BookOpen, label: 'Formulas', hint: 'Alt+R', active: referenceOpen, onClick: onReference, color: C.emerald },
@@ -181,7 +215,7 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
 
   return (
     <div style={{
-      position: 'fixed', left: DESKTOP_SIDEBAR_W, top: '50%', transform: 'translateY(-50%)', zIndex: 320,
+      position: 'fixed', left: contentLeft, top: '50%', transform: 'translateY(-50%)', zIndex: 320,
       display: 'flex', flexDirection: 'column', gap: 8,
     }}>
       {buttons.map(b => {

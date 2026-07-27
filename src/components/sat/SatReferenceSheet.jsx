@@ -48,8 +48,13 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
             animate={isMobile ? { y: 0 } : { x: 0 }}
             exit={isMobile ? { y: '100%' } : { x: '-100%' }}
             transition={{ type: 'spring', damping: 32, stiffness: 320 }}
+            className="sat-sheet"
             style={isMobile ? {
-              position: 'fixed', left: 0, right: 0, bottom: 0, height: '82vh', zIndex: Z,
+              // 82dvh, not 82vh: iOS Safari's vh is the height with the toolbar
+              // collapsed, so a vh-sized sheet is taller than the visible page
+              // and its footer sits under the browser chrome. dvh tracks the
+              // real viewport as the toolbar shows and hides.
+              position: 'fixed', left: 0, right: 0, bottom: 0, height: '82dvh', zIndex: Z,
               background: C.s0, borderTop: `1px solid ${tint(accent, 0.3)}`, borderRadius: '20px 20px 0 0',
               display: 'flex', flexDirection: 'column', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
             } : {
