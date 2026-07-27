@@ -131,6 +131,7 @@ const DECK_CAT_HUES = {
   'Science':        ['green',  'forestGrad', '\ud83e\uddea'],
   'Social Studies': ['pink',   'sunsetGrad', '\ud83c\udfdb\ufe0f'],
   'Study Skills':   ['teal',   'forestGrad', '\ud83e\udde0'],
+  'Pathway & Admissions': ['indigo', 'oceanGrad', '\ud83c\udf93'],
   'My Decks':       ['violet', 'violetGrad', '\ud83d\uddc2\ufe0f'],
 };
 const deckCatMeta = (cat) => {
