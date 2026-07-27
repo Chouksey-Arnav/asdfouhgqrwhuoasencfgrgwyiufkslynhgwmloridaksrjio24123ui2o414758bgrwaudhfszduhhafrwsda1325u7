@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { ClipboardList, Coffee, ChevronRight, Play, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
+import { ClipboardList, Coffee, ChevronRight, Play, Clock, AlertTriangle, TrendingUp, Calculator } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
 import SatQuestionPlayer from './SatQuestionPlayer';
@@ -28,7 +28,7 @@ import { SCORE_DISCLAIMER, MODULE_PATHS } from '../../data/sat/scoring';
 const STAGES = buildTestPlan();
 
 export default function SatFullTestPanel({
-  accent = C.violet, satData, isMobile = false, onNavigate, onSessionComplete,
+  accent = C.violet, satData, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { attempts, reload } = satData;
   const [state, setState] = useState(null); // {attemptId, stageIdx, questions, deadline, responses}
@@ -224,6 +224,7 @@ export default function SatFullTestPanel({
           onAnswer={(r) => recordResponse(state.attemptId, r)}
           onComplete={completeStage}
           onExit={leaveTest}
+          onAskMedabrain={onAskMedabrain}
         />
       </div>
     );
@@ -282,9 +283,26 @@ export default function SatFullTestPanel({
           ))}
         </div>
 
-        <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.blue, 0.22) }}>
+        <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.teal, 0.22) }}>
+          <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+            <Calculator size={12} color={C.teal} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+              Your tools during the test
+            </span>
+          </div>
           <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
-            <b style={{ color: C.t1 }}>What we do not simulate:</b> there is no built-in graphing calculator and no passage annotation yet. Everything else — module timing, flagging, cross-out, the review screen, adaptive routing and the score ceiling — matches the real format.
+            The real Desmos calculator and the formula sheet stay one click away for the whole
+            test — Alt+C and Alt+R, or the tabs on the left edge. Use them exactly as much as you
+            would on test day, which for Math is as much as you like.
+          </div>
+        </div>
+
+        <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
+            <b style={{ color: C.t1 }}>What we do not simulate:</b> passage annotation and highlighting.
+            Everything else — module timing, the hideable timer, flagging, cross-out, the review
+            screen, the calculator, the reference sheet, adaptive routing and the score ceiling —
+            matches the real format.
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers } from 'lucide-react';
+import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import PanelHero, { SectionTitle, StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
@@ -9,6 +9,7 @@ import { nextAction, secondaryActions } from '../../lib/sat/nextAction';
 import { projectionEmptyState, targetProgress } from '../../lib/sat/projection';
 import { SCORE_DISCLAIMER } from '../../data/sat/scoring';
 import { SAT_SECTIONS } from '../../data/sat/taxonomy';
+import { useSatTools } from './SatToolsContext';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Overview — the honest dashboard.
@@ -22,9 +23,10 @@ import { SAT_SECTIONS } from '../../data/sat/taxonomy';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function SatOverviewPanel({
-  accent = C.lime, satData, user, isMobile = false, onNavigate,
+  accent = C.lime, satData, user, isMobile = false, onNavigate, onAskMedabrain,
 }) {
   const { attempts, responses, reviewLog, masteryMap, projection, ranked, summary } = satData;
+  const tools = useSatTools();
 
   const daysToExam = useMemo(() => {
     if (!user?.examDate) return null;
@@ -227,6 +229,36 @@ export default function SatOverviewPanel({
           isMobile={isMobile}
           onSelect={(skill) => onNavigate?.('practice', { skill })}
         />
+      </div>
+
+      {/* ── Test-day tools ──
+          Discoverability, not decoration: a calculator nobody knows is there is
+          worth exactly as much as no calculator. The rail on the left edge is
+          always available, but the first visit needs to be told. */}
+      <div style={glass({ padding: isMobile ? 18 : 24 })}>
+        <SectionTitle icon={Calculator} color={C.teal}>Your test-day tools</SectionTitle>
+        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 14, maxWidth: 620 }}>
+          The Digital SAT gives you Desmos on every Math question and keeps a formula sheet on
+          screen for the whole section. Both are here, on every SAT screen — including mid-question
+          and mid-test — so the way you practise is the way you will actually sit the exam.
+        </div>
+        <div style={G(3, 12, {}, isMobile)}>
+          <StatTile
+            icon={Calculator} color={C.teal} value="Desmos"
+            label="graphing calculator" sub="Alt+C, or the left edge"
+            onClick={() => tools.available ? tools.openCalculator() : onNavigate?.('toolkit')}
+          />
+          <StatTile
+            icon={BookOpen} color={C.emerald} value="Formulas"
+            label="given, and not given" sub="Alt+R"
+            onClick={() => tools.available ? tools.openReference() : onNavigate?.('toolkit')}
+          />
+          <StatTile
+            icon={Brain} color={accent} value="Medabrain"
+            label="SAT coach" sub="reads the data on this page"
+            onClick={() => onAskMedabrain?.()}
+          />
+        </div>
       </div>
     </div>
   );

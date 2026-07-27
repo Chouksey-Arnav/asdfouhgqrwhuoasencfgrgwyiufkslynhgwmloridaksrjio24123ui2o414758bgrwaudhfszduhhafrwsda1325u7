@@ -345,6 +345,11 @@ const SAT_SUBNAV = [
   {id:'tests',ic:ClipboardList,label:'Full Tests',color:C.violet},
   {id:'review',ic:AlertTriangle,label:'Review Log',color:C.rose},
   {id:'skills',ic:TrendingUp,label:'Skill Mastery',color:C.amber},
+  // The Digital SAT hands every student the Desmos graphing calculator on every
+  // Math question. This is its home: the real calculator at full size, the
+  // formula sheet the exam does (and does not) give you, and the technique list
+  // that turns "there is a calculator" into points.
+  {id:'toolkit',ic:Calculator,label:'Calculator',color:C.teal},
   {id:'scores',ic:LineChart,label:'Scores',color:C.green},
 ];
 const PREP_SUBNAV = [
@@ -1212,6 +1217,13 @@ export default function App({ account, onAccountChange }) {
   // open/closed state survives a student entering or exiting a lesson, instead of resetting.
   const [prepBrainOpen, setPrepBrainOpen] = useState(false);
   const [prepBrainMessages, setPrepBrainMessages] = useState([]);
+  // ── SAT Medabrain (purpose:'sat') — lifted here for the same reason as Prep's above, though
+  // the trigger is different: SatTab unmounts whenever the student leaves the SAT tab, so
+  // owning the conversation inside it would throw away the thread every time they glanced at
+  // Plans and came back. The 'sat' Groq key pool already existed for generated drills and
+  // explanations (api/groq.js); this is its first conversational surface.
+  const [satBrainOpen, setSatBrainOpen] = useState(false);
+  const [satBrainMessages, setSatBrainMessages] = useState([]);
   // ── Lesson notes + highlights — loaded fresh for whichever lesson is active, so switching
   // lessons never bleeds one lesson's notes/highlights into another's UI, even for an instant.
   const [notesOpen, setNotesOpen] = useState(false);
@@ -6486,7 +6498,12 @@ export default function App({ account, onAccountChange }) {
         subnavItems={SAT_SUBNAV}
         accent={satAccent}
         user={user}
+        gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
         isMobile={isMobile}
+        medabrainOpen={satBrainOpen}
+        onMedabrainOpenChange={setSatBrainOpen}
+        medabrainMessages={satBrainMessages}
+        onMedabrainMessagesChange={setSatBrainMessages}
         planStrip={user.masterPlan?(
           <div style={{padding:isMobile?'0 0 12px':'0 0 14px'}}>
             <PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>

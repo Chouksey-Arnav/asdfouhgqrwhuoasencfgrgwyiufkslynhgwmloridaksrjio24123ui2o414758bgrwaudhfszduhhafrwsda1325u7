@@ -33,7 +33,7 @@ const MODES = [
 ];
 
 export default function SatPracticePanel({
-  accent = C.blue, satData, params, onConsumeParams, isMobile = false, onNavigate, onSessionComplete,
+  accent = C.blue, satData, params, onConsumeParams, isMobile = false, onNavigate, onSessionComplete, onAskMedabrain,
 }) {
   const { masteryMap, ranked, openReviews, seenIds, reload } = satData;
   const [mode, setMode] = useState('smart');
@@ -136,6 +136,7 @@ export default function SatPracticePanel({
           onAnswer={(r) => recordResponse(session.attemptId, r)}
           onComplete={handleComplete}
           onExit={handleLeave}
+          onAskMedabrain={onAskMedabrain}
         />
       </div>
     );

@@ -41,7 +41,16 @@ service role server-side and enforces per-user ownership itself.
 GROQ_API_KEY=...    # Medabrain AI tutoring/coaching (api/groq.js)
 GROQ_API_KEY_2=...  # optional 2nd Groq account — see GROQ_SETUP.md "Multiple accounts, maximized usage"
 GROQ_API_KEY_3=...  # optional 3rd Groq account — same pooling/failover as above
+GROQ_API_KEY_SAT=...      # optional dedicated key for the SAT tab (drills, hints, explanations, SAT coach)
+
+VITE_DESMOS_API_KEY=...   # Desmos calculator API key — see docs/SAT_TOOLS.md
 ```
+
+`VITE_DESMOS_API_KEY` is a **build-time** variable (the `VITE_` prefix means
+Vite inlines it into the client bundle), so it must be set wherever the build
+runs, not just at runtime. Without it the SAT tab falls back to the public demo
+key Desmos publishes in its own docs — which works, but is rate-limited and
+unsupported. Get a free key at <https://www.desmos.com/api>.
 
 ### Running the production server locally
 

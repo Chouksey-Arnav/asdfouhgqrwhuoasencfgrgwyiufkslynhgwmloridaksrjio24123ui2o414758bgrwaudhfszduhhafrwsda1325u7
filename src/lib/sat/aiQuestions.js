@@ -184,6 +184,54 @@ export async function generateQuestions(skillId, { difficulty = 'M', count = 4 }
 }
 
 /**
+ * A nudge for a question the student has NOT answered yet.
+ *
+ * Deliberately a separate call from explainQuestion() rather than a flag on it:
+ * the answer key and the rationale are never put into this prompt at all, so
+ * the model cannot leak what it was not given. A prompt that contains the
+ * answer and is merely asked not to say it will eventually say it.
+ *
+ * Returns null on any failure — the caller falls back to the strategy card,
+ * which is static and always available.
+ */
+export async function hintForQuestion(question) {
+  if (!question) return null;
+  const meta = skillMeta(question.skill);
+  const strategy = strategyFor(question.skill);
+
+  const system = [
+    'You are an SAT tutor giving ONE hint on a question a student has not answered yet.',
+    'You have NOT been told the correct answer, and you must not claim to know it.',
+    'Do not solve the problem. Do not eliminate any answer choice.',
+    'Give the first move only: what to notice, what to write down, or what to ask themselves.',
+    'Under 45 words. One or two sentences. No preamble, no sign-off.',
+    strategy ? `The taught approach for this skill: ${strategy.approach}` : '',
+  ].filter(Boolean).join('\n');
+
+  const message = [
+    `SKILL: ${meta.label} (${meta.sectionLabel})`,
+    question.stimulus ? `PASSAGE: ${question.stimulus}` : '',
+    `QUESTION: ${question.q}`,
+    // Choices are included because a hint like "compare the two that differ
+    // only in punctuation" needs to see them — but the key is not.
+    question.format === 'mcq' ? `CHOICES: ${question.ch.map((c, i) => `${'ABCD'[i]}) ${c}`).join(' | ')}` : 'FORMAT: the student types a number, there are no choices.',
+  ].filter(Boolean).join('\n');
+
+  try {
+    const res = await fetch('/api/groq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system, message, purpose: 'sat', tier: 'guide', maxTokens: 140 }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.content?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Ask for a plain-language explanation of a question the student got wrong,
  * grounded in the question and its official rationale so the model teaches
  * rather than invents.
