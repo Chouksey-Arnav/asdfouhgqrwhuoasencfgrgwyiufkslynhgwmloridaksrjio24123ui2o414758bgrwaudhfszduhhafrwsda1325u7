@@ -93,7 +93,17 @@ export default function DesmosSurface({
         // Flush before teardown — an unmount mid-typing must not lose the line
         // the student was in the middle of.
         try { saveGraphState(mode, calc.getState()); } catch { /* non-fatal */ }
-        try { calc.destroy(); } catch { /* already gone */ }
+        // calc.destroy() tears down Desmos's own WebGL/SVG surface, which is
+        // heavy. This unmount is most often triggered by SatToolsContext hiding
+        // the tools portal the instant the student leaves the SAT tab (see
+        // `toolsActive` there) — the SAME commit that starts App.jsx's outer
+        // AnimatePresence exit animation for the outgoing tab. Running the
+        // expensive destroy synchronously in that commit can contend with the
+        // animation's own frame and stall the repaint that swaps in the next
+        // tab, leaving the screen blank until something else forces a repaint.
+        // The rail/window are already hidden by `toolsActive` at this point, so
+        // the destroy can wait one frame without the student ever seeing it.
+        requestAnimationFrame(() => { try { calc.destroy(); } catch { /* already gone */ } });
       }
       calcRef.current = null;
       seededIds.current = [];
