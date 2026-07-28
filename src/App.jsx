@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
+import { setActiveTab } from './lib/sat/activeTabStore';
 import { generateAIFlashcards } from './lib/aiFlashcards';
 import { polishFlashcardsWithAI } from './lib/flashcards/aiPolish';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -1183,6 +1184,10 @@ export default function App({ account, onAccountChange }) {
   // restore/persist effects near the flashcards state below for the "resume mid-deck" case.
   const [boot] = useState(()=>bootRoute(loadViewState()));
   const [tab,   setTab]   = useState(boot.tab);
+  // Mirrors `tab` into a plain external store, synchronously, before paint —
+  // see src/lib/sat/activeTabStore.js for why SatToolsProvider needs this
+  // instead of a prop.
+  useLayoutEffect(() => { setActiveTab(tab); }, [tab]);
   const [vidM,  setVM]    = useState(null);
   // ── Lesson Player state (immersive Overview->Article->Video->Quiz->Complete) ─
   const [activeLesson, setActiveLesson] = useState(null); // { lesson, unit } while the player is open

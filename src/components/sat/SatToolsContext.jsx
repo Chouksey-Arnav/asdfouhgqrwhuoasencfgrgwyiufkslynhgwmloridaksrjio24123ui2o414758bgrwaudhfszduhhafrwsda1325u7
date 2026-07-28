@@ -1,5 +1,5 @@
 import React, {
-  createContext, useContext, useState, useCallback, useMemo, useRef, useEffect,
+  createContext, useContext, useState, useCallback, useMemo, useRef, useEffect, useSyncExternalStore,
 } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, BookOpen } from 'lucide-react';
@@ -8,6 +8,7 @@ import DesmosCalculator from './DesmosCalculator';
 import SatReferenceSheet from './SatReferenceSheet';
 import Portal from '../ui/Portal';
 import { seedForQuestion } from '../../lib/sat/desmosSeed';
+import { getActiveTab, subscribeActiveTab } from '../../lib/sat/activeTabStore';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test-day tools, available from anywhere in the SAT tab.
@@ -46,6 +47,14 @@ export function SatToolsProvider({ children, accent = C.teal, isMobile = false, 
   const [note, setCalculatorNote] = useState(null);
   const [seed, setSeed] = useState(null);
   const seedToken = useRef(0);
+
+  // Whether the SAT tab is the one actually on screen right now, read from an
+  // external store rather than a prop — see activeTabStore.js. This is the
+  // real fix for the rail/calculator getting stuck over other tabs: it can
+  // hide the portal immediately even if this provider's own unmount is
+  // delayed or dropped by an interrupted AnimatePresence exit.
+  const liveTab = useSyncExternalStore(subscribeActiveTab, getActiveTab, getActiveTab);
+  const toolsActive = liveTab == null || liveTab === 'sat';
 
   const openCalculator = useCallback(() => setCalculatorOpen(true), []);
   const closeCalculator = useCallback(() => setCalculatorOpen(false), []);
@@ -110,33 +119,35 @@ export function SatToolsProvider({ children, accent = C.teal, isMobile = false, 
           rendering these inline made the rail and the calculator appear inside
           the content column for the length of the tab transition and then jump.
           See src/components/ui/Portal.jsx. */}
-      <Portal>
-        {showRail && (
-          <ToolRail
-            accent={accent} isMobile={isMobile}
-            calculatorOpen={calculatorOpen || embedded}
-            referenceOpen={referenceOpen}
-            onCalculator={embedded ? null : toggleCalculator}
-            onReference={toggleReference}
+      {toolsActive && (
+        <Portal>
+          {showRail && (
+            <ToolRail
+              accent={accent} isMobile={isMobile}
+              calculatorOpen={calculatorOpen || embedded}
+              referenceOpen={referenceOpen}
+              onCalculator={embedded ? null : toggleCalculator}
+              onReference={toggleReference}
+            />
+          )}
+
+          <DesmosCalculator
+            open={calculatorOpen && !embedded}
+            onClose={closeCalculator}
+            seed={seed}
+            accent={accent}
+            isMobile={isMobile}
+            note={note}
           />
-        )}
 
-        <DesmosCalculator
-          open={calculatorOpen && !embedded}
-          onClose={closeCalculator}
-          seed={seed}
-          accent={accent}
-          isMobile={isMobile}
-          note={note}
-        />
-
-        <SatReferenceSheet
-          open={referenceOpen}
-          onClose={closeReference}
-          accent={accent}
-          isMobile={isMobile}
-        />
-      </Portal>
+          <SatReferenceSheet
+            open={referenceOpen}
+            onClose={closeReference}
+            accent={accent}
+            isMobile={isMobile}
+          />
+        </Portal>
+      )}
     </SatToolsContext.Provider>
   );
 }
