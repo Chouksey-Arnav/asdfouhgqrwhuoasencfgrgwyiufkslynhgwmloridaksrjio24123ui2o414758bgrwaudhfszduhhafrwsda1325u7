@@ -237,6 +237,9 @@ export function buildCoachSystemPrompt({
   satProjection = null,
   satWeakSkills = [],
   satOpenReviews = 0,
+  // Cross-app "what have they actually been doing" digest — see
+  // src/lib/recentActivity.js. Null when nothing has been logged recently.
+  recentActivitySummary = null,
 } = {}) {
   const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
@@ -308,6 +311,12 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
   liveParts.push(streak > 0 ? `Current study streak: ${streak} day(s).` : `No active study streak right now.`);
   const liveNote = liveParts.length ? `\n\nWhere they stand right now: ${liveParts.join(' ')}` : '';
 
+  // ── Recent cross-app activity — this is what makes Medabrain feel like it's
+  // actually watching, not just reading a profile filled out once at signup.
+  const recentActivityNote = recentActivitySummary
+    ? `\n\n${recentActivitySummary} Reference something specific from this when it's natural (e.g. congratulate real momentum, or gently note a quiet stretch) instead of generic encouragement — this is real evidence of what they've been doing, not an inference.`
+    : '';
+
   // ── Master plan awareness — the "meta brain" link. Scout, Guide, and Sage all
   // build their system prompt from this same function, so whichever tier answers
   // a given message, it knows the same plan the Plans tab shows the student.
@@ -330,7 +339,7 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
 
   const tail = `\n\nBe concise, warm, and encouraging — celebrate effort and progress, not just results, and when a student seems behind or discouraged, give one concrete, achievable next step rather than generic reassurance. Keep replies short: 2-4 sentences for a simple question, and only use longer, structured answers (bullets, multiple steps) when the question genuinely needs them — don't pad. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks or $...$ for formulas when helpful.${PERSONA_GUARDRAIL}`;
 
-  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + planNote + portfolioBrainNote + KNOWLEDGE_POLICY + tail;
+  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + planNote + portfolioBrainNote + KNOWLEDGE_POLICY + tail;
 }
 
 // ── Meta Brain — Portfolio Intelligence system prompt ─────────────────────────
@@ -356,6 +365,7 @@ export function buildPortfolioSystemPrompt({
   testScores = [],
   awards = [],
   gpaEntries = [],
+  recentActivitySummary = null,
 } = {}) {
   const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialised on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
@@ -446,7 +456,7 @@ Questions that stray outside the application (a study-plan question, a science q
     academicParts.push(`${gpaEntries.length} GPA entr${gpaEntries.length === 1 ? 'y' : 'ies'} tracked, most recent: ${latestGpa.gpa}${latestGpa.weighted ? ' (weighted)' : ''}${latestGpa.term ? ` for ${latestGpa.term}` : ''}.`);
   } else academicParts.push(`No GPA entries logged yet.`);
 
-  const dataBlock = `\n\n── Their full Portfolio, as of right now ──\nCOLLEGES: ${collegeParts.join(' ')}\nESSAYS: ${essayParts.join(' ')}\nDEADLINES: ${deadlineParts.join(' ')}\nFINANCIAL AID: ${scholarshipParts.join(' ')}\nTEST SCORES: ${testScoreParts.join(' ')}\nACADEMICS: ${academicParts.join(' ')}\nOTHER: ${otherParts.join(' ')}`;
+  const dataBlock = `\n\n── Their full Portfolio, as of right now ──\nCOLLEGES: ${collegeParts.join(' ')}\nESSAYS: ${essayParts.join(' ')}\nDEADLINES: ${deadlineParts.join(' ')}\nFINANCIAL AID: ${scholarshipParts.join(' ')}\nTEST SCORES: ${testScoreParts.join(' ')}\nACADEMICS: ${academicParts.join(' ')}\nOTHER: ${otherParts.join(' ')}${recentActivitySummary ? `\nRECENT ACTIVITY ACROSS THE WHOLE APP (not just Portfolio): ${recentActivitySummary}` : ''}`;
 
   const rules = `\n\nRules: never invent a college on their list, a deadline they logged, a dollar amount, a test score, a GPA or an essay draft that isn't in the data above — those are claims about THEM and the data above is the only source for them. Facts about the wider admissions world are a different matter entirely: answer those from your own knowledge, in detail, and say when a date or policy is the kind of thing that shifts year to year. If a category is empty (no colleges, no essays, no clinical hours, no scores), answer the question first, then say plainly what isn't logged yet and name the exact panel that captures it. When asked "what should I work on next," prioritize real urgency (closest deadline, an essay for a school with no draft started, a category with nothing logged at all) over generic advice. Keep replies focused and concrete — 2-5 sentences unless a genuinely structured breakdown (e.g. ranking every upcoming deadline) is what was asked for. Format with markdown: **bold** key facts, bullet lists for multi-item breakdowns.${PERSONA_GUARDRAIL}`;
 
@@ -491,6 +501,7 @@ export function buildPrepSystemPrompt({
   weakestScore = null,
   dueCards = 0,
   streak = 0,
+  recentActivitySummary = null,
 } = {}) {
   const base = `You are Medabrain, the Prep specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, sitting right next to ${user?.name || 'this student'} while they study so they can get help without leaving the lesson.
 
@@ -500,7 +511,7 @@ You are a real tutor with real subject knowledge — biology, chemistry, physics
 
   let scopeBlock;
   if (lesson) {
-    scopeBlock = `\n\n── The lesson they're currently studying ──\nLesson: "${lesson.title}"${unit?.title ? ` (unit: "${unit.title}")` : ''}\n${objectives.length ? `What this lesson is supposed to teach: ${objectives.join('; ')}\n` : ''}${articleSections.length ? `Article content, section by section:\n${articleSections.map(s => `- ${s.heading}: ${s.body}`).join('\n')}\n` : ''}${keyTakeaways.length ? `Key takeaways: ${keyTakeaways.join('; ')}` : ''}${lessonNote.trim() ? `\n\n── The student's own notes on this lesson (written by them, in their own words — you have full access) ──\n"${lessonNote.trim()}"\n\nUse these notes actively: reference them by name when relevant, answer questions about what they wrote, help them expand on something they flagged as confusing, quiz them on their own notes, or help turn them into a cleaner summary or flashcards if asked. Treat these as a first-class part of what you know about their study of this lesson, not an afterthought.` : ''}`;
+    scopeBlock = `\n\n── The lesson they're currently studying ──\nLesson: "${lesson.title}"${unit?.title ? ` (unit: "${unit.title}")` : ''}\n${objectives.length ? `What this lesson is supposed to teach: ${objectives.join('; ')}\n` : ''}${articleSections.length ? `Article content, section by section:\n${articleSections.map(s => `- ${s.heading}: ${s.body}`).join('\n')}\n` : ''}${keyTakeaways.length ? `Key takeaways: ${keyTakeaways.join('; ')}` : ''}${lessonNote.trim() ? `\n\n── The student's own notes on this lesson (written by them, in their own words — you have full access) ──\n"${lessonNote.trim()}"\n\nUse these notes actively: reference them by name when relevant, answer questions about what they wrote, help them expand on something they flagged as confusing, quiz them on their own notes, or help turn them into a cleaner summary or flashcards if asked. Treat these as a first-class part of what you know about their study of this lesson, not an afterthought.` : ''}${recentActivitySummary ? `\n\n── Recent activity across the app ──\n${recentActivitySummary}` : ''}`;
   } else {
     const unitLines = units.length
       ? units.map(u => `- "${u.title}": ${u.done}/${u.total} lesson(s) verified${u.done >= u.total && u.total > 0 ? ' — complete' : ''}`).join('\n')
@@ -510,6 +521,7 @@ You are a real tutor with real subject knowledge — biology, chemistry, physics
     if (weakestCategory && weakestScore != null) progressParts.push(`Weakest quiz category so far: ${weakestCategory} at ${weakestScore}% — a strong candidate for what to study next.`);
     if (dueCards > 0) progressParts.push(`${dueCards} flashcard(s) currently due for review.`);
     progressParts.push(streak > 0 ? `Current study streak: ${streak} day(s) — factor this in if they ask about momentum.` : `No active study streak right now.`);
+    if (recentActivitySummary) progressParts.push(recentActivitySummary);
     scopeBlock = `\n\n── Their pathway ──\n${pathwayLabel} pathway. No specific lesson is open right now — they're asking from the Prep tab in general.${unitLines ? `\n\nUnit-by-unit progress (real, not estimated):\n${unitLines}` : ''}\n\n${progressParts.join(' ')}`;
   }
 
@@ -569,6 +581,7 @@ export function buildSatSystemPrompt({
   answered = false,
   studentChoice = null,       // 'A' | 'B' | 'C' | 'D' | typed grid-in string
   wasCorrect = null,
+  recentActivitySummary = null,
 } = {}) {
   const name = user?.name || 'this student';
   const base = `You are Medabrain, the SAT specialist inside MedSchoolPrep — a focused branch of Medabrain (the app's head AI coach) that only helps ${name} with the Digital SAT: the question in front of them, what to practise next, pacing, and how to actually move their score. You report up through the same coaching system Medabrain does, so the two must never contradict each other.
@@ -620,7 +633,7 @@ You are also a genuine expert on the test itself and on everything around it: ho
     if (pacingNote) dataLines.push(pacingNote);
   }
 
-  const dataBlock = `\n\n── What has actually been measured about ${name} ──\n${dataLines.join('\n')}`;
+  const dataBlock = `\n\n── What has actually been measured about ${name} ──\n${dataLines.join('\n')}${recentActivitySummary ? `\n\nRecent activity across the whole app (not just SAT): ${recentActivitySummary}` : ''}`;
 
   // ── In-question context ──
   let questionBlock = '';

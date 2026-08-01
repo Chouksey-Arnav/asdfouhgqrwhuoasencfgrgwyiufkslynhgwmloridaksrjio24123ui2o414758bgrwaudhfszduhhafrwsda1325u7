@@ -31,6 +31,7 @@ export default function SatTab({
   view, onViewChange, params, onConsumeParams, subnavItems, subnavHrefFor,
   accent = C.sky, user, gradeLabel = null, isMobile = false, planStrip = null, onSessionComplete,
   medabrainOpen = false, onMedabrainOpenChange, medabrainMessages = [], onMedabrainMessagesChange,
+  recentActivitySummary = null,
 }) {
   // Keyed on the active view so moving between panels re-reads Dexie and every
   // panel agrees on the same snapshot.
@@ -126,6 +127,7 @@ export default function SatTab({
         answered={!!askContext?.answered}
         studentChoice={askContext?.studentChoice ?? null}
         wasCorrect={askContext?.wasCorrect ?? null}
+        recentActivitySummary={recentActivitySummary}
       />
     </SatToolsProvider>
   );

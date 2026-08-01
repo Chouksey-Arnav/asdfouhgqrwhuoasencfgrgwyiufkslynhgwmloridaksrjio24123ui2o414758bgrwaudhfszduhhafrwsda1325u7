@@ -13,16 +13,33 @@ ad hoc.
 - Eventually support cohort-level benchmarking ("students on this pathway typically verify a
   unit within X days") without exposing any individual's data to other users.
 
-## Phase 1 — Local-only engagement log (shipped)
+## Phase 1 — Local-only engagement log (shipped, now instrumented app-wide)
 
-`src/lib/eventLog.js` + the Dexie `studyEvents` table (`src/lib/db.js`, v8) already record, purely
-on-device:
+`src/lib/eventLog.js` + the Dexie `studyEvents` table (`src/lib/db.js`, v8) record, purely
+on-device, across every pillar of the app (not just the pathway flow):
 - `lesson_video_watched` — a lesson's Study action was taken
 - `quiz_attempt` — a verification quiz was started
 - `unit_lesson_verified` / `unit_verified` — a lesson/unit passed verification
+- `quiz_scored` — any quiz in the Quiz Library was completed (`DB.saveQuizScore`)
+- `flashcard_reviewed` — a flashcard was reviewed (`DB.recordCardReview`)
+- `sat_attempt_completed` / `sat_diagnostic_completed` — an SAT practice/drill/full-test/diagnostic
+  attempt finished (`DB.finishSatAttempt`)
+- `sat_baseline_completed` — the SAT baseline placement test finished (`DB.finishSatBaseline`)
+- `pathway_diagnostic_completed` — the Pathway Diagnostic was completed
+- `portfolio_item_added` — a deadline/college/essay/activity/research/clinical-hours/recommender
+  entry was saved in Portfolio
+- `interview_session_completed` — a mock interview session finished
+- `coach_message_sent` — a message was sent to the main Medabrain coach
 
-Nothing here is transmitted anywhere. It exists to power the Verified Progress view's honesty
-(distinguishing "opened" from "proved") and as the seed schema for Phase 2.
+Nothing here is transmitted anywhere. It powers the Verified Progress view's honesty
+(distinguishing "opened" from "proved"), the seed schema for Phase 2, and — new — the
+**recent-activity digest** (`src/lib/recentActivity.js`'s `summarizeRecentActivity()`), which turns
+the last 7 days of these events into one compact sentence fed into every Medabrain system prompt
+(the head coach, the Prep/Portfolio/SAT specialists, and plan generation — see `studentProfile.js`
+and `masterPlanGenerator.js`). This is what lets Medabrain reference what a student has actually
+been doing across quizzes, flashcards, SAT practice, diagnostics, and Portfolio — not just their
+onboarding answers and static summary counts — so its picture of the student keeps expanding with
+real use instead of staying frozen at signup.
 
 ## Phase 2 — Opt-in cross-device sync (future)
 

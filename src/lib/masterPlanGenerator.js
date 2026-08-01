@@ -200,6 +200,7 @@ function buildProfileFactsText(user, liveSignals = {}, portfolio = null) {
     liveSignals.clinicalHours > 0 ? `${liveSignals.clinicalHours} clinical/shadowing hour(s) logged so far` : null,
     liveSignals.recommendersCount > 0 ? `Tracking ${liveSignals.recommendersCount} recommender(s)` : null,
     `Current study streak: ${liveSignals.streak || 0} day(s)`,
+    liveSignals.recentActivitySummary ? `Recent activity across the whole app: ${liveSignals.recentActivitySummary}` : null,
     // Things the student said directly (typed or dictated by mic — see PlanVoiceNotes in
     // PlansTab.jsx) — the highest-signal input there is, since it's exactly what they asked for
     // in their own words, not an inference. Weight it accordingly: treat these as real

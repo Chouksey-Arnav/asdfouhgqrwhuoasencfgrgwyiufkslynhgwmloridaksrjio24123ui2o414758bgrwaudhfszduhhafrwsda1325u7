@@ -60,6 +60,7 @@ export default function SatMedabrain({
   answered = false,
   studentChoice = null,
   wasCorrect = null,
+  recentActivitySummary = null,
 }) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -150,6 +151,7 @@ export default function SatMedabrain({
         question: questionContext,
         strategy: question ? strategyFor(question.skill) : null,
         answered, studentChoice, wasCorrect,
+        recentActivitySummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
