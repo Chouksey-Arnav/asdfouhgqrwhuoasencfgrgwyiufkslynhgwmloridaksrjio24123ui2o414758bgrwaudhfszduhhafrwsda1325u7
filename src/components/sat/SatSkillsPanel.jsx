@@ -9,6 +9,7 @@ import { strategyFor } from '../../data/sat/strategies';
 import { SAT_SECTIONS } from '../../data/sat/taxonomy';
 import { confidenceBand } from '../../lib/sat/mastery';
 import { questionCountForSkill } from '../../data/sat/questions/index.js';
+import { SatVideoRecommendations, SatSkillVideos } from './SatVideoRecs';
 
 // Skill Mastery — every tested skill with its measured mastery, its sample
 // size, its pacing, and a strategy card for how to attack it.
@@ -39,6 +40,17 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
 
   const measured = Object.values(masteryMap).filter(m => m.attempts > 0).length;
 
+  // Only MEASURED skills get a video recommendation. Recommending a lesson for
+  // a skill the student has never attempted is not advice, it is a table of
+  // contents — and it would push the genuinely weak skills off the card.
+  const videoTargets = useMemo(
+    () => ranked
+      .filter(r => r.attempts > 0 && r.mastery < 0.85)
+      .slice(0, 3)
+      .map(r => ({ skill: r.skill, accuracy: r.mastery })),
+    [ranked],
+  );
+
   return (
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
@@ -55,6 +67,13 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
       <SatCard title="Heat map" icon={Target} iconColor={accent} m={isMobile}>
         <SatSkillHeatmap masteryMap={masteryMap} isMobile={isMobile} onSelect={(s) => setExpanded(s)} />
       </SatCard>
+
+      <SatVideoRecommendations
+        weakSkills={videoTargets}
+        title="Lessons for your weakest skills"
+        isMobile={isMobile}
+        onNavigate={onNavigate}
+      />
 
       {/* Filters */}
       <div style={R({ gap: 14, flexWrap: 'wrap' })}>
@@ -143,6 +162,14 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
                           )}
                         </div>
                       )}
+
+                      {/* Instruction beside the strategy. A student who has
+                          just read "how to attack it" and does not follow it
+                          needs someone to teach the underlying rule, not a
+                          bigger drill button. */}
+                      <div style={{ marginTop: 14 }}>
+                        <SatSkillVideos skill={s.skill} limit={2} isMobile={isMobile} />
+                      </div>
 
                       <button
                         onClick={() => onNavigate?.('practice', { skill: s.skill })}

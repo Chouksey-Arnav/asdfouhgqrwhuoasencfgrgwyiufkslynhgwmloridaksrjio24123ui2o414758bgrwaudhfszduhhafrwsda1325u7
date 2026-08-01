@@ -14,6 +14,7 @@ import { canGraph } from '../../lib/sat/desmosSeed';
 import { useSatTools } from './SatToolsContext';
 import { useMediaQuery } from '../ui/primitives';
 import MathText from '../ui/MathText';
+import SatAnnotatableText, { hasMathMarkup } from './SatAnnotatableText';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The SAT question player.
@@ -172,6 +173,11 @@ export default function SatQuestionPlayer({
   // questionId -> { loading, text } — one AI hint per question, on request only.
   const [hints, setHints] = useState({});
   const [showStrategy, setShowStrategy] = useState(false);
+  // questionId -> [{start, end, color}]. Kept in component state rather than
+  // persisted: Bluebook discards annotations when a module ends, and a student
+  // returning to a question inside the same module is exactly the case this
+  // needs to survive, which component state already covers.
+  const [highlights, setHighlights] = useState({});
   const questionStart = useRef(Date.now());
 
   const q = deck[idx];
@@ -237,6 +243,13 @@ export default function SatQuestionPlayer({
       difficulty: q.difficulty, targetSeconds: q.targetSeconds,
       choice, input: input ?? null, correct, seconds,
       flagged: flagged.has(q.id), answeredAt: Date.now(),
+      // The question itself travels with the response so a miss can be reviewed
+      // later even when the item exists nowhere else. Generated items — the
+      // baseline's, and AI-authored drill sets — are not in the static bank, so
+      // an id alone is a dangling reference for them. useSatSession stores this
+      // on the Review Log entry only when the id is not in the bank, so the
+      // common case stays a plain reference.
+      question: q,
     };
     const next = [...responses.filter(r => r.questionId !== q.id), response];
     setResponses(next);
@@ -441,7 +454,18 @@ export default function SatQuestionPlayer({
       )}
       {q.stimulus && (
         <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.8, marginBottom: splitLayout ? 0 : 18, whiteSpace: 'pre-wrap' }}>
-          <MathText text={q.stimulus} />
+          {hasMathMarkup(q.stimulus) ? (
+            // Maths stimuli go through MathText and lose highlighting: KaTeX
+            // inserts nodes with no character correspondence, so any offset
+            // computed across them would be wrong. See SatAnnotatableText.
+            <MathText text={q.stimulus} />
+          ) : (
+            <SatAnnotatableText
+              text={q.stimulus}
+              highlights={highlights[q.id] || []}
+              onChange={(next) => setHighlights(prev => ({ ...prev, [q.id]: next }))}
+            />
+          )}
         </div>
       )}
     </>

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2 } from 'lucide-react';
+import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2, PlayCircle } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
 import { SatPageHeader, SatCard, Segmented } from './satUi';
@@ -9,7 +9,8 @@ import EmptyState from '../ui/EmptyState';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import { useSatSession, scheduleReviewRetry } from './useSatSession';
 import * as DB from '../../lib/db';
-import { detectPatterns } from '../../lib/sat/errorPatterns';
+import { detectPatterns, weakSkillsFromLog } from '../../lib/sat/errorPatterns';
+import { SatVideoRecommendations, SatSkillVideos } from './SatVideoRecs';
 import { getQuestion } from '../../data/sat/questions/index.js';
 import { ERROR_TYPES, ERROR_TYPE_IDS, TRAP_TAGS, skillMeta } from '../../data/sat/taxonomy';
 import { nextReviewLabel } from '../../lib/fsrs';
@@ -36,6 +37,36 @@ const FILTERS = [
   { id: 'resolved', label: 'Cleared' },
 ];
 
+// Where a miss came from. Shown on every entry so "review your mistakes" means
+// all of them, from anywhere, and the student can tell a timed-test miss from a
+// relaxed drill miss — which are not the same mistake even on the same skill.
+const SOURCE_LABELS = {
+  baseline: 'Baseline',
+  diagnostic: 'Diagnostic',
+  full: 'Full test',
+  test: 'Full test',
+  practice: 'Practice',
+  review: 'Retry',
+  generated: 'Generated set',
+};
+
+/**
+ * Resolve the question behind a Review Log entry.
+ *
+ * The static bank is preferred over the stored snapshot even when both exist,
+ * so a corrected explanation or a rebalanced choice set reaches students whose
+ * log entry predates the fix. The snapshot is the fallback for items that live
+ * nowhere else — the baseline's generated items and AI-authored drill sets.
+ *
+ * This function is the whole fix for a real bug: the panel used to resolve
+ * entries through the static bank ALONE and then filter out anything that came
+ * back empty, so every baseline and generated-practice miss was written to the
+ * log correctly and then silently hidden from the one screen built to review it.
+ */
+function resolveQuestion(entry) {
+  return getQuestion(entry.questionId) || entry.question || null;
+}
+
 export default function SatReviewLogPanel({
   accent = C.rose, satData, profile = null, isMobile = false,
   onNavigate, onSessionComplete, onAskMedabrain,
@@ -52,6 +83,9 @@ export default function SatReviewLogPanel({
   const untriaged = useMemo(() => open.filter(r => !r.errorType), [open]);
   const due = useMemo(() => open.filter(r => (r.due || 0) <= Date.now()), [open]);
   const patterns = useMemo(() => detectPatterns(open), [open]);
+  // Ranked by how often the skill actually appears in the backlog, so the
+  // videos offered are the ones aimed at what is going wrong most.
+  const weakSkills = useMemo(() => weakSkillsFromLog(open).slice(0, 4), [open]);
 
   const visible = useMemo(() => {
     const source = filter === 'resolved' ? reviewLog.filter(r => r.resolved)
@@ -59,7 +93,7 @@ export default function SatReviewLogPanel({
         : filter === 'due' ? due
           : open;
     return source
-      .map(r => ({ ...r, question: getQuestion(r.questionId) }))
+      .map(r => ({ ...r, question: resolveQuestion(r) }))
       .filter(r => r.question);
   }, [filter, reviewLog, untriaged, due, open]);
 
@@ -87,7 +121,7 @@ export default function SatReviewLogPanel({
   }, []);
 
   async function startRetry() {
-    const questions = due.map(r => getQuestion(r.questionId)).filter(Boolean).slice(0, 10);
+    const questions = due.map(resolveQuestion).filter(Boolean).slice(0, 10);
     if (!questions.length) { toast('Nothing is due for retry yet.'); return; }
     const id = await start({ kind: 'review', questions, meta: {} });
     setRetrySession({ questions, attemptId: id });
@@ -174,6 +208,18 @@ export default function SatReviewLogPanel({
             </SatCard>
           )}
 
+          {/* ── Instruction before more drilling ──
+              Placed above the entry list on purpose: a student with a backlog
+              of Boundaries misses needs the rule explained before they grind
+              more Boundaries items, and burying the lesson under forty
+              accordion rows guarantees they never reach it. */}
+          <SatVideoRecommendations
+            weakSkills={weakSkills}
+            title="Learn the skills you keep missing"
+            isMobile={isMobile}
+            onNavigate={onNavigate}
+          />
+
           {/* ── Actions ── */}
           <div style={G(3, 12, {}, isMobile)}>
             <StatTile icon={AlertTriangle} color={untriaged.length ? C.rose : C.green} value={untriaged.length} label="need sorting" onClick={() => setFilter('untriaged')} />
@@ -210,6 +256,11 @@ export default function SatReviewLogPanel({
                   >
                     <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginBottom: 8 }}>
                       <span style={pill(tint(meta.color, 0.14), meta.color, { fontSize: 10 })}>{meta.label}</span>
+                      {SOURCE_LABELS[entry.source] && (
+                        <span style={pill('rgba(255,255,255,0.04)', C.t3, { fontSize: 10 })}>
+                          {SOURCE_LABELS[entry.source]}
+                        </span>
+                      )}
                       {entry.missCount > 1 && (
                         <span style={pill(tint(C.rose, 0.16), C.roseL, { fontSize: 10 })}>missed {entry.missCount}x</span>
                       )}
@@ -245,9 +296,16 @@ export default function SatReviewLogPanel({
                             <div style={{ fontSize: 10, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
                               Correct answer{q.format === 'mcq' ? `: ${['A', 'B', 'C', 'D'][q.ans]}` : ''}
                             </div>
-                            {q.format === 'mcq' && (
-                              <div style={{ fontSize: 12.5, color: C.t1, marginBottom: 8 }}>{q.ch[q.ans]}</div>
-                            )}
+                            {q.format === 'mcq' ? (
+                              <div style={{ fontSize: 12.5, color: C.t1, marginBottom: 8 }}>{q.ch?.[q.ans]}</div>
+                            ) : q.sprAccept?.values?.length ? (
+                              // Grid-ins accept several equivalent forms, and a
+                              // student who entered 3/2 needs to see that 1.5
+                              // was the same answer, not a different one.
+                              <div style={{ fontSize: 12.5, color: C.t1, marginBottom: 8, fontFamily: C.FM }}>
+                                {q.sprAccept.values.join('  or  ')}
+                              </div>
+                            ) : null}
                             <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7 }}>{q.exp}</div>
                             {q.trap && (
                               <div style={{ marginTop: 10, fontSize: 11, color: C.amberL }}>
@@ -277,6 +335,14 @@ export default function SatReviewLogPanel({
                               {explanations[entry.questionId]?.loading ? 'Thinking…' : 'Explain this differently'}
                             </button>
                           )}
+
+                          {/* Instruction attached to the specific miss. This
+                              is the moment a student is most likely to watch
+                              something: they have just read why they were
+                              wrong and the gap is concrete. */}
+                          <div style={{ marginBottom: 14 }}>
+                            <SatSkillVideos skill={q.skill} limit={2} isMobile={isMobile} />
+                          </div>
 
                           {!entry.resolved && (
                             <>

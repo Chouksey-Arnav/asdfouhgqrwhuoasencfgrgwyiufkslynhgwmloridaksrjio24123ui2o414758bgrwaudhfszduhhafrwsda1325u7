@@ -29,6 +29,7 @@ import {
 import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
 import { SatPageHeader, SatCard } from './satUi';
+import { SatVideoRecommendations } from './SatVideoRecs';
 import { Bar } from '../ui/primitives';
 import MathText from '../ui/MathText';
 import * as DB from '../../lib/db';
@@ -619,6 +620,16 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
       )}
 
       {/* ── The misses ─────────────────────────────────────────────────── */}
+      {/* Instruction, keyed to the same weakest-skills ranking shown above.
+          A baseline that reports a range and a list of weak skills has told a
+          student where they stand and nothing about how to move. */}
+      <SatVideoRecommendations
+        weakSkills={result.weakest.map(w => ({ skill: w.skill, accuracy: w.accuracy }))}
+        title="Where to start this week"
+        isMobile={isMobile}
+        onNavigate={onNavigate}
+      />
+
       {result.flagged.length > 0 && (
         <SatCard title="The {result.flagged.length} you missed" icon={XCircle} iconColor={C.amber} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>

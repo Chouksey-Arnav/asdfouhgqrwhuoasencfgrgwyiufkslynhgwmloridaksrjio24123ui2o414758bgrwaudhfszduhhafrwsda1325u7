@@ -20,7 +20,7 @@ const NAV_GROUPS = [
   { id: 'home',   label: null,       ids: ['overview'] },
   { id: 'assess', label: 'Assess',   ids: ['baseline', 'diagnostic', 'tests'] },
   { id: 'train',  label: 'Train',    ids: ['practice', 'skills', 'review'] },
-  { id: 'track',  label: 'Toolkit',  ids: ['toolkit', 'scores'] },
+  { id: 'track',  label: 'Toolkit',  ids: ['library', 'toolkit', 'scores'] },
 ];
 
 /**

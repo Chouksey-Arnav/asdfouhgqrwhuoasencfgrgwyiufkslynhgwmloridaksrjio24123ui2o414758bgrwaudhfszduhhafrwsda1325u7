@@ -31,7 +31,7 @@ export const SUBVIEWS = {
   sat: {
     state: 'satView',
     default: 'overview',
-    ids: ['overview', 'baseline', 'diagnostic', 'practice', 'tests', 'review', 'skills', 'toolkit', 'scores'],
+    ids: ['overview', 'baseline', 'diagnostic', 'practice', 'tests', 'review', 'skills', 'library', 'toolkit', 'scores'],
   },
   prep: {
     state: 'prepView',

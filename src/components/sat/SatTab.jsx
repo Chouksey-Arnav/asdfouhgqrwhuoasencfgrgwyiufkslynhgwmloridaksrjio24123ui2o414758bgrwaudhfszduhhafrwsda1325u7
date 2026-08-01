@@ -10,6 +10,7 @@ import SatFullTestPanel from './SatFullTestPanel';
 import SatReviewLogPanel from './SatReviewLogPanel';
 import SatSkillsPanel from './SatSkillsPanel';
 import SatToolkitPanel from './SatToolkitPanel';
+import SatLibraryPanel from './SatLibraryPanel';
 import ScoreTrackerPanel from '../ScoreTrackerPanel';
 import { SatToolsProvider } from './SatToolsContext';
 import SatMedabrain from './SatMedabrain';
@@ -91,6 +92,7 @@ export default function SatTab({
     tests: () => <SatFullTestPanel accent={C.sky} {...shared} />,
     review: () => <SatReviewLogPanel accent={C.rose} {...shared} />,
     skills: () => <SatSkillsPanel accent={C.sky} {...shared} />,
+    library: () => <SatLibraryPanel accent={C.sky} params={params} onConsumeParams={onConsumeParams} {...shared} />,
     toolkit: () => <SatToolkitPanel accent={C.sky} isMobile={isMobile} />,
     // Reuses the existing Portfolio score tracker rather than duplicating a
     // second SAT/ACT score log against the same test_scores table.

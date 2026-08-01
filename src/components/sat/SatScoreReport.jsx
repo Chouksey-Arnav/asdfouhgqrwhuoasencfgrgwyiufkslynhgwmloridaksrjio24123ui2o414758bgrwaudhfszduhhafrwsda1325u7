@@ -5,6 +5,7 @@ import { StatTile } from '../ui/PanelHero';
 import { SatPageHeader, SatCard } from './satUi';
 import { Bar } from '../ui/primitives';
 import { domainBreakdown, pacingAnalysis, routingNarrative } from '../../lib/sat/adaptive';
+import { SatVideoRecommendations } from './SatVideoRecs';
 import { SAT_SECTIONS, skillMeta } from '../../data/sat/taxonomy';
 import { SCORE_DISCLAIMER, MODULE_PATHS, ROUTING_THRESHOLD } from '../../data/sat/scoring';
 
@@ -148,6 +149,18 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
           </div>
         </SatCard>
       )}
+
+      {/* ── What to actually do about it ──
+          A score report that ends at "here is what you are bad at" hands the
+          student a diagnosis and no treatment. This is the moment they are most
+          willing to act, so the instruction goes here rather than three screens
+          away. */}
+      <SatVideoRecommendations
+        weakSkills={worstSkills.map(s => ({ skill: s.skill, accuracy: s.correct / s.total }))}
+        title="Start here before your next test"
+        isMobile={isMobile}
+        onNavigate={onNavigate}
+      />
 
       <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }) }}>
         {missed.length > 0 && (

@@ -12,7 +12,7 @@ import { Radar, Line, Doughnut } from 'react-chartjs-2';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 import {
-  Home, Compass, Route, Layers, MessageCircle, Layers3, BookOpen,
+  Home, Compass, Route, Layers, MessageCircle, Layers3, BookOpen, Library,
   Trophy, Building2, LineChart, Settings, Flame, Zap, CheckCircle2, TrendingUp,
   Lock, Check, X, AlertTriangle, FileDown, Sparkles, Coffee, Target, PartyPopper,
   Search, Package, Handshake, FlaskConical, CalendarDays, Award, ChevronRight, ChevronLeft,
@@ -323,6 +323,10 @@ const SAT_SUBNAV = [
   // Math question. This is its home: the real calculator at full size, the
   // formula sheet the exam does (and does not) give you, and the technique list
   // that turns "there is a calculator" into points.
+  // The bank, browsable, plus College Board's own free material. Sits beside
+  // the Calculator rather than under Train because it is a reference surface —
+  // somewhere you go looking for a specific thing, not somewhere you are sent.
+  {id:'library',ic:Library,label:'Library',color:C.sky},
   {id:'toolkit',ic:Calculator,label:'Calculator',color:C.sky},
   {id:'scores',ic:LineChart,label:'Scores',color:C.sky},
 ];
