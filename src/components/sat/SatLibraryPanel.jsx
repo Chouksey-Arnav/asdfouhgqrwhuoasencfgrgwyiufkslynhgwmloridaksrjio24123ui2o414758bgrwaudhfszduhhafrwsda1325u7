@@ -1,0 +1,455 @@
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Library, Search, ChevronDown, ExternalLink, Filter, Play, BookOpen, Star, X,
+} from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, btnG, inp, R, CC, G, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented } from './satUi';
+import { StatTile } from '../ui/PanelHero';
+import MathText from '../ui/MathText';
+import { SatSkillVideos } from './SatVideoRecs';
+import {
+  SAT_QUESTIONS, pool, BANK_SIZE,
+} from '../../data/sat/questions/index.js';
+import {
+  SAT_SECTIONS, SAT_DOMAINS, SAT_SKILLS, SECTION_IDS, DOMAINS_BY_SECTION,
+  SKILLS_BY_DOMAIN, DIFFICULTIES, DIFFICULTY_IDS, TRAP_TAGS, skillMeta,
+} from '../../data/sat/taxonomy';
+import { orderedResources, RESOURCE_KINDS } from '../../data/sat/resources.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Library — the question bank, browsable, plus the official resources.
+//
+// WHY A BROWSER AT ALL
+// Every other route into the bank is chosen FOR the student: the selector picks
+// their drill set, the test builder assembles their module. That is right for
+// most sessions and wrong for one specific and common one — "I have twenty
+// minutes and I know exactly what I am bad at." Filtering the whole bank by
+// domain, skill and difficulty is the only way to serve that, and hiding a
+// 300-item bank behind an algorithm makes the app feel smaller than it is.
+//
+// WHY THE OFFICIAL RESOURCES SHARE THIS SCREEN
+// Because the honest version of "here is our question bank" is "and here is
+// where to find the official one". Putting them side by side is a deliberate
+// admission: our items are original and blueprint-matched, but the four
+// adaptive tests in Bluebook are written by the people who write the real exam
+// and nothing here replaces them. A prep tool that buries that is selling
+// something.
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: 'bank', label: 'Question bank' },
+  { id: 'official', label: 'Official & free resources' },
+];
+
+const SECTION_FILTERS = [
+  { id: 'all', label: 'Both sections' },
+  ...SECTION_IDS.map(s => ({ id: s, label: SAT_SECTIONS[s].label })),
+];
+
+const DIFFICULTY_FILTERS = [
+  { id: 'all', label: 'Any level' },
+  ...DIFFICULTY_IDS.map(d => ({ id: d, label: DIFFICULTIES[d].label })),
+];
+
+const PAGE_SIZE = 25;
+
+export default function SatLibraryPanel({
+  accent = C.sky, isMobile = false, onNavigate, params, onConsumeParams,
+}) {
+  const [tab, setTab] = useState('bank');
+  const [section, setSection] = useState('all');
+  const [difficulty, setDifficulty] = useState('all');
+  const [skill, setSkill] = useState(params?.skill || null);
+  const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState(null);
+  const [limit, setLimit] = useState(PAGE_SIZE);
+
+  // Deep links from the heat map and the review log arrive as {skill}. Consume
+  // the param so navigating away and back does not silently re-apply it.
+  React.useEffect(() => {
+    if (params?.skill) {
+      setSkill(params.skill);
+      setSection(skillMeta(params.skill).section || 'all');
+      onConsumeParams?.();
+    }
+  }, [params?.skill]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const results = useMemo(() => {
+    let rows = pool({
+      section: section === 'all' ? undefined : section,
+      skill: skill || undefined,
+      difficulty: difficulty === 'all' ? undefined : difficulty,
+    });
+    const q = query.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(r =>
+        (r.q || '').toLowerCase().includes(q)
+        || (r.stimulus || '').toLowerCase().includes(q)
+        || (r.notes || []).some(n => n.toLowerCase().includes(q)));
+    }
+    // Easy first: a student browsing a skill they are weak at should meet the
+    // approachable version of it before the hard one, which is also the order
+    // the real modules present them in.
+    const rank = { E: 0, M: 1, H: 2 };
+    return rows.sort((a, b) => (rank[a.difficulty] - rank[b.difficulty]) || a.id.localeCompare(b.id));
+  }, [section, skill, difficulty, query]);
+
+  const visible = results.slice(0, limit);
+
+  const clearFilters = () => {
+    setSection('all'); setDifficulty('all'); setSkill(null); setQuery(''); setLimit(PAGE_SIZE);
+  };
+  const filtered = section !== 'all' || difficulty !== 'all' || skill || query.trim();
+
+  // Skills offered in the picker, narrowed to the chosen section.
+  const skillGroups = useMemo(() => {
+    const sections = section === 'all' ? SECTION_IDS : [section];
+    return sections.flatMap(s => (DOMAINS_BY_SECTION[s] || []).map(d => ({
+      domain: d,
+      label: SAT_DOMAINS[d].label,
+      color: SAT_DOMAINS[d].color,
+      skills: SKILLS_BY_DOMAIN[d] || [],
+    })));
+  }, [section]);
+
+  const counts = useMemo(() => ({
+    total: BANK_SIZE,
+    rw: SAT_QUESTIONS.filter(q => q.section === 'rw').length,
+    math: SAT_QUESTIONS.filter(q => q.section === 'math').length,
+  }), []);
+
+  return (
+    <div style={CC({ gap: 20 })}>
+      <SatPageHeader
+        accent={accent}
+        eyebrow="SAT · Library" title="Every question, and where the official ones live"
+        sub="Browse the whole bank by section, domain, skill and difficulty — or go straight to College Board's own free material. Both belong in a serious prep plan, and they are not interchangeable."
+        meta={[
+          { value: counts.total, label: 'questions' },
+          { value: Object.keys(SAT_SKILLS).length, label: 'skills covered' },
+        ]}
+        m={isMobile}
+        tourTag="sat-deep-library"
+      />
+
+      <Segmented options={TABS} value={tab} onChange={setTab} accent={accent} label="Show" />
+
+      {tab === 'official' ? (
+        <OfficialResources isMobile={isMobile} />
+      ) : (
+        <>
+          <div style={G(3, 12, {}, isMobile)}>
+            <StatTile icon={Library} color={accent} value={counts.total} label="in the bank" />
+            <StatTile icon={BookOpen} color={SAT_SECTIONS.rw.color} value={counts.rw} label="Reading & Writing" onClick={() => { setSection('rw'); setSkill(null); }} />
+            <StatTile icon={Filter} color={SAT_SECTIONS.math.color} value={counts.math} label="Math" onClick={() => { setSection('math'); setSkill(null); }} />
+          </div>
+
+          {/* ── Filters ── */}
+          <SatCard title="Narrow it down" icon={Filter} iconColor={accent} m={isMobile}>
+            <div style={CC({ gap: 14 })}>
+              <Segmented
+                options={SECTION_FILTERS}
+                value={section}
+                onChange={(v) => { setSection(v); setSkill(null); setLimit(PAGE_SIZE); }}
+                accent={accent}
+                label="Section"
+              />
+              <Segmented
+                options={DIFFICULTY_FILTERS}
+                value={difficulty}
+                onChange={(v) => { setDifficulty(v); setLimit(PAGE_SIZE); }}
+                accent={accent}
+                label="Difficulty"
+              />
+
+              <div>
+                <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 9 }}>
+                  Skill
+                </div>
+                <div style={CC({ gap: 11 })}>
+                  {skillGroups.map(g => (
+                    <div key={g.domain}>
+                      <div style={{ fontSize: 11, color: g.color, fontWeight: 700, marginBottom: 6 }}>{g.label}</div>
+                      <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+                        {g.skills.map(s => {
+                          const active = skill === s;
+                          const n = pool({ skill: s }).length;
+                          return (
+                            <button
+                              key={s}
+                              onClick={() => { setSkill(active ? null : s); setLimit(PAGE_SIZE); }}
+                              style={btnSm(active ? tint(g.color, 0.2) : 'rgba(255,255,255,0.03)', {
+                                border: `1px solid ${active ? tint(g.color, 0.45) : C.b1}`,
+                                color: active ? '#fff' : C.t2, fontSize: 11.5, gap: 6,
+                              })}
+                            >
+                              {SAT_SKILLS[s].label}
+                              <span style={{ fontFamily: C.FM, fontSize: 10, color: active ? 'rgba(255,255,255,0.7)' : C.t4 }}>{n}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+                <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+                  <Search size={13} color={C.t4} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)' }} />
+                  <input
+                    value={query}
+                    onChange={(e) => { setQuery(e.target.value); setLimit(PAGE_SIZE); }}
+                    placeholder="Search question text…"
+                    aria-label="Search the question bank"
+                    style={inp({ paddingLeft: 32, width: '100%' })}
+                  />
+                </div>
+                {filtered && (
+                  <button onClick={clearFilters} style={btnG({ padding: '9px 14px', fontSize: 12 })}>
+                    <X size={12} /> Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          </SatCard>
+
+          {/* ── Results ── */}
+          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12.5, color: C.t2 }}>
+              <b style={{ color: C.t1, fontFamily: C.FM }}>{results.length}</b>
+              {results.length === 1 ? ' question' : ' questions'}
+              {skill ? ` in ${SAT_SKILLS[skill].label}` : ''}
+            </span>
+            {skill && (
+              <button
+                onClick={() => onNavigate?.('practice', { skill })}
+                style={btn(`linear-gradient(135deg,${accent},${C.indigo})`, { padding: '8px 15px', fontSize: 12 })}
+              >
+                <Play size={12} /> Drill this skill
+              </button>
+            )}
+          </div>
+
+          {skill && <SatSkillVideos skill={skill} limit={2} isMobile={isMobile} />}
+
+          {results.length === 0 ? (
+            <div style={{ ...glass2({ padding: 22, textAlign: 'center' }), fontSize: 12.5, color: C.t3 }}>
+              Nothing matches those filters. Try widening the difficulty or clearing the search.
+            </div>
+          ) : (
+            <div style={CC({ gap: 10 })}>
+              {visible.map(q => (
+                <BankRow
+                  key={q.id}
+                  question={q}
+                  open={expanded === q.id}
+                  onToggle={() => setExpanded(expanded === q.id ? null : q.id)}
+                  isMobile={isMobile}
+                />
+              ))}
+              {results.length > visible.length && (
+                <button
+                  onClick={() => setLimit(l => l + PAGE_SIZE)}
+                  style={btnG({ alignSelf: 'center', padding: '9px 18px', fontSize: 12 })}
+                >
+                  Show {Math.min(PAGE_SIZE, results.length - visible.length)} more
+                  <span style={{ color: C.t4, marginLeft: 6, fontFamily: C.FM }}>
+                    ({visible.length}/{results.length})
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ── One question, collapsed to its stem and expandable to the full rationale ──
+function BankRow({ question: q, open, onToggle, isMobile }) {
+  const meta = skillMeta(q.skill);
+  const diff = DIFFICULTIES[q.difficulty] || DIFFICULTIES.M;
+
+  return (
+    <div style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${open ? tint(meta.color, 0.3) : C.b1}` }}>
+      <button
+        onClick={onToggle}
+        style={{ width: '100%', textAlign: 'left', padding: isMobile ? 14 : 16, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: C.FB }}
+      >
+        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
+          <span style={pill(tint(meta.color, 0.14), meta.color, { fontSize: 10 })}>{meta.label}</span>
+          <span style={pill(tint(diff.color, 0.14), diff.color, { fontSize: 10 })}>{diff.label}</span>
+          {q.format === 'spr' && (
+            <span style={pill(tint(C.violet, 0.14), C.violetL, { fontSize: 10 })}>Grid-in</span>
+          )}
+          <span style={{ marginLeft: 'auto', fontSize: 10, color: C.t4, fontFamily: C.FM }}>{q.id}</span>
+          <ChevronDown size={14} color={C.t3} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .2s' }} />
+        </div>
+        <div style={{
+          fontSize: 12.5, color: C.t1, lineHeight: 1.6,
+          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: open ? 99 : 2, WebkitBoxOrient: 'vertical',
+        }}>
+          <MathText text={q.q} />
+        </div>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
+            <div style={{ padding: isMobile ? '0 14px 14px' : '0 16px 16px' }}>
+              {q.stimulus && (
+                <div style={{ ...glass2({ padding: 13 }), fontSize: 12, color: C.t2, lineHeight: 1.75, whiteSpace: 'pre-wrap', marginBottom: 12 }}>
+                  <MathText text={q.stimulus} />
+                </div>
+              )}
+              {q.notes && (
+                <ul style={{ ...glass2({ padding: '13px 13px 13px 30px' }), margin: '0 0 12px', color: C.t2, fontSize: 12, lineHeight: 1.75 }}>
+                  {q.notes.map((n, i) => <li key={i}>{n}</li>)}
+                </ul>
+              )}
+
+              {q.format === 'mcq' ? (
+                <div style={CC({ gap: 7, marginBottom: 12 })}>
+                  {q.ch.map((choice, i) => {
+                    const correct = i === q.ans;
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          ...glass2({ padding: '10px 12px' }),
+                          borderColor: correct ? tint(C.green, 0.4) : C.b1,
+                          background: correct ? tint(C.green, 0.07) : undefined,
+                        }}
+                      >
+                        <div style={R({ gap: 9, alignItems: 'flex-start' })}>
+                          <span style={{
+                            width: 18, height: 18, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                            background: correct ? tint(C.green, 0.2) : 'rgba(255,255,255,0.05)',
+                            color: correct ? C.greenL : C.t3,
+                            fontSize: 10, fontWeight: 800, fontFamily: C.FM,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          }}>{'ABCD'[i]}</span>
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.55 }}>
+                              <MathText text={choice} />
+                            </div>
+                            {q.distractorExp?.[i] && (
+                              <div style={{ fontSize: 11.5, color: correct ? C.greenL : C.t3, marginTop: 5, lineHeight: 1.6 }}>
+                                {q.distractorExp[i]}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div style={{ ...glass2({ padding: 12 }), marginBottom: 12, borderColor: tint(C.green, 0.35) }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                    Accepted answers
+                  </div>
+                  <div style={{ fontSize: 13, color: C.t1, fontFamily: C.FM }}>
+                    {(q.sprAccept?.values || []).join('   or   ')}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ ...glass2({ padding: 12 }), marginBottom: q.trap ? 10 : 0 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                  Why
+                </div>
+                <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}>
+                  <MathText text={q.exp} />
+                </div>
+              </div>
+
+              {q.trap && (
+                <div style={{ fontSize: 11, color: C.amberL, lineHeight: 1.6 }}>
+                  Trap: {TRAP_TAGS[q.trap] || q.trap.replace(/_/g, ' ')}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Official and free resources ─────────────────────────────────────────────
+function OfficialResources({ isMobile }) {
+  const rows = useMemo(orderedResources, []);
+  return (
+    <div style={CC({ gap: 16 })}>
+      <div style={{
+        ...glass({ padding: isMobile ? 16 : 20 }),
+        border: `1px solid ${tint(C.amber, 0.32)}`,
+        background: `linear-gradient(120deg,${tint(C.amber, 0.1)},rgba(255,255,255,0.015))`,
+      }}>
+        <div style={{ ...R({ gap: 9 }), marginBottom: 8 }}>
+          <Star size={14} color={C.amberL} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: C.t1 }}>Read this before you use any of it</span>
+        </div>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75 }}>
+          Our bank is original, blueprint-matched and built for volume, diagnosis and drilling.
+          It is not written by College Board, and no practice bank anywhere is. The four adaptive
+          tests in Bluebook are the only ones written by the people who write the real exam — take
+          at least two of them, and treat their score as the real number. Everything on this app,
+          including its score estimates, is preparation for those.
+        </div>
+      </div>
+
+      <div style={CC({ gap: 11 })}>
+        {rows.map(r => (
+          <div key={r.id} style={glass({ padding: isMobile ? 14 : 17 })}>
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
+              <span style={pill(tint(C.sky, 0.14), C.skyL, { fontSize: 10 })}>
+                {RESOURCE_KINDS[r.kind]?.label || r.kind}
+              </span>
+              <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>{r.org}</span>
+            </div>
+
+            <a
+              href={r.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ ...R({ gap: 7 }), fontSize: 14, fontWeight: 700, color: C.t1, textDecoration: 'none' }}
+            >
+              {r.title}
+              <ExternalLink size={12} color={C.t3} />
+            </a>
+
+            <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7, marginTop: 7 }}>{r.blurb}</div>
+
+            <div style={{ ...glass2({ padding: '9px 12px' }), marginTop: 11, borderColor: tint(C.sky, 0.2) }}>
+              <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+                <b style={{ color: C.skyL }}>Use it for: </b>{r.why}
+              </span>
+            </div>
+
+            {!!r.children?.length && (
+              <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 12 }}>
+                {r.children.map(c => (
+                  <span key={c.label} style={R({ gap: 4 })}>
+                    <a href={c.url} target="_blank" rel="noopener noreferrer" style={btnSm('rgba(255,255,255,0.03)', { border: `1px solid ${C.b1}`, color: C.t2, fontSize: 11.5, textDecoration: 'none' })}>
+                      {c.label}
+                    </a>
+                    {c.answers && (
+                      <a href={c.answers} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: C.t4, textDecoration: 'none' }} title={`${c.label} answer key`}>
+                        key
+                      </a>
+                    )}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

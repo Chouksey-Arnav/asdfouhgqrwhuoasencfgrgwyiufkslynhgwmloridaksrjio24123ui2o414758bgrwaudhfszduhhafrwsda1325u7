@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import * as DB from '../../lib/db';
+import { getQuestion } from '../../data/sat/questions/index.js';
 import { awardXP } from '../../lib/rewards';
 import { celebrateXP } from '../../lib/celebrate';
 import { scheduleCard } from '../../lib/fsrs';
@@ -37,7 +38,12 @@ export function useSatSession({ onFinished } = {}) {
   /** Persist one response. Safe to call before the attempt row exists. */
   const recordResponse = useCallback(async (id, response) => {
     if (!id) return;
-    await DB.recordSatResponse({ attemptId: id, ...response });
+    // The question snapshot is for the Review Log, not the response row — one
+    // row per answered question times a full test is a lot of duplicated
+    // stimulus text to carry in `satResponses`, which is already the largest
+    // SAT store and is synced.
+    const { question, ...responseRow } = response;
+    await DB.recordSatResponse({ attemptId: id, ...responseRow });
 
     // A miss — or a correct answer the student flagged, which usually means a
     // guess — goes into the Review Log immediately, due now.
@@ -45,8 +51,16 @@ export function useSatSession({ onFinished } = {}) {
       await DB.addSatReviewEntry({
         questionId: response.questionId,
         skill: response.skill,
+        section: response.section,
+        chosen: response.choice ?? response.input ?? null,
         due: Date.now(),
         wasFlaggedGuess: !!(response.correct && response.flagged),
+        source: response.source || 'practice',
+        // Only carry the snapshot for items the static bank cannot resolve.
+        // Storing it for bank questions too would duplicate the bank into
+        // IndexedDB and, worse, freeze a stale copy: a corrected explanation
+        // shipped later would never reach a student whose log predates it.
+        ...(question && !getQuestion(question.id) ? { question } : {}),
       });
     }
   }, []);

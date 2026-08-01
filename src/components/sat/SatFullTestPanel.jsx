@@ -298,10 +298,23 @@ export default function SatFullTestPanel({
 
         <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
           <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
-            <b style={{ color: C.t1 }}>What we do not simulate:</b> passage annotation and highlighting.
-            Everything else — module timing, the hideable timer, flagging, cross-out, the review
-            screen, the calculator, the reference sheet, adaptive routing and the score ceiling —
-            matches the real format.
+            <b style={{ color: C.t1 }}>Question order matches the real thing.</b> Reading &amp; Writing
+            runs Craft and Structure, then Information and Ideas, then Standard English Conventions,
+            then Expression of Ideas — grouped by question type and running easiest to hardest inside
+            each group, exactly as Bluebook presents it. Maths trends easy to hard with grid-ins
+            scattered through, about a quarter of the module. A practice test that shuffles its
+            questions teaches you to read the module wrong.
+          </div>
+        </div>
+
+        <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
+            <b style={{ color: C.t1 }}>Where we still differ:</b> the score conversion is our own
+            estimate rather than College Board&rsquo;s table, and highlighting has three colours
+            rather than Bluebook&rsquo;s annotate-with-notes. Everything else — module timing and
+            the five-minute warning, the hideable timer, flag-for-review, answer cross-out, the
+            end-of-module review screen, passage highlighting, Desmos, the reference sheet, adaptive
+            routing and the score ceiling on the easier Module 2 — matches the real format.
           </div>
         </div>
 

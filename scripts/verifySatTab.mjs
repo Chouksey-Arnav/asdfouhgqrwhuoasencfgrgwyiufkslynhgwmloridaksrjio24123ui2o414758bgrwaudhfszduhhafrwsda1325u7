@@ -83,8 +83,21 @@ await step('SAT tab is reachable in the nav', async () => {
   if (!(await nav.count())) throw new Error('no SAT entry in nav');
 });
 
-await step('SAT sub-nav renders all eight views', async () => {
-  for (const label of ['Overview', 'Diagnostic', 'Practice', 'Full Tests', 'Review Log', 'Skill Mastery', 'Calculator', 'Scores']) {
+// The SAT sub-nav renders each tab as a real <a> when a hrefFor is supplied
+// (so cmd-click and "copy link address" behave like navigation) and as a
+// <button> otherwise — see SatNav in src/components/sat/satUi.jsx. Clicking via
+// `button:has-text(...)` therefore matched nothing for tabs whose label appears
+// nowhere else on the page, which is why this script used to die on Skill
+// Mastery while the sub-nav assertion above passed: that one uses `text=` and
+// found the anchor perfectly well. Match either element.
+const gotoSatView = async (label) => {
+  const nav = p.locator(`a:has-text("${label}"), button:has-text("${label}")`).first();
+  await nav.click();
+  await p.waitForTimeout(900);
+};
+
+await step('SAT sub-nav renders every view', async () => {
+  for (const label of ['Overview', 'Baseline', 'Diagnostic', 'Practice', 'Full Tests', 'Review Log', 'Skill Mastery', 'Library', 'Calculator', 'Scores']) {
     if (!(await p.locator(`text="${label}"`).count())) throw new Error(`missing sub-nav item: ${label}`);
   }
 });
@@ -144,8 +157,7 @@ await step('Can work through 12 questions including grid-ins', async () => {
 });
 
 await step('Skill Mastery renders the heat map', async () => {
-  await p.locator('button:has-text("Skill Mastery")').first().click();
-  await p.waitForTimeout(1200);
+  await gotoSatView("Skill Mastery");
   const t = await p.textContent('body');
   if (!/All 28 tested skills/.test(t)) throw new Error('skills panel did not render');
   if (!/not practised yet/.test(t)) throw new Error('heat map legend missing');
@@ -167,8 +179,7 @@ await step('Mastery is shown with its sample size, never bare', async () => {
 await p.screenshot({ path: 'shots/sat-skills.png', fullPage: true });
 
 await step('Full Tests panel renders the adaptive structure', async () => {
-  await p.locator('button:has-text("Full Tests")').first().click();
-  await p.waitForTimeout(900);
+  await gotoSatView("Full Tests");
   const t = await p.textContent('body');
   if (!/Module 1/.test(t)) throw new Error('test structure not shown');
   if (!/caps that section near 600|easier one caps/.test(t)) throw new Error('routing ceiling not explained');
@@ -176,15 +187,13 @@ await step('Full Tests panel renders the adaptive structure', async () => {
 await p.screenshot({ path: 'shots/sat-fulltest.png', fullPage: true });
 
 await step('Review Log renders', async () => {
-  await p.locator('button:has-text("Review Log")').first().click();
-  await p.waitForTimeout(900);
+  await gotoSatView("Review Log");
   if (!/review log|Your mistakes/i.test(await p.textContent('body'))) throw new Error('review log did not render');
 });
 await p.screenshot({ path: 'shots/sat-review.png', fullPage: true });
 
 await step('Practice panel renders all four modes', async () => {
-  await p.locator('button:has-text("Practice")').first().click();
-  await p.waitForTimeout(900);
+  await gotoSatView("Practice");
   const t = await p.textContent('body');
   for (const m of ['Smart Set', 'AI Set', 'Skill Drill', 'Timed Set']) {
     if (!t.includes(m)) throw new Error(`missing mode: ${m}`);

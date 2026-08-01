@@ -32,8 +32,27 @@ import {
 const VERBOSE = process.argv.includes('--verbose');
 
 // Minimum questions per leaf skill before adaptive selection starts repeating
-// itself noticeably. Raise this as the bank grows (target is ~35 in Phase 7).
-const MIN_PER_SKILL = 2;
+// itself noticeably. Raised from 2 to 6 with expansion batch B: at 2 a student
+// drilling one skill saw the same item on their third question.
+const MIN_PER_SKILL = 6;
+
+// Phrases that mean the author was still working the problem out when they hit
+// save. Every one of these shipped in a first draft of expansion batch B, in an
+// explanation that ALSO had the wrong answer key attached — the hedge and the
+// wrong key came from the same moment of confusion, which is exactly why the
+// hedge is worth gating on even though it is only a wording problem on its face.
+// An explanation is the one place in this app that must be certain: it is read
+// by a student who has just got the question wrong.
+const HESITATION_PATTERNS = [
+  /\bwait\b\s*[—–-]/i,
+  /\bhmm\b/i,
+  /\blet me (?:check|recheck|verify)\b/i,
+  /\bcheck the (?:direction|arithmetic)\b/i,
+  /\bactually,? (?:no|wait)\b/i,
+  /\bthe intended (?:single )?answer\b/i,
+  /\bas posed\b/i,
+  /\bI think\b/i,
+];
 // Acceptable drift between a domain's realised share of the bank and its
 // blueprint share, in percentage points.
 const DOMAIN_SHARE_TOLERANCE = 12;
@@ -68,6 +87,44 @@ for (const q of SAT_QUESTIONS) {
   if (typeof q.targetSeconds !== 'number' || q.targetSeconds <= 0) err(`${at} missing targetSeconds`);
   if (q.trap && !TRAP_TAGS[q.trap]) warn(`${at} unknown trap tag "${q.trap}"`);
 
+  // Authoring-hesitation lint. Applies to every piece of prose the student can
+  // actually read, plus `hint`, which is shown before they answer.
+  for (const [field, text] of [['exp', q.exp], ['hint', q.hint]]) {
+    if (typeof text !== 'string') continue;
+    for (const pattern of HESITATION_PATTERNS) {
+      if (pattern.test(text)) {
+        err(`${at} ${field} contains unresolved authoring hesitation (${pattern.source}) — re-derive the answer and rewrite`);
+        break;
+      }
+    }
+  }
+  if (Array.isArray(q.distractorExp)) {
+    for (const d of q.distractorExp) {
+      if (typeof d === 'string' && HESITATION_PATTERNS.some(p => p.test(d))) {
+        err(`${at} a distractorExp entry contains unresolved authoring hesitation — re-derive the answer and rewrite`);
+        break;
+      }
+    }
+  }
+
+  // Exactly one distractorExp entry should announce itself as the correct one,
+  // and it must be the one at `ans`. A mismatch here means the key and the
+  // rationale disagree, which is the single worst failure this bank can ship:
+  // the student is told they were wrong AND given the reasoning for a different
+  // choice. Three of these shipped in a first draft of batch B.
+  if (q.format === 'mcq' && Array.isArray(q.distractorExp)) {
+    const marked = q.distractorExp
+      .map((d, i) => (/^correct[.,:]/i.test(String(d).trim()) ? i : -1))
+      .filter(i => i >= 0);
+    if (marked.length === 0) {
+      warn(`${at} no distractorExp entry begins with "Correct." — cannot cross-check the answer key`);
+    } else if (marked.length > 1) {
+      err(`${at} ${marked.length} distractorExp entries claim to be correct (indexes ${marked.join(', ')})`);
+    } else if (marked[0] !== q.ans) {
+      err(`${at} answer key says index ${q.ans} but the "Correct." rationale is at index ${marked[0]} — key and explanation disagree`);
+    }
+  }
+
   if (q.format === 'mcq') {
     if (!Array.isArray(q.ch) || q.ch.length !== 4) {
       err(`${at} MCQ must have exactly 4 choices (has ${q.ch?.length ?? 0})`);
@@ -86,6 +143,27 @@ for (const q of SAT_QUESTIONS) {
   } else {
     err(`${at} invalid format "${q.format}" (expected "mcq" or "spr")`);
   }
+}
+
+// ── 4b. Near-duplicate items ────────────────────────────────────────────────
+// Unique ids do not make unique QUESTIONS. Expansion batch B shipped a cone
+// volume item whose stem was word-for-word an existing cylinder item, and the
+// only reason it surfaced was a human scrolling the new Library browser — the
+// selector would happily have served both in one drill set, which reads to a
+// student as the bank being smaller than it is.
+//
+// Normalisation strips punctuation and case so "What is its volume?" and
+// "what is its volume" collide, which is the point: cosmetic differences are
+// exactly how duplicates hide.
+const normalise = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const byStem = new Map();
+for (const q of SAT_QUESTIONS) {
+  const key = `${normalise(q.q)}||${normalise(q.stimulus)}`;
+  if (!byStem.has(key)) byStem.set(key, []);
+  byStem.get(key).push(q.id);
+}
+for (const [, ids] of byStem) {
+  if (ids.length > 1) err(`duplicate question text across ${ids.length} items: ${ids.join(', ')}`);
 }
 
 // ── 5. Answer-position balance ──────────────────────────────────────────────

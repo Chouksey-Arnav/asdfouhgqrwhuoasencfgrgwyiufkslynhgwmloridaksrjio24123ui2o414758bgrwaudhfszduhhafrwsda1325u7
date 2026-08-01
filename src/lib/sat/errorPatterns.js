@@ -23,12 +23,33 @@ const MIN_SHARE = 0.4;
  * @returns {Array<{id, kind, severity, title, body, cta, skill?, trap?, count}>}
  *          ordered most-actionable first
  */
+/**
+ * The question behind a review-log row, from whichever source has it.
+ *
+ * Bank first, then the snapshot the row carries, then the row's own denormalised
+ * fields. That last fallback matters: rows written before snapshots were stored
+ * still know their `skill` and `section`, which is enough for the skill-level
+ * patterns even though the trap-level ones will skip them.
+ *
+ * Resolving through the bank alone — which this module used to do — quietly
+ * excluded every baseline and AI-generated miss from pattern detection, so a
+ * student whose entire backlog came from the baseline saw "no patterns yet"
+ * with thirty entries sitting in their log.
+ */
+function questionFor(row) {
+  if (!row) return null;
+  const fromBank = getQuestion(row.questionId);
+  if (fromBank) return fromBank;
+  if (row.question) return row.question;
+  return row.skill ? { skill: row.skill, section: row.section, difficulty: row.difficulty } : null;
+}
+
 export function detectPatterns(misses = []) {
   if (misses.length < MIN_INSTANCES) return [];
 
   const enriched = misses
     .map(m => {
-      const q = getQuestion(m.questionId);
+      const q = questionFor(m);
       return q ? { ...m, skill: q.skill, domain: q.domain, section: q.section, trap: q.trap, difficulty: q.difficulty } : null;
     })
     .filter(Boolean);
@@ -152,8 +173,8 @@ export function reviewSummary(reviewLog = []) {
 export function weakSkillsFromLog(reviewLog = []) {
   const counts = {};
   for (const row of reviewLog.filter(r => !r.resolved)) {
-    const q = getQuestion(row.questionId);
-    if (!q) continue;
+    const q = questionFor(row);
+    if (!q?.skill) continue;
     counts[q.skill] = (counts[q.skill] || 0) + (row.missCount || 1);
   }
   return Object.entries(counts)

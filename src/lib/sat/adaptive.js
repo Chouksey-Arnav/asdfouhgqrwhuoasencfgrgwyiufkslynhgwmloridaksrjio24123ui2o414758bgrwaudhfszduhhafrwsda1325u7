@@ -13,11 +13,11 @@
 //   Math Module 1  22q / 35min  ->  Math Module 2  22q / 35min
 // ─────────────────────────────────────────────────────────────────────────────
 import {
-  SAT_SECTIONS, SAT_DOMAINS, DOMAINS_BY_SECTION, SECTION_IDS, BREAK_MINUTES,
-} from '../../data/sat/taxonomy';
+  SAT_SECTIONS, SAT_DOMAINS, SAT_SKILLS, DOMAINS_BY_SECTION, SECTION_IDS, BREAK_MINUTES,
+} from '../../data/sat/taxonomy.js';
 import { pool } from '../../data/sat/questions/index.js';
-import { routeModule2, scoreSection, compositeScore, compositePercentile } from '../../data/sat/scoring';
-import { seededRandom, seededShuffle, hashString } from './shuffle';
+import { routeModule2, scoreSection, compositeScore, compositePercentile } from '../../data/sat/scoring.js';
+import { seededRandom, seededShuffle, hashString } from './shuffle.js';
 
 // Difficulty mix per module. Module 1 is deliberately mixed so it can
 // discriminate across the whole ability range. Module 2 skews to match the
@@ -28,6 +28,130 @@ export const MODULE_BLUEPRINTS = {
   upper:   { E: 0.10, M: 0.40, H: 0.50 },
   lower:   { E: 0.55, M: 0.35, H: 0.10 },
 };
+
+// ── Presentation order ──────────────────────────────────────────────────────
+//
+// A module is not a shuffled bag, and shipping one as if it were is the single
+// most obvious way a practice test gives itself away to anyone who has actually
+// sat the exam. Bluebook orders a Reading & Writing module by DOMAIN, in a
+// fixed sequence, with questions testing the same skill grouped together and
+// running easiest-to-hardest inside each group. A student learns to read that
+// shape — they know roughly where they are in a module from the question type
+// alone, and they know a question appearing late in its group is meant to be
+// hard. A randomised module trains none of that and feels wrong immediately.
+//
+// The one documented exception is Standard English Conventions, which is
+// ordered by difficulty ALONE, irrespective of which rule is being tested. So a
+// comma question can sit next to a subject-verb question there, and does.
+export const RW_DOMAIN_ORDER = ['craft_structure', 'info_ideas', 'conventions', 'expression'];
+
+const DIFFICULTY_RANK = { E: 0, M: 1, H: 2 };
+
+/**
+ * Order one Reading & Writing module the way Bluebook presents it.
+ *
+ * Within a domain, skills appear in taxonomy order and each skill's questions
+ * run easy -> hard. Conventions is the exception noted above: one flat
+ * easy -> hard run, with ties broken randomly so the two Conventions skills
+ * interleave rather than marching through all the comma items first.
+ */
+function orderRwModule(questions, rng) {
+  const jitter = new Map(questions.map(q => [q.id, rng()]));
+  const skillOrder = Object.keys(SAT_SKILLS);
+
+  const byDomain = new Map(RW_DOMAIN_ORDER.map(d => [d, []]));
+  const orphans = [];
+  for (const q of questions) {
+    if (byDomain.has(q.domain)) byDomain.get(q.domain).push(q);
+    else orphans.push(q);
+  }
+
+  const out = [];
+  for (const domain of RW_DOMAIN_ORDER) {
+    const group = byDomain.get(domain) || [];
+    group.sort((a, b) => {
+      if (domain !== 'conventions') {
+        const sa = skillOrder.indexOf(a.skill);
+        const sb = skillOrder.indexOf(b.skill);
+        if (sa !== sb) return sa - sb;
+      }
+      const da = DIFFICULTY_RANK[a.difficulty] ?? 1;
+      const db = DIFFICULTY_RANK[b.difficulty] ?? 1;
+      if (da !== db) return da - db;
+      return jitter.get(a.id) - jitter.get(b.id);
+    });
+    out.push(...group);
+  }
+  return [...out, ...orphans];
+}
+
+/**
+ * Order one Math module.
+ *
+ * Math has no domain grouping — a module walks through all four domains — but
+ * it does trend easy -> hard, and grid-ins (student-produced response) are
+ * scattered through rather than parked at the end the way the old paper test
+ * did it. Both matter for pacing practice: a student needs to feel the ramp,
+ * and needs to meet a grid-in when they are not braced for one.
+ *
+ * The ramp is deliberately soft, not a strict sort. A perfectly monotonic
+ * module is its own tell — the moment a student notices question 18 is always
+ * harder than question 17 they start using position as a difficulty cue, which
+ * is a habit the real test will punish. Sorting on difficulty PLUS noise gives
+ * the genuine trend with the local disorder the real thing has.
+ */
+function orderMathModule(questions, rng) {
+  const RAMP_NOISE = 0.8; // in difficulty-rank units; ~ one band of local slop
+  return [...questions]
+    .map(q => ({
+      q,
+      key: (DIFFICULTY_RANK[q.difficulty] ?? 1) + (rng() - 0.5) * 2 * RAMP_NOISE,
+    }))
+    .sort((a, b) => a.key - b.key)
+    .map(x => x.q);
+}
+
+/** Order a built module for presentation, per its section's real conventions. */
+export function orderModule(section, questions, rng) {
+  return section === 'rw' ? orderRwModule(questions, rng) : orderMathModule(questions, rng);
+}
+
+// ── Allocation ──────────────────────────────────────────────────────────────
+
+/**
+ * Largest-remainder apportionment: split `total` across `weights` so the parts
+ * are proportional AND sum to exactly `total`.
+ *
+ * Naive per-bucket rounding was the previous approach and it leaked questions:
+ * rounding four domain shares and then three difficulty shares inside each of
+ * them compounds, and a 27-question module routinely came out at 24 or 25 with
+ * the remainder back-filled at random from anywhere in the section. That
+ * silently broke the blueprint the module is supposed to be reproducing.
+ *
+ * @param {number} total
+ * @param {Array<{key:string, weight:number}>} weights
+ * @returns {Map<string, number>}
+ */
+export function apportion(total, weights) {
+  const sum = weights.reduce((s, w) => s + (w.weight || 0), 0);
+  if (!sum || total <= 0) return new Map(weights.map(w => [w.key, 0]));
+
+  const rows = weights.map(w => {
+    const exact = (w.weight / sum) * total;
+    return { key: w.key, exact, n: Math.floor(exact) };
+  });
+  let assigned = rows.reduce((s, r) => s + r.n, 0);
+  rows.sort((a, b) => (b.exact - Math.floor(b.exact)) - (a.exact - Math.floor(a.exact)));
+  for (let i = 0; assigned < total; i++, assigned++) rows[i % rows.length].n += 1;
+
+  return new Map(rows.map(r => [r.key, r.n]));
+}
+
+// Share of a Math module that is student-produced response (grid-in). College
+// Board puts it at about a quarter; 22 x 0.25 rounds to 6 in practice, and a
+// module that hands a student 22 multiple-choice questions in a row teaches
+// them nothing about typing an answer into a box under time pressure.
+export const MATH_SPR_SHARE = 0.25;
 
 /** Ordered stages of a full test, for the player's state machine. */
 export function buildTestPlan() {
@@ -57,21 +181,45 @@ export function buildModule({
   const used = new Set(exclude);
   const picked = [];
 
-  // Fill domain by domain so the module matches the real content blueprint,
-  // and within each domain honour the difficulty mix.
-  for (const domainId of DOMAINS_BY_SECTION[section]) {
-    const domainTarget = Math.round(target * SAT_DOMAINS[domainId].share);
-    for (const [difficulty, share] of Object.entries(mix)) {
-      const want = Math.round(domainTarget * share);
+  // Domain counts first, exactly (see apportion), then the difficulty mix
+  // exactly within each domain. Two levels of largest-remainder rather than two
+  // levels of Math.round.
+  const domainIds = DOMAINS_BY_SECTION[section];
+  const perDomain = apportion(target, domainIds.map(d => ({ key: d, weight: SAT_DOMAINS[d].share })));
+
+  for (const domainId of domainIds) {
+    const domainTarget = perDomain.get(domainId) || 0;
+    if (domainTarget <= 0) continue;
+    const perDifficulty = apportion(
+      domainTarget,
+      Object.entries(mix).map(([d, share]) => ({ key: d, weight: share })),
+    );
+    for (const [difficulty, want] of perDifficulty) {
       if (want <= 0) continue;
       const candidates = pool({ domain: domainId, difficulty, exclude: used });
       const take = seededShuffle(candidates, rng).slice(0, want);
       take.forEach(q => used.add(q.id));
       picked.push(...take);
+      // If the bank is thin at this exact (domain, difficulty), borrow from the
+      // adjacent band in the SAME domain before giving up on the domain count.
+      // Content coverage is the promise a blueprint makes; the difficulty mix
+      // is a means to it, so that is the one to bend first.
+      let missing = want - take.length;
+      if (missing > 0) {
+        const nearby = difficulty === 'M' ? ['H', 'E'] : difficulty === 'E' ? ['M', 'H'] : ['M', 'E'];
+        for (const alt of nearby) {
+          if (missing <= 0) break;
+          const extra = seededShuffle(pool({ domain: domainId, difficulty: alt, exclude: used }), rng).slice(0, missing);
+          extra.forEach(q => used.add(q.id));
+          picked.push(...extra);
+          missing -= extra.length;
+        }
+      }
     }
   }
 
-  // Top up from anywhere in the section if rounding or bank gaps left us short.
+  // Top up from anywhere in the section only as a last resort — this is the
+  // path that breaks the blueprint, so `shortfall` reports how far it had to go.
   if (picked.length < target) {
     const filler = seededShuffle(pool({ section, exclude: used }), rng);
     for (const q of filler.slice(0, target - picked.length)) {
@@ -80,11 +228,57 @@ export function buildModule({
     }
   }
 
+  let questions = picked.slice(0, target);
+
+  // Math: hold the grid-in share near the real one by swapping formats within a
+  // domain, so correcting the format never costs the content blueprint.
+  if (section === 'math') questions = balanceSprShare(questions, used, rng);
+
   return {
-    questions: seededShuffle(picked, rng).slice(0, target),
-    shortfall: Math.max(0, target - picked.length),
+    questions: orderModule(section, questions, rng),
+    shortfall: Math.max(0, target - questions.length),
     requested: target,
+    sprCount: questions.filter(q => q.format === 'spr').length,
   };
+}
+
+/**
+ * Nudge a built Math module toward MATH_SPR_SHARE grid-ins by swapping items
+ * for same-domain, same-difficulty items of the other format. Swapping inside
+ * (domain, difficulty) is what makes this safe: the module's content and
+ * difficulty blueprint are untouched, only the response format moves.
+ * Best-effort — a bank with no grid-ins for a domain simply keeps what it has.
+ */
+function balanceSprShare(questions, used, rng) {
+  const wantSpr = Math.round(questions.length * MATH_SPR_SHARE);
+  const out = [...questions];
+
+  const swapOne = (fromFormat, toFormat) => {
+    const candidates = out
+      .map((q, i) => ({ q, i }))
+      .filter(({ q }) => q.format === fromFormat);
+    for (const { q, i } of seededShuffle(candidates, rng)) {
+      const replacements = pool({ domain: q.domain, difficulty: q.difficulty, exclude: used })
+        .filter(r => r.format === toFormat);
+      if (!replacements.length) continue;
+      const pick = seededShuffle(replacements, rng)[0];
+      used.add(pick.id);
+      used.delete(q.id);
+      out[i] = pick;
+      return true;
+    }
+    return false;
+  };
+
+  let guard = questions.length;
+  while (out.filter(q => q.format === 'spr').length < wantSpr && guard-- > 0) {
+    if (!swapOne('mcq', 'spr')) break;
+  }
+  guard = questions.length;
+  while (out.filter(q => q.format === 'spr').length > wantSpr && guard-- > 0) {
+    if (!swapOne('spr', 'mcq')) break;
+  }
+  return out;
 }
 
 /**

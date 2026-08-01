@@ -13,17 +13,30 @@ import { MATH_ADVANCED_QUESTIONS }      from './mathAdvanced.js';
 import { MATH_PSDA_QUESTIONS }          from './mathPSDA.js';
 import { MATH_GEO_TRIG_QUESTIONS }      from './mathGeoTrig.js';
 
+// Expansion batch B. Split into separate files per domain rather than appended
+// to the originals for the same reason src/data/elib*.js is split: a 2,000-line
+// data file is one nobody reviews carefully, and this bank's correctness is
+// load-bearing for a score estimate.
+import { RW_CRAFT_STRUCTURE_B } from './rwCraftStructureB.js';
+import { RW_INFO_IDEAS_B }      from './rwInfoIdeasB.js';
+import { RW_CONVENTIONS_B }     from './rwConventionsB.js';
+import { RW_EXPRESSION_B }      from './rwExpressionB.js';
+import { MATH_ALGEBRA_B }       from './mathAlgebraB.js';
+import { MATH_ADVANCED_B }      from './mathAdvancedB.js';
+import { MATH_PSDA_B }          from './mathPSDAB.js';
+import { MATH_GEO_TRIG_B }      from './mathGeoTrigB.js';
+
 import { SAT_SKILLS, SKILL_IDS, skillMeta } from '../taxonomy.js';
 
 export const SAT_QUESTIONS = [
-  ...RW_CRAFT_STRUCTURE_QUESTIONS,
-  ...RW_INFO_IDEAS_QUESTIONS,
-  ...RW_CONVENTIONS_QUESTIONS,
-  ...RW_EXPRESSION_QUESTIONS,
-  ...MATH_ALGEBRA_QUESTIONS,
-  ...MATH_ADVANCED_QUESTIONS,
-  ...MATH_PSDA_QUESTIONS,
-  ...MATH_GEO_TRIG_QUESTIONS,
+  ...RW_CRAFT_STRUCTURE_QUESTIONS, ...RW_CRAFT_STRUCTURE_B,
+  ...RW_INFO_IDEAS_QUESTIONS,      ...RW_INFO_IDEAS_B,
+  ...RW_CONVENTIONS_QUESTIONS,     ...RW_CONVENTIONS_B,
+  ...RW_EXPRESSION_QUESTIONS,      ...RW_EXPRESSION_B,
+  ...MATH_ALGEBRA_QUESTIONS,       ...MATH_ALGEBRA_B,
+  ...MATH_ADVANCED_QUESTIONS,      ...MATH_ADVANCED_B,
+  ...MATH_PSDA_QUESTIONS,          ...MATH_PSDA_B,
+  ...MATH_GEO_TRIG_QUESTIONS,      ...MATH_GEO_TRIG_B,
 ];
 
 // ── Indexes ─────────────────────────────────────────────────────────────────
