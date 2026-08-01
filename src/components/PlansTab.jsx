@@ -16,7 +16,7 @@ import { computePlanReadiness } from '../lib/studentProfile';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, addDaysStr, resolveAllTaskLinks,
-  applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES, moveTaskToDay, reorderTasksInDay,
+  applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES, moveTaskToDay, reorderTasksInDay, planIsStale,
 } from '../lib/masterPlanGenerator';
 
 // Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
@@ -166,6 +166,23 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     }
   }
 
+  // Same rebuild as handleRegenerate, minus the confirm dialog — this one fires from the
+  // "your profile changed" banner below, which is already an explicit student click, not a
+  // background auto-rebuild (that would burn an Oracle call on every profile edit unprompted).
+  async function handleRefreshFromProfile() {
+    setGenerating(true);
+    setStageLabel("Medabrain's Oracle is updating your roadmap for your new profile…");
+    try {
+      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolioData);
+      saveUser({ ...user, masterPlan: updated });
+      toast.success('Your plan now reflects your updated profile.');
+    } catch {
+      toast.error("Couldn't refresh your roadmap — please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
   // Manual toggling only ever applies to task types the app has no way to verify happened (see
   // AUTO_VERIFIABLE_KINDS) — quiz/lesson/deck tasks are checked off automatically, for real, from
   // inside those features (App.jsx's applyPlanAutoComplete), and TaskRow below never renders a
@@ -235,9 +252,11 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   const weekNumber = getCurrentWeekNumber(plan);
   const phase = getCurrentPhase(plan);
   const upcoming = getUpcomingDays(plan, 14);
+  const stale = planIsStale(plan, user);
 
   return (
     <div style={CC({ gap: 22 })}>
+      {stale && <StaleProfileBanner accent={accent} onRefresh={handleRefreshFromProfile} />}
       <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} />
 
       <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} portfolioData={portfolioData} accent={accent} />
@@ -366,6 +385,25 @@ function GeneratingCard({ label, accent }) {
           {label}
         </motion.div>
       </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Stale-profile banner ──────────────────────────────────────────────────
+// Shown when planIsStale() detects the student's onboarding/profile facts
+// (goal, target score, pathway, obstacles, grades, ...) have changed since
+// this plan's roadmap was last built — e.g. after editing goals in Settings
+// or switching pathway. One click regenerates the roadmap (phases/milestones/
+// weekly themes) from the current profile; the day-by-day window already in
+// progress is left alone, same as a manual "Rebuild Roadmap".
+function StaleProfileBanner({ accent, onRefresh }) {
+  return (
+    <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', border: `1px solid ${C.amber}35`, background: `${C.amber}0e` }}>
+      <RefreshCw size={15} color={C.amberL} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>
+        Your profile's changed since this roadmap was built — refresh it so your plan reflects where you are now.
+      </div>
+      <button style={btnSm(accent, { color: '#fff' })} onClick={onRefresh}>Refresh My Plan</button>
     </div>
   );
 }

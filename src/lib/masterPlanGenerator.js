@@ -782,6 +782,40 @@ const CHUNK_DAYS = 7;
 const ROLLING_WINDOW_DAYS = 14; // how many days of full detail to keep generated ahead of today
 const EXTEND_THRESHOLD_DAYS = 3; // trigger the next chunk once this many days of window remain
 
+// ── Profile staleness — "keeps updating based on the student's updated
+// profile" ────────────────────────────────────────────────────────────────
+// The plan is expensive to regenerate (3 sequential Oracle calls), so it
+// isn't rebuilt on every keystroke in Settings. Instead, every roadmap-level
+// generation (createMasterPlan/regenerateRoadmap/adaptPlanToNotes) stamps a
+// snapshot of the profile fields it was actually built from onto the plan.
+// planIsStale() compares that snapshot to the student's CURRENT profile so
+// the UI can prompt a refresh the moment something the plan depends on
+// (goal, target score, pathway, obstacles, ...) has genuinely changed —
+// instead of the plan silently going stale until the student happens to hit
+// "Rebuild Roadmap" themselves.
+const PROFILE_SNAPSHOT_FIELDS = [
+  'goal', 'obstacles', 'accomplish', 'studyMethod', 'studyHours',
+  'onboardingTargetScore', 'onboardingCurrentScore', 'testTrack', 'examDate', 'testTimeline',
+  'gpaBand', 'sciences', 'healthExperience', 'whyMedicine', 'dreamRole', 'certainty',
+  'specialty', 'gradeStage',
+];
+function buildProfileSnapshot(user) {
+  const snap = {};
+  for (const f of PROFILE_SNAPSHOT_FIELDS) snap[f] = user?.[f] ?? null;
+  return snap;
+}
+function snapshotsEqual(a, b) {
+  if (!a || !b) return false;
+  return PROFILE_SNAPSHOT_FIELDS.every(f => JSON.stringify(a[f] ?? null) === JSON.stringify(b[f] ?? null));
+}
+// Plans generated before this feature shipped have no profileSnapshot at
+// all — treated as "not stale" rather than retroactively flagged, since
+// there's nothing to compare against.
+export function planIsStale(plan, user) {
+  if (!plan?.profileSnapshot || !user) return false;
+  return !snapshotsEqual(plan.profileSnapshot, buildProfileSnapshot(user));
+}
+
 export async function createMasterPlan(user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring');
   const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
@@ -795,6 +829,7 @@ export async function createMasterPlan(user, liveSignals, portfolio) {
     version: 1, linkVersion: 2, ...roadmap, startDate,
     days, daysGeneratedFrom: startDate, daysGeneratedThrough: addDaysStr(startDate, ROLLING_WINDOW_DAYS - 1),
     progressLog: [], createdAt: now, updatedAt: now, lastExtendedAt: now,
+    profileSnapshot: buildProfileSnapshot(user),
   };
 }
 
@@ -827,7 +862,7 @@ export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
     const phase = phaseForWeek(roadmap, weekNumber);
     return { ...d, weekNumber, phaseId: phase?.id || null };
   });
-  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now() };
+  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now(), profileSnapshot: buildProfileSnapshot(user) };
 }
 
 // The real "Add to plan" mechanism — regenerates the roadmap spine (as
@@ -860,7 +895,7 @@ export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
     const phase = phaseForWeek(roadmap, weekNumber);
     return { ...d, weekNumber, phaseId: phase?.id || null };
   });
-  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now() };
+  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now(), profileSnapshot: buildProfileSnapshot(user) };
 }
 
 export function needsExtension(plan) {
