@@ -1,18 +1,20 @@
 /* ── Token defaults ──────────────────────────────────────────────────────────
    applyTheme() in src/lib/theme.js overwrites these on <html> at boot and on
-   every theme change. They're duplicated here (dark values) purely so the very
-   first paint — before any JS runs — isn't a flash of unstyled white. */
+   every theme change. They're duplicated here (light values, matching the
+   app's default theme) purely so the very first paint — before any JS runs —
+   isn't a flash of the wrong palette. */
 :root {
-  --c-bg: #04060b; --c-s0: #060a15; --c-s1: #0a1020; --c-s2: #0f1828;
-  --c-s3: #162032; --c-s4: #1d2a40; --c-s5: #253350;
-  --c-b1: rgba(255,255,255,0.07); --c-b2: rgba(255,255,255,0.11); --c-b3: rgba(255,255,255,0.18);
-  --c-t1: #eef2ff; --c-t2: #94a3c0; --c-t3: #506080; --c-t4: #2d3f58;
-  --c-blue: #2d7fff; --c-blueL: #5da0ff; --c-blueDim: rgba(45,127,255,0.10);
-  --c-violet: #8b5cf6; --c-rose: #f43f5e; --c-green: #10b981; --c-amber: #f59e0b;
-  --c-surf: rgba(255,255,255,0.03); --c-surfHi: rgba(255,255,255,0.06);
-  --c-inputBg: rgba(255,255,255,0.04); --c-inputBorder: rgba(255,255,255,0.10);
-  --c-scrim: rgba(0,0,0,0.55);
-  --c-noiseOpacity: 0.02;
+  color-scheme: light;
+  --c-bg: #eaeef6; --c-s0: #f2f5fa; --c-s1: #ffffff; --c-s2: #f7f9fd;
+  --c-s3: #eff3fa; --c-s4: #e3eaf4; --c-s5: #d3ddec;
+  --c-b1: rgba(15,23,42,0.10); --c-b2: rgba(15,23,42,0.15); --c-b3: rgba(15,23,42,0.24);
+  --c-t1: #0c1424; --c-t2: #41506b; --c-t3: #697894; --c-t4: #95a2ba;
+  --c-blue: #1f6feb; --c-blueL: #1550ba; --c-blueDim: rgba(31,111,235,0.10);
+  --c-violet: #7c3aed; --c-rose: #e11d48; --c-green: #059669; --c-amber: #d97706;
+  --c-surf: rgba(255,255,255,0.75); --c-surfHi: rgba(255,255,255,0.95);
+  --c-inputBg: #ffffff; --c-inputBorder: rgba(15,23,42,0.14);
+  --c-scrim: rgba(15,23,42,0.35);
+  --c-noiseOpacity: 0.015;
   --c-pageGlow: none;
   --c-FD: 'Bricolage Grotesque', -apple-system, sans-serif;
   --c-FB: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;

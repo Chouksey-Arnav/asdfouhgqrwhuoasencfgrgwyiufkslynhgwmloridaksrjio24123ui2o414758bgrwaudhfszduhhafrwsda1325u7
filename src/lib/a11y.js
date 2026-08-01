@@ -26,7 +26,7 @@ const KEY = 'msp_a11y';
 export const READABLE_FONT_STACK = "'Atkinson Hyperlegible','Lexend',Verdana,Tahoma,-apple-system,sans-serif";
 
 export const DEFAULTS = {
-  themeMode: 'dark',          // 'dark' | 'light' | 'system'
+  themeMode: 'light',         // 'dark' | 'light' | 'system'
   fontScale: 1,               // 0.9 – 1.5
   highContrast: false,
   readableFont: false,
