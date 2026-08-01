@@ -187,6 +187,26 @@ db.version(14).stores({
   satBaselines: '++id, status, startedAt, finishedAt',
 });
 
+// v15: cross-device counter sync + the reward-claim outbox.
+//
+// `syncBaseline` — a single local-only row tracking how much of this device's current
+// xp/aiChatCount/interviewCount/cardReviewCount has already been reported to the server (see
+// claimSyncDelta/commitSyncDelta/resetSyncBaseline below + src/lib/progressSync.js). Replaces a
+// bug where these counters synced as absolute values merged via Math.max(local, remote) — correct
+// only when one device's progress is a strict superset of the other's, and silently lossy the
+// moment two devices earn real, independent progress between syncs (the ordinary "phone during
+// the day, laptop at night" pattern). Deliberately excluded from buildSyncSnapshot(), same as
+// trackQueue: it's bookkeeping about what's already been sent, not progress itself.
+//
+// `rewardClaimQueue` — the durable outbox behind idempotent, once-only rewards (today's
+// check-in, an achievement unlock, a weekly quest claim). Mirrors trackQueue.js's pattern: the
+// claim intent is written here before any network call, so it survives a closed tab or a dead
+// connection and reconciles once one's available. See src/lib/rewardClaimQueue.js.
+db.version(15).stores({
+  syncBaseline: 'key',
+  rewardClaimQueue: '++id, claimKey, attemptId, status, queuedAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -286,8 +306,17 @@ export async function getDeckCreatedAtMap() {
   const rows = await db.deckMeta.toArray();
   return Object.fromEntries(rows.map(r => [r.name, r.createdAt]));
 }
+// `cardReviews` rows (below) power the per-day streak heatmap and stay an approximate,
+// Math.max-per-day cross-device merge (see applyRemoteSnapshot) — fine for a "did I study that
+// day" visual. `user.cardReviewCount` is the exact, cross-device-additive total used for
+// achievement thresholds (Card Master, Flashcard Marathoner) and the weekly review quest, synced
+// via the same delta mechanism as xp (see claimSyncDelta below) rather than Math.max — reading
+// straight from Dexie right before the write (not a value the caller passed in) avoids a stale
+// closure race across rapid-fire reviews in one study session.
 export async function recordCardReview(cardId) {
   await db.cardReviews.add({ cardId, reviewedAt: Date.now() });
+  const u = await db.user.toCollection().first();
+  if (u) await db.user.update(u.id, { cardReviewCount: (u.cardReviewCount || 0) + 1 });
   pushDirty();
 }
 export async function getTotalCardReviews() {
@@ -703,8 +732,15 @@ function mergeUserRecord(local, remote) {
   if (!remote) return local;
   if (!local) return remote;
   const merged = { ...remote, ...local };
-  for (const k of ['xp', 'aiChatCount', 'interviewCount']) {
-    merged[k] = Math.max(local[k] || 0, remote[k] || 0);
+  // xp/aiChatCount/interviewCount/cardReviewCount are server-accumulated via additive delta sync
+  // (see claimSyncDelta/commitSyncDelta below + progressSync.js + api/progress-sync.js's
+  // bump_progress_counters) rather than merged here — `remote` already reflects every device's
+  // contributions, so it is authoritative for these four fields specifically. This replaces a
+  // Math.max(local, remote) merge that silently discarded whichever device's independent gain
+  // was smaller instead of summing them — falls back to local only for an old snapshot written
+  // before a field existed server-side.
+  for (const k of ['xp', 'aiChatCount', 'interviewCount', 'cardReviewCount']) {
+    merged[k] = remote[k] != null ? remote[k] : (local[k] || 0);
   }
   for (const k of ['obstacles', 'accomplish', 'courses', 'bookmarks', 'studied']) {
     if (Array.isArray(local[k]) || Array.isArray(remote[k])) {
@@ -839,6 +875,11 @@ export async function applyRemoteSnapshot(remote) {
   if (dayKeys.size) await db.studyDays.bulkPut([...dayKeys].map(date => ({ date })));
 
   // ── review counts -> synthetic per-day cardReviews rows (see buildSyncSnapshot comment) ──
+  // Intentionally still Math.max-per-day, not additive: this only feeds the streak heatmap's
+  // per-day "did I study" display, where an approximate distribution is harmless. The count that
+  // actually matters (achievement thresholds, the weekly review quest) is the exact,
+  // cross-device-additive `user.cardReviewCount`, merged above in mergeUserRecord via the same
+  // delta mechanism as xp — see that function's comment.
   const localCounts = {};
   for (const r of localCardReviews) { const k = dateKeyOf(r.reviewedAt); localCounts[k] = (localCounts[k] || 0) + 1; }
   const dateSet = new Set([...Object.keys(localCounts), ...Object.keys(remote.reviewCountsByDate || {})]);
@@ -1207,6 +1248,151 @@ export async function deleteTrackQueueEntry(id) {
   await db.trackQueue.delete(id);
 }
 
+// ── Cross-device counter sync (delta baseline) ────────────────────────────────
+// xp / aiChatCount / interviewCount / cardReviewCount are denormalized totals mutated directly
+// by many call sites across the app (the `saveUser({...user, xp: user.xp+n})` shape). Naively
+// syncing "the current absolute value" and merging two devices' absolutes with Math.max silently
+// drops whichever device's independent gain since the last sync was smaller — see
+// mergeUserRecord's comment above. Instead each device tracks how much of its current total it
+// has already reported to the server (this table) and reports only the increment since then; the
+// server always ADDS incoming deltas (api/progress-sync.js's bump_progress_counters RPC), never
+// overwrites. See src/lib/progressSync.js for the push side.
+//
+// claimSyncDelta()/commitSyncDelta() are a claim/commit pair, each its own Dexie transaction, so
+// two tabs of the SAME browser flushing near-simultaneously can't both compute and send the same
+// increment — IndexedDB serializes transactions against the same object store even across tabs
+// of one origin, so the second tab's claim always observes the first tab's already-advanced
+// state (or its still-pending claim, handled below) rather than a stale snapshot. A claim that's
+// never committed (its tab closed or crashed mid-request) self-heals after PENDING_STALE_MS —
+// the next attempt, from any tab, reclaims it instead of stalling sync forever.
+const COUNTER_FIELDS = ['xp', 'aiChatCount', 'interviewCount', 'cardReviewCount'];
+const PENDING_STALE_MS = 30000;
+
+async function getBaselineRow() {
+  return (await db.syncBaseline.get('counters')) ||
+    { key: 'counters', xp: 0, aiChatCount: 0, interviewCount: 0, cardReviewCount: 0, pending: null, pendingSince: null };
+}
+
+/** Atomically claims the not-yet-reported increment since the last confirmed sync, across all
+ *  four counters. Returns null if a claim is already in flight and still fresh (another push —
+ *  this tab or another — is currently sending it), or if there's genuinely nothing new. */
+export async function claimSyncDelta() {
+  return db.transaction('rw', db.syncBaseline, db.user, async () => {
+    const row = await getBaselineRow();
+    if (row.pending) {
+      const age = Date.now() - (row.pendingSince || 0);
+      if (age < PENDING_STALE_MS) return null; // a live claim is already in flight elsewhere
+      // Stale: the attempt that claimed this almost certainly crashed/closed before committing.
+      // Fold it back into the confirmed baseline as a no-op (its amount is still sitting in the
+      // live user record, so the recompute below naturally reclaims it) and continue.
+    }
+    const confirmed = row.pending
+      ? { xp: row.xp, aiChatCount: row.aiChatCount, interviewCount: row.interviewCount, cardReviewCount: row.cardReviewCount }
+      : row;
+    const u = await db.user.toCollection().first();
+    const deltas = {};
+    let hasAny = false;
+    for (const f of COUNTER_FIELDS) {
+      const d = Math.max(0, (u?.[f] || 0) - (confirmed[f] || 0));
+      deltas[f] = d;
+      if (d > 0) hasAny = true;
+    }
+    if (!hasAny) {
+      if (row.pending) await db.syncBaseline.put({ ...row, pending: null, pendingSince: null });
+      return null;
+    }
+    await db.syncBaseline.put({ ...row, ...confirmed, pending: deltas, pendingSince: Date.now() });
+    return deltas;
+  });
+}
+
+/** Resolves the in-flight claim: folds it into the confirmed baseline on success, or releases it
+ *  (without losing the underlying local progress, which is simply reclaimed by the next attempt)
+ *  on failure. */
+export async function commitSyncDelta(success) {
+  return db.transaction('rw', db.syncBaseline, async () => {
+    const row = await getBaselineRow();
+    if (!row.pending) return;
+    if (success) {
+      const next = { ...row, pending: null, pendingSince: null };
+      for (const f of COUNTER_FIELDS) next[f] = (row[f] || 0) + (row.pending[f] || 0);
+      await db.syncBaseline.put(next);
+    } else {
+      await db.syncBaseline.put({ ...row, pending: null, pendingSince: null });
+    }
+  });
+}
+
+/** Re-anchors the confirmed baseline to a just-pulled/merged user record — call once per app
+ *  load, right after applyRemoteSnapshot(), so the first delta computed this session is relative
+ *  to what the server already has. Without this, a fresh sign-in (baseline still at 0) would
+ *  re-report this device's *entire* existing total as "new" on its very first push. */
+export async function resetSyncBaseline(user) {
+  const next = { key: 'counters', pending: null, pendingSince: null };
+  for (const f of COUNTER_FIELDS) next[f] = user?.[f] || 0;
+  await db.syncBaseline.put(next);
+}
+
+/** Called after every successful push with the server's response, which reflects every device's
+ *  contributions (including any that landed since this device's last pull). Bumps local counters
+ *  UP to match (never down — this device may have earned more locally during the round trip) and
+ *  — critically — advances the confirmed baseline to the same values in the same transaction. If
+ *  only `user.<field>` were bumped and the baseline were left behind, the next claimSyncDelta
+ *  would see local-minus-old-baseline as a fresh "new" delta and re-report another device's
+ *  already-confirmed contribution right back to the server, double-counting it. */
+export async function absorbAuthoritativeCounters(counters) {
+  if (!counters) return;
+  return db.transaction('rw', db.syncBaseline, db.user, async () => {
+    const u = await db.user.toCollection().first();
+    const row = await getBaselineRow();
+    const userPatch = {};
+    const nextBaseline = { ...row };
+    for (const f of COUNTER_FIELDS) {
+      if (counters[f] == null) continue;
+      userPatch[f] = Math.max(u?.[f] || 0, counters[f]);
+      nextBaseline[f] = Math.max(row[f] || 0, counters[f]);
+    }
+    if (u && Object.keys(userPatch).length) await db.user.update(u.id, userPatch);
+    await db.syncBaseline.put(nextBaseline);
+  });
+}
+
+/** Advances the CONFIRMED sync baseline for `field` by `amount` (may be negative, for a
+ *  rollback) without going through the claim/commit pending flow. Used exclusively by
+ *  rewardClaimQueue.js: XP granted via an idempotent reward claim (checkin/achievement/quest) is
+ *  reported to the server through its own dedicated, dedup-safe endpoint, not the generic
+ *  counterDeltas path — without this, the next generic flush would see that same local xp growth
+ *  as an unreported delta and send it to the server a second time. */
+export async function markCounterConfirmed(field, amount) {
+  if (!amount) return;
+  return db.transaction('rw', db.syncBaseline, async () => {
+    const row = await getBaselineRow();
+    await db.syncBaseline.put({ ...row, [field]: (row[field] || 0) + amount });
+  });
+}
+
+// ── Reward claim outbox (durable idempotent-milestone intents) ────────────────
+// Plain CRUD only — retry/dedupe/reconcile policy lives in src/lib/rewardClaimQueue.js. Mirrors
+// trackQueue.js: the intent (and its `attemptId` — see that file for why a stable per-attempt id
+// matters for a lost-response retry) is written here before any network call. Deliberately
+// device-local like trackQueue (excluded from buildSyncSnapshot): an unresolved claim intent is
+// not progress.
+export async function getRewardClaimQueue() {
+  return db.rewardClaimQueue.orderBy('queuedAt').toArray();
+}
+export async function findRewardClaimQueueEntry(claimKey) {
+  return db.rewardClaimQueue.where('claimKey').equals(claimKey).first();
+}
+export async function addRewardClaimQueueEntry(entry) {
+  return db.rewardClaimQueue.add({ status: 'pending', attempts: 0, lastError: null, queuedAt: Date.now(), ...entry });
+}
+export async function updateRewardClaimQueueEntry(id, patch) {
+  await db.rewardClaimQueue.update(id, patch);
+}
+export async function deleteRewardClaimQueueEntry(id) {
+  await db.rewardClaimQueue.delete(id);
+}
+
 // ── Sync push scheduling ──────────────────────────────────────────────────────
 // src/lib/progressSync.js registers a listener here once at app start; every exported mutator
 // below that touches a synced table calls pushDirty() so a debounced push follows automatically
@@ -1256,5 +1442,9 @@ export async function clearAllData() {
     db.satReviewLog.clear(), db.satAiCache.clear(), db.satBaselines.clear(),
     db.lessonNotes.clear(), db.lessonHighlights.clear(),
     db.trackQueue.clear(),
+    // Critical on a shared/family device: without clearing these, a different account signing in
+    // next would inherit the previous account's sync baseline (corrupting its own delta math from
+    // its very first push) and any of its still-queued reward claims.
+    db.syncBaseline.clear(), db.rewardClaimQueue.clear(),
   ]);
 }

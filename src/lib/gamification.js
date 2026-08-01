@@ -97,6 +97,14 @@ export function getWeeklyQuests({ quizzesThisWeek = 0, cardsThisWeek = 0, coachO
   });
 }
 
+// Device-local fast path only — purely a UI hint for "should the Claim button already read
+// Claimed on THIS device," not the source of truth for whether the reward was actually granted.
+// The real, cross-device-safe dedup is server-side: App.jsx's claimQuestReward() routes the XP
+// itself through src/lib/rewardClaimQueue.js's idempotent reward-claim path (claim_key
+// `quest:<weekKey>:<questId>`), so even if this localStorage marker is (correctly) unaware of a
+// claim made on a different device, clicking Claim there still can't grant the XP twice — the
+// server claim is rejected and the optimistic local grant is rolled back with an explanatory
+// toast. This function existing/being empty is not itself a correctness bug.
 export function getClaimedQuests(weekKey) {
   try {
     return new Set(JSON.parse(localStorage.getItem(`quest:${weekKey}`) || '[]'));
