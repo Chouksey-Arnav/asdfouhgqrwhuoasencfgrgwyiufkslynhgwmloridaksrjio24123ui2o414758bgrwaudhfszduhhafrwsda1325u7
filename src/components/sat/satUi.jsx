@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { C, tint } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 
@@ -37,6 +36,15 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
   // that is silently cut off at the viewport edge reads as a rendering bug, and
   // this rail overflows at any width narrower than about 1500px.
   const [edges, setEdges] = useState({ left: false, right: false });
+  // The sliding underline under the active tab. Plain measured offsets animated
+  // with a CSS transition rather than framer-motion's layoutId: a layoutId FLIP
+  // here shares framer-motion's global projection tree with the outer
+  // AnimatePresence that animates whole-tab switches (App.jsx), and once this
+  // indicator has run one shared-layout transition, leaving the SAT tab entirely
+  // can wedge that unrelated AnimatePresence exit forever (onExitComplete never
+  // fires, so the next tab never mounts — a blank screen). Measuring it by hand
+  // keeps the same sliding-underline feel without touching that shared system.
+  const [ink, setInk] = useState(null);
 
   const measure = useCallback(() => {
     const el = scrollRef.current;
@@ -56,6 +64,12 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
     window.addEventListener('resize', measure);
     return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
   }, [measure, items.length]);
+
+  useEffect(() => {
+    const btn = btnRefs.current[active];
+    if (!btn) { setInk(null); return; }
+    setInk({ left: btn.offsetLeft, width: btn.offsetWidth });
+  }, [active, items, m]);
 
   // A plain vertical mouse wheel should scroll this row horizontally; trackpads
   // already emit deltaX, so only take over a dominantly-vertical gesture. The
@@ -105,9 +119,20 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
         style={{
           display: 'flex', alignItems: 'stretch', gap: 0,
           overflowX: 'auto', WebkitOverflowScrolling: 'touch',
-          borderBottom: `1px solid ${C.b1}`,
+          borderBottom: `1px solid ${C.b1}`, position: 'relative',
         }}
       >
+        {ink && (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute', left: ink.left + (m ? 6 : 10), width: ink.width - (m ? 12 : 20),
+              bottom: -1, height: 2, borderRadius: 2, background: accent,
+              boxShadow: `0 0 10px ${tint(accent, 0.55)}`,
+              transition: 'left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1)',
+            }}
+          />
+        )}
         {grouped.map((g, gi) => (
           <div key={g.id} style={{ display: 'flex', alignItems: 'stretch', flexShrink: 0 }}>
             {gi > 0 && (
@@ -161,16 +186,6 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
                     }}>
                       {it.badge}
                     </span>
-                  )}
-                  {isActive && (
-                    <motion.div
-                      layoutId="sat-nav-ink"
-                      transition={{ type: 'spring', stiffness: 500, damping: 40 }}
-                      style={{
-                        position: 'absolute', left: m ? 6 : 10, right: m ? 6 : 10, bottom: -1, height: 2,
-                        borderRadius: 2, background: accent, boxShadow: `0 0 10px ${tint(accent, 0.55)}`,
-                      }}
-                    />
                   )}
                 </Tab>
               );
