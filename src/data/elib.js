@@ -65,6 +65,10 @@ import { ELIB_EXPANSION_D } from './elibExpansionD';
 import { ELIB_EXPANSION_E } from './elibExpansionE';
 import { ELIB_EXPANSION_F } from './elibExpansionF';
 import { ELIB_EXPANSION_G } from './elibExpansionG';
+import { ELIB_EXPANSION_H } from './elibExpansionH';
+import { ELIB_EXPANSION_I } from './elibExpansionI';
+import { ELIB_EXPANSION_J } from './elibExpansionJ';
+import { ELIB_EXPANSION_K } from './elibExpansionK';
 
 const ELIB_CORE = [
   {
@@ -1434,4 +1438,11 @@ const ELIB_CORE = [
 // while a correct copy already existed in Physical Sciences — was removed as
 // part of this pass. See elibExpansionG.js's own header for the full
 // rationale and verification checklist.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F, ...ELIB_EXPANSION_G];
+// Expansion batches H-K (see ./elibExpansionH.js's header for the shared
+// rationale) — a fourth-round expansion (681 entries) that turns the
+// library's existing "full series" YouTube playlist links into individual,
+// per-episode entries, so a specific episode is directly clickable in the
+// app instead of requiring a trip to YouTube's own playlist browser. Every
+// id/title pair was pulled from the playlist's own page and independently
+// re-verified against the YouTube oEmbed endpoint.
+export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F, ...ELIB_EXPANSION_G, ...ELIB_EXPANSION_H, ...ELIB_EXPANSION_I, ...ELIB_EXPANSION_J, ...ELIB_EXPANSION_K];
