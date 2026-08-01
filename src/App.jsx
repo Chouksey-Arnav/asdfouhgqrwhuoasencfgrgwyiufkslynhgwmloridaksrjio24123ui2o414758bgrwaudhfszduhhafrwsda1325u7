@@ -1984,7 +1984,7 @@ export default function App({ account, onAccountChange }) {
     // buildCoachSystemPrompt() (src/lib/studentProfile.js) and the
     // onboarding recap card actually use what the student told us.
     saveUser({
-      name, specialty:'exploring', gradeStage, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
+      name, specialty:null, gradeStage, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
       goal:profile.goal||null, obstacles:profile.obstacles||[], studyMethod:profile.studyMethod||null,
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
       onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
@@ -2023,7 +2023,7 @@ export default function App({ account, onAccountChange }) {
   // for their name again.
   useEffect(()=>{
     if(!dbReady||user||!account?.onboardingComplete||!account?.name)return;
-    saveUser({ name:account.name, specialty:'exploring', gradeStage:account.gradeLevel||null, xp:0, streak:1, lastActive:Date.now(), email:account.email });
+    saveUser({ name:account.name, specialty:null, gradeStage:account.gradeLevel||null, xp:0, streak:1, lastActive:Date.now(), email:account.email });
   },[dbReady,user,account,saveUser]);
   // A lesson only counts toward mastery/unlock-gating once it's actually verified (curated quiz
   // passed) — for lessons with no quizIds yet (pathways not migrated to the new model this pass),
@@ -6908,7 +6908,37 @@ export default function App({ account, onAccountChange }) {
       setLS(id);setLC('All');setLType('All');setLDiff('All');setLFreeOnly(false);setLSort('default');setLSubTab('all');
     }
   }
+  // Plans are built around a pathway (see masterPlanGenerator.js — every generator call reads
+  // user.specialty), so a student who hasn't picked one yet — manually or via the diagnostic —
+  // gets a requirement screen here instead of a plan silently defaulting to "Exploring Pre-Health."
   function tPlans(){
+    if(!user?.specialty){
+      return(
+        <div style={CC({gap:22})}>
+          <PanelHero icon={Compass} color={C.fuchsia} color2={C.violet} m={isMobile}
+            eyebrow="Plans" title="Pick Your Pathway First"
+            sub="Your plan is built around a pathway — the health career track that shapes which units, quizzes, and milestones show up in your day-by-day roadmap. Take the diagnostic for a recommendation, or choose a pathway yourself. You can always switch later."/>
+          <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.cyanDim},${C.blueDim} 70%,transparent)`,border:`1px solid ${C.cyan}30`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
+            <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
+            <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
+            <div style={{position:'relative',flex:1,minWidth:220}}>
+              <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Not sure which fits? Take the diagnostic.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:3}}>{DIAG_QS.length} questions about how you think, what actually interests you, and what these careers look like day to day — takes about 6 minutes.</div>
+            </div>
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(C.oceanGrad,{fontSize:13,padding:'12px 24px',boxShadow:`0 6px 18px ${C.cyan}35,inset 0 1px 0 rgba(255,255,255,0.15)`}),display:'inline-flex',alignItems:'center',gap:8,flexShrink:0,position:'relative'}} onClick={()=>{setDD(false);setDS(0);setDA([]);setDIntro(false);goPrep('diagnostic');}}>Start Diagnostic<ChevronRight size={15}/></motion.button>
+          </motion.div>
+          <div>
+            <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
+            <div style={G(isMobile?1:2,16,{},false)}>
+              {Object.entries(PATHS).map(([key,p])=>(
+                <PathwayCard key={key} pathKey={key} p={p} current={false} m={isMobile}
+                  onSelect={(k)=>{saveUser({...user,specialty:k});toast.success(`${p.label} pathway activated`);}}/>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
     const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
     const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
     const liveSignals={
