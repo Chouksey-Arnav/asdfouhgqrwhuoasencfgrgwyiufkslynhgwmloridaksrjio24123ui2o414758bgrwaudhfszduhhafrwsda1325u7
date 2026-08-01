@@ -140,7 +140,8 @@ export function computePlanReadiness(user, signals = {}) {
       ...PLAN_READINESS_FIELDS.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile' })),
       ...ACTIVITY_GATES.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
     ];
-    return { ready: false, pct: 0, missing };
+    const checklist = missing.map(m => ({ ...m, state: 'pending' }));
+    return { ready: false, pct: 0, missing, checklist };
   }
   const missingFields = PLAN_READINESS_FIELDS.filter(f => !isFilled(user[f]));
   const missingActivity = ACTIVITY_GATES.filter(g => !g.ok(user, signals));
@@ -149,7 +150,32 @@ export function computePlanReadiness(user, signals = {}) {
     ...missingActivity.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
   ];
   const pct = Math.round(((totalChecks - missing.length) / totalChecks) * 100);
-  return { ready: missing.length === 0, pct, missing };
+  // Full ordered checklist (not just what's missing) so the UI can show satisfied items as
+  // checked instead of only ever showing what's still needed — the "onboarding already answered
+  // this" auto-check-off students expect to see, not just a shrinking list. Profile fields are
+  // binary (isFilled or not — never "still loading"). Activity gates carry a genuine third state:
+  // `signals.quizzesTaken`/`signals.portfolioItemCount` being `null` means their own data hasn't
+  // loaded yet (see ACTIVITY_GATES' `ok()` — null is provisionally treated as satisfied so the
+  // lock screen doesn't flash true), so a plain done/pending boolean here would misreport an
+  // unloaded gate as either wrongly-checked or wrongly-unchecked. `'loading'` lets the UI render
+  // neither — and, just as importantly, lets a checklist animation tell a real pending→done
+  // transition (something the student just finished) apart from a loading→done resolution
+  // (nothing changed, the data just arrived), so nothing fake-animates on first paint.
+  const checklist = [
+    ...PLAN_READINESS_FIELDS.map(f => ({
+      field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile',
+      state: isFilled(user[f]) ? 'done' : 'pending',
+    })),
+    ...ACTIVITY_GATES.map(g => {
+      const loading = (g.field === 'quizAttempted' && signals.quizzesTaken == null) ||
+        (g.field === 'portfolioTracked' && signals.portfolioItemCount == null);
+      return {
+        field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView,
+        state: loading ? 'loading' : (g.ok(user, signals) ? 'done' : 'pending'),
+      };
+    }),
+  ];
+  return { ready: missing.length === 0, pct, missing, checklist };
 }
 
 // Human-readable recap of what onboarding captured — shown on the dashboard

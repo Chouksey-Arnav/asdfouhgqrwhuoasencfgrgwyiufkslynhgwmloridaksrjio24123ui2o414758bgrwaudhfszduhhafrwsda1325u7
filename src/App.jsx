@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge, Loader2,
+  Highlighter, Accessibility, Gauge, Loader2, Info,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -47,6 +47,7 @@ import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
 import { trackItem, installTrackQueueLifecycle } from './lib/trackQueue';
+import { claimReward as claimRewardXP, installRewardClaimQueueLifecycle } from './lib/rewardClaimQueue';
 import { usePendingTrackKeys } from './lib/useTrackQueue';
 import { trackedKeySet } from './lib/trackingCatalog';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
@@ -1667,6 +1668,15 @@ export default function App({ account, onAccountChange }) {
         try{
           const remoteSnapshot = await ProgressSync.pullSnapshot();
           if(remoteSnapshot) await DB.applyRemoteSnapshot(remoteSnapshot);
+          // Re-anchor the local delta baseline to what the server just confirmed — every load,
+          // unconditionally, whether this is a brand-new device, a normal reopen, or the first
+          // run after this sync mechanism shipped. Without this, the first push of a session
+          // would treat this device's entire existing xp/aiChatCount/interviewCount/
+          // cardReviewCount as a brand-new "delta" on top of a server total that (from an older
+          // client, or an earlier session) already reflects roughly that same number — silently
+          // inflating it. See src/lib/db.js's resetSyncBaseline for the full reasoning.
+          const justMergedUser = await DB.getUser();
+          await ProgressSync.resetSyncBaseline(justMergedUser);
         }catch(err){ console.error('Progress sync pull failed (continuing offline):', err); }
       }
       // Must run before getStreak() so a bridged (freeze-covered) gap is
@@ -1746,6 +1756,9 @@ export default function App({ account, onAccountChange }) {
       // Flushes anything the student tracked in a previous session that never reached the server
       // (tracked offline, or while signed out), and re-flushes on reconnect/refocus from here on.
       installTrackQueueLifecycle();
+      // Same idea for any daily-check-in/achievement/quest claim that didn't resolve before the
+      // last session ended — replays it with its original attemptId (see rewardClaimQueue.js).
+      installRewardClaimQueueLifecycle();
       setDbReady(true);
     }
     init();
@@ -1869,6 +1882,12 @@ export default function App({ account, onAccountChange }) {
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
+  // rewardClaimQueue.claimReward() writes xp straight to Dexie itself (so a durable claim intent
+  // and its optimistic local grant land together, even if this component isn't mounted to hear
+  // about it — e.g. a queued claim resolving on app start). Call this right after to pull that
+  // write back into React state, instead of using the `saveUser` wrapper above (which would
+  // re-write Dexie a second time from a stale `user` closure).
+  const syncUserFromDb = useCallback(async ()=>{ const u = await DB.getUser(); if(u) setUser_(u); return u; },[]);
   // ── Plan accountability: auto-checks off Plan tasks when their exact linked resource is
   // actually completed elsewhere in the app (quiz submitted, lesson verified, flashcard deck
   // session finished) — see AUTO_VERIFIABLE_KINDS in masterPlanGenerator.js for why only quiz/
@@ -2303,7 +2322,12 @@ export default function App({ account, onAccountChange }) {
       if(isNew){
         setAchiev_(prev=>new Set([...prev,achievement.key]));
         const bonusXP=achievement.xp||0;
-        if(u&&bonusXP>0){const nu={...u,xp:(u.xp||0)+bonusXP};saveUser(nu);}
+        // `achievements` itself is already deduped cross-device (unlocked once, merged by key —
+        // see db.js), but this XP grant runs the instant THIS device notices the condition is
+        // met, which can happen independently on two devices before either has synced. Route the
+        // bonus through the idempotent reward-claim path (keyed by the achievement, which is
+        // already a stable, globally-unique-per-account identity) so it can only ever land once.
+        if(u&&bonusXP>0){ claimRewardXP(`achievement:${achievement.key}`,bonusXP).then(syncUserFromDb).catch(console.error); }
         if(achievement.key==='streak_7'||achievement.key==='streak_30'){
           const granted=await DB.grantStreakFreeze();
           if(granted){
@@ -2347,10 +2371,20 @@ export default function App({ account, onAccountChange }) {
         cosmetic,
         onOpen: async ()=>{
           const claimed = await claimCheckin(day);
-          if(!claimed)return; // today's check-in was already recorded (e.g. reload race) — don't double-grant
-          saveUser({ ...user, xp: (user.xp||0) + reward.xp });
+          if(!claimed)return; // today's check-in was already recorded locally (e.g. reload race) — don't double-grant
           play('xp');
           if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
+          // Grants XP optimistically (instant, same as always) and reconciles with the server in
+          // the background — the local `checkins` row above only proves THIS device hasn't shown
+          // today's chest yet, not that another device hasn't already claimed it in the last few
+          // seconds. `checkin:<date>` is a stable, once-per-calendar-day key, so whichever device's
+          // claim reaches the server first wins; a losing claim rolls its local grant back and
+          // says so, rather than staying silently double-counted. See rewardClaimQueue.js.
+          const { granted } = await claimRewardXP(`checkin:${localDateStr()}`, reward.xp);
+          await syncUserFromDb();
+          if(granted===false){
+            toast('That check-in was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+          }
         },
       });
     })();
@@ -3183,6 +3217,17 @@ export default function App({ account, onAccountChange }) {
   // How many decks have at least one card due — surfaced instead of the raw due-card count so
   // the number stays small and approachable no matter how large the underlying library grows.
   const dueDeckCount = useMemo(()=>allDecksList.filter(d=>getDueCards(d.cards).length>0).length,[allDecksList]);
+  // ── Medabrain plan spotlight ─────────────────────────────────────────────────
+  // Drives both the Home spotlight (TodayPlanNudge picks exactly ONE task to glow) and the small
+  // nav-badge dot below (ANY pillar with outstanding plan tasks today, reusing PlanTaskStrip's
+  // own `t.pillar===pillar` filter so "does this tab have something due" can't drift out of sync
+  // between the two places that ask it).
+  const todayPlanEntry = useMemo(()=>getTodayPlanEntry(user?.masterPlan),[user?.masterPlan]);
+  const planPillarsDueToday = useMemo(()=>{
+    const set = new Set();
+    for(const t of (todayPlanEntry?.tasks||[])) if(!t.done && t.pillar) set.add(t.pillar);
+    return set;
+  },[todayPlanEntry]);
   const deckFuse = useMemo(()=>buildDeckSearch(allDecksList),[allDecksList]);
   const newestDeckName = useMemo(()=>{
     const entries = Object.entries(deckCreatedAt);
@@ -3316,7 +3361,7 @@ export default function App({ account, onAccountChange }) {
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
             away regardless of which tab a student opens the app to. */}
-        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile}/>}
+        {user.masterPlan && <TodayPlanNudge user={user} accent={accent} onOpenPlan={goPlans} onOpenNextDay={(d)=>goPlans(d)} onOpenTask={openPlanResource} onToggleTask={handlePlanToggleTask} onSnoozeTask={handlePlanSnoozeTask} planStreak={getPlanStreak(user.masterPlan)} isMobile={isMobile} reducedMotion={reducedMotion}/>}
 
         {/* Your personalized plan — the max-out plan Medabrain built at onboarding,
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
@@ -5751,11 +5796,14 @@ export default function App({ account, onAccountChange }) {
     function claimQuestReward(q){
       if(!q.done||claimedQuests.has(q.id))return;
       claimQuest(weekKey,q.id);
-      // Quest XP stays deterministic and is granted immediately — only the
-      // *reveal* is a variable, anticipation-building chest-open moment.
-      const nu={...user,xp:(user?.xp||0)+q.xp};
-      saveUser(nu);
       setQuestTick(t=>t+1);
+      // Quest XP stays deterministic and is granted immediately — only the *reveal* is a
+      // variable, anticipation-building chest-open moment (kicked off now, reconciled by the
+      // time the chest opens). `claimQuest` above marks this quest claimed only on THIS device
+      // (localStorage) — without a server-side guard, the same quest could be claimed once per
+      // device instead of once per account, so the actual XP is routed through the idempotent
+      // reward-claim path, keyed by this exact quest+week, same pattern as checkin/achievements.
+      const claimPromise = claimRewardXP(`quest:${weekKey}:${q.id}`,q.xp).then(async(r)=>{ await syncUserFromDb(); return r; });
       const wonCosmetic = Math.random()<0.25 ? rollCosmetic(cosmetics) : null;
       openChest({
         title: 'Quest Complete',
@@ -5764,6 +5812,10 @@ export default function App({ account, onAccountChange }) {
         cosmetic: wonCosmetic,
         onOpen: async ()=>{
           if(wonCosmetic){ await DB.unlockCosmetic(wonCosmetic.key); setCosmetics(prev=>new Set([...prev,wonCosmetic.key])); }
+          const { granted } = await claimPromise;
+          if(granted===false){
+            toast('That quest was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+          }
         },
       });
     }
@@ -6903,6 +6955,7 @@ export default function App({ account, onAccountChange }) {
                 const active=tab===n.id;
                 const nc=navColor[n.id]||accent;
                 const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
+                const planDue=planPillarsDueToday.has(n.id);
                 return(
                   // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
                   // the destination shows in the status bar on hover, and screen readers get
@@ -6910,6 +6963,10 @@ export default function App({ account, onAccountChange }) {
                   <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
+                    {/* Medabrain: this pillar has an outstanding plan task due today — see
+                        planPillarsDueToday above. Distinct violet dot (not the amber due-deck
+                        count pill above) so the two signals never read as one thing. */}
+                    {planDue&&<span title="A plan task is due here today" aria-label="Plan task due today" style={{width:7,height:7,borderRadius:'50%',background:C.violet,flexShrink:0,boxShadow:`0 0 0 2px ${C.violet}30`}}/>}
                   </motion.a>
                 );
               })}
@@ -6945,6 +7002,7 @@ export default function App({ account, onAccountChange }) {
             {NAV.map(n=>{
               const nc=navColor[n.id]||accent;
               const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
+              const planDue=planPillarsDueToday.has(n.id);
               return(
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
                 // was width:70 back when there were only 5 tabs; fixed widths would overflow once
@@ -6953,6 +7011,10 @@ export default function App({ account, onAccountChange }) {
                   <div style={{position:'relative',display:'flex'}}>
                     <n.ic size={19} color={tab===n.id?nc:C.t3}/>
                     {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
+                    {/* Medabrain: this pillar has an outstanding plan task due today — offset to
+                        the opposite corner from the due-deck badge above so both can show at once
+                        without overlapping. */}
+                    {planDue&&<span title="A plan task is due here today" aria-label="Plan task due today" style={{position:'absolute',bottom:-2,right:-3,width:7,height:7,borderRadius:'50%',background:C.violet,boxShadow:`0 0 0 2px ${C.s0}`}}/>}
                   </div>
                   <span style={{fontSize:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
                 </a>

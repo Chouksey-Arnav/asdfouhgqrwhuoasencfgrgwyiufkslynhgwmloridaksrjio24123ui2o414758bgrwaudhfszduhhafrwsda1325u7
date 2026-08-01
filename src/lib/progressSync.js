@@ -77,21 +77,38 @@ export async function pullSnapshot() {
 // Pushes the current local state immediately. Coalesces overlapping calls (if a push is already
 // in flight when another is requested, one more run happens right after instead of firing two
 // requests concurrently against the same row).
+//
+// xp/aiChatCount/interviewCount/cardReviewCount ride along as an additive delta (DB.claimSyncDelta),
+// not as part of the plain last-write-wins snapshot merge everything else here uses — see db.js's
+// mergeUserRecord comment for why a Math.max(local, remote) merge on these four fields was the
+// root cause of "XP earned on one device doesn't add up with another device's." Claim/commit is
+// deliberately its own step around the request (not inside buildSyncSnapshot) so a failed request
+// releases the claim instead of losing it.
 export async function flushNow(opts = {}) {
   if (pushing) { pushAgainAfter = true; return; }
   pushing = true;
   setStatus({ state: 'syncing', error: null });
+  const counterDeltas = await DB.claimSyncDelta().catch(() => null);
   try {
     const snapshot = await DB.buildSyncSnapshot();
-    await req('/progress-sync', {
+    if (counterDeltas) snapshot.user = { ...(snapshot.user || {}), counterDeltas };
+    const { counters } = await req('/progress-sync', {
       method: 'PUT',
       body: JSON.stringify({ data: snapshot }),
       keepalive: !!opts.keepalive,
     });
+    if (counterDeltas) await DB.commitSyncDelta(true);
+    // The response reflects every device's contributions, including any that landed since this
+    // device's last pull. Absorb it immediately (bumping local counters up, never down — this
+    // device may have earned more locally during the round trip) so cross-device XP catches up
+    // live instead of only on the next full reload. See db.js's absorbAuthoritativeCounters for
+    // why this must also advance the local baseline, not just the displayed value.
+    await DB.absorbAuthoritativeCounters(counters).catch(() => {});
     retryAttempt = 0;            // success clears the backoff ladder
     clearTimeout(retryTimer);
     setStatus({ state: 'synced', lastSyncedAt: Date.now(), error: null });
   } catch (err) {
+    if (counterDeltas) await DB.commitSyncDelta(false).catch(() => {});
     setStatus({ state: 'error', error: err.message || 'Sync failed.' });
     scheduleRetry();             // self-heal instead of staying stuck on 'error'
     throw err;
@@ -102,6 +119,15 @@ export async function flushNow(opts = {}) {
       flushNow().catch(() => {});
     }
   }
+}
+
+// Called once per app load, right after applyRemoteSnapshot() has merged a freshly-pulled
+// snapshot into local Dexie — re-anchors the local delta baseline to what the server already has,
+// so the first push of the session reports only genuinely new local progress instead of
+// re-reporting this device's entire existing total (see db.js's resetSyncBaseline for the full
+// "why this migrates safely with no special-casing" reasoning).
+export async function resetSyncBaseline(user) {
+  return DB.resetSyncBaseline(user);
 }
 
 // Registered with DB.setSyncDirtyListener — called (a lot, potentially) after any write to a

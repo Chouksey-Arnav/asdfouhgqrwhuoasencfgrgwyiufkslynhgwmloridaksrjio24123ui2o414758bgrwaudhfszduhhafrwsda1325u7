@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CalendarClock, ArrowRight, PartyPopper, Flame, Sunrise, Target, Circle } from 'lucide-react';
+import { ArrowRight, PartyPopper, Flame, Sunrise, Target, Circle, Sparkles } from 'lucide-react';
 import { C, glass2, pill, R, btnSm } from '../lib/theme';
 import { getTodayPlanEntry, getNextPlanDay, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES } from '../lib/masterPlanGenerator';
+import { pickNudge } from '../lib/nudges';
 
 // Slim inline progress bar — mirrors App.jsx's local `Bar` component (not exported, so
 // reimplemented minimally here) so today's plan progress reads as a bar, not just a fraction.
@@ -19,7 +20,7 @@ function ProgressBar({ pct, color }) {
 // "what do I still need to do today" is visible without opening the Plans tab at all.
 // Renders nothing until a masterPlan actually exists (the Plans tab's own empty/locked
 // states already cover onboarding-adjacent nudging for students without one yet).
-export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, onOpenTask, onToggleTask, onSnoozeTask, planStreak = 0, isMobile }) {
+export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, onOpenNextDay, onOpenTask, onToggleTask, onSnoozeTask, planStreak = 0, isMobile, reducedMotion = false }) {
   const today = getTodayPlanEntry(user?.masterPlan);
   if (!today || !today.tasks?.length) return null;
   const total = today.tasks.length;
@@ -60,8 +61,17 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
   const showEarlyNudge = remaining > 0 && pct >= 90 && new Date().getHours() >= 15;
   const earlyNudgeNextDay = showEarlyNudge ? getNextPlanDay(user?.masterPlan) : null;
 
-  const nextTasks = today.tasks.filter(t => !t.done).slice(0, 3);
+  const remainingTasks = today.tasks.filter(t => !t.done);
+  // Medabrain's ONE pick for today: the first remaining task that actually points somewhere
+  // (a real quiz/lesson/deck/article), not a rest/reflection day with nothing to open — falling
+  // back to the first remaining task of any kind so the spotlight never just goes dark.
+  const spotlightTask = remainingTasks.find(t => t.resourceKind && t.resourceKind !== 'view' && t.resourceLabel) || remainingTasks[0] || null;
+  let nextTasks = remainingTasks.slice(0, 3);
+  if (spotlightTask && !nextTasks.some(t => t.id === spotlightTask.id)) {
+    nextTasks = [spotlightTask, ...nextTasks.slice(0, 2)];
+  }
   const overflow = remaining - nextTasks.length;
+  const medabrainLine = pickNudge('plan_tasks_remaining', { count: remaining, plural: remaining === 1 ? '' : 's' });
   // Each remaining task is its own tappable chip — straight to the exact quiz/lesson/deck it
   // names (via onOpenTask, same deep-link opener PlansTab uses) — rather than plain text the
   // student has to go find themselves. Tasks with no addressable resource (rest, reflection…)
@@ -71,10 +81,11 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
       style={{ ...glass2({ padding: 16 }), display: 'flex', flexDirection: 'column', gap: 12, borderLeft: `2px solid ${accent}` }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         <div style={{ width: 34, height: 34, borderRadius: 10, background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <CalendarClock size={16} color={accent} />
+          <Sparkles size={16} color={accent} />
         </div>
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={R({ gap: 8 })}>
+            <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: accent }}>Medabrain</span>
             <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>Today's plan</span>
             <span style={pill(`${accent}18`, accent, { fontSize: 10 })}>{done}/{total} done</span>
             {planStreak > 1 && (
@@ -87,6 +98,14 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
         <button style={btnSm(accent, { color: '#fff' })} onClick={onOpenPlan}>
           Go to Plan<ArrowRight size={12} />
         </button>
+      </div>
+      {/* Medabrain speaking, not a generic status line — same phrase bank the evening
+          "tasks remaining" toast draws from (src/data/nudgeBank.js), so the voice matches
+          whether it's here on Home or in that toast. Resurfaces every time this card renders,
+          i.e. every Home visit until the underlying task is actually done — no dismiss-forever. */}
+      <div style={{ fontSize: 12, color: C.t2, marginLeft: isMobile ? 0 : 48, display: 'flex', alignItems: 'flex-start', gap: 6, fontStyle: 'italic' }}>
+        <Sparkles size={12} color={accent} style={{ flexShrink: 0, marginTop: 2 }} />
+        <span>{medabrainLine}</span>
       </div>
       {planStreak > 1 && (
         <div style={{ fontSize: 11.5, color: C.t2, marginLeft: isMobile ? 0 : 48, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -101,6 +120,15 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
           // Same accountability rule as the Plans tab's own TaskRow — quiz/lesson/deck tasks
           // auto-verify from actually doing them (no self-report checkbox here either).
           const autoVerify = AUTO_VERIFIABLE_KINDS.has(t.resourceKind) || AUTO_VERIFIABLE_TYPES.has(t.type);
+          // Medabrain's single top pick gets a glowing ring so it visually stands out from the
+          // rest of the list instead of every task reading as equally important — deliberately
+          // just one (see spotlightTask above). The pulse itself respects the app's motion
+          // preference (OS-level prefers-reduced-motion + the Settings override, both already
+          // folded into `reducedMotion` by src/lib/a11y.js's motionReduced()) — a persistent,
+          // resurfaces-every-visit glow is a real motion-sensitivity concern in a way a one-time
+          // tour animation isn't, so a reduced-motion visitor gets a static accent border instead.
+          const isSpotlight = spotlightTask && t.id === spotlightTask.id;
+          const spotlightRing = `0 0 0 2px ${accent}55, 0 0 14px ${accent}40`;
           return (
             <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6, maxWidth: '100%' }}>
               {autoVerify ? (
@@ -112,14 +140,22 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
                 </button>
               )}
               <motion.button whileHover={{ scale: 1.02, y: -1 }} whileTap={{ scale: 0.97 }}
+                animate={isSpotlight && !reducedMotion ? {
+                  boxShadow: [spotlightRing, `0 0 0 3px ${accent}70, 0 0 22px ${accent}66`, spotlightRing],
+                } : undefined}
+                transition={isSpotlight && !reducedMotion ? { boxShadow: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' } } : undefined}
                 onClick={() => (onOpenTask ? onOpenTask(t) : onOpenPlan?.())}
+                aria-label={isSpotlight ? `Medabrain's pick: ${label}` : undefined}
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 999,
-                  border: `1px solid ${accent}45`, background: `${accent}14`, color: C.t1,
+                  border: isSpotlight ? `1.5px solid ${accent}` : `1px solid ${accent}45`,
+                  background: isSpotlight ? `${accent}20` : `${accent}14`, color: C.t1,
+                  boxShadow: isSpotlight && reducedMotion ? spotlightRing : undefined,
                   fontSize: 11, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer', maxWidth: '100%', flex: 1, minWidth: 0,
                 }}>
-                <Target size={11} color={accent} style={{ flexShrink: 0 }} />
+                {isSpotlight ? <Sparkles size={11} color={accent} style={{ flexShrink: 0 }} /> : <Target size={11} color={accent} style={{ flexShrink: 0 }} />}
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{label}</span>
+                {isSpotlight && <span style={{ fontSize: 8.5, fontWeight: 800, color: accent, textTransform: 'uppercase', letterSpacing: '.04em', flexShrink: 0 }}>Medabrain's pick</span>}
                 <ArrowRight size={10} color={accent} style={{ flexShrink: 0 }} />
               </motion.button>
               {onSnoozeTask && (

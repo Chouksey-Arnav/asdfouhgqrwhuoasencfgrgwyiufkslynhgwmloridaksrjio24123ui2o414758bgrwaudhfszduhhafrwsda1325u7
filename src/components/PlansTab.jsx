@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, R, CC, G, pill } from '../lib/theme';
 import { awardXP, BONUS_COPY } from '../lib/rewards';
-import { celebrateXP, celebrateBonusXP, celebrateJackpot } from '../lib/celebrate';
+import { celebrateXP, celebrateBonusXP, celebrateJackpot, celebrateAchievement } from '../lib/celebrate';
 import * as speech from '../lib/speech';
 import { listItems } from '../lib/dataApi';
 import { computePlanReadiness } from '../lib/studentProfile';
@@ -75,6 +75,36 @@ function relTime(ts) {
 export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate, quizzesTaken = null }) {
   const plan = user?.masterPlan || null;
   const portfolioData = usePortfolioData();
+  // portfolioData is null while its own fetch is in flight — pass null (not 0) through so
+  // computePlanReadiness treats that one gate as provisionally satisfied rather than flashing
+  // "locked" for a student who actually has Portfolio items, only to unlock a beat later.
+  const portfolioItemCount = portfolioData ? Object.values(portfolioData).reduce((s, arr) => s + (arr?.length || 0), 0) : null;
+  // Computed unconditionally (not just inside the `!plan` branch below) so the "you're ready"
+  // effect can watch it with a normal, always-called hook — only meaningful pre-plan, so this is
+  // cheap/pure and harmless once a plan already exists.
+  const readiness = !plan ? computePlanReadiness(user, { quizzesTaken, portfolioItemCount }) : null;
+  // "You're ready" — fires once per genuine false→true readiness transition observed while
+  // mounted (comparing against an explicit prior `false`, not just "falsy", is what stops this
+  // re-firing on a mere remount: switching tabs and back in this no-router SPA can remount
+  // PlansTab, and a student who was ALREADY ready would otherwise see the celebration again every
+  // time they revisit before ever building a plan). The localStorage flag below is a second,
+  // belt-and-suspenders guard scoped to the account (not just this component instance) against
+  // that same re-fire — cheap insurance, given how easy a one-time celebration is to get wrong.
+  const prevReadyRef = useRef(null);
+  useEffect(() => {
+    if (!readiness) { prevReadyRef.current = null; return; }
+    const wasReady = prevReadyRef.current;
+    prevReadyRef.current = readiness.ready;
+    if (readiness.ready && wasReady === false) {
+      const flagKey = `planReadinessCelebrated:${user?.email || user?.id || 'anon'}`;
+      let already = false;
+      try { already = localStorage.getItem(flagKey) === '1'; } catch { /* private mode — best effort */ }
+      if (already) return;
+      try { localStorage.setItem(flagKey, '1'); } catch { /* best effort only */ }
+      toast.success("You're all set — Medabrain has everything it needs. Let's build your plan.", { duration: 5500, icon: '✨' });
+      celebrateAchievement();
+    }
+  }, [readiness?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
   const [view, setView] = useState('week'); // 'week' | 'roadmap'
   const [generating, setGenerating] = useState(false);
   const [stageLabel, setStageLabel] = useState(LOADING_STAGES[0].label);
@@ -233,11 +263,6 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 
   if (generating) return <GeneratingCard label={stageLabel} accent={accent} />;
   if (!plan) {
-    // portfolioData is null while its own fetch is in flight — pass null (not 0) through so
-    // computePlanReadiness treats that one gate as provisionally satisfied rather than flashing
-    // "locked" for a student who actually has Portfolio items, only to unlock a beat later.
-    const portfolioItemCount = portfolioData ? Object.values(portfolioData).reduce((s, arr) => s + (arr?.length || 0), 0) : null;
-    const readiness = computePlanReadiness(user, { quizzesTaken, portfolioItemCount });
     if (!readiness.ready) {
       return (
         <LockedState
@@ -295,9 +320,67 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 // plan it can actually be confident in. Anyone who's been through the current
 // onboarding flow already has all six by construction — this only actually
 // gates legacy accounts, which is exactly the intended nudge toward Settings.
+// One checklist row — done/pending/loading, with a checkmark that animates in only on a genuine
+// pending→done transition (see the `justCompleted` diffing in LockedState below), never on a
+// loading→done resolution (nothing changed, the data just arrived) or on first paint.
+function ChecklistRow({ item, accent, onClick, clickable, justCompleted }) {
+  const { state, label } = item;
+  const Wrapper = clickable ? motion.button : motion.div;
+  return (
+    <Wrapper
+      onClick={clickable ? onClick : undefined}
+      animate={justCompleted ? { scale: [1, 1.05, 1] } : undefined}
+      transition={justCompleted ? { duration: 0.45, ease: 'easeOut' } : undefined}
+      style={{
+        all: clickable ? 'unset' : undefined, cursor: clickable ? 'pointer' : 'default', boxSizing: 'border-box', width: '100%',
+        ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+        border: state === 'done' ? `1px solid ${C.green}35` : undefined,
+      }}>
+      <AnimatePresence mode="wait" initial={false}>
+        {state === 'done' ? (
+          <motion.span key="done" initial={justCompleted ? { scale: 0, rotate: -90 } : false} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }} style={{ display: 'flex', flexShrink: 0 }}>
+            <CheckCircle2 size={14} color={C.greenL} />
+          </motion.span>
+        ) : state === 'loading' ? (
+          <motion.span key="loading" animate={{ opacity: [0.3, 0.7, 0.3] }} transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }} style={{ display: 'flex', flexShrink: 0 }}>
+            <Circle size={13} color={C.t3} />
+          </motion.span>
+        ) : (
+          <span key="pending" style={{ display: 'flex', flexShrink: 0 }}>
+            <Circle size={13} color={C.amberL} />
+          </span>
+        )}
+      </AnimatePresence>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{label}</div>
+        {state === 'done' && <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Already have this from your onboarding</div>}
+      </div>
+      {clickable && state !== 'done' && <ArrowRight size={13} color={C.amberL} style={{ flexShrink: 0 }} />}
+    </Wrapper>
+  );
+}
+
 function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) {
   const missingProfile = readiness.missing.filter(m => m.kind === 'profile');
   const missingActivity = readiness.missing.filter(m => m.kind === 'activity');
+  const profileItems = readiness.checklist.filter(c => c.kind === 'profile');
+  const activityItems = readiness.checklist.filter(c => c.kind === 'activity');
+
+  // Diffed one render behind (via effect, not during render) so a checkmark only animates for an
+  // item that just flipped pending→done since the LAST commit — a loading→done resolution (the
+  // gate's own data simply finished loading, nothing the student did) never animates.
+  const prevStatesRef = useRef({});
+  const [justCompleted, setJustCompleted] = useState(() => new Set());
+  useEffect(() => {
+    const prev = prevStatesRef.current;
+    const next = new Set();
+    for (const item of readiness.checklist) {
+      if (prev[item.field] === 'pending' && item.state === 'done') next.add(item.field);
+    }
+    prevStatesRef.current = Object.fromEntries(readiness.checklist.map(c => [c.field, c.state]));
+    if (next.size) setJustCompleted(next);
+  }, [readiness.checklist]);
+
   return (
     <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.amber}30` }}>
       <div style={{ position: 'absolute', inset: 0, background: C.auroraGrad, opacity: 0.05, pointerEvents: 'none' }} />
@@ -310,29 +393,22 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) 
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>A few things first</h2>
         </div>
         <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 460, margin: 0 }}>
-          Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Fill these in and your plan unlocks:
+          Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Onboarding already answered some of this for you; fill in the rest and your plan unlocks:
         </p>
-        {missingProfile.length > 0 && (
+        {profileItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
             <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Your profile</div>
-            {missingProfile.map(m => (
-              <div key={m.field} style={{ ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' }}>
-                <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{m.label}</span>
-              </div>
+            {profileItems.map(m => (
+              <ChecklistRow key={m.field} item={m} accent={accent} clickable={false} justCompleted={justCompleted.has(m.field)} />
             ))}
           </div>
         )}
-        {missingActivity.length > 0 && (
+        {activityItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
             <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Show us where you stand</div>
-            {missingActivity.map(m => (
-              <button key={m.field} onClick={() => onGoActivity?.(m)}
-                style={{ all: 'unset', cursor: onGoActivity ? 'pointer' : 'default', ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', boxSizing: 'border-box', width: '100%' }}>
-                <Circle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600, flex: 1 }}>{m.label}</span>
-                {onGoActivity && <ArrowRight size={13} color={C.amberL} style={{ flexShrink: 0 }} />}
-              </button>
+            {activityItems.map(m => (
+              <ChecklistRow key={m.field} item={m} accent={accent} clickable={m.state !== 'done' && !!onGoActivity}
+                onClick={() => onGoActivity?.(m)} justCompleted={justCompleted.has(m.field)} />
             ))}
           </div>
         )}

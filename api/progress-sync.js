@@ -43,13 +43,30 @@ export default async function handler(req, res) {
       if (!payload || typeof payload !== 'object') return res.status(400).json({ error: 'Missing data.' });
       if (JSON.stringify(payload).length > MAX_BYTES) return res.status(413).json({ error: 'Snapshot too large.' });
 
-      const { data, error } = await supabase
-        .from('progress_sync')
-        .upsert({ user_id: user.id, data: payload, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
-        .select('updated_at')
-        .single();
+      // xp/aiChatCount/interviewCount/cardReviewCount travel as an additive delta
+      // (`counterDeltas`), not as part of the plain overwrite the rest of this payload gets — see
+      // src/lib/db.js's mergeUserRecord/claimSyncDelta for why a blind overwrite (or a
+      // client-computed Math.max merge) silently lost cross-device progress on these fields.
+      // Stripped off before storing: it's a transport-only instruction, not part of the snapshot.
+      const counterDeltas = payload.user?.counterDeltas || null;
+      if (payload.user && 'counterDeltas' in payload.user) {
+        const { counterDeltas: _drop, ...restUser } = payload.user;
+        payload.user = restUser;
+      }
+
+      // bump_progress_counters is a single atomic Postgres function call (see
+      // supabase/migrations/0004_reward_and_counter_sync.sql) — it upserts the full snapshot AND
+      // additively applies counterDeltas within one row-locked transaction, so two concurrent
+      // pushes for the same user can't race a read-then-write from this handler and lose one
+      // side's increment (a classic lost-update bug a naive "SELECT, add in Node, upsert back"
+      // would have reintroduced).
+      const { data: mergedData, error } = await supabase.rpc('bump_progress_counters', {
+        p_user_id: user.id,
+        p_data: payload,
+        p_deltas: counterDeltas,
+      });
       if (error) throw error;
-      return res.status(200).json({ updatedAt: data.updated_at });
+      return res.status(200).json({ updatedAt: new Date().toISOString(), counters: mergedData?.user || null });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });
