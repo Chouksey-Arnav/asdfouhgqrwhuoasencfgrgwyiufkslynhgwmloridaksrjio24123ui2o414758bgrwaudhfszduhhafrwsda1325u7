@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge,
+  Highlighter, Accessibility, Gauge, Loader2,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -5264,6 +5264,21 @@ export default function App({ account, onAccountChange }) {
   }
   // ── PORTFOLIO ─────────────────────────────────────────────────────────────────
   function tPort(){
+    // Portfolio's activities/awards/GPA history live in Supabase, not the local-first
+    // Dexie store everything else on this tab reads from — so unlike every other tab,
+    // the very first visit each session has a real network round trip to wait on. Until
+    // it lands, show a clear loading state instead of the panel's real layout starting
+    // life full of misleading zeros (0 activities, 0 awards, 0% strength) that then pop
+    // to their real values a moment later.
+    if(!portLoaded){
+      return(
+        <div style={{...glass({padding:40}),display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,minHeight:360}}>
+          <Loader2 className="spin" size={26} color={C.blue} />
+          <div style={{fontSize:13.5,fontWeight:600,color:C.t2}}>Loading your Portfolio…</div>
+          <div style={{fontSize:11.5,color:C.t3}}>Pulling in your activities, awards, and GPA history.</div>
+        </div>
+      );
+    }
     const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
     const annualH=a=>(parseFloat(a.hours_per_week)||0)*(parseFloat(a.weeks_per_year)||0);
     const totH=Math.round(portActivities.reduce((s,a)=>s+annualH(a),0));
