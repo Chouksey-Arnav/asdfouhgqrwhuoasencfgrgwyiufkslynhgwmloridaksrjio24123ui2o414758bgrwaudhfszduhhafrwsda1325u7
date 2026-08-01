@@ -72,7 +72,7 @@ function relTime(ts) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate, quizzesTaken = null }) {
+export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate, quizzesTaken = null, reducedMotion = false }) {
   const plan = user?.masterPlan || null;
   const portfolioData = usePortfolioData();
   // portfolioData is null while its own fetch is in flight — pass null (not 0) through so
@@ -683,7 +683,7 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
         </div>
       )}
 
-      {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx} />}
+      {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx} reducedMotion={reducedMotion} />}
 
       {restOfWeek.length > 0 && (
         <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Coming up — drag a task onto a day to reschedule it</div>
@@ -757,7 +757,7 @@ function MoveDayPicker({ moveFor, upcoming, accent, onPick, onClose }) {
 // WeekView's task-position map (used to compute a same-day drop order) and
 // reports live pointer position while dragging so WeekView can hit-test it
 // against every day column's bounding rect.
-function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx }) {
+function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx, isSpotlight, accent, reducedMotion }) {
   const controls = useDragControls();
   const isDragging = dragCtx.drag?.taskId === task.id;
   return (
@@ -780,6 +780,7 @@ function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx }) {
         task={task} onToggle={onToggle} onJump={onJump}
         onSnooze={() => dragCtx.onSnooze(date, task.id)}
         onMoveClick={() => dragCtx.onMoveClick(task.id, date, task.title)}
+        isSpotlight={isSpotlight} accent={accent} reducedMotion={reducedMotion}
         dragHandle={
           <span onPointerDown={e => controls.start(e)} style={{ cursor: 'grab', touchAction: 'none', display: 'flex', flexShrink: 0, marginTop: 2, color: C.t4 }} aria-hidden="true">
             <GripVertical size={14} />
@@ -794,11 +795,16 @@ function DraggableTaskRow({ task, date, onToggle, onJump, dragCtx }) {
 // prominent, always-expanded treatment so "what do I do right now" never
 // requires a click. A conic-gradient ring gives an at-a-glance sense of
 // completion without pulling in a charting dependency.
-function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx }) {
+function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }) {
   const total = day.tasks.length;
   const done = day.tasks.filter(t => t.done).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
   const isDropTarget = dragCtx?.drag && dragCtx.hoverDate === day.date && dragCtx.drag.fromDate !== day.date;
+  // Medabrain's ONE pick for today, same rule TodayPlanNudge uses on Home: the first remaining
+  // task that actually points somewhere real, falling back to the first remaining task of any
+  // kind — so the plan's own full view highlights the same "first priority" thing Home does.
+  const remainingTasks = day.tasks.filter(t => !t.done);
+  const spotlightTask = remainingTasks.find(t => t.resourceKind && t.resourceKind !== 'view' && t.resourceLabel) || remainingTasks[0] || null;
   return (
     <div ref={el => dragCtx?.registerDayEl(day.date, el)} style={{
       ...glass({ padding: 0, overflow: 'hidden' }),
@@ -823,11 +829,12 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx }) {
         </div>
       </div>
       <div style={{ padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {day.tasks.map(t => (
-          dragCtx
-            ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} />
-            : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
-        ))}
+        {day.tasks.map(t => {
+          const isSpotlight = !!spotlightTask && t.id === spotlightTask.id;
+          return dragCtx
+            ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} isSpotlight={isSpotlight} accent={accent} reducedMotion={reducedMotion} />
+            : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} isSpotlight={isSpotlight} accent={accent} reducedMotion={reducedMotion} />;
+        })}
         {day.reflectionPrompt && (
           <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>
             {day.reflectionPrompt}
@@ -903,7 +910,7 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
   );
 }
 
-function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle }) {
+function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle, isSpotlight, accent, reducedMotion }) {
   const meta = PILLAR_META[task.pillar] || PILLAR_META.prep;
   const Icon = TYPE_ICON[task.type] || BookOpen;
   const canJump = task.resourceTab && task.resourceView;
@@ -923,8 +930,22 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle }) 
   const linkLabel = specific
     ? `Open: ${task.resourceLabel.length > 34 ? task.resourceLabel.slice(0, 32) + '…' : task.resourceLabel}`
     : (task.resourceLabel ? `Go to ${task.resourceLabel}` : 'Open');
+  // The single highest-priority incomplete task for the day gets the same "Medabrain's pick"
+  // glow treatment TodayPlanNudge uses on Home — so the one thing most worth doing reads as
+  // visually first everywhere the plan is shown, not just in the compact Home card. Just one
+  // task at a time (see spotlightTask in TodayHero), and the pulse respects reduced-motion.
+  const ringColor = accent || meta.color;
+  const spotlightRing = `0 0 0 2px ${ringColor}55, 0 0 14px ${ringColor}40`;
   return (
-    <div style={{ ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }), opacity: task.done ? 0.55 : 1, borderLeft: `2px solid ${meta.color}45` }}>
+    <motion.div
+      animate={isSpotlight && !reducedMotion ? { boxShadow: [spotlightRing, `0 0 0 3px ${ringColor}70, 0 0 22px ${ringColor}66`, spotlightRing] } : undefined}
+      transition={isSpotlight && !reducedMotion ? { boxShadow: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' } } : undefined}
+      style={{
+        ...glass2({ padding: '10px 12px', display: 'flex', gap: 10, alignItems: 'flex-start' }),
+        opacity: task.done ? 0.55 : 1,
+        borderLeft: isSpotlight ? `2px solid ${ringColor}` : `2px solid ${meta.color}45`,
+        boxShadow: isSpotlight && reducedMotion ? spotlightRing : undefined,
+      }}>
       {dragHandle}
       {autoVerify ? (
         <span title={task.done ? 'Verified automatically — you actually did this' : 'Checks off automatically when you complete it — no self-report'}
@@ -944,6 +965,11 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle }) 
         {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
         <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
+          {isSpotlight && (
+            <span style={{ ...pill(`${ringColor}20`, ringColor, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 3, textTransform: 'uppercase', letterSpacing: '.03em' }}>
+              <Sparkles size={9} />Medabrain's pick
+            </span>
+          )}
           {task.rolledOverFrom && (
             <span style={{ ...pill(`${C.amber}18`, C.amberL, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
               <Undo2 size={9} />Carried over
@@ -979,7 +1005,7 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle }) 
           )}
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

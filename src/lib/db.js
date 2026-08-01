@@ -264,6 +264,7 @@ export async function getQuizHistory() {
 }
 export async function saveQuizScore(quizId, score) {
   await db.quizScores.put({ quizId, score, completedAt: Date.now() });
+  logStudyEvent('quiz_scored', quizId).catch(() => {});
   pushDirty();
 }
 export async function resetQuizScores() {
@@ -317,6 +318,7 @@ export async function recordCardReview(cardId) {
   await db.cardReviews.add({ cardId, reviewedAt: Date.now() });
   const u = await db.user.toCollection().first();
   if (u) await db.user.update(u.id, { cardReviewCount: (u.cardReviewCount || 0) + 1 });
+  logStudyEvent('flashcard_reviewed', String(cardId)).catch(() => {});
   pushDirty();
 }
 export async function getTotalCardReviews() {
@@ -1066,6 +1068,8 @@ export async function updateSatAttempt(id, patch) {
 
 export async function finishSatAttempt(id, result = {}) {
   await db.satAttempts.update(id, { status: 'complete', finishedAt: Date.now(), ...result });
+  const attempt = await db.satAttempts.get(id);
+  logStudyEvent(attempt?.kind === 'diagnostic' ? 'sat_diagnostic_completed' : 'sat_attempt_completed', attempt?.kind || null).catch(() => {});
   pushDirty();
 }
 
@@ -1194,6 +1198,7 @@ export async function updateSatBaseline(id, patch) {
 
 export async function finishSatBaseline(id, result) {
   await db.satBaselines.update(id, { status: 'complete', finishedAt: Date.now(), result });
+  logStudyEvent('sat_baseline_completed', null).catch(() => {});
   pushDirty();
 }
 

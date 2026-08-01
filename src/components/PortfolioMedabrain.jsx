@@ -23,7 +23,7 @@ const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activitie
 // head-coach chat state: it fetches the full Portfolio resource lists itself so it always
 // reasons over live, complete data, and its API traffic never competes with or gets mixed
 // into the main Medabrain coach's key pool/rate limits.
-export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile }) {
+export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile, recentActivitySummary = null }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -78,6 +78,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
         recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
         awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
+        recentActivitySummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',

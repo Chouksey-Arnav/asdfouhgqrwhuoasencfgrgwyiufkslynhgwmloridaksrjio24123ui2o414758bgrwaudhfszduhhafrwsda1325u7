@@ -57,6 +57,7 @@ import { celebrateXP, celebrateLevelUp, celebratePerfect, celebrateAchievement, 
 import { awardXP, BONUS_COPY } from './lib/rewards';
 import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
+import { summarizeRecentActivity } from './lib/recentActivity';
 import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { localDateStr } from './lib/dateUtils';
@@ -1921,6 +1922,7 @@ export default function App({ account, onAccountChange }) {
   // instead of racing stale closure state, and folds the Plan XP into that same object so there's
   // only ever one saveUser() call per action.
   function applyPlanAutoComplete(baseUser, isMatch){
+    refreshRecentActivity(); // this choke point fires after nearly every trackable action app-wide
     const plan=baseUser?.masterPlan;
     if(!plan)return baseUser;
     const {plan:updatedPlan,completed}=autoCompleteResourceTasks(plan,isMatch);
@@ -2170,6 +2172,14 @@ export default function App({ account, onAccountChange }) {
   const [satWeakSkills,setSatWeakSkills]=useState([]);
   const [satOpenReviews,setSatOpenReviews]=useState(0);
   const [satStats,setSatStats]=useState({diagnosticDone:false,fullTests:0,questions:0,logCleared:false,masteredSkills:0});
+  // Cross-app "what has this student actually been doing" digest (src/lib/recentActivity.js,
+  // reading the studyEvents log) — fed into every Medabrain surface (coach/prep/portfolio/sat/plan
+  // generation) so MedaBrain's knowledge keeps expanding from real activity, not just onboarding
+  // answers and today's summary counts. Refreshed opportunistically via applyPlanAutoComplete
+  // below, the same shared choke point nearly every trackable action already flows through.
+  const [recentActivitySummary,setRecentActivitySummary]=useState(null);
+  const refreshRecentActivity=useCallback(()=>{summarizeRecentActivity(7).then(r=>setRecentActivitySummary(r?.text||null)).catch(()=>{});},[]);
+  useEffect(()=>{ if(dbReady) refreshRecentActivity(); },[dbReady,refreshRecentActivity]);
   useEffect(()=>{
     let cancelled=false;
     (async()=>{
@@ -2625,6 +2635,7 @@ export default function App({ account, onAccountChange }) {
         skillsCount,
         streak,
         planSummary:summarizePlanForCoach(user?.masterPlan),
+        recentActivitySummary,
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
@@ -2665,7 +2676,7 @@ export default function App({ account, onAccountChange }) {
     setMsgs(next);setCi('');
     DB.addCoachMessage(threadId,'user',message).catch(console.error);
     bumpThreadLocally(threadId);
-    const newCount=aiChatCount+1;setAiChatCount(newCount);saveUser(applyPlanAutoComplete({...user,aiChatCount:newCount},typeMatch('coach')));bumpWeeklyCoachCount(getIsoWeekKey());
+    const newCount=aiChatCount+1;setAiChatCount(newCount);logEvent('coach_message_sent',threadId);saveUser(applyPlanAutoComplete({...user,aiChatCount:newCount},typeMatch('coach')));bumpWeeklyCoachCount(getIsoWeekKey());
     await requestAIResponse(next,threadId,newCount);
   }
 
@@ -3067,6 +3078,8 @@ export default function App({ account, onAccountChange }) {
     setDCats(ranked.filter(k=>k!==top).slice(0,2)); // top 2 alternates, shown as "you might also fit"
     setDWhy(explainMatch(vector, top, { scored })); // reasoning behind the match, not just the label
     setDD(true);
+    logEvent('pathway_diagnostic_completed',top);
+    refreshRecentActivity();
     saveUser({...user,diagnosticResult:top});
   }
 
@@ -6737,6 +6750,7 @@ export default function App({ account, onAccountChange }) {
           keyTakeaways={lessonContent?.article?.keyTakeaways||[]}
           objectives={lesson.objectives||[]}
           lessonNote={lessonNote}
+          recentActivitySummary={recentActivitySummary}
         />
         {/* Left-side notes panel — per-lesson free-text notes, autosaved and fully readable by
             Meta Brain above (see buildPrepSystemPrompt's lessonNote block). */}
@@ -6785,6 +6799,7 @@ export default function App({ account, onAccountChange }) {
           weakestCategory={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?cats3[w.i]:null;})()}
           weakestScore={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?w.v:null;})()}
           dueCards={dueCards} streak={streak}
+          recentActivitySummary={recentActivitySummary}
         />
       </div>
     );
@@ -6796,17 +6811,17 @@ export default function App({ account, onAccountChange }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
-    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} onAdded={()=>saveUser(applyPlanAutoComplete(user,typeMatch('deadline')))}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>saveUser(applyPlanAutoComplete(user,typeMatch('college')))}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>saveUser(applyPlanAutoComplete(user,typeMatch('essay')))}/>,
+    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
-    resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>saveUser(applyPlanAutoComplete(user,typeMatch('activity')))}/>,
-    research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>saveUser(applyPlanAutoComplete(user,typeMatch('research')))}/>,
+    resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}/>,
+    research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>{logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}/>,
     skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
-    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}/>,
-    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
-    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);logEvent('portfolio_item_added','clinical');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}/>,
+    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
+    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };
   function tPortWrap(){
     return(
@@ -6822,6 +6837,7 @@ export default function App({ account, onAccountChange }) {
           user={user} pathwayLabel={curPath?.label||'college prep'}
           gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
           isMobile={isMobile}
+          recentActivitySummary={recentActivitySummary}
         />
       </div>
     );
@@ -6900,8 +6916,9 @@ export default function App({ account, onAccountChange }) {
       dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
+      recentActivitySummary,
     };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>;
   }
   // ── SAT: the test-prep pillar (src/components/sat/) ──
   function tSatWrap(){
@@ -6922,6 +6939,7 @@ export default function App({ account, onAccountChange }) {
         onMedabrainOpenChange={setSatBrainOpen}
         medabrainMessages={satBrainMessages}
         onMedabrainMessagesChange={setSatBrainMessages}
+        recentActivitySummary={recentActivitySummary}
         planStrip={user.masterPlan?(
           <div style={{padding:isMobile?'0 0 12px':'0 0 14px'}}>
             <PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>

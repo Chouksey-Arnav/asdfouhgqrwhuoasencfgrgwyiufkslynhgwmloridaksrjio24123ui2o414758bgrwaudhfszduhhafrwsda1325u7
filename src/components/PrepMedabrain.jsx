@@ -43,6 +43,7 @@ export default function PrepMedabrain({
   user, pathwayLabel, gradeLabel, accent = C.blue, isMobile,
   lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [], lessonNote = '',
   units = [], totalDone = null, totalLessons = null, weakestCategory = null, weakestScore = null, dueCards = 0, streak = 0,
+  recentActivitySummary = null,
 }) {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -72,6 +73,7 @@ export default function PrepMedabrain({
         user, pathwayLabel, gradeLabel,
         lesson, unit, articleSections, keyTakeaways, objectives, unitTitles, lessonNote,
         units, totalDone, totalLessons, weakestCategory, weakestScore, dueCards, streak,
+        recentActivitySummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
