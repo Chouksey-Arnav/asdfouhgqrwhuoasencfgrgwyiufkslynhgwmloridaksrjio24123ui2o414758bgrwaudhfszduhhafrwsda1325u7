@@ -11,17 +11,31 @@
 const DIFF_WEIGHT = { Easy: 1, Medium: 0.86, Hard: 0.55, Expert: 0.35 };
 const REASON_PRIORITY = ['course', 'weak', 'pathway', 'streak', 'new'];
 
-function buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken }) {
+// Grade-stage framing — freshmen/sophomores have runway to explore broadly;
+// juniors/seniors are closer to standardized tests and applications, so a
+// known gap in a course category is worth more urgency than a brand-new one.
+const EARLY_GRADES = new Set(['freshman', 'sophomore']);
+const LATE_GRADES = new Set(['junior', 'senior', 'gap']);
+const STRUGGLING_GPA = new Set(['mostly_b', 'below_b']);
+
+function buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken, gradeKey, gpaBand }) {
   const reasons = [];
   if (catAvg !== null && catAvg !== undefined) {
     if (catAvg < 75) {
-      reasons.push({ type: 'weak', text: `Your ${quiz.cat} average is ${catAvg}% — this is the fastest way to close the gap.` });
+      const urgency = LATE_GRADES.has(gradeKey)
+        ? ' — worth shoring up now while you still have time before applications.'
+        : ' — this is the fastest way to close the gap.';
+      reasons.push({ type: 'weak', text: `Your ${quiz.cat} average is ${catAvg}%${urgency}` });
     }
   } else {
-    reasons.push({ type: 'new', text: `You haven't started ${quiz.cat} yet — a fresh area to build up.` });
+    const explore = EARLY_GRADES.has(gradeKey)
+      ? ' — a great time to explore now, while you still have years of runway.'
+      : ' — a fresh area to build up.';
+    reasons.push({ type: 'new', text: `You haven't started ${quiz.cat} yet${explore}` });
   }
   if (courseCats?.has(quiz.cat)) {
-    reasons.push({ type: 'course', text: `Matches a course you're currently taking.` });
+    const gradeTie = STRUGGLING_GPA.has(gpaBand) ? ' Extra reps here can reinforce what actually affects your grade in that class.' : '';
+    reasons.push({ type: 'course', text: `Matches a course you're currently taking.${gradeTie}` });
   }
   if (pathwayCats?.includes(quiz.cat)) {
     reasons.push({ type: 'pathway', text: `Core to your ${pathwayLabel} pathway.` });
@@ -50,23 +64,40 @@ function primaryReason(reasons) {
  * @param {Set}    opts.courseCats    categories matching the student's enrolled courses
  * @param {Array}  opts.pathwayCats   PATHS[specialty].quizCats
  * @param {string} opts.pathwayLabel  PATHS[specialty].label
+ * @param {string} [opts.gradeKey]    GRADE_STAGES key ('freshman'..'senior'|'gap') — shifts the
+ *   breadth-vs-urgency balance: early grades lean toward exploring new categories, late grades
+ *   lean toward closing known gaps and course-relevant material before applications.
+ * @param {string} [opts.gpaBand]     onboarding GPA_OPTIONS value — a struggling band
+ *   (mostly_b/below_b) raises the weight of quizzes that match a course currently being taken,
+ *   since that's the material most likely to move an actual grade.
  * @param {number} opts.count         how many ranked picks to return (default 6)
  * @returns {Array<{rank, quiz, reason, tags}>}
  */
-export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', count = 6 }) {
+export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', gradeKey = null, gpaBand = null, count = 6 }) {
   const untaken = quizzes.filter(q => qScores[q.id] === undefined);
   if (!untaken.length) return [];
 
   const totalTaken = Object.keys(qScores).length;
+  const early = EARLY_GRADES.has(gradeKey);
+  const late = LATE_GRADES.has(gradeKey);
+  const strugglingGpa = STRUGGLING_GPA.has(gpaBand);
 
   const scored = untaken.map(quiz => {
     const catAvg = catAverages[quiz.cat] ?? null;
-    const reasons = buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken });
+    const reasons = buildReasons({ quiz, catAvg, pathwayCats, pathwayLabel, courseCats, totalTaken, gradeKey, gpaBand });
 
     let score = 50;
-    if (catAvg !== null) score += Math.max(0, 100 - catAvg) * 0.6;
-    else score += 18; // unexplored-category breadth bonus
-    if (courseCats?.has(quiz.cat)) score += 20;
+    // Late grades (junior/senior/gap) weight a real, measured gap more heavily —
+    // there's less runway left to close it. Early grades weight it slightly less
+    // so unexplored breadth (below) can compete with it instead of dominating.
+    if (catAvg !== null) score += Math.max(0, 100 - catAvg) * (late ? 0.72 : 0.6);
+    // Unexplored-category breadth bonus — bigger for freshmen/sophomores, who
+    // have years to sample widely; smaller for juniors/seniors, who benefit
+    // more from depth on what they've already started.
+    else score += early ? 24 : late ? 12 : 18;
+    // Course-relevant material gets an extra boost when self-reported grades
+    // are struggling — this is the practice most likely to move an actual GPA.
+    if (courseCats?.has(quiz.cat)) score += strugglingGpa ? 27 : 20;
     if (pathwayCats?.includes(quiz.cat)) score += 14;
     if (totalTaken < 5 && quiz.diff === 'Easy') score += 12;
     score *= DIFF_WEIGHT[quiz.diff] ?? 0.7;

@@ -16,14 +16,24 @@
 //   2. Nothing is buried behind a "show advanced". A student who needs larger
 //      tap targets is exactly the student least able to hunt for them.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sun, Moon, Monitor, Type, Contrast, Zap, MousePointer2, Eye,
   RotateCcw, Check, Accessibility, AlignLeft, Sparkles, Info,
 } from 'lucide-react';
 import { C, DARK, LIGHT, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
-import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion } from '../lib/a11y';
+import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion, motionReduced } from '../lib/a11y';
+
+// Which DEFAULTS keys belong to which card, so each card can show its own
+// "customized" indicator and the reset flow can be verified key-by-key
+// against exactly what's rendered — no setting silently falls outside both.
+const CARD_KEYS = {
+  text: ['fontScale', 'lineSpacing', 'letterSpacing', 'readableFont', 'boldText', 'readingWidth'],
+  contrast: ['highContrast', 'reduceTransparency', 'underlineLinks', 'alwaysShowFocus'],
+  motion: ['reduceMotion', 'hideDecorative'],
+  pointer: ['largeTargets', 'cursorSize'],
+};
 
 // ── Small shared controls ────────────────────────────────────────────────────
 
@@ -109,22 +119,31 @@ function Slider({ label, description, value, min, max, step, onChange, format, a
   );
 }
 
-function Card({ icon: Icon, title, subtitle, hue, children }) {
+const Card = React.forwardRef(function Card({ icon: Icon, title, subtitle, hue, changed, onReset, children }, ref) {
   return (
-    <div style={glass({ padding: 20 })}>
+    <div ref={ref} style={{ ...glass({ padding: 20 }), scrollMarginTop: 84 }}>
       <div style={{ ...R({ gap: 11, alignItems: 'flex-start' }), marginBottom: 16 }}>
         <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(hue, 0.14), border: `1px solid ${tint(hue, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
           <Icon size={15} color={hue} />
         </div>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.01em' }}>{title}</div>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={R({ gap: 8 })}>
+            <span style={{ fontSize: 14.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.01em' }}>{title}</span>
+            {changed && (
+              <span
+                title="Customized from default"
+                style={{ width: 6, height: 6, borderRadius: '50%', background: hue, flexShrink: 0 }}
+              />
+            )}
+          </div>
           {subtitle && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 2 }}>{subtitle}</div>}
         </div>
+        {changed && onReset && <CardResetButton hue={hue} onClick={onReset} />}
       </div>
       <div style={CC({ gap: 18 })}>{children}</div>
     </div>
   );
-}
+});
 
 // ── Theme preview swatch ─────────────────────────────────────────────────────
 // A miniature of the real thing, built from the actual DARK/LIGHT palettes
@@ -160,10 +179,37 @@ const THEME_CHOICES = [
   { value: 'system', label: 'Match device', icon: Monitor, palette: null,  note: 'Follows your phone or computer' },
 ];
 
+const NAV_SECTIONS = [
+  { id: 'theme', label: 'Theme', icon: Sun, hue: C.amber },
+  { id: 'text', label: 'Text & reading', icon: Type, hue: C.blue },
+  { id: 'contrast', label: 'Contrast', icon: Contrast, hue: C.violet },
+  { id: 'motion', label: 'Motion', icon: Zap, hue: C.cyan },
+  { id: 'pointer', label: 'Pointer & touch', icon: MousePointer2, hue: C.green },
+];
+
+// A tiny ghost button offered on any card that's drifted from default —
+// resets just that card's settings, so fixing one overcorrected slider
+// doesn't force wiping every other choice the student made on purpose.
+function CardResetButton({ hue, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7,
+        border: `1px solid ${tint(hue, 0.3)}`, background: 'transparent', color: hue,
+        fontSize: 10.5, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer', flexShrink: 0,
+      }}
+    >
+      <RotateCcw size={10} />Reset section
+    </button>
+  );
+}
+
 export default function AppearanceSettings({ settings, onChange, isMobile = false, accent = C.blue }) {
   const s = { ...DEFAULTS, ...settings };
   const [justReset, setJustReset] = useState(false);
   const set = (patch) => onChange(patch);
+  const sectionRefs = useRef({});
 
   const reset = () => {
     onChange({ ...DEFAULTS, themeMode: s.themeMode });
@@ -171,15 +217,57 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
     window.setTimeout(() => setJustReset(false), 2000);
   };
 
+  const resetCard = (id) => {
+    const keys = CARD_KEYS[id];
+    if (!keys) return;
+    onChange(Object.fromEntries(keys.map(k => [k, DEFAULTS[k]])));
+  };
+
+  const cardChanged = (id) => (CARD_KEYS[id] || []).some(k => s[k] !== DEFAULTS[k]);
+
   const changedCount = Object.keys(DEFAULTS)
     .filter(k => k !== 'themeMode')
     .filter(k => s[k] !== DEFAULTS[k]).length;
 
+  const jumpTo = (id) => {
+    sectionRefs.current[id]?.scrollIntoView({
+      behavior: motionReduced({ reduceMotion: s.reduceMotion }) ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  };
+
   return (
     <div style={CC({ gap: 16 })}>
 
+      {/* ── Intro + quick jump ───────────────────────────────────────────── */}
+      <div>
+        <p style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
+          Every control below applies immediately and stays saved on this device. Jump to a section:
+        </p>
+        <div role="tablist" aria-label="Jump to accessibility section" style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+          {NAV_SECTIONS.map(sec => {
+            const Icon = sec.icon;
+            const on = cardChanged(sec.id);
+            return (
+              <button
+                key={sec.id} type="button" onClick={() => jumpTo(sec.id)}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8,
+                  border: `1px solid ${on ? tint(sec.hue, 0.35) : C.b1}`, background: on ? tint(sec.hue, 0.1) : C.s2,
+                  color: on ? sec.hue : C.t2, fontSize: 11.5, fontWeight: 600, fontFamily: C.FB, cursor: 'pointer',
+                }}
+              >
+                <Icon size={11} />{sec.label}
+                {on && <span style={{ width: 5, height: 5, borderRadius: '50%', background: sec.hue }} />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* ── Theme ─────────────────────────────────────────────────────────── */}
       <Card
+        ref={el => { sectionRefs.current.theme = el; }}
         icon={Sun} hue={C.amber}
         title="Theme"
         subtitle="Both themes are fully built out — every panel, chart and question surface is designed for each."
@@ -222,9 +310,11 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
 
       {/* ── Text & reading ────────────────────────────────────────────────── */}
       <Card
+        ref={el => { sectionRefs.current.text = el; }}
         icon={Type} hue={C.blue}
         title="Text & reading"
         subtitle="Scaling resizes the whole interface, not just the words — buttons, icons and spacing grow with it."
+        changed={cardChanged('text')} onReset={() => resetCard('text')}
       >
         <Segmented
           label="Interface size"
@@ -294,9 +384,11 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
 
       {/* ── Contrast & visibility ─────────────────────────────────────────── */}
       <Card
+        ref={el => { sectionRefs.current.contrast = el; }}
         icon={Contrast} hue={C.violet}
         title="Contrast & visibility"
         subtitle="For low vision, glare, bright rooms, or screens that wash out."
+        changed={cardChanged('contrast')} onReset={() => resetCard('contrast')}
       >
         <Toggle
           id="a11y-high-contrast" accent={C.violet}
@@ -326,9 +418,11 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
 
       {/* ── Motion ────────────────────────────────────────────────────────── */}
       <Card
+        ref={el => { sectionRefs.current.motion = el; }}
         icon={Zap} hue={C.cyan}
         title="Motion & effects"
         subtitle="For motion sensitivity, vestibular conditions, or simply fewer distractions while studying."
+        changed={cardChanged('motion')} onReset={() => resetCard('motion')}
       >
         <Segmented
           label="Animation"
@@ -352,9 +446,11 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
 
       {/* ── Pointer & touch ───────────────────────────────────────────────── */}
       <Card
+        ref={el => { sectionRefs.current.pointer = el; }}
         icon={MousePointer2} hue={C.green}
         title="Pointer & touch"
         subtitle="For tremor, limited dexterity, or using the app one-handed on a phone."
+        changed={cardChanged('pointer')} onReset={() => resetCard('pointer')}
       >
         <Toggle
           id="a11y-large-targets" accent={C.green}
@@ -373,21 +469,23 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
       </Card>
 
       {/* ── Reset ─────────────────────────────────────────────────────────── */}
-      <div style={{ ...glass2({ padding: 16 }), ...R({ justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }) }}>
-        <div style={R({ gap: 10, alignItems: 'flex-start' })}>
-          <Accessibility size={16} color={C.t3} style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={{ ...glass({ padding: 18 }), ...R({ justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }) }}>
+        <div style={R({ gap: 12, alignItems: 'flex-start' })}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(C.t3, 0.14), border: `1px solid ${tint(C.t3, 0.28)}`, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <Accessibility size={15} color={C.t2} />
+          </div>
           <div>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t2 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
               {changedCount === 0 ? 'Everything is at its default' : `${changedCount} setting${changedCount === 1 ? '' : 's'} changed from default`}
             </div>
-            <div style={{ fontSize: 11, color: C.t4, marginTop: 2 }}>These apply on this device and stay put between sessions.</div>
+            <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>These apply on this device and stay put between sessions. Your theme choice is left as-is — reset just one card with its own "Reset section" button, or clear everything else here.</div>
           </div>
         </div>
         <button
           onClick={reset} disabled={changedCount === 0}
-          style={btnG({ fontSize: 12, padding: '8px 16px', opacity: changedCount === 0 ? 0.4 : 1, cursor: changedCount === 0 ? 'default' : 'pointer' })}
+          style={btnG({ fontSize: 12.5, padding: '9px 18px', opacity: changedCount === 0 ? 0.4 : 1, cursor: changedCount === 0 ? 'default' : 'pointer', flexShrink: 0 })}
         >
-          {justReset ? <><Check size={13} /> Reset</> : <><RotateCcw size={13} /> Reset to defaults</>}
+          {justReset ? <><Check size={13} /> Reset</> : <><RotateCcw size={13} /> Reset everything</>}
         </button>
       </div>
     </div>

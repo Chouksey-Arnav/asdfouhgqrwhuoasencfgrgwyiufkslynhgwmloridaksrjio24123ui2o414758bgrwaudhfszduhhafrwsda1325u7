@@ -166,17 +166,17 @@ export const HC_LIGHT = {
 
 // ── The live token object ────────────────────────────────────────────────────
 // Everything in the app imports this. It is intentionally mutable; see the
-// header comment. Starts as dark so the very first render (before applyTheme
-// runs) matches what the app has always looked like.
-export const C = { ...DARK };
+// header comment. Starts as light so the very first render (before applyTheme
+// runs) matches the app's default theme.
+export const C = { ...LIGHT };
 
 export const THEME_MODES = ['dark', 'light', 'system'];
 export const THEME_STORAGE_KEY = 'msp_themeMode';
 
-/** What the OS is currently asking for. Defaults to dark when unknowable. */
+/** What the OS is currently asking for. Defaults to light when unknowable. */
 export function systemPrefersLight() {
   try { return window.matchMedia('(prefers-color-scheme: light)').matches; }
-  catch { return false; }
+  catch { return true; }
 }
 
 /** 'system' → the concrete mode it currently resolves to. */
@@ -189,12 +189,12 @@ export function resolveMode(mode) {
 export function getStoredMode() {
   try {
     const v = localStorage.getItem(THEME_STORAGE_KEY);
-    return THEME_MODES.includes(v) ? v : 'dark';
-  } catch { return 'dark'; }
+    return THEME_MODES.includes(v) ? v : 'light';
+  } catch { return 'light'; }
 }
 
 export function storeMode(mode) {
-  try { localStorage.setItem(THEME_STORAGE_KEY, THEME_MODES.includes(mode) ? mode : 'dark'); } catch { /* private mode */ }
+  try { localStorage.setItem(THEME_STORAGE_KEY, THEME_MODES.includes(mode) ? mode : 'light'); } catch { /* private mode */ }
 }
 
 // Only these tokens need to cross into index.css, so only these become CSS
@@ -208,7 +208,7 @@ const CSS_VAR_TOKENS = [
   'FD', 'FB', 'FM',
 ];
 
-let currentResolved = 'dark';
+let currentResolved = 'light';
 
 /**
  * Switch the palette. Mutates `C` in place and writes the CSS custom properties
@@ -219,7 +219,7 @@ let currentResolved = 'dark';
  * `opts.highContrast` layers the HC overlay on top of the chosen base.
  * `opts.fontStack` swaps the UI typeface (the dyslexia-friendly setting).
  */
-export function applyTheme(mode = 'dark', opts = {}) {
+export function applyTheme(mode = 'light', opts = {}) {
   const resolved = resolveMode(mode);
   const base = resolved === 'light' ? LIGHT : DARK;
   const overlay = opts.highContrast ? (resolved === 'light' ? HC_LIGHT : HC_DARK) : null;

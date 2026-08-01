@@ -381,6 +381,10 @@ const COURSE_GROUPS = [
   { group:'History & Social Studies', items:['US History','World History','AP US History','AP World History','AP Government','AP Psychology'] },
   { group:'World Language', items:['Spanish','French','Mandarin','Other Language'] },
 ];
+const COURSE_GROUP_ICONS = {
+  Math:Calculator, Science:FlaskConical, English:BookOpen,
+  'History & Social Studies':Landmark, 'World Language':Globe,
+};
 // ── Responsive hook ───────────────────────────────────────────────────────────
 // useMediaQuery, Arc, Bar and Stat now live in src/components/ui/primitives.jsx
 // so the SAT panels (and any future standalone panel) can use them without
@@ -1457,22 +1461,40 @@ export default function App({ account, onAccountChange }) {
   // above the key and survives, while every descendant recomputes its styles.
   const [a11y,setA11y]=useState(()=>loadA11y());
   const [themeEpoch,setThemeEpoch]=useState(0);
+  // Only highContrast/readableFont and the resolved dark-vs-light palette force
+  // a remount (they mutate the C token object, which inline styles snapshotted
+  // at render time can't pick up any other way — see theme.js). Every other
+  // a11y setting (cursor size, large tap targets, motion, spacing…) is applied
+  // purely via data-attributes/CSS custom properties in applyA11y(), which take
+  // effect live with no remount needed. Remounting for those anyway used to
+  // reset scroll position to the top of the page on every single toggle —
+  // most noticeably when turning on the large pointer, since that's a control
+  // students reach for mid-page rather than at the top of Settings.
+  const epochKeyRef=useRef(null);
+  const applyA11yAndSync=useCallback((settings)=>{
+    const resolved=applyA11y(settings);
+    const epochKey=`${resolved}|${settings.highContrast}|${settings.readableFont}`;
+    if(epochKeyRef.current!==epochKey){
+      epochKeyRef.current=epochKey;
+      setThemeEpoch(e=>e+1);
+    }
+    return resolved;
+  },[]);
 
   // Apply on mount and on every change. applyA11y is fully declarative, so
   // running it repeatedly is safe and always converges on the same DOM state.
   useEffect(()=>{
-    applyA11y(a11y);
+    applyA11yAndSync(a11y);
     saveA11y(a11y);
     storeMode(a11y.themeMode);
-    setThemeEpoch(e=>e+1);
-  },[a11y]);
+  },[a11y,applyA11yAndSync]);
 
   // Follow the OS while the student has chosen "match my device". Nothing to do
   // in the other two modes — an explicit choice should not be overridden.
   useEffect(()=>{
     if(a11y.themeMode!=='system') return;
-    return watchSystemTheme(()=>{ applyA11y(a11y); setThemeEpoch(e=>e+1); });
-  },[a11y]);
+    return watchSystemTheme(()=>{ applyA11yAndSync(a11y); });
+  },[a11y,applyA11yAndSync]);
 
   const updateA11y=useCallback((patch)=>{setA11y(s=>({...s,...patch}));},[]);
   // Framer Motion is driven from JS, so the CSS reduced-motion rules can't reach
@@ -2243,8 +2265,9 @@ export default function App({ account, onAccountChange }) {
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
   const rankedQuizzes = useMemo(()=>rankQuizzes({
     quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
-    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'', count:6,
-  }),[qScores,catAverages,courseCats,curPath]);
+    pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'',
+    gradeKey: user?.gradeStage||null, gpaBand: user?.gpaBand||null, count:6,
+  }),[qScores,catAverages,courseCats,curPath,user?.gradeStage,user?.gpaBand]);
   const topPick = rankedQuizzes[0];
 
   // Optional one-line Medabrain (Groq) narration of the #1 pick — the ranking
@@ -3899,6 +3922,13 @@ export default function App({ account, onAccountChange }) {
           </div>
           <ChevronRight size={15} color={C.t3} style={{flexShrink:0}}/>
         </div>
+        {/* Medabrain ranked quiz recommendations — placed first, above the stat
+            tiles and filter toolbar, so it's the first thing a student sees
+            rather than something buried below the library's chrome. Ranking
+            itself factors in this student's real category performance,
+            enrolled courses, pathway, grade level, and self-reported grades
+            (see lib/recommend.js) — this is not a static "top picks" list. */}
+        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}/>}
         {/* Stat tiles */}
         <div style={G(3,12,{},isMobile)}>
           <StatTile icon={Layers} value={ALL_QUIZZES.length} label={`quizzes · ${TOTAL_QUESTIONS} questions`} color={C.sky}/>
@@ -3949,8 +3979,6 @@ export default function App({ account, onAccountChange }) {
             </div>
           </div>
         </div>
-        {/* Medabrain ranked quiz recommendations — full top-6 list */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}/>}
         {/* Today's Plan — collapsible, previews 2-3 upcoming plan-assigned quizzes (this
             week, not just today) with a direct deep-link to each; the quiz grid below
             still stable-partitions today's exact targets to the front (see onPlan/
@@ -6468,29 +6496,52 @@ export default function App({ account, onAccountChange }) {
           {sSpec&&sSpec!==eSpec&&<motion.button whileHover={{scale:1.02}} whileTap={{scale:.98}} style={{...btn(),marginTop:16}} onClick={()=>{switchPath(sSpec);setSS('');}}>Switch to {PATHS[sSpec]?.label}</motion.button>}
         </div>
 
-        <div data-tour="settings-deep-courseload" style={glass()}>
-          <SL>Current Course Load</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Tell us what you're taking so the AI Coach and Quiz Library can point you to relevant material.</p>
-          {COURSE_GROUPS.map(g=>(
-            <div key={g.group} style={{marginBottom:14}}>
-              <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>{g.group}</div>
-              <div style={R({gap:6,flexWrap:'wrap'})}>
-                {g.items.map(course=>{
-                  const active=(user.courses||[]).includes(course);
-                  return(
-                    <button key={course} type="button" onClick={()=>{
-                      const next=active?(user.courses||[]).filter(c=>c!==course):[...(user.courses||[]),course];
-                      saveUser({...user,courses:next});
-                    }} style={btnSm(active?accent:'rgba(255,255,255,0.06)',{color:'#fff'})}>{course}</button>
-                  );
-                })}
+        <div data-tour="settings-deep-courseload" style={glass({padding:20})}>
+          <div style={{...R({justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap',gap:10}),marginBottom:4}}>
+            <SL extra={{marginBottom:0}}>Current Course Load</SL>
+            <span style={pill(tint(accent,0.14),accent,{fontSize:10.5,fontWeight:800})}>
+              {(user.courses||[]).length} selected
+            </span>
+          </div>
+          <p style={{fontSize:13,color:C.t2,marginBottom:18,lineHeight:1.6}}>Tell us what you're taking so Medabrain and the Quiz Library can point you to relevant material — this feeds directly into your quiz recommendations and AI coaching.</p>
+          {COURSE_GROUPS.map(g=>{
+            const GroupIcon=COURSE_GROUP_ICONS[g.group]||BookOpen;
+            const groupActiveCount=g.items.filter(c=>(user.courses||[]).includes(c)).length;
+            return(
+              <div key={g.group} style={{marginBottom:18}}>
+                <div style={{...R({gap:7}),marginBottom:9}}>
+                  <GroupIcon size={12} color={C.t3}/>
+                  <span style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>{g.group}</span>
+                  {groupActiveCount>0&&<span style={{fontSize:10,fontWeight:700,color:accent,fontFamily:C.FM}}>· {groupActiveCount}</span>}
+                </div>
+                <div style={R({gap:7,flexWrap:'wrap'})}>
+                  {g.items.map(course=>{
+                    const active=(user.courses||[]).includes(course);
+                    return(
+                      <motion.button key={course} type="button" whileHover={{y:-1}} whileTap={{scale:0.96}}
+                        onClick={()=>{
+                          const next=active?(user.courses||[]).filter(c=>c!==course):[...(user.courses||[]),course];
+                          saveUser({...user,courses:next});
+                        }}
+                        style={{
+                          display:'inline-flex',alignItems:'center',gap:5,padding:'7px 14px',borderRadius:8,cursor:'pointer',
+                          fontSize:12,fontWeight:600,fontFamily:C.FB,transition:'background .15s,border-color .15s,color .15s',
+                          background:active?tint(accent,0.16):C.s3,
+                          border:`1px solid ${active?`${accent}55`:C.b1}`,
+                          color:active?accent:C.t2,
+                        }}>
+                        {active&&<Check size={11}/>}{course}
+                      </motion.button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-          <div style={{...R({gap:10,marginTop:6,paddingTop:14,borderTop:`1px solid ${C.b1}`})}}>
-            <div onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:11,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`}}>
+            );
+          })}
+          <div style={{...R({gap:10,marginTop:4,paddingTop:16,borderTop:`1px solid ${C.b1}`})}}>
+            <button type="button" role="switch" aria-checked={!!user.apIb} onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:11,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`,padding:0}}>
               <div style={{width:16,height:16,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.apIb?20:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
-            </div>
+            </button>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1}}>I'm an AP/IB student</div>
               <div style={{fontSize:11,color:C.t3,marginTop:1}}>Unlocks AP/IB exam deadline types on the Deadlines tab</div>
