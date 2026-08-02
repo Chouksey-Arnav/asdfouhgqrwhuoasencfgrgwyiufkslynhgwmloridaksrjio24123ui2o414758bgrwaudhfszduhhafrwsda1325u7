@@ -13,6 +13,27 @@
 //     numbers) for shadowing/clinical/volunteer/leadership hours, used by the
 //     Portfolio and Progress benchmark bars.
 //   - accent2/glow/gradient: the pathway's visual identity beyond a single hex.
+//
+// UNIT DEPTH — the four tracks students actually pick most (physician, nursing,
+// physicianAssistant, and the default "exploring") each run 7–8 units deep;
+// the six narrower tracks stay at the original 3-unit core. That asymmetry is
+// deliberate, not an oversight: depth was invested where students actually
+// spend their time, rather than spread thin across ten tracks nobody finishes.
+//
+// Units on those four expanded tracks also carry grade-personalization
+// metadata, read by the Pathway view (a "Recommended for your grade" badge) and
+// by masterPlanGenerator's resource catalog so the generated plan sequences
+// units against the student's actual runway:
+//   - stage:      'foundation' | 'core' | 'advanced' | 'application' — how far
+//                 into the track this unit sits conceptually.
+//   - gradeFocus: which GRADE_STAGES keys this unit is genuinely best timed for.
+//                 NOT a lock — every unit stays open to every student; this only
+//                 drives the "best time for you to hit this" signal.
+//   - blurb:      one plain sentence on why the unit exists, shown under its
+//                 title so a student can tell at a glance what they're about to
+//                 spend three lessons on.
+// Units without these fields (the six unexpanded tracks) render exactly as
+// before — every consumer treats them as optional.
 export const PATHS = {
   exploring: {
     label:'Exploring Pre-Health', accent:'#64748b', accent2:'#94a3b8', glow:'rgba(100,116,139,0.30)',
@@ -31,7 +52,10 @@ export const PATHS = {
     outcomes:['Undeclared Pre-Health / Biology','Any med/health-track major requiring strong science fundamentals','A confident, informed choice of specific health career before you declare'],
     bestFor:['You know you want to help people through medicine or health science, but not which role yet','You want to keep your options wide across clinical, research, and allied-health careers','You\'d rather build broad strength than specialize before you\'ve tested the field'],
     units:[
-      { id:'ex1', title:'Life Sciences Foundations', quizCat:'Life Sciences', lessons:[
+      { id:'ex1', title:'Life Sciences Foundations', quizCat:'Life Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'The biology core every health career draws on, whichever one you land on.',
+        lessons:[
         { id:'ex1l1', title:'Biology Fundamentals', url:'https://www.youtube.com/watch?v=tZE_fQFK8EY', src:'YouTube', quizIds:['ex1l1q'],
           objectives:['Cell theory and the prokaryotic vs. eukaryotic distinction','How photosynthesis and cellular respiration move energy through living systems','DNA as the molecule that encodes and passes down hereditary information'] },
         { id:'ex1l2', title:'AP Biology Review', url:'https://www.youtube.com/watch?v=8kK2zwjRV0M', src:'YouTube', quizIds:['ex1l2q'],
@@ -39,7 +63,10 @@ export const PATHS = {
         { id:'ex1l3', title:'Human Physiology Overview', url:'https://www.youtube.com/watch?v=uBGl2BujkPQ', src:'YouTube', quizIds:['ex1l3q'],
           objectives:['The anatomy vs. physiology distinction','Homeostasis and negative feedback loops','A tour of the major organ systems and how they work together'] },
       ]},
-      { id:'ex2', title:'Physical Sciences Foundations', quizCat:'Physical Sciences', lessons:[
+      { id:'ex2', title:'Physical Sciences Foundations', quizCat:'Physical Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'Chemistry, physics, and statistics — the three that quietly gate the most doors later.',
+        lessons:[
         { id:'ex2l1', title:'Chemistry Fundamentals', url:'https://www.youtube.com/watch?v=FSyAehMdpyI', src:'YouTube', quizIds:['ex2l1q'],
           objectives:['Atomic structure and periodic trends','Ionic vs. covalent bonding, and why water\'s polarity matters biologically','What a balanced chemical equation and chemical equilibrium actually mean'] },
         { id:'ex2l2', title:'Physics Fundamentals', url:'https://www.youtube.com/watch?v=ZM8ECpBuQYE', src:'YouTube', quizIds:['ex2l2q'],
@@ -47,13 +74,72 @@ export const PATHS = {
         { id:'ex2l3', title:'Statistics & Data Basics', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube', quizIds:['ex2l3q'],
           objectives:['Mean, median, mode, and when each is the better summary of data','What "statistically significant" does (and doesn\'t) tell you','Why correlation never proves causation'] },
       ]},
-      { id:'ex3', title:'Exploring Health Careers', quizCat:'Behavioral & Social Sciences', lessons:[
+      { id:'ex3', title:'Exploring Health Careers', quizCat:'Behavioral & Social Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore','junior'],
+        blurb:'A first honest look at the field itself, not just the coursework behind it.',
+        lessons:[
         { id:'ex3l1', title:'Intro to Psychology', url:'https://www.youtube.com/watch?v=vo4pMVb0R6M', src:'YouTube', quizIds:['ex3l1q'],
           objectives:['The major psychological perspectives (biological, cognitive, behavioral, humanistic)','Why psychology matters in every health career, not just mental health','How modern psychology frames the nature vs. nurture question'] },
         { id:'ex3l2', title:'Shadowing & Clinical Exposure 101', src:'Original Article', quizIds:['ex3l2q'],
           objectives:['How to realistically arrange a shadowing opportunity as a high schooler','What to actually pay attention to during a shadowing day','Confidentiality and professionalism — what you can and can\'t discuss afterward'] },
         { id:'ex3l3', title:'What Pre-Health Programs Look For', src:'Original Article', quizIds:['ex3l3q'],
           objectives:['Why "pre-health" is a shared foundation, not a single locked-in career choice','What admissions readers actually screen for at this stage','Why staying undeclared a little longer can be a smart strategy'] },
+      ]},
+      { id:'ex4', title:'The Human Body, System by System', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'Every health career assumes this tour. Take it once, properly, and it stops being a gap.',
+        lessons:[
+        { id:'ex4l1', title:'Circulatory & Respiratory Systems', url:'https://www.youtube.com/watch?v=9fxm85Fy4sQ', src:'YouTube',
+          objectives:['How the heart and blood vessels move oxygen and nutrients to every tissue','How gas exchange works in the alveoli, and what a pulse oximeter measures','Why these two systems are almost always evaluated as a pair'],
+          quizIds:['bb82'] },
+        { id:'ex4l2', title:'Digestive & Excretory Systems', url:'https://www.youtube.com/watch?v=yIoTRGfcMqM', src:'YouTube',
+          objectives:['How food is mechanically and chemically broken down, and where absorption happens','How the kidneys filter waste and hold fluid and electrolytes in balance','Why the liver and kidneys together determine how the body clears almost everything'],
+          quizIds:['bb83'] },
+        { id:'ex4l3', title:'Nervous & Endocrine Systems', url:'https://www.youtube.com/watch?v=eWHH9je2zG4', src:'YouTube',
+          objectives:['Fast electrical signaling through neurons vs. slow chemical signaling through hormones','Negative feedback loops, the control pattern behind most of physiology','Why so many common conditions are, at bottom, signaling or regulation failures'],
+          quizIds:['bb84','bb96'] },
+      ]},
+      { id:'ex5', title:'How Medicine Actually Works', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'The practical literacy that makes a shadowing day make sense instead of washing over you.',
+        lessons:[
+        { id:'ex5l1', title:'Medical Terminology 101', src:'Original Article',
+          objectives:['Decoding an unfamiliar medical term from its root, prefix, and suffix','Anatomical position and directional terms, assumed by every clinical note','Why this vocabulary is the fastest single upgrade to how much you understand while shadowing'],
+          quizIds:['medTermq'] },
+        { id:'ex5l2', title:'Vital Signs & What Health Data Tells You', src:'Original Article',
+          objectives:['The five vital signs, their normal adult ranges, and what changes each one','What a reference range is, and why "outside the range" isn\'t automatically "sick"','How clinicians read a trend across time rather than one isolated number'],
+          quizIds:['vitalsq'] },
+        { id:'ex5l3', title:'Germs, Immunity & Infection Control', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube',
+          objectives:['Innate vs. adaptive immunity, and how vaccines exploit immune memory','The chain of infection, and which link healthcare workers break most often','Why hand hygiene and standard precautions apply to volunteers and students too'],
+          quizIds:['bb85','infectionControlq'] },
+      ]},
+      { id:'ex6', title:'Health Careers Up Close', quizCat:'Behavioral & Social Sciences',
+        stage:'advanced', gradeFocus:['sophomore','junior','senior'],
+        blurb:'A real map of the field — including the two-thirds of health careers nobody names for you.',
+        lessons:[
+        { id:'ex6l1', title:'The Clinical Careers Map', src:'Original Article',
+          objectives:['What MD/DO, NP, PA, RN, PT/OT, RT, and paramedic each actually do differently','How training length, cost, and autonomy trade off across those roles','Why "who has the final call" is the single most useful question for sorting them'],
+          quizIds:['careersMapq'] },
+        { id:'ex6l2', title:'Behind-the-Scenes Health Careers', url:'https://www.youtube.com/watch?v=5aww-Bpgkf4', src:'YouTube',
+          objectives:['Research, public health, health administration, informatics, and lab science as real careers','Why non-clinical health roles often reach more people than a clinician ever will','How to test interest in a behind-the-scenes role when you can\'t shadow one easily'],
+          quizIds:['behindScenesq'] },
+        { id:'ex6l3', title:'Comparing Health Careers Honestly', src:'Original Article',
+          objectives:['Comparing training length, debt, autonomy, schedule, and burnout rates side by side','Why salary is the worst single variable to choose a health career on','How to weigh these tradeoffs against what you actually want your daily life to look like'],
+          quizIds:['careerTradeoffsq'] },
+      ]},
+      { id:'ex7', title:'Building Your Foundation Now', quizCat:'Behavioral & Social Sciences',
+        stage:'application', gradeFocus:['sophomore','junior','senior','gap'],
+        blurb:'The moves that keep every door open — useful no matter which pathway you eventually pick.',
+        lessons:[
+        { id:'ex7l1', title:'Course Planning for Any Health Career', src:'Original Article',
+          objectives:['The high school course backbone shared by essentially every health path','The real tradeoff on AP credit, and when skipping an intro science backfires','How to plan four years of courses that stay rigorous without wrecking your GPA'],
+          quizIds:['coursePlan101q'] },
+        { id:'ex7l2', title:'High School Health Programs & Certifications', src:'Original Article',
+          objectives:['HOSA, health-science academies, CPR, CNA, and EMT — what each realistically requires','Which of these convert into countable clinical or patient-care hours, and which don\'t','How to check that a program is legitimate and state-recognized before paying for it'],
+          quizIds:['hsHealthCertsq'] },
+        { id:'ex7l3', title:'Testing Your Interest Across Roles', src:'Original Article',
+          objectives:['Why shadowing two or three different roles beats many hours in only one','What to actually watch for during a shadowing day to learn something decision-useful','How to log varied exposure so the record reads as deliberate exploration, not drifting'],
+          quizIds:['shadow101q'] },
       ]},
     ]
   },
@@ -74,7 +160,10 @@ export const PATHS = {
     outcomes:['Biology / Pre-Med','Neuroscience','Chemistry (pre-med track)','Any rigorous science major with an MD/DO goal after undergrad'],
     bestFor:['You want to be the one making the final diagnosis and treatment call','You\'re comfortable with high-stakes, fast-moving situations','You\'re willing to commit to the longest training path in medicine'],
     units:[
-      { id:'phy1', title:'Biology & Biochemistry Foundations', quizCat:'Life Sciences', lessons:[
+      { id:'phy1', title:'Biology & Biochemistry Foundations', quizCat:'Life Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'The cell-and-genetics layer every later unit quietly assumes you already have.',
+        lessons:[
         { id:'phy1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.youtube.com/watch?v=CBezq1fFUEA', src:'YouTube',
           objectives:['Cell organelles and their functions — nucleus, mitochondria, ribosomes, and Golgi apparatus','Mitosis vs. meiosis — what each produces and why clinically distinguishing them matters','Mendelian inheritance and Punnett squares, the basis for single-gene disorders like cystic fibrosis'],
           quizIds:['bb71','bb77','bb79'] },
@@ -85,7 +174,10 @@ export const PATHS = {
           objectives:['Innate vs. adaptive immunity — the difference and why both matter','How antibodies, antigens, and memory cells work together','Why fever and inflammation are protective responses, not malfunctions'],
           quizIds:['bb85'] },
       ]},
-      { id:'phy2', title:'Chemistry for Medicine', quizCat:'Physical Sciences', lessons:[
+      { id:'phy2', title:'Chemistry for Medicine', quizCat:'Physical Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'College chemistry is the classic pre-med bottleneck — this is the head start on it.',
+        lessons:[
         { id:'phy2l1', title:'General & Organic Chemistry', url:'https://www.youtube.com/watch?v=PmvLB5dIEp8', src:'YouTube',
           objectives:['Atomic structure and bonding review — what makes carbon chemically unique','What actually defines an "organic" molecule (a carbon backbone, not "natural vs. artificial")','Functional groups (alcohols, carboxylic acids, ketones, amines) and why they predict drug behavior'],
           quizIds:['cp72','cp73','cp13'] },
@@ -96,13 +188,86 @@ export const PATHS = {
           objectives:['What makes something an acid or a base, and how the pH scale works','How a titration finds an unknown concentration, and how to read a titration curve',`Why the body's bicarbonate buffer system keeps blood pH stable — and shows up on every arterial blood gas test`],
           quizIds:['cp76','cp05'] },
       ]},
-      { id:'phy3', title:'The Physician Path', quizCat:'Behavioral & Social Sciences', lessons:[
+      { id:'phy3', title:'The Physician Path', quizCat:'Behavioral & Social Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore','junior'],
+        blurb:'What the job and the road to it actually look like, before you commit years to either.',
+        lessons:[
         { id:'phy3l1', title:'Doctor-Patient Communication & Ethics', src:'Original Article', quizIds:['ps57'],
           objectives:['The four pillars of medical ethics: autonomy, beneficence, non-maleficence, and justice','What informed consent actually requires from a physician','Why communication is a clinical skill, not a soft extra'] },
         { id:'phy3l2', title:'Shadowing & Clinical Exposure 101', src:'Original Article', quizIds:['shadow101q'],
           objectives:['How to realistically arrange physician shadowing as a high schooler','Why different specialties can feel like entirely different jobs day to day','Confidentiality, and how to log a shadowing day in Portfolio → Clinical Hours'] },
         { id:'phy3l3', title:'What Medical Schools Actually Look For', src:'Original Article', quizIds:['whatMedSchoolq'],
           objectives:['The realistic timeline: undergrad → MCAT → medical school → residency','What "holistic review" actually means in medical school admissions','Why sustained clinical exposure counts more than a single standout activity'] },
+      ]},
+      { id:'phy4', title:'Organ Systems in Depth', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'One level below the survey tour — the three systems physicians reason about most.',
+        lessons:[
+        { id:'phy4l1', title:'The Heart & Circulation in Depth', url:'https://www.youtube.com/watch?v=X9ZZ6tcxArI', src:'YouTube',
+          objectives:['The cardiac cycle — how atria, ventricles, and valves generate systolic and diastolic pressure','What a blood pressure reading is actually measuring, and why both numbers matter','How hemoglobin loads and unloads oxygen, and why that curve explains real clinical decisions'],
+          quizIds:['bb82','bb35'] },
+        { id:'phy4l2', title:'Kidneys, Fluid & Electrolyte Balance', url:'https://www.youtube.com/watch?v=l128tW1H5a8', src:'YouTube',
+          objectives:['The nephron as a filter — glomerular filtration, tubular reabsorption, and secretion','How the kidneys regulate blood volume, blood pressure, and electrolyte concentrations','Why creatinine, BUN, sodium, and potassium appear on nearly every basic metabolic panel'],
+          quizIds:['bb39','bb83'] },
+        { id:'phy4l3', title:'The Endocrine System & Hormonal Control', url:'https://www.youtube.com/watch?v=eWHH9je2zG4', src:'YouTube',
+          objectives:['Peptide vs. steroid hormones, and why the difference changes how a drug has to be given','Negative feedback loops and hormone cascades, including the HPA axis','Why diabetes and thyroid disease are, mechanically, feedback-loop failures'],
+          quizIds:['bb27','bb96'] },
+      ]},
+      { id:'phy5', title:'Biochemistry, Metabolism & How Drugs Work', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'The molecular layer where pharmacology actually lives — and where most pre-meds first get lost.',
+        lessons:[
+        { id:'phy5l1', title:'Biomolecules: The Four Building Blocks', url:'https://www.youtube.com/watch?v=H8WJ2KENlK0', src:'YouTube',
+          objectives:['Carbohydrates, lipids, proteins, and nucleic acids — structure and what each is actually for','Why a protein\'s shape, not just its sequence, determines what it can do','How each class of biomolecule shows up on a routine lab panel (glucose, lipids, albumin)'],
+          quizIds:['bb72','bb100'] },
+        { id:'phy5l2', title:'Enzymes, Metabolism & Cellular Energy', url:'https://www.youtube.com/watch?v=00jbG_cfGuQ', src:'YouTube',
+          objectives:['What an enzyme does to a reaction, and what inhibiting one accomplishes','Cellular respiration end to end — glycolysis, the citric acid cycle, and the electron transport chain','Why so many drugs are, at bottom, deliberate enzyme inhibitors'],
+          quizIds:['bb17','bb76'] },
+        { id:'phy5l3', title:'Pharmacology Basics: How a Drug Moves Through the Body', src:'Original Article',
+          objectives:['ADME — absorption, distribution, metabolism, and excretion, in plain language','Why the liver and kidneys set the dose for most medications','What a drug interaction actually is, mechanically, and why polypharmacy is a real clinical risk'],
+          quizIds:['pharmBasicsq'] },
+      ]},
+      { id:'phy6', title:'Clinical Reasoning & the Language of Medicine', quizCat:'Life Sciences',
+        stage:'advanced', gradeFocus:['junior','senior','gap'],
+        blurb:'How physicians actually talk, measure, and think — the part shadowing shows you but never explains.',
+        lessons:[
+        { id:'phy6l1', title:'Medical Terminology & Reading a Chart', src:'Original Article',
+          objectives:['Decoding any medical term from its root, prefix, and suffix instead of memorizing thousands','The anatomical position and directional terms every note and imaging report assumes','How a SOAP note is structured, and what each section is actually claiming'],
+          quizIds:['medTermq'] },
+        { id:'phy6l2', title:'Vital Signs, Lab Values & What "Normal" Means', src:'Original Article',
+          objectives:['The five vital signs, their adult reference ranges, and what pushes each one out of range','How a reference range is built, and why "abnormal" is not the same as "sick"','Reading a CBC and a basic metabolic panel at the level a shadowing student can follow along'],
+          quizIds:['vitalsq'] },
+        { id:'phy6l3', title:'Differential Diagnosis: How Physicians Actually Reason', src:'Original Article',
+          objectives:['Building a differential — generating possibilities before narrowing to one','Sensitivity, specificity, and why a positive test isn\'t proof of a disease','Common reasoning traps (anchoring, availability bias) and how clinicians guard against them'],
+          quizIds:['ddxq'] },
+      ]},
+      { id:'phy7', title:'Evidence, Populations & Ethics in Practice', quizCat:'Behavioral & Social Sciences',
+        stage:'advanced', gradeFocus:['junior','senior','gap'],
+        blurb:'Why two equally skilled physicians can disagree — and how evidence is supposed to settle it.',
+        lessons:[
+        { id:'phy7l1', title:'Evidence-Based Medicine & Reading a Study', url:'https://www.youtube.com/watch?v=sxQaBpKfDRk', src:'YouTube',
+          objectives:['The evidence hierarchy — case report through randomized trial and systematic review','What a p-value, a confidence interval, and an effect size each actually tell you','How to read an abstract critically instead of trusting a headline about it'],
+          quizIds:['ebm101q','ps32'] },
+        { id:'phy7l2', title:'Social Determinants & Health Disparities', url:'https://www.youtube.com/watch?v=CcdSeqqMR5M', src:'YouTube',
+          objectives:['The major social determinants of health, and how much of an outcome they explain','Why two patients with identical biology can have very different prognoses','What a physician can and can\'t do about a determinant that starts outside the clinic'],
+          quizIds:['ps15'] },
+        { id:'phy7l3', title:'Epidemiology for Clinicians', url:'https://www.youtube.com/watch?v=_luU3I03JwE', src:'YouTube',
+          objectives:['Incidence vs. prevalence, and why mixing them up changes the whole picture','Cohort, case-control, and cross-sectional studies — what each design can and cannot show','Why pre-test probability makes the same test mean different things in different patients'],
+          quizIds:['ps31'] },
+      ]},
+      { id:'phy8', title:'Your Pre-Med Runway', quizCat:'Behavioral & Social Sciences',
+        stage:'application', gradeFocus:['junior','senior','gap'],
+        blurb:'The concrete moves that make the next four years easier, made while you still have time to make them.',
+        lessons:[
+        { id:'phy8l1', title:'Course Planning & AP Strategy for Pre-Med', src:'Original Article',
+          objectives:['Which high school courses genuinely matter for a pre-med trajectory, and which don\'t','The real tradeoff on AP credit — skipping intro science can hurt more than it helps','How to build a four-year course plan that stays rigorous without wrecking your GPA'],
+          quizIds:['coursePlan101q'] },
+        { id:'phy8l2', title:'Research, Science Fair & Summer Programs', src:'Original Article',
+          objectives:['What high-school-scale research realistically looks like, and what it doesn\'t','How to find a mentor, a science fair track, or a summer program you can actually get into','Why free, competitive programs beat expensive pay-to-play ones on an application'],
+          quizIds:['hsResearchq'] },
+        { id:'phy8l3', title:'Telling Your Story: Reflection, Essays & Interviews', src:'Original Article',
+          objectives:['Why a reflection habit now produces far better essays years later','What makes a "why medicine" answer specific and credible instead of generic','How to talk about an experience without overclaiming what you did in it'],
+          quizIds:['medNarrativeq'] },
       ]},
     ]
   },
@@ -123,7 +288,10 @@ export const PATHS = {
     outcomes:['Nursing (BSN)','Health Sciences','Biology (nursing-track)','Public Health (clinical track)'],
     bestFor:['You want constant, direct contact with patients over a career, not occasional','You like hands-on work as much as you like understanding why it works','You\'d rather be deeply embedded in a care team than working solo'],
     units:[
-      { id:'nur1', title:'Anatomy & Physiology Foundations', quizCat:'Life Sciences', lessons:[
+      { id:'nur1', title:'Anatomy & Physiology Foundations', quizCat:'Life Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'A&P is the single biggest prerequisite nursing programs screen on — start it early.',
+        lessons:[
         { id:'nur1l1', title:'Anatomy & Physiology Overview', url:'https://www.youtube.com/playlist?list=PL8dPuuaLjXtMyRLxWzB1yWEyRDXZfebT9', src:'YouTube', quizIds:['bb82'],
           objectives:['The anatomy vs. physiology distinction, and why nurses need fluency in both','Homeostasis and negative feedback loops — the concept behind every vital-sign check','A tour of the major organ systems nurses assess constantly, and how they depend on each other'] },
         { id:'nur1l2', title:'The Nervous System', url:'https://www.youtube.com/watch?v=qPix_X-9t7E', src:'YouTube', quizIds:['bb84'],
@@ -131,7 +299,10 @@ export const PATHS = {
         { id:'nur1l3', title:'The Respiratory System', url:'https://www.youtube.com/watch?v=bHZsvBdUC2I', src:'YouTube', quizIds:['bb82'],
           objectives:['How gas exchange works in the alveoli, and what a pulse oximeter reading actually measures','Normal vs. abnormal breathing patterns nurses monitor at the bedside','Why a change in respiratory status is often the earliest sign a patient is declining'] },
       ]},
-      { id:'nur2', title:'Chemistry & Math for Nursing', quizCat:'Life Sciences', lessons:[
+      { id:'nur2', title:'Chemistry & Math for Nursing', quizCat:'Life Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'Dosage math is tested early and often in nursing school — this is where that fluency starts.',
+        lessons:[
         { id:'nur2l1', title:'General Chemistry Basics', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp72'],
           objectives:['Atomic structure, bonding, and solutions — the chemistry behind IV fluids and electrolytes','How concentration and dilution reasoning translates directly into medication dosing','Why electrolyte balance (sodium, potassium, calcium) is a constant nursing monitoring concern'] },
         { id:'nur2l2', title:'Statistics for Dosage & Data', url:'https://www.khanacademy.org/math/statistics-probability', src:'Khan Academy', quizIds:['ps14'],
@@ -139,13 +310,72 @@ export const PATHS = {
         { id:'nur2l3', title:'Algebra Review for Calculations', url:'https://www.khanacademy.org/math/algebra2', src:'Khan Academy', quizIds:['cp87'],
           objectives:['Solving for an unknown variable — the core algebra skill behind every dosage formula','The desired-over-available dosage formula, and how algebra underlies it','Why unit cancellation (dimensional analysis) is what actually prevents medication math errors'] },
       ]},
-      { id:'nur3', title:'Patient Care & Communication', quizCat:'Behavioral & Social Sciences', lessons:[
+      { id:'nur3', title:'Patient Care & Communication', quizCat:'Behavioral & Social Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore','junior'],
+        blurb:'Nursing is a relationship-heavy job, and this is the part of it you can practice right now.',
+        lessons:[
         { id:'nur3l1', title:'Psychology of Patient Care', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'],
           objectives:['Why patient anxiety and fear change how information needs to be delivered','Therapeutic communication techniques nurses use to build trust quickly with a stranger','How motivation and health psychology affect whether a patient actually follows a care plan'] },
         { id:'nur3l2', title:'Hospital & Clinical Volunteering 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['volunteer101q'],
           objectives:['How to realistically find and apply for a hospital teen-volunteer program','What background checks and health screenings to expect before you can start','How to turn a volunteer shift into a credible, logged record for nursing program applications'] },
         { id:'nur3l3', title:'What Nursing Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatNursingq'],
           objectives:['The difference between an ADN and a BSN, and why the choice matters for your path','What the NCLEX is, and where it fits in becoming a licensed RN','What nursing programs actually screen for beyond GPA — hands-on experience and holistic review'] },
+      ]},
+      { id:'nur4', title:'Body Systems at the Bedside', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'The systems a nurse assesses on nearly every shift, at the depth an assessment actually needs.',
+        lessons:[
+        { id:'nur4l1', title:'The Cardiovascular System at the Bedside', url:'https://www.youtube.com/watch?v=X9ZZ6tcxArI', src:'YouTube',
+          objectives:['The cardiac cycle, and what systolic and diastolic pressure each represent','How to take a blood pressure correctly, and the errors that produce a falsely high or low reading','Why perfusion signs (capillary refill, skin color, pulse quality) are checked alongside the numbers'],
+          quizIds:['bb82','bb35'] },
+        { id:'nur4l2', title:'The Digestive & Urinary Systems', url:'https://www.youtube.com/watch?v=yIoTRGfcMqM', src:'YouTube',
+          objectives:['How food is broken down and absorbed, and where nutrition problems actually originate','How the kidneys regulate fluid volume, electrolytes, and blood pressure','Why intake-and-output charting is a real clinical measurement, not paperwork'],
+          quizIds:['bb83','bb39'] },
+        { id:'nur4l3', title:'Skin, Wounds & the Musculoskeletal System', url:'https://www.youtube.com/watch?v=Orumw-PyNjw', src:'YouTube',
+          objectives:['The skin as an organ — barrier, thermoregulation, and what a wound has to rebuild','How pressure injuries form, and why repositioning is a nursing intervention with real evidence behind it','Safe patient handling and mobility, and why nurse injury rates make body mechanics a survival skill'],
+          quizIds:['mskSkinq'] },
+      ]},
+      { id:'nur5', title:'Clinical Skills & Patient Safety', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior','senior'],
+        blurb:'The hands-on, safety-critical routines that make up most of a nurse\'s actual shift.',
+        lessons:[
+        { id:'nur5l1', title:'Vital Signs & Head-to-Toe Assessment', src:'Original Article',
+          objectives:['The five vital signs, adult reference ranges, and what moves each one','The order and logic of a head-to-toe assessment, and why the sequence is fixed','Why a trend across a shift tells you more than any single set of numbers'],
+          quizIds:['vitalsq'] },
+        { id:'nur5l2', title:'Infection Control & Standard Precautions', src:'Original Article',
+          objectives:['The chain of infection, and which link is easiest for a nurse to break','Standard precautions vs. transmission-based precautions, and when each applies','Why hand hygiene remains the single highest-impact infection-control action, and where it fails'],
+          quizIds:['infectionControlq'] },
+        { id:'nur5l3', title:'Medication Safety & the Rights of Administration', src:'Original Article',
+          objectives:['The rights of medication administration, and what each one is actually preventing','How dosage math errors happen, and the double-check habits that catch them','Why high-alert medications get extra verification, and what a near-miss report is for'],
+          quizIds:['medSafetyq'] },
+      ]},
+      { id:'nur6', title:'Nutrition, Pharmacology & Chronic Disease', quizCat:'Life Sciences',
+        stage:'advanced', gradeFocus:['junior','senior','gap'],
+        blurb:'Most nursing work is chronic, not dramatic — this is the content that job is actually made of.',
+        lessons:[
+        { id:'nur6l1', title:'Nutrition, Hydration & Fluid Balance', url:'https://www.youtube.com/watch?v=l128tW1H5a8', src:'YouTube',
+          objectives:['Macronutrients and micronutrients, and what deficiency actually looks like clinically','Dehydration and fluid overload — how each presents and why both are common in hospitals','Why nutrition status changes wound healing, medication effect, and length of stay'],
+          quizIds:['bb91'] },
+        { id:'nur6l2', title:'Pharmacology Basics for Nurses', src:'Original Article',
+          objectives:['ADME — how a drug is absorbed, distributed, metabolized, and cleared','Routes of administration, and why the route changes onset, dose, and monitoring','What to monitor after giving a medication, and how side effects differ from adverse reactions'],
+          quizIds:['pharmBasicsq'] },
+        { id:'nur6l3', title:'Managing Chronic Disease: Diabetes, Hypertension & Asthma', url:'https://www.youtube.com/watch?v=eWHH9je2zG4', src:'YouTube',
+          objectives:['What is mechanically going wrong in type 1 and type 2 diabetes, hypertension, and asthma','Why patient education is the highest-leverage nursing intervention in chronic disease','What actually drives whether a patient follows a long-term care plan'],
+          quizIds:['chronicDiseaseq'] },
+      ]},
+      { id:'nur7', title:'Your Nursing Runway', quizCat:'Behavioral & Social Sciences',
+        stage:'application', gradeFocus:['junior','senior','gap'],
+        blurb:'Nursing rewards early hands-on hours more than almost any other health path — here\'s how to get them.',
+        lessons:[
+        { id:'nur7l1', title:'Getting Certified in High School: CPR, CNA & EMT', src:'Original Article',
+          objectives:['Which health certifications a high schooler can realistically earn, and what each costs in time','Why a CNA or EMT certification converts directly into paid, countable patient-care hours','How to verify a program is legitimate and state-recognized before you pay for it'],
+          quizIds:['hsHealthCertsq'] },
+        { id:'nur7l2', title:'Nursing Specialties & the Career Ladder', src:'Original Article',
+          objectives:['What ICU, ED, OR, L&D, peds, and community nursing each actually feel like day to day','The RN → BSN → MSN/DNP ladder, and where NP and CRNA roles branch off it','Why nursing is unusually flexible — you can change specialty without restarting your career'],
+          quizIds:['nursingSpecialtiesq'] },
+        { id:'nur7l3', title:'Applying to Nursing Programs: Direct-Entry vs. Pre-Nursing', src:'Original Article',
+          objectives:['Direct-entry BSN vs. pre-nursing-then-apply, and the real risk difference between them','What the TEAS is, where it\'s required, and how it fits the application timeline','Why prerequisite science grades are weighted more heavily than overall GPA'],
+          quizIds:['nursingApplyq'] },
       ]},
     ]
   },
@@ -166,7 +396,10 @@ export const PATHS = {
     outcomes:['Biology / Health Sciences (PA-track)','Exercise Science','Any science major with strong direct clinical hours before PA school'],
     bestFor:['You want hands-on diagnostic and treatment work without years of solo-authority training first','You like being part of a physician-led care team, not working in isolation','You want a faster path into direct patient care than the MD/DO route'],
     units:[
-      { id:'pa1', title:'Biology & Physiology Core', quizCat:'Life Sciences', lessons:[
+      { id:'pa1', title:'Biology & Physiology Core', quizCat:'Life Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'PA programs share the pre-med prerequisite base — this is that base, built early.',
+        lessons:[
         { id:'pa1l1', title:'Cell Biology & Genetics (AP Bio)', url:'https://www.khanacademy.org/science/ap-biology', src:'Khan Academy', quizIds:['bb71'],
           objectives:['Cell organelles and their functions — the foundation for reasoning about disease at a cellular level','Mitosis vs. meiosis, and why the distinction matters when reviewing a patient\'s family and personal history','Mendelian inheritance and Punnett squares, the basis for recognizing single-gene disorders'] },
         { id:'pa1l2', title:'Human Physiology Systems', url:'https://www.khanacademy.org/science/health-and-medicine', src:'Khan Academy', quizIds:['bb83'],
@@ -174,7 +407,10 @@ export const PATHS = {
         { id:'pa1l3', title:'Immune System & Homeostasis', url:'https://www.youtube.com/watch?v=GIJK3dwCWCw', src:'YouTube', quizIds:['bb85'],
           objectives:['Innate vs. adaptive immunity — the difference and why both matter in patient assessment','How antibodies, antigens, and memory cells work together','Why fever and inflammation are protective responses to interpret correctly, not eliminate reflexively'] },
       ]},
-      { id:'pa2', title:'Chemistry Foundations', quizCat:'Physical Sciences', lessons:[
+      { id:'pa2', title:'Chemistry Foundations', quizCat:'Physical Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore'],
+        blurb:'Enough chemistry that college gen-chem is review of a familiar shape, not a first encounter.',
+        lessons:[
         { id:'pa2l1', title:'General Chemistry', url:'https://www.khanacademy.org/science/chemistry', src:'Khan Academy', quizIds:['cp72'],
           objectives:['Atomic structure and periodic trends','Ionic vs. covalent bonding, and why it matters for understanding how drugs interact in the body','What a balanced chemical equation and chemical equilibrium actually mean'] },
         { id:'pa2l2', title:'AP Chemistry Review', url:'https://www.khanacademy.org/science/ap-chemistry', src:'Khan Academy', quizIds:['cp75'],
@@ -182,13 +418,72 @@ export const PATHS = {
         { id:'pa2l3', title:'Reaction Kinetics & Rate Laws', url:'https://www.youtube.com/watch?v=Ue2m_l91W2w', src:'YouTube', quizIds:['cp40'],
           objectives:['What a reaction rate actually measures, and the factors that speed up or slow down a reaction','Rate laws and reaction order, and how to read one from experimental data','Why reaction kinetics matters for understanding how quickly a drug takes effect in the body'] },
       ]},
-      { id:'pa3', title:'The PA Path', quizCat:'Behavioral & Social Sciences', lessons:[
+      { id:'pa3', title:'The PA Path', quizCat:'Behavioral & Social Sciences',
+        stage:'foundation', gradeFocus:['freshman','sophomore','junior'],
+        blurb:'What working inside a physician-led team actually means, and how the training differs.',
+        lessons:[
         { id:'pa3l1', title:'Team-Based Clinical Care & Psychology', url:'https://www.khanacademy.org/science/ap-college-psychology-13', src:'Khan Academy', quizIds:['ps57'],
           objectives:['Why psychology is central to collaborative, team-based clinical practice','Communication techniques for working smoothly within a physician-led care team','How patient motivation and trust-building apply just as directly to a PA\'s daily patient interactions'] },
         { id:'pa3l2', title:'Shadowing & Clinical Exposure 101', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['shadow101q'],
           objectives:['How to realistically arrange shadowing a PA, or a PA-supervising physician, as a high schooler','What to look for that\'s specific to the PA role — how collaboration with a supervising physician actually works','Confidentiality and professionalism, and how to log a shadowing day in Portfolio → Clinical Hours'] },
         { id:'pa3l3', title:'What PA Programs Look For', url:'https://www.khanacademy.org/college-careers-more', src:'Khan Academy', quizIds:['whatPAq'],
           objectives:['Why PA programs require substantial direct patient care hours, not just shadowing','What CASPA is, and how the centralized PA application process works','What PA admissions committees weigh alongside hands-on hours — GPA, a standardized test, and letters of recommendation'] },
+      ]},
+      { id:'pa4', title:'Organ Systems for Clinical Practice', quizCat:'Life Sciences',
+        stage:'core', gradeFocus:['sophomore','junior'],
+        blurb:'PA school compresses two years of this into months — every hour spent here now is bought back later.',
+        lessons:[
+        { id:'pa4l1', title:'Cardiovascular & Respiratory Systems in Depth', url:'https://www.youtube.com/watch?v=X9ZZ6tcxArI', src:'YouTube',
+          objectives:['The cardiac cycle, and what systolic and diastolic blood pressure each measure','How oxygen binds and releases from hemoglobin, and what pulse oximetry actually reads','Why cardiac and respiratory causes of the same symptom get separated at the bedside'],
+          quizIds:['bb82','bb35'] },
+        { id:'pa4l2', title:'Renal, Fluid & Electrolyte Balance', url:'https://www.youtube.com/watch?v=l128tW1H5a8', src:'YouTube',
+          objectives:['Filtration, reabsorption, and secretion along the nephron','How the kidneys hold blood volume, pressure, and electrolytes in range','Why kidney function sets the safe dose for a large share of medications'],
+          quizIds:['bb39','bb83'] },
+        { id:'pa4l3', title:'Endocrine & Metabolic Regulation', url:'https://www.youtube.com/watch?v=eWHH9je2zG4', src:'YouTube',
+          objectives:['Peptide vs. steroid hormones, and why that changes how each is delivered','Negative feedback and hormone cascades, including the HPA axis','How diabetes and thyroid disease present as feedback-loop failures'],
+          quizIds:['bb27','bb96'] },
+      ]},
+      { id:'pa5', title:'Clinical Skills & the Language of Medicine', quizCat:'Life Sciences',
+        stage:'advanced', gradeFocus:['junior','senior','gap'],
+        blurb:'The vocabulary, measurements, and reasoning a PA uses in every single patient encounter.',
+        lessons:[
+        { id:'pa5l1', title:'Medical Terminology & Charting', src:'Original Article',
+          objectives:['Decoding medical terms from roots, prefixes, and suffixes rather than memorizing them','Anatomical position and directional terms, which every note and imaging report assumes','SOAP note structure, and what each section is claiming'],
+          quizIds:['medTermq'] },
+        { id:'pa5l2', title:'Vital Signs & Physical Assessment', src:'Original Article',
+          objectives:['The five vital signs, their reference ranges, and what pushes each out of range','The four classic exam techniques — inspection, palpation, percussion, auscultation','Why a trend over time beats any single measurement'],
+          quizIds:['vitalsq'] },
+        { id:'pa5l3', title:'Clinical Reasoning & Differential Diagnosis', src:'Original Article',
+          objectives:['Building a differential before narrowing toward a single diagnosis','Sensitivity, specificity, and why a positive test is not proof of disease','How a PA and supervising physician actually divide diagnostic decisions in practice'],
+          quizIds:['ddxq'] },
+      ]},
+      { id:'pa6', title:'Pharmacology & Patient Safety', quizCat:'Life Sciences',
+        stage:'advanced', gradeFocus:['junior','senior','gap'],
+        blurb:'PAs prescribe in all 50 states — which makes drug safety a core competency, not a specialty topic.',
+        lessons:[
+        { id:'pa6l1', title:'Pharmacology Basics', src:'Original Article',
+          objectives:['ADME — absorption, distribution, metabolism, and excretion in plain language','Why liver and kidney function set the dose for most medications','What a drug interaction is mechanically, and why polypharmacy raises real risk'],
+          quizIds:['pharmBasicsq'] },
+        { id:'pa6l2', title:'Prescribing Safely Inside a Care Team', src:'Original Article',
+          objectives:['The rights of medication administration, and what each one prevents','How a prescription is verified across PA, pharmacist, and nurse before it reaches a patient','Why speaking up about a questionable order is a professional obligation, not an insult'],
+          quizIds:['medSafetyq'] },
+        { id:'pa6l3', title:'Infection Control & Standard Precautions', src:'Original Article',
+          objectives:['The chain of infection, and which link clinicians can most reliably break','Standard vs. transmission-based precautions, and when each applies','Why antibiotic stewardship is now part of every prescriber\'s job'],
+          quizIds:['infectionControlq'] },
+      ]},
+      { id:'pa7', title:'Your PA Runway', quizCat:'Behavioral & Social Sciences',
+        stage:'application', gradeFocus:['junior','senior','gap'],
+        blurb:'PA admissions is the one health path where paid patient-care hours matter most — start the clock early.',
+        lessons:[
+        { id:'pa7l1', title:'Getting Patient-Care Hours in High School', src:'Original Article',
+          objectives:['Which certifications (CNA, EMT, MA, phlebotomy) generate hours PA programs actually count','The difference between shadowing hours and direct patient-care hours, which PA schools separate strictly','How to start logging hours now so the total isn\'t reconstructed from memory in college'],
+          quizIds:['hsHealthCertsq'] },
+        { id:'pa7l2', title:'PA vs. NP vs. MD: Scope, Training & Autonomy', src:'Original Article',
+          objectives:['How training length, cost, and clinical model differ across the three roles','What "scope of practice" means, and why it varies by state','How to compare the three honestly instead of by prestige or salary alone'],
+          quizIds:['paScopeq'] },
+        { id:'pa7l3', title:'Course Planning & the CASPA Timeline', src:'Original Article',
+          objectives:['The prerequisite courses nearly every PA program requires, and when to take them','How the CASPA cycle runs, and why applying early in a rolling cycle matters','Building a high school course plan that keeps both PA and other health paths open'],
+          quizIds:['paTimelineq'] },
       ]},
     ]
   },
@@ -451,6 +746,29 @@ export const PATHS = {
     ]
   },
 };
+
+// ── UNIT STAGE LABELS ─────────────────────────────────────────────────────────
+// Display metadata for the `stage` field the expanded pathways' units carry.
+// Kept next to PATHS so a new stage can't be introduced in one place and go
+// unlabelled in the other. `order` is the conceptual depth of the stage, used
+// when a consumer needs to reason about "how far in is this" without hardcoding
+// the string values.
+export const UNIT_STAGES = {
+  foundation:  { label:'Foundation',  order:0, blurb:'Core groundwork every later unit builds on.' },
+  core:        { label:'Core',        order:1, blurb:'The substance of the track — where most of the learning is.' },
+  advanced:    { label:'Advanced',    order:2, blurb:'Applied depth that assumes the foundation is in place.' },
+  application: { label:'Next Steps',  order:3, blurb:'Turning what you know into concrete moves toward the path.' },
+};
+
+// True when a unit is timed well for a given GRADE_STAGES key. Units without a
+// gradeFocus (the six unexpanded tracks) always read as "not specifically
+// timed" rather than as a mismatch — the UI simply shows no badge for them.
+// This never gates access: every unit stays open to every student, and this
+// only drives the "good time for you to hit this" signal.
+export function isUnitTimelyFor(unit, gradeStage) {
+  if (!gradeStage || !Array.isArray(unit?.gradeFocus)) return false;
+  return unit.gradeFocus.includes(gradeStage);
+}
 
 // ── COURSE → QUIZ CATEGORY MAP ────────────────────────────────────────────────
 // Maps a student's self-reported courses (Settings) to the 3 quiz-library

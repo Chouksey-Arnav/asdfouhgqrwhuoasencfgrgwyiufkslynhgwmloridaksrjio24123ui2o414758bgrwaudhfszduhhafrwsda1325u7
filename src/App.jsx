@@ -30,7 +30,7 @@ const TIER_ICONS = { Sparkles, Hammer, Compass, Trophy, Sun, ShieldCheck, Crown 
 
 import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
-import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory } from './data/constants';
+import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
 import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
@@ -2108,10 +2108,14 @@ export default function App({ account, onAccountChange }) {
   const doneL   = allL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const mastery = allL.length>0?Math.round((doneL/allL.length)*100):0;
   // Current-pathway-only lesson count (distinct from the cross-pathway `allL`/`doneL`/`mastery`
-  // above), for the pacing goal indicator — a goal is "3 of 9 lessons in Nursing," not a share
-  // of all 90 lessons across every pathway.
+  // above), for the pacing goal indicator — a goal is "6 of 24 lessons in Physician," not a share
+  // of every lesson across every pathway.
   const curPathAllL  = (curPath?.units||[]).flatMap(u=>u.lessons||[]);
   const curPathDoneL = curPathAllL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
+  const curPathMastery = curPathAllL.length>0?Math.round((curPathDoneL/curPathAllL.length)*100):0;
+  // The student's class-year label, resolved once — several surfaces need it, and the
+  // Pathway view's per-unit "right time for you" badge reads it on every unit row.
+  const gradeLabel = useMemo(()=>GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null,[user?.gradeStage]);
   const levelInfo = getLevelInfo(user?.xp||0);
   const lvl     = levelInfo.level;
   const xpIn    = levelInfo.xpIntoLevel;
@@ -2613,7 +2617,7 @@ export default function App({ account, onAccountChange }) {
       const sysPrompt=buildCoachSystemPrompt({
         pathwayLabel:curPath?.label||'college prep',
         pathCoachNote:PATH_COACH_NOTES[eSpec]||PATH_COACH_NOTES.exploring,
-        gradeLabel:GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null,
+        gradeLabel,
         user,
         courses:user?.courses||[],
         apIb:!!user?.apIb,
@@ -3742,15 +3746,21 @@ export default function App({ account, onAccountChange }) {
             <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{curPath?.label}</h2>
             {curPath?.tagline&&<div style={{fontSize:12,color:accent,fontWeight:600,marginTop:4}}>{curPath.tagline}</div>}
           </div>
+          {/* Scoped to THIS pathway, not the cross-pathway totals. A header titled
+              "Physician (MD/DO)" reporting progress against every lesson in all ten
+              pathways read as a bug even at 90 lessons, and became actively misleading
+              once the deep tracks grew — it disagreed with the pace-goal card directly
+              below it, which was already pathway-scoped. Cross-pathway `mastery`/`allL`
+              still drive the Home dashboard, where that framing is the correct one. */}
           <div style={{position:'relative',marginLeft:isMobile?0:'auto',...R({gap:12})}}>
-            <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.t2,fontFamily:C.FM}}>{doneL}/{allL.length}</div><div style={{fontSize:10,color:C.t3}}>lessons</div></div>
-            <Arc pct={mastery} size={60} stroke={5} color={accent} label={`${mastery}%`}/>
+            <div style={{textAlign:'right'}}><div style={{fontSize:12,color:C.t2,fontFamily:C.FM}}>{curPathDoneL}/{curPathAllL.length}</div><div style={{fontSize:10,color:C.t3}}>lessons</div></div>
+            <Arc pct={curPathMastery} size={60} stroke={5} color={accent} label={`${curPathMastery}%`}/>
           </div>
         </div>
         {curPath?.overview&&<div style={{...glass2({padding:'14px 18px',background:`${accent}12`,border:`1px solid ${accent}28`})}}>
           <p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:0}}>{curPath.overview}</p>
         </div>}
-        <Bar pct={mastery} color={accent} h={5} glow/>
+        <Bar pct={curPathMastery} color={accent} h={5} glow/>
         {(()=>{
           const totalLessons=curPathAllL.length;
           const pathComplete=totalLessons>0&&curPathDoneL>=totalLessons;
@@ -3812,6 +3822,19 @@ export default function App({ account, onAccountChange }) {
         })()}
         {units.map((unit,ui)=>{
           const p=unitM(unit);const done=p===100;const ucm=catMeta(unit.quizCat);
+          // Grade personalization — the deep tracks (physician/nursing/PA/exploring) tag each
+          // unit with the class years it's genuinely best timed for. This only ever *labels*:
+          // sequencing and unlocking are unchanged, so the pathway still runs foundation-first
+          // for everyone. Units without the metadata render exactly as before.
+          //
+          // The honesty problem this has to solve: the units best timed for an older student
+          // (Advanced, Next Steps) are exactly the ones furthest behind the sequential unlock,
+          // so a senior would otherwise see "Right time for Senior" sitting on a locked unit
+          // with no explanation. When the unit isn't reachable yet the badge says so and names
+          // what stands between them and it, instead of pointing at a wall.
+          const stageMeta=unit.stage?UNIT_STAGES[unit.stage]:null;
+          const reachable=ui===0||(units[ui-1]?.lessons||[]).every(l=>isLessonComplete(l,pathway[l.id]));
+          const timely=isUnitTimelyFor(unit,user?.gradeStage)&&!done;
           return(
             <motion.div key={unit.id} initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{delay:ui*.05}} style={{...glass({borderLeft:`3px solid ${done?C.green:accent}55`}),background:`linear-gradient(120deg,${done?C.green:accent}0a,transparent 40%)`}}>
               <div style={R({marginBottom:20})}>
@@ -3820,10 +3843,13 @@ export default function App({ account, onAccountChange }) {
                   <div style={R({gap:8,marginBottom:3,flexWrap:'wrap'})}>
                     <span style={{...pill(done?C.greenDim:`${accent}14`,done?C.greenL:accent,{fontSize:9.5,fontWeight:800,fontFamily:C.FM,letterSpacing:'.08em',padding:'2px 9px'})}}>UNIT {ui+1}</span>
                     <span style={{...pill(ucm.dim,ucm.light,{fontSize:9.5})}}>{ucm.emoji} {unit.quizCat}</span>
+                    {stageMeta&&<span title={stageMeta.blurb} style={{...pill(C.s3,C.t2,{fontSize:9.5,fontFamily:C.FM,letterSpacing:'.06em'})}}>{stageMeta.label}</span>}
+                    {timely&&<span title={reachable?undefined:`Work through ${units[ui-1]?.title} to open this up.`} style={{...pill(C.violetDim,C.violetL,{fontSize:9.5,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:4}}><Sparkles size={9}/>{reachable?`Right time for ${gradeLabel||'your grade'}`:`Worth reaching this year${gradeLabel?` — ${gradeLabel} focus`:''}`}</span>}
                     {done&&<span style={{...pill(C.greenDim,C.greenL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Mastered</span>}
                   </div>
                   <div style={{fontSize:15,fontWeight:700,color:C.t1,fontFamily:C.FD}}>{unit.title}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2}}>{unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length}/{unit.lessons.length} lessons complete</div>
+                  {unit.blurb&&<div style={{fontSize:11.5,color:C.t3,marginTop:3,lineHeight:1.5,maxWidth:560}}>{unit.blurb}</div>}
+                  <div style={{fontSize:11,color:C.t3,marginTop:4}}>{unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length}/{unit.lessons.length} lessons complete</div>
                 </div>
               </div>
               {/* Motivation boost: turn "the next unit is locked" into a concrete, encouraging
@@ -6743,7 +6769,7 @@ export default function App({ account, onAccountChange }) {
         <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
-          user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          user={user} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
           accent={curPath?.accent||C.blue} isMobile={isMobile}
           lesson={lesson} unit={unit}
           articleSections={lessonContent?.article?.sections||[]}
@@ -6792,7 +6818,7 @@ export default function App({ account, onAccountChange }) {
         <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
-          user={user} pathwayLabel={curPath?.label} gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          user={user} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
           accent={pA} isMobile={isMobile}
           units={(curPath?.units||[]).map(u=>({ title:u.title, done:(u.lessons||[]).filter(l=>isLessonComplete(l,pathway[l.id])).length, total:(u.lessons||[]).length }))}
           totalDone={curPathDoneL} totalLessons={curPathAllL.length}
@@ -6835,7 +6861,7 @@ export default function App({ account, onAccountChange }) {
         {(portfolioRenders[portfolioView]||tPort)()}
         <PortfolioMedabrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
-          gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+          gradeLabel={gradeLabel}
           isMobile={isMobile}
           recentActivitySummary={recentActivitySummary}
         />
@@ -6963,7 +6989,7 @@ export default function App({ account, onAccountChange }) {
         subnavHrefFor={satHref}
         accent={satAccent}
         user={user}
-        gradeLabel={GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null}
+        gradeLabel={gradeLabel}
         isMobile={isMobile}
         medabrainOpen={satBrainOpen}
         onMedabrainOpenChange={setSatBrainOpen}

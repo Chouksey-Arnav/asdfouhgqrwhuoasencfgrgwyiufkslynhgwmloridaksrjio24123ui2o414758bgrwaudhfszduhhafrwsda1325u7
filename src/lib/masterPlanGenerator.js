@@ -39,7 +39,7 @@
 // against — via the same "repair per-field from a deterministic fallback"
 // pattern planGenerator.js established for the onboarding plan.
 // ─────────────────────────────────────────────────────────────────────────────
-import { PATHS, GRADE_STAGES, DECK_CATEGORY_ORDER, FLASH_DECKS } from '../data/constants';
+import { PATHS, GRADE_STAGES, DECK_CATEGORY_ORDER, FLASH_DECKS, UNIT_STAGES, isUnitTimelyFor } from '../data/constants';
 import { ALL_QUIZZES } from '../data/quizzes/index';
 import { ELIB } from '../data/elib';
 import {
@@ -83,15 +83,30 @@ export function computeHorizonWeeks(user) {
 function clampPhaseCount(horizonWeeks) { return Math.min(6, Math.max(3, Math.round(horizonWeeks / 5))); }
 
 // ── Resource catalog — the real grounding for "every single resource" ─────────
-// Deliberately compact (full detail for the student's OWN pathway's 3 units;
+// Deliberately compact (full detail for the student's OWN pathway's units;
 // counts + category names for everything else) so the model has concrete,
 // real, nameable things to reference without the prompt ballooning to include
-// all 90 lessons / 342 quizzes / ~576 library entries in the app.
-export function buildResourceCatalog(specialtyKey) {
+// every lesson, quiz and library entry in the app.
+//
+// Units on the deep tracks (physician / nursing / physicianAssistant /
+// exploring) carry `stage` and `gradeFocus`, and both are passed through here
+// so the generated plan can sequence against the student's actual runway —
+// putting a foundation unit in front of a freshman and a Next Steps unit in
+// front of a senior — rather than treating all units as interchangeable.
+// `gradeStage` is optional: when omitted (or when a pathway's units carry no
+// grade metadata) the catalog simply omits the timing annotations.
+export function buildResourceCatalog(specialtyKey, gradeStage = null) {
   const path = PATHS[specialtyKey] || PATHS.exploring;
   const unitTitles = path.units.map(u => u.title);
   const unitLines = path.units
-    .map(u => `  • ${u.title} (quiz category: ${u.quizCat}) — lessons: ${u.lessons.map(l => l.title).join(', ')}`)
+    .map(u => {
+      const stage = u.stage ? `${UNIT_STAGES[u.stage]?.label || u.stage} stage` : null;
+      const timing = isUnitTimelyFor(u, gradeStage)
+        ? 'BEST TIMED FOR THIS STUDENT NOW'
+        : (u.gradeFocus?.length ? `usually best in: ${u.gradeFocus.join('/')}` : null);
+      const tags = [stage, timing].filter(Boolean).join('; ');
+      return `  • ${u.title} (quiz category: ${u.quizCat}${tags ? `; ${tags}` : ''}) — lessons: ${u.lessons.map(l => l.title).join(', ')}`;
+    })
     .join('\n');
   const quizCatCounts = {};
   for (const q of ALL_QUIZZES) quizCatCounts[q.cat] = (quizCatCounts[q.cat] || 0) + 1;
@@ -818,7 +833,7 @@ export function planIsStale(plan, user) {
 }
 
 export async function createMasterPlan(user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring');
+  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
   const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
   const startDate = todayStr();
   const planShell = { ...roadmap, startDate, days: [] };
@@ -838,7 +853,7 @@ export async function createMasterPlan(user, liveSignals, portfolio) {
 // running out of generated days. This is the mechanism that keeps the plan
 // "continuing to plan" indefinitely instead of going stale.
 export async function extendMasterPlan(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring');
+  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
   const from = addDaysStr(plan.daysGeneratedThrough, 1);
   const nextChunk = await generateDayChunk(plan, user, liveSignals, catalog, from, CHUNK_DAYS, portfolio);
   const merged = pruneRollingWindow({
@@ -855,7 +870,7 @@ export async function extendMasterPlan(plan, user, liveSignals, portfolio) {
 // in-progress work isn't lost, and re-derives their week/phase linkage
 // against the new roadmap.
 export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring');
+  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
   const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
   const startDate = plan?.startDate || todayStr();
   const days = (plan?.days || []).map(d => {
@@ -874,7 +889,7 @@ export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
 // later) whose tasks are already fully done, is left completely untouched —
 // only the first still-open day onward gets a fresh, note-aware generation.
 export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring');
+  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
   const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
   const today = todayStr();
   const startDate = plan?.startDate || today;
