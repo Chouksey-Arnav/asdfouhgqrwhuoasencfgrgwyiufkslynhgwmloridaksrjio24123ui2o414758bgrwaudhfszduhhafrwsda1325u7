@@ -34,3 +34,6 @@ yarn-error.log*
 .eslintcache
 *.tsbuildinfo
 shots/
+
+# Claude Code agent worktrees (scratch checkouts for background subagents)
+.claude/worktrees/
