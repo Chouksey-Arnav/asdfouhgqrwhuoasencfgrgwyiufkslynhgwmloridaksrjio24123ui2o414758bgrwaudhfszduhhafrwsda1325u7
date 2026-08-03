@@ -1514,109 +1514,110 @@ export const BIO_BIOCHEM_QUIZZES = [
 { q:`In eukaryotic cells, before an mRNA transcript leaves the nucleus, non-coding sections called introns are typically:`, ch:[`Duplicated and inserted back into the DNA template`,`Removed, and the remaining exons joined together`,`Translated directly into a separate small protein`,`Converted into transfer RNA molecules for the ribosome`], ans:1, exp:`Eukaryotic pre-mRNA undergoes processing in which introns (non-coding regions) are cut out and the remaining exons (coding regions) are spliced together to form the mature mRNA that is translated.` },
 { q:`A change in a single nucleotide base within a gene's DNA sequence is known as a:`, ch:[`Point mutation`,`Chromosomal deletion`,`Gene duplication`,`Translocation`], ans:0, exp:`A point mutation is a change to a single nucleotide base, such as a substitution of one base for another. Depending on where it occurs, this can change the amino acid sequence of the resulting protein or have no effect at all.` }
 ]},
-{ id:`bb81`, cat:`Life Sciences`, title:`Evolution & Natural Selection Basics`, diff:`Easy`, qs:[
-{ q:`Charles Darwin's theory of natural selection proposes that:`, ch:[`All individuals in a population reproduce at the same rate`,`Individuals with traits better suited to their environment tend to survive and reproduce more successfully`,`Organisms can acquire new traits during their lifetime and pass them to offspring`,`Species never change over long periods of time`], ans:1, exp:`Natural selection is the process by which individuals with heritable traits that improve survival and reproduction in a given environment tend to leave more offspring, gradually shifting the traits common in a population over generations.` },
-{ q:`The phrase "survival of the fittest" is best understood to mean that the organisms most likely to pass on their genes are those that are:`, ch:[`Physically the strongest members of the population`,`Best suited to reproduce successfully in their specific environment`,`The largest in body size`,`The fastest runners in the population`], ans:1, exp:`In evolutionary biology, "fitness" refers to reproductive success, not physical strength. An organism is "fit" if its traits help it survive and produce viable offspring in its particular environment.` },
-{ q:`An adaptation is best defined as:`, ch:[`Any change an organism makes during its lifetime to cope with stress`,`A heritable trait that increases an organism's chances of survival and reproduction in its environment`,`A random genetic change with no effect on survival`,`A behavior learned from parents through teaching`], ans:1, exp:`Adaptations are inherited traits, shaped by natural selection over many generations, that help organisms survive and reproduce in their specific environment, such as camouflage coloring or a specialized beak shape.` },
+{ id:`bb81`, cat:`Life Sciences`, title:`Evolution & Natural Selection Basics`, diff:`Easy`, lengthAudited: true, qs:[
+{ q:`Charles Darwin's theory of natural selection proposes that:`, ch:[`All individuals in a population reproduce at the same rate`,`Individuals whose traits suit their environment reproduce more often`,`Traits acquired during an organism's lifetime are passed to offspring`,`Species remain fixed and unchanging across geological time`], ans:1, exp:`Natural selection is the process by which individuals with heritable traits that improve survival and reproduction in a given environment tend to leave more offspring, gradually shifting the traits common in a population over generations.` },
+{ q:`The phrase "survival of the fittest" is best understood to mean that the organisms most likely to pass on their genes are those that are:`, ch:[`Physically the strongest members of the population`,`Best suited to reproduce in their environment`,`The largest-bodied members of the population`,`The fastest and most aggressive individuals`], ans:1, exp:`In evolutionary biology, "fitness" refers to reproductive success, not physical strength. An organism is "fit" if its traits help it survive and produce viable offspring in its particular environment.` },
+{ q:`An adaptation is best defined as:`, ch:[`Any change an organism makes during its lifetime to cope with stress`,`An inherited trait that improves survival and reproduction`,`A random genetic change with no effect on survival`,`A behavior learned from parents through teaching`], ans:1, exp:`Adaptations are inherited traits, shaped by natural selection over many generations, that help organisms survive and reproduce in their specific environment, such as camouflage coloring or a specialized beak shape.` },
 { q:`What is the ultimate original source of the genetic variation that natural selection acts upon?`, ch:[`Mutation`,`Learned behaviors`,`Migration alone`,`Identical reproduction`], ans:0, exp:`Mutations are random changes in DNA sequence that create new alleles, introducing the raw genetic variation within a population. Natural selection then acts on this existing variation, favoring alleles that improve survival and reproduction.` },
-{ q:`Speciation refers to the process by which:`, ch:[`A single species becomes extinct`,`Two or more populations become reproductively isolated and evolve into distinct species`,`An organism adapts to a new food source within its lifetime`,`A population's gene pool stays exactly the same over time`], ans:1, exp:`Speciation occurs when populations of the same species become separated, often geographically, and accumulate enough genetic differences over time that they can no longer successfully interbreed, resulting in new distinct species.` },
+{ q:`Speciation refers to the process by which:`, ch:[`A species goes extinct and is replaced by another`,`Populations become reproductively isolated and form new species`,`An organism adapts to a new food source within its lifetime`,`A population's gene pool stays exactly the same over time`], ans:1, exp:`Speciation occurs when populations of the same species become separated, often geographically, and accumulate enough genetic differences over time that they can no longer successfully interbreed, resulting in new distinct species.` },
 { q:`Bat wings and human arms have very different functions but share a similar underlying bone structure inherited from a common ancestor. These are examples of:`, ch:[`Analogous structures`,`Homologous structures`,`Vestigial structures`,`Convergent structures`], ans:1, exp:`Homologous structures share a similar internal structure due to common ancestry, even if they now serve different functions. This is strong evidence that different species evolved from a shared evolutionary ancestor.` },
 { q:`Which type of evidence involves examining preserved remains and imprints of ancient organisms to study how species have changed over millions of years?`, ch:[`Comparative embryology`,`The fossil record`,`Molecular biology`,`Biogeography`], ans:1, exp:`The fossil record provides a physical timeline of past life, showing how organisms have changed over long periods and revealing transitional forms that connect ancestral species to their modern descendants.` },
 { q:`Insect wings and bird wings both allow flight but evolved independently from different ancestral structures. This is an example of:`, ch:[`Homologous structures`,`Divergent evolution`,`Convergent evolution`,`Genetic drift`], ans:2, exp:`Convergent evolution occurs when unrelated species independently evolve similar features because they face similar environmental pressures, even though the structures did not come from a shared ancestor.` },
-{ q:`How does artificial selection differ from natural selection?`, ch:[`Artificial selection involves humans choosing which organisms breed based on desired traits, while natural selection is driven by the environment`,`Artificial selection cannot change a population's traits over generations`,`Natural selection only occurs in laboratory settings`,`There is no meaningful difference between the two processes`], ans:0, exp:`In artificial selection, humans intentionally breed organisms, such as crops or dogs, for particular desired traits. In natural selection, the environment itself determines which traits improve survival and reproduction.` },
-{ q:`For natural selection to occur within a population, which of the following conditions must be present?`, ch:[`Identical genes in every individual, no environmental pressure, and unlimited resources`,`Heritable variation among individuals, and differences in survival or reproduction related to that variation`,`A stable population size that never changes`,`Only asexual reproduction`], ans:1, exp:`Natural selection requires that individuals vary in heritable traits, and that this variation leads to differences in survival and reproductive success, so that advantageous traits become more common in future generations.` },
+{ q:`How does artificial selection differ from natural selection?`, ch:[`Humans select which organisms breed; in nature the environment does`,`Artificial selection cannot change a population's traits over generations`,`Natural selection occurs only in controlled laboratory settings`,`There is no meaningful difference between the two processes`], ans:0, exp:`In artificial selection, humans intentionally breed organisms, such as crops or dogs, for particular desired traits. In natural selection, the environment itself determines which traits improve survival and reproduction.` },
+{ q:`For natural selection to occur within a population, which of the following conditions must be present?`, ch:[`Identical genes in every individual and unlimited resources`,`Heritable variation linked to differences in reproductive success`,`A population size that stays constant across generations`,`Reproduction that is exclusively asexual and clonal`], ans:1, exp:`Natural selection requires that individuals vary in heritable traits, and that this variation leads to differences in survival and reproductive success, so that advantageous traits become more common in future generations.` },
 { q:`During the Industrial Revolution in England, dark-colored peppered moths became more common than light-colored ones in polluted areas because they were better camouflaged from predators on soot-darkened trees. This is a classic example of:`, ch:[`Genetic drift`,`Natural selection in action`,`Artificial selection`,`A vestigial trait`], ans:1, exp:`The peppered moth example shows natural selection directly: pollution darkened tree bark, so darker moths were better camouflaged from bird predators and survived to reproduce at higher rates, shifting the population's coloration over time.` },
 { q:`The idea that all living species descended from earlier life forms that lived millions of years ago is known as the concept of:`, ch:[`Spontaneous generation`,`Common ancestry`,`Punctuated equilibrium`,`Genetic engineering`], ans:1, exp:`Common ancestry is the concept that all currently existing species share connections to earlier ancestral species, ultimately tracing back through an evolutionary tree to shared common ancestors.` }
 ]},
-{ id:`bb82`, cat:`Life Sciences`, title:`Human Body Systems Overview: Circulatory & Respiratory`, diff:`Easy`, qs:[
+{ id:`bb82`, cat:`Life Sciences`, title:`Human Body Systems Overview: Circulatory & Respiratory`, diff:`Easy`, lengthAudited: true, qs:[
 { q:`How many chambers does the human heart have?`, ch:[`Two`,`Three`,`Four`,`Six`], ans:2, exp:`The human heart has four chambers: two upper chambers called atria and two lower chambers called ventricles. This four-chambered structure keeps oxygen-rich and oxygen-poor blood separated.` },
 { q:`What is the main function of red blood cells?`, ch:[`Fighting off infection`,`Carrying oxygen to tissues`,`Clotting at wound sites`,`Producing antibodies`], ans:1, exp:`Red blood cells contain hemoglobin, a protein that binds oxygen in the lungs and releases it to body tissues, making oxygen transport their primary role in the circulatory system.` },
-{ q:`Pulmonary circulation refers to the pathway of blood that:`, ch:[`Travels between the heart and the lungs to pick up oxygen`,`Travels between the heart and the rest of the body`,`Flows only through the kidneys`,`Carries blood from the digestive system to the liver`], ans:0, exp:`Pulmonary circulation is the short loop that carries deoxygenated blood from the heart to the lungs, where it picks up oxygen and releases carbon dioxide, before returning oxygenated blood to the heart.` },
+{ q:`Pulmonary circulation refers to the pathway of blood that:`, ch:[`Travels between the heart and lungs to pick up oxygen`,`Travels between the heart and the rest of the body`,`Flows only through the kidneys and renal arteries`,`Carries blood from the digestive system to the liver`], ans:0, exp:`Pulmonary circulation is the short loop that carries deoxygenated blood from the heart to the lungs, where it picks up oxygen and releases carbon dioxide, before returning oxygenated blood to the heart.` },
 { q:`Gas exchange between the lungs and the bloodstream primarily takes place in tiny sac-like structures called:`, ch:[`Bronchi`,`Alveoli`,`The trachea`,`The larynx`], ans:1, exp:`Alveoli are tiny, thin-walled air sacs surrounded by capillaries. Their large surface area and thin walls allow oxygen to diffuse into the blood and carbon dioxide to diffuse out efficiently.` },
-{ q:`After blood returns to the heart from the body, in what general order does it flow through the heart on its way to being reoxygenated?`, ch:[`Right atrium, right ventricle, lungs, left atrium, left ventricle, body`,`Left atrium, left ventricle, lungs, right atrium, right ventricle, body`,`Right ventricle, right atrium, body, lungs`,`Left ventricle, right ventricle, lungs, body`], ans:0, exp:`Deoxygenated blood enters the right atrium, moves to the right ventricle, and is pumped to the lungs. Oxygenated blood then returns to the left atrium, moves to the left ventricle, and is pumped out to the rest of the body.` },
+{ q:`After blood returns to the heart from the body, in what general order does it flow through the heart on its way to being reoxygenated?`, ch:[`Right atrium, right ventricle, lungs, left atrium, left ventricle, body`,`Left atrium, left ventricle, lungs, right atrium, right ventricle, body`,`Right ventricle, right atrium, lungs, left ventricle, body`,`Left ventricle, right ventricle, lungs, left atrium, body`], ans:0, exp:`Deoxygenated blood enters the right atrium, moves to the right ventricle, and is pumped to the lungs. Oxygenated blood then returns to the left atrium, moves to the left ventricle, and is pumped out to the rest of the body.` },
 { q:`Which blood vessels generally carry blood away from the heart under high pressure?`, ch:[`Veins`,`Capillaries`,`Arteries`,`Lymph vessels`], ans:2, exp:`Arteries have thick, muscular walls built to withstand the high pressure of blood being pumped directly from the heart. Veins, by contrast, carry blood back toward the heart under lower pressure and often contain valves.` },
 { q:`What is the primary role of the diaphragm in the respiratory system?`, ch:[`Filtering bacteria from inhaled air`,`Producing mucus to trap dust`,`Driving air into and out of the lungs`,`Warming air before it reaches the lungs`], ans:2, exp:`The diaphragm is a dome-shaped muscle beneath the lungs. When it contracts, it flattens and increases chest cavity volume, drawing air into the lungs; when it relaxes, it helps push air back out.` },
 { q:`A blood pressure reading is essentially a measurement of:`, ch:[`Red blood cell count in a sample`,`Force of blood against artery walls`,`Oxygen concentration in the blood`,`The rate the heart is beating`], ans:1, exp:`Blood pressure measures the force exerted by circulating blood against artery walls, typically recorded as two numbers representing pressure during heart contraction (systolic) and relaxation (diastolic).` },
-{ q:`Which type of blood cell is primarily responsible for defending the body against infection?`, ch:[`Red blood cells`,`Platelets`,`White blood cells`,`Plasma cells only (excluding lymphocytes)`], ans:2, exp:`White blood cells are the immune system's cellular defenders, identifying and destroying pathogens such as bacteria and viruses, unlike red blood cells, which mainly transport oxygen.` },
+{ q:`Which type of blood cell is primarily responsible for defending the body against infection?`, ch:[`Red blood cells (erythrocytes)`,`Platelets (thrombocytes)`,`White blood cells (leukocytes)`,`Megakaryocytes in bone marrow`], ans:2, exp:`White blood cells are the immune system's cellular defenders, identifying and destroying pathogens such as bacteria and viruses, unlike red blood cells, which mainly transport oxygen.` },
 { q:`What is the primary function of the valves within the heart?`, ch:[`Producing the heartbeat's electrical signal`,`Keeping blood flowing one direction`,`Filtering waste out of the blood`,`Generating new blood cells`], ans:1, exp:`Heart valves open and close in coordination with the heart's contractions, acting like one-way doors that prevent blood from flowing backward between chambers or back into vessels leading into the heart.` },
 { q:`Which structure serves as the main airway connecting the throat to the bronchi and lungs?`, ch:[`Esophagus`,`Trachea`,`Epiglottis`,`Diaphragm`], ans:1, exp:`The trachea, or windpipe, is a rigid tube reinforced with cartilage rings that carries air from the throat down toward the bronchi, which branch into each lung.` },
 { q:`Platelets found in the blood are primarily responsible for:`, ch:[`Transporting oxygen`,`Fighting viral infections`,`Clotting at an injury site`,`Regulating body temperature`], ans:2, exp:`Platelets are small cell fragments that gather at the site of a blood vessel injury and help form clots, preventing excessive blood loss and beginning the wound-healing process.` }
 ]},
-{ id:`bb83`, cat:`Life Sciences`, title:`Human Body Systems Overview: Digestive & Excretory`, diff:`Easy`, qs:[
+{ id:`bb83`, cat:`Life Sciences`, title:`Human Body Systems Overview: Digestive & Excretory`, diff:`Easy`, lengthAudited: true, qs:[
 { q:`What role does stomach acid primarily play in digestion?`, ch:[`Absorbing nutrients into the blood`,`Activating pepsin to digest protein`,`Storing bile from the liver`,`Converting glucose to glycogen`], ans:1, exp:`The stomach secretes hydrochloric acid, which creates a highly acidic environment that kills many ingested microbes and activates the enzyme pepsin, allowing it to begin breaking down proteins.` },
 { q:`Most nutrient absorption into the bloodstream occurs in which organ?`, ch:[`The stomach`,`The large intestine`,`The small intestine`,`The esophagus`], ans:2, exp:`The small intestine is lined with finger-like projections that greatly increase surface area, allowing the majority of digested nutrients, including carbohydrates, proteins, and fats, to be absorbed into the bloodstream.` },
-{ q:`One of the main functions of the large intestine is to:`, ch:[`Produce digestive enzymes for protein breakdown`,`Absorb the majority of water from remaining food material`,`Filter waste products from the blood`,`Store bile before it is used in digestion`], ans:1, exp:`As undigested material passes through the large intestine, water and some remaining electrolytes are reabsorbed into the body, which helps solidify waste into feces for elimination.` },
+{ q:`One of the main functions of the large intestine is to:`, ch:[`Produce digestive enzymes for protein breakdown`,`Absorb remaining water from undigested material`,`Filter nitrogenous waste products from the blood`,`Store bile until it is needed for digestion`], ans:1, exp:`As undigested material passes through the large intestine, water and some remaining electrolytes are reabsorbed into the body, which helps solidify waste into feces for elimination.` },
 { q:`Which organ produces bile, a substance important for breaking down fats during digestion?`, ch:[`The pancreas`,`The gallbladder`,`The liver`,`The small intestine`], ans:2, exp:`The liver produces bile, which is then stored and concentrated in the gallbladder until it is released into the small intestine to help emulsify fats, making them easier for enzymes to digest.` },
 { q:`What is the primary role of the kidneys in the excretory system?`, ch:[`Producing digestive enzymes`,`Filtering blood waste into urine`,`Storing urine until elimination`,`Breaking down large food molecules`], ans:1, exp:`The kidneys continuously filter blood, removing metabolic wastes like urea along with excess water and salts, and concentrating them into urine while returning needed substances back into the bloodstream.` },
 { q:`The nephron is best described as:`, ch:[`The muscular tube connecting the kidney to the bladder`,`The functional filtering unit within the kidney`,`A hormone that regulates blood pressure`,`The outer protective layer of the kidney`], ans:1, exp:`Nephrons are the microscopic structures within the kidney where blood filtration actually occurs. Each kidney contains roughly a million nephrons that work together to filter blood and produce urine.` },
 { q:`Which sequence correctly lists the general order food travels through the digestive tract?`, ch:[`Mouth, esophagus, stomach, small intestine, large intestine`,`Mouth, stomach, esophagus, small intestine, large intestine`,`Mouth, small intestine, stomach, esophagus, large intestine`,`Esophagus, mouth, stomach, large intestine, small intestine`], ans:0, exp:`After being chewed in the mouth, food travels down the esophagus into the stomach for initial breakdown, then to the small intestine for nutrient absorption, and finally to the large intestine before waste elimination.` },
-{ q:`The pancreas contributes to digestion primarily by:`, ch:[`Storing excess glucose as fat`,`Releasing enzymes into the small intestine`,`Absorbing water from digested food`,`Producing bile to emulsify fats`], ans:1, exp:`The pancreas secretes a variety of digestive enzymes into the small intestine that help break down carbohydrates, proteins, and fats. It also produces hormones like insulin that regulate blood sugar.` },
-{ q:`What is the primary function of the urinary bladder?`, ch:[`Filtering waste out of the blood`,`Producing urine`,`Storing urine before elimination`,`Reabsorbing nutrients from urine`], ans:2, exp:`The bladder is a muscular, expandable organ that stores urine produced by the kidneys until it is convenient to release it from the body through urination.` },
-{ q:`Villi, the tiny finger-like projections lining the small intestine, primarily function to:`, ch:[`Break large food particles into smaller pieces mechanically`,`Increase the surface area available for nutrient absorption`,`Neutralize stomach acid before it damages intestinal tissue`,`Produce hydrochloric acid`], ans:1, exp:`Villi (and the even smaller microvilli on their surface) dramatically increase the internal surface area of the small intestine, allowing far more efficient absorption of nutrients into the bloodstream.` },
+{ q:`The pancreas contributes to digestion primarily by:`, ch:[`Storing excess glucose as body fat`,`Releasing enzymes into the small intestine`,`Absorbing water from digested food`,`Producing bile that emulsifies dietary fat`], ans:1, exp:`The pancreas secretes a variety of digestive enzymes into the small intestine that help break down carbohydrates, proteins, and fats. It also produces hormones like insulin that regulate blood sugar.` },
+{ q:`What is the primary function of the urinary bladder?`, ch:[`Filtering waste out of the blood`,`Producing urine from filtered blood`,`Storing urine before elimination`,`Reabsorbing nutrients from urine`], ans:2, exp:`The bladder is a muscular, expandable organ that stores urine produced by the kidneys until it is convenient to release it from the body through urination.` },
+{ q:`Villi, the tiny finger-like projections lining the small intestine, primarily function to:`, ch:[`Break large food particles into smaller pieces mechanically`,`Increase the surface area available for nutrient absorption`,`Neutralize stomach acid before it damages intestinal tissue`,`Secrete hydrochloric acid to break down proteins`], ans:1, exp:`Villi (and the even smaller microvilli on their surface) dramatically increase the internal surface area of the small intestine, allowing far more efficient absorption of nutrients into the bloodstream.` },
 { q:`Urea, a major waste product removed by the kidneys, is primarily formed from the breakdown of:`, ch:[`Excess glucose`,`Proteins`,`Dietary fats`,`Vitamins`], ans:1, exp:`When the body breaks down proteins for energy or other uses, the resulting nitrogen-containing waste is converted into urea, mainly in the liver, which is then filtered out of the blood by the kidneys and excreted in urine.` },
 { q:`The enzyme amylase, found in saliva, begins the digestion of which type of nutrient?`, ch:[`Proteins`,`Fats`,`Carbohydrates`,`Vitamins`], ans:2, exp:`Salivary amylase starts breaking down starch, a complex carbohydrate, into smaller sugar molecules while food is still being chewed in the mouth, beginning the process of carbohydrate digestion.` }
 ]},
-{ id:`bb84`, cat:`Life Sciences`, title:`Human Body Systems Overview: Nervous & Endocrine Basics`, diff:`Medium`, qs:[
+{ id:`bb84`, cat:`Life Sciences`, title:`Human Body Systems Overview: Nervous & Endocrine Basics`, diff:`Medium`, lengthAudited: true, qs:[
 { q:`In a typical neuron, which structures receive incoming signals from other neurons?`, ch:[`Axons`,`Dendrites`,`The myelin sheath`,`The nucleus`], ans:1, exp:`Dendrites are branch-like extensions of a neuron that receive chemical signals from neighboring neurons and convert them into electrical signals that travel toward the cell body.` },
 { q:`At a synapse, communication between two neurons typically occurs through the release of:`, ch:[`Hormones directly into the bloodstream`,`Neurotransmitters into the small gap between neurons`,`Enzymes that digest the neuron membrane`,`Electrical current that jumps freely through the body`], ans:1, exp:`When an electrical signal reaches the end of an axon, it triggers the release of chemical messengers called neurotransmitters, which cross the synaptic gap and bind to receptors on the next neuron, continuing the signal.` },
 { q:`Which best describes the difference between the central nervous system (CNS) and the peripheral nervous system (PNS)?`, ch:[`CNS = brain and spinal cord; PNS = nerves branching to the body`,`CNS controls involuntary actions only; PNS controls voluntary actions only`,`PNS includes the brain; CNS is only the spinal cord`,`There is no meaningful distinction between the two`], ans:0, exp:`The central nervous system, made up of the brain and spinal cord, serves as the body's main processing center, while the peripheral nervous system consists of nerves extending throughout the body that relay information to and from the CNS.` },
 { q:`Which part of the brain is primarily responsible for coordinating balance and fine motor movement?`, ch:[`Cerebrum`,`Cerebellum`,`Medulla oblongata`,`Hypothalamus`], ans:1, exp:`The cerebellum, located at the back of the brain, plays a key role in coordinating voluntary muscle movements, maintaining posture, and balance, while the cerebrum handles higher-level thought and sensory processing.` },
 { q:`A reflex arc, such as quickly pulling your hand away from a hot stove, is notable because it:`, ch:[`Requires conscious thought in the cerebrum first`,`Bypasses the brain via the spinal cord for speed`,`Only involves the endocrine system`,`Takes longer than a voluntary response`], ans:1, exp:`Reflex arcs allow certain rapid, automatic responses to be processed directly through the spinal cord rather than waiting for signals to travel all the way to the brain and back, resulting in a much faster protective response.` },
-{ q:`A hormone is best defined as:`, ch:[`An electrical signal along a neuron`,`A gland's chemical messenger sent via blood`,`A type of white blood cell`,`A stomach enzyme that breaks down food`], ans:1, exp:`Hormones are chemical signals produced by endocrine glands and released into the bloodstream. They travel throughout the body but only affect target cells that have the specific receptors needed to respond to them.` },
+{ q:`A hormone is best defined as:`, ch:[`An electrical signal along a neuron`,`A gland's chemical messenger sent via blood`,`A signaling protein made by white blood cells`,`A stomach enzyme that breaks down food`], ans:1, exp:`Hormones are chemical signals produced by endocrine glands and released into the bloodstream. They travel throughout the body but only affect target cells that have the specific receptors needed to respond to them.` },
 { q:`Which gland releases the hormone insulin to help regulate blood glucose levels?`, ch:[`Thyroid`,`Pancreas`,`Adrenal gland`,`Pituitary gland`], ans:1, exp:`The pancreas produces insulin, a hormone that lowers blood glucose levels by signaling cells to take up glucose from the bloodstream, helping to maintain stable blood sugar levels.` },
 { q:`The pituitary gland is often referred to as the "master gland" because it:`, ch:[`Produces the most hormone of any gland`,`Regulates many other endocrine glands`,`Is the only gland required for survival`,`Directly controls muscle contraction`], ans:1, exp:`The pituitary gland secretes hormones that stimulate and regulate the activity of several other endocrine glands, such as the thyroid and adrenal glands, effectively coordinating much of the body's hormonal activity.` },
-{ q:`The thyroid gland primarily produces hormones that regulate:`, ch:[`Blood clotting`,`The body's overall metabolic rate`,`Short-term memory formation`,`Immune cell production`], ans:1, exp:`Thyroid hormones influence how quickly cells throughout the body use energy, affecting overall metabolic rate, growth, and body temperature regulation.` },
+{ q:`The thyroid gland primarily produces hormones that regulate:`, ch:[`The rate of blood clotting`,`The body's overall metabolic rate`,`Short-term memory formation`,`The production of immune cells`], ans:1, exp:`Thyroid hormones influence how quickly cells throughout the body use energy, affecting overall metabolic rate, growth, and body temperature regulation.` },
 { q:`During a "fight or flight" response, which glands release adrenaline (epinephrine) to prepare the body for quick action?`, ch:[`Thyroid glands`,`Pituitary glands`,`Adrenal glands`,`Pancreatic glands`], ans:2, exp:`The adrenal glands, located above the kidneys, release adrenaline in response to stress or danger, which rapidly increases heart rate, blood flow to muscles, and alertness to prepare the body for immediate action.` },
-{ q:`In hormone regulation, a negative feedback loop generally works by:`, ch:[`Continuously increasing hormone output`,`Sensing a target level, then reducing release`,`Only functioning during illness`,`Permanently shutting down a gland`], ans:1, exp:`Negative feedback loops help maintain homeostasis. When a hormone's effect reaches an appropriate level, the body senses this and reduces further hormone secretion, preventing the levels from rising too high or too low.` },
-{ q:`A nerve impulse, or action potential, generally travels along a neuron in which direction?`, ch:[`Axon terminal to the dendrites`,`Dendrites, through the cell body, down the axon`,`Randomly, depending on the stimulus`,`Only within the cell body`], ans:1, exp:`A nerve impulse typically begins when dendrites receive a stimulus, travels through the cell body, and then propagates down the axon toward the axon terminals, where it can be passed to the next neuron via neurotransmitters.` }
+{ q:`In hormone regulation, a negative feedback loop generally works by:`, ch:[`Continuously increasing hormone output`,`Sensing a target level and reducing release`,`Operating only during periods of illness`,`Permanently shutting down the secreting gland`], ans:1, exp:`Negative feedback loops help maintain homeostasis. When a hormone's effect reaches an appropriate level, the body senses this and reduces further hormone secretion, preventing the levels from rising too high or too low.` },
+{ q:`A nerve impulse, or action potential, generally travels along a neuron in which direction?`, ch:[`From the axon terminals back to the dendrites`,`Dendrites, through the cell body, down the axon`,`Randomly, depending on the type of stimulus`,`Only within the cell body, never along the axon`], ans:1, exp:`A nerve impulse typically begins when dendrites receive a stimulus, travels through the cell body, and then propagates down the axon toward the axon terminals, where it can be passed to the next neuron via neurotransmitters.` }
 ]},
-{ id:`bb85`, cat:`Life Sciences`, title:`Immune System Basics`, diff:`Easy`, qs:[
+{ id:`bb85`, cat:`Life Sciences`, title:`Immune System Basics`, diff:`Easy`, lengthAudited: true, qs:[
 { q:`What is the primary role of white blood cells in the body?`, ch:[`Transporting oxygen throughout the bloodstream`,`Detecting and destroying invading pathogens`,`Forming clots at the site of a wound`,`Carrying absorbed nutrients from digestion`], ans:1, exp:`White blood cells, also called leukocytes, are the main cellular defenders of the immune system. Different types work together to identify, attack, and eliminate pathogens that enter the body.` },
-{ q:`What is the key difference between innate and adaptive immunity?`, ch:[`Innate immunity is fast and general; adaptive immunity is slower but pathogen-specific`,`Adaptive immunity acts immediately, while innate immunity takes weeks`,`Innate immunity only ever occurs in adults`,`Only adaptive immunity involves any white blood cells`], ans:0, exp:`Innate immunity provides a fast, non-specific first line of defense against many pathogens, while adaptive immunity develops a targeted response to specific pathogens, which can take longer to mount but includes immune memory.` },
-{ q:`What is the primary function of antibodies produced by the immune system?`, ch:[`Digesting bacterial cell walls directly`,`Binding specific antigens to neutralize or flag pathogens`,`Regulating body temperature during illness`,`Transporting oxygen to infected tissue`], ans:1, exp:`Antibodies are Y-shaped proteins produced by B cells that recognize and bind to specific antigens on pathogens. This binding can neutralize the pathogen directly or flag it for destruction by other immune cells.` },
+{ q:`What is the key difference between innate and adaptive immunity?`, ch:[`Innate immunity is fast and general; adaptive is slower but specific`,`Adaptive immunity acts immediately, while innate immunity takes weeks`,`Innate immunity develops only after childhood vaccination`,`Only adaptive immunity uses white blood cells at all`], ans:0, exp:`Innate immunity provides a fast, non-specific first line of defense against many pathogens, while adaptive immunity develops a targeted response to specific pathogens, which can take longer to mount but includes immune memory.` },
+{ q:`What is the primary function of antibodies produced by the immune system?`, ch:[`Digesting bacterial cell walls with lysozyme`,`Binding antigens to neutralize or flag pathogens`,`Regulating body temperature during illness`,`Transporting oxygen to infected tissues`], ans:1, exp:`Antibodies are Y-shaped proteins produced by B cells that recognize and bind to specific antigens on pathogens. This binding can neutralize the pathogen directly or flag it for destruction by other immune cells.` },
 { q:`How do vaccines help protect the body against future infection?`, ch:[`They permanently destroy every pathogen present at vaccination`,`They train memory cells using a harmless piece of the pathogen`,`They make white blood cells unnecessary`,`They only ever protect against bacteria, not viruses`], ans:1, exp:`Vaccines introduce a weakened, inactivated, or partial form of a pathogen that triggers an immune response without causing disease. This allows the body to produce memory cells, enabling a much faster and stronger response if exposed to the real pathogen later.` },
 { q:`Which of the following serves as the body's first line of defense against pathogens entering from the environment?`, ch:[`Circulating antibodies`,`The skin and mucous membranes`,`Activated B cells`,`Activated T cells`], ans:1, exp:`The skin and mucous membranes act as a physical and chemical barrier that prevents most pathogens from ever entering the body, making them the first line of defense before any internal immune response is needed.` },
 { q:`Lymphocytes are a category of white blood cell that includes which two major types central to adaptive immunity?`, ch:[`Red blood cells and platelets`,`B cells and T cells`,`Neurons and glial cells`,`Skin cells and mucous cells`], ans:1, exp:`B cells and T cells are the two main types of lymphocytes responsible for adaptive immunity. B cells primarily produce antibodies, while T cells can directly destroy infected cells or help coordinate the immune response.` },
-{ q:`In immunology, an antigen is best defined as:`, ch:[`A surface molecule that triggers an immune response`,`An antibody produced only after vaccination`,`A protein that lowers body temperature`,`A cell that produces mucus`], ans:0, exp:`An antigen is any molecule, often a protein on the surface of a pathogen, that the immune system recognizes as foreign and responds to, typically by producing antibodies that specifically target it.` },
-{ q:`A fever that develops during an infection is best understood as:`, ch:[`A nervous-system malfunction with no real purpose`,`A regulated response that can slow pathogens and boost immunity`,`A symptom caused exclusively by dehydration`,`A sign that the immune system has already failed`], ans:1, exp:`A fever is generally a regulated immune response in which the body raises its internal temperature, which can inhibit the growth of many pathogens and enhance the activity of certain immune cells.` },
+{ q:`In immunology, an antigen is best defined as:`, ch:[`A molecule that triggers an immune response`,`An antibody produced only after vaccination`,`A protein that lowers body temperature`,`An immune cell that engulfs bacteria`], ans:0, exp:`An antigen is any molecule, often a protein on the surface of a pathogen, that the immune system recognizes as foreign and responds to, typically by producing antibodies that specifically target it.` },
+{ q:`A fever that develops during an infection is best understood as:`, ch:[`A nervous-system malfunction with no real purpose`,`A regulated response that slows pathogen growth`,`A symptom caused only by fluid loss and dehydration`,`A sign that the immune system has already failed`], ans:1, exp:`A fever is generally a regulated immune response in which the body raises its internal temperature, which can inhibit the growth of many pathogens and enhance the activity of certain immune cells.` },
 { q:`After successfully fighting off an infection, some B cells and T cells remain in the body as memory cells. What is the main benefit of these memory cells?`, ch:[`They prevent every future infection of any kind`,`They enable a faster response if the pathogen returns`,`They replace the innate immune system entirely`,`They cause the original infection to periodically return`], ans:1, exp:`Memory cells persist long after an infection clears and "remember" the specific antigen encountered. If the same pathogen invades again, these cells enable a much quicker and stronger immune response, often preventing illness altogether.` },
 { q:`A pathogen is best defined as:`, ch:[`Any disease-causing organism or agent`,`A specific type of antibody`,`A cell that produces hormones`,`A structure unique to the human body`], ans:0, exp:`Pathogens include disease-causing organisms and agents such as bacteria, viruses, fungi, and parasites. The immune system's primary job is to detect and eliminate these invaders before they cause significant harm.` },
 { q:`Inflammation, marked by redness, swelling, and heat around an injury or infection, primarily occurs because:`, ch:[`Blood vessels constrict to fully cut off blood flow`,`More blood and immune cells reach the affected area`,`The immune system has stopped working there`,`Nearby muscle tissue is being permanently destroyed`], ans:1, exp:`Inflammation is a protective response in which blood vessels near an injury or infection widen and become more permeable, increasing blood flow and allowing immune cells to reach the affected area more easily to fight pathogens and begin repair.` },
-{ q:`An autoimmune disease occurs when:`, ch:[`The immune system fails to respond to any pathogens`,`The immune system attacks the body's own healthy tissue`,`A person is vaccinated too many times`,`White blood cells stop being produced`], ans:1, exp:`In autoimmune diseases, the immune system loses the ability to distinguish the body's own cells from foreign invaders and mistakenly attacks healthy tissue, which can damage organs or other body systems over time.` }
+{ q:`An autoimmune disease occurs when:`, ch:[`The immune system fails to respond to any pathogens`,`The immune system attacks the body's own tissue`,`A person receives too many vaccinations in sequence`,`White blood cell production shuts down entirely`], ans:1, exp:`In autoimmune diseases, the immune system loses the ability to distinguish the body's own cells from foreign invaders and mistakenly attacks healthy tissue, which can damage organs or other body systems over time.` }
 ]},
-{ id:`bb86`, cat:`Life Sciences`, title:`Human Reproduction & Development Basics`, diff:`Easy`, qs:[
-{ q:`What is the primary function of the testes in the male reproductive system?`, ch:[`Producing sperm and the hormone testosterone`,`Storing sperm until ejaculation`,`Producing eggs`,`Regulating the menstrual cycle`], ans:0, exp:`The testes are the primary male reproductive organs, responsible for producing sperm cells through a process called spermatogenesis, as well as producing testosterone, the main male sex hormone.` },
-{ q:`What is the primary function of the ovaries in the female reproductive system?`, ch:[`Producing eggs and the hormones estrogen and progesterone`,`Providing a site for fertilization`,`Producing milk for nursing`,`Housing a developing fetus`], ans:0, exp:`The ovaries produce egg cells (ova) through a process called oogenesis and also secrete the hormones estrogen and progesterone, which regulate the menstrual cycle and support pregnancy.` },
-{ q:`Fertilization is best defined as the process in which:`, ch:[`An egg matures inside the ovary`,`A sperm cell fuses with an egg cell to form a zygote`,`The uterine lining thickens in preparation for pregnancy`,`A fetus develops fully formed organs`], ans:1, exp:`Fertilization occurs when a sperm cell successfully penetrates and fuses with an egg cell, combining their genetic material to form a single-celled zygote, which marks the beginning of a new individual's development.` },
-{ q:`Ovulation refers to the point in the menstrual cycle when:`, ch:[`The uterine lining is shed`,`A mature egg is released from the ovary`,`Testosterone levels peak`,`Implantation occurs in the uterus`], ans:1, exp:`Ovulation is the release of a mature egg from one of the ovaries, typically around the midpoint of the menstrual cycle. This is generally when fertilization is most likely to occur if sperm are present.` },
+{ id:`bb86`, cat:`Life Sciences`, title:`Human Reproduction & Development Basics`, diff:`Easy`, lengthAudited: true, qs:[
+{ q:`What is the primary function of the testes in the male reproductive system?`, ch:[`Producing sperm and the hormone testosterone`,`Storing mature sperm until ejaculation`,`Producing egg cells for fertilization`,`Regulating the monthly menstrual hormone cycle`], ans:0, exp:`The testes are the primary male reproductive organs, responsible for producing sperm cells through a process called spermatogenesis, as well as producing testosterone, the main male sex hormone.` },
+{ q:`What is the primary function of the ovaries in the female reproductive system?`, ch:[`Producing eggs, estrogen, and progesterone`,`Providing the usual site where fertilization occurs`,`Producing milk to nourish a newborn`,`Housing and nourishing a developing fetus`], ans:0, exp:`The ovaries produce egg cells (ova) through a process called oogenesis and also secrete the hormones estrogen and progesterone, which regulate the menstrual cycle and support pregnancy.` },
+{ q:`Fertilization is best defined as the process in which:`, ch:[`An egg cell matures inside the ovarian follicle`,`A sperm cell fuses with an egg cell to form a zygote`,`The uterine lining thickens in preparation for pregnancy`,`A fetus develops its fully formed organ systems`], ans:1, exp:`Fertilization occurs when a sperm cell successfully penetrates and fuses with an egg cell, combining their genetic material to form a single-celled zygote, which marks the beginning of a new individual's development.` },
+{ q:`Ovulation refers to the point in the menstrual cycle when:`, ch:[`The uterine lining is shed as menstrual flow`,`A mature egg is released from the ovary`,`Testosterone levels reach their monthly peak`,`Implantation occurs in the uterine wall`], ans:1, exp:`Ovulation is the release of a mature egg from one of the ovaries, typically around the midpoint of the menstrual cycle. This is generally when fertilization is most likely to occur if sperm are present.` },
 { q:`Immediately after fertilization, the single cell formed by the union of sperm and egg is called a:`, ch:[`Embryo`,`Fetus`,`Zygote`,`Placenta`], ans:2, exp:`The zygote is the very first cell of a new organism, formed the moment a sperm fertilizes an egg. It contains a full set of chromosomes and will begin dividing repeatedly as development proceeds.` },
-{ q:`During pregnancy, the placenta primarily functions to:`, ch:[`Produce sperm for future pregnancies`,`Exchange nutrients, gases, and waste products between the mother's blood and the developing fetus`,`Store the egg before fertilization`,`Trigger labor contractions exclusively`], ans:1, exp:`The placenta is an organ that develops during pregnancy and connects the fetus to the uterine wall, allowing oxygen and nutrients to pass from mother to fetus and waste products to pass from fetus to mother, without their blood directly mixing.` },
+{ q:`During pregnancy, the placenta primarily functions to:`, ch:[`Produce the sperm cells needed for future pregnancies`,`Exchange nutrients and wastes between mother and fetus`,`Store the mature egg until fertilization occurs`,`Trigger labor contractions and nothing else`], ans:1, exp:`The placenta is an organ that develops during pregnancy and connects the fetus to the uterine wall, allowing oxygen and nutrients to pass from mother to fetus and waste products to pass from fetus to mother, without their blood directly mixing.` },
 { q:`Compared to normal human body cells, which contain 46 chromosomes, how many chromosomes are found in a human sperm or egg cell?`, ch:[`46, the same as body cells`,`23, half the normal number`,`92, double the normal number`,`0, since gametes lack chromosomes`], ans:1, exp:`Sperm and egg cells are haploid, meaning they contain only 23 chromosomes, half the usual number found in body cells. When sperm and egg fuse during fertilization, the resulting zygote has the full 46 chromosomes.` },
-{ q:`In human prenatal development, at what point does a developing human generally transition from being called an "embryo" to a "fetus"?`, ch:[`At the moment of fertilization`,`After the first two weeks of development`,`Around the end of the eighth week, once major organ structures have begun to form`,`Only at the moment of birth`], ans:2, exp:`The term "embryo" is used during the earliest stage of development when major organs and structures are first forming, while "fetus" describes the developing human from roughly the ninth week of pregnancy onward, as it grows and matures.` },
-{ q:`The onset of puberty in both males and females is primarily triggered by:`, ch:[`A sudden decrease in overall hormone production`,`Increased production of sex hormones such as testosterone and estrogen`,`The complete development of the reproductive organs before birth`,`A decrease in growth hormone`], ans:1, exp:`Puberty begins when the body increases production of sex hormones, testosterone in males and estrogen in females, which drive the physical and reproductive changes associated with sexual maturation.` },
-{ q:`What is the main function of the umbilical cord during pregnancy?`, ch:[`It connects the fetus to the placenta, allowing nutrient and waste exchange`,`It produces hormones that trigger labor`,`It protects the fetus from physical impacts`,`It forms the outer boundary of the amniotic sac`], ans:0, exp:`The umbilical cord contains blood vessels that connect the developing fetus to the placenta, allowing nutrients and oxygen to flow to the fetus and waste products to be carried away.` },
+{ q:`In human prenatal development, at what point does a developing human generally transition from being called an "embryo" to a "fetus"?`, ch:[`At the very moment of fertilization`,`After the first two weeks of development`,`Around the end of the eighth week`,`Not until the moment of birth itself`], ans:2, exp:`The term "embryo" is used during the earliest stage of development when major organs and structures are first forming, while "fetus" describes the developing human from roughly the ninth week of pregnancy onward, as it grows and matures.` },
+{ q:`The onset of puberty in both males and females is primarily triggered by:`, ch:[`A sudden decrease in overall hormone production`,`Increased production of testosterone and estrogen`,`Full development of reproductive organs before birth`,`A sharp decline in growth hormone levels`], ans:1, exp:`Puberty begins when the body increases production of sex hormones, testosterone in males and estrogen in females, which drive the physical and reproductive changes associated with sexual maturation.` },
+{ q:`What is the main function of the umbilical cord during pregnancy?`, ch:[`It carries blood between the fetus and the placenta`,`It produces the hormones that trigger labor onset`,`It cushions the fetus against physical impacts`,`It forms the outer boundary of the amniotic sac`], ans:0, exp:`The umbilical cord contains blood vessels that connect the developing fetus to the placenta, allowing nutrients and oxygen to flow to the fetus and waste products to be carried away.` },
 { q:`A typical human pregnancy, from fertilization to birth, lasts approximately how long?`, ch:[`About 4 months`,`About 6 months`,`About 9 months`,`About 12 months`], ans:2, exp:`A full-term human pregnancy typically lasts about 9 months, or roughly 40 weeks from the start of the mother's last menstrual period, allowing time for the fertilized egg to develop into a fully formed baby.` },
-{ q:`What is the key biological difference between identical and fraternal twins?`, ch:[`Identical twins come from two separate fertilized eggs, while fraternal twins come from one egg that splits`,`Identical twins develop from a single fertilized egg that splits into two, while fraternal twins develop from two separate eggs fertilized by two separate sperm`,`Fraternal twins always share identical DNA, while identical twins do not`,`There is no genetic difference between the two types of twins`], ans:1, exp:`Identical twins form when a single fertilized egg splits early in development, resulting in two genetically identical individuals. Fraternal twins result from two separate eggs being fertilized by two different sperm, making them genetically no more similar than typical siblings.` }
+{ q:`What is the key biological difference between identical and fraternal twins?`, ch:[`Identical twins come from two separate eggs; fraternal twins from one split egg`,`Identical twins come from one split egg; fraternal twins from two separate eggs`,`Fraternal twins always share identical DNA, while identical twins do not`,`There is no genetic difference between the two types of twins`], ans:1, exp:`Identical twins form when a single fertilized egg splits early in development, resulting in two genetically identical individuals. Fraternal twins result from two separate eggs being fertilized by two different sperm, making them genetically no more similar than typical siblings.` }
 ]},
-{ id:`bb87`, cat:`Life Sciences`, title:`Biodiversity & Classification of Living Things`, diff:`Easy`, qs:[
+{ id:`bb87`, cat:`Life Sciences`, title:`Biodiversity & Classification of Living Things`, diff:`Easy`, lengthAudited: true, qs:[
 { q:`In the standard taxonomic hierarchy, which level is the broadest, containing the most organisms?`, ch:[`Species`,`Genus`,`Kingdom`,`Family`], ans:2, exp:`Taxonomic classification is organized from broadest to most specific: Kingdom, Phylum, Class, Order, Family, Genus, and Species. Kingdom is one of the broadest categories, grouping together a huge diversity of organisms, while species is the most specific and narrow.` },
-{ q:`Binomial nomenclature, the naming system used for classifying organisms, gives each species a scientific name consisting of:`, ch:[`A single word describing its habitat`,`Its genus and species names, such as Homo sapiens`,`A number assigned by scientists`,`Its common name translated into Latin`], ans:1, exp:`Binomial nomenclature assigns each species a two-part Latin name made up of its genus followed by its specific species epithet, such as Homo sapiens for humans, providing a standardized name recognized worldwide.` },
+{ q:`Binomial nomenclature, the naming system used for classifying organisms, gives each species a scientific name consisting of:`, ch:[`A single Latin word describing its habitat`,`Its genus and species names, like Homo sapiens`,`A catalog number assigned by scientists`,`Its common name translated into Latin form`], ans:1, exp:`Binomial nomenclature assigns each species a two-part Latin name made up of its genus followed by its specific species epithet, such as Homo sapiens for humans, providing a standardized name recognized worldwide.` },
 { q:`Which three domains are used in the broadest, most modern classification of all life?`, ch:[`Animalia, Plantae, Fungi`,`Bacteria, Archaea, and Eukarya`,`Vertebrates, Invertebrates, and Plants`,`Prokaryotes, Protists, and Animals`], ans:1, exp:`The domain system divides all life into three broad groups: Bacteria and Archaea, which are both prokaryotic (lacking a nucleus), and Eukarya, which includes all organisms with cells containing a true nucleus, such as animals, plants, fungi, and protists.` },
 { q:`Within the domain Eukarya, which of the following is NOT typically recognized as one of the traditional kingdoms?`, ch:[`Animalia`,`Plantae`,`Fungi`,`Archaea`], ans:3, exp:`Archaea is actually its own domain, separate from Eukarya, rather than a kingdom within it. The traditional eukaryotic kingdoms include Animalia, Plantae, Fungi, and Protista.` },
-{ q:`In biology, a species is generally defined as a group of organisms that:`, ch:[`Live in the exact same geographic location`,`Can interbreed and produce fertile offspring under natural conditions`,`Share the same diet`,`Have identical physical appearances`], ans:1, exp:`The most widely used biological definition of a species is a group of organisms capable of interbreeding in nature and producing fertile offspring. This reproductive compatibility is what distinguishes one species from another.` },
-{ q:`Which of the following is the key distinguishing feature between vertebrates and invertebrates?`, ch:[`Vertebrates possess a backbone, or vertebral column, while invertebrates do not`,`Vertebrates live only on land, while invertebrates live only in water`,`Invertebrates are always larger than vertebrates`,`Vertebrates cannot reproduce sexually`], ans:0, exp:`Vertebrates are animals that have an internal backbone made of vertebrae, such as fish, birds, and mammals, while invertebrates, such as insects and worms, lack a backbone entirely.` },
-{ q:`Scientists classify organisms into groups primarily based on:`, ch:[`Random assignment for convenience`,`Shared physical, genetic, and evolutionary characteristics`,`Where an organism was first discovered`,`Alphabetical order of common names`], ans:1, exp:`Classification systems group organisms according to shared traits, including physical characteristics, genetic similarities, and evolutionary relationships, in order to reflect how closely related different species are to one another.` },
-{ q:`Biodiversity refers to:`, ch:[`The total number of individual organisms in a single species`,`The variety of life, including the number of different species, genetic variation, and diversity of ecosystems, in a given area`,`The rate at which new species are named by scientists`,`The size of an organism's habitat`], ans:1, exp:`Biodiversity encompasses the variety of life at multiple levels, including the number of different species present, the genetic diversity within those species, and the range of different ecosystems in a region.` },
-{ q:`What is the primary purpose of a dichotomous key in biology?`, ch:[`To measure the age of a fossil`,`To help identify an unknown organism by working through a series of paired characteristic choices`,`To calculate the population size of a species`,`To determine an organism's genetic sequence`], ans:1, exp:`A dichotomous key presents a series of paired statements or questions about an organism's characteristics. By repeatedly choosing between two options, a user can narrow down and ultimately identify the specific organism.` },
+{ q:`In biology, a species is generally defined as a group of organisms that:`, ch:[`Live in the exact same geographic location`,`Can interbreed and produce fertile offspring`,`Share the same diet and feeding habits`,`Have identical physical appearances`], ans:1, exp:`The most widely used biological definition of a species is a group of organisms capable of interbreeding in nature and producing fertile offspring. This reproductive compatibility is what distinguishes one species from another.` },
+{ q:`Which of the following is the key distinguishing feature between vertebrates and invertebrates?`, ch:[`Vertebrates have a backbone; invertebrates do not`,`Vertebrates live on land; invertebrates live in water`,`Invertebrates are always larger than vertebrates`,`Vertebrates cannot reproduce sexually at all`], ans:0, exp:`Vertebrates are animals that have an internal backbone made of vertebrae, such as fish, birds, and mammals, while invertebrates, such as insects and worms, lack a backbone entirely.` },
+{ q:`Scientists classify organisms into groups primarily based on:`, ch:[`Random assignment made purely for convenience`,`Shared physical, genetic, and evolutionary traits`,`Where an organism was first discovered`,`Alphabetical order of their common names`], ans:1, exp:`Classification systems group organisms according to shared traits, including physical characteristics, genetic similarities, and evolutionary relationships, in order to reflect how closely related different species are to one another.` },
+{ q:`Biodiversity refers to:`, ch:[`The total number of individual organisms in a single species`,`The variety of species, genes, and ecosystems in an area`,`The rate at which new species are named by scientists`,`The total size of an organism's habitat range`], ans:1, exp:`Biodiversity encompasses the variety of life at multiple levels, including the number of different species present, the genetic diversity within those species, and the range of different ecosystems in a region.` },
+{ q:`What is the primary purpose of a dichotomous key in biology?`, ch:[`To measure the age of a fossil specimen`,`To identify an organism using paired trait choices`,`To calculate the population size of a species`,`To determine an organism's genetic sequence`], ans:1, exp:`A dichotomous key presents a series of paired statements or questions about an organism's characteristics. By repeatedly choosing between two options, a user can narrow down and ultimately identify the specific organism.` },
 { q:`Which scientist is widely credited with developing the modern system of binomial nomenclature and hierarchical classification still used today?`, ch:[`Charles Darwin`,`Gregor Mendel`,`Carl Linnaeus`,`Louis Pasteur`], ans:2, exp:`Carl Linnaeus, an 18th-century Swedish botanist, developed the two-part naming system (binomial nomenclature) and the hierarchical classification structure that forms the foundation of modern taxonomy.` },
-{ q:`In taxonomic classification, a genus is best described as:`, ch:[`A group of closely related species that share many characteristics`,`The single broadest category encompassing all life`,`A synonym for an individual species`,`A term used only for classifying plants`], ans:0, exp:`A genus is a taxonomic rank that groups together closely related species sharing significant similarities, such as the genus Panthera, which includes lions, tigers, and leopards.` },
-{ q:`When a species goes extinct, what is the general impact on biodiversity within its ecosystem?`, ch:[`Biodiversity always increases because resources are freed up`,`Biodiversity is unaffected, since ecosystems remain unchanged`,`Biodiversity typically decreases, and the loss can disrupt food webs and other species that depended on it`,`Extinction only affects biodiversity in aquatic ecosystems`], ans:2, exp:`When a species becomes extinct, overall biodiversity in that ecosystem decreases, and other species that relied on it, whether as a food source, predator control, or pollinator, can be negatively affected, sometimes triggering further ecological disruption.` }
+{ q:`In taxonomic classification, a genus is best described as:`, ch:[`A group of closely related, similar species`,`The single broadest category encompassing all life`,`Another word for an individual species`,`A term used only for classifying plants`], ans:0, exp:`A genus is a taxonomic rank that groups together closely related species sharing significant similarities, such as the genus Panthera, which includes lions, tigers, and leopards.` },
+{ q:`When a species goes extinct, what is the general impact on biodiversity within its ecosystem?`, ch:[`Biodiversity always increases because resources are freed up`,`Biodiversity is unaffected, since ecosystems remain unchanged`,`Biodiversity typically decreases and food webs are disrupted`,`Extinction only affects biodiversity in aquatic ecosystems`], ans:2, exp:`When a species becomes extinct, overall biodiversity in that ecosystem decreases, and other species that relied on it, whether as a food source, predator control, or pollinator, can be negatively affected, sometimes triggering further ecological disruption.` }
 ]},
 {
     id: `bb88`,
     cat: `Life Sciences`,
     title: `Ecosystems, Biomes & Energy Flow`,
     diff: `Easy`,
+    lengthAudited: true,
     qs: [
       {
         q: `What is the primary source of energy for nearly all ecosystems on Earth?`,
@@ -1632,7 +1633,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `According to the 10% rule, what happens to energy as it moves from one trophic level to the next?`,
-        ch: [`About 90% is transferred and 10% is lost`, `About 10% is transferred and 90% is lost as heat`, `All the energy is transferred`, `Energy transfer is always 50%`],
+        ch: [`About 90% is transferred and 10% is lost`, `About 10% is transferred and 90% is lost`, `All of the energy is transferred upward`, `Exactly 50% is transferred at each level`],
         ans: 1,
         exp: `Only roughly 10% of energy stored at one trophic level is passed to the next; the rest is lost mainly as heat through metabolic processes, which is why food chains rarely exceed four or five levels.`
       },
@@ -1674,7 +1675,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `An energy pyramid is typically shaped like a pyramid, becoming narrower at the top, because?`,
-        ch: [`Predators eat more than producers make`, `Usable energy decreases at each higher trophic level`, `Producers require less energy than consumers`, `Decomposers remove energy only from the top`],
+        ch: [`Predators consume more than producers make`, `Usable energy decreases at each trophic level`, `Producers require less energy than consumers`, `Decomposers remove energy only from the top`],
         ans: 1,
         exp: `Because a large percentage of energy is lost as heat at each transfer between trophic levels, less energy is available to support organisms at higher levels, resulting in fewer top predators than producers.`
       },
@@ -1686,7 +1687,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `What is the main difference between a food chain and a food web?`,
-        ch: [`A food chain includes decomposers while a food web does not`, `A food web shows multiple interconnected feeding relationships while a food chain shows one linear path`, `A food chain only occurs in aquatic ecosystems`, `There is no meaningful difference between them`],
+        ch: [`A food chain includes decomposers while a food web does not`, `A food web shows many interconnected paths; a chain shows one`, `A food chain only occurs in aquatic ecosystems`, `There is no meaningful difference between them`],
         ans: 1,
         exp: `A food chain shows a single, linear sequence of who eats whom, while a food web connects many overlapping food chains to show the more realistic, complex feeding relationships within an ecosystem.`
       }
@@ -1697,16 +1698,17 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Population Ecology & Carrying Capacity`,
     diff: `Medium`,
+    lengthAudited: true,
     qs: [
       {
         q: `What is "carrying capacity" in population ecology?`,
-        ch: [`The maximum population size an environment can sustain long-term`, `The total number of species in an ecosystem`, `The rate at which a population grows each year`, `The minimum population needed to avoid extinction`],
+        ch: [`The largest population an environment can sustain`, `The total number of species living in an ecosystem`, `The rate at which a population grows each year`, `The minimum population needed to avoid extinction`],
         ans: 0,
         exp: `Carrying capacity (K) is the maximum population size that an environment's resources, such as food, water, and space, can support indefinitely without degrading the habitat.`
       },
       {
         q: `In logistic population growth, what happens to the growth rate as a population approaches carrying capacity?`,
-        ch: [`It increases sharply`, `It stays constant`, `It slows down and levels off`, `It becomes negative immediately`],
+        ch: [`It increases sharply and keeps rising`, `It stays constant at the maximum rate`, `It slows down and levels off`, `It becomes negative immediately`],
         ans: 2,
         exp: `In logistic growth, as resources become limited near carrying capacity, growth rate slows and the population size stabilizes, producing the characteristic S-shaped curve.`
       },
@@ -1718,7 +1720,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `A disease outbreak that affects a population regardless of its size is an example of a?`,
-        ch: [`Density-dependent limiting factor`, `Density-independent limiting factor`, `Biotic potential factor`, `Carrying capacity factor`],
+        ch: [`Density-dependent limiting factor`, `Density-independent limiting factor`, `Biotic potential limiting factor`, `Carrying capacity limiting factor`],
         ans: 1,
         exp: `Density-independent factors, like natural disasters or extreme weather, affect a population's size regardless of how crowded it is, unlike density-dependent factors such as disease spread or competition, which intensify with higher density.`
       },
@@ -1730,25 +1732,25 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Which of the following is a density-dependent limiting factor?`,
-        ch: [`A volcanic eruption`, `Competition for food among individuals`, `An early frost`, `A hurricane`],
+        ch: [`A sudden volcanic eruption`, `Competition for limited food`, `An unusually early autumn frost`, `A category-four hurricane`],
         ans: 1,
         exp: `Density-dependent factors, such as competition for food, spread of disease, and predation, become more intense as population density increases, unlike density-independent factors like weather events.`
       },
       {
         q: `In a predator-prey relationship, what typically happens to the predator population shortly after the prey population increases?`,
-        ch: [`The predator population decreases immediately`, `The predator population also increases due to more available food`, `The predator population stays exactly the same`, `The predator population goes extinct`],
+        ch: [`The predator population decreases immediately`, `The predator population also rises with more food`, `The predator population stays exactly the same`, `The predator population goes extinct locally`],
         ans: 1,
         exp: `More prey generally means more food available, allowing the predator population to grow, though this growth typically lags slightly behind the rise in prey, creating cyclical boom-and-bust patterns over time.`
       },
       {
         q: `What does a Type I survivorship curve indicate about a species?`,
-        ch: [`Most individuals die young`, `Death rates are constant across all ages`, `Most individuals survive to old age and die later in life`, `The species reproduces only once`],
+        ch: [`Most individuals die at a young age`, `Death rates are constant across all ages`, `Most individuals survive to old age`, `The species reproduces only once in life`],
         ans: 2,
         exp: `A Type I survivorship curve, typical of species like humans and large mammals, shows high survival through early and middle life with most deaths concentrated in old age.`
       },
       {
         q: `If a population's birth rate exceeds its death rate and there is no migration, the population will?`,
-        ch: [`Decrease`, `Stay exactly the same`, `Increase`, `Immediately reach carrying capacity`],
+        ch: [`Decrease over time`, `Stay exactly the same`, `Increase over time`, `Immediately reach carrying capacity`],
         ans: 2,
         exp: `Population growth rate depends on births, deaths, immigration, and emigration; when births outnumber deaths and migration is balanced, the population size increases.`
       },
@@ -1777,6 +1779,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Human Impact on the Environment & Conservation`,
     diff: `Easy`,
+    lengthAudited: true,
     qs: [
       {
         q: `Which of the following is considered a renewable resource?`,
@@ -1810,7 +1813,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Overfishing is a major concern because it can lead to?`,
-        ch: [`Increased biodiversity in oceans`, `Collapse of fish populations and disrupted marine food webs`, `Higher populations of all marine species`, `No significant environmental impact`],
+        ch: [`Increased biodiversity in ocean habitats`, `Collapse of fish stocks and disrupted food webs`, `Higher populations of all marine species`, `No significant impact on ocean ecosystems`],
         ans: 1,
         exp: `Overfishing removes fish faster than populations can reproduce and replenish, which can collapse fish stocks and disrupt the balance of entire marine food webs.`
       },
@@ -1828,7 +1831,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Which of the following is the best example of a sustainable practice?`,
-        ch: [`Using resources faster than they can be replenished`, `Rotating crops to maintain soil fertility for future harvests`, `Clear-cutting entire forests without replanting`, `Dumping industrial waste into rivers`],
+        ch: [`Using resources faster than they can be replenished`, `Rotating crops to maintain long-term soil fertility`, `Clear-cutting entire forests without replanting`, `Dumping untreated industrial waste into rivers`],
         ans: 1,
         exp: `Sustainable practices, like crop rotation, meet present needs without compromising the ability of future generations to meet their own needs by maintaining resource availability, such as soil fertility, over time.`
       },
@@ -1857,6 +1860,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Nutrition Basics: Macronutrients & Micronutrients`,
     diff: `Easy`,
+    lengthAudited: true,
     qs: [
       {
         q: `Which of the following is classified as a macronutrient?`,
@@ -1896,7 +1900,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Dietary fiber is important for digestive health primarily because it?`,
-        ch: [`Provides a concentrated source of calories`, `Helps regulate digestion and promotes bowel regularity`, `Is quickly absorbed into the bloodstream as sugar`, `Builds and repairs muscle tissue`],
+        ch: [`Provides a concentrated source of calories`, `Helps regulate digestion and bowel regularity`, `Is quickly absorbed into the bloodstream as sugar`, `Builds and repairs damaged muscle tissue`],
         ans: 1,
         exp: `Dietary fiber, found in fruits, vegetables, and whole grains, is not digested by the body but adds bulk to stool and helps keep the digestive system moving regularly.`
       },
@@ -1914,7 +1918,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Which of the following best describes the role of water as an essential nutrient?`,
-        ch: [`It provides significant caloric energy`, `It regulates body temperature and transports nutrients`, `It is only needed during exercise`, `It is classified as a macronutrient like protein`],
+        ch: [`It provides a significant source of calories`, `It regulates temperature and transports nutrients`, `It is only needed during heavy exercise`, `It is classified as a macronutrient like protein`],
         ans: 1,
         exp: `Water, though it contains no calories, is essential for regulating body temperature, transporting nutrients and waste, and supporting nearly every bodily function, which is why it is considered an essential nutrient.`
       },
@@ -1937,10 +1941,11 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Basic Public Health & Disease Prevention`,
     diff: `Easy`,
+    lengthAudited: true,
     qs: [
       {
         q: `What is the main purpose of a vaccine?`,
-        ch: [`To directly kill an existing infection`, `To train the immune system to recognize and fight a specific pathogen`, `To replace damaged cells`, `To provide the body with extra nutrients`],
+        ch: [`To directly kill an already-existing infection`, `To train the immune system to fight a pathogen`, `To replace cells damaged by infection`, `To provide the body with extra nutrients`],
         ans: 1,
         exp: `Vaccines expose the immune system to a harmless piece or weakened form of a pathogen, prompting it to produce antibodies so it can respond quickly if the real pathogen is encountered later.`
       },
@@ -1958,13 +1963,13 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `What is "herd immunity"?`,
-        ch: [`Immunity found only in farm animals`, `A situation where enough of a population is immune to a disease that it slows or stops the disease's spread`, `Immunity gained only from natural infection, never from vaccines`, `A type of immunity that lasts only a few days`],
+        ch: [`Immunity that occurs only in farm animals`, `When enough people are immune that spread slows`, `Immunity gained only from infection, never vaccines`, `A type of immunity that lasts only a few days`],
         ans: 1,
         exp: `Herd immunity occurs when a large enough proportion of a population becomes immune to a disease, through vaccination or prior infection, making it harder for the disease to spread and indirectly protecting those who are not immune.`
       },
       {
         q: `Which of the following practices is most effective at preventing the spread of many infectious diseases?`,
-        ch: [`Skipping meals`, `Regular handwashing with soap`, `Avoiding water intake`, `Sleeping less than four hours per night`],
+        ch: [`Skipping meals during the day`, `Regular handwashing with soap`, `Avoiding drinking any water`, `Sleeping fewer than four hours nightly`],
         ans: 1,
         exp: `Regular handwashing with soap physically removes and breaks down many pathogens from the skin, making it one of the simplest and most effective ways to prevent the spread of infectious disease.`
       },
@@ -1988,25 +1993,25 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Why are antiviral medications generally different from antibiotics?`,
-        ch: [`Antivirals target processes specific to viruses, while antibiotics target bacteria`, `Antivirals and antibiotics work in exactly the same way`, `Antivirals only treat noncommunicable diseases`, `Antibiotics can cure any viral infection`],
+        ch: [`Antivirals target viral processes; antibiotics target bacteria`, `Antivirals and antibiotics work in exactly the same way`, `Antivirals only treat noncommunicable chronic diseases`, `Antibiotics can cure any viral infection quickly`],
         ans: 0,
         exp: `Antiviral drugs target structures or processes unique to viruses, such as their replication machinery, while antibiotics target bacterial structures like cell walls, which is why the two types of medication are not interchangeable.`
       },
       {
         q: `Proper food handling and cooking meat to safe temperatures primarily helps prevent?`,
-        ch: [`Genetic disorders`, `Foodborne illness from pathogens like bacteria`, `Vitamin toxicity`, `Allergic reactions to all foods`],
+        ch: [`Genetic disorders passed from parents`, `Foodborne illness caused by bacteria`, `Vitamin toxicity from supplements`, `Allergic reactions to all common foods`],
         ans: 1,
         exp: `Cooking food to recommended temperatures and following safe food handling practices kills harmful bacteria, such as Salmonella and E. coli, that can cause foodborne illness.`
       },
       {
         q: `Which of the following best describes the purpose of quarantine during a disease outbreak?`,
-        ch: [`To cure infected individuals immediately`, `To separate and restrict the movement of people who may have been exposed to a contagious disease to prevent its spread`, `To provide nutritional supplements to a population`, `To vaccinate an entire population at once`],
+        ch: [`To cure infected individuals immediately`, `To restrict movement of people who may be exposed`, `To provide nutritional supplements to a population`, `To vaccinate an entire population at once`],
         ans: 1,
         exp: `Quarantine separates and restricts the movement of individuals who may have been exposed to a contagious disease, giving time to see if they become sick while limiting the chance the disease spreads further.`
       },
       {
         q: `Which of the following is the best example of a primary prevention strategy in public health?`,
-        ch: [`Treating a disease after diagnosis`, `Vaccinating children before they are exposed to a disease`, `Performing surgery to remove a tumor`, `Prescribing medication to manage chronic pain`],
+        ch: [`Treating a disease soon after diagnosis`, `Vaccinating children before they are exposed`, `Performing surgery to remove a detected tumor`, `Prescribing medication to manage chronic pain`],
         ans: 1,
         exp: `Primary prevention aims to stop disease before it starts, such as through vaccination, whereas treating an existing condition falls under secondary or tertiary prevention.`
       }
@@ -2017,6 +2022,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Water Cycle, Carbon Cycle & Nitrogen Cycle`,
     diff: `Medium`,
+    lengthAudited: true,
     qs: [
       {
         q: `In the water cycle, the process by which liquid water changes into water vapor is called?`,
@@ -2050,7 +2056,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Burning fossil fuels affects the carbon cycle by?`,
-        ch: [`Removing carbon dioxide from the atmosphere`, `Releasing carbon that had been stored underground for millions of years back into the atmosphere`, `Converting carbon dioxide directly into oxygen`, `Having no measurable effect on atmospheric carbon`],
+        ch: [`Removing carbon dioxide from the atmosphere`, `Releasing carbon stored underground back into the air`, `Converting carbon dioxide directly into oxygen`, `Having no measurable effect on atmospheric carbon`],
         ans: 1,
         exp: `Fossil fuels formed from ancient organic matter over millions of years; burning them releases that long-stored carbon into the atmosphere as carbon dioxide much faster than natural cycles would.`
       },
@@ -2062,13 +2068,13 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Which organisms are primarily responsible for converting atmospheric nitrogen gas into a form usable by plants?`,
-        ch: [`Fungi in decaying wood`, `Nitrogen-fixing bacteria in soil and root nodules`, `Algae in the ocean`, `Insects in leaf litter`],
+        ch: [`Fungi growing on decaying wood and leaves`, `Nitrogen-fixing bacteria in root nodules`, `Algae floating in the open ocean`, `Insects living in the leaf litter`],
         ans: 1,
         exp: `Nitrogen-fixing bacteria, many of which live symbiotically in the root nodules of legume plants, convert atmospheric nitrogen gas into ammonia, making it accessible to plants for building proteins and nucleic acids.`
       },
       {
         q: `Denitrification is the process by which?`,
-        ch: [`Nitrogen gas is converted into ammonia`, `Bacteria convert nitrates back into nitrogen gas, released into the atmosphere`, `Plants absorb nitrogen directly from the air`, `Animals excrete nitrogen as waste`],
+        ch: [`Nitrogen gas is converted directly into ammonia`, `Bacteria convert nitrates back into nitrogen gas`, `Plants absorb nitrogen directly from the air`, `Animals excrete excess nitrogen as waste`],
         ans: 1,
         exp: `Denitrification is carried out by certain bacteria that convert nitrates in the soil back into nitrogen gas, which is then released into the atmosphere, completing the nitrogen cycle.`
       },
@@ -2086,7 +2092,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `How are the carbon cycle and the greenhouse effect most directly connected?`,
-        ch: [`Carbon dioxide, a greenhouse gas, traps heat in the atmosphere, so increased carbon released by human activity intensifies warming`, `The carbon cycle prevents any greenhouse gases from forming`, `Carbon has no relationship to atmospheric temperature`, `Only nitrogen, not carbon, contributes to the greenhouse effect`],
+        ch: [`Carbon dioxide is a greenhouse gas, so more of it traps more heat`, `The carbon cycle prevents any greenhouse gases from forming`, `Carbon has no relationship to atmospheric temperature`, `Only nitrogen, not carbon, contributes to the greenhouse effect`],
         ans: 0,
         exp: `Carbon dioxide is a key greenhouse gas that traps heat in the atmosphere; as human activities like burning fossil fuels add more carbon dioxide to the atmosphere, they intensify the greenhouse effect and contribute to global warming.`
       }
@@ -2097,10 +2103,11 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Climate & Weather Basics`,
     diff: `Easy`,
+    lengthAudited: true,
     qs: [
       {
         q: `What is the main difference between weather and climate?`,
-        ch: [`Weather and climate mean exactly the same thing`, `Weather describes short-term atmospheric conditions, while climate describes long-term average patterns in a region`, `Climate changes daily while weather stays constant for years`, `Weather only refers to temperature, while climate refers to precipitation`],
+        ch: [`Weather and climate mean exactly the same thing`, `Weather is short-term conditions; climate is long-term averages`, `Climate changes daily while weather stays constant for years`, `Weather only refers to temperature, while climate refers to precipitation`],
         ans: 1,
         exp: `Weather refers to short-term atmospheric conditions, like today's temperature or rainfall, while climate describes the long-term average weather patterns of a region over many years or decades.`
       },
@@ -2130,7 +2137,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Humidity refers to?`,
-        ch: [`The speed of wind in an area`, `The amount of water vapor present in the air`, `The air pressure at sea level`, `The temperature of ocean water`],
+        ch: [`The speed of the wind in an area`, `The amount of water vapor in the air`, `The air pressure measured at sea level`, `The temperature of nearby ocean water`],
         ans: 1,
         exp: `Humidity measures the amount of water vapor present in the air; high humidity often makes conditions feel warmer and stickier because it slows the evaporation of sweat from skin.`
       },
@@ -2142,13 +2149,13 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `A region's climate zone (such as tropical, temperate, or polar) is mainly determined by?`,
-        ch: [`The day of the week`, `Its latitude and resulting average temperature and precipitation patterns`, `The color of the local soil`, `The number of rivers nearby`],
+        ch: [`The number of cities built within the region`, `Its latitude and typical temperature and rainfall`, `The color and mineral content of local soil`, `The number of rivers flowing through it`],
         ans: 1,
         exp: `Climate zones are largely determined by latitude, which affects how directly sunlight hits a region, leading to characteristic long-term patterns of temperature and precipitation, such as the warm, wet conditions near the equator versus the cold, dry conditions near the poles.`
       },
       {
         q: `El Nino is best described as?`,
-        ch: [`A permanent increase in global temperature`, `A periodic warming of surface waters in the central and eastern Pacific Ocean that affects global weather patterns`, `A type of hurricane found only in the Atlantic`, `A yearly, predictable snowstorm`],
+        ch: [`A permanent increase in global temperature`, `A periodic warming of Pacific surface waters`, `A type of hurricane found only in the Atlantic`, `A yearly and entirely predictable snowstorm`],
         ans: 1,
         exp: `El Nino is a recurring climate pattern involving periodic warming of ocean surface temperatures in the central and eastern Pacific, which can shift global weather patterns, including rainfall and storm tracks, for months at a time.`
       },
@@ -2160,13 +2167,13 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Prevailing winds that consistently blow in a predictable direction across large regions of the globe are known as?`,
-        ch: [`Local breezes`, `Global wind patterns (such as trade winds)`, `Random gusts`, `Tornadoes`],
+        ch: [`Local sea and land breezes near coasts`, `Global wind patterns like the trade winds`, `Random short-lived gusts of turbulence`, `Tornadoes and other violent storms`],
         ans: 1,
         exp: `Global wind patterns, like the trade winds and westerlies, are large-scale, consistent wind systems driven by the uneven heating of Earth's surface and the planet's rotation, and they influence regional climates.`
       },
       {
         q: `Which of the following would most likely be classified as "climate" rather than "weather"?`,
-        ch: [`It is raining outside right now`, `Tomorrow will be sunny with a high of 75 degrees`, `This region typically has hot, dry summers and mild, wet winters`, `There was a thunderstorm this afternoon`],
+        ch: [`It is raining outside at this moment`, `Tomorrow will be sunny with a high of 75 degrees`, `This region usually has hot summers and wet winters`, `There was a strong thunderstorm this afternoon`],
         ans: 2,
         exp: `Describing typical, long-term seasonal patterns for a region reflects climate, whereas statements about today's or tomorrow's specific conditions describe weather.`
       }
@@ -2177,10 +2184,11 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Genetics in Everyday Life: Heredity & Genetic Disorders Overview`,
     diff: `Medium`,
+    lengthAudited: true,
     qs: [
       {
         q: `What is the relationship between DNA, genes, and chromosomes?`,
-        ch: [`Chromosomes are made of genes, which are made of proteins`, `DNA is coiled into structures called chromosomes, and genes are specific segments of DNA that code for traits`, `Genes are made of chromosomes, which are made of DNA`, `DNA, genes, and chromosomes are all the same thing`],
+        ch: [`Chromosomes are made of genes, which are made of proteins`, `DNA coils into chromosomes, and genes are segments of DNA`, `Genes are made of chromosomes, which are made of DNA`, `DNA, genes, and chromosomes are all the same thing`],
         ans: 1,
         exp: `DNA is a long molecule that is tightly coiled and packaged into structures called chromosomes; specific segments of that DNA, called genes, contain the instructions for producing particular traits or proteins.`
       },
@@ -2198,7 +2206,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `A Punnett square is primarily used to?`,
-        ch: [`Measure the physical size of a chromosome`, `Predict the possible genotype and phenotype combinations of offspring from a genetic cross`, `Determine the exact age of an organism`, `Calculate the number of chromosomes in a cell`],
+        ch: [`Measure the physical size of a chromosome`, `Predict genotype and phenotype ratios in offspring`, `Determine the exact age of an organism`, `Calculate the number of chromosomes in a cell`],
         ans: 1,
         exp: `A Punnett square is a diagram that combines possible alleles from two parents to predict the probability of different genotype and phenotype outcomes in their offspring.`
       },
@@ -2246,7 +2254,7 @@ export const BIO_BIOCHEM_QUIZZES = [
       },
       {
         q: `Which of the following best describes the difference between genotype and phenotype?`,
-        ch: [`Genotype is the observable trait, while phenotype is the genetic code`, `Genotype is the genetic makeup of an organism, while phenotype is the observable expression of that genetic makeup`, `Genotype and phenotype are unrelated concepts`, `Phenotype determines genotype, not the other way around`],
+        ch: [`Genotype is the observable trait, while phenotype is the genetic code`, `Genotype is the genetic makeup; phenotype is what is observed`, `Genotype and phenotype are entirely unrelated concepts`, `Phenotype determines genotype, not the other way around`],
         ans: 1,
         exp: `Genotype refers to the actual genetic information an organism carries, while phenotype is how that genetic information is physically or observably expressed, often influenced by environmental factors as well.`
       }
@@ -2257,6 +2265,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Endocrine Hormone Response Directionality`,
     diff: `Medium`,
+    lengthAudited: true,
     sameChoices: true,
     qs: [
       {
@@ -2326,65 +2335,66 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Autonomic Nervous System Actions`,
     diff: `Medium`,
+    lengthAudited: true,
     sameChoices: true,
     qs: [
       {
         q: `Which branch of the autonomic nervous system is responsible for dilating the pupils (mydriasis)?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 0,
         exp: `Sympathetic activation dilates the pupils (mydriasis) by contracting the pupillary dilator (radial) muscle of the iris, allowing more light to enter for better distance vision in fight-or-flight situations.`
       },
       {
         q: `Which branch of the autonomic nervous system is responsible for slowing down the heart rate (bradycardia)?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `Parasympathetic activation slows the heart rate (negative chronotropy) via the vagus nerve (CN X), which releases acetylcholine acting on M2 muscarinic receptors at the sinoatrial node.`
       },
       {
         q: `Which branch of the autonomic nervous system is responsible for stimulating digestion and saliva flow?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `Parasympathetic activation governs the 'rest-and-digest' state, stimulating gastrointestinal secretions, saliva flow, and intestinal motility to facilitate digestion.`
       },
       {
         q: `Which branch is activated during a 'fight-or-flight' response to a perceived threat?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 0,
         exp: `The sympathetic nervous system coordinates the 'fight-or-flight' response, preparing the body for intense physical activity by raising heart rate, dilating airways, and releasing glucose.`
       },
       {
         q: `Which branch is responsible for constricting the bronchioles to normal resting state?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `The parasympathetic system constricts bronchiolar smooth muscle via muscarinic receptors when high-airflow demand is no longer needed, returning airways to their baseline resting diameter.`
       },
       {
         q: `Which branch stimulates glucose release from the liver into the blood?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 0,
         exp: `Sympathetic activation stimulates hepatic glycogenolysis and gluconeogenesis, increasing blood glucose levels to supply working skeletal muscles with energy.`
       },
       {
         q: `Which branch is responsible for stimulating urination by contracting the detrusor muscle?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `Micturition (urination) is promoted by the parasympathetic system, which contracts the detrusor muscle of the bladder wall and relaxes the internal urethral sphincter.`
       },
       {
         q: `Which branch promotes sweating (diaphoresis) across the body?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 0,
         exp: `Sweating is mediated by the sympathetic nervous system. Uniquely, the sympathetic fibers innervating sweat glands are cholinergic, releasing acetylcholine rather than norepinephrine.`
       },
       {
         q: `Which branch is predominantly active during restful sleep (rest-and-digest)?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `The parasympathetic nervous system dominates during periods of rest, sleep, and recovery, conserving energy and promoting maintenance activities.`
       },
       {
         q: `Which branch is responsible for increasing gastrointestinal motility?`,
-        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both sympathetic and parasympathetic activation`, `Neither`],
+        ch: [`Sympathetic activation`, `Parasympathetic activation`, `Both branches acting together`, `Neither branch is involved`],
         ans: 1,
         exp: `The parasympathetic system increases GI motility and relaxes sphincters to move food through the digestive tract, whereas the sympathetic system inhibits these processes.`
       }
@@ -2395,6 +2405,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Genetic Inheritance Patterns`,
     diff: `Medium`,
+    lengthAudited: true,
     sameChoices: true,
     qs: [
       {
@@ -2464,6 +2475,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Cellular Organelle Functions`,
     diff: `Medium`,
+    lengthAudited: true,
     sameChoices: true,
     qs: [
       {
@@ -2533,6 +2545,7 @@ export const BIO_BIOCHEM_QUIZZES = [
     cat: `Life Sciences`,
     title: `Biomolecule Classifications`,
     diff: `Medium`,
+    lengthAudited: true,
     sameChoices: true,
     qs: [
       {
