@@ -26,17 +26,35 @@ import { MATH_ADVANCED_B }      from './mathAdvancedB.js';
 import { MATH_PSDA_B }          from './mathPSDAB.js';
 import { MATH_GEO_TRIG_B }      from './mathGeoTrigB.js';
 
+// Expansion batch C. Batches A and B were sized so DRILLING would not repeat
+// itself; batch C is sized so full-length FORMS would not. A form reserves
+// roughly 130 questions across its four modules, so a 328-question bank could
+// assemble exactly two tests that shared nothing, and every later form was
+// mostly a reshuffle of the first two. The mix here is therefore weighted to
+// the bands that ran out first — Easy everywhere, plus Hard in the two largest
+// R&W domains — rather than to the bank's natural shape.
+//
+//   npm run verify:sat-forms    prints how many genuinely distinct forms fit
+import { RW_CRAFT_STRUCTURE_C } from './rwCraftStructureC.js';
+import { RW_INFO_IDEAS_C }      from './rwInfoIdeasC.js';
+import { RW_CONVENTIONS_C }     from './rwConventionsC.js';
+import { RW_EXPRESSION_C }      from './rwExpressionC.js';
+import { MATH_ALGEBRA_C }       from './mathAlgebraC.js';
+import { MATH_ADVANCED_C }      from './mathAdvancedC.js';
+import { MATH_PSDA_C }          from './mathPSDAC.js';
+import { MATH_GEO_TRIG_C }      from './mathGeoTrigC.js';
+
 import { SAT_SKILLS, SKILL_IDS, skillMeta } from '../taxonomy.js';
 
 export const SAT_QUESTIONS = [
-  ...RW_CRAFT_STRUCTURE_QUESTIONS, ...RW_CRAFT_STRUCTURE_B,
-  ...RW_INFO_IDEAS_QUESTIONS,      ...RW_INFO_IDEAS_B,
-  ...RW_CONVENTIONS_QUESTIONS,     ...RW_CONVENTIONS_B,
-  ...RW_EXPRESSION_QUESTIONS,      ...RW_EXPRESSION_B,
-  ...MATH_ALGEBRA_QUESTIONS,       ...MATH_ALGEBRA_B,
-  ...MATH_ADVANCED_QUESTIONS,      ...MATH_ADVANCED_B,
-  ...MATH_PSDA_QUESTIONS,          ...MATH_PSDA_B,
-  ...MATH_GEO_TRIG_QUESTIONS,      ...MATH_GEO_TRIG_B,
+  ...RW_CRAFT_STRUCTURE_QUESTIONS, ...RW_CRAFT_STRUCTURE_B, ...RW_CRAFT_STRUCTURE_C,
+  ...RW_INFO_IDEAS_QUESTIONS,      ...RW_INFO_IDEAS_B,      ...RW_INFO_IDEAS_C,
+  ...RW_CONVENTIONS_QUESTIONS,     ...RW_CONVENTIONS_B,     ...RW_CONVENTIONS_C,
+  ...RW_EXPRESSION_QUESTIONS,      ...RW_EXPRESSION_B,      ...RW_EXPRESSION_C,
+  ...MATH_ALGEBRA_QUESTIONS,       ...MATH_ALGEBRA_B,       ...MATH_ALGEBRA_C,
+  ...MATH_ADVANCED_QUESTIONS,      ...MATH_ADVANCED_B,      ...MATH_ADVANCED_C,
+  ...MATH_PSDA_QUESTIONS,          ...MATH_PSDA_B,          ...MATH_PSDA_C,
+  ...MATH_GEO_TRIG_QUESTIONS,      ...MATH_GEO_TRIG_B,      ...MATH_GEO_TRIG_C,
 ];
 
 // ── Indexes ─────────────────────────────────────────────────────────────────

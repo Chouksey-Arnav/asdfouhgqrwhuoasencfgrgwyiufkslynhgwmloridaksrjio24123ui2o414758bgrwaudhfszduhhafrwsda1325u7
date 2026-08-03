@@ -443,6 +443,11 @@ function OfficialResources({ isMobile }) {
                         key
                       </a>
                     )}
+                    {c.scoring && (
+                      <a href={c.scoring} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10.5, color: C.t4, textDecoration: 'none' }} title={`${c.label} raw-to-scaled conversion`}>
+                        scoring
+                      </a>
+                    )}
                   </span>
                 ))}
               </div>

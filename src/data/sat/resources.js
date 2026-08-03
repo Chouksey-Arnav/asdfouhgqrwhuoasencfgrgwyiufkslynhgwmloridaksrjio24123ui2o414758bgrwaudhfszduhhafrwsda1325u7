@@ -15,13 +15,19 @@
 // at the top of src/data/sat/taxonomy.js.
 //
 // VERIFICATION. Every URL below returned HTTP 200 when it was added, including
-// each of the six linear-form practice-test PDFs and their answer keys.
+// each linear-form practice-test PDF, its answer key and its scoring guide.
 //
 //   npm run audit:sat-resources    re-check every link
 //
 // A dead link here is worse than in most places: a student clicking "official
 // practice test" and hitting a 404 reasonably concludes the whole tab is stale.
+// The reverse rots just as quietly: this list sat at six linear forms for a
+// year while College Board published up to eleven, so five free official tests
+// were sitting there unlinked. The list is now derived from
+// src/data/sat/forms.js, which is also what the test picker reads, so adding a
+// test in one place adds it everywhere.
 // ─────────────────────────────────────────────────────────────────────────────
+import { OFFICIAL_LINEAR_TESTS } from './forms.js';
 
 export const RESOURCE_KINDS = {
   official_test: { id: 'official_test', label: 'Official practice test' },
@@ -91,16 +97,14 @@ export const SAT_RESOURCES = [
     url: 'https://satsuite.collegeboard.org/practice/practice-tests/paper',
     priority: 5,
     blurb:
-      'Six full official practice tests as PDFs, with answer keys. These are linear rather than adaptive — the same questions for everyone, no Module 2 routing.',
+      `${OFFICIAL_LINEAR_TESTS.length} full official practice tests as PDFs, each with an answer key and a raw-to-scaled scoring guide. These are linear rather than adaptive — the same questions for everyone, no Module 2 routing.`,
     why: 'Use these for content practice and paper work; use Bluebook when you need a realistic score.',
-    children: [
-      { label: 'Practice Test 1', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-1-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-1-answers-digital.pdf' },
-      { label: 'Practice Test 2', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-2-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-2-answers-digital.pdf' },
-      { label: 'Practice Test 3', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-3-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-3-answers-digital.pdf' },
-      { label: 'Practice Test 4', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-4-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-4-answers-digital.pdf' },
-      { label: 'Practice Test 5', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-5-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-5-answers-digital.pdf' },
-      { label: 'Practice Test 6', url: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-6-digital.pdf', answers: 'https://satsuite.collegeboard.org/media/pdf/sat-practice-test-6-answers-digital.pdf' },
-    ],
+    children: OFFICIAL_LINEAR_TESTS.map(t => ({
+      label: `Practice Test ${t.number}`,
+      url: t.url,
+      answers: t.answersUrl,
+      scoring: t.scoringUrl,
+    })),
   },
 
   // ── Free instruction ──────────────────────────────────────────────────────
@@ -187,6 +191,7 @@ export function allResourceUrls() {
     for (const c of r.children || []) {
       out.push({ id: `${r.id}:${c.label}`, url: c.url, label: `${r.title} — ${c.label}` });
       if (c.answers) out.push({ id: `${r.id}:${c.label}:answers`, url: c.answers, label: `${r.title} — ${c.label} answers` });
+      if (c.scoring) out.push({ id: `${r.id}:${c.label}:scoring`, url: c.scoring, label: `${r.title} — ${c.label} scoring guide` });
     }
   }
   return out;
