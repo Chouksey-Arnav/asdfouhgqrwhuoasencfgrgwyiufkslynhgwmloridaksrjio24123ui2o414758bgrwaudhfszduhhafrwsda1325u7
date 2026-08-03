@@ -20,9 +20,9 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sun, Moon, Monitor, Type, Contrast, Zap, MousePointer2, Eye,
-  RotateCcw, Check, Accessibility, AlignLeft, Sparkles, Info,
+  RotateCcw, Check, Accessibility, AlignLeft, Sparkles, Info, SunMoon,
 } from 'lucide-react';
-import { C, DARK, LIGHT, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
+import { C, DARK, LIGHT, BALANCED, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
 import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion, motionReduced } from '../lib/a11y';
 
 // Which DEFAULTS keys belong to which card, so each card can show its own
@@ -173,10 +173,14 @@ function ThemePreview({ palette }) {
   );
 }
 
+// Ordered as a brightness ramp — Balanced, then the two ends, then "follow my
+// device" — so the picker itself shows that there is a middle now.
 const THEME_CHOICES = [
-  { value: 'dark',   label: 'Dark',        icon: Moon,    palette: DARK,  note: 'Easier at night and in dim rooms' },
-  { value: 'light',  label: 'Light',       icon: Sun,     palette: LIGHT, note: 'Better in daylight and for long reading' },
-  { value: 'system', label: 'Match device', icon: Monitor, palette: null,  note: 'Follows your phone or computer' },
+  { value: 'balanced', label: 'Balanced', icon: SunMoon, palette: BALANCED, badge: 'Default',
+    note: 'The middle ground — softer than dark, no glare. Best for long sessions.' },
+  { value: 'dark',   label: 'Dark',        icon: Moon,    palette: DARK,  note: 'Deepest. Easier at night and in dim rooms.' },
+  { value: 'light',  label: 'Light',       icon: Sun,     palette: LIGHT, note: 'Brightest. Best in daylight and direct sun.' },
+  { value: 'system', label: 'Match device', icon: Monitor, palette: null, note: 'Light in the day, Balanced at night.' },
 ];
 
 const NAV_SECTIONS = [
@@ -270,16 +274,17 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         ref={el => { sectionRefs.current.theme = el; }}
         icon={Sun} hue={C.amber}
         title="Theme"
-        subtitle="Both themes are fully built out — every panel, chart and question surface is designed for each."
+        subtitle="Every theme is fully built out — panels, charts and question surfaces are designed for each. Balanced is the app's default; the other two are the ends of the range if you want them."
       >
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4,1fr)', gap: 12 }}>
           {THEME_CHOICES.map(choice => {
             const on = s.themeMode === choice.value;
             const Icon = choice.icon;
             // "Match device" has no palette of its own — show whichever it is
-            // resolving to right now so the card isn't a blank.
+            // resolving to right now so the card isn't a blank. It resolves to
+            // Balanced rather than Dark on a dark device (see resolveMode).
             const palette = choice.palette
-              || (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches ? LIGHT : DARK);
+              || (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches ? LIGHT : BALANCED);
             return (
               <button
                 key={choice.value}
@@ -298,6 +303,11 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
                   <div style={R({ gap: 6 })}>
                     <Icon size={13} color={on ? accent : C.t3} />
                     <span style={{ fontSize: 13, fontWeight: 700, color: on ? C.t1 : C.t2 }}>{choice.label}</span>
+                    {choice.badge && (
+                      <span style={pill(tint(accent, 0.13), accent, { fontSize: 8.5, padding: '1px 6px', letterSpacing: '.06em' })}>
+                        {choice.badge}
+                      </span>
+                    )}
                   </div>
                   {on && <Check size={14} color={accent} />}
                 </div>

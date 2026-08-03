@@ -10,6 +10,7 @@ import MedabrainLauncher from '../MedabrainLauncher';
 import Portal from '../ui/Portal';
 import { skillMeta, ERROR_TYPES } from '../../data/sat/taxonomy';
 import { strategyFor } from '../../data/sat/strategies';
+import { satGrad, satWash } from './satUi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Medabrain, SAT branch.
@@ -230,14 +231,14 @@ export default function SatMedabrain({
               {/* Header */}
               <div style={{
                 padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, flexShrink: 0,
-                background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`,
+                background: satWash(accent, 0.08),
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{
                     width: 34, height: 34, borderRadius: 10, flexShrink: 0,
-                    background: `linear-gradient(135deg,${accent},${C.green})`,
+                    background: satGrad(accent),
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    boxShadow: `0 4px 14px ${tint(accent, 0.4)}`,
+                    boxShadow: `0 3px 10px ${tint(accent, 0.22)}`,
                   }}>
                     <Brain size={17} color="#fff" />
                   </div>
@@ -279,8 +280,8 @@ export default function SatMedabrain({
                 {messages.length === 0 && (
                   <div style={{
                     ...glass({ padding: 16 }),
-                    background: `linear-gradient(120deg,${tint(accent, 0.08)},rgba(255,255,255,0.02))`,
-                    border: `1px solid ${tint(accent, 0.22)}`,
+                    background: satWash(accent, 0.06),
+                    border: `1px solid ${tint(accent, 0.18)}`,
                   }}>
                     <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 12 }}>
                       {question
@@ -328,7 +329,7 @@ export default function SatMedabrain({
                 />
                 <button type="submit" disabled={loading || !input.trim()} aria-label="Send" style={{
                   width: 40, height: 40, borderRadius: 10, border: 'none', flexShrink: 0,
-                  background: `linear-gradient(135deg,${accent},${C.green})`,
+                  background: satGrad(accent),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
                 }}>

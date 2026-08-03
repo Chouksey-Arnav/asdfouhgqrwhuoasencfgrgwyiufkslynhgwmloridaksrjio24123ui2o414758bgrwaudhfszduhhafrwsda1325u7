@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { C, tint } from '../../lib/theme';
+import { C, tint, shade, btn, accentFill, contrastRatio } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -11,7 +11,66 @@ import { isPlainLeftClick } from '../../lib/useAppRouter';
 // per-sub-tab rainbow, semantic colour reserved for meaning (green = measured
 // good, rose = needs work, gold = a measurement event), and an underline tab
 // rail instead of pill chips — the grammar of serious desktop software.
+//
+// ── The quiet pass ───────────────────────────────────────────────────────────
+// Colour policy above was right; the RENDERING of it was not. Three habits had
+// spread across the eleven panels and, stacked on one screen, they were what
+// made a first-time student's eyes bounce:
+//
+//   1. Two-hue gradients on every button — gold→orange, violet→indigo,
+//      amber→orange, rose→roseL. Each one is a second hue that carries no
+//      meaning, so a screen with four buttons introduced eight colours.
+//   2. Tinted washes at 0.10–0.16 alpha on card after card, so nothing was
+//      quiet enough to make anything else look loud.
+//   3. Coloured halos — glows under buttons, under the tab underline, under
+//      progress bars — all of which say "look at me" simultaneously.
+//
+// The three helpers below replace those habits without removing a single
+// element or changing what any colour MEANS. Every panel gets its semantic hue;
+// it just states it once, at a lower volume, instead of three times.
 // ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The SAT primary-button fill: one hue, darkened toward its own shadow.
+ * Reads as a solid, expensive object rather than a two-colour candy stripe.
+ */
+export const satGrad = (color = C.sky) => {
+  // accentFill first: on the light palette amber/gold are far too pale to carry
+  // the white label these buttons use.
+  const base = accentFill(color);
+  return `linear-gradient(140deg,${base},${shade(base, 0.26)})`;
+};
+
+/**
+ * A page/card wash. Single stop that fades to nothing — no second colour, and
+ * no `rgba(255,255,255,0.02)` tail, which only ever showed up in dark mode and
+ * left light mode with a hard edge where the gradient stopped.
+ */
+export const satWash = (color = C.sky, a = 0.055) => `linear-gradient(135deg,${tint(color, a)},transparent 72%)`;
+
+/**
+ * Primary SAT action. Same geometry as the app's btn(), single-hue fill, and a
+ * shadow that grounds the button instead of lighting it up.
+ */
+export const satBtn = (color = C.sky, x = {}) => {
+  // Amber and gold are the two hues a white label can't sit on. Darkening them
+  // to fit the label (what satGrad does for icon badges) turns a warm accent
+  // muddy brown, so a filled BUTTON keeps the bright hue and flips its ink
+  // instead — the same move a well-built design system makes for yellow.
+  // The cutoff is deliberately low. Anything above it (blue, rose, violet, the
+  // pillar's own sky) keeps a white label and gets its fill darkened by
+  // accentFill instead, which is what those hues want; below it lives the warm
+  // family, where darkening far enough for white text kills the colour.
+  const darkInk = contrastRatio(color, C.onAccent || '#ffffff') < 2.8;
+  const fill = darkInk
+    ? `linear-gradient(140deg,${color},${shade(color, 0.14)})`
+    : satGrad(color);
+  return btn(fill, {
+    color: darkInk ? '#14181f' : C.onAccent,
+    boxShadow: `0 2px 10px ${tint(color, 0.20)}, inset 0 1px 0 rgba(255,255,255,0.08)`,
+    ...x,
+  });
+};
 
 // How the nine sub-views group into a mental model. Order within a group is
 // the order a student should encounter them; anything not listed (a future
@@ -128,7 +187,9 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
             style={{
               position: 'absolute', left: ink.left + (m ? 6 : 10), width: ink.width - (m ? 12 : 20),
               bottom: -1, height: 2, borderRadius: 2, background: accent,
-              boxShadow: `0 0 10px ${tint(accent, 0.55)}`,
+              // No halo. The underline is already the only moving thing in the
+              // header; a glow under it made the whole rail feel electric.
+              boxShadow: `0 0 6px ${tint(accent, 0.25)}`,
               transition: 'left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1)',
             }}
           />
@@ -251,7 +312,7 @@ export function MetaChip({ value, label, color }) {
     <span style={{
       display: 'inline-flex', alignItems: 'baseline', gap: 6,
       padding: '6px 12px', borderRadius: 9,
-      background: C.surf2, border: `1px solid ${color ? tint(color, 0.35) : C.b1}`,
+      background: C.surf2, border: `1px solid ${color ? tint(color, 0.24) : C.b1}`,
     }}>
       {value != null && (
         <b style={{ fontSize: 14, fontWeight: 800, fontFamily: C.FM, color: color || C.t1, lineHeight: 1 }}>{value}</b>
@@ -295,8 +356,8 @@ export function Segmented({ options, value, onChange, accent = C.sky, label, siz
               className="sat-seg"
               style={{
                 padding: pad, borderRadius: 7, border: 'none', cursor: 'pointer',
-                background: on ? tint(accent, 0.18) : 'transparent',
-                boxShadow: on ? `inset 0 0 0 1px ${tint(accent, 0.4)}` : 'none',
+                background: on ? tint(accent, 0.13) : 'transparent',
+                boxShadow: on ? `inset 0 0 0 1px ${tint(accent, 0.28)}` : 'none',
                 color: on ? C.t1 : C.t3, fontWeight: on ? 700 : 500,
                 fontSize: font, fontFamily: C.FB, whiteSpace: 'nowrap', flexShrink: 0,
               }}

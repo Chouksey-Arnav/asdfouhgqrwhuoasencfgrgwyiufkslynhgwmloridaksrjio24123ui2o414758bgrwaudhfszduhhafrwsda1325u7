@@ -6,6 +6,7 @@ import {
 import { C, R, tint } from '../../lib/theme';
 import DesmosSurface, { resetCalculator, calcChromeButton } from './DesmosSurface';
 import { CALC_MODES, loadCalcUi, saveCalcUi } from '../../lib/sat/desmos';
+import { satWash } from './satUi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The floating Desmos window.
@@ -155,7 +156,7 @@ export default function DesmosCalculator({
           style={{
             height: HEADER_H, flexShrink: 0, padding: '0 8px 0 12px',
             display: 'flex', alignItems: 'center', gap: 8,
-            background: `linear-gradient(120deg,${tint(accent, 0.16)},rgba(255,255,255,0.02))`,
+            background: satWash(accent, 0.09),
             borderBottom: `1px solid ${C.b1}`,
             cursor: isMobile || maximised ? 'default' : 'grab',
             touchAction: 'none', userSelect: 'none',

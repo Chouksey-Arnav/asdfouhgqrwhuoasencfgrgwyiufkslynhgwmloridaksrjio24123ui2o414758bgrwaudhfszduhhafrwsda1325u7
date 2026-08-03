@@ -6,6 +6,7 @@ import { Tex } from '../ui/MathText';
 import {
   GIVEN_FORMULAS, MEMORIZE_FORMULAS, CALCULATOR_FACTS, REFERENCE_DISCLAIMER,
 } from '../../data/sat/reference';
+import { satGrad, satWash } from './satUi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The reference sheet, as a drawer you can open on top of a live question.
@@ -66,12 +67,12 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
             {/* Header */}
             <div style={{
               padding: '15px 18px', borderBottom: `1px solid ${C.b1}`, flexShrink: 0,
-              background: `linear-gradient(120deg,${tint(accent, 0.14)},rgba(255,255,255,0.02))`,
+              background: satWash(accent, 0.08),
             }}>
               <div style={R({ gap: 10 })}>
                 <div style={{
                   width: 32, height: 32, borderRadius: 10, flexShrink: 0,
-                  background: `linear-gradient(135deg,${accent},${C.emerald})`,
+                  background: satGrad(accent),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <BookOpen size={16} color="#fff" />

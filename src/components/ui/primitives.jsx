@@ -70,7 +70,7 @@ export function Bar({ pct = 0, color = C.blue, h = 4, glow = false }) {
       <div style={{
         height: '100%', width: `${Math.min(100, Math.max(0, pct))}%`, background: color,
         borderRadius: h, transition: 'width .6s cubic-bezier(.16,1,.3,1)',
-        boxShadow: glow ? `0 0 12px ${color}70` : undefined,
+        boxShadow: glow ? `0 0 10px ${color}45` : undefined,
       }} />
     </div>
   );

@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Library, Search, ChevronDown, ExternalLink, Filter, Play, BookOpen, Star, X,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, R, CC, G, tint, pill } from '../../lib/theme';
-import { SatPageHeader, SatCard, Segmented } from './satUi';
+import { C, glass, glass2, btnSm, btnG, inp, R, CC, G, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented, satBtn, satWash } from './satUi';
 import { StatTile } from '../ui/PanelHero';
 import MathText from '../ui/MathText';
 import { SatSkillVideos } from './SatVideoRecs';
@@ -225,7 +225,7 @@ export default function SatLibraryPanel({
             {skill && (
               <button
                 onClick={() => onNavigate?.('practice', { skill })}
-                style={btn(`linear-gradient(135deg,${accent},${C.indigo})`, { padding: '8px 15px', fontSize: 12 })}
+                style={satBtn(accent, { padding: '8px 15px', fontSize: 12 })}
               >
                 <Play size={12} /> Drill this skill
               </button>
@@ -387,8 +387,8 @@ function OfficialResources({ isMobile }) {
     <div style={CC({ gap: 16 })}>
       <div style={{
         ...glass({ padding: isMobile ? 16 : 20 }),
-        border: `1px solid ${tint(C.amber, 0.32)}`,
-        background: `linear-gradient(120deg,${tint(C.amber, 0.1)},rgba(255,255,255,0.015))`,
+        border: `1px solid ${tint(C.amber, 0.24)}`,
+        background: satWash(C.amber, 0.07),
       }}>
         <div style={{ ...R({ gap: 9 }), marginBottom: 8 }}>
           <Star size={14} color={C.amberL} />

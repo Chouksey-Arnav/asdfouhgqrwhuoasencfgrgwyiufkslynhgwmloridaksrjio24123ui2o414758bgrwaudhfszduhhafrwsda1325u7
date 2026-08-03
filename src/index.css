@@ -1,20 +1,20 @@
 /* ── Token defaults ──────────────────────────────────────────────────────────
    applyTheme() in src/lib/theme.js overwrites these on <html> at boot and on
-   every theme change. They're duplicated here (light values, matching the
-   app's default theme) purely so the very first paint — before any JS runs —
-   isn't a flash of the wrong palette. */
+   every theme change. They're duplicated here (the BALANCED values, matching
+   the app's default theme) purely so the very first paint — before any JS runs
+   — isn't a flash of the wrong palette. Keep them in sync with BALANCED. */
 :root {
-  color-scheme: light;
-  --c-bg: #eaeef6; --c-s0: #f2f5fa; --c-s1: #ffffff; --c-s2: #f7f9fd;
-  --c-s3: #eff3fa; --c-s4: #e3eaf4; --c-s5: #d3ddec;
-  --c-b1: rgba(15,23,42,0.10); --c-b2: rgba(15,23,42,0.15); --c-b3: rgba(15,23,42,0.24);
-  --c-t1: #0c1424; --c-t2: #41506b; --c-t3: #697894; --c-t4: #95a2ba;
-  --c-blue: #1f6feb; --c-blueL: #1550ba; --c-blueDim: rgba(31,111,235,0.10);
-  --c-violet: #7c3aed; --c-rose: #e11d48; --c-green: #059669; --c-amber: #d97706;
-  --c-surf: rgba(255,255,255,0.75); --c-surfHi: rgba(255,255,255,0.95);
-  --c-inputBg: #ffffff; --c-inputBorder: rgba(15,23,42,0.14);
-  --c-scrim: rgba(15,23,42,0.35);
-  --c-noiseOpacity: 0.015;
+  color-scheme: dark;
+  --c-bg: #181d27; --c-s0: #1c222d; --c-s1: #212834; --c-s2: #252d3a;
+  --c-s3: #2a3341; --c-s4: #323c4c; --c-s5: #3d4959;
+  --c-b1: rgba(255,255,255,0.09); --c-b2: rgba(255,255,255,0.14); --c-b3: rgba(255,255,255,0.22);
+  --c-t1: #e6eaf2; --c-t2: #a7b2c6; --c-t3: #7c8799; --c-t4: #5c6879;
+  --c-blue: #4b8bf5; --c-blueL: #7aa9f7; --c-blueDim: rgba(75,139,245,0.10);
+  --c-violet: #8579e6; --c-rose: #e0637a; --c-green: #2ea37f; --c-amber: #d9a23c;
+  --c-surf: rgba(255,255,255,0.035); --c-surfHi: rgba(255,255,255,0.07);
+  --c-inputBg: rgba(255,255,255,0.05); --c-inputBorder: rgba(255,255,255,0.12);
+  --c-scrim: rgba(9,12,18,0.58);
+  --c-noiseOpacity: 0.014;
   --c-pageGlow: none;
   --c-FD: 'Bricolage Grotesque', -apple-system, sans-serif;
   --c-FB: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;

@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { Compass, ChevronRight, Clock, Target, TrendingUp, RotateCcw, Sparkles } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
-import { SatPageHeader, SatCard } from './satUi';
+import { SatPageHeader, SatCard, satBtn, satWash } from './satUi';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import SatStudyPlanCard from './SatStudyPlanCard';
@@ -158,7 +158,7 @@ export default function SatDiagnosticPanel({
           <div style={{
             ...glass({ padding: isMobile ? 18 : 22 }),
             border: `1px solid ${tint(C.sky, 0.28)}`,
-            background: `linear-gradient(120deg,${tint(C.sky, 0.1)},rgba(255,255,255,0.02))`,
+            background: satWash(C.sky, 0.07),
           }}>
             <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }) }}>
               <div style={{ flex: 1, minWidth: 220 }}>
@@ -171,7 +171,7 @@ export default function SatDiagnosticPanel({
                   work. It runs on the deepest model available, so give it a moment.
                 </div>
               </div>
-              <button onClick={() => buildPlan()} style={btn(`linear-gradient(135deg,${C.sky},${C.blue})`, { flexShrink: 0 })}>
+              <button onClick={() => buildPlan()} style={satBtn(C.sky, { flexShrink: 0 })}>
                 <Sparkles size={14} /> Build my plan
               </button>
             </div>
@@ -222,7 +222,7 @@ export default function SatDiagnosticPanel({
           )}
 
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
-            <button onClick={() => onNavigate?.('practice')} style={btn(`linear-gradient(135deg,${accent},${C.blue})`)}>
+            <button onClick={() => onNavigate?.('practice')} style={satBtn(accent)}>
               Start practising <ChevronRight size={14} />
             </button>
             <button onClick={() => onNavigate?.('overview')} style={btnG()}>See your overview</button>
@@ -276,7 +276,7 @@ export default function SatDiagnosticPanel({
             </div>
           ))}
         </div>
-        <button onClick={begin} style={btn(`linear-gradient(135deg,${accent},${C.blue})`, { marginTop: 20 })}>
+        <button onClick={begin} style={satBtn(accent, { marginTop: 20 })}>
           {last ? <><RotateCcw size={14} /> Retake diagnostic</> : <>Start the diagnostic <ChevronRight size={14} /></>}
         </button>
         <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>

@@ -208,11 +208,12 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
               whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.06 }}
               style={{
                 width: 46, height: 46, borderRadius: '50%', cursor: 'pointer',
-                border: `1px solid ${b.active ? tint(b.color, 0.7) : tint('#ffffff', 0.18)}`,
-                background: b.active
-                  ? `linear-gradient(135deg,${tint(b.color, 0.9)},${tint(b.color, 0.7)})`
-                  : `linear-gradient(150deg, rgba(10,16,32,0.94), rgba(6,10,21,0.94))`,
-                boxShadow: `0 8px 24px ${tint(b.color, b.active ? 0.45 : 0.25)}, 0 1px 0 ${tint('#ffffff', 0.15)} inset`,
+                border: `1px solid ${b.active ? tint(b.color, 0.5) : C.b2}`,
+                // Theme tokens, not the hard-coded navy this used to carry:
+                // on the light palette a near-black pill was the loudest thing
+                // on the screen, and it fought the page instead of sitting on it.
+                background: b.active ? tint(b.color, 0.8) : C.s1,
+                boxShadow: `0 4px 14px ${tint(b.color, b.active ? 0.28 : 0.14)}, 0 1px 0 ${tint('#ffffff', 0.10)} inset`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
@@ -242,15 +243,17 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
               // Longhand rather than `border` + `borderLeft: none`: React warns
               // when a shorthand and its longhand are both set on a re-render,
               // and this button re-renders every time the panel toggles.
-              borderTop: `1px solid ${b.active ? tint(b.color, 0.55) : tint('#ffffff', 0.14)}`,
-              borderRight: `1px solid ${b.active ? tint(b.color, 0.55) : tint('#ffffff', 0.14)}`,
-              borderBottom: `1px solid ${b.active ? tint(b.color, 0.55) : tint('#ffffff', 0.14)}`,
+              borderTop: `1px solid ${b.active ? tint(b.color, 0.42) : C.b2}`,
+              borderRight: `1px solid ${b.active ? tint(b.color, 0.42) : C.b2}`,
+              borderBottom: `1px solid ${b.active ? tint(b.color, 0.42) : C.b2}`,
               borderLeft: 'none',
+              // Each tool keeps its hue, at a whisper when idle and a statement
+              // when open — the same information, a third of the volume.
               background: b.active
-                ? `linear-gradient(160deg, ${tint(b.color, 0.4)} 0%, rgba(10,16,32,0.9) 100%)`
-                : `linear-gradient(160deg, ${tint(b.color, 0.16)} 0%, rgba(10,16,32,0.88) 60%)`,
+                ? `linear-gradient(160deg, ${tint(b.color, 0.28)} 0%, ${C.s1} 100%)`
+                : `linear-gradient(160deg, ${tint(b.color, 0.09)} 0%, ${C.s1} 70%)`,
               backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-              boxShadow: `6px 6px 24px ${tint(b.color, b.active ? 0.35 : 0.18)}, 0 1px 0 ${tint('#ffffff', 0.14)} inset`,
+              boxShadow: `4px 4px 16px ${tint(b.color, b.active ? 0.20 : 0.10)}, 0 1px 0 ${tint('#ffffff', 0.10)} inset`,
             }}
           >
             <Icon size={16} color={b.active ? '#fff' : b.color} />

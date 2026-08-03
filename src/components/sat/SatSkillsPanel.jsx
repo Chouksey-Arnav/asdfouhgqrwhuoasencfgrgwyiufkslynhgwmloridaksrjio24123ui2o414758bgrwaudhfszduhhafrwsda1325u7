@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, ChevronDown, ChevronRight, Target, Lightbulb, AlertTriangle, Clock } from 'lucide-react';
-import { C, glass2, btn, R, CC, tint, pill } from '../../lib/theme';
-import { SatPageHeader, SatCard, Segmented } from './satUi';
+import { C, glass2, R, CC, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented, satBtn } from './satUi';
 import { Bar } from '../ui/primitives';
 import SatSkillHeatmap from './SatSkillHeatmap';
 import { strategyFor } from '../../data/sat/strategies';
@@ -173,7 +173,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
 
                       <button
                         onClick={() => onNavigate?.('practice', { skill: s.skill })}
-                        style={{ ...btn(`linear-gradient(135deg,${s.color},${s.color}cc)`, { marginTop: 14, padding: '8px 16px', fontSize: 12 }) }}
+                        style={satBtn(s.color, { marginTop: 14, padding: '8px 16px', fontSize: 12 })}
                       >
                         Drill this skill <ChevronRight size={13} />
                       </button>

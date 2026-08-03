@@ -5,7 +5,7 @@ import {
   Calculator, BookOpen, LineChart, Brain, Lightbulb, Loader2, Eye, EyeOff, Keyboard,
   ShieldCheck, Wand2,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, inp, R, CC, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnSm, btnG, inp, R, CC, tint, pill } from '../../lib/theme';
 import { skillMeta, DIFFICULTIES } from '../../data/sat/taxonomy';
 import { strategyFor } from '../../data/sat/strategies';
 import { shuffleChoices } from '../../lib/sat/shuffle';
@@ -15,6 +15,7 @@ import { useSatTools } from './SatToolsContext';
 import { useMediaQuery } from '../ui/primitives';
 import MathText from '../ui/MathText';
 import SatAnnotatableText, { hasMathMarkup } from './SatAnnotatableText';
+import { satBtn, satWash } from './satUi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The SAT question player.
@@ -399,7 +400,7 @@ export default function SatQuestionPlayer({
           </div>
 
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
-            <button onClick={() => finish(responses)} style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)}>
+            <button onClick={() => finish(responses)} style={satBtn(accent)}>
               Submit {isExam ? 'module' : 'set'} <ArrowRight size={14} />
             </button>
             {unanswered.length > 0 && (
@@ -556,7 +557,7 @@ export default function SatQuestionPlayer({
       <AnimatePresence>
         {hint?.text && !revealed && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.amber, 0.3), background: `linear-gradient(120deg,${tint(C.amber, 0.08)},rgba(255,255,255,0.015))` }}>
+            <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.amber, 0.24), background: satWash(C.amber, 0.06) }}>
               <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
                 <Lightbulb size={12} color={C.amberL} />
                 <span style={{ fontSize: 10, fontWeight: 700, color: C.amberL, textTransform: 'uppercase', letterSpacing: '.08em' }}>Hint — not the answer</span>
@@ -806,14 +807,14 @@ export default function SatQuestionPlayer({
           {revealed ? (
             <button
               onClick={goNext} className="sat-tap"
-              style={btn(`linear-gradient(135deg,${accent},${accent}cc)`, isMobile ? { flex: 1, padding: '13px 20px' } : {})}
+              style={satBtn(accent, isMobile ? { flex: 1, padding: '13px 20px' } : {})}
             >
               {idx < deck.length - 1 ? 'Next question' : 'See results'} <ChevronRight size={14} />
             </button>
           ) : (
             <button
               onClick={submitAnswer} disabled={!canSubmit} className="sat-tap"
-              style={btn(`linear-gradient(135deg,${accent},${accent}cc)`, {
+              style={satBtn(accent, {
                 opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed',
                 ...(isMobile ? { flex: 1, padding: '13px 20px' } : {}),
               })}

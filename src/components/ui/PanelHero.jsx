@@ -76,14 +76,17 @@ export function StatTile({ icon: Icon, value, label, sub, color = C.blue, onClic
       type={onClick ? 'button' : undefined}
       className={onClick ? 'sat-choice sat-tap' : undefined}
       style={{
-        background: `linear-gradient(120deg,${tint(color, 0.1)},rgba(255,255,255,0.015))`,
-        border: `1px solid ${tint(color, 0.22)}`, borderRadius: 12, padding: '14px 16px',
+        // A single fading stop rather than a tint→white ramp: three of these in
+        // a row used to read as three coloured cards, which is a lot of signal
+        // for what is a row of numbers.
+        background: `linear-gradient(135deg,${tint(color, 0.07)},transparent 75%)`,
+        border: `1px solid ${tint(color, 0.16)}`, borderRadius: 12, padding: '14px 16px',
         display: 'flex', alignItems: 'center', gap: 12, cursor: onClick ? 'pointer' : undefined,
         textAlign: 'left', font: 'inherit', color: 'inherit', width: '100%',
       }}
     >
       {Icon && (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(color, 0.14), border: `1px solid ${tint(color, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(color, 0.11), border: `1px solid ${tint(color, 0.2)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon size={15} color={color} />
         </div>
       )}
