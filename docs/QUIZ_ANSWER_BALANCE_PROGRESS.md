@@ -66,7 +66,7 @@ never silently goes stale.
 
 | Batch | IDs | Quizzes | Questions | Status | PR |
 |---|---|---|---|---|---|
-| 1 | `bb01`–`bb100` (all of Life Sciences) | 100 | 1,337 | **Done** | "The First 100 Quizzes" |
+| 1 | `bb01`–`bb100` (all of Life Sciences) | 100 | 1,337 | **Done** | [PR #129 "The First 100 Quizzes"](https://github.com/Chouksey-Arnav/medschoolprep-dev/pull/129) |
 | 2 | `cp01`–`cp100` (all of Physical Sciences) | 100 | — | Not started | — |
 | 3 | `ps01`–`ps120` (all of Behavioral & Social Sciences) | 120 | — | Not started | — |
 | 4 | Lesson/career-guidance quizzes (`lessonQuizzes.js`, 42 quizzes) | 42 | — | Not started | — |
@@ -78,3 +78,25 @@ When starting the next batch: confirm the count with
 comma list for the lesson file, since those ids don't share a numeric
 prefix), split into ~20-quiz chunks the same way batch 1 did, and update the
 table above when done.
+
+## Known follow-up: answer-POSITION bias (separate from length, not yet fixed)
+
+While fixing length bias in batch 1, a second, larger bias surfaced: the
+correct choice's *position* (its index in `ch[]`, i.e. which of the 4 slots
+it sits in) is heavily skewed toward index 1 (the 2nd option) across the
+whole bank, not just bb:
+
+| Bank | Correct-answer position distribution (idx 0/1/2/3) | Chance baseline |
+|---|---|---|
+| `bb` (batch 1, post length-fix) | 8% / 72% / 16% / 4% | 25% each |
+| `cp` (untouched) | 26% / 54% / 13% / 7% | 25% each |
+| `ps` (untouched) | 22% / 55% / 12% / 11% | 25% each |
+
+"Always pick the 2nd answer" currently beats guessing by roughly as much as
+the length tell did before this batch's fix — it is a distinct exploit from
+length (reordering `ch[]` and updating `ans`, not editing choice text) and
+was deliberately left out of batch 1 to keep that PR scoped and reviewable.
+This needs its own remediation pass — ideally shuffling choice order (with
+`ans` updated to match) across the whole bank once all 4 length-bias batches
+are done, verified with a similar audit script checking the `ans` index
+distribution per quiz/bank against the 25% baseline.
