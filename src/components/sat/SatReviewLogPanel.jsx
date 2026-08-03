@@ -2,9 +2,9 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2, PlayCircle } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
-import { SatPageHeader, SatCard, Segmented } from './satUi';
+import { SatPageHeader, SatCard, Segmented, satBtn, satWash } from './satUi';
 import EmptyState from '../ui/EmptyState';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import { useSatSession, scheduleReviewRetry } from './useSatSession';
@@ -186,7 +186,7 @@ export default function SatReviewLogPanel({
                   <div key={p.id} style={{
                     ...glass2({ padding: 14 }),
                     borderColor: tint(p.severity >= 3 ? C.rose : C.amber, 0.28),
-                    background: `linear-gradient(120deg,${tint(p.severity >= 3 ? C.rose : C.amber, 0.08)},rgba(255,255,255,0.015))`,
+                    background: satWash(p.severity >= 3 ? C.rose : C.amber, 0.06),
                   }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, lineHeight: 1.5 }}>{p.title}</div>
                     <div style={{ fontSize: 11.5, color: C.t2, marginTop: 6, lineHeight: 1.65 }}>{p.body}</div>
@@ -228,7 +228,7 @@ export default function SatReviewLogPanel({
           </div>
 
           {due.length > 0 && (
-            <button onClick={startRetry} style={btn(`linear-gradient(135deg,${C.amber},${C.orange})`)}>
+            <button onClick={startRetry} style={satBtn(C.amber)}>
               <RotateCcw size={14} /> Retry {Math.min(10, due.length)} due question{due.length === 1 ? '' : 's'}
             </button>
           )}

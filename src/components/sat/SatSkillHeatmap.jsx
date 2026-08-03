@@ -1,6 +1,7 @@
 import React from 'react';
 import { C, glass2, tint } from '../../lib/theme';
 import { SAT_SECTIONS, SAT_DOMAINS, DOMAINS_BY_SECTION, SKILLS_BY_DOMAIN, skillMeta } from '../../data/sat/taxonomy';
+import { satWash } from './satUi';
 
 // Skill heat map — every tested skill at a glance, grouped by section and
 // domain, coloured by mastery.
@@ -59,10 +60,10 @@ export default function SatSkillHeatmap({ masteryMap = {}, onSelect, isMobile = 
                             flexGrow, flexBasis: isMobile ? 100 : 130, minWidth: isMobile ? 100 : 130,
                             textAlign: 'left', padding: '9px 11px', borderRadius: 9, cursor: 'pointer',
                             fontFamily: C.FB, transition: 'all .15s',
-                            border: `1px solid ${measured ? tint(color, 0.4) : C.b2}`,
+                            border: `1px solid ${measured ? tint(color, 0.28) : C.b2}`,
                             background: measured
-                              ? `linear-gradient(120deg,${tint(color, 0.06 + m.mastery * 0.16)},rgba(255,255,255,0.015))`
-                              : 'rgba(255,255,255,0.015)',
+                              ? satWash(color, 0.05 + m.mastery * 0.10)
+                              : C.surf2,
                             borderStyle: measured ? 'solid' : 'dashed',
                           }}
                         >
@@ -98,7 +99,7 @@ export default function SatSkillHeatmap({ masteryMap = {}, onSelect, isMobile = 
       <div style={{ ...glass2({ padding: '10px 14px' }), display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
         {[[C.rose, '0-20%'], [C.orange, '20-40%'], [C.amber, '40-60%'], [C.lime, '60-80%'], [C.green, '80%+']].map(([col, lab]) => (
           <span key={lab} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: C.t3 }}>
-            <span style={{ width: 10, height: 10, borderRadius: 3, background: tint(col, 0.5), border: `1px solid ${col}` }} />
+            <span style={{ width: 10, height: 10, borderRadius: 3, background: tint(col, 0.32), border: `1px solid ${tint(col, 0.7)}` }} />
             {lab}
           </span>
         ))}

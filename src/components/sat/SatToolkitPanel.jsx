@@ -5,8 +5,8 @@ import {
   Calculator, LineChart, Trash2, BookOpen, ChevronDown, Sparkles, Info,
   AlertTriangle, PlayCircle, Keyboard,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, tint, pill } from '../../lib/theme';
-import { SatPageHeader, SatCard } from './satUi';
+import { C, glass, glass2, btnG, R, CC, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, satBtn } from './satUi';
 import DesmosSurface, { resetCalculator, calcChromeButton } from './DesmosSurface';
 import { useSatTools } from './SatToolsContext';
 import { CALC_MODES, USING_DEMO_KEY } from '../../lib/sat/desmos';
@@ -178,7 +178,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
                           <button
                             onClick={() => loadPlay(play)}
                             disabled={status !== 'ready'}
-                            style={btn(`linear-gradient(135deg,${accent},${C.emerald})`, {
+                            style={satBtn(accent, {
                               marginTop: 13, padding: '7px 14px', fontSize: 12,
                               opacity: status === 'ready' ? 1 : 0.45,
                               cursor: status === 'ready' ? 'pointer' : 'not-allowed',

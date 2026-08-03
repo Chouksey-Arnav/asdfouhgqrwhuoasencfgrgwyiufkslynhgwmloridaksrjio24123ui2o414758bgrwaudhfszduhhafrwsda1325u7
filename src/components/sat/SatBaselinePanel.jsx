@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
-import { SatPageHeader, SatCard } from './satUi';
+import { SatPageHeader, SatCard, satBtn, satWash } from './satUi';
 import { SatVideoRecommendations } from './SatVideoRecs';
 import { Bar } from '../ui/primitives';
 import MathText from '../ui/MathText';
@@ -361,7 +361,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
       <div style={{
         ...glass({ padding: isMobile ? 18 : 24, textAlign: 'center' }),
         border: `1px solid ${tint(gateOpen ? accent : C.t4, 0.3)}`,
-        background: gateOpen ? `linear-gradient(135deg,${tint(accent, 0.1)},transparent)` : undefined,
+        background: gateOpen ? satWash(accent, 0.07) : undefined,
       }}>
         {gateOpen ? (
           <>
@@ -372,7 +372,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
               About 40 minutes, {BASELINE_LENGTH} questions, no going back. Sit somewhere you can concentrate —
               this is the number the rest of your plan gets built on, so a distracted run costs you more than it saves.
             </div>
-            <button onClick={onStart} style={btn(`linear-gradient(135deg,${accent},${C.orange})`, { padding: '12px 28px', fontSize: 14, borderRadius: 12 })}>
+            <button onClick={onStart} style={satBtn(accent, { padding: '12px 28px', fontSize: 14, borderRadius: 12 })}>
               <Gauge size={16} /> Start the baseline
             </button>
           </>
@@ -520,7 +520,7 @@ function Running({
               <button onClick={onAbandon} style={btnG({ fontSize: 11, padding: '7px 14px', color: C.t3 })}>End baseline</button>
               <button
                 onClick={onSubmit} disabled={!ready}
-                style={btn(`linear-gradient(135deg,${accent},${C.orange})`, {
+                style={satBtn(accent, {
                   padding: '11px 24px', fontSize: 13.5, borderRadius: 11,
                   opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed',
                 })}
@@ -549,8 +549,8 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
       {/* ── The number ─────────────────────────────────────────────────── */}
       <div style={{
         ...glass({ padding: isMobile ? 22 : 32, textAlign: 'center' }),
-        background: `linear-gradient(135deg,${tint(accent, 0.14)},${tint(C.orange, 0.05)} 60%,transparent)`,
-        border: `1px solid ${tint(accent, 0.3)}`,
+        background: satWash(accent, 0.09),
+        border: `1px solid ${tint(accent, 0.24)}`,
       }}>
         <div style={{ ...lbl({ marginBottom: 10 }), color: accent }}>Your baseline</div>
         <div style={{ fontSize: isMobile ? 40 : 56, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: '-.04em', lineHeight: 1 }}>

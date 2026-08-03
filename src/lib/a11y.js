@@ -13,7 +13,7 @@
 // high contrast and the dyslexia-friendly typeface. Those are handed to
 // applyTheme() in theme.js, and the App remounts so inline styles recompute.
 // ─────────────────────────────────────────────────────────────────────────────
-import { applyTheme, getStoredMode } from './theme';
+import { applyTheme, getStoredMode, DEFAULT_THEME_MODE } from './theme';
 
 const KEY = 'msp_a11y';
 
@@ -26,7 +26,11 @@ const KEY = 'msp_a11y';
 export const READABLE_FONT_STACK = "'Atkinson Hyperlegible','Lexend',Verdana,Tahoma,-apple-system,sans-serif";
 
 export const DEFAULTS = {
-  themeMode: 'light',         // 'dark' | 'light' | 'system'
+  // The app's base palette. Balanced deliberately, not Light: it is the one
+  // that neither glares nor disappears, and it is what a new student should
+  // meet before they know the picker exists. Every other mode stays one tap
+  // away in Settings → Appearance.
+  themeMode: DEFAULT_THEME_MODE, // 'balanced' | 'dark' | 'light' | 'system'
   fontScale: 1,               // 0.9 – 1.5
   highContrast: false,
   readableFont: false,

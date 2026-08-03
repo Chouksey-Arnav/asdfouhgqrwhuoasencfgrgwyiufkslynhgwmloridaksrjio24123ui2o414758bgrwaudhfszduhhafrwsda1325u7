@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { ClipboardList, Coffee, ChevronRight, Play, Clock, AlertTriangle, TrendingUp, Calculator } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, tint, pill } from '../../lib/theme';
-import { SatPageHeader, SatCard } from './satUi';
+import { C, glass, glass2, btnG, R, CC, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, satBtn, satWash } from './satUi';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import SatScoreReport from './SatScoreReport';
 import { useSatSession } from './useSatSession';
@@ -200,8 +200,8 @@ export default function SatFullTestPanel({
       <div style={CC({ gap: 16 })}>
         <div style={{
           ...glass2({ padding: '12px 16px' }),
-          background: `linear-gradient(120deg,${tint(section.color, 0.14)},rgba(255,255,255,0.02))`,
-          border: `1px solid ${tint(section.color, 0.28)}`,
+          background: satWash(section.color, 0.08),
+          border: `1px solid ${tint(section.color, 0.22)}`,
         }}>
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
             <div style={R({ gap: 9 })}>
@@ -247,7 +247,7 @@ export default function SatFullTestPanel({
       />
 
       {resumable && (
-        <div style={{ ...glass({ padding: 18 }), border: `1px solid ${tint(C.amber, 0.35)}`, background: `linear-gradient(120deg,${tint(C.amber, 0.12)},rgba(255,255,255,0.02))` }}>
+        <div style={{ ...glass({ padding: 18 }), border: `1px solid ${tint(C.amber, 0.26)}`, background: satWash(C.amber, 0.08) }}>
           <div style={R({ gap: 9 })}>
             <AlertTriangle size={15} color={C.amberL} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>You have a test in progress</span>
@@ -256,7 +256,7 @@ export default function SatFullTestPanel({
             Started {new Date(resumable.startedAt).toLocaleString()}. Resuming picks up in the same module with the same questions — but note the module timer kept running, so it may already have expired.
           </div>
           <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginTop: 14 }}>
-            <button onClick={resumeTest} style={btn(`linear-gradient(135deg,${C.amber},${C.orange})`)}>Resume test</button>
+            <button onClick={resumeTest} style={satBtn(C.amber)}>Resume test</button>
             <button onClick={discardResumable} style={btnG()}>Discard it</button>
           </div>
         </div>
@@ -318,7 +318,7 @@ export default function SatFullTestPanel({
           </div>
         </div>
 
-        <button onClick={beginTest} disabled={!!resumable} style={btn(`linear-gradient(135deg,${accent},${C.indigo})`, { marginTop: 18, opacity: resumable ? 0.45 : 1, cursor: resumable ? 'not-allowed' : 'pointer' })}>
+        <button onClick={beginTest} disabled={!!resumable} style={satBtn(accent, { marginTop: 18, opacity: resumable ? 0.45 : 1, cursor: resumable ? 'not-allowed' : 'pointer' })}>
           <Play size={14} /> Start full test · about 2h 15m
         </button>
         <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>
@@ -376,7 +376,7 @@ function BreakScreen({ deadline, accent, isMobile, onContinue }) {
       }}>
         {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
       </div>
-      <button onClick={onContinue} style={{ ...btn(`linear-gradient(135deg,${accent},${C.indigo})`), marginTop: 24 }}>
+      <button onClick={onContinue} style={satBtn(accent, { marginTop: 24 })}>
         Continue to Math <ChevronRight size={14} />
       </button>
     </div>

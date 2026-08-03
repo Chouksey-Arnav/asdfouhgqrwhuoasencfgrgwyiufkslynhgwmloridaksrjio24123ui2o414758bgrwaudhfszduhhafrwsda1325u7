@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Target, ChevronRight, CalendarClock, AlertTriangle, TrendingUp, Info, Layers, Calculator, BookOpen, Brain, Sparkles, Gauge } from 'lucide-react';
-import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass2, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
 import { Bar } from '../ui/primitives';
-import { SatPageHeader, SatCard } from './satUi';
+import { SatPageHeader, SatCard, satBtn, satWash } from './satUi';
 import SatSkillHeatmap from './SatSkillHeatmap';
 import SatStudyPlanCard from './SatStudyPlanCard';
 import { loadSatStudyPlan, generateSatStudyPlan } from '../../lib/sat/aiStudyPlan';
@@ -213,7 +213,7 @@ export default function SatOverviewPanel({
           padding: isMobile ? 18 : 26, minWidth: 0,
           borderTop: isMobile ? `1px solid ${C.b1}` : 'none',
           borderLeft: isMobile ? 'none' : `1px solid ${C.b1}`,
-          background: `linear-gradient(160deg,${tint(C.gold, 0.06)},transparent 65%)`,
+          background: satWash(C.gold, 0.05),
           display: 'flex', flexDirection: 'column',
         }}>
           <div style={{ ...R({ gap: 8 }), marginBottom: 14 }}>
@@ -251,7 +251,7 @@ export default function SatOverviewPanel({
           )}
           <button
             onClick={() => onNavigate?.('baseline')}
-            style={btn(`linear-gradient(135deg,${C.gold},${C.orange})`, { fontSize: 12.5, padding: '10px 20px', marginTop: 16, alignSelf: 'flex-start' })}
+            style={satBtn(C.gold, { fontSize: 12.5, padding: '10px 20px', marginTop: 16, alignSelf: 'flex-start' })}
           >
             {latestBaseline ? (baselineOpen ? 'Retake baseline' : 'See breakdown') : 'Set your baseline'}
           </button>
@@ -288,7 +288,7 @@ export default function SatOverviewPanel({
             ))}
             <button
               onClick={() => onNavigate?.(action.view, action.params)}
-              style={btn(urgent ? `linear-gradient(135deg,${C.rose},${C.roseL})` : `linear-gradient(135deg,${accent},${C.blue})`)}
+              style={satBtn(urgent ? C.rose : accent)}
             >
               {action.ctaLabel} <ChevronRight size={14} />
             </button>
@@ -401,7 +401,11 @@ export default function SatOverviewPanel({
           Discoverability, not decoration: a calculator nobody knows is there is
           worth exactly as much as no calculator. The rail on the left edge is
           always available, but the first visit needs to be told. */}
-      <SatCard title="Your test-day tools" icon={Calculator} iconColor={C.teal} m={isMobile}>
+      {/* The three tiles below used to be teal / emerald / sky — three hues for
+          three things that are simply "tools", which is exactly the kind of
+          colour-without-meaning the SAT palette policy rules out. They share
+          the pillar accent now and are told apart by their icons and labels. */}
+      <SatCard title="Your test-day tools" icon={Calculator} iconColor={accent} m={isMobile}>
         <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 14, maxWidth: 620 }}>
           The Digital SAT gives you Desmos on every Math question and keeps a formula sheet on
           screen for the whole section. Both are here, on every SAT screen — including mid-question
@@ -409,12 +413,12 @@ export default function SatOverviewPanel({
         </div>
         <div style={G(3, 12, {}, isMobile)}>
           <StatTile
-            icon={Calculator} color={C.teal} value="Desmos"
+            icon={Calculator} color={accent} value="Desmos"
             label="graphing calculator" sub="Alt+C, or the left edge"
             onClick={() => tools.available ? tools.openCalculator() : onNavigate?.('toolkit')}
           />
           <StatTile
-            icon={BookOpen} color={C.emerald} value="Formulas"
+            icon={BookOpen} color={accent} value="Formulas"
             label="given, and not given" sub="Alt+R"
             onClick={() => tools.available ? tools.openReference() : onNavigate?.('toolkit')}
           />

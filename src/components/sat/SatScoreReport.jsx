@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Trophy, ChevronRight, Info, Clock, Layers, AlertTriangle, TrendingUp } from 'lucide-react';
-import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass2, btnG, R, CC, G, tint, pill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
-import { SatPageHeader, SatCard } from './satUi';
+import { SatPageHeader, SatCard, satBtn } from './satUi';
 import { Bar } from '../ui/primitives';
 import { domainBreakdown, pacingAnalysis, routingNarrative } from '../../lib/sat/adaptive';
 import { SatVideoRecommendations } from './SatVideoRecs';
@@ -164,7 +164,7 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
 
       <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }) }}>
         {missed.length > 0 && (
-          <button onClick={() => onNavigate?.('review')} style={btn(`linear-gradient(135deg,${C.rose},${C.roseL})`)}>
+          <button onClick={() => onNavigate?.('review')} style={satBtn(C.rose)}>
             Review your {missed.length} misses <ChevronRight size={14} />
           </button>
         )}

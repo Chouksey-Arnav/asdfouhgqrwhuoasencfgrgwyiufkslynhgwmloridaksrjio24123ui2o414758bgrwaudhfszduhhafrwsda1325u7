@@ -4,8 +4,8 @@ import {
   Layers, Zap, Target, Clock, ChevronRight, Sparkles, RotateCcw, Check,
   Wand2, ShieldCheck, Loader2, AlertTriangle, Info,
 } from 'lucide-react';
-import { C, glass2, btn, btnG, R, CC, G, tint, pill } from '../../lib/theme';
-import { SatPageHeader, SatCard, Segmented } from './satUi';
+import { C, glass2, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { SatPageHeader, SatCard, Segmented, satBtn, satWash } from './satUi';
 import EmptyState from '../ui/EmptyState';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
@@ -270,7 +270,7 @@ export default function SatPracticePanel({
           </div>
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
             {missed.length > 0 && (
-              <button onClick={() => onNavigate?.('review')} style={btn(`linear-gradient(135deg,${C.rose},${C.roseL})`)}>
+              <button onClick={() => onNavigate?.('review')} style={satBtn(C.rose)}>
                 Sort these {missed.length} misses <ChevronRight size={14} />
               </button>
             )}
@@ -314,13 +314,13 @@ export default function SatPracticePanel({
               aria-pressed={isActive}
               style={{
                 textAlign: 'left', padding: isMobile ? 14 : 16, borderRadius: 13, cursor: 'pointer',
-                border: `1px solid ${isActive ? tint(m.color, 0.45) : C.b1}`,
-                background: isActive ? `linear-gradient(120deg,${tint(m.color, 0.14)},rgba(255,255,255,0.015))` : 'rgba(255,255,255,0.02)',
+                border: `1px solid ${isActive ? tint(m.color, 0.32) : C.b1}`,
+                background: isActive ? satWash(m.color, 0.09) : C.surf2,
                 fontFamily: C.FB,
               }}
             >
               <div style={{ ...R({ gap: 9 }), marginBottom: 8 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(m.color, 0.16), border: `1px solid ${tint(m.color, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(m.color, 0.12), border: `1px solid ${tint(m.color, 0.22)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon size={14} color={m.color} />
                 </div>
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{m.label}</span>
@@ -349,7 +349,7 @@ export default function SatPracticePanel({
             </div>
           )}
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 18 }}>
-            <button onClick={beginSmart} style={btn(`linear-gradient(135deg,${C.blue},${C.blueD})`)}>
+            <button onClick={beginSmart} style={satBtn(C.blue)}>
               Start Smart Set · {smartPreview.questions.length} questions <ChevronRight size={14} />
             </button>
             <span style={{ fontSize: 11.5, color: C.t3 }}>
@@ -416,8 +416,8 @@ export default function SatPracticePanel({
               >
                 <div style={{
                   ...glass2({ padding: 15 }), marginTop: 16,
-                  borderColor: tint(C.violet, 0.3),
-                  background: `linear-gradient(120deg,${tint(C.violet, 0.09)},rgba(255,255,255,0.015))`,
+                  borderColor: tint(C.violet, 0.24),
+                  background: satWash(C.violet, 0.07),
                 }}>
                   <div style={R({ gap: 10, alignItems: 'flex-start' })}>
                     <Loader2 size={15} color={C.violetL} className="spin" style={{ marginTop: 1, flexShrink: 0 }} />
@@ -462,8 +462,8 @@ export default function SatPracticePanel({
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
               <div style={{
                 ...glass2({ padding: 15 }), marginTop: 16,
-                borderColor: tint(C.green, 0.3),
-                background: `linear-gradient(120deg,${tint(C.green, 0.08)},rgba(255,255,255,0.015))`,
+                borderColor: tint(C.green, 0.24),
+                background: satWash(C.green, 0.06),
               }}>
                 <div style={R({ gap: 9, flexWrap: 'wrap' })}>
                   <ShieldCheck size={15} color={C.greenL} />
@@ -508,7 +508,7 @@ export default function SatPracticePanel({
                     onClick={() => startSession({
                       questions: aiResult.questions, mode: 'tutor', kind: 'drill', generated: true,
                     })}
-                    style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`)}
+                    style={satBtn(C.violet)}
                   >
                     Start this set <ChevronRight size={14} />
                   </button>
@@ -527,7 +527,7 @@ export default function SatPracticePanel({
               <button
                 onClick={() => buildAiSet()}
                 disabled={!aiBlueprint.length}
-                style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, {
+                style={satBtn(C.violet, {
                   opacity: aiBlueprint.length ? 1 : 0.4,
                   cursor: aiBlueprint.length ? 'pointer' : 'not-allowed',
                 })}
@@ -591,7 +591,7 @@ export default function SatPracticePanel({
           <button
             onClick={() => drillSkill && beginDrill(drillSkill)}
             disabled={!drillSkill || generating}
-            style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { marginTop: 18, opacity: drillSkill && !generating ? 1 : 0.4, cursor: drillSkill && !generating ? 'pointer' : 'not-allowed' })}
+            style={satBtn(C.violet, { marginTop: 18, opacity: drillSkill && !generating ? 1 : 0.4, cursor: drillSkill && !generating ? 'pointer' : 'not-allowed' })}
           >
             {generating ? 'Building your drill…' : <>Start drill <ChevronRight size={14} /></>}
           </button>
@@ -618,7 +618,7 @@ export default function SatPracticePanel({
               </button>
             ))}
           </div>
-          <button onClick={() => beginTimed(timedSection)} style={btn(`linear-gradient(135deg,${C.amber},${C.orange})`, { marginTop: 18 })}>
+          <button onClick={() => beginTimed(timedSection)} style={satBtn(C.amber, { marginTop: 18 })}>
             Start timed set <ChevronRight size={14} />
           </button>
         </SatCard>

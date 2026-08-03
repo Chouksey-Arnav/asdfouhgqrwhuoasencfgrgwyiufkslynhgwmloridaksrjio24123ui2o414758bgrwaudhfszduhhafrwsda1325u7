@@ -3,8 +3,9 @@ import { motion } from 'framer-motion';
 import {
   Sparkles, Target, CalendarDays, Flag, Timer, ChevronRight, RotateCcw, Loader2, Info,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnG, R, CC, tint, pill } from '../../lib/theme';
 import { SectionTitle } from '../ui/PanelHero';
+import { satWash } from './satUi';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The generated study plan, rendered.
@@ -27,8 +28,8 @@ export default function SatStudyPlanCard({
     return (
       <div style={{
         ...glass({ padding: isMobile ? 18 : 24 }),
-        border: `1px solid ${tint(accent, 0.28)}`,
-        background: `linear-gradient(120deg,${tint(accent, 0.1)},rgba(255,255,255,0.02))`,
+        border: `1px solid ${tint(accent, 0.22)}`,
+        background: satWash(accent, 0.07),
       }}>
         <div style={R({ gap: 10 })}>
           <Loader2 size={16} color={accent} className="spin" />
@@ -71,8 +72,8 @@ export default function SatStudyPlanCard({
       transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
       style={{
         ...glass({ padding: isMobile ? 18 : 26 }),
-        border: `1px solid ${tint(accent, 0.3)}`,
-        background: `linear-gradient(125deg,${tint(accent, 0.12)},rgba(255,255,255,0.02) 60%)`,
+        border: `1px solid ${tint(accent, 0.24)}`,
+        background: satWash(accent, 0.08),
       }}
     >
       {/* ── Headline ── */}
@@ -120,8 +121,8 @@ export default function SatStudyPlanCard({
               style={{
                 ...glass2({ padding: isMobile ? 13 : 15 }),
                 textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, width: '100%',
-                borderColor: tint(f.color, 0.24),
-                background: `linear-gradient(120deg,${tint(f.color, 0.07)},rgba(255,255,255,0.015))`,
+                borderColor: tint(f.color, 0.2),
+                background: satWash(f.color, 0.055),
               }}
             >
               <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginBottom: 7 }}>
