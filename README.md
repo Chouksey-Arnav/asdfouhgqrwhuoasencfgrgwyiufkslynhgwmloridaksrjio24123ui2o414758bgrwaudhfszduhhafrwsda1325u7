@@ -56,11 +56,11 @@ When a request is sent to `/api/groq.js`, it specifies a `purpose`. If a dedicat
 | :--- | :--- | :--- | :--- |
 | `coach` | Primary conversational coach | Guide (Balanced) / Auto | *(Uses shared pool)* |
 | `interview` | Conversational mock-interview simulator | Guide (Balanced) | `GROQ_API_KEY_INTERVIEW` |
-| `portfolio` | Rich resume, activities, essay, and college tracking advice | Guide (Balanced) | `GROQ_API_KEY_PORTFOLIO` |
-| `prep` | In-context tutoring help (e.g. lesson, quiz, or video questions) | Scout (Fast/Cheap) | `GROQ_API_KEY_PREP` |
+| `portfolio` | Rich resume, activities, essay, and college tracking advice | Sage (Deep) | `GROQ_API_KEY_PORTFOLIO` |
+| `prep` | In-context tutoring help (e.g. lesson, quiz, or video questions) | Guide (Balanced) | `GROQ_API_KEY_PREP` |
 | `plan` | Onboarding diagnostic "max-out plan" generator | Sage (Deep) | `GROQ_API_KEY_PLAN` |
 | `masterplan` | Plans tab: detailed day-by-day roadmap generator | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_MASTERPLAN` |
-| `sat` | SAT drills, hints, step-by-step explanations, and coach | Scout (Fast/Cheap) | `GROQ_API_KEY_SAT` |
+| `sat` | SAT drills, hints, step-by-step explanations, and coach | Sage (Deep) | `GROQ_API_KEY_SAT` |
 
 #### Key Configuration Variable Names
 | Variable Name | Type | Description / Value |

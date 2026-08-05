@@ -45,3 +45,20 @@ one of these lesson ids elsewhere won't reintroduce the original broken link.
 
 Run `npm run audit:videos` to re-verify all current video ids against
 YouTube's oEmbed endpoint before adding or editing any pathway content.
+
+---
+
+## SAT Video Library Audit Notes
+
+The SAT video library is maintained in `src/data/sat/videos.js` and contains curated YouTube videos for each of the 28 leaf academic skills on the SAT.
+
+During systematic verification utilizing `npm run audit:sat-videos` (which checks YouTube's public oEmbed endpoint), the following 4 video IDs were flagged as **DEAD** (returning HTTP 404):
+
+| Video ID | Topic / Described Title | Channel | Scope / Skill | Status / Action |
+| --- | --- | --- | --- | --- |
+| `mMpDeV_dOyU` | Text Structure and Purpose — Quick example | Khan Academy SAT | `skill: text_structure_purpose` | **DEAD** — Needs confirmed replacement |
+| `FgX3gLDDlzI` | Solving systems of linear equations — Basic example | Khan Academy SAT | `skill: linear_systems` | **DEAD** — Needs confirmed replacement |
+| `-ylIGciS7_8` | Solving systems of linear equations — Harder example | Khan Academy SAT | `skill: linear_systems` | **DEAD** — Needs confirmed replacement |
+| `-5pXEsA68pk` | Systems of linear inequalities word problems — Harder example | Khan Academy SAT | `skill: linear_inequality_word` | **DEAD** — Needs confirmed replacement |
+
+Before adding any new video links or modifying existing ones in the SAT database, developers must execute `npm run audit:sat-videos` to verify ID status and guarantee students are only recommended functional and highly relevant educational instruction.

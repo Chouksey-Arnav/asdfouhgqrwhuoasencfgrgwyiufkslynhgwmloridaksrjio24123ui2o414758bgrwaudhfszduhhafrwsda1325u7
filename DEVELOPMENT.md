@@ -68,12 +68,24 @@ consistency of the video step). Before attaching a `ytId`:
 
 ## Running the audit scripts
 
-```
+While individual parts of the codebase can be checked with scoped audit scripts, the complete suite can be verified together:
+
+```bash
 npm run audit:lessons   # structural completeness: objectives + article + video/OMIT for every lesson
 npm run audit:videos    # every ytId resolves via YouTube oEmbed, no title mismatches
-npm run audit:all       # both, in sequence
+npm run audit:all       # full repository health check (runs 10 distinct audit & verification suites in sequence)
 ```
 
-Both scripts exit non-zero on failure, so they're safe to wire into CI or a
-pre-commit hook. Any PR touching pathway content should pass both before
-merging.
+The comprehensive `npm run audit:all` health check executes the following suites sequentially:
+1. `audit:lessons` — Scans pathway lessons for structural completeness.
+2. `audit:videos` — Resolves pathway lesson YouTube video IDs via oEmbed.
+3. `audit:sat` — Audits the SAT practice question bank.
+4. `audit:sat-videos` — Audits the SAT skill video library.
+5. `audit:sat-resources` — Cross-checks SAT resources, official forms, and links.
+6. `verify:sat-scoring` — Validates the SAT scoring conversion formulas.
+7. `verify:sat-forms` — Asserts SAT forms are distinct, on-blueprint, and complete.
+8. `verify:sat-baseline` — Verifies baseline placement and diagnostic scoring curves.
+9. `verify:tracking` — Tests offline tracking, losslessness, and deduplication keys.
+10. `verify:routing` — Static-tests path routing maps and sitemap structures.
+
+All audit and verification scripts exit non-zero on any failure, making them ideal for pre-commit hooks, local testing, or CI pipelines. Any PR touching pathways, SAT materials, tracking, or routing should pass the relevant tests before merging.
