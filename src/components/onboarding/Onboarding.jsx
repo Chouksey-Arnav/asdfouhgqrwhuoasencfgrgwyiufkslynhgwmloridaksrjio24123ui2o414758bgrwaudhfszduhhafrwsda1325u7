@@ -73,7 +73,7 @@ function buildSteps(answers) {
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
   steps.push('accomplish', 'potential', 'thankYou', 'toggleAddBack', 'toggleRollover', 'commitment',
-    'generating', 'planReady', 'planSummary', 'saveProgress');
+    'saveProgress');
   return steps;
 }
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
