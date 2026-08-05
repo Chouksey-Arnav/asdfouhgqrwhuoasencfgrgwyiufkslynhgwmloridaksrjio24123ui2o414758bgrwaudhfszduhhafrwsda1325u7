@@ -14,7 +14,7 @@ import { satGrad, satWash } from './satUi';
 // Bluebook keeps its reference sheet one tap away for the whole Math section,
 // so this is one tap away too — including mid-question, mid-timed-set and
 // mid-full-test. It slides from the LEFT so it never fights the Medabrain panel
-// (right) or the floating calculator (centre).
+// (right) or the floating calculator (center).
 //
 // The second tab is the one that actually matters. The sheet the exam gives you
 // is short and mostly geometry; the formulas it withholds are where students

@@ -2,7 +2,7 @@
 // voice their browser/OS actually offers (grouped English-first, enhanced-quality-first), preview
 // each one with a sample line, and lock in a favorite that's remembered across sessions (see
 // getSavedVoiceURI/setSavedVoiceURI in lib/speech.js). We can't add new voices — the Web Speech
-// API has no external provider — so the win here is making the *existing* catalogue easy to
+// API has no external provider — so the win here is making the *existing* catalog easy to
 // audition and pick from, instead of a silent hardcoded default.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -13,11 +13,11 @@
 //   • Every YouTube playlist / channel URL (type "Course") was likewise
 //     confirmed against search results returning that exact list= id or handle.
 //   • Official sites (.gov, test-makers, professional associations, OpenStax,
-//     LibreTexts, PhET, etc.) use each organisation's canonical homepage or a
+//     LibreTexts, PhET, etc.) use each organization's canonical homepage or a
 //     long-lived section URL.
 // Three NEW categories are introduced here — "Clinical Exposure",
 // "Wellness & Balance", and "Math & Data" — and are wired into the library's
-// category filter (LIB_CATS) and colour map (CAT_META) in the app.
+// category filter (LIB_CATS) and color map (CAT_META) in the app.
 //
 // Dedup fix (elibExpansionE.js audit): a full programmatic re-check against
 // elib.js's core set turned up 21 entries in this file that were exact URL

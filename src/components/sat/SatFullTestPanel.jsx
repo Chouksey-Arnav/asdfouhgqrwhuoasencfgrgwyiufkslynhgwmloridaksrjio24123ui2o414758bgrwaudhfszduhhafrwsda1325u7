@@ -160,7 +160,7 @@ export default function SatFullTestPanel({
     const stage = STAGES[stageIdx];
     // A fresh mix must avoid everything the student has ever seen AND everything
     // this test has already handed them; a named form ignores both, because its
-    // questions were apportioned when the catalogue was built.
+    // questions were apportioned when the catalog was built.
     const delivered = new Set(Object.values(state.questionsByStage || {}).flat());
     const exclude = new Set([...(seenIds || []), ...delivered]);
 
@@ -396,7 +396,7 @@ export default function SatFullTestPanel({
         <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
           <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
             <b style={{ color: C.t1 }}>Where we still differ:</b> the score conversion is our own
-            estimate rather than College Board&rsquo;s table, and highlighting has three colours
+            estimate rather than College Board&rsquo;s table, and highlighting has three colors
             rather than Bluebook&rsquo;s annotate-with-notes. Everything else — module timing and
             the five-minute warning, the hideable timer, flag-for-review, answer cross-out, the
             end-of-module review screen, passage highlighting, Desmos, the reference sheet, adaptive
@@ -422,7 +422,7 @@ export default function SatFullTestPanel({
                       {new Date(a.finishedAt || a.startedAt).toLocaleDateString()}
                     </span>
                     {/* Which test produced this number. Attempts recorded before
-                        the catalogue existed have no testId and say so, rather
+                        the catalog existed have no testId and say so, rather
                         than being labelled as a form they were never sat on. */}
                     <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
                       · {a.meta?.official?.label || testLabel(a.meta?.testId)}

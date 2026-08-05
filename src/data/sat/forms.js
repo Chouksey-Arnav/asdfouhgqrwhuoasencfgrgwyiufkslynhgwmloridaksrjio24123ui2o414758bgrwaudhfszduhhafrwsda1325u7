@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// The catalogue of full-length tests a student can choose between.
+// The catalog of full-length tests a student can choose between.
 //
 // WHY NAMED FORMS AND NOT JUST A FRESH RANDOM SHUFFLE
 // The full-test panel used to build every test from `Date.now()` as its seed.
@@ -38,10 +38,10 @@
  * Order matters: src/lib/sat/forms.js apportions the bank in this order, so
  * earlier forms get first claim on the freshest questions and each later form
  * takes what is left. Appending a form therefore cannot disturb any existing
- * one, which is the property that makes the catalogue safe to grow.
+ * one, which is the property that makes the catalog safe to grow.
  *
  * HOW LONG THIS LIST IS ALLOWED TO BE
- * A form's footprint is around 130 bank questions, so the catalogue length is
+ * A form's footprint is around 130 bank questions, so the catalog length is
  * capped by the bank, not by taste. It is three because 466 questions support
  * three tests that share NOTHING; a fourth was drafted and came out 26% new,
  * which is not a fourth test, it is Form C with a coat of paint. Shipping it

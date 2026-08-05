@@ -13,7 +13,7 @@ import { celebrateXP } from '../../lib/celebrate';
 import { scheduleCard } from '../../lib/fsrs';
 
 // XP is weighted toward reviewing errors rather than raw volume — the incentive
-// should follow the behaviour that actually raises scores.
+// should follow the behavior that actually raises scores.
 const XP_PER_CORRECT = 3;
 const XP_PER_ATTEMPT = 1;
 

@@ -12,7 +12,7 @@
 //      sitting is the single most obvious way a practice test loses a student's
 //      trust, and it is also a scoring error — they get two bites at one skill.
 //   3. Forms are actually different from each other. That is the entire point
-//      of the feature; if Form B is Form A with a reshuffle, the catalogue is a
+//      of the feature; if Form B is Form A with a reshuffle, the catalog is a
 //      lie.
 //   4. The blueprint still holds per form — domain mix, difficulty mix and the
 //      grid-in share, checked against the same spec the single-test builder is
@@ -36,8 +36,8 @@ const manifests = allFormManifests();
 const SLOTS = ['module1', 'upper', 'lower'];
 
 // ── 1. Shape ────────────────────────────────────────────────────────────────
-assert('the catalogue assembled every form', manifests.length === SAT_FORMS.length,
-  `catalogue has ${SAT_FORMS.length}, assembled ${manifests.length}`);
+assert('the catalog assembled every form', manifests.length === SAT_FORMS.length,
+  `catalog has ${SAT_FORMS.length}, assembled ${manifests.length}`);
 
 for (const form of manifests) {
   for (const section of SECTION_IDS) {
@@ -81,12 +81,12 @@ for (const form of manifests) {
 
 // ── 3. Every form is a genuinely different test ─────────────────────────────
 //
-// This is the gate that keeps the catalogue honest, and it is deliberately
+// This is the gate that keeps the catalog honest, and it is deliberately
 // absolute rather than a percentage: NO form may share a single question with
-// any other. A catalogue is a promise that picking Form C gets you something
+// any other. A catalog is a promise that picking Form C gets you something
 // Form A did not, and a threshold like "less than half shared" would let that
 // promise degrade quietly as forms are appended to a bank that cannot carry
-// them. If this fails, the fix is to grow the bank or shorten the catalogue —
+// them. If this fails, the fix is to grow the bank or shorten the catalog —
 // never to loosen the number.
 const capacity = formCapacity();
 
@@ -103,7 +103,7 @@ for (let i = 0; i < manifests.length; i++) {
 }
 
 assert(
-  'every form in the catalogue is fully fresh',
+  'every form in the catalog is fully fresh',
   capacity.fullyFreshForms === manifests.length,
   `${capacity.fullyFreshForms} of ${manifests.length} forms are fully fresh`,
 );
@@ -205,7 +205,7 @@ for (const form of manifests) {
 
 // ── Report ──────────────────────────────────────────────────────────────────
 console.log('\nSAT test forms\n');
-console.log(`  forms in catalogue      ${capacity.forms}`);
+console.log(`  forms in catalog      ${capacity.forms}`);
 console.log(`  fully fresh forms       ${capacity.fullyFreshForms}  (share nothing with any earlier form)`);
 console.log(`  questions per form      ${capacity.questionsReservedPerForm}  (module 1 + both module 2 variants, both sections)`);
 console.log('');

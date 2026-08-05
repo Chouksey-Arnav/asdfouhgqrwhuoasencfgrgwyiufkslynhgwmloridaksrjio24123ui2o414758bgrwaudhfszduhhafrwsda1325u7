@@ -29,10 +29,10 @@ export const RW_INFO_IDEAS_QUESTIONS = [
   {
     id: 'sat-rw-cid-0002', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 70,
-    stimulus: 'Standard economic models long treated household labour as outside the economy, on the grounds that it is unpaid and therefore unmeasured. Waring’s 1988 critique did not dispute the measurement problem; she argued that the choice of what to measure was itself a political act, and that a national accounting system which registers an oil spill as growth while registering a raised child as nothing is not neutral but merely conventional.',
+    stimulus: 'Standard economic models long treated household labor as outside the economy, on the grounds that it is unpaid and therefore unmeasured. Waring’s 1988 critique did not dispute the measurement problem; she argued that the choice of what to measure was itself a political act, and that a national accounting system which registers an oil spill as growth while registering a raised child as nothing is not neutral but merely conventional.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
-      'Waring showed that household labour can be measured accurately using existing methods.',
+      'Waring showed that household labor can be measured accurately using existing methods.',
       'Waring argued that what a country counts is a political choice.',
       'Waring believed oil spills should be excluded from measures of economic growth.',
       'Standard economic models were mathematically flawed in ways Waring corrected.',
@@ -49,16 +49,16 @@ export const RW_INFO_IDEAS_QUESTIONS = [
   {
     id: 'sat-rw-cid-0003', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 70,
-    stimulus: 'Sourdough starters are often described as containing a stable community of yeasts and bacteria. A 2021 survey of five hundred home starters found that while the same few species recurred worldwide, the *proportions* varied enormously between kitchens and shifted within a single starter over months — and that these proportions, not the species list, predicted the flavour of the resulting bread.',
+    stimulus: 'Sourdough starters are often described as containing a stable community of yeasts and bacteria. A 2021 survey of five hundred home starters found that while the same few species recurred worldwide, the *proportions* varied enormously between kitchens and shifted within a single starter over months — and that these proportions, not the species list, predicted the flavor of the resulting bread.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Sourdough starters around the world turn out to contain entirely different microbial species.',
-      'A starter’s flavour tracks the relative abundance of its microbes, not which species it holds.',
+      'A starter’s flavor tracks the relative abundance of its microbes, not which species it holds.',
       'Home sourdough starters are considerably less stable over time than commercial ones are.',
       'The 2021 survey showed that sourdough microbiology is simply too variable to study usefully.',
     ],
     ans: 1,
-    exp: 'The final clause is the payoff: proportions, "not the species list", predicted flavour.',
+    exp: 'The final clause is the payoff: proportions, "not the species list", predicted flavor.',
     distractorExp: [
       'The text says the same few species recurred worldwide.',
       'Correct. Abundance over identity is the finding.',
@@ -94,7 +94,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     stimulus: 'In a study of urban foxes, Nakamura hypothesised that boldness around humans is learned within a fox’s lifetime rather than inherited.',
     q: 'Which finding would most weaken Nakamura’s hypothesis?',
     ch: [
-      'Foxes born in city centres approach humans far more readily than foxes born in the outer suburbs.',
+      'Foxes born in city centers approach humans far more readily than foxes born in the outer suburbs.',
       'Cubs cross-fostered from bold urban parents to shy rural ones grow up as bold as their birth parents.',
       'Adult foxes relocated from rural areas into the city grow noticeably bolder over eighteen months.',
       'Bold foxes manage to obtain considerably more food from human sources than shy foxes do.',
@@ -123,7 +123,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
     exp: 'The critic’s point is that the narrator understands her world through absences. Navigating by a tree that no longer exists is exactly that habit of mind.',
     distractorExp: [
       'Age of the house is not absence.',
-      'Correct. She orients herself by what is missing — absence as her organising frame.',
+      'Correct. She orients herself by what is missing — absence as her organizing frame.',
       'A present, positive sensory detail; it works against the argument.',
       'Continuity across generations is the opposite of loss.',
     ],
@@ -206,7 +206,7 @@ export const RW_INFO_IDEAS_QUESTIONS = [
       'laboratory fog chambers systematically overestimate collection rates for all known materials.',
     ],
     ans: 1,
-    exp: 'The films match the beetle in still, controlled fog but fall behind in variable wind — and the beetle actively *tilts into the wind*. The missing ingredient is behaviour, not chemistry.',
+    exp: 'The films match the beetle in still, controlled fog but fall behind in variable wind — and the beetle actively *tilts into the wind*. The missing ingredient is behavior, not chemistry.',
     distractorExp: [
       'The chamber results show the chemistry is reproduced well; the gap only appears with variable wind.',
       'Correct. The gap tracks wind variability, and posture is what the film lacks.',
@@ -217,18 +217,18 @@ export const RW_INFO_IDEAS_QUESTIONS = [
   {
     id: 'sat-rw-inf-0002', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 80,
-    stimulus: 'Linguists once assumed that a language’s colour vocabulary expands in a fixed order, with terms for blue arriving late. Analysis of the Berinmo language of Papua New Guinea complicated this: Berinmo has no single term covering the English range of "blue", but it does draw a boundary English lacks, between two shades English speakers group together as "green". Speakers were faster than English speakers at discriminating across that boundary and slower across the blue-green boundary English marks. It follows that ______',
+    stimulus: 'Linguists once assumed that a language’s color vocabulary expands in a fixed order, with terms for blue arriving late. Analysis of the Berinmo language of Papua New Guinea complicated this: Berinmo has no single term covering the English range of "blue", but it does draw a boundary English lacks, between two shades English speakers group together as "green". Speakers were faster than English speakers at discriminating across that boundary and slower across the blue-green boundary English marks. It follows that ______',
     q: 'Which choice most logically completes the text?',
     ch: [
-      'Berinmo speakers perceive fewer colours than English speakers do.',
-      'colour discrimination is shaped in part by the boundaries a speaker’s language draws.',
-      'the fixed-order theory of colour vocabulary has been confirmed by the Berinmo data.',
+      'Berinmo speakers perceive fewer colors than English speakers do.',
+      'color discrimination is shaped in part by the boundaries a speaker’s language draws.',
+      'the fixed-order theory of color vocabulary has been confirmed by the Berinmo data.',
       'Berinmo lacks the vocabulary needed to describe natural landscapes.',
     ],
     ans: 1,
     exp: 'Each group was faster across the boundary its own language marks and slower across the other. The performance difference tracks the vocabulary difference.',
     distractorExp: [
-      'They did not perceive *fewer* colours — they were faster on a boundary English speakers were slower on.',
+      'They did not perceive *fewer* colors — they were faster on a boundary English speakers were slower on.',
       'Correct. Discrimination speed follows the language’s own category boundaries.',
       'The data complicate the fixed-order theory; the passage says so explicitly.',
       'Nothing in the passage concerns describing landscapes.',
@@ -237,12 +237,12 @@ export const RW_INFO_IDEAS_QUESTIONS = [
   {
     id: 'sat-rw-inf-0003', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 75,
-    stimulus: 'Restorers cleaning a seventeenth-century panel found that the varnish they removed had yellowed enough to shift the apparent colour of the sky from grey-green to warm brown. Contemporary written descriptions of the painting consistently praise its "cold northern light" — a description that matches the cleaned surface but not the state of the painting as it appeared for most of the intervening centuries. This implies that ______',
+    stimulus: 'Restorers cleaning a seventeenth-century panel found that the varnish they removed had yellowed enough to shift the apparent color of the sky from gray-green to warm brown. Contemporary written descriptions of the painting consistently praise its "cold northern light" — a description that matches the cleaned surface but not the state of the painting as it appeared for most of the intervening centuries. This implies that ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'the written descriptions were composed before the varnish yellowed much.',
       'the restorers removed original paint along with the varnish.',
-      'seventeenth-century viewers preferred cooler colour palettes than later viewers did.',
+      'seventeenth-century viewers preferred cooler color palettes than later viewers did.',
       'the painting was repainted at some point after the seventeenth century.',
     ],
     ans: 0,

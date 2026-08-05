@@ -4,10 +4,10 @@
 // ── Why `C` is a MUTABLE object rather than CSS custom properties ────────────
 // The obvious way to theme this app would be to make every token a
 // `var(--c-blue)`. That doesn't work here, and it's worth writing down why so
-// nobody "fixes" it back: the codebase composes colours by string concatenation
+// nobody "fixes" it back: the codebase composes colors by string concatenation
 // in ~380 places — `border: 1px solid ${C.violet}28`, `boxShadow: 0 4px 16px
 // ${accent}40`. That idiom appends a two-digit hex alpha to a six-digit hex
-// colour. `var(--c-violet)28` is not a colour, it is a syntax error, and every
+// color. `var(--c-violet)28` is not a color, it is a syntax error, and every
 // one of those borders would silently vanish.
 //
 // So instead `C` stays a plain object of real hex/rgba strings, and switching
@@ -15,7 +15,7 @@
 // the app is an inline style object computed during render, so a remount is all
 // it takes for the entire UI to pick up the new palette — no per-component
 // wiring, no context threading through 16k lines, and the concatenation idiom
-// keeps working because the tokens are still real colours.
+// keeps working because the tokens are still real colors.
 //
 // The one rule this creates: never capture a token into a module-level object
 // literal, because that snapshots the value at import time and it will never
@@ -24,7 +24,7 @@
 //
 // CSS custom properties ARE still emitted (see applyTheme) — but only for the
 // handful of things that live in index.css and genuinely need a variable:
-// the page background, scrollbars, selection colour, focus rings.
+// the page background, scrollbars, selection color, focus rings.
 // ─────────────────────────────────────────────────────────────────────────────
 
 // ── Dark palette ─────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export const DARK = {
   // Added with light mode. The app previously hard-coded
   // `rgba(255,255,255,0.03)` inline for every glass surface, which reads as
   // "lift a surface toward the light" — the correct instinct in dark mode and,
-  // as it happens, still correct in light mode, where a white wash over a grey
+  // as it happens, still correct in light mode, where a white wash over a gray
   // page is exactly how a raised card looks. So the light values below are the
   // same idea at a much higher alpha rather than an inversion.
   surf:'rgba(255,255,255,0.03)', surf2:'rgba(255,255,255,0.025)', surfHi:'rgba(255,255,255,0.06)',
@@ -91,14 +91,14 @@ export const DARK = {
 // ── Light palette ────────────────────────────────────────────────────────────
 // Not a mechanical inversion. Three deliberate decisions:
 //
-// 1. The page is a soft cool grey (#eaeef6), not white. That keeps the existing
+// 1. The page is a soft cool gray (#eaeef6), not white. That keeps the existing
 //    white-wash surface treatment meaningful — cards read as raised because
 //    they're whiter than the page — and it's markedly easier on the eyes for a
 //    student staring at a reading passage for an hour.
 // 2. Every `*L` token, which in dark mode means "the lighter, more readable
 //    variant", becomes the DARKER variant here. Those tokens are overwhelmingly
-//    used as text colour, and the job of the token is legibility, not lightness.
-// 3. Base accents are pulled down toward their 600-weight so a coloured heading
+//    used as text color, and the job of the token is legibility, not lightness.
+// 3. Base accents are pulled down toward their 600-weight so a colored heading
 //    or a chip label clears roughly 4.5:1 against a light surface. #2d7fff on
 //    white is about 3.1:1 — fine for a border, not fine for words.
 // 4. (Added in the glare pass.) No large surface is pure #ffffff any more. A
@@ -142,9 +142,9 @@ export const LIGHT = {
   shadowSm:'0 1px 3px rgba(15,23,42,0.07)',
   scrim:'rgba(15,23,42,0.35)',
   onAccent:'#ffffff',
-  // Two hues, not five. The old five-colour wash put a different tint in every
+  // Two hues, not five. The old five-color wash put a different tint in every
   // corner of the page, which is exactly the ambient busy-ness this pass is
-  // removing — and at these alphas the extra three were never read as colour,
+  // removing — and at these alphas the extra three were never read as color,
   // only as unevenness.
   pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(45,127,255,0.07) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(124,58,237,0.04) 0%, transparent 58%)',
   noiseOpacity:'0.012',
@@ -163,7 +163,7 @@ export const LIGHT = {
 //
 // Balanced is a dusk slate: a page at #181d27 (light enough that the screen
 // isn't a black mirror, dark enough that it never glares), text at #e6eaf2
-// rather than white, and accents pulled roughly 15–20% of the way toward grey
+// rather than white, and accents pulled roughly 15–20% of the way toward gray
 // from the Dark palette's saturated versions. That last part is what makes it
 // read as calm rather than merely dim — on a dark page, a fully-saturated
 // #10b981 or #f43f5e is a light source, and a screen with six of them is the
@@ -402,7 +402,7 @@ export const CAT_META = new Proxy({}, {
 });
 
 /**
- * Turn any colour token into a translucent tint.
+ * Turn any color token into a translucent tint.
  * Handles hex (the common case) and falls back to color-mix() for rgba/named
  * inputs, so a caller passing an already-translucent token gets something
  * sensible rather than the string back unchanged.
@@ -417,12 +417,12 @@ export const tint = (color, a = 0.12) => {
 };
 
 /**
- * Darken a colour toward black by `amount` (0–1).
+ * Darken a color toward black by `amount` (0–1).
  *
  * Exists so a gradient can be built from ONE hue — `linear-gradient(135deg,
  * ${c}, ${shade(c)})` — instead of pairing two different accents, which is what
  * turns a screen of buttons into a paint chart. Hex in, hex out; anything else
- * falls back to color-mix so a caller passing rgba still gets a darker colour
+ * falls back to color-mix so a caller passing rgba still gets a darker color
  * rather than the string back unchanged.
  */
 export const shade = (color, amount = 0.22) => {
@@ -446,7 +446,7 @@ const relLum = (hex) => {
   return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
 };
 
-/** WCAG contrast ratio between two hex colours. Null if either isn't hex. */
+/** WCAG contrast ratio between two hex colors. Null if either isn't hex. */
 export const contrastRatio = (a, b) => {
   const [la, lb] = [relLum(a), relLum(b)];
   if (la == null || lb == null) return null;
@@ -460,7 +460,7 @@ export const contrastRatio = (a, b) => {
  * Light mode's amber and gold sit around 2.5:1 against white, so a filled
  * "Set your baseline" button was illegible on exactly the screen it matters
  * most on. Rather than banning those hues from buttons — they carry meaning —
- * this walks the colour down until the label is readable, which changes nothing
+ * this walks the color down until the label is readable, which changes nothing
  * for hues that already pass (every accent on the dark palettes).
  */
 export const accentFill = (color, min = 4.0) => {

@@ -39,7 +39,7 @@
 //                 scratch, so the deep tier would be spending money on latency.
 //
 // 3. LICENSING. No official College Board content may enter a prompt here, as
-//    an example or otherwise: they grant no commercial licence for SAT items and
+//    an example or otherwise: they grant no commercial license for SAT items and
 //    explicitly forbid their use with generative AI. The prompts below describe
 //    the published *blueprint* — domain names, skill descriptions, question
 //    formats, timing — which is factual, and ask for wholly original items.

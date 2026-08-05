@@ -23,7 +23,7 @@ import { generateForSkill } from './aiPractice';
  * Generate extra practice questions for one skill.
  * @deprecated prefer generatePracticeSet() in aiPractice.js, which personalises
  * across skills. Retained because the Practice panel's drill top-up wants
- * exactly this narrow behaviour.
+ * exactly this narrow behavior.
  */
 export async function generateQuestions(skillId, { difficulty = 'M', count = 4, profile = null, fresh = false, signal } = {}) {
   return generateForSkill(skillId, { difficulty, count, profile, fresh, signal });

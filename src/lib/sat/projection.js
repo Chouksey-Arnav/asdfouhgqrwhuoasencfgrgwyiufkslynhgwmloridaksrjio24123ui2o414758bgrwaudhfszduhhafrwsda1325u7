@@ -48,7 +48,7 @@ const clampScore = (n) => Math.max(200, Math.min(800, roundTo10(n)));
  *
  * Converts measured proportion-correct into a raw count out of the section's
  * real question total, then runs it through the same conversion table the full
- * test uses. Uses the LOWER path curve deliberately: a student practising in
+ * test uses. Uses the LOWER path curve deliberately: a student practicing in
  * untimed drills has not demonstrated they can clear the routing bar under exam
  * conditions, and over-promising is the failure mode we are correcting.
  */
@@ -121,7 +121,7 @@ export function projectScore({ masteryMap = {}, attempts = [], responses = [] } 
 
   const mid = compositeScore(sections.rw.scaled, sections.math.scaled);
   const band = BAND[basis] * 2;
-  // Thin coverage widens the band further: practising only Algebra tells us
+  // Thin coverage widens the band further: practicing only Algebra tells us
   // little about Math as a whole.
   const avgCoverage = SECTION_IDS.reduce((s, x) => s + (sections[x]?.coverage || 0), 0) / SECTION_IDS.length;
   const coveragePenalty = Math.round((1 - avgCoverage) * 100);
@@ -157,7 +157,7 @@ export function projectionEmptyState(responseCount = 0) {
   return {
     title: 'Not enough data yet',
     body: `You have answered ${responseCount} question${responseCount === 1 ? '' : 's'}. We need at least ${MIN_TOTAL_RESPONSES} across both sections before an estimate means anything.`,
-    cta: 'Keep practising',
+    cta: 'Keep practicing',
     view: 'practice',
   };
 }

@@ -212,7 +212,7 @@ export const SAT_STRATEGIES = {
     approach: 'Find the denominator first — the conditional phrase tells you which row or column.',
     steps: [
       '"Given that..." restricts you to one row or column of the table.',
-      'Count the favourable outcomes within that restricted group only.',
+      'Count the favorable outcomes within that restricted group only.',
       'Check whether the question wants a fraction, decimal or percentage.',
     ],
     watchFor: 'Using the grand total as the denominator on a conditional question.',
@@ -254,7 +254,7 @@ export const SAT_STRATEGIES = {
     watchFor: 'Taking the ratio relative to the wrong angle.',
   },
   circles: {
-    approach: 'Get to centre-radius form, then everything else follows.',
+    approach: 'Get to center-radius form, then everything else follows.',
     steps: [
       '(x − h)² + (y − k)² = r² — note the signs are subtracted, and the right side is r², not r.',
       'Arc length and sector area are just the fraction of the circle the angle represents.',

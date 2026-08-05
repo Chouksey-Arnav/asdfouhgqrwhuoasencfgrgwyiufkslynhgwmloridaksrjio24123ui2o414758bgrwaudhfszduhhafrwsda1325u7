@@ -601,7 +601,7 @@ export default function SatPracticePanel({
       {mode === 'timed' && (
         <SatCard title="Choose a section" icon={Clock} iconColor={C.amber} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
-            One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practise committing under time.
+            One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practice committing under time.
           </div>
           <div style={G(2, 12, {}, isMobile)}>
             {Object.values(SAT_SECTIONS).map(s => (

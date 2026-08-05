@@ -11,7 +11,7 @@
 // percentages; question counts are the real per-section totals.
 //
 // LICENSING: every question in src/data/sat/questions/** must be original.
-// College Board grants no commercial licence for official SAT items and
+// College Board grants no commercial license for official SAT items and
 // explicitly forbids their use with generative AI, so no scraped Bluebook or
 // Question Bank content may enter this directory, and no AI prompt may pass
 // official questions as examples. The taxonomy below describes the published
@@ -145,7 +145,7 @@ export const SAT_SKILLS = {
   text_structure_purpose: {
     id: 'text_structure_purpose', domain: 'craft_structure', weight: 0.35,
     label: 'Text Structure and Purpose', targetSeconds: 75,
-    blurb: 'Identify why a text is organised the way it is, or the function of one part.',
+    blurb: 'Identify why a text is organized the way it is, or the function of one part.',
   },
   cross_text_connections: {
     id: 'cross_text_connections', domain: 'craft_structure', weight: 0.25,
@@ -203,7 +203,7 @@ export const SAT_SKILLS = {
   linear_equations_1var: {
     id: 'linear_equations_1var', domain: 'algebra', weight: 0.22,
     label: 'Linear Equations in One Variable', targetSeconds: 60,
-    blurb: 'Solve, and recognise when an equation has no or infinitely many solutions.',
+    blurb: 'Solve, and recognize when an equation has no or infinitely many solutions.',
   },
   linear_equations_2var: {
     id: 'linear_equations_2var', domain: 'algebra', weight: 0.24,
@@ -394,7 +394,7 @@ export const ERROR_TYPES = {
   },
   ran_out_of_time: {
     id: 'ran_out_of_time', label: 'Ran out of time', color: C.violet,
-    prescription: 'Practise this skill under a timer. Learn to recognise and skip time sinks.',
+    prescription: 'Practice this skill under a timer. Learn to recognize and skip time sinks.',
   },
   guessed: {
     id: 'guessed', label: 'Guessed — reasoning was wrong', color: C.sky,

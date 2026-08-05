@@ -64,7 +64,7 @@ export function SatVideoCard({ video, isMobile = false, accentColor = C.sky }) {
             alt=""
             loading="lazy"
             onError={() => setImgFailed(true)}
-            // hqdefault is 4:3 with letterbox bars; cropping to the centre
+            // hqdefault is 4:3 with letterbox bars; cropping to the center
             // recovers the 16:9 frame without stretching anyone's face.
             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />

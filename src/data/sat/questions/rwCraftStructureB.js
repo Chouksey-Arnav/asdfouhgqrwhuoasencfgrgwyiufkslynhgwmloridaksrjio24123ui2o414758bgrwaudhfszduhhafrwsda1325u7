@@ -6,7 +6,7 @@
 //
 // Passage lengths deliberately sit in the 25-150 word band the real exam uses,
 // with exactly one question per passage. A 400-word passage carrying four
-// questions is the OLD SAT, and practising on one teaches pacing that will not
+// questions is the OLD SAT, and practicing on one teaches pacing that will not
 // survive contact with the digital test.
 export const RW_CRAFT_STRUCTURE_B = [
   // ── Words in Context ──────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ export const RW_CRAFT_STRUCTURE_B = [
     ans: 0,
     exp: 'The passage describes work that keeps being revised while remaining itself. "Provisional" — held for now, open to change — is exactly that.',
     distractorExp: [
-      'Correct. A provisional work is one held open to revision, which is the behaviour described.',
+      'Correct. A provisional work is one held open to revision, which is the behavior described.',
       'Derivative means copied from something else; nothing here says his work is unoriginal.',
       'Ornamental means decorative rather than essential, which the passage never suggests.',
       'Inscrutable means impossible to understand, and the passage is about revision, not obscurity.',
@@ -58,11 +58,11 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-wic-0104', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 70,
-    stimulus: 'Economists have long modelled consumers as calculating agents. Behavioural work has not so much refuted that model as ______ it: the calculations turn out to be real but bounded, performed under limits of time and attention that the original framework simply did not represent.',
+    stimulus: 'Economists have long modeled consumers as calculating agents. Behavioral work has not so much refuted that model as ______ it: the calculations turn out to be real but bounded, performed under limits of time and attention that the original framework simply did not represent.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['discarded', 'circumscribed', 'vindicated', 'popularised'],
     ans: 1,
-    exp: '"Not so much refuted as ______" calls for something weaker than refutation. The calculations are "real but bounded", so the behavioural work drew limits around the model: circumscribed it.',
+    exp: '"Not so much refuted as ______" calls for something weaker than refutation. The calculations are "real but bounded", so the behavioral work drew limits around the model: circumscribed it.',
     distractorExp: [
       'Discarded is stronger than refuted, and the sentence needs something weaker.',
       'Correct. To circumscribe is to draw a boundary around, which matches "real but bounded".',
@@ -148,7 +148,7 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-wic-0110', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 60,
-    stimulus: 'Critics of the restoration complained that the cleaned frescoes looked garish. The conservators\' reply was ______: the colours had always been that bright, and four centuries of candle soot had done the muting that the critics had mistaken for the artist\'s intent.',
+    stimulus: 'Critics of the restoration complained that the cleaned frescoes looked garish. The conservators\' reply was ______: the colors had always been that bright, and four centuries of candle soot had done the muting that the critics had mistaken for the artist\'s intent.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['apologetic', 'evasive', 'unsparing', 'tentative'],
     ans: 2,
@@ -187,7 +187,7 @@ export const RW_CRAFT_STRUCTURE_B = [
       'Correct. The scales conceal the moth from a bat\'s sonar.',
       'Ornament is what the sentence explicitly rules out with "not decoration".',
       'Nourishment has nothing to do with reflecting or absorbing sound.',
-      'Communication would mean signalling to another animal; the point is to avoid being detected.',
+      'Communication would mean signaling to another animal; the point is to avoid being detected.',
     ],
   },
   {
@@ -229,7 +229,7 @@ export const RW_CRAFT_STRUCTURE_B = [
     q: 'Which choice best describes the overall structure of the text?',
     ch: [
       'It presents a result and then lists competing explanations for it.',
-      'It describes a controversy and then settles it in favour of one side.',
+      'It describes a controversy and then settles it in favor of one side.',
       'It defines a scientific term and then gives an extended example of its use.',
       'It recounts a study\'s method and then criticises the sample it drew on.',
     ],
@@ -408,13 +408,13 @@ export const RW_CRAFT_STRUCTURE_B = [
     stimulus: 'The following text is adapted from a 2015 memoir by a translator.\n\nI had been warned that the author was difficult. What I found instead was an author who was exact. He would not accept "almost" for a word he had chosen deliberately, and he could always say why he had chosen it. Three months in I stopped resenting the letters and started keeping them.',
     q: 'Which choice best describes the function of the last sentence in the text?',
     ch: [
-      'It marks a change in the narrator\'s judgement of the author\'s exactness.',
+      'It marks a change in the narrator\'s judgment of the author\'s exactness.',
       'It reveals that the narrator eventually abandoned the translation project.',
       'It explains the specific method the author used to choose his words.',
       'It concedes that the initial warning about the author had been accurate.',
     ],
     ans: 0,
-    exp: 'Resentment turning into keeping the letters records the narrator coming round to the author\'s precision — a shift in judgement, not in the author.',
+    exp: 'Resentment turning into keeping the letters records the narrator coming round to the author\'s precision — a shift in judgment, not in the author.',
     distractorExp: [
       'Correct. The narrator\'s attitude changes from resentment to valuing the letters.',
       'Nothing suggests the project was abandoned.',
@@ -425,8 +425,8 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-tsp-0111', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'H', format: 'mcq', trap: 'too_extreme', targetSeconds: 85,
-    stimulus: 'The following text is adapted from a 2021 paper in economics.\n\nMinimum-wage studies typically compare employment across a state border after one side raises its floor. The design is clean, and its critics have mostly attacked the wrong thing: not the comparison itself, which is sound, but the assumption that a border marks the edge of a labour market. Where commuting is heavy, a raise on one side changes the wage a worker on the other side will accept, and the control group has been treated.',
-    q: 'Which choice best describes the function of the underlined portion? (underlined: "not the comparison itself, which is sound, but the assumption that a border marks the edge of a labour market")',
+    stimulus: 'The following text is adapted from a 2021 paper in economics.\n\nMinimum-wage studies typically compare employment across a state border after one side raises its floor. The design is clean, and its critics have mostly attacked the wrong thing: not the comparison itself, which is sound, but the assumption that a border marks the edge of a labor market. Where commuting is heavy, a raise on one side changes the wage a worker on the other side will accept, and the control group has been treated.',
+    q: 'Which choice best describes the function of the underlined portion? (underlined: "not the comparison itself, which is sound, but the assumption that a border marks the edge of a labor market")',
     ch: [
       'It concedes the critics\' main point before setting it aside as largely unimportant.',
       'It separates a defensible feature of the design from the assumption the passage challenges.',
@@ -468,13 +468,13 @@ export const RW_CRAFT_STRUCTURE_B = [
     stimulus: 'The following text is adapted from a 2020 article about ocean currents.\n\nDrifting buoys are the cheapest oceanography there is. You release one, it goes where the water goes, and it reports its position by satellite until its battery dies. No ship time, no crew, no hypothesis required in advance. The data that comes back is not the data you asked for. It is simply the data the ocean happened to produce.',
     q: 'Which choice best describes the function of the last two sentences in the text?',
     ch: [
-      'They characterise the kind of knowledge the method yields.',
+      'They characterize the kind of knowledge the method yields.',
       'They identify a technical failure that limits the method\'s usefulness.',
       'They compare drifting buoys with ship-based measurement techniques.',
       'They explain how satellite positioning of the buoys actually works.',
     ],
     ans: 0,
-    exp: 'After describing the method, the passage turns to what kind of data it gives — observational rather than hypothesis-driven. That characterisation is their job.',
+    exp: 'After describing the method, the passage turns to what kind of data it gives — observational rather than hypothesis-driven. That characterization is their job.',
     distractorExp: [
       'Correct. They describe the nature of the resulting knowledge.',
       'Nothing is described as failing; the battery dying is part of the design.',
@@ -507,7 +507,7 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-ctc-0102', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 100,
-    stimulus: 'Text 1\nThe standard defence of biodiversity is instrumental: species are a library of possible medicines, crops and materials, and burning a library is imprudent whatever is in it. The argument has the advantage of speaking a language that budget committees already understand.\n\nText 2\nInstrumental arguments buy protection at a price. If a species is worth saving because it might yield a drug, then a species shown to yield nothing has, by the argument\'s own logic, lost its claim. Defenders rarely accept that conclusion — which suggests the argument was never really doing the work they thought it was.',
+    stimulus: 'Text 1\nThe standard defense of biodiversity is instrumental: species are a library of possible medicines, crops and materials, and burning a library is imprudent whatever is in it. The argument has the advantage of speaking a language that budget committees already understand.\n\nText 2\nInstrumental arguments buy protection at a price. If a species is worth saving because it might yield a drug, then a species shown to yield nothing has, by the argument\'s own logic, lost its claim. Defenders rarely accept that conclusion — which suggests the argument was never really doing the work they thought it was.',
     q: 'Based on the texts, the author of Text 2 would most likely describe the "advantage" mentioned in Text 1 as',
     ch: [
       'real but bought by accepting a premise its users would reject.',
@@ -547,8 +547,8 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-ctc-0104', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 95,
-    stimulus: 'Text 1\nThe fossil record shows long stretches in which species change very little, punctuated by brief intervals of rapid change. Eldredge and Gould took the pattern at face value: stasis is real, and evolution is concentrated in short bursts around speciation events.\n\nText 2\nSediment does not accumulate at a constant rate. Millions of years can be compressed into a centimetre, or a single century spread across a metre. Before a pattern of stasis and burst can be read as biology, it has to be shown not to be an artefact of the rock that recorded it.',
-    q: 'Based on the texts, the author of Text 2 would most likely characterise Eldredge and Gould\'s approach as',
+    stimulus: 'Text 1\nThe fossil record shows long stretches in which species change very little, punctuated by brief intervals of rapid change. Eldredge and Gould took the pattern at face value: stasis is real, and evolution is concentrated in short bursts around speciation events.\n\nText 2\nSediment does not accumulate at a constant rate. Millions of years can be compressed into a centimeter, or a single century spread across a meter. Before a pattern of stasis and burst can be read as biology, it has to be shown not to be an artifact of the rock that recorded it.',
+    q: 'Based on the texts, the author of Text 2 would most likely characterize Eldredge and Gould\'s approach as',
     ch: [
       'mistaken about the fossil record, which in fact shows continuous gradual change.',
       'premature, because another source of the pattern has not yet been ruled out.',
@@ -556,7 +556,7 @@ export const RW_CRAFT_STRUCTURE_B = [
       'well supported, provided that sediment accumulation is measured more accurately.',
     ],
     ans: 1,
-    exp: 'Text 2 does not assert the pattern is false — it says it must "be shown not to be an artefact" first. That is an objection about order of proof, not about the answer.',
+    exp: 'Text 2 does not assert the pattern is false — it says it must "be shown not to be an artifact" first. That is an objection about order of proof, not about the answer.',
     distractorExp: [
       'Text 2 never claims the record shows gradual change; it questions what the record can show.',
       'Correct. The objection is that a rival explanation has not been eliminated yet.',
@@ -567,7 +567,7 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-ctc-0105', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 100,
-    stimulus: 'Text 1\nCritics of algorithmic hiring point to biased outcomes and conclude the models are at fault. But a model trained on a firm\'s past hires can only reproduce the firm\'s past preferences. The bias is in the record, and the algorithm is the first thing to state it plainly enough to be measured.\n\nText 2\nThat defence proves less than it appears to. A human manager\'s bias applies to the candidates that manager sees; a model\'s applies to every candidate, identically, at once. Making bias measurable is worth something. Making it uniform and total is a cost that has to be set against it.',
+    stimulus: 'Text 1\nCritics of algorithmic hiring point to biased outcomes and conclude the models are at fault. But a model trained on a firm\'s past hires can only reproduce the firm\'s past preferences. The bias is in the record, and the algorithm is the first thing to state it plainly enough to be measured.\n\nText 2\nThat defense proves less than it appears to. A human manager\'s bias applies to the candidates that manager sees; a model\'s applies to every candidate, identically, at once. Making bias measurable is worth something. Making it uniform and total is a cost that has to be set against it.',
     q: 'Based on the texts, the author of Text 2 would most likely agree with which claim about Text 1\'s argument?',
     ch: [
       'It correctly locates the bias but understates what automation changes.',

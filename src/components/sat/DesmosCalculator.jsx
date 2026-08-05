@@ -13,7 +13,7 @@ import { satWash } from './satUi';
 //
 // On the real Digital SAT the calculator is a panel a student pops open on top
 // of the question and drags out of the way of the passage — so it is a floating
-// window here too, not a separate screen. Practising on a layout the exam does
+// window here too, not a separate screen. Practicing on a layout the exam does
 // not have is a small thing that costs real seconds on test day.
 //
 // It stays open across questions, across sub-tabs, and across reloads: geometry

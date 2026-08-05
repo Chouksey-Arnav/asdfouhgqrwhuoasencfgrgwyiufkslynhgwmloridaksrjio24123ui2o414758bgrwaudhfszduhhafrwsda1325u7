@@ -44,7 +44,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-bnd-0103', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'fragment', targetSeconds: 45,
-    stimulus: 'Deep-sea anglerfish practise a reproductive strategy found nowhere else among vertebrates ______ the much smaller male fuses permanently to the female\'s body and is absorbed into her circulation.',
+    stimulus: 'Deep-sea anglerfish practice a reproductive strategy found nowhere else among vertebrates ______ the much smaller male fuses permanently to the female\'s body and is absorbed into her circulation.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [': ', ', ', ' ', ', which '],
     ans: 0,
@@ -179,7 +179,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-bnd-0112', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'comma_splice', targetSeconds: 45,
-    stimulus: 'The 1908 Tunguska event flattened some 2,000 square kilometres of forest ______ no crater was ever found, which is why the object is now thought to have exploded in the air.',
+    stimulus: 'The 1908 Tunguska event flattened some 2,000 square kilometers of forest ______ no crater was ever found, which is why the object is now thought to have exploded in the air.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [', but ', ', ', ' ', '; but '],
     ans: 0,
@@ -239,7 +239,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-bnd-0116', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'E', format: 'mcq', trap: 'comma_splice', targetSeconds: 40,
-    stimulus: 'Although the theatre had been dark for eleven years ______ the lighting rig above the stage was found to be entirely intact.',
+    stimulus: 'Although the theater had been dark for eleven years ______ the lighting rig above the stage was found to be entirely intact.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [', ', '; ', ' but ', ': '],
     ans: 0,
@@ -306,7 +306,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-fss-0103', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'M', format: 'mcq', trap: 'tense_shift', targetSeconds: 50,
-    stimulus: 'By the time the survey team reached the upper valley in 1974, the glacier they had come to measure ______ nearly a kilometre from the position recorded on their maps.',
+    stimulus: 'By the time the survey team reached the upper valley in 1974, the glacier they had come to measure ______ nearly a kilometer from the position recorded on their maps.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['retreats', 'has retreated', 'had retreated', 'will have retreated'],
     ans: 2,
@@ -405,12 +405,12 @@ export const RW_CONVENTIONS_B = [
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['test', 'tested', 'are testing', 'will test'],
     ans: 1,
-    exp: 'The two verbs share a subject and describe the same past programme, so they must be in the same tense: collected and tested.',
+    exp: 'The two verbs share a subject and describe the same past program, so they must be in the same tense: collected and tested.',
     distractorExp: [
       'Present tense breaks the parallel with "collected".',
       'Correct. Past tense matches "collected".',
       'Present progressive contradicts the completed eleven-year period.',
-      'Future tense contradicts a programme already carried out.',
+      'Future tense contradicts a program already carried out.',
     ],
   },
   {
@@ -481,7 +481,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-fss-0114', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'M', format: 'mcq', trap: 'subject_verb', targetSeconds: 50,
-    stimulus: 'Data from the three monitoring stations ______ that the plume travelled north-east for at least sixty kilometres.',
+    stimulus: 'Data from the three monitoring stations ______ that the plume traveled north-east for at least sixty kilometers.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['suggests', 'suggest', 'is suggesting', 'has suggested'],
     ans: 1,
@@ -511,7 +511,7 @@ export const RW_CONVENTIONS_B = [
   {
     id: 'sat-rw-fss-0116', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'M', format: 'mcq', trap: 'subject_verb', targetSeconds: 50,
-    stimulus: 'Mathematics, along with the two laboratory sciences, ______ required of every student in the programme\'s first year.',
+    stimulus: 'Mathematics, along with the two laboratory sciences, ______ required of every student in the program\'s first year.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['are', 'is', 'were', 'have been'],
     ans: 1,

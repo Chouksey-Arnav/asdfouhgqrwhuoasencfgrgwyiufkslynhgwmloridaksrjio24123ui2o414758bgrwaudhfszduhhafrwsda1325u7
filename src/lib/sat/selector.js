@@ -195,7 +195,7 @@ export function buildSmartSet({
         label: SAT_SKILLS[skillId].label,
         reason: masteryMap[skillId]?.attempts
           ? `${Math.round((masteryMap[skillId].mastery) * 100)}% mastery · ${(examShare(skillId) * 98).toFixed(1)} questions per exam`
-          : 'not practised yet',
+          : 'not practiced yet',
       });
     }
   }

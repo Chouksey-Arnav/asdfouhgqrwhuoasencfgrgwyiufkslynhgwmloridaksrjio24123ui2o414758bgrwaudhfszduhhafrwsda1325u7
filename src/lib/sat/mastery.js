@@ -151,8 +151,8 @@ export function computeSkillMastery(skillId, responses = [], now = Date.now()) {
     confidence,
     confidenceBand: confidenceBand(confidence).id,
     // Used for ranking, never for display. Shrinking by confidence makes a
-    // never-practised skill rank as "weak", which is what we want the selector
-    // and the heat map to prioritise.
+    // never-practiced skill rank as "weak", which is what we want the selector
+    // and the heat map to prioritize.
     effectiveMastery: mastery * confidence,
     avgSeconds,
     targetSeconds: target,
@@ -219,7 +219,7 @@ export function rankSkillsByLeverage(masteryMap, { section, limit } = {}) {
 /**
  * Roll skill mastery up to a section-level estimate of proportion-correct.
  * Weighted by each skill's real share of the section, so the estimate reflects
- * the exam's actual composition rather than what the student chose to practise.
+ * the exam's actual composition rather than what the student chose to practice.
  * Returns null when there is not enough data to say anything honest.
  */
 export function sectionMastery(masteryMap, section) {
@@ -236,7 +236,7 @@ export function sectionMastery(masteryMap, section) {
   if (!weightSum || attempts < 5) return null;
 
   // Coverage: what fraction of the section's exam weight we have any data on.
-  // A student who has only practised Algebra has not measured "Math".
+  // A student who has only practiced Algebra has not measured "Math".
   const totalWeight = skills.reduce((s, id) => s + examShare(id), 0);
   return {
     section,

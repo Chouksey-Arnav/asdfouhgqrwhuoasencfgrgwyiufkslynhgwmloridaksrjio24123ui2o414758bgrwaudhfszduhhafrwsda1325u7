@@ -116,7 +116,7 @@ body::before {
 /* Medabrain launcher (PortfolioMedabrain / PrepMedabrain pull-tab + mobile FAB) — a diagonal
    light sweep that glides across the button on hover, on top of the ambient .msp-pulse-glow ring
    already applied to its own glow layer. isolation:isolate keeps the ::after sweep clipped to
-   this element's own stacking context so it can't bleed over neighbouring UI. */
+   this element's own stacking context so it can't bleed over neighboring UI. */
 .mb-launcher { position: relative; overflow: hidden; isolation: isolate; }
 .mb-launcher::after {
   content: '';
@@ -200,7 +200,7 @@ body::before {
 
 /* SubNav (Prep/Portfolio pill tab bar) — a highlighted, unmissable horizontal scrollbar instead
    of the near-invisible 4px default above. `--subnav-accent` is set per-instance from the active
-   section's colour so the thumb itself carries that section's identity. */
+   section's color so the thumb itself carries that section's identity. */
 .subnav-scroll { scrollbar-width: thin; scrollbar-color: var(--subnav-accent, #3d5580) transparent; }
 .subnav-scroll::-webkit-scrollbar { height: 7px; }
 .subnav-scroll::-webkit-scrollbar-track { background: rgba(255,255,255,0.05); border-radius: 4px; }
@@ -228,7 +228,7 @@ body::before {
 .sat-nav-tab:focus-visible { outline: 2px solid var(--c-blue); outline-offset: -2px; border-radius: 6px; }
 
 /* Segmented control segments. Same restraint as the tabs: hover only lifts the
-   label colour, the selected fill does the rest. */
+   label color, the selected fill does the rest. */
 .sat-seg { -webkit-tap-highlight-color: transparent; transition: background-color .14s ease, color .14s ease; }
 @media (hover: hover) and (pointer: fine) {
   .sat-seg:not([aria-pressed="true"]):hover { color: var(--c-t1); background: var(--c-surf); }
@@ -404,8 +404,8 @@ body::before {
 }
 
 /* ── Underlined links ─────────────────────────────────────────────────────
-   Colour alone is not a sufficient signal (WCAG 1.4.1), and this app's links
-   are frequently accent-coloured text inside a paragraph. */
+   Color alone is not a sufficient signal (WCAG 1.4.1), and this app's links
+   are frequently accent-colored text inside a paragraph. */
 :root[data-underline-links] a,
 :root[data-underline-links] .msp-auth-link,
 :root[data-underline-links] .msp-md a {

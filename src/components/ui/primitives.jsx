@@ -2,7 +2,7 @@
 // them without importing the 480 KB monolith. App.jsx now imports these too,
 // so there is exactly one definition of each.
 //
-// Behaviour is unchanged from the originals — the only difference is that they
+// Behavior is unchanged from the originals — the only difference is that they
 // take their tokens from src/lib/theme.js rather than App.jsx's local copy of
 // the same palette (the two were byte-identical).
 import React, { useState, useEffect } from 'react';
@@ -38,7 +38,7 @@ export function useMediaQuery(query) {
 /** Convenience wrapper for the app-wide mobile breakpoint. */
 export const useIsMobile = () => useMediaQuery('(max-width: 768px)');
 
-/** Circular progress gauge with a glowing stroke and optional centre label. */
+/** Circular progress gauge with a glowing stroke and optional center label. */
 export function Arc({ pct = 0, size = 52, stroke = 4, color = C.blue, label = '', sub = '' }) {
   const r = (size - stroke * 2) / 2;
   const circ = 2 * Math.PI * r;

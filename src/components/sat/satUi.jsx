@@ -7,32 +7,32 @@ import { isPlainLeftClick } from '../../lib/useAppRouter';
 //
 // The SAT pillar is the one surface a student compares directly against a real
 // testing product (Bluebook), so it holds itself to a stricter visual standard
-// than the rest of the app: ONE identity colour (C.sky) instead of a
-// per-sub-tab rainbow, semantic colour reserved for meaning (green = measured
+// than the rest of the app: ONE identity color (C.sky) instead of a
+// per-sub-tab rainbow, semantic color reserved for meaning (green = measured
 // good, rose = needs work, gold = a measurement event), and an underline tab
 // rail instead of pill chips — the grammar of serious desktop software.
 //
 // ── The quiet pass ───────────────────────────────────────────────────────────
-// Colour policy above was right; the RENDERING of it was not. Three habits had
+// Color policy above was right; the RENDERING of it was not. Three habits had
 // spread across the eleven panels and, stacked on one screen, they were what
 // made a first-time student's eyes bounce:
 //
 //   1. Two-hue gradients on every button — gold→orange, violet→indigo,
 //      amber→orange, rose→roseL. Each one is a second hue that carries no
-//      meaning, so a screen with four buttons introduced eight colours.
+//      meaning, so a screen with four buttons introduced eight colors.
 //   2. Tinted washes at 0.10–0.16 alpha on card after card, so nothing was
 //      quiet enough to make anything else look loud.
-//   3. Coloured halos — glows under buttons, under the tab underline, under
+//   3. Colored halos — glows under buttons, under the tab underline, under
 //      progress bars — all of which say "look at me" simultaneously.
 //
 // The three helpers below replace those habits without removing a single
-// element or changing what any colour MEANS. Every panel gets its semantic hue;
+// element or changing what any color MEANS. Every panel gets its semantic hue;
 // it just states it once, at a lower volume, instead of three times.
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * The SAT primary-button fill: one hue, darkened toward its own shadow.
- * Reads as a solid, expensive object rather than a two-colour candy stripe.
+ * Reads as a solid, expensive object rather than a two-color candy stripe.
  */
 export const satGrad = (color = C.sky) => {
   // accentFill first: on the light palette amber/gold are far too pale to carry
@@ -42,7 +42,7 @@ export const satGrad = (color = C.sky) => {
 };
 
 /**
- * A page/card wash. Single stop that fades to nothing — no second colour, and
+ * A page/card wash. Single stop that fades to nothing — no second color, and
  * no `rgba(255,255,255,0.02)` tail, which only ever showed up in dark mode and
  * left light mode with a hard edge where the gradient stopped.
  */
@@ -60,7 +60,7 @@ export const satBtn = (color = C.sky, x = {}) => {
   // The cutoff is deliberately low. Anything above it (blue, rose, violet, the
   // pillar's own sky) keeps a white label and gets its fill darkened by
   // accentFill instead, which is what those hues want; below it lives the warm
-  // family, where darkening far enough for white text kills the colour.
+  // family, where darkening far enough for white text kills the color.
   const darkInk = contrastRatio(color, C.onAccent || '#ffffff') < 2.8;
   const fill = darkInk
     ? `linear-gradient(140deg,${color},${shade(color, 0.14)})`
