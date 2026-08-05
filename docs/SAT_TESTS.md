@@ -21,8 +21,8 @@ different-ish test each time and nothing a student could reason about:
 
 ## What replaced it
 
-A test is now something you pick from a catalogue (`SatTestPicker`), and the
-catalogue has three kinds of entry.
+A test is now something you pick from a catalog (`SatTestPicker`), and the
+catalog has three kinds of entry.
 
 ### 1. Official College Board tests — listed first
 
@@ -47,14 +47,14 @@ A **form** is a named, fixed selection of bank questions: identical for
 everyone, identical every time it is assembled. Its `seed` must never change
 once shipped — changing it silently rewrites a test students have already sat.
 
-Forms are apportioned once, in catalogue order, against a running set of
+Forms are apportioned once, in catalog order, against a running set of
 already-claimed questions (`src/lib/sat/forms.js`). Form A takes its share,
 Form B takes from what is left, and so on. Appending a form therefore cannot
 disturb an existing one.
 
 **The guarantee: no form shares a single question with any other form.**
 `scripts/verifySatForms.mjs` enforces it absolutely rather than as a percentage,
-because a threshold would let the catalogue's promise decay quietly as forms are
+because a threshold would let the catalog's promise decay quietly as forms are
 appended to a bank that cannot carry them.
 
 ### 3. Fresh mix
@@ -67,13 +67,13 @@ anywhere in the app. Maximum novelty; not reproducible, so not comparable.
 A form's footprint is about 130 bank questions. Six were drafted; with the bank
 at 328 questions only two were genuinely distinct and Form C onwards was a
 reshuffle. Expansion batch C (138 new questions, weighted to the bands that ran
-out first) took the bank to 466 and the catalogue to three fully distinct forms.
+out first) took the bank to 466 and the catalog to three fully distinct forms.
 
 A fourth came out 26% new, which is not a fourth test. It was cut. To add one,
 grow the bank until `npm run verify:sat-forms` goes quiet — the audit will not
 let the list outrun what is behind it.
 
-    forms in catalogue      3
+    forms in catalog      3
     fully fresh forms       3
     414 of 466 bank questions committed to forms; 52 spare
 

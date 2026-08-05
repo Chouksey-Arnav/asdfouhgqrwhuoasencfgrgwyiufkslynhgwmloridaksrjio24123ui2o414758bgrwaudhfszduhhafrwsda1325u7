@@ -63,7 +63,7 @@ export const MATH_PSDA_C = [
     ],
   },
 
-  // ── Distributions and Measures of Centre ──────────────────────────────────
+  // ── Distributions and Measures of Center ──────────────────────────────────
   {
     id: 'sat-m-dat-0201', section: 'math', domain: 'psda', skill: 'data_distributions',
     difficulty: 'E', format: 'mcq', trap: 'mean_vs_median', targetSeconds: 50,
@@ -109,7 +109,7 @@ export const MATH_PSDA_C = [
     distractorExp: [
       'Correct. 3 blue out of 10 marbles.',
       'This divides by the number of NON-blue marbles (7) rather than by the total.',
-      'This compares blue to the number of colours rather than to the number of marbles.',
+      'This compares blue to the number of colors rather than to the number of marbles.',
       'This uses the red count as the denominator.',
     ],
   },

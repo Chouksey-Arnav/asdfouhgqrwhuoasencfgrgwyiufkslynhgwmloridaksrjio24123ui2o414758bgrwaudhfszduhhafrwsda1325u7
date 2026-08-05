@@ -8,7 +8,7 @@ import { C, tint } from '../lib/theme';
 // (mobile) that opens PortfolioMedabrain.jsx or PrepMedabrain.jsx.
 //
 // Design intent: a dark glass tab with a living gradient edge, instead of a
-// flat colour slab. Three layers of motion, each tied to user intent:
+// flat color slab. Three layers of motion, each tied to user intent:
 //   1. Ambient — a slow breathing aura (msp-pulse-glow) signals Medabrain is a
 //      standing presence reading live context, not a static menu item.
 //   2. Hover — a soft accent spotlight physically follows the cursor across the

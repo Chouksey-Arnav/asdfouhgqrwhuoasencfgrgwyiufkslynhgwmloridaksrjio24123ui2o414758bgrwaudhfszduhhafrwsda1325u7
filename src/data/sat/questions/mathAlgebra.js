@@ -68,15 +68,15 @@ export const MATH_ALGEBRA_QUESTIONS = [
   {
     id: 'sat-m-le2-0002', section: 'math', domain: 'algebra', skill: 'linear_equations_2var',
     difficulty: 'M', format: 'mcq', trap: 'unit_mismatch', targetSeconds: 75,
-    q: 'A tank contains 240 litres of water and is draining at a constant rate of 15 litres per minute. Which equation gives the volume V, in litres, remaining after t minutes?',
+    q: 'A tank contains 240 liters of water and is draining at a constant rate of 15 liters per minute. Which equation gives the volume V, in liters, remaining after t minutes?',
     ch: ['V = 15t + 240', 'V = 240 − 15t', 'V = 240t − 15', 'V = 15 − 240t'],
     ans: 1,
-    exp: 'Start at 240 and lose 15 litres each minute: V = 240 − 15t. The starting amount is the intercept; the rate of loss is a negative slope.',
+    exp: 'Start at 240 and lose 15 liters each minute: V = 240 − 15t. The starting amount is the intercept; the rate of loss is a negative slope.',
     distractorExp: [
       'This adds water instead of draining it — the sign of the rate is wrong.',
-      'Correct. Initial 240 litres, decreasing by 15 per minute.',
+      'Correct. Initial 240 liters, decreasing by 15 per minute.',
       'This treats 240 as a rate and 15 as a starting amount, reversing their roles.',
-      'This starts the tank at 15 litres and drains 240 per minute.',
+      'This starts the tank at 15 liters and drains 240 per minute.',
     ],
   },
   {
@@ -163,7 +163,7 @@ export const MATH_ALGEBRA_QUESTIONS = [
   {
     id: 'sat-m-sys-0003', section: 'math', domain: 'algebra', skill: 'systems_linear',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 80,
-    q: 'A theatre sold 200 tickets and collected $2,600. Adult tickets cost $18 and student tickets cost $8. How many student tickets were sold?',
+    q: 'A theater sold 200 tickets and collected $2,600. Adult tickets cost $18 and student tickets cost $8. How many student tickets were sold?',
     ch: ['60', '100', '120', '140'],
     ans: 1,
     exp: 'Let s be student tickets and a adult: a + s = 200 and 18a + 8s = 2600. Substituting a = 200 − s: 18(200 − s) + 8s = 2600 → 3600 − 10s = 2600 → 10s = 1000 → s = 100.',

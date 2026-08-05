@@ -100,7 +100,7 @@ export function detectPatterns(misses = []) {
         title: `${Math.round((rows.length / typed.length) * 100)}% of your triaged misses are "${meta.label.toLowerCase()}"`,
         body: meta.prescription,
         cta: type === 'ran_out_of_time'
-          ? { label: 'Practise under a timer', action: 'timed' }
+          ? { label: 'Practice under a timer', action: 'timed' }
           : { label: 'Review these', action: 'review' },
       });
     }

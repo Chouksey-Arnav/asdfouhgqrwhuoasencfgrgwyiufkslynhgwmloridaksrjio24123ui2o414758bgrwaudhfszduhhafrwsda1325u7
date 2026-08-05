@@ -4,7 +4,7 @@
 // HONESTY NOTE — read this before touching anything here.
 // College Board does not publish its conversion tables or its routing cutoff.
 // Everything in this file is OUR OWN calibration, fitted to the publicly
-// documented behaviour of the exam:
+// documented behavior of the exam:
 //
 //   * Each section is 200-800; the composite is 400-1600.
 //   * Module 1 performance routes you to an easier or harder Module 2.

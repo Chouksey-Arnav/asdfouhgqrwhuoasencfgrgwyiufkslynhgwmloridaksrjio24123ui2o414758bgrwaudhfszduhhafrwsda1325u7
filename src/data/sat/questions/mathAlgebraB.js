@@ -162,7 +162,7 @@ export const MATH_ALGEBRA_B = [
   {
     id: 'sat-m-le2-0105', section: 'math', domain: 'algebra', skill: 'linear_equations_2var',
     difficulty: 'M', format: 'mcq', trap: 'unit_mismatch', targetSeconds: 70,
-    q: 'A cyclist starts 12 kilometres from home and rides away from home at a constant 18 kilometres per hour. Which equation gives her distance d, in kilometres, from home after t hours?',
+    q: 'A cyclist starts 12 kilometers from home and rides away from home at a constant 18 kilometers per hour. Which equation gives her distance d, in kilometers, from home after t hours?',
     ch: ['d = 18t − 12', 'd = 12t + 18', 'd = 18 − 12t', 'd = 12 + 18t'],
     ans: 3,
     exp: 'She begins 12 km out (the intercept) and adds 18 km each hour (the slope): d = 12 + 18t.',
@@ -228,12 +228,12 @@ export const MATH_ALGEBRA_B = [
   {
     id: 'sat-m-lfn-0102', section: 'math', domain: 'algebra', skill: 'linear_functions',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 70,
-    q: 'A tank is being filled at a constant rate. The volume, in litres, after m minutes is V(m) = 24m + 90. What does the number 24 represent in this context?',
+    q: 'A tank is being filled at a constant rate. The volume, in liters, after m minutes is V(m) = 24m + 90. What does the number 24 represent in this context?',
     ch: [
-      'The tank held 24 litres before filling began.',
-      'The tank gains 24 litres each minute.',
+      'The tank held 24 liters before filling began.',
+      'The tank gains 24 liters each minute.',
       'The tank is full after 24 minutes of filling.',
-      'It takes 24 minutes to add the first 90 litres.',
+      'It takes 24 minutes to add the first 90 liters.',
     ],
     ans: 1,
     exp: '24 is the coefficient of m — the change in volume per minute, which is the fill rate.',
@@ -241,7 +241,7 @@ export const MATH_ALGEBRA_B = [
       'The starting volume is 90, the constant term.',
       'Correct. 24 is the rate of change per minute.',
       'Nothing in the function says when the tank is full.',
-      'The 90 litres are present at m = 0, not added over time.',
+      'The 90 liters are present at m = 0, not added over time.',
     ],
   },
   {

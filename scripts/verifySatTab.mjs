@@ -160,7 +160,7 @@ await step('Skill Mastery renders the heat map', async () => {
   await gotoSatView("Skill Mastery");
   const t = await p.textContent('body');
   if (!/All 28 tested skills/.test(t)) throw new Error('skills panel did not render');
-  if (!/not practised yet/.test(t)) throw new Error('heat map legend missing');
+  if (!/not practiced yet/.test(t)) throw new Error('heat map legend missing');
 });
 
 await step('Answered skills appear as measured (data refreshes across panels)', async () => {
@@ -213,9 +213,9 @@ await step('AI Set previews its blueprint from measured data before generating',
   if (!/Questions written for you/.test(t)) throw new Error('AI Set body did not render');
   if (!/Generate my set/.test(t)) throw new Error('no generate action');
   // Every blueprint row states its own justification with a sample size or an
-  // explicit "never practised" — the same honesty rule the rest of the tab
+  // explicit "never practiced" — the same honesty rule the rest of the tab
   // follows. A bare skill name with no evidence behind it is the failure.
-  const rows = await p.locator('text=/mastery from \\d+ question|never practised/').count();
+  const rows = await p.locator('text=/mastery from \\d+ question|never practiced/').count();
   if (!rows) throw new Error('blueprint rows carry no evidence for why each skill was chosen');
   // And nothing may be generated until the student asks.
   if (/Writing your questions|Checking the answer keys/.test(t)) {

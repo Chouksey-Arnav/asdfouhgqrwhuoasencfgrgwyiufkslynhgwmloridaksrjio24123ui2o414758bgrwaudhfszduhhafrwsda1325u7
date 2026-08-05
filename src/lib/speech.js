@@ -3,7 +3,7 @@
 // Two halves, both built on the browser-native Web Speech API (no network, no key):
 //   • Text-to-speech (speechSynthesis) — the interviewer's *voice*. We pick the most natural
 //     English voice the device offers and tune rate/pitch so it lands warm and unhurried
-//     ("soothing") rather than robotic. The catalogue of voices is whatever the OS/browser ships;
+//     ("soothing") rather than robotic. The catalog of voices is whatever the OS/browser ships;
 //     we can't bundle a custom voice, so the win is careful selection + tuning + sentence-by-
 //     sentence chunking (long single utterances cut off in some engines).
 //   • Speech-to-text (SpeechRecognition) — the student answering out loud. Support is patchy
@@ -59,7 +59,7 @@ const PREFERRED_VOICES = [
 ];
 
 // ── Voice selection (persisted student preference) ──────────────────────────
-// The catalogue of voices is whatever the OS/browser ships, so we can't offer a
+// The catalog of voices is whatever the OS/browser ships, so we can't offer a
 // fixed roster — instead we let the student pick from whatever's actually
 // available on their device and remember that choice (by voiceURI, which is
 // stable across reloads on the same browser/device, unlike array index).

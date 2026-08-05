@@ -2,7 +2,7 @@
 // Desmos integration — the calculator the Digital SAT actually ships with.
 //
 // The real exam embeds Desmos inside Bluebook and lets a student open it on
-// every Math question, for as long as they want. Practising with a different
+// every Math question, for as long as they want. Practicing with a different
 // calculator (or none) trains a workflow the test day will not honour, so this
 // module loads the genuine Desmos API and the SAT tab hosts it everywhere.
 //

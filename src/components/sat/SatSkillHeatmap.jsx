@@ -4,7 +4,7 @@ import { SAT_SECTIONS, SAT_DOMAINS, DOMAINS_BY_SECTION, SKILLS_BY_DOMAIN, skillM
 import { satWash } from './satUi';
 
 // Skill heat map — every tested skill at a glance, grouped by section and
-// domain, coloured by mastery.
+// domain, colored by mastery.
 //
 // Two deliberate choices:
 //   * Cells are sized by exam weight, so a skill worth 6 questions per test is
@@ -55,7 +55,7 @@ export default function SatSkillHeatmap({ masteryMap = {}, onSelect, isMobile = 
                           onClick={() => onSelect?.(skillId)}
                           title={measured
                             ? `${meta.label} — ${Math.round(m.mastery * 100)}% from ${m.attempts} question${m.attempts === 1 ? '' : 's'}`
-                            : `${meta.label} — not practised yet`}
+                            : `${meta.label} — not practiced yet`}
                           style={{
                             flexGrow, flexBasis: isMobile ? 100 : 130, minWidth: isMobile ? 100 : 130,
                             textAlign: 'left', padding: '9px 11px', borderRadius: 9, cursor: 'pointer',
@@ -105,7 +105,7 @@ export default function SatSkillHeatmap({ masteryMap = {}, onSelect, isMobile = 
         ))}
         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: C.t3 }}>
           <span style={{ width: 10, height: 10, borderRadius: 3, border: `1px dashed ${C.b3}` }} />
-          not practised yet
+          not practiced yet
         </span>
         <span style={{ fontSize: 10, color: C.t4 }}>Wider tile = more questions on the real exam</span>
       </div>

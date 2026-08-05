@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Turning the form catalogue into actual assembled tests.
+// Turning the form catalog into actual assembled tests.
 //
 // THE PROBLEM THIS SOLVES
 // Every full test used to be built from `Date.now()`, drawing from the whole
@@ -16,7 +16,7 @@
 //      test they half-remember gets a score that measures recall, not skill.
 //
 // THE FIX
-// Forms are apportioned ONCE, in catalogue order, against a running set of
+// Forms are apportioned ONCE, in catalog order, against a running set of
 // questions already claimed. Form A takes its 81 R&W and 66 Math questions
 // (Module 1 plus both possible Module 2s); Form B takes from what is left; and
 // so on. Within a form nothing repeats — that guarantee is absolute. Between
@@ -97,7 +97,7 @@ function buildSlot({ section, blueprint, seed, tiers }) {
 }
 
 /**
- * Assemble every form in catalogue order. Pure, deterministic, and run once —
+ * Assemble every form in catalog order. Pure, deterministic, and run once —
  * the result is frozen into `MANIFESTS` below.
  */
 function buildAllForms() {
@@ -305,7 +305,7 @@ export function formPickerRows({ attempts = [], seenIds = new Set() } = {}) {
 /**
  * Bank-capacity summary, for the audit script and the "why do later forms
  * repeat" note in the UI. `fullyFreshForms` is the number of forms at the front
- * of the catalogue that share nothing with any earlier form — the honest answer
+ * of the catalog that share nothing with any earlier form — the honest answer
  * to "how many genuinely different tests does this bank hold?"
  */
 export function formCapacity() {

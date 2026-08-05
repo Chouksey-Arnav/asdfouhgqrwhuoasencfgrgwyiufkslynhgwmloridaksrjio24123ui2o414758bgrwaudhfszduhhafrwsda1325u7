@@ -233,7 +233,7 @@ export default function SatQuestionPlayer({
     tools.setCalculatorNote(
       q.section === 'math'
         ? null
-        : 'The real exam gives you no calculator on Reading & Writing. It is here so you can use it freely while you practise — just do not build a habit that test day will take away.',
+        : 'The real exam gives you no calculator on Reading & Writing. It is here so you can use it freely while you practice — just do not build a habit that test day will take away.',
     );
   }, [q?.section, tools.available]); // eslint-disable-line react-hooks/exhaustive-deps
 

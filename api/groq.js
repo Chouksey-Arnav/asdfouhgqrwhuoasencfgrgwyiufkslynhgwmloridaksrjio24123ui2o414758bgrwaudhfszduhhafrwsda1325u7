@@ -339,7 +339,7 @@ export default async function handler(req, res) {
   // treated as ground truth) and the shared knowledge policy that tells the
   // model to use its full world knowledge rather than refusing anything outside
   // the student's tracked data. Both are appended near the end, and truncation
-  // here would silently cut the behavioural rules while leaving the raw data in
+  // here would silently cut the behavioral rules while leaving the raw data in
   // place — the exact inversion of what a cap is for. Input tokens are the cheap
   // half of a request, so headroom is the right trade.
   const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000 };

@@ -53,7 +53,7 @@ const HESITATION_PATTERNS = [
   /\bas posed\b/i,
   /\bI think\b/i,
 ];
-// Acceptable drift between a domain's realised share of the bank and its
+// Acceptable drift between a domain's realized share of the bank and its
 // blueprint share, in percentage points.
 const DOMAIN_SHARE_TOLERANCE = 12;
 

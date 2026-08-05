@@ -21,7 +21,7 @@ import { SatVideoRecommendations, SatSkillVideos } from './SatVideoRecs';
 const SORTS = [
   { id: 'leverage', label: 'By leverage' },
   { id: 'weakest', label: 'Weakest first' },
-  { id: 'unpractised', label: 'Not practised' },
+  { id: 'unpracticed', label: 'Not practiced' },
 ];
 
 export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = false, onNavigate }) {
@@ -34,7 +34,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
     let r = [...ranked];
     if (sectionFilter !== 'all') r = r.filter(x => x.section === sectionFilter);
     if (sort === 'weakest') r.sort((a, b) => (a.attempts ? a.mastery : 2) - (b.attempts ? b.mastery : 2));
-    else if (sort === 'unpractised') r.sort((a, b) => a.attempts - b.attempts);
+    else if (sort === 'unpracticed') r.sort((a, b) => a.attempts - b.attempts);
     return r;
   }, [ranked, sort, sectionFilter]);
 
@@ -119,7 +119,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
                   <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, whiteSpace: 'nowrap' }}>
                     {s.attempts
                       ? `${Math.round(s.mastery * 100)}% · ${band.label} (${s.attempts})`
-                      : 'not practised'}
+                      : 'not practiced'}
                   </span>
                 </div>
 

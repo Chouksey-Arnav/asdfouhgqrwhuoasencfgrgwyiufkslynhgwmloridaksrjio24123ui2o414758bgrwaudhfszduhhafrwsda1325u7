@@ -151,7 +151,7 @@ export const RW_CONVENTIONS_QUESTIONS = [
   {
     id: 'sat-rw-fss-0005', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'H', format: 'mcq', trap: 'subject_verb', targetSeconds: 55,
-    stimulus: 'What most surprised the researchers about the octopuses’ behaviour ______ that individuals appeared to recognise particular keepers on sight.',
+    stimulus: 'What most surprised the researchers about the octopuses’ behavior ______ that individuals appeared to recognize particular keepers on sight.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['were', 'was', 'have been', 'are'],
     ans: 1,

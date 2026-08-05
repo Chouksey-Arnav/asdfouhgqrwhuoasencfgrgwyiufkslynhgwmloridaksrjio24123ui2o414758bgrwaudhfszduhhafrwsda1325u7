@@ -116,8 +116,8 @@ export const SAT_RESOURCES = [
     url: 'https://www.khanacademy.org/digital-sat',
     priority: 6,
     blurb:
-      'College Board’s official free learning partner. Thousands of official practice questions organised by skill and difficulty, with video explanations and hints.',
-    why: 'Free, official, and organised by the same skill taxonomy this tab uses. Link your Bluebook scores for targeted practice.',
+      'College Board’s official free learning partner. Thousands of official practice questions organized by skill and difficulty, with video explanations and hints.',
+    why: 'Free, official, and organized by the same skill taxonomy this tab uses. Link your Bluebook scores for targeted practice.',
   },
   {
     id: 'khan-sat-math',
@@ -136,7 +136,7 @@ export const SAT_RESOURCES = [
     org: 'Khan Academy',
     url: 'https://www.khanacademy.org/test-prep/sat-reading-and-writing',
     priority: 8,
-    blurb: 'The Reading and Writing half, organised by the four content domains and their leaf skills.',
+    blurb: 'The Reading and Writing half, organized by the four content domains and their leaf skills.',
     why: 'The grammar units here are the fastest points on the test if Standard English Conventions is weak.',
   },
 
@@ -150,7 +150,7 @@ export const SAT_RESOURCES = [
     priority: 9,
     blurb:
       'The published blueprint: question counts, timing, domain percentages and what each skill is defined to test. This document is where this app’s skill taxonomy comes from.',
-    why: 'Read it once. Knowing that Craft and Structure is 28% of Reading and Writing changes what you practise.',
+    why: 'Read it once. Knowing that Craft and Structure is 28% of Reading and Writing changes what you practice.',
   },
   {
     id: 'understanding-scores',
@@ -170,7 +170,7 @@ export const SAT_RESOURCES = [
     url: 'https://satsuite.collegeboard.org/sat/registration',
     priority: 11,
     blurb: 'Test dates, deadlines, fees and fee waivers.',
-    why: 'Register early. Preferred test centres fill, and a rushed registration costs you a date.',
+    why: 'Register early. Preferred test centers fill, and a rushed registration costs you a date.',
   },
 ];
 

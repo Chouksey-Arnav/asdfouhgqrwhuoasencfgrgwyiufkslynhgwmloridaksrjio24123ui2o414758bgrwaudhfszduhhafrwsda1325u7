@@ -357,7 +357,7 @@ export const MATH_ADVANCED_B = [
   {
     id: 'sat-m-nfn-0102', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'M', format: 'mcq', trap: 'percent_of_what', targetSeconds: 80,
-    q: 'A bacterial population is modelled by P(t) = 400(1.15)^t, where t is measured in hours. Which statement best describes the population?',
+    q: 'A bacterial population is modeled by P(t) = 400(1.15)^t, where t is measured in hours. Which statement best describes the population?',
     ch: [
       'It starts at 400 and increases by 15 bacteria each hour.',
       'It starts at 400 and increases by 15% each hour.',
@@ -398,7 +398,7 @@ export const MATH_ADVANCED_B = [
       '−2 is the leading coefficient, which tells you the parabola opens downward.',
       '1 relates to the x-coordinate of the vertex (x = −1), not the maximum value.',
       'Correct. The maximum value is 8, at x = −1.',
-      'You get 10 by adding 2 and 8 rather than recognising that the squared term contributes 0.',
+      'You get 10 by adding 2 and 8 rather than recognizing that the squared term contributes 0.',
     ],
   },
   {

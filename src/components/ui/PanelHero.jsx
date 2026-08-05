@@ -3,7 +3,7 @@ import { C, glass, pill, tint } from '../../lib/theme';
 
 // Shared hero header for every Portfolio sub-view — a gradient identity card
 // (icon badge, eyebrow, title, subtitle, stat pills) so each tab opens with
-// its own recognisable colour instead of a bare text heading. `color2` lets a
+// its own recognisable color instead of a bare text heading. `color2` lets a
 // tab carry a two-tone gradient identity; stats render as tinted pills on the
 // right ({ icon?, value, label, color? }).
 export default function PanelHero({ icon: Icon, color = C.blue, color2, eyebrow, title, sub, stats = [], right, m = false, tourTag }) {
@@ -50,9 +50,9 @@ export default function PanelHero({ icon: Icon, color = C.blue, color2, eyebrow,
   );
 }
 
-// Coloured section label — same uppercase micro-heading every panel already
-// uses, but with an optional icon + accent colour so sections inside a tab
-// pick up its identity instead of always rendering flat grey.
+// Colored section label — same uppercase micro-heading every panel already
+// uses, but with an optional icon + accent color so sections inside a tab
+// pick up its identity instead of always rendering flat gray.
 export function SectionTitle({ icon: Icon, color = C.t3, children, extra = {} }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14, ...extra }}>
@@ -62,7 +62,7 @@ export function SectionTitle({ icon: Icon, color = C.t3, children, extra = {} })
   );
 }
 
-// Compact coloured stat tile ({ icon, value, label, sub?, color }) — the
+// Compact colored stat tile ({ icon, value, label, sub?, color }) — the
 // "numbers at a glance" strip under a hero. Use inside a CSS grid.
 export function StatTile({ icon: Icon, value, label, sub, color = C.blue, onClick }) {
   // A clickable tile renders as a real <button>, not a <div> with an onClick:
@@ -77,7 +77,7 @@ export function StatTile({ icon: Icon, value, label, sub, color = C.blue, onClic
       className={onClick ? 'sat-choice sat-tap' : undefined}
       style={{
         // A single fading stop rather than a tint→white ramp: three of these in
-        // a row used to read as three coloured cards, which is a lot of signal
+        // a row used to read as three colored cards, which is a lot of signal
         // for what is a row of numbers.
         background: `linear-gradient(135deg,${tint(color, 0.07)},transparent 75%)`,
         border: `1px solid ${tint(color, 0.16)}`, borderRadius: 12, padding: '14px 16px',

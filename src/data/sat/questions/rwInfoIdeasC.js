@@ -31,21 +31,21 @@ export const RW_INFO_IDEAS_C = [
   {
     id: 'sat-rw-cid-0202', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 70,
-    stimulus: 'When the composer Florence Price died in 1953, most of her manuscripts were in a house she had used as a summer residence. The house stood abandoned for decades. In 2009 its new owners, renovating, found boxes of scores — including two violin concertos and a symphony that no catalogue of her work had listed. Price’s output is now known to be roughly twice the size scholars had assumed.',
+    stimulus: 'When the composer Florence Price died in 1953, most of her manuscripts were in a house she had used as a summer residence. The house stood abandoned for decades. In 2009 its new owners, renovating, found boxes of scores — including two violin concertos and a symphony that no catalog of her work had listed. Price’s output is now known to be roughly twice the size scholars had assumed.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'A chance discovery in an abandoned house doubled the known extent of a composer’s work.',
       'Florence Price was the most prolific American composer of her generation.',
       'Summer residences are a common place for composers to store manuscripts.',
-      'Music catalogues from the 1950s were compiled with unusual carelessness.',
+      'Music catalogs from the 1950s were compiled with unusual carelessness.',
     ],
     ans: 0,
-    exp: 'The text is a chain: manuscripts left behind, house abandoned, renovation finds them, catalogue doubles. The last sentence gives the payoff.',
+    exp: 'The text is a chain: manuscripts left behind, house abandoned, renovation finds them, catalog doubles. The last sentence gives the payoff.',
     distractorExp: [
       'Correct. Chance find, and the scale of what it changed.',
       'No comparison with other composers is made.',
       'One case cannot establish what is common.',
-      'The catalogues could not list scores nobody knew existed; no carelessness is alleged.',
+      'The catalogs could not list scores nobody knew existed; no carelessness is alleged.',
     ],
   },
   {
@@ -95,7 +95,7 @@ export const RW_INFO_IDEAS_C = [
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Most published results from mouse studies cannot be reproduced by other laboratories.',
-      'Animal models should be abandoned in favour of testing compounds directly in humans.',
+      'Animal models should be abandoned in favor of testing compounds directly in humans.',
       'Failures in human trials often reflect how the animal study was set up, not a false result.',
       'Housing temperature is the single greatest source of error in preclinical research.',
     ],
@@ -126,7 +126,7 @@ export const RW_INFO_IDEAS_C = [
     distractorExp: [
       'Body size could raise pitch for reasons that have nothing to do with noise, which would compete with the explanation rather than support it.',
       'Correct. Pitch tracking noise level within a city isolates noise as the driver.',
-      'Timing is a different behaviour and says nothing about why pitch differs.',
+      'Timing is a different behavior and says nothing about why pitch differs.',
       'The presence of other species is irrelevant to why these birds sing higher.',
     ],
   },
@@ -164,7 +164,7 @@ export const RW_INFO_IDEAS_C = [
     ans: 0,
     exp: 'The prediction is about the SOURCE of the plants. Colonisation starting at the boundary with the old marsh and moving inward is what arrival-from-next-door looks like; seed already in the soil would germinate everywhere at once.',
     distractorExp: [
-      'Correct. A spatial gradient from the neighbouring marsh points to arrival from it.',
+      'Correct. A spatial gradient from the neighboring marsh points to arrival from it.',
       'Total cover rising is consistent with either source, so it cannot distinguish them.',
       'The wall’s construction has no bearing on where plants came from.',
       'Birds are a different outcome and say nothing about the origin of the plants.',
@@ -247,8 +247,8 @@ export const RW_INFO_IDEAS_C = [
     difficulty: 'E', format: 'mcq', trap: 'percent_of_what', targetSeconds: 80,
     figure: {
       type: 'table',
-      title: 'Households reporting a home vegetable plot, by neighbourhood (2015 and 2023)',
-      columns: ['Neighbourhood', '2015 (%)', '2023 (%)'],
+      title: 'Households reporting a home vegetable plot, by neighborhood (2015 and 2023)',
+      columns: ['Neighborhood', '2015 (%)', '2023 (%)'],
       rows: [
         ['Eastgate', '9', '27'],
         ['Millfield', '22', '31'],
@@ -256,12 +256,12 @@ export const RW_INFO_IDEAS_C = [
         ['Southway', '14', '19'],
       ],
     },
-    stimulus: 'A city surveyed home food growing in four neighbourhoods. An analyst concluded that the neighbourhoods that started with the fewest plots saw the largest proportional growth, so the gap between neighbourhoods narrowed over the period.',
+    stimulus: 'A city surveyed home food growing in four neighborhoods. An analyst concluded that the neighborhoods that started with the fewest plots saw the largest proportional growth, so the gap between neighborhoods narrowed over the period.',
     q: 'Which choice best describes data from the table that support the analyst’s conclusion?',
     ch: [
       'Northbrook had the highest share of households with a plot in both years surveyed.',
       'Eastgate tripled its share, from 9% to 27%, while Northbrook rose only from 38% to 41%.',
-      'All four neighbourhoods recorded a higher share in 2023 than they did in 2015.',
+      'All four neighborhoods recorded a higher share in 2023 than they did in 2015.',
       'Millfield and Southway both ended the period below 35%.',
     ],
     ans: 1,
@@ -270,7 +270,7 @@ export const RW_INFO_IDEAS_C = [
       'This describes Northbrook’s rank, not the rate at which anything grew.',
       'Correct. Lowest start with the largest proportional rise, contrasted with the highest start and the smallest.',
       'Universal growth is consistent with the gap widening, narrowing or holding steady.',
-      'Where two neighbourhoods finished says nothing about proportional change or the gap.',
+      'Where two neighborhoods finished says nothing about proportional change or the gap.',
     ],
   },
   {
@@ -360,7 +360,7 @@ export const RW_INFO_IDEAS_C = [
     distractorExp: [
       'Correct. Largest pool and lowest rate together — the two facts the administrator is reconciling.',
       'This asserts the very inference the administrator says the data cannot support.',
-      'A total of offers speaks to neither access nor comparative judgement.',
+      'A total of offers speaks to neither access nor comparative judgment.',
       'The middle route’s position is consistent with the argument but demonstrates neither the widening nor the caution about rates.',
     ],
   },
@@ -389,7 +389,7 @@ export const RW_INFO_IDEAS_C = [
   {
     id: 'sat-rw-inf-0202', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 70,
-    stimulus: 'Roman concrete harbour structures at Baiae have stood in seawater for two thousand years, while modern marine concrete typically needs major repair within a century. Analysis shows that seawater reacts with volcanic ash in the Roman mix to grow interlocking mineral crystals inside cracks as they form. Modern Portland cement contains no such ash, which suggests that the durability gap is explained less by superior workmanship than by ______',
+    stimulus: 'Roman concrete harbor structures at Baiae have stood in seawater for two thousand years, while modern marine concrete typically needs major repair within a century. Analysis shows that seawater reacts with volcanic ash in the Roman mix to grow interlocking mineral crystals inside cracks as they form. Modern Portland cement contains no such ash, which suggests that the durability gap is explained less by superior workmanship than by ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'a chemistry that repairs damage as seawater penetrates the material.',

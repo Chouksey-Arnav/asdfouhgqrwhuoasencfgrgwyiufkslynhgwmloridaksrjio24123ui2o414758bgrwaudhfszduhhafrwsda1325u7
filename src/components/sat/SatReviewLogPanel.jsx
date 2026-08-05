@@ -158,7 +158,7 @@ export default function SatReviewLogPanel({
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Review log" title="Your mistakes, organised"
+        eyebrow="SAT · Review log" title="Your mistakes, organized"
         sub="Questions only find your gaps. Working out why you missed them is what closes them — and it is the step almost everyone skips."
         meta={[
           { value: open.length, label: 'open' },
@@ -174,7 +174,7 @@ export default function SatReviewLogPanel({
           body="Your review log is clear. It fills up as you miss questions in practice and on full tests — which is the point, so do not aim to keep it empty."
           // Green, not the panel's rose: an empty review log is the good state,
           // and a rose badge around a tick reads as an error at a glance.
-          actionLabel="Go practise" onAction={() => onNavigate?.('practice')} accent={C.green}
+          actionLabel="Go practice" onAction={() => onNavigate?.('practice')} accent={C.green}
         />
       ) : (
         <>

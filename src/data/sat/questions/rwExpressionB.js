@@ -51,7 +51,7 @@ export const RW_EXPRESSION_B = [
       'She received the Nobel Peace Prize in 2004, the first African woman to do so.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to explain why Maathai\'s work was recognised with a peace prize rather than an environmental one. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to explain why Maathai\'s work was recognized with a peace prize rather than an environmental one. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'Maathai founded the Green Belt Movement in 1977, and it planted over 50 million trees in three decades.',
       'Maathai treated deforestation, poverty and repression as one problem, so her planting was political.',
@@ -64,7 +64,7 @@ export const RW_EXPRESSION_B = [
       'Reports the scale of the planting, which would argue for an environmental prize.',
       'Correct. Supplies the reason the work counted as peace work.',
       'Restates the award without explaining why that award.',
-      'Describes the method, not why it was recognised as peace work.',
+      'Describes the method, not why it was recognized as peace work.',
     ],
   },
   {
@@ -181,7 +181,7 @@ export const RW_EXPRESSION_B = [
     notes: [
       'Bessie Coleman could not train as a pilot in the United States because of her race and sex.',
       'She learned French in order to train in France instead.',
-      'She earned an international pilot\'s licence in 1921.',
+      'She earned an international pilot\'s license in 1921.',
       'She performed as a stunt flier at air shows across the United States.',
       'She refused to perform at venues that segregated their audiences.',
     ],
@@ -190,7 +190,7 @@ export const RW_EXPRESSION_B = [
     ch: [
       'Barred from flight schools at home, Coleman learned French so she could train in France.',
       'Coleman performed as a stunt flier at air shows in many parts of the United States.',
-      'Coleman earned an international pilot\'s licence in 1921, and went on to fly professionally.',
+      'Coleman earned an international pilot\'s license in 1921, and went on to fly professionally.',
       'Coleman refused to perform at any venue that segregated its audience by race.',
     ],
     ans: 0,
@@ -240,7 +240,7 @@ export const RW_EXPRESSION_B = [
       'Vertebrate nervous systems concentrate processing centrally.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to contrast octopus neural organisation with that of vertebrates. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to contrast octopus neural organization with that of vertebrates. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'An octopus arm that has been severed from the body can still reach for and grasp food.',
       'Octopuses distribute two-thirds of their neurons into the arms, while vertebrates process centrally.',
@@ -334,7 +334,7 @@ export const RW_EXPRESSION_B = [
       'Describes her job, not the trust placed in her.',
       'Correct. An astronaut making his own flight conditional on her check.',
       'Background about the machines, with no bearing on trust.',
-      'Reports the labour involved rather than what it meant to anyone.',
+      'Reports the labor involved rather than what it meant to anyone.',
     ],
   },
   {
@@ -356,10 +356,10 @@ export const RW_EXPRESSION_B = [
       'Saffron stigmas must be gathered by hand rather than by any mechanical harvesting method.',
     ],
     ans: 1,
-    exp: 'The explanation is labour intensity at scale: 150,000 flowers, each picked by hand, in a one-morning window. The volume and the hand-picking together make the price.',
+    exp: 'The explanation is labor intensity at scale: 150,000 flowers, each picked by hand, in a one-morning window. The volume and the hand-picking together make the price.',
     distractorExp: [
       'Restates that it is expensive without explaining why.',
-      'Correct. The scale of hand labour behind a single kilogram.',
+      'Correct. The scale of hand labor behind a single kilogram.',
       'A botanical detail that does not by itself explain cost.',
       'Half the explanation — hand-picking, without the number that makes it staggering.',
     ],
@@ -528,11 +528,11 @@ export const RW_EXPRESSION_B = [
   {
     id: 'sat-rw-trn-0108', section: 'rw', domain: 'expression', skill: 'transitions',
     difficulty: 'M', format: 'mcq', trap: 'wrong_transition', targetSeconds: 55,
-    stimulus: 'Bees learn to associate particular flower colours with reward and return to those colours preferentially. ______ a field planted with a single species trains a local bee population to ignore everything else in bloom nearby.',
+    stimulus: 'Bees learn to associate particular flower colors with reward and return to those colors preferentially. ______ a field planted with a single species trains a local bee population to ignore everything else in bloom nearby.',
     q: 'Which choice completes the text with the most logical transition?',
     ch: ['Instead,', 'As a result,', 'Admittedly,', 'Previously,'],
     ans: 1,
-    exp: 'Colour learning is the mechanism; the monoculture effect is what it produces. A causal transition is what connects them.',
+    exp: 'Color learning is the mechanism; the monoculture effect is what it produces. A causal transition is what connects them.',
     distractorExp: [
       '"Instead" would replace the first claim, not build on it.',
       'Correct. The second sentence is the consequence of the learning described.',
@@ -558,13 +558,13 @@ export const RW_EXPRESSION_B = [
   {
     id: 'sat-rw-trn-0110', section: 'rw', domain: 'expression', skill: 'transitions',
     difficulty: 'M', format: 'mcq', trap: 'wrong_transition', targetSeconds: 55,
-    stimulus: 'Critics praised the novel\'s structure and its handling of time. Its dialogue, ______ was widely described as stilted, and several reviewers said the characters spoke in a single voice.',
+    stimulus: 'Critics praised the novel\'s structure and its handling of time. Its dialog, ______ was widely described as stilted, and several reviewers said the characters spoke in a single voice.',
     q: 'Which choice completes the text with the most logical transition?',
     ch: ['by contrast,', 'in fact,', 'furthermore,', 'to that end,'],
     ans: 0,
     exp: 'Praise in the first sentence, criticism in the second, on a different aspect of the same book. That is a contrast.',
     distractorExp: [
-      'Correct. The dialogue is set against the praised structure.',
+      'Correct. The dialog is set against the praised structure.',
       '"In fact" would intensify the praise, but the sentence reverses it.',
       '"Furthermore" adds more praise, and this is criticism.',
       '"To that end" signals purpose, which does not apply.',

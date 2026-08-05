@@ -80,9 +80,9 @@ export default function SatTab({
     onAskMedabrain: openMedabrain,
   };
 
-  // One identity colour for the whole pillar. The old per-panel rainbow (lime
+  // One identity color for the whole pillar. The old per-panel rainbow (lime
   // overview, gold baseline, cyan diagnostic, …) read as nine small apps;
-  // colour inside the SAT tab is now reserved for MEANING — green for measured
+  // color inside the SAT tab is now reserved for MEANING — green for measured
   // strength, rose for work owed (the Review Log keeps it as its accent),
   // sky for everything that is simply "the SAT product".
   const panels = {

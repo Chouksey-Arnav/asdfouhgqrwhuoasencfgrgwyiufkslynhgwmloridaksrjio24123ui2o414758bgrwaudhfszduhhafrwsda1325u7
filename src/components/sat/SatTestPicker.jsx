@@ -12,7 +12,7 @@ import { formPickerRows } from '../../lib/sat/forms';
 // Choosing which full-length test to sit.
 //
 // The panel used to have a single "Start full test" button that built a test
-// from the clock. This replaces it with a catalogue, for two reasons a student
+// from the clock. This replaces it with a catalog, for two reasons a student
 // feels immediately:
 //
 //   · A test you can name is a test you can plan around and compare against.

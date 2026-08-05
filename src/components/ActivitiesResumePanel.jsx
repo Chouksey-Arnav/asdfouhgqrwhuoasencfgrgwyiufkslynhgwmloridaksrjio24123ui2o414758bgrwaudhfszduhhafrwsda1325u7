@@ -9,7 +9,7 @@ import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
 const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
-// Every activity type gets its own colour so the logged list reads as a
+// Every activity type gets its own color so the logged list reads as a
 // varied, scannable portfolio instead of a monochrome stack.
 const ACT_COLORS = {
   'Clinical/Shadowing': C.pink, 'Patient Care (paid)': C.rose, 'Health Club/HOSA': C.cyan,

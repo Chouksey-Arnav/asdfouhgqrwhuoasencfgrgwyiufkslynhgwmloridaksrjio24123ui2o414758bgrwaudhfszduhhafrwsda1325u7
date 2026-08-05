@@ -18,7 +18,7 @@
 //    instruct it to.
 //
 // 2. ABSENCE IS DATA. `measuredSkills` vs `unmeasuredSkills` is an explicit
-//    split rather than an implicit zero, because "never practised" and "scored
+//    split rather than an implicit zero, because "never practiced" and "scored
 //    zero" call for opposite responses and a bare 0% cannot tell them apart.
 //
 // Everything here is derived — it reads the same Dexie-backed snapshot the
@@ -291,7 +291,7 @@ export function renderProfileForPrompt(profile, { verbosity = 'full' } = {}) {
 
   if (profile.unmeasuredHeavy.length && verbosity === 'full') {
     L.push(
-      'NEVER PRACTISED (unknown, not weak — these have no data at all): '
+      'NEVER PRACTICED (unknown, not weak — these have no data at all): '
       + profile.unmeasuredHeavy.map(s => `${s.label} (~${s.perExam} q/exam)`).join(', ') + '.',
     );
   }
@@ -415,7 +415,7 @@ export function planGeneratedSet(profile, { count = 8, section = null, skill = n
 
   let candidates = (profile?.weakSkills || []).filter(s => !section || s.section === section);
 
-  // Fold in the heaviest never-practised skills. A set built only from measured
+  // Fold in the heaviest never-practiced skills. A set built only from measured
   // weakness will never touch a skill the student has been quietly avoiding,
   // which is exactly where the unknown risk lives.
   const unknowns = (profile?.unmeasuredHeavy || [])
@@ -450,7 +450,7 @@ export function planGeneratedSet(profile, { count = 8, section = null, skill = n
     count: per[i],
     why: s.attempts
       ? `${pct(s.mastery)}% mastery from ${s.attempts} question(s)${s.trusted ? '' : ' (thin sample)'}, worth ~${s.perExam ?? '?'} questions per exam`
-      : `never practised — worth ~${s.perExam ?? '?'} questions per exam, so it is an unknown rather than a known weakness`,
+      : `never practiced — worth ~${s.perExam ?? '?'} questions per exam, so it is an unknown rather than a known weakness`,
     trap: trapForSkill(profile, s.skill),
   })).filter(s => s.count > 0);
 }
