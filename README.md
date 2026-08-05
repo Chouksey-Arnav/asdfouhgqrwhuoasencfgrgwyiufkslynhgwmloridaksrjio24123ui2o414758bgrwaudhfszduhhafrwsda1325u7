@@ -58,8 +58,8 @@ When a request is sent to `/api/groq.js`, it specifies a `purpose`. If a dedicat
 | `interview` | Conversational mock-interview simulator | Guide (Balanced) | `GROQ_API_KEY_INTERVIEW` |
 | `portfolio` | Rich resume, activities, essay, and college tracking advice | Sage (Deep) | `GROQ_API_KEY_PORTFOLIO` |
 | `prep` | In-context tutoring help (e.g. lesson, quiz, or video questions) | Guide (Balanced) | `GROQ_API_KEY_PREP` |
-| `plan` | Onboarding diagnostic "max-out plan" generator | Sage (Deep) | `GROQ_API_KEY_PLAN` |
-| `masterplan` | Plans tab: detailed day-by-day roadmap generator | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_MASTERPLAN` |
+| `plan` | Onboarding diagnostic plan fallback / legacy | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_PLAN` |
+| `masterplan` | Plans tab: detailed day-by-day roadmap generator | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_PLAN` |
 | `sat` | SAT drills, hints, step-by-step explanations, and coach | Sage (Deep) | `GROQ_API_KEY_SAT` |
 
 #### Key Configuration Variable Names
@@ -71,8 +71,7 @@ When a request is sent to `/api/groq.js`, it specifies a `purpose`. If a dedicat
 | `GROQ_API_KEY_INTERVIEW` | String | *(Optional)* Dedicated key for conversational interview simulation. |
 | `GROQ_API_KEY_PORTFOLIO` | String | *(Optional)* Dedicated key for Portfolio Meta Brain advice. |
 | `GROQ_API_KEY_PREP` | String | *(Optional)* Dedicated key for inline homework/prep help. |
-| `GROQ_API_KEY_PLAN` | String | *(Optional)* Dedicated key for first-day summary diagnostics. |
-| `GROQ_API_KEY_MASTERPLAN`| String | *(Optional)* Dedicated key for the Plans tab master roadmap. |
+| `GROQ_API_KEY_PLAN` | String | *(Optional)* Dedicated key for the Plans tab master roadmap generation (and onboarding legacy fallback). |
 | `GROQ_API_KEY_SAT` | String | *(Optional)* Dedicated key for SAT tutor queries. |
 
 #### Model Tiers Overview
