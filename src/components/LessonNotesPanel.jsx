@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NotebookPen, X, Check } from 'lucide-react';
-import { C, glass2, tint } from '../lib/theme';
+import { C, glass2, tint, accentGrad } from '../lib/theme';
 
 const SAVE_DEBOUNCE_MS = 600;
 
@@ -43,7 +43,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
           style={{
             position: 'fixed', top: isMobile ? 'auto' : '50%', bottom: isMobile ? 96 : 'auto',
             left: isMobile ? 14 : 0, transform: isMobile ? 'none' : 'translateY(-50%)',
-            zIndex: 320, background: `linear-gradient(135deg,${accent},${accent}cc)`, color: '#fff', border: 'none',
+            zIndex: 320, background: accentGrad(accent), color: C.onAccent, border: 'none',
             borderRadius: isMobile ? 14 : '0 12px 12px 0', width: isMobile ? 46 : 40, height: isMobile ? 46 : 64,
             display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
             boxShadow: `0 6px 20px ${accent}55`,
@@ -75,7 +75,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
             >
               <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg,${accent},${accent}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
                     <NotebookPen size={16} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>

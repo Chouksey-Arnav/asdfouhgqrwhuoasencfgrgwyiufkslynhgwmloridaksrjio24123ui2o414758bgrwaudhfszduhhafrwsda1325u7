@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plus, Check, CloudOff, Loader2 } from 'lucide-react';
-import { C, btnSm, tint } from '../../lib/theme';
+import { C, btnSm, tint, onTint } from '../../lib/theme';
 
 // The Track button, shared by the scholarship and opportunity databases.
 //
@@ -34,7 +34,7 @@ export default function TrackButton({ state = 'idle', busy = false, accent = C.b
     );
   }
   return (
-    <button onClick={onClick} style={btnSm(tint(accent, 0.18), { color: '#fff' })}>
+    <button onClick={onClick} style={btnSm(tint(accent, 0.18), { color: onTint(accent) })}>
       <Plus size={12} />{label}
     </button>
   );

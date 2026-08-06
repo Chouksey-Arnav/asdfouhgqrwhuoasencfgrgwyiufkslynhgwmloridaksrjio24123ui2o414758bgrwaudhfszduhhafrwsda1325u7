@@ -30,7 +30,8 @@ export const DEFAULTS = {
   // that neither glares nor disappears, and it is what a new student should
   // meet before they know the picker exists. Every other mode stays one tap
   // away in Settings → Appearance.
-  themeMode: DEFAULT_THEME_MODE, // 'balanced' | 'dark' | 'light' | 'system'
+  // 'balanced' (Balanced Dark) | 'balancedLight' | 'dark' | 'light' | 'system'
+  themeMode: DEFAULT_THEME_MODE,
   fontScale: 1,               // 0.9 – 1.5
   highContrast: false,
   readableFont: false,

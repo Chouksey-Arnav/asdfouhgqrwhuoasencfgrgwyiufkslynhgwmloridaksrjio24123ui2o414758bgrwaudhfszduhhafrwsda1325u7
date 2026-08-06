@@ -103,7 +103,7 @@ export default function InterviewHistoryPanel({ accent }) {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                  y: { min: 0, max: 10, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: C.t3, font: { family: C.FM }, stepSize: 2 } },
+                  y: { min: 0, max: 10, grid: { color: C.b1 }, ticks: { color: C.t3, font: { family: C.FM }, stepSize: 2 } },
                   x: { grid: { display: false }, ticks: { color: C.t3 } },
                 },
               }}

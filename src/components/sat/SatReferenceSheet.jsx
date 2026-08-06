@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookOpen, Info, Brain, ClipboardCheck } from 'lucide-react';
-import { C, glass2, btnSm, R, CC, tint } from '../../lib/theme';
+import { C, glass2, btnSm, R, CC, tint, onTint } from '../../lib/theme';
 import { Tex } from '../ui/MathText';
 import {
   GIVEN_FORMULAS, MEMORIZE_FORMULAS, CALCULATOR_FACTS, REFERENCE_DISCLAIMER,
@@ -95,7 +95,7 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
                       key={t.id} onClick={() => setTab(t.id)}
                       style={btnSm(isActive ? tint(accent, 0.22) : 'rgba(255,255,255,0.03)', {
                         border: `1px solid ${isActive ? tint(accent, 0.45) : C.b1}`,
-                        color: isActive ? '#fff' : C.t2, fontSize: 11.5, padding: '6px 12px',
+                        color: isActive ? onTint(accent) : C.t2, fontSize: 11.5, padding: '6px 12px',
                       })}
                     >
                       <Icon size={11} /> {t.label}

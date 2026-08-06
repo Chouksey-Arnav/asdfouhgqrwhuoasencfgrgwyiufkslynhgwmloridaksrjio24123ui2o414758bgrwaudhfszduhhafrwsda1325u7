@@ -7,7 +7,8 @@ import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = ['Planning to ask', 'Asked', 'Confirmed', 'Submitted'];
-const STATUS_COLORS = { 'Planning to ask':C.t3, 'Asked':C.amberL, 'Confirmed':C.blueL, 'Submitted':C.greenL };
+// Per call, not a frozen literal — see the note in theme.js's header.
+const statusColor = (status) => ({ 'Planning to ask':C.t3, 'Asked':C.amberL, 'Confirmed':C.blueL, 'Submitted':C.greenL }[status]);
 const RELATIONSHIPS = ['Teacher', 'Counselor', 'Coach', 'Employer/Supervisor', 'Physician/Health Professional Shadowed', 'Research Mentor', 'Other'];
 
 // Supabase-backed (see supabase/migrations/0001_portfolio_credibility_expansion.sql) — this
@@ -116,7 +117,7 @@ function Section({ title, items, accent, onCycle, onRemove }) {
     <div style={CC({gap:8})}>
       <SectionTitle icon={Users} color={accent}>{title}</SectionTitle>
       {items.map(e => {
-        const sc = STATUS_COLORS[e.status] || C.t3;
+        const sc = statusColor(e.status) || C.t3;
         const stepIdx = STATUSES.indexOf(e.status);
         return (
         <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'}),borderLeft:`3px solid ${sc}`,background:`linear-gradient(120deg,${tint(sc,0.05)},rgba(255,255,255,0.02) 55%)`}}>
@@ -128,7 +129,7 @@ function Section({ title, items, accent, onCycle, onRemove }) {
             {/* 4-step ask→submitted progress strip — click the status pill to advance */}
             <div style={{display:'flex',gap:4,marginTop:8,maxWidth:180}}>
               {STATUSES.map((s,i)=>(
-                <span key={s} title={s} style={{flex:1,height:4,borderRadius:3,background:i<=stepIdx?(STATUS_COLORS[s]===C.t3?C.t4:STATUS_COLORS[s]):'rgba(255,255,255,0.07)'}}/>
+                <span key={s} title={s} style={{flex:1,height:4,borderRadius:3,background:i<=stepIdx?(statusColor(s)===C.t3?C.t4:statusColor(s)):C.b1}}/>
               ))}
             </div>
           </div>

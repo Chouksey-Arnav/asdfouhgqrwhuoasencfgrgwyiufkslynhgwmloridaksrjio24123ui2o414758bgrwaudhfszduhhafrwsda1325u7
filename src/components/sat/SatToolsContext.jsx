@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, BookOpen } from 'lucide-react';
-import { C, tint } from '../../lib/theme';
+import { C, tint, onTint } from '../../lib/theme';
 import DesmosCalculator from './DesmosCalculator';
 import SatReferenceSheet from './SatReferenceSheet';
 import Portal from '../ui/Portal';
@@ -256,10 +256,10 @@ function ToolRail({ accent, isMobile, calculatorOpen, referenceOpen, onCalculato
               boxShadow: `4px 4px 16px ${tint(b.color, b.active ? 0.20 : 0.10)}, 0 1px 0 ${tint('#ffffff', 0.10)} inset`,
             }}
           >
-            <Icon size={16} color={b.active ? '#fff' : b.color} />
+            <Icon size={16} color={b.active ? onTint(b.color) : b.color} />
             <span style={{
               writingMode: 'vertical-rl', fontSize: 9.5, fontWeight: 700,
-              color: b.active ? '#fff' : C.t2, letterSpacing: '.14em',
+              color: b.active ? onTint(b.color) : C.t2, letterSpacing: '.14em',
               textTransform: 'uppercase', fontFamily: C.FB,
             }}>
               {b.label}

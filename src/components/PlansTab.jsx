@@ -7,7 +7,7 @@ import {
   MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
   FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2, GripVertical, Sunrise, CalendarPlus,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, R, CC, G, pill } from '../lib/theme';
+import { C, glass, glass2, btn, btnSm, R, CC, G, pill, accentFill, onTint } from '../lib/theme';
 import { awardXP, BONUS_COPY } from '../lib/rewards';
 import { celebrateXP, celebrateBonusXP, celebrateJackpot, celebrateAchievement } from '../lib/celebrate';
 import * as speech from '../lib/speech';
@@ -293,7 +293,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
             <button key={v.id} onClick={() => setView(v.id)} style={{
               display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 16px', borderRadius: 999,
               border: active ? `1px solid ${accent}66` : `1px solid ${C.b1}`, background: active ? `${accent}22` : 'rgba(255,255,255,0.02)',
-              color: active ? '#fff' : C.t2, fontWeight: active ? 700 : 500, fontSize: 12.5, fontFamily: C.FB, cursor: 'pointer',
+              color: active ? onTint(accent) : C.t2, fontWeight: active ? 700 : 500, fontSize: 12.5, fontFamily: C.FB, cursor: 'pointer',
             }}>
               <v.icon size={13} color={active ? accent : C.t3} />{v.label}
             </button>
@@ -479,7 +479,7 @@ function StaleProfileBanner({ accent, onRefresh }) {
       <div style={{ flex: 1, minWidth: 200, fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>
         Your profile's changed since this roadmap was built — refresh it so your plan reflects where you are now.
       </div>
-      <button style={btnSm(accent, { color: '#fff' })} onClick={onRefresh}>Refresh My Plan</button>
+      <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={onRefresh}>Refresh My Plan</button>
     </div>
   );
 }
@@ -601,7 +601,7 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, acce
           </button>
         )}
         <button onClick={submit} disabled={!draft.trim() || submitting}
-          style={{ ...btnSm(accent, { color: '#fff' }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: !draft.trim() || submitting ? 0.55 : 1 }}>
+          style={{ ...btnSm(accentFill(accent), { color: C.onAccent }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: !draft.trim() || submitting ? 0.55 : 1 }}>
           {submitting ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Sparkles size={12} />}
           {submitting ? 'Updating plan…' : 'Add to My Plan'}
         </button>

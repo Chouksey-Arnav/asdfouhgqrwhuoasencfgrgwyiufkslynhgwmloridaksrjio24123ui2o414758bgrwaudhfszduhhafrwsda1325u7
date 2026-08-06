@@ -2,7 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { AlertTriangle, Check, ChevronRight, ChevronDown, RotateCcw, Sparkles, Trash2, PlayCircle } from 'lucide-react';
-import { C, glass, glass2, btnSm, btnG, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnSm, btnG, R, CC, G, tint, pill, onTint } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
 import { SatPageHeader, SatCard, Segmented, satBtn, satWash } from './satUi';
 import EmptyState from '../ui/EmptyState';
@@ -355,7 +355,7 @@ export default function SatReviewLogPanel({
                                     key={t} onClick={() => triage(entry, t)}
                                     style={btnSm(entry.errorType === t ? tint(ERROR_TYPES[t].color, 0.2) : 'rgba(255,255,255,0.03)', {
                                       border: `1px solid ${entry.errorType === t ? tint(ERROR_TYPES[t].color, 0.45) : C.b1}`,
-                                      fontSize: 11.5, color: entry.errorType === t ? '#fff' : C.t2,
+                                      fontSize: 11.5, color: entry.errorType === t ? onTint(ERROR_TYPES[t].color) : C.t2,
                                     })}
                                   >
                                     {ERROR_TYPES[t].label}

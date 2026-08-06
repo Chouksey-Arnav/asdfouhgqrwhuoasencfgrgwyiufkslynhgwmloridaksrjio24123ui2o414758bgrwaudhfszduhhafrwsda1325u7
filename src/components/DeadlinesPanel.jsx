@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, CalendarClock, CalendarDays, CalendarX, Hourglass, AlertTriangle, History, Sparkles, Loader2, ListChecks } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
+import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint, onTint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
 import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
@@ -262,7 +262,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
         <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
           <div style={R({justifyContent:'space-between',marginBottom:12})}>
             <SectionTitle icon={ListChecks} color={C.violetL} extra={{marginBottom:0}}>Suggested from your Portfolio ({suggestions.length})</SectionTitle>
-            <button style={btnSm(tint(C.violet,0.2),{color:'#fff'})} disabled={addingAll} onClick={addAllSuggestions}>{addingAll?<Loader2 size={12} className="spin"/>:<Plus size={12}/>}Add all</button>
+            <button style={btnSm(tint(C.violet,0.2),{color:onTint(C.violet)})} disabled={addingAll} onClick={addAllSuggestions}>{addingAll?<Loader2 size={12} className="spin"/>:<Plus size={12}/>}Add all</button>
           </div>
           <p style={{fontSize:11.5,color:C.t3,marginBottom:12,lineHeight:1.5}}>Pulled automatically from dates you already entered on College List and Financial Aid (plus FAFSA/AP/IB) — nothing here is guessed.</p>
           <div style={CC({gap:6})}>

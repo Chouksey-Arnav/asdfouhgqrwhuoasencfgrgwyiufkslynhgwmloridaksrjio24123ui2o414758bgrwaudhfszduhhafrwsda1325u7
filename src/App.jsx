@@ -109,6 +109,7 @@ import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
+  onTint, accentText, accentFill, accentGrad, accentSweep, shade, isLight,
   applyTheme, getStoredMode, storeMode, resolveMode, watchSystemTheme, THEME_MODES,
 } from './lib/theme';
 import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
@@ -776,7 +777,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
               <h3 style={{fontSize:m?20:24,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Lesson verified{pathwayEntry?.quizScore!=null?` — ${pathwayEntry.quizScore}%`:''}</h3>
               <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>"{lesson.title}" is locked in for good. {hasNextLesson?'Keep the momentum going with the next one.':'That was the last lesson in this unit — nice work.'}</p>
               <div style={R({gap:10,justifyContent:'center',flexWrap:'wrap'})}>
-                {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:`linear-gradient(135deg,${accent},${accent}cc)`,{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
+                {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
                 <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:6}} onClick={onClose}>Back to Pathway</button>
               </div>
             </div>
@@ -792,7 +793,7 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
             <button onClick={goBack} disabled={curIdx===0} style={{...btnG({flex:'0 0 auto',padding:'14px 18px',fontSize:13,opacity:curIdx===0?.4:1,minHeight:48}),display:'inline-flex',alignItems:'center',gap:6}}><ChevronLeft size={16}/>Back</button>
             <motion.button whileHover={{scale:1.01}} whileTap={{scale:.98}} onClick={goNext}
               disabled={(step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo)}
-              style={{...btn(accent===C.blue?C.blueGrad:`linear-gradient(135deg,${accent},${accent}cc)`,{flex:1,padding:'14px 18px',fontSize:14,minHeight:48,opacity:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?.45:1,cursor:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?'not-allowed':'pointer'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
+              style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{flex:1,padding:'14px 18px',fontSize:14,minHeight:48,opacity:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?.45:1,cursor:((step==='article'&&!canContinueArticle)||(step==='video'&&!canContinueVideo))?'not-allowed':'pointer'}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
               {step==='overview'?'Begin':'Continue'}<ChevronRight size={16}/>
             </motion.button>
           </div>
@@ -838,7 +839,7 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
           <div style={{fontSize:13,color:C.t2}}>{quiz.title}</div>
           {!readonly&&<div style={{fontSize:11,color:C.t3,marginTop:4,fontFamily:C.FM,display:'inline-flex',alignItems:'center',gap:5}}><Timer size={11}/>{fmtT(elapsed)} elapsed</div>}
           <div style={R({justifyContent:'center',gap:10,marginTop:20})}>
-            <button style={{...btn(`linear-gradient(135deg,${sc},${sc}cc)`),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & Exit<ArrowRight size={15}/></button>
+            <button style={{...btn(accentGrad(sc)),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>onFinish(scoreRef.current,tot)}>Save & Exit<ArrowRight size={15}/></button>
             <button style={{...btnG(),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportQuizResult(quiz,answers,scoreRef.current,tot)}><FileDown size={14}/>Export PDF</button>
           </div>
         </div>
@@ -913,11 +914,12 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
 }
 
 // ── Flip Card ─────────────────────────────────────────────────────────────────
-const DIFF_COLOR = { easy:C.green, medium:C.amber, hard:C.rose };
+// Per call, not a frozen literal — see the note in theme.js's header.
+const diffColor = (d) => ({ easy:C.green, medium:C.amber, hard:C.rose }[d]);
 function FlipCard({card,flipped,onClick,m=false,streak=0}){
   const [showHint,setShowHint]=useState(false);
   const ret=getRetainability(card);const nxt=card.due?nextReviewLabel(card):null;
-  const dCol=DIFF_COLOR[card.difficulty]||C.blueL;
+  const dCol=diffColor(card.difficulty)||C.blueL;
   const heat=Math.min(streak,10)/10; // 0→1, brightens the glow as the streak climbs
   const glowShadow=streak>=3
     ? `0 8px 40px rgba(245,158,11,${0.10+heat*0.28}),0 0 0 1px rgba(245,158,11,${0.14+heat*0.22}),inset 0 1px 0 rgba(255,255,255,0.05)`
@@ -996,7 +998,7 @@ function CardManagerModal({deckName,cards,onAdd,onUpdate,onDelete,onClose,m=fals
                     <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editFront} onChange={e=>setEditFront(e.target.value)} placeholder="Front (question)"/>
                     <textarea style={inp({minHeight:50,resize:'vertical',fontSize:12.5})} value={editBack} onChange={e=>setEditBack(e.target.value)} placeholder="Back (answer)"/>
                     <div style={R({gap:8})}>
-                      <button style={btnSm(C.blueGrad,{color:'#fff',fontSize:11})} onClick={saveEdit}>Save</button>
+                      <button style={btnSm(C.blueGrad,{color:C.onAccent,fontSize:11})} onClick={saveEdit}>Save</button>
                       <button style={btnG({fontSize:11,padding:'6px 14px'})} onClick={()=>setEditIdx(null)}>Cancel</button>
                     </div>
                   </div>
@@ -1068,13 +1070,13 @@ function PathwayCard({ pathKey, p, current, onSelect, m=false }){
     <motion.div initial={{opacity:0,y:12}} animate={{opacity:1,y:0}} whileHover={{y:-2,borderColor:`${p.accent}45`,boxShadow:`0 10px 32px rgba(0,0,0,0.5),0 0 0 1px ${p.accent}25`}}
       style={{...glass({padding:m?18:24,transition:'box-shadow .2s,border-color .2s'}),border:current?`1px solid ${p.accent}55`:`1px solid ${C.b1}`}}>
       <div style={R({alignItems:'flex-start',marginBottom:14})}>
-        <div style={{width:44,height:44,borderRadius:12,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic size={20} color={p.accent}/></div>
+        <div style={{width:44,height:44,borderRadius:12,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Ic size={20} color={accentText(p.accent)}/></div>
         <div style={{flex:1,minWidth:0}}>
           <div style={R({gap:8})}>
             <div style={{fontSize:16,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.01em'}}>{p.label}</div>
             {current&&<span style={{...pill(`${p.accent}20`,p.accent,{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>Current</span>}
           </div>
-          {p.tagline&&<div style={{fontSize:12,color:p.accent,marginTop:2,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
+          {p.tagline&&<div style={{fontSize:12,color:accentText(p.accent),marginTop:2,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
         </div>
       </div>
       {p.overview&&<p style={{fontSize:12.5,color:C.t2,lineHeight:1.75,margin:'0 0 16px'}}>{p.overview}</p>}
@@ -1083,7 +1085,7 @@ function PathwayCard({ pathKey, p, current, onSelect, m=false }){
         <div style={CC({gap:7})}>
           {p.highlights.map((h,i)=>(
             <div key={i} style={{display:'flex',gap:8,alignItems:'flex-start'}}>
-              <Check size={12} color={p.accent} style={{flexShrink:0,marginTop:2}}/>
+              <Check size={12} color={accentText(p.accent)} style={{flexShrink:0,marginTop:2}}/>
               <span style={{fontSize:12,color:C.t2,lineHeight:1.6}}>{h}</span>
             </div>
           ))}
@@ -1104,7 +1106,7 @@ function PathwayCard({ pathKey, p, current, onSelect, m=false }){
       <div style={R({justifyContent:'space-between'})}>
         <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{(p.units||[]).length} units · {lessonCount} lessons</span>
         <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} disabled={current}
-          style={{...btn(current?C.s3:`linear-gradient(135deg,${p.accent},${p.accent}cc)`,{fontSize:11.5,padding:'8px 16px',opacity:current?.6:1,cursor:current?'default':'pointer',boxShadow:current?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
+          style={{...btn(current?C.s3:accentGrad(p.accent),{fontSize:11.5,padding:'8px 16px',opacity:current?.6:1,cursor:current?'default':'pointer',boxShadow:current?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
           onClick={()=>!current&&onSelect(pathKey)}>
           {current?<>Currently Active<Check size={13}/></>:<>Select This Pathway<ChevronRight size={13}/></>}
         </motion.button>
@@ -2083,7 +2085,14 @@ export default function App({ account, onAccountChange }) {
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'exploring';
   const curPath = PATHS[eSpec]||PATHS['exploring'];
-  const accent  = curPath?.accent||C.blue;
+  // accentText, not the raw brand hex: a pathway's accent is fixed identity
+  // (constants.js `physician: '#2d7fff'`), tuned as a fill, and this same value
+  // is used as a TEXT color for unit kickers, stat numbers and taglines all
+  // over the app. #2d7fff is ~3.0:1 on a light card, so every one of those
+  // labels was washed out in the light themes. accentText returns the color
+  // untouched when it already reads — which is every dark theme — and walks it
+  // down until it does otherwise.
+  const accent  = accentText(curPath?.accent||C.blue);
   // Per-tab color identity — Prep and Home stay keyed to the chosen pathway's own accent (that
   // pathway color IS their identity, and Home's hero is deliberately tinted per-pathway), but
   // Portfolio/Progress/Settings are generic app sections with no pathway of their own, so each
@@ -3589,7 +3598,7 @@ export default function App({ account, onAccountChange }) {
       <div style={CC({gap:22})}>
         <div><div style={{...lbl(),color:C.cyanL}}>Pathway Diagnostic</div><h2 style={{fontSize:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>Your Match</h2></div>
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center',background:path?.gradient?`linear-gradient(135deg,${path.accent}14,${path.accent2||path.accent}08)`:`linear-gradient(135deg,${C.blueDim},rgba(6,182,212,0.05))`,border:`1px solid ${path?.accent||C.blue}30`})}}>
-          <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={path?.accent||accent}/></div>
+          <div style={{width:80,height:80,borderRadius:'50%',background:`${path?.accent||accent}18`,border:`2px solid ${path?.accent||accent}40`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 20px',boxShadow:`0 0 30px ${path?.glow||`${accent}30`}`}}><ResIcon size={34} color={accentText(path?.accent||accent)}/></div>
           <h2 style={{fontSize:30,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:'0 0 14px'}}>{path?.label}</h2>
           <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
@@ -3602,7 +3611,7 @@ export default function App({ account, onAccountChange }) {
         {/* Why this path — the actual decision logic (5-axis work-style vector + scenario
             votes, see diagnosticEngine.js), not just a bare label the student has to trust. */}
         <div style={glass({padding:18,borderLeft:`3px solid ${path?.accent||C.cyan}55`,background:`linear-gradient(120deg,${path?.accent||C.cyan}08,transparent 45%)`})}>
-          <SectionTitle icon={Lightbulb} color={path?.accent||C.cyanL}>Why {path?.label}</SectionTitle>
+          <SectionTitle icon={Lightbulb} color={accentText(path?.accent||C.cyanL)}>Why {path?.label}</SectionTitle>
           {dWhy?.reasons?.length>0?(
             <div style={CC({gap:10})}>
               <p style={{fontSize:12.5,color:C.t2,lineHeight:1.6,margin:0}}>Your answers leaned toward:</p>
@@ -3633,9 +3642,9 @@ export default function App({ account, onAccountChange }) {
           <div style={G(2,10,{},isMobile)}>
             {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
-                <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={p.accent}/></div>
+                <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={accentText(p.accent)}/></div>
                 <div>
-                  <div style={{fontSize:13,fontWeight:700,color:p.accent,fontFamily:C.FD}}>{p.label}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
                   {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:2,lineHeight:1.4}}>{p.tagline}</div>}
                 </div>
               </motion.div>
@@ -3647,7 +3656,7 @@ export default function App({ account, onAccountChange }) {
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
-                <div style={{fontSize:13,fontWeight:700,color:p.accent,fontFamily:C.FD}}>{p.label}</div>
+                <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
                 <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
               </motion.div>
@@ -3893,7 +3902,7 @@ export default function App({ account, onAccountChange }) {
                             {isStudying&&<span style={pill(C.amberDim,C.amberL,{fontSize:9})}>In progress — continue when ready</span>}
                           </div>
                         </div>
-                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${C.amber},${C.rose})`:`linear-gradient(135deg,${accent},${accent}cc)`,{fontSize:11,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
+                        {(avail||isStudying)&&<motion.button whileHover={{scale:1.04}} whileTap={{scale:.96}} style={{...btnSm(planned?`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.rose)})`:`linear-gradient(135deg,${accentFill(accent)},${shade(accentFill(accent),0.18)})`,{fontSize:11,color:C.onAccent,boxShadow:`0 2px 8px ${planned?C.amber:accent}30`}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>openLesson(lesson,unit)}>{planned?<Target size={11}/>:isStudying?<RefreshCw size={11}/>:<Play size={11}/>}{planned?"Do it — today's plan":isStudying?'Continue':'Start Lesson'}</motion.button>}
                         {isVerified&&<button onClick={()=>reviewLesson(lesson,unit)} title="Re-read this lesson's article and video" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>Review</button>}
                         {(isDone||isVerified)&&<Check size={14} color={C.green} strokeWidth={3}/>}
                         {state==='locked'&&<Lock size={12} color={C.t4}/>}
@@ -3921,9 +3930,9 @@ export default function App({ account, onAccountChange }) {
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>switchPath(key)} style={{...glass2({padding:14,cursor:'pointer',border:eSpec===key?`1px solid ${p.accent}50`:undefined,transition:'all .15s'})}} >
-                <div style={{fontSize:12,fontWeight:700,color:eSpec===key?p.accent:C.t2,fontFamily:C.FD}}>{p.label}</div>
+                <div style={{fontSize:12,fontWeight:700,color:eSpec===key?accentText(p.accent):C.t2,fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
-                {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:6,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
+                {eSpec===key&&<div style={{fontSize:10,color:accentText(p.accent),marginTop:6,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
           </div>
@@ -4597,7 +4606,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
               <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review {dueDeckCount} due deck{dueDeckCount===1?'':'s'} in one session — no need to pick a deck first.</div>
             </div>
-            <span style={{...btn(`linear-gradient(135deg,${C.amber},${C.amber}cc)`,{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
+            <span style={{...btn(accentGrad(C.amber),{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
           </motion.div>
         )}
 
@@ -5902,7 +5911,7 @@ export default function App({ account, onAccountChange }) {
     };
     const radarOpts={
       responsive:true,maintainAspectRatio:false,
-      scales:{r:{min:0,max:100,ticks:{color:'rgba(255,255,255,0.3)',backdropColor:'transparent',stepSize:20},grid:{color:'rgba(255,255,255,0.08)'},pointLabels:{color:C.t2,font:{size:12,family:C.FB}}}},
+      scales:{r:{min:0,max:100,ticks:{color:C.t3,backdropColor:'transparent',stepSize:20},grid:{color:C.b2},pointLabels:{color:C.t2,font:{size:12,family:C.FB}}}},
       plugins:{legend:{display:false},tooltip:{backgroundColor:C.s2,titleColor:C.t1,bodyColor:C.t2,borderColor:C.b2,borderWidth:1}},
     };
 
@@ -5922,7 +5931,7 @@ export default function App({ account, onAccountChange }) {
     const lineOpts={
       responsive:true,maintainAspectRatio:false,
       scales:{
-        y:{min:0,max:100,grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:C.t3,font:{size:11}}},
+        y:{min:0,max:100,grid:{color:C.b1},ticks:{color:C.t3,font:{size:11}}},
         x:{grid:{display:false},ticks:{color:C.t3,font:{size:11}}},
       },
       plugins:{legend:{display:false},tooltip:{backgroundColor:C.s2,titleColor:C.t1,bodyColor:C.t2,borderColor:C.b2,borderWidth:1}},
@@ -5985,7 +5994,7 @@ export default function App({ account, onAccountChange }) {
           sub="Readiness, credibility, and performance across your pathway." m={isMobile}
           right={!isMobile&&(
             <div style={R({gap:10})}>
-              <div style={{...pill(`${levelInfo.tierColor}1e`,levelInfo.tierColor,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
+              <div style={{...pill(`${levelInfo.tierColor}1e`,accentText(levelInfo.tierColor),{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><TierIcon size={12}/>Lv.{lvl} {levelInfo.tier}</div>
               {streak>0&&<div style={{...pill(C.amberDim,C.amberL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Flame size={12}/>{streak}d</div>}
               <div style={{...pill(C.greenDim,C.greenL,{fontSize:12,fontWeight:700}),display:'inline-flex',alignItems:'center',gap:6}}><Trophy size={12}/>{achiev.size}</div>
             </div>
@@ -6059,7 +6068,7 @@ export default function App({ account, onAccountChange }) {
           <div style={R({gap:16,flexWrap:'wrap',justifyContent:'space-between'})}>
             <div style={R({gap:14})}>
               <div style={{width:52,height:52,borderRadius:16,background:`${levelInfo.tierColor}25`,border:`1.5px solid ${levelInfo.tierColor}55`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                <TierIcon size={24} color={levelInfo.tierColor}/>
+                <TierIcon size={24} color={accentText(levelInfo.tierColor)}/>
               </div>
               <div>
                 <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Level {lvl} · {levelInfo.tier}</div>
@@ -6367,7 +6376,7 @@ export default function App({ account, onAccountChange }) {
       <div style={CC({gap:30})}>
         {/* Hero */}
         <div style={{...glass({padding:26}),background:`linear-gradient(135deg,${accent}14,transparent)`,border:`1px solid ${accent}26`,display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
-          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24,color:'#fff',boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
+          <div style={{width:58,height:58,borderRadius:16,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`2px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:24,color:onTint(accent),boxShadow:`0 8px 24px ${accent}30`,flexShrink:0}}>
             {user.name[0].toUpperCase()}
           </div>
           <div style={{flex:1,minWidth:200}}>
@@ -6410,7 +6419,7 @@ export default function App({ account, onAccountChange }) {
         <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Display Name</SL>
           <div style={CC({gap:4,marginBottom:14})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
-          <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
+          <button style={btn(accentGrad(accent))} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
@@ -6511,7 +6520,7 @@ export default function App({ account, onAccountChange }) {
           <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
-            <button style={btn(`linear-gradient(135deg,${accent},${accent}cc)`)} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
+            <button style={btn(accentGrad(accent))} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
             {user?.examDate&&<button style={btnG()} onClick={()=>{saveUser({...user,examDate:null});setSExamDate('');toast('Test date cleared');}}>Clear</button>}
           </div>
         </div>
@@ -6521,14 +6530,14 @@ export default function App({ account, onAccountChange }) {
             <SL extra={{marginBottom:0}}>Study Track</SL>
             <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
           </div>
-          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:curPath?.accent||accent,fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
+          <p style={{fontSize:13,color:C.t2,marginBottom:16}}>Current: <span style={{color:accentText(curPath?.accent||accent),fontWeight:700,fontFamily:C.FD}}>{curPath?.label}</span></p>
           <div style={G(2,10,{},isMobile)}>
             {Object.entries(PATHS).map(([key,p])=>(
               <motion.div key={key} whileHover={{borderColor:`${p.accent}40`}} onClick={()=>setSS(sSpec===key?'':key)} style={{...glass2({padding:16,cursor:'pointer',border:sSpec===key?`1px solid ${p.accent}60`:eSpec===key?`1px solid ${p.accent}30`:undefined,transition:'border-color .15s'})}}>
-                <div style={{fontSize:13,fontWeight:700,color:sSpec===key?p.accent:eSpec===key?p.accent:C.t2,fontFamily:C.FD}}>{p.label}</div>
+                <div style={{fontSize:13,fontWeight:700,color:sSpec===key?accentText(p.accent):eSpec===key?accentText(p.accent):C.t2,fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
                 <div style={{fontSize:11,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units · {p.units.reduce((s,u)=>s+u.lessons.length,0)} lessons</div>
-                {eSpec===key&&<div style={{fontSize:10,color:p.accent,marginTop:4,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
+                {eSpec===key&&<div style={{fontSize:10,color:accentText(p.accent),marginTop:4,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
               </motion.div>
             ))}
           </div>
@@ -6579,7 +6588,7 @@ export default function App({ account, onAccountChange }) {
           })}
           <div style={{...R({gap:10,marginTop:4,paddingTop:16,borderTop:`1px solid ${C.b1}`})}}>
             <button type="button" role="switch" aria-checked={!!user.apIb} onClick={()=>saveUser({...user,apIb:!user.apIb})} style={{width:40,height:22,borderRadius:11,background:user.apIb?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.apIb?accent:C.b2}`,padding:0}}>
-              <div style={{width:16,height:16,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.apIb?20:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+              <div style={{width:16,height:16,borderRadius:'50%',background:user.apIb?'#fff':C.s1,border:user.apIb?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.apIb?20:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
             </button>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1}}>I'm an AP/IB student</div>
@@ -6598,7 +6607,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:11,color:C.t3,marginTop:2}}>Audio feedback for correct answers, level-ups, and achievements</div>
             </div>
             <div onClick={()=>{const v=!sfxOn;setSfxOn(v);setSFX(v);}} style={{width:44,height:24,borderRadius:12,background:sfxOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${sfxOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:sfxOn?'#fff':C.s1,border:sfxOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:sfxOn?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
             </div>
           </div>
           <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
@@ -6607,7 +6616,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:11,color:C.t3,marginTop:2}}>Confetti bursts for level-ups, streaks, and achievements</div>
             </div>
             <div onClick={()=>{const v=!confettiOn;setConfettiOn(v);setConfettiEnabled(v);}} style={{width:44,height:24,borderRadius:12,background:confettiOn?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${confettiOn?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:confettiOn?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:confettiOn?'#fff':C.s1,border:confettiOn?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:confettiOn?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
             </div>
           </div>
         </div>
@@ -6622,7 +6631,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:11,color:C.t3,marginTop:2}}>If you finish a day's plan early, tomorrow's load gets a little lighter.</div>
             </div>
             <div onClick={()=>saveUser({...user,addBack:!(user.addBack!==false)})} style={{width:44,height:24,borderRadius:12,background:user.addBack!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.addBack!==false?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.addBack!==false?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:user.addBack!==false?'#fff':C.s1,border:user.addBack!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.addBack!==false?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
             </div>
           </div>
           <div style={{...R({justifyContent:'space-between'}),marginTop:16,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
@@ -6631,7 +6640,7 @@ export default function App({ account, onAccountChange }) {
               <div style={{fontSize:11,color:C.t3,marginTop:2}}>Missed tasks get folded into the next generated day instead of lost.</div>
             </div>
             <div onClick={()=>saveUser({...user,rollover:!(user.rollover!==false)})} style={{width:44,height:24,borderRadius:12,background:user.rollover!==false?accent:C.s4,cursor:'pointer',position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${user.rollover!==false?accent:C.b2}`}}>
-              <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:user.rollover!==false?22:2,transition:'left .2s',boxShadow:'0 1px 4px rgba(0,0,0,0.4)'}}/>
+              <div style={{width:18,height:18,borderRadius:'50%',background:user.rollover!==false?'#fff':C.s1,border:user.rollover!==false?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:user.rollover!==false?22:2,transition:'left .2s',boxShadow:C.shadowSm}}/>
             </div>
           </div>
         </div>
@@ -7040,7 +7049,7 @@ export default function App({ account, onAccountChange }) {
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>
               </div>
-              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:'#fff',cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
+              <div onClick={() => setTab('settings')} style={{width:32,height:32,borderRadius:10,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:12,color:onTint(accent),cursor:'pointer'}}>{user.name[0].toUpperCase()}</div>
             </div>
           </header>
         )}
@@ -7063,7 +7072,7 @@ export default function App({ account, onAccountChange }) {
             </button>
             <div onClick={()=>setTab('settings')} style={{padding:'14px 18px',borderBottom:`1px solid ${C.b1}`,cursor:'pointer',background:tab==='settings'?`${settingsAccent}12`:undefined}}>
               <div style={R({gap:11,marginBottom:12})}>
-                <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:'#fff',flexShrink:0}}>
+                <div style={{width:36,height:36,borderRadius:11,background:`linear-gradient(135deg,${accent}55,${accent}28)`,border:`1.5px solid ${accent}45`,display:'flex',alignItems:'center',justifyContent:'center',fontWeight:800,fontSize:14,color:onTint(accent),flexShrink:0}}>
                   {user.name[0].toUpperCase()}
                 </div>
                 <div style={{flex:1,minWidth:0}}>
@@ -7085,7 +7094,7 @@ export default function App({ account, onAccountChange }) {
                   // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
                   // the destination shows in the status bar on hover, and screen readers get
                   // a link with aria-current instead of an unlabelled clickable box.
-                  <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?'#fff':C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
+                  <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?onTint(nc):C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
                     <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — see

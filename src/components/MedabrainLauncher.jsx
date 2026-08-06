@@ -1,7 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Sparkles } from 'lucide-react';
-import { C, tint } from '../lib/theme';
+import { C, tint, accentFill, shade } from '../lib/theme';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The "Ask Medabrain" launcher — the always-visible pull-tab (desktop) / FAB
@@ -74,7 +74,10 @@ export default function MedabrainLauncher({ onClick, accent = C.violet, accent2 
         style={{
           position: 'fixed', right: 16, bottom: 'calc(64px + env(safe-area-inset-bottom) + 16px)', zIndex: 320,
           width: 56, height: 56, borderRadius: '50%', border: `1px solid ${tint('#ffffff', 0.3)}`,
-          background: `linear-gradient(135deg, ${tint(accent, 0.92)}, ${tint(a2, 0.92)}), ${C.s1}`,
+          // accentFill, not a tint over C.s1: the FAB is a solid accent puck
+          // carrying a white glyph, and 92%-of-accent over a near-white card is
+          // a pale disc in the light themes — the brain icon vanished into it.
+          background: `linear-gradient(135deg, ${accentFill(accent, 4.5)}, ${accentFill(a2, 4.5)})`,
           boxShadow: `0 12px 34px ${tint(accent, 0.45)}, 0 2px 8px rgba(0,0,0,0.4), 0 0 0 1px ${tint(accent, 0.2)} inset, 0 1px 0 ${tint('#ffffff', 0.25)} inset`,
           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
         }}>
@@ -98,9 +101,14 @@ export default function MedabrainLauncher({ onClick, accent = C.violet, accent2 
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9,
         padding: '18px 10px', borderRadius: '16px 0 0 16px',
         border: `1px solid ${tint('#ffffff', 0.16)}`, borderRight: 'none',
-        // Dark glass body with the accent living in the edge + aura, not a flat fill —
-        // reads quieter at rest, so the hover/press states have somewhere to go.
-        background: `linear-gradient(165deg, ${tint(accent, 0.32)} 0%, rgba(10,16,32,0.85) 45%, ${tint(a2, 0.3)} 100%), ${C.s1}`,
+        // A deep accent body, in every theme. This used to be two 30%-alpha accent
+        // tints over C.s1 with one dark stop between them, which is a dark glass tab
+        // on a dark page and a washed-out pale one on a light page — where the white
+        // 'ASK MEDABRAIN' label measured 1.6:1 and read as an empty strip.
+        // accentFill guarantees the body stays dark enough for the white label and
+        // icons whatever palette is live, and the shaded middle keeps the original
+        // 'quiet at rest, somewhere to go on hover' shape of the gradient.
+        background: `linear-gradient(165deg, ${accentFill(accent, 4.5)} 0%, ${shade(accentFill(accent, 4.5), 0.45)} 45%, ${accentFill(a2, 4.5)} 100%)`,
         backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
         boxShadow: `-8px 8px 32px ${tint(accent, 0.35)}, -2px 2px 10px rgba(0,0,0,0.45), 0 0 0 1px ${tint(accent, 0.25)} inset, 0 1px 0 ${tint('#ffffff', 0.18)} inset`,
         cursor: 'pointer',

@@ -308,7 +308,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
         <div style={R({ gap: 6 })}>
           {ttsSupported && (
             <button title={muted ? 'Unmute interviewer voice' : 'Mute interviewer voice'} onClick={() => { const m = !muted; setMuted(m); if (m) { cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false); } }}
-              style={{ ...iconBtn, color: muted ? C.rose : C.t2 }}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
+              style={{ ...iconBtn(), color: muted ? C.rose : C.t2 }}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
           )}
           {phase !== 'done' && (
             <button onClick={endAndDebrief} disabled={loading} style={{ ...btnG({ fontSize: 12 }), display: 'inline-flex', alignItems: 'center', gap: 6, opacity: loading ? 0.6 : 1 }}>
@@ -356,7 +356,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
       {phase !== 'done' && (
         <div style={glass2({ padding: 12 })}>
           <textarea
-            style={{ ...composerInput, borderColor: listening ? C.green : C.b1 }}
+            style={{ ...composerInput(), borderColor: listening ? C.green : C.b1 }}
             placeholder={listening ? 'Listening — speak your answer…' : sttSupported ? 'Tap the mic and speak, or type your answer here…' : 'Type your answer here…'}
             value={draft}
             onChange={e => setDraft(e.target.value)}
@@ -381,5 +381,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   );
 }
 
-const iconBtn = { width: 32, height: 32, borderRadius: 9, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' };
-const composerInput = { width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '11px 14px', color: C.t1, fontSize: 14, lineHeight: 1.6, fontFamily: C.FB, outline: 'none' };
+// Functions, not literals: a module-level style object freezes the palette at
+// import time and never follows a theme switch (see theme.js's header note).
+const iconBtn = () => ({ width: 32, height: 32, borderRadius: 9, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' });
+const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '11px 14px', color: C.t1, fontSize: 14, lineHeight: 1.6, fontFamily: C.FB, outline: 'none' });

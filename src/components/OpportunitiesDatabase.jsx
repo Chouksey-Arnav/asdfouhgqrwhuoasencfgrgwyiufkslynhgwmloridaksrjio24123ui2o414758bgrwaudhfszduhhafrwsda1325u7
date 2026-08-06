@@ -3,7 +3,7 @@ import Fuse from 'fuse.js';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Search, Compass, Plus, Sparkles, Loader2, Info, ChevronDown, ChevronUp, Trophy, Medal } from 'lucide-react';
-import { C, glass, glass2, btn, inp, R, CC, pill, tint } from '../lib/theme';
+import { C, glass, glass2, btn, inp, R, CC, pill, tint, onTint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../data/opportunities';
 import { rankOpportunities } from '../lib/recommendOpportunities';
@@ -25,7 +25,8 @@ const fuse = new Fuse(OPPORTUNITIES, {
   ignoreLocation: true,
 });
 
-const EFFORT_COLOR = { Elite: C.rose, Competitive: C.amber, Open: C.green };
+// Per call, not a frozen literal — see the note in theme.js's header.
+const effortColor = (effort) => ({ Elite: C.rose, Competitive: C.amber, Open: C.green }[effort]);
 const RANK_STYLE = {
   1: { grad: 'linear-gradient(135deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.35)', Icon: Trophy },
   2: { grad: 'linear-gradient(135deg,#94a3b8,#cbd5e1)', glow: 'rgba(148,163,184,0.25)', Icon: Medal },
@@ -189,7 +190,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {OPPORTUNITY_TYPES.map(t => (
           <button key={t} onClick={() => setType(t)}
-            style={pill(type === t ? tint(accent, 0.22) : 'rgba(255,255,255,0.05)', type === t ? '#fff' : C.t3,
+            style={pill(type === t ? tint(accent, 0.22) : C.surf2, type === t ? onTint(accent) : C.t3,
               { cursor: 'pointer', border: `1px solid ${type === t ? tint(accent, 0.4) : C.b1}`, fontWeight: type === t ? 700 : 500 })}>
             {t}
           </button>
@@ -211,7 +212,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
           )}
           <div style={G2(ranked.length)}>
             {ranked.map(r => {
-              const ec = EFFORT_COLOR[r.item.effort] || C.t2;
+              const ec = effortColor(r.item.effort) || C.t2;
               const rs = RANK_STYLE[r.rank];
               return (
                 <motion.div key={r.item.id} whileHover={{ y: -1 }} style={{ ...glass({ padding: 16 }), border: `1px solid ${ec}30` }}>
@@ -245,7 +246,7 @@ export default function OpportunitiesDatabase({ accent = C.blue, onTrack, tracke
         <div style={CC({ gap: 8 })}>
           {results.slice(0, 60).map(o => {
             const isOpen = expandedId === o.id;
-            const ec = EFFORT_COLOR[o.effort] || C.t2;
+            const ec = effortColor(o.effort) || C.t2;
             const state = stateOf(o);
             return (
               <div key={o.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : ec}` }}>

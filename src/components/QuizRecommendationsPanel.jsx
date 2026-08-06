@@ -8,10 +8,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Target } from 'lucide-react';
-import { C, glass, glass2, btn, pill } from '../lib/theme';
+import { C, glass, glass2, btn, pill, accentFill } from '../lib/theme';
 import { rankLabel } from '../lib/recommend';
 
-const dColors = { Easy: C.green, Medium: C.cyan, Hard: C.amber, Expert: C.rose };
+// Built per call, never as a module-level literal: a literal snapshots the
+// palette at import time (which is Balanced Dark) and then never follows a
+// theme switch, so these chips kept painting dark-theme greens on a light page.
+const dColor = (diff) => ({ Easy: C.green, Medium: C.cyan, Hard: C.amber, Expert: C.rose }[diff]);
 
 const RANK_STYLE = {
   1: { grad: 'linear-gradient(135deg,#f59e0b,#fbbf24)', glow: 'rgba(245,158,11,0.35)', icon: Trophy },
@@ -72,7 +75,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
   }
 
   const [top, ...rest] = orderedRanked;
-  const topColor = dColors[top.quiz.diff] || C.blue;
+  const topColor = dColor(top.quiz.diff) || C.blue;
   const topIsPlanPick = isPlanPick(top);
 
   async function askMedabrain(pick) {
@@ -145,7 +148,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch', minWidth: 140 }}>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              style={{ ...btn(`linear-gradient(135deg,${C.amber},${C.amberL})`, { fontSize: 12.5, padding: '10px 20px' }), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ ...btn(`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.amberL)})`, { fontSize: 12.5, padding: '10px 20px', color: C.onAccent }), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
               onClick={() => onStart(top.quiz)}>
               Start Now<ChevronRight size={14} />
             </motion.button>
@@ -166,7 +169,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
       {rest.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rest.map((p, i) => {
-            const dc = dColors[p.quiz.diff] || C.t2;
+            const dc = dColor(p.quiz.diff) || C.t2;
             const planPick = isPlanPick(p);
             return (
               <motion.div

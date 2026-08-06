@@ -40,7 +40,11 @@
 export const DARK = {
   bg:'#0a0e16', s0:'#0e131d', s1:'#141b28', s2:'#18202e', s3:'#1e2735', s4:'#26303f', s5:'#2f3b4d',
   b0:'rgba(255,255,255,0.04)', b1:'rgba(255,255,255,0.07)', b2:'rgba(255,255,255,0.11)', b3:'rgba(255,255,255,0.18)',
-  t1:'#e9eefb', t2:'#98a6c2', t3:'#5b6b8a', t4:'#3b4c68',
+  // t3/t4 lifted in the light-mode audit pass. They measured 2.8:1 and 1.7:1
+  // against a card — "faint" past the point of being text at all, and the same
+  // class of failure as the light palette's washed-out metadata, just in the
+  // other direction. Still clearly the two quietest steps in the ramp.
+  t1:'#e9eefb', t2:'#98a6c2', t3:'#6e7b97', t4:'#627086',
   blue:'#2d7fff', blueL:'#5da0ff', blueLL:'#93c5fd', blueD:'#1d5fd9',
   blueDim:'rgba(45,127,255,0.10)', blueGlow:'rgba(45,127,255,0.28)',
   blueGrad:'linear-gradient(135deg,#2d7fff 0%,#1d5fd9 100%)',
@@ -98,9 +102,15 @@ export const DARK = {
 // 2. Every `*L` token, which in dark mode means "the lighter, more readable
 //    variant", becomes the DARKER variant here. Those tokens are overwhelmingly
 //    used as text color, and the job of the token is legibility, not lightness.
-// 3. Base accents are pulled down toward their 600-weight so a colored heading
-//    or a chip label clears roughly 4.5:1 against a light surface. #2d7fff on
-//    white is about 3.1:1 — fine for a border, not fine for words.
+// 3. Base accents are pulled down until a colored heading or chip label clears
+//    4.5:1 against BOTH a card and the page. #2d7fff on white is about 3.1:1 —
+//    fine for a border, not fine for words.
+//    This originally stopped at the 600 weights and claimed the 4.5:1 result
+//    without ever measuring it; the 600s actually land around 2.6–3.1:1, which
+//    is why every section kicker ("SETTINGS", "PROFILE & GOALS", "UNIT 3") and
+//    every stat number rendered in an accent was washed out. They now sit near
+//    the 700 weights, and scripts/verifyPaletteContrast.mjs asserts it on every
+//    build so the claim can't drift away from the values again.
 // 4. (Added in the glare pass.) No large surface is pure #ffffff any more. A
 //    full-white card under a bright screen is the single biggest source of the
 //    "blinding" complaint, and dropping it two points to #fbfcfe costs nothing
@@ -111,29 +121,35 @@ export const DARK = {
 export const LIGHT = {
   bg:'#e6eaf1', s0:'#eff3f9', s1:'#fbfcfe', s2:'#f4f7fc', s3:'#edf1f8', s4:'#e0e7f1', s5:'#d0dae9',
   b0:'rgba(15,23,42,0.05)', b1:'rgba(15,23,42,0.10)', b2:'rgba(15,23,42,0.15)', b3:'rgba(15,23,42,0.24)',
-  t1:'#111a2b', t2:'#44536d', t3:'#6b7a96', t4:'#97a4bb',
-  blue:'#1f6feb', blueL:'#1550ba', blueLL:'#1e40af', blueD:'#0f4bb3',
-  blueDim:'rgba(31,111,235,0.10)', blueGlow:'rgba(31,111,235,0.22)',
-  blueGrad:'linear-gradient(135deg,#2d7fff 0%,#1550ba 100%)',
-  green:'#059669', greenL:'#047857', greenDim:'rgba(5,150,105,0.10)',
-  amber:'#d97706', amberL:'#b45309', amberDim:'rgba(217,119,6,0.11)',
-  rose:'#e11d48', roseL:'#be123c', roseDim:'rgba(225,29,72,0.09)',
-  violet:'#7c3aed', violetL:'#6d28d9', violetDim:'rgba(124,58,237,0.09)',
-  cyan:'#0891b2', cyanDim:'rgba(8,145,178,0.10)', orange:'#ea580c',
-  cyanL:'#0e7490', orangeL:'#c2410c', orangeDim:'rgba(234,88,12,0.10)',
-  teal:'#0d9488', tealL:'#0f766e', tealDim:'rgba(13,148,136,0.10)',
-  indigo:'#4f46e5', indigoL:'#4338ca', indigoDim:'rgba(79,70,229,0.09)',
-  pink:'#db2777', pinkL:'#be185d', pinkDim:'rgba(219,39,119,0.09)',
-  fuchsia:'#c026d3', fuchsiaL:'#a21caf', fuchsiaDim:'rgba(192,38,211,0.09)',
-  lime:'#65a30d', limeL:'#4d7c0f', limeDim:'rgba(101,163,13,0.11)',
-  sky:'#0284c7', skyL:'#0369a1', skyDim:'rgba(2,132,199,0.10)',
-  emerald:'#047857', emeraldL:'#065f46', emeraldDim:'rgba(4,120,87,0.10)',
-  red:'#dc2626', redL:'#b91c1c', redDim:'rgba(220,38,38,0.09)',
-  gold:'#ca8a04', goldL:'#a16207', goldDim:'rgba(202,138,4,0.12)',
-  auroraGrad:'linear-gradient(120deg,#2d7fff 0%,#7c3aed 45%,#db2777 100%)',
-  oceanGrad:'linear-gradient(135deg,#0891b2 0%,#2d7fff 60%,#4f46e5 100%)',
-  sunsetGrad:'linear-gradient(135deg,#f59e0b 0%,#e11d48 55%,#c026d3 100%)',
-  forestGrad:'linear-gradient(135deg,#059669 0%,#0d9488 55%,#0284c7 100%)',
+  t1:'#111a2b', t2:'#3f4d66', t3:'#5c6a85', t4:'#737e96',
+  // t3/t4 are darker than a mechanical inversion would give. In dark mode a
+  // muted token can sit close to the page because the eye reads light-on-dark
+  // detail well below the ratio it needs the other way round; on a light page
+  // the same "muted" value is simply gone. The old #97a4bb t4 measured 2.4:1
+  // against a card, which is where "ASSESS", "new" and every unit's metadata
+  // row were disappearing.
+  blue:'#1b63d4', blueL:'#1651ae', blueLL:'#423bc0', blueD:'#1651ae',
+  blueDim:'rgba(27,99,212,0.1)', blueGlow:'rgba(27,99,212,0.22)',
+  blueGrad:'linear-gradient(135deg,#1b63d4 0%,#1651ae 100%)',
+  green:'#057855', greenL:'#046245', greenDim:'rgba(5,120,85,0.1)',
+  amber:'#9d5606', amberL:'#814605', amberDim:'rgba(157,86,6,0.11)',
+  rose:'#cc1940', roseL:'#ab1536', roseDim:'rgba(204,25,64,0.1)',
+  violet:'#7c3aed', violetL:'#6831c7', violetDim:'rgba(124,58,237,0.1)',
+  cyan:'#08718a', cyanL:'#075f74', cyanDim:'rgba(8,113,138,0.1)',
+  orange:'#b5440c', orangeL:'#94380a', orangeDim:'rgba(181,68,12,0.1)',
+  teal:'#0d746a', tealL:'#0b6159', tealDim:'rgba(13,116,106,0.1)',
+  indigo:'#4f46e5', indigoL:'#423bc0', indigoDim:'rgba(79,70,229,0.1)',
+  pink:'#c22268', pinkL:'#a31d57', pinkDim:'rgba(194,34,104,0.1)',
+  fuchsia:'#ad22bf', fuchsiaL:'#911da0', fuchsiaDim:'rgba(173,34,191,0.1)',
+  lime:'#48730d', limeL:'#3b5f0b', limeDim:'rgba(72,115,13,0.1)',
+  sky:'#026fa7', skyL:'#025b89', skyDim:'rgba(2,111,167,0.1)',
+  emerald:'#047857', emeraldL:'#036247', emeraldDim:'rgba(4,120,87,0.1)',
+  red:'#cd2323', redL:'#a81c1c', redDim:'rgba(205,35,35,0.1)',
+  gold:'#8d6104', goldL:'#734f03', goldDim:'rgba(141,97,4,0.11)',
+  auroraGrad:'linear-gradient(120deg,#1b63d4 0%,#7c3aed 45%,#c22268 100%)',
+  oceanGrad:'linear-gradient(135deg,#08718a 0%,#1b63d4 60%,#4f46e5 100%)',
+  sunsetGrad:'linear-gradient(135deg,#9d5606 0%,#cc1940 55%,#ad22bf 100%)',
+  forestGrad:'linear-gradient(135deg,#057855 0%,#0d746a 55%,#026fa7 100%)',
   violetGrad:'linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%)',
 
   surf:'rgba(255,255,255,0.70)', surf2:'rgba(255,255,255,0.55)', surfHi:'rgba(255,255,255,0.88)',
@@ -175,7 +191,7 @@ export const LIGHT = {
 export const BALANCED = {
   bg:'#181d27', s0:'#1c222d', s1:'#212834', s2:'#252d3a', s3:'#2a3341', s4:'#323c4c', s5:'#3d4959',
   b0:'rgba(255,255,255,0.05)', b1:'rgba(255,255,255,0.09)', b2:'rgba(255,255,255,0.14)', b3:'rgba(255,255,255,0.22)',
-  t1:'#e6eaf2', t2:'#a7b2c6', t3:'#7c8799', t4:'#5c6879',
+  t1:'#e6eaf2', t2:'#a7b2c6', t3:'#7c8799', t4:'#717b89',
   blue:'#4b8bf5', blueL:'#7aa9f7', blueLL:'#a9c6fa', blueD:'#2f6ad4',
   blueDim:'rgba(75,139,245,0.10)', blueGlow:'rgba(75,139,245,0.22)',
   blueGrad:'linear-gradient(135deg,#4b8bf5 0%,#2f6ad4 100%)',
@@ -215,6 +231,79 @@ export const BALANCED = {
   FM:"'JetBrains Mono','SF Mono',monospace",
 };
 
+// ── Balanced Light palette ───────────────────────────────────────────────────
+// The other half of Balanced. BALANCED above is a dusk slate; this is the same
+// idea walked to the light side of the line — "overcast daylight" rather than
+// noon sun.
+//
+// It exists because "Balanced" previously only meant one thing, and that thing
+// was dark. A student who wants a light interface had exactly one option, and
+// that option is the brightest surface the app can draw. The two ends of the
+// ramp now both have a middle:
+//
+//   Dark ── Balanced Dark ──┼── Balanced Light ── Light
+//
+// Three things separate it from LIGHT:
+//   1. No surface goes above #f1f4f8. LIGHT already pulled cards off pure white
+//      to #fbfcfe; this goes four more steps down, which is the single biggest
+//      lever on the "the screen is a flashbulb" feeling.
+//   2. The page is #dfe3ea, deeper than LIGHT's #e6eaf1, so the contrast
+//      between page and card stays legible even though both moved down.
+//   3. Text stops short of the extremes in both directions — #1f2836 rather
+//      than #111a2b — for the same reason BALANCED's t1 is #e6eaf2 and not
+//      white. Maximum contrast in both directions is what makes long reading
+//      tiring, and this is the palette for the two-hour sitting.
+//
+// Accents are LIGHT's, unchanged where they already read as calm and pulled a
+// little further down where they didn't. They are NOT desaturated toward gray
+// the way BALANCED's are: on a light page, moving an accent toward gray moves
+// it toward the background, so the dark-side trick for "calmer" is the
+// light-side recipe for "invisible". Muting here is done with luminance only.
+export const BALANCED_LIGHT = {
+  bg:'#dfe3ea', s0:'#e7ebf1', s1:'#f1f4f8', s2:'#ebeff5', s3:'#e4e9f0', s4:'#d7dde7', s5:'#c6cfdd',
+  b0:'rgba(15,23,42,0.055)', b1:'rgba(15,23,42,0.11)', b2:'rgba(15,23,42,0.17)', b3:'rgba(15,23,42,0.27)',
+  t1:'#1f2836', t2:'#45536b', t3:'#5d6b85', t4:'#6d798d',
+  blue:'#1a5fcc', blueL:'#154ea7', blueLL:'#3b36a9', blueD:'#154ea7',
+  blueDim:'rgba(26,95,204,0.1)', blueGlow:'rgba(26,95,204,0.22)',
+  blueGrad:'linear-gradient(135deg,#1a5fcc 0%,#154ea7 100%)',
+  green:'#067156', greenL:'#055d46', greenDim:'rgba(6,113,86,0.1)',
+  amber:'#905808', amberL:'#764807', amberDim:'rgba(144,88,8,0.11)',
+  rose:'#c21a3e', roseL:'#9f1533', roseDim:'rgba(194,26,62,0.1)',
+  violet:'#6d31d4', violetL:'#5c29b2', violetDim:'rgba(109,49,212,0.1)',
+  cyan:'#0a6c84', cyanL:'#08596c', cyanDim:'rgba(10,108,132,0.1)',
+  orange:'#af420a', orangeL:'#8f3608', orangeDim:'rgba(175,66,10,0.1)',
+  teal:'#0b7166', tealL:'#095d54', tealDim:'rgba(11,113,102,0.1)',
+  indigo:'#4640c9', indigoL:'#3b36a9', indigoDim:'rgba(70,64,201,0.1)',
+  pink:'#bd2168', pinkL:'#9b1b55', pinkDim:'rgba(189,33,104,0.1)',
+  fuchsia:'#a422b8', fuchsiaL:'#871c97', fuchsiaDim:'rgba(164,34,184,0.1)',
+  lime:'#456f0b', limeL:'#395b09', limeDim:'rgba(69,111,11,0.1)',
+  sky:'#026b97', skyL:'#02587c', skyDim:'rgba(2,107,151,0.1)',
+  emerald:'#046a4f', emeraldL:'#035942', emeraldDim:'rgba(4,106,79,0.1)',
+  red:'#c02121', redL:'#a11c1c', redDim:'rgba(192,33,33,0.1)',
+  gold:'#865d05', goldL:'#6e4c04', goldDim:'rgba(134,93,5,0.11)',
+  auroraGrad:'linear-gradient(120deg,#1a5fcc 0%,#6d31d4 45%,#bd2168 100%)',
+  oceanGrad:'linear-gradient(135deg,#0a6c84 0%,#1a5fcc 60%,#4640c9 100%)',
+  sunsetGrad:'linear-gradient(135deg,#905808 0%,#c21a3e 55%,#a422b8 100%)',
+  forestGrad:'linear-gradient(135deg,#067156 0%,#0b7166 55%,#026b97 100%)',
+  violetGrad:'linear-gradient(135deg,#6d31d4 0%,#4640c9 100%)',
+
+  // Lower peak white than LIGHT's surfaces (0.70/0.55/0.88): a glass card here
+  // lands around #f1f4f8 rather than near-white, which is the whole point.
+  surf:'rgba(255,255,255,0.55)', surf2:'rgba(255,255,255,0.42)', surfHi:'rgba(255,255,255,0.72)',
+  inputBg:'#f6f8fb', inputBorder:'rgba(15,23,42,0.16)',
+  shadow:'0 1px 2px rgba(15,23,42,0.05),0 6px 20px rgba(15,23,42,0.07)',
+  shadowSm:'0 1px 3px rgba(15,23,42,0.08)',
+  scrim:'rgba(15,23,42,0.38)',
+  onAccent:'#ffffff',
+  pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(29,102,219,0.055) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(109,49,212,0.035) 0%, transparent 58%)',
+  noiseOpacity:'0.010',
+  colorScheme:'light',
+
+  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
+  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
+  FM:"'JetBrains Mono','SF Mono',monospace",
+};
+
 // ── High-contrast overlays ───────────────────────────────────────────────────
 // Layered ON TOP of the chosen base palette when the student turns on the
 // high-contrast accessibility setting. Only the tokens that actually matter for
@@ -242,6 +331,23 @@ export const HC_BALANCED = {
   skyL:'#84cdf0', emeraldL:'#6fdcb8', redL:'#ff9a9a', goldL:'#ffd870', orangeL:'#ffb27f',
   pageGlow:'none', noiseOpacity:'0',
 };
+// Balanced Light's overlay. Same reasoning as HC_BALANCED: high contrast must
+// stay inside the theme the student picked, so the surfaces here go to the top
+// of *this* palette rather than to HC_LIGHT's pure white — which would defeat
+// the one thing Balanced Light exists to do.
+export const HC_BALANCED_LIGHT = {
+  t1:'#000000', t2:'#1b2434', t3:'#333e51', t4:'#4e5a6e',
+  b0:'rgba(15,23,42,0.24)', b1:'rgba(15,23,42,0.36)', b2:'rgba(15,23,42,0.52)', b3:'rgba(15,23,42,0.76)',
+  bg:'#e8ebf0', s0:'#f2f4f8', s1:'#f8fafc', s2:'#f2f5f9', s3:'#eaeef4', s4:'#dbe1ea', s5:'#c7cfdc',
+  surf:'#f8fafc', surf2:'#f8fafc', surfHi:'#eef2f7', inputBg:'#ffffff', inputBorder:'rgba(15,23,42,0.48)',
+  blue:'#0a48b4', blueL:'#08388c', green:'#046045', greenL:'#034936', amber:'#874709', amberL:'#6d3907',
+  rose:'#a30f2a', roseL:'#830c22', violet:'#521da4', violetL:'#421884', cyan:'#025f78', cyanL:'#014d61',
+  teal:'#06635b', tealL:'#054e47', indigo:'#312b93', indigoL:'#282374', pink:'#921152', pinkL:'#750d42',
+  fuchsia:'#7c1789', fuchsiaL:'#63126d', lime:'#3b5e0a', limeL:'#2e4907',
+  sky:'#015a80', skyL:'#014766', emerald:'#03533b', emeraldL:'#02422f', red:'#961616', redL:'#781111',
+  gold:'#7c5403', goldL:'#634302', orange:'#9e3707', orangeL:'#7e2c05',
+  pageGlow:'none', noiseOpacity:'0',
+};
 export const HC_LIGHT = {
   t1:'#000000', t2:'#1d2637', t3:'#3b4658', t4:'#5a6577',
   b0:'rgba(15,23,42,0.22)', b1:'rgba(15,23,42,0.34)', b2:'rgba(15,23,42,0.5)', b3:'rgba(15,23,42,0.75)',
@@ -262,12 +368,30 @@ export const HC_LIGHT = {
 // runs) matches the app's default theme.
 export const C = { ...BALANCED };
 
-/** The palette a mode resolves to. 'system' is not in here — it is a pointer. */
-export const PALETTES = { balanced: BALANCED, dark: DARK, light: LIGHT };
+/**
+ * The palette a mode resolves to. 'system' is not in here — it is a pointer.
+ *
+ * The key for Balanced Dark stays the bare 'balanced' it has always been so
+ * that every student who already picked it keeps their theme across this
+ * change; 'balancedDark' is accepted as an alias for anyone reading the code
+ * and expecting symmetry (see normalizeMode).
+ */
+export const PALETTES = {
+  balanced: BALANCED,
+  balancedLight: BALANCED_LIGHT,
+  dark: DARK,
+  light: LIGHT,
+};
 
-export const THEME_MODES = ['balanced', 'dark', 'light', 'system'];
+/** Which resolved modes are light-on-dark, and which are dark-on-light. */
+export const LIGHT_FAMILY = new Set(['light', 'balancedLight']);
+
+export const THEME_MODES = ['balanced', 'balancedLight', 'dark', 'light', 'system'];
 export const DEFAULT_THEME_MODE = 'balanced';
 export const THEME_STORAGE_KEY = 'msp_themeMode';
+
+/** Accepts the spelled-out alias for Balanced Dark; everything else passes through. */
+export const normalizeMode = (mode) => (mode === 'balancedDark' ? 'balanced' : mode);
 
 /** What the OS is currently asking for. Defaults to light when unknowable. */
 export function systemPrefersLight() {
@@ -278,27 +402,27 @@ export function systemPrefersLight() {
 /**
  * 'system' → the concrete palette it currently resolves to.
  *
- * A device asking for dark gets Balanced, not Dark: "match my device" is a
- * request to follow the light/dark signal, not a request for the most extreme
- * palette on that side, and Balanced is what this app considers its dark-side
- * default. Picking Dark explicitly still gets the deep one.
+ * "Match my device" is a request to follow the light/dark signal, not a request
+ * for the most extreme palette on that side — so it resolves to the Balanced
+ * variant either way: Balanced Dark on a dark device, Balanced Light on a light
+ * one. Picking Dark or Light explicitly still gets the ends of the range.
  */
 export function resolveMode(mode) {
-  if (mode === 'light') return 'light';
-  if (mode === 'dark') return 'dark';
-  if (mode === 'balanced') return 'balanced';
-  return systemPrefersLight() ? 'light' : 'balanced';
+  const m = normalizeMode(mode);
+  if (PALETTES[m]) return m;
+  return systemPrefersLight() ? 'balancedLight' : 'balanced';
 }
 
 export function getStoredMode() {
   try {
-    const v = localStorage.getItem(THEME_STORAGE_KEY);
+    const v = normalizeMode(localStorage.getItem(THEME_STORAGE_KEY));
     return THEME_MODES.includes(v) ? v : DEFAULT_THEME_MODE;
   } catch { return DEFAULT_THEME_MODE; }
 }
 
 export function storeMode(mode) {
-  try { localStorage.setItem(THEME_STORAGE_KEY, THEME_MODES.includes(mode) ? mode : DEFAULT_THEME_MODE); } catch { /* private mode */ }
+  const m = normalizeMode(mode);
+  try { localStorage.setItem(THEME_STORAGE_KEY, THEME_MODES.includes(m) ? m : DEFAULT_THEME_MODE); } catch { /* private mode */ }
 }
 
 // Only these tokens need to cross into index.css, so only these become CSS
@@ -326,9 +450,8 @@ let currentResolved = DEFAULT_THEME_MODE;
 export function applyTheme(mode = DEFAULT_THEME_MODE, opts = {}) {
   const resolved = resolveMode(mode);
   const base = PALETTES[resolved] || BALANCED;
-  const overlay = opts.highContrast
-    ? (resolved === 'light' ? HC_LIGHT : resolved === 'dark' ? HC_DARK : HC_BALANCED)
-    : null;
+  const HC = { light: HC_LIGHT, balancedLight: HC_BALANCED_LIGHT, dark: HC_DARK, balanced: HC_BALANCED };
+  const overlay = opts.highContrast ? (HC[resolved] || HC_BALANCED) : null;
 
   // Reset first: without this, switching high-contrast back off would leave the
   // overlay's values behind, because Object.assign only ever adds.
@@ -340,6 +463,11 @@ export function applyTheme(mode = DEFAULT_THEME_MODE, opts = {}) {
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
     root.dataset.theme = resolved;
+    // The family is what stylesheet rules should key off. Every "this rule
+    // assumed a dark backdrop" correction in index.css applies to Balanced
+    // Light exactly as much as it applies to Light, and pinning those rules to
+    // [data-theme="light"] is how a new light palette ships half-styled.
+    root.dataset.themeFamily = LIGHT_FAMILY.has(resolved) ? 'light' : 'dark';
     root.style.colorScheme = C.colorScheme || resolved;
     for (const k of CSS_VAR_TOKENS) {
       if (C[k] != null) root.style.setProperty(`--c-${k}`, String(C[k]));
@@ -350,9 +478,10 @@ export function applyTheme(mode = DEFAULT_THEME_MODE, opts = {}) {
 }
 
 export function currentMode() { return currentResolved; }
-export function isLight() { return currentResolved === 'light'; }
-/** Balanced and Dark both want the "light text on a dark page" treatment. */
-export function isDarkFamily() { return currentResolved !== 'light'; }
+/** True for Light and Balanced Light — anything that paints dark text on a light page. */
+export function isLight() { return LIGHT_FAMILY.has(currentResolved); }
+/** Balanced Dark and Dark both want the "light text on a dark page" treatment. */
+export function isDarkFamily() { return !LIGHT_FAMILY.has(currentResolved); }
 
 /**
  * Re-apply on OS theme change while the student is in 'system' mode.
@@ -472,6 +601,94 @@ export const accentFill = (color, min = 4.0) => {
   }
   return c;
 };
+
+/**
+ * Lighten a color toward white by `amount` (0–1). The mirror of shade().
+ */
+export const tone = (color, amount = 0.22) => {
+  const h = String(color).replace('#', '');
+  if (/^[0-9a-fA-F]{6}$/.test(h)) {
+    const n = parseInt(h, 16);
+    const ch = (v) => Math.round(v + (255 - v) * amount).toString(16).padStart(2, '0');
+    return `#${ch((n >> 16) & 255)}${ch((n >> 8) & 255)}${ch(n & 255)}`;
+  }
+  return `color-mix(in srgb, ${color} ${Math.round((1 - amount) * 100)}%, white)`;
+};
+
+/**
+ * A version of `color` readable as TEXT on the given surface (default: a card).
+ *
+ * The counterpart to accentFill, which solves the opposite problem — that one
+ * darkens a *fill* until white sits on it safely, this one moves a *word* until
+ * it separates from what's behind it. Walks away from the surface (down on a
+ * light page, up on a dark one) until it clears `min`, and returns the color
+ * untouched when it already does, so nothing shifts in the themes that were
+ * already fine.
+ *
+ * The case that forced it: pathway accents live in constants.js as fixed brand
+ * hex (`physician: '#2d7fff'`) because a pathway's color is its identity, not a
+ * theme token. #2d7fff is 3.1:1 on a white card — a fine border, an unreadable
+ * heading — so every "UNIT 3" and "Physician (MD/DO)" label rendered in it was
+ * washed out in light mode with no token to fix.
+ */
+export const accentText = (color, surface = null, min = 4.5) => {
+  const bg = surface || C.s1 || C.bg;
+  const goDark = (relLum(bg) ?? 1) > 0.4;
+  let c = color;
+  for (let i = 0; i < 10; i += 1) {
+    const r = contrastRatio(c, bg);
+    if (r == null || r >= min) return c;
+    c = goDark ? shade(c, 0.14) : tone(c, 0.14);
+  }
+  return c;
+};
+
+/**
+ * The label color for text sitting on a TRANSLUCENT TINT of `accent` — the
+ * `background: ${accent}22` treatment used by every active nav pill, chip,
+ * badge and soft-filled button in the app.
+ *
+ * On a dark page a 13%-alpha accent wash is still dark, so white reads. On a
+ * light page it is a pale wash of an already-light surface, and white on it is
+ * *nothing* — this was the single most widespread light-mode bug in the app:
+ * the selected sidebar tab, the active sub-nav tab, the avatar initial, every
+ * "Track" and "Add to Portfolio" button, and the Medabrain pull-tab all
+ * rendered their label in #fff on near-white.
+ *
+ * So: white in the dark family, and a darkened accent in the light family,
+ * which also keeps the label tied to the tint's own hue instead of going flat
+ * gray.
+ */
+export const onTint = (accent, min = 4.5) => (isLight() ? accentText(accent, C.s1, min) : (C.onAccent || '#ffffff'));
+
+/**
+ * A two-stop gradient of `accent` for background-clipped TEXT (the big numbers
+ * on every Stat tile).
+ *
+ * The original was `${color} → ${color}aa`, and the alpha is the problem: a 67%
+ * wash of an accent composites toward whatever is behind it, so on a light card
+ * the tail of every stat number faded to roughly 2.9:1. Fading away from the
+ * surface instead of toward it keeps the same "the number catches the light"
+ * effect while the faint end stays readable — darker on a light page, lighter
+ * on a dark one.
+ */
+/**
+ * A filled-button gradient of `accent` that is guaranteed to carry C.onAccent.
+ *
+ * Replaces the `linear-gradient(135deg,${c},${c}cc)` idiom that this codebase
+ * repeats everywhere. That one has two failure modes and hits at least one of
+ * them in every theme: the `cc` tail is 80% alpha, so it composites toward the
+ * card and washes out, and the base hue is used raw — a bright amber or gold
+ * button carrying a white label lands near 2.2:1 whatever the page is doing.
+ * accentFill handles the base, and the tail is an opaque shade of it.
+ */
+export const accentGrad = (accent, amount = 0.2) => {
+  const base = accentFill(accent);
+  return `linear-gradient(135deg,${base},${shade(base, amount)})`;
+};
+
+export const accentSweep = (accent, amount = 0.22) =>
+  `linear-gradient(135deg,${accent},${isLight() ? shade(accent, amount) : tone(accent, amount)})`;
 
 export const glass  = (x={}) => ({ background:C.surf, border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:C.shadow, backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
 export const glass2 = (x={}) => ({ background:C.surf2, border:`1px solid ${C.b1}`, borderRadius:10, padding:14, ...x });

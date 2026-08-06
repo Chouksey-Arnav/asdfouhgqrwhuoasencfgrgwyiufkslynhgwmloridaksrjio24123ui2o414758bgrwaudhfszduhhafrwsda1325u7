@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, PartyPopper, Flame, Sunrise, Target, Circle, Sparkles } from 'lucide-react';
-import { C, glass2, pill, R, btnSm } from '../lib/theme';
+import { C, glass2, pill, R, btnSm, accentFill } from '../lib/theme';
 import { getTodayPlanEntry, getNextPlanDay, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES } from '../lib/masterPlanGenerator';
 import { pickNudge } from '../lib/nudges';
 
@@ -46,7 +46,7 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
         {hasNext && (
           <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' })}>
             <span style={{ fontSize: 11.5, color: C.t3 }}>Ready to keep going? Tomorrow's tasks are already lined up.</span>
-            <button style={btnSm(accent, { color: '#fff' })} onClick={() => onOpenNextDay?.(nextDay.date)}>
+            <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={() => onOpenNextDay?.(nextDay.date)}>
               <Sunrise size={12} />Get a head start on tomorrow
             </button>
           </div>
@@ -95,7 +95,7 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
             )}
           </div>
         </div>
-        <button style={btnSm(accent, { color: '#fff' })} onClick={onOpenPlan}>
+        <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={onOpenPlan}>
           Go to Plan<ArrowRight size={12} />
         </button>
       </div>
@@ -178,7 +178,7 @@ export default function TodayPlanNudge({ user, accent = C.violet, onOpenPlan, on
             <Sunrise size={12} color={C.amberL} style={{ flexShrink: 0 }} />
             You're on pace today ({pct}% done) — want to start tomorrow's tasks early?
           </span>
-          <button style={btnSm(accent, { color: '#fff' })} onClick={() => onOpenNextDay?.(earlyNudgeNextDay.date)}>
+          <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={() => onOpenNextDay?.(earlyNudgeNextDay.date)}>
             <Sunrise size={12} />Get a head start
           </button>
         </div>
