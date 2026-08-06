@@ -10,6 +10,7 @@ import AuthShell from './auth/AuthShell';
 import LoginView from './auth/LoginView';
 import SignupView from './auth/SignupView';
 import ForgotPasswordView from './auth/ForgotPasswordView';
+import OAuthCallbackView from './auth/OAuthCallbackView';
 
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
@@ -141,6 +142,12 @@ export default function AuthGate({ children }) {
           initialEmail={prefillEmail}
           onBack={() => goTo('login', prefillEmail)}
           onAuthed={handleAuthed}
+        />
+      )}
+      {view === 'oauth' && (
+        <OAuthCallbackView
+          onBack={() => goTo('login')}
+          onAuthed={(token, u) => { handleAuthed(token, u); toast.success('Welcome back.'); }}
         />
       )}
     </AuthShell>

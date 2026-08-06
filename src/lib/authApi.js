@@ -51,6 +51,10 @@ export const resetPassword = (email, verificationToken, password) =>
 
 export const login = (email, password) => req('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 
+// Exchanges a Supabase Auth access token (minted by supabase.auth.signInWithOAuth in
+// the browser, see src/lib/supabaseClient.js) for this app's own session token.
+export const googleAuth = (accessToken) => req('/auth/google', { method: 'POST', body: JSON.stringify({ accessToken }) });
+
 export const fetchMe = () => req('/auth/me', { method: 'GET' });
 export const updateMe = (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) });
 export const logout = () => req('/auth/logout', { method: 'POST' }).finally(clearToken);

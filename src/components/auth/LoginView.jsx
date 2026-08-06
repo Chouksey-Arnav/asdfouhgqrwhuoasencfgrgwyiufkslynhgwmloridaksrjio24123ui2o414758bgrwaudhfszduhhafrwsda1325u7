@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Mail, ArrowRight } from 'lucide-react';
 import { C, btn, inp, lbl, CC } from '../../lib/theme';
 import * as AuthAPI from '../../lib/authApi';
-import { PasswordField, FieldError, BackButton } from './ui';
+import { PasswordField, FieldError, BackButton, OrDivider } from './ui';
+import GoogleButton from './GoogleButton';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -42,6 +43,9 @@ export default function LoginView({ initialEmail = '', onBack, onGoSignup, onGoF
             <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Log in</div>
             <div style={{ fontSize: 13, color: C.t2 }}>Welcome back — enter your email and password.</div>
           </div>
+
+          <GoogleButton label="Log in with Google" />
+          <OrDivider />
 
           <div>
             <label style={lbl()}>Email</label>

@@ -4,7 +4,8 @@ import { Mail, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { C, btn, inp, lbl, CC } from '../../lib/theme';
 import * as AuthAPI from '../../lib/authApi';
-import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton } from './ui';
+import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider } from './ui';
+import GoogleButton from './GoogleButton';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CODE_RE = /^\d{6}$/;
@@ -96,6 +97,8 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
                 <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create your account</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>We'll email you a 6-digit code to verify it's really you.</div>
               </div>
+              <GoogleButton label="Sign up with Google" />
+              <OrDivider />
               <div>
                 <label style={lbl()}>Email</label>
                 <div style={{ position: 'relative' }}>

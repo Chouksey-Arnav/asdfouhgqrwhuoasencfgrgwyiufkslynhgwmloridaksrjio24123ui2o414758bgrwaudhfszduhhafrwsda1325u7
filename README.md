@@ -31,6 +31,20 @@ This application utilizes Supabase solely as a server-side storage and synchroni
 | `SUPABASE_URL` | String | The full URL of your Supabase project (e.g., `https://<project-ref>.supabase.co`). |
 | `SUPABASE_SERVICE_ROLE_KEY` | String | The high-privilege `service_role` API key (never use the `anon` key). |
 
+#### Google sign-in (Supabase Auth)
+"Sign in / up with Google" (`GoogleButton`, `src/lib/supabaseClient.js`) is the one place the browser talks to Supabase directly — `supabase.auth.signInWithOAuth` has to run client-side to redirect to Google. It uses the public **anon** key only, never the service-role key, and the resulting Supabase access token is immediately traded in at `/api/auth/google` for this app's own session token (same `sessions` table every other sign-in path uses) — the client still never reads/writes Supabase tables directly.
+
+| Variable Name | Type | Description / Value |
+| :--- | :--- | :--- |
+| `VITE_SUPABASE_URL` | String | Same value as `SUPABASE_URL`, exposed to the client build (must be prefixed `VITE_`). |
+| `VITE_SUPABASE_ANON_KEY` | String | The Supabase project's public **anon** key (Project Settings → API). Never the service role key. |
+
+Setup, once per Supabase project:
+1. Supabase Dashboard → Authentication → Providers → enable **Google**, with your Google OAuth Client ID/Secret.
+2. Supabase Dashboard → Authentication → URL Configuration → add `https://<your-domain>/auth/callback` (and the Vercel preview domain, if used) to **Redirect URLs**.
+3. Google Cloud Console → OAuth Client → Authorized redirect URIs → add the Supabase callback URL shown on the Google provider page (`https://<project-ref>.supabase.co/auth/v1/callback`).
+4. Set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in both Vercel and Coolify — if unset, the Google button shows a friendly "not configured" error instead of breaking the page.
+
 ---
 
 ### 2. SMTP / Email Configuration (Brevo)
