@@ -52,14 +52,31 @@ const DIFFICULTY_FILTERS = [
   ...DIFFICULTY_IDS.map(d => ({ id: d, label: DIFFICULTIES[d].label })),
 ];
 
+// Grid-in items exist only in Math, so this filter is a no-op on the R&W side
+// of the bank. It is offered anyway rather than hidden conditionally: a student
+// who wants to drill exactly the format they keep losing points on should not
+// have to discover that the control appears only under one section.
+const FORMAT_FILTERS = [
+  { id: 'all', label: 'Any format' },
+  { id: 'mcq', label: 'Multiple choice' },
+  { id: 'spr', label: 'Grid-in' },
+];
+
 const PAGE_SIZE = 25;
+
+// How many questions a "practise these" set contains. Matches the Smart Set
+// length in SatPracticePanel — a set built from the Library is still a practice
+// set, and it should not be a different size just because of where it started.
+const PRACTICE_SET_SIZE = 12;
 
 export default function SatLibraryPanel({
   accent = C.sky, isMobile = false, onNavigate, params, onConsumeParams,
 }) {
   const [tab, setTab] = useState('bank');
   const [section, setSection] = useState('all');
+  const [domain, setDomain] = useState('all');
   const [difficulty, setDifficulty] = useState('all');
+  const [format, setFormat] = useState('all');
   const [skill, setSkill] = useState(params?.skill || null);
   const [query, setQuery] = useState('');
   const [expanded, setExpanded] = useState(null);
@@ -75,12 +92,20 @@ export default function SatLibraryPanel({
     }
   }, [params?.skill]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // The one description of "what the student is looking at". The results list,
+  // the count, and the practice set that can be started from here all read this
+  // single object, so the set they get is exactly the slice they filtered to —
+  // there is no second, subtly different filter anywhere on this screen.
+  const filter = useMemo(() => ({
+    section: section === 'all' ? undefined : section,
+    domain: domain === 'all' ? undefined : domain,
+    skill: skill || undefined,
+    difficulty: difficulty === 'all' ? undefined : difficulty,
+    format: format === 'all' ? undefined : format,
+  }), [section, domain, skill, difficulty, format]);
+
   const results = useMemo(() => {
-    let rows = pool({
-      section: section === 'all' ? undefined : section,
-      skill: skill || undefined,
-      difficulty: difficulty === 'all' ? undefined : difficulty,
-    });
+    let rows = pool(filter);
     const q = query.trim().toLowerCase();
     if (q) {
       rows = rows.filter(r =>
@@ -93,25 +118,66 @@ export default function SatLibraryPanel({
     // the real modules present them in.
     const rank = { E: 0, M: 1, H: 2 };
     return rows.sort((a, b) => (rank[a.difficulty] - rank[b.difficulty]) || a.id.localeCompare(b.id));
-  }, [section, skill, difficulty, query]);
+  }, [filter, query]);
 
   const visible = results.slice(0, limit);
 
-  const clearFilters = () => {
-    setSection('all'); setDifficulty('all'); setSkill(null); setQuery(''); setLimit(PAGE_SIZE);
-  };
-  const filtered = section !== 'all' || difficulty !== 'all' || skill || query.trim();
+  // How many questions the practise button would actually draw from. Deliberately
+  // NOT results.length: results is narrowed by the free-text search as well, and
+  // the set is built from the filter alone, so counting the searched list would
+  // promise a number the session does not deliver.
+  const filterCount = useMemo(() => pool(filter).length, [filter]);
 
-  // Skills offered in the picker, narrowed to the chosen section.
+  const clearFilters = () => {
+    setSection('all'); setDomain('all'); setDifficulty('all'); setFormat('all');
+    setSkill(null); setQuery(''); setLimit(PAGE_SIZE);
+  };
+  const filtered = section !== 'all' || domain !== 'all' || difficulty !== 'all'
+    || format !== 'all' || skill || query.trim();
+
+  // Domains offered in the picker, narrowed to the chosen section. This filter
+  // did not exist while the bank was small enough that the skill chips fitted
+  // on a screen; at 28 skills across 1,000-plus questions, "show me all of
+  // Advanced Math" is the step between picking a section and picking a leaf.
+  const domainFilters = useMemo(() => {
+    const sections = section === 'all' ? SECTION_IDS : [section];
+    return [
+      { id: 'all', label: 'All domains' },
+      ...sections.flatMap(s => (DOMAINS_BY_SECTION[s] || []).map(d => ({
+        id: d, label: SAT_DOMAINS[d].label,
+      }))),
+    ];
+  }, [section]);
+
+  // Skills offered in the picker, narrowed to the chosen section and domain.
   const skillGroups = useMemo(() => {
     const sections = section === 'all' ? SECTION_IDS : [section];
-    return sections.flatMap(s => (DOMAINS_BY_SECTION[s] || []).map(d => ({
-      domain: d,
-      label: SAT_DOMAINS[d].label,
-      color: SAT_DOMAINS[d].color,
-      skills: SKILLS_BY_DOMAIN[d] || [],
-    })));
-  }, [section]);
+    return sections
+      .flatMap(s => (DOMAINS_BY_SECTION[s] || []))
+      .filter(d => domain === 'all' || d === domain)
+      .map(d => ({
+        domain: d,
+        label: SAT_DOMAINS[d].label,
+        color: SAT_DOMAINS[d].color,
+        skills: SKILLS_BY_DOMAIN[d] || [],
+      }));
+  }, [section, domain]);
+
+  // What the practice set built from this screen is called in the player. The
+  // player shows a rationale line, and "12 questions from the Library" is worse
+  // than useless there — a student who comes back to a paused session needs to
+  // know which slice they asked for.
+  const filterLabel = useMemo(() => {
+    const parts = [];
+    if (skill) parts.push(SAT_SKILLS[skill].label);
+    else if (domain !== 'all') parts.push(SAT_DOMAINS[domain].label);
+    else if (section !== 'all') parts.push(SAT_SECTIONS[section].label);
+    if (difficulty !== 'all') parts.push(`${DIFFICULTIES[difficulty].label} only`);
+    if (format !== 'all') parts.push(format === 'spr' ? 'grid-in only' : 'multiple choice only');
+    return parts.length
+      ? `From the Library: ${parts.join(', ')}.`
+      : 'From the Library: the whole bank, mixed.';
+  }, [section, domain, skill, difficulty, format]);
 
   const counts = useMemo(() => ({
     total: BANK_SIZE,
@@ -151,9 +217,16 @@ export default function SatLibraryPanel({
               <Segmented
                 options={SECTION_FILTERS}
                 value={section}
-                onChange={(v) => { setSection(v); setSkill(null); setLimit(PAGE_SIZE); }}
+                onChange={(v) => { setSection(v); setDomain('all'); setSkill(null); setLimit(PAGE_SIZE); }}
                 accent={accent}
                 label="Section"
+              />
+              <Segmented
+                options={domainFilters}
+                value={domain}
+                onChange={(v) => { setDomain(v); setSkill(null); setLimit(PAGE_SIZE); }}
+                accent={accent}
+                label="Domain"
               />
               <Segmented
                 options={DIFFICULTY_FILTERS}
@@ -161,6 +234,13 @@ export default function SatLibraryPanel({
                 onChange={(v) => { setDifficulty(v); setLimit(PAGE_SIZE); }}
                 accent={accent}
                 label="Difficulty"
+              />
+              <Segmented
+                options={FORMAT_FILTERS}
+                value={format}
+                onChange={(v) => { setFormat(v); setLimit(PAGE_SIZE); }}
+                accent={accent}
+                label="Format"
               />
 
               <div>
@@ -221,13 +301,24 @@ export default function SatLibraryPanel({
               <b style={{ color: C.t1, fontFamily: C.FM }}>{results.length}</b>
               {results.length === 1 ? ' question' : ' questions'}
               {skill ? ` in ${SAT_SKILLS[skill].label}` : ''}
+              {query.trim() ? ' matching your search' : ''}
             </span>
-            {skill && (
+            {/* Practise WHAT IS ON SCREEN, not just the selected skill.
+                This button used to appear only once a leaf skill was chosen,
+                which quietly said that a filter was for reading and a skill was
+                for working — so "all the Hard grid-ins in Geometry" was
+                browsable and undrillable. The set is built from the same filter
+                object the list above is built from, minus the free-text search:
+                a keyword match is a way of FINDING a question, not a
+                pedagogically coherent set to sit. */}
+            {filterCount > 0 && (
               <button
-                onClick={() => onNavigate?.('practice', { skill })}
+                onClick={() => onNavigate?.('practice', { filter, filterLabel })}
                 style={satBtn(accent, { padding: '8px 15px', fontSize: 12 })}
+                title={filterLabel}
               >
-                <Play size={12} /> Drill this skill
+                <Play size={12} />
+                Practise {Math.min(PRACTICE_SET_SIZE, filterCount)} of these
               </button>
             )}
           </div>

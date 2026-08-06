@@ -88,6 +88,39 @@ export function buildSkillDrill(skillId, { count = 10, seen = new Set(), seed = 
 }
 
 /**
+ * A set built from an ARBITRARY slice of the bank, described the way the
+ * Library browser describes it: any combination of section, domain, skill,
+ * difficulty and format.
+ *
+ * Why this exists alongside buildSkillDrill. Every other builder in this file
+ * decides FOR the student — that is the point of them, and it is right for most
+ * sessions. This one is the deliberate exception: it is what "practise exactly
+ * what I am looking at" means, and it only makes sense as a companion to the
+ * Library, which is the one screen where the student has already done the
+ * choosing. Any narrower a contract (skill only, as the deep link used to be)
+ * throws away most of what they picked on the way to the player.
+ *
+ * Ordering and unseen-first behaviour match buildSkillDrill exactly, so a set
+ * that happens to describe one skill is indistinguishable from a Skill Drill.
+ */
+export function buildFilteredSet(filter = {}, { count = 12, seen = new Set(), seed = Date.now() } = {}) {
+  const rng = seededRandom(hashString(String(seed)));
+  const available = pool(filter);
+  if (!available.length) return [];
+
+  const unseen = available.filter(q => !seen.has(q.id));
+  const chosen = seededShuffle(unseen, rng).slice(0, count);
+  if (chosen.length < count) {
+    const taken = new Set(chosen.map(q => q.id));
+    const filler = seededShuffle(available.filter(q => !taken.has(q.id)), rng);
+    chosen.push(...filler.slice(0, count - chosen.length));
+  }
+
+  const order = { E: 0, M: 1, H: 2 };
+  return chosen.sort((a, b) => order[a.difficulty] - order[b.difficulty]);
+}
+
+/**
  * A timed set built to a section's real domain blueprint, so pacing practice
  * reflects the actual mix a student will face.
  */

@@ -41,18 +41,18 @@
  * one, which is the property that makes the catalogue safe to grow.
  *
  * HOW LONG THIS LIST IS ALLOWED TO BE
- * A form's footprint is around 130 bank questions, so the catalogue length is
- * capped by the bank, not by taste. It is three because 466 questions support
- * three tests that share NOTHING; a fourth was drafted and came out 26% new,
- * which is not a fourth test, it is Form C with a coat of paint. Shipping it
- * would have made the picker a menu of four options where two were the same
- * meal.
+ * A form's footprint is around 145 bank questions, so the catalogue length is
+ * capped by the bank, not by taste. It was three for as long as the bank was
+ * 466 questions: three tests that shared NOTHING was all that fitted, and a
+ * fourth drafted against that bank came out 26% new, which is not a fourth
+ * test, it is Form C with a coat of paint.
  *
- * scripts/verifySatForms.mjs enforces this: it fails if ANY form in this list
- * shares a single question with any other. So the way to add Form D is to grow
- * the bank until the audit goes quiet — the list cannot quietly outrun what is
- * behind it. See the batch C note in src/data/sat/questions/index.js for how
- * that expansion was sized.
+ * Expansion batch D took the bank past a thousand questions, which is what
+ * paid for Forms D and E. They were added the only way this list may grow: by
+ * appending, and only after scripts/verifySatForms.mjs confirmed every form in
+ * the catalogue still shares zero questions with every other. That audit is the
+ * gate — it fails if ANY form here overlaps another, so the list cannot quietly
+ * outrun the bank behind it.
  */
 export const SAT_FORMS = [
   {
@@ -75,6 +75,20 @@ export const SAT_FORMS = [
     name: 'Form C — Third sitting',
     seed: 'msp-sat-form-c-2026',
     blurb: 'The third independent draw from the bank. Same blueprint, same timing, questions you have not met in A or B.',
+  },
+  {
+    id: 'form-d',
+    label: 'Form D',
+    name: 'Form D — Fourth sitting',
+    seed: 'msp-sat-form-d-2026',
+    blurb: 'Added once the bank passed a thousand questions. Shares nothing with A, B or C, so a fourth test still measures you.',
+  },
+  {
+    id: 'form-e',
+    label: 'Form E',
+    name: 'Form E — Final rehearsal',
+    seed: 'msp-sat-form-e-2026',
+    blurb: 'The last fully independent draw the bank supports. Save it for the week before the real thing.',
   },
 ];
 

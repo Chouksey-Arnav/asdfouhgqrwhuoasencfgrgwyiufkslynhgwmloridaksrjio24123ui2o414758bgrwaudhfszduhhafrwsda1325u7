@@ -32,9 +32,18 @@ import {
 const VERBOSE = process.argv.includes('--verbose');
 
 // Minimum questions per leaf skill before adaptive selection starts repeating
-// itself noticeably. Raised from 2 to 6 with expansion batch B: at 2 a student
-// drilling one skill saw the same item on their third question.
-const MIN_PER_SKILL = 6;
+// itself noticeably.
+//
+// 2 → 6 with expansion batch B: at 2 a student drilling one skill saw the same
+// item on their third question.
+//
+// 6 → 24 with expansion batch D. Six was never the right number, it was the
+// number the bank could meet: nine of the twenty-eight skills sat at eight or
+// nine questions, so a SINGLE ten-question drill exhausted the pool and the
+// selector started re-serving items inside one session. The floor is now set
+// above one drill's worth with room to run several before repetition is even
+// possible. Batch D put every skill past 30, so this bites only on regression.
+const MIN_PER_SKILL = 24;
 
 // Phrases that mean the author was still working the problem out when they hit
 // save. Every one of these shipped in a first draft of expansion batch B, in an
