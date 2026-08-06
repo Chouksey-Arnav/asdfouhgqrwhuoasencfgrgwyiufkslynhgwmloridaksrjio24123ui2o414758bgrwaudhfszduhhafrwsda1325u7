@@ -201,6 +201,17 @@ export function FieldError({ children }) {
   return <div style={{ fontSize: 12, color: C.roseL, lineHeight: 1.4 }}>{children}</div>;
 }
 
+// "or" rule between the OAuth button and the email/password form.
+export function OrDivider({ label = 'or' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ flex: 1, height: 1, background: C.b1 }} />
+      <span style={{ fontSize: 11, color: C.t3, textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: C.b1 }} />
+    </div>
+  );
+}
+
 export function BackButton({ onClick, label = 'Back' }) {
   return (
     <button type="button" onClick={onClick} className="msp-auth-link" style={{ display: 'flex', alignItems: 'center', gap: 6, color: C.t3, fontSize: 12, marginBottom: 18 }}>

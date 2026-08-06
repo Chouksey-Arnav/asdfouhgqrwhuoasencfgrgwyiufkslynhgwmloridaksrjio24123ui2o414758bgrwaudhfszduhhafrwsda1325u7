@@ -56,7 +56,7 @@ export const SUBVIEWS = {
  * back out of the login form and you land on the landing page, not on whatever
  * site you visited before ours.
  */
-export const AUTH_VIEWS = { login: '/login', signup: '/signup', forgot: '/forgot-password' };
+export const AUTH_VIEWS = { login: '/login', signup: '/signup', forgot: '/forgot-password', oauth: '/auth/callback' };
 const AUTH_PATHS = Object.values(AUTH_VIEWS);
 
 /**
