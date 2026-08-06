@@ -65,8 +65,6 @@ export async function buildPortfolioSnapshot() {
 }
 
 // The pure snapshot derivations (isEmptySnapshot / snapshotItemCount / weeksToNearestDeadline /
-// currentLoadHours) live in weeklyGoals.js and are re-exported here so callers can keep importing
-// "snapshot things" from one place. They are defined there because this module imports Dexie and
+// currentLoadHours) deliberately live in weeklyGoals.js, not here: this module imports Dexie and
 // the data API, which makes it unimportable from a plain-Node verify script — and those four
-// functions are precisely the ones worth testing.
-export { isEmptySnapshot, snapshotItemCount, weeksToNearestDeadline, currentLoadHours } from './weeklyGoals';
+// functions are precisely the ones worth testing. Import them from weeklyGoals.js.

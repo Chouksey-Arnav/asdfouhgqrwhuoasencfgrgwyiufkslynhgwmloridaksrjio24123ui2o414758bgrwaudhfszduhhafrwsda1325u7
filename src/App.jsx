@@ -1914,6 +1914,16 @@ export default function App({ account, onAccountChange }) {
 
   // Live view of the Track outbox, so an opportunity queued offline reads as "Queued" (and flips
   // to "Tracked" on its own once the flush lands) instead of looking untracked.
+  // Tracked-board summary for the Overview, derived from the same shared snapshot the Tracked tab
+  // renders from. Memoized here rather than computed inside tPort(): tPort is a plain function
+  // invoked during App's render, so anything built in its body is rebuilt on every unrelated state
+  // change in a 7,000-line component — classifying every tracked row and regenerating the daily
+  // report each time.
+  const trackedSummary = useMemo(()=>{
+    const items=portSnapshot?buildTrackedItems(portSnapshot):[];
+    return { items, report:buildDailyReport(items), needsAction:items.filter(i=>i.stage==='needs_action').length };
+  },[portSnapshot]);
+
   const pendingTracks = usePendingTrackKeys();
   const trackedActivityKeys = useMemo(()=>trackedKeySet('activities',portActivities),[portActivities]);
   const trackedScholarshipKeys = useMemo(()=>trackedKeySet('scholarships',portScholarships),[portScholarships]);
@@ -5459,12 +5469,7 @@ export default function App({ account, onAccountChange }) {
     // Each strength subscore carries its own color so the gauge breakdown reads
     // as four distinct dimensions, not four identical gray numbers.
     const subscoreMeta={academic:{col:C.blue,Ic:GraduationCap},clinical:{col:C.pink,Ic:Stethoscope},application:{col:C.violet,Ic:ScrollText},activities:{col:C.amber,Ic:Award}};
-    // Live tracking summary, computed from the same snapshot the Tracked tab renders — the
-    // Overview's job is to tell you whether anything needs you, and hand you off to the board
-    // that shows what.
-    const trackedItems=portSnapshot?buildTrackedItems(portSnapshot):[];
-    const trackReport=buildDailyReport(trackedItems);
-    const trackNeeds=trackedItems.filter(i=>i.stage==='needs_action').length;
+    const {items:trackedItems,report:trackReport,needsAction:trackNeeds}=trackedSummary;
 
     // The Portfolio section navigator. One row per real sub-view with its live count, so the
     // Overview is the map of the tab rather than a second dashboard that happens to sit above it.

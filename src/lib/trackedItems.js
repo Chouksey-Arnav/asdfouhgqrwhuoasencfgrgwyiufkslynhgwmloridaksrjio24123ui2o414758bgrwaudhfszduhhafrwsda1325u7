@@ -17,6 +17,7 @@
 // means the report can never hallucinate a status: every line it makes is derived from a column.
 // ─────────────────────────────────────────────────────────────────────────────
 import { toTime } from './weeklyGoals.js';
+import { isCatalogSourced } from './trackingCatalog.js';
 
 const DAY = 86400000;
 
@@ -105,7 +106,7 @@ export function buildTrackedItems(snapshot = {}, now = Date.now()) {
     // Only rows that came out of the catalog, or that carry no logged hours yet, are "tracked"
     // in the follow-through sense. An activity the student already does 5 hours a week is not
     // waiting on anything — it belongs on the resume, not in a chase list.
-    const fromCatalog = /opportunities database|MedSchoolPrep/i.test(a.description || '');
+    const fromCatalog = isCatalogSourced(a.description);
     const hours = (parseFloat(a.hours_per_week) || 0);
     if (!fromCatalog && hours > 0) continue;
     items.push(finalize({

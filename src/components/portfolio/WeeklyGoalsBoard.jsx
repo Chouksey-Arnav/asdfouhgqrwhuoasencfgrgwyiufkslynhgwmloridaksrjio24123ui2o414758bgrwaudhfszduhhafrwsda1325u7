@@ -10,8 +10,8 @@ import {
   METRICS, METRIC_BY_ID, measureWeek, measureHistory, summarizeWeek, weekHeadline,
   recommendTarget, pinnedMetrics, setPinned, setGoal, goalStreak, goalsForWeek,
   recordWeekResult, getIsoWeekKey, weekLabel, daysLeftInWeek, weekRange,
+  weeksToNearestDeadline, currentLoadHours,
 } from '../../lib/weeklyGoals';
-import { weeksToNearestDeadline, currentLoadHours } from '../../lib/portfolioData';
 import WeeklyGoalTile from './WeeklyGoalTile';
 
 // ─────────────────────────────────────────────────────────────────────────────

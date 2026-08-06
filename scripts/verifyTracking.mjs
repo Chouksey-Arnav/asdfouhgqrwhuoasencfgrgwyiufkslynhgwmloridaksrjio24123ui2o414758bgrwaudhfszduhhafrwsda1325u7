@@ -16,7 +16,7 @@ import {
   normalizeKey, rowDedupeKey, catalogDedupeKey, trackedKeySet, findExistingByKey,
   scholarshipRowFromCatalog, scholarshipRowFromOpportunity, activityRowFromOpportunity,
   activityTypeForOpportunity, resourceForOpportunity, trackTargetForOpportunity,
-  needsDeadlineDate,
+  needsDeadlineDate, isCatalogSourced, CATALOG_MARKER,
 } from '../src/lib/trackingCatalog.js';
 import { SCHOLARSHIPS } from '../src/data/scholarships.js';
 import { OPPORTUNITIES } from '../src/data/opportunities.js';
@@ -132,6 +132,25 @@ check('deadline key includes the date',
   `${normalizeKey('X — EA Deadline')}|2026-11-01`);
 assert('the same deadline title on a different date is not a duplicate',
   rowDedupeKey('deadlines', { title: 'X', due_date: '2026-11-01' }) !== rowDedupeKey('deadlines', { title: 'X', due_date: '2027-11-01' }));
+
+// ── Provenance round-trip ────────────────────────────────────────────────────
+// The Tracked tab tells a saved program the student still owes work on from an activity they
+// already do every week by reading CATALOG_MARKER back out of the row's free text
+// (src/lib/trackedItems.js). If a builder ever stops writing the marker, that distinction fails
+// silently — every catalog-tracked program would simply stop appearing on the follow-up board
+// with nothing throwing. So assert the round trip across the entire corpus, both directions.
+for (const o of OPPORTUNITIES.slice(0, 40)) {
+  const { row } = trackTargetForOpportunity(o);
+  assert(`[${o.id}] tracked row is detectable as catalog-sourced`,
+    isCatalogSourced(row.description ?? row.notes), `marker "${CATALOG_MARKER}" missing from the row's free text`);
+}
+for (const sch of SCHOLARSHIPS.slice(0, 20)) {
+  assert(`[${sch.name}] tracked scholarship is detectable as catalog-sourced`,
+    isCatalogSourced(scholarshipRowFromCatalog(sch).notes));
+}
+assert("a student's own free-text row is NOT read as catalog-sourced",
+  !isCatalogSourced('Marching band, 6 hours a week since freshman year'));
+assert('isCatalogSourced tolerates null', !isCatalogSourced(null));
 
 // ── needsDeadlineDate ────────────────────────────────────────────────────────
 const mixed = [

@@ -98,17 +98,18 @@ export default function TrackedPanel({
   // One line per day, written locally the first time the student opens the tab that day. It's
   // what makes the tracking read as *live* — a running record of what the tracker said on each
   // day, rather than a single number that silently overwrites itself.
+  const [log, setLog] = useState(readLog);
   useEffect(() => {
     if (loading || !snapshot) return;
     const today = localDateStr();
-    const log = readLog();
-    if (log[0]?.date === today && log[0]?.headline === report.headline) return;
-    const next = [{ date: today, headline: report.headline, needsAction: counts.needs_action || 0, tracked: items.length },
-      ...log.filter((e) => e.date !== today)].slice(0, LOG_DAYS);
-    try { localStorage.setItem(LOG_KEY, JSON.stringify(next)); } catch { /* log is a nicety */ }
+    setLog((prev) => {
+      if (prev[0]?.date === today && prev[0]?.headline === report.headline) return prev;
+      const next = [{ date: today, headline: report.headline, needsAction: counts.needs_action || 0, tracked: items.length },
+        ...prev.filter((e) => e.date !== today)].slice(0, LOG_DAYS);
+      try { localStorage.setItem(LOG_KEY, JSON.stringify(next)); } catch { /* the log is a nicety */ }
+      return next;
+    });
   }, [report.headline, loading, snapshot, counts.needs_action, items.length]);
-
-  const log = useMemo(() => readLog(), [showLog, report.headline]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
