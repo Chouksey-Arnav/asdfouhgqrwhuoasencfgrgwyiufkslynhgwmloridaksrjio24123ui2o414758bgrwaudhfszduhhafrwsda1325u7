@@ -7,7 +7,8 @@ import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = ['Ongoing', 'Completed', 'Published'];
-const STATUS_COLORS = { Ongoing: C.amber, Completed: C.blue, Published: C.green };
+// Per call, not a frozen literal — see the note in theme.js's header.
+const statusColor = (status) => ({ Ongoing: C.amber, Completed: C.blue, Published: C.green }[status]);
 
 // New Portfolio resource — part of the "crazy in-depth" database expansion (see
 // supabase/migrations/0001_portfolio_credibility_expansion.sql). Research is one of the most
@@ -104,7 +105,7 @@ export default function ResearchExperiencePanel({ accent = C.blue, onLogged = nu
 
       <div style={CC({gap:8})}>
         {entries.map(e => {
-          const sc = STATUS_COLORS[e.status] || accent;
+          const sc = statusColor(e.status) || accent;
           return (
           <div key={e.id} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'}),borderLeft:`3px solid ${sc}`,background:`linear-gradient(120deg,${tint(sc,0.05)},rgba(255,255,255,0.02) 55%)`}}>
             <div style={{width:34,height:34,borderRadius:10,background:tint(accent,0.13),border:`1px solid ${tint(accent,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><FlaskConical size={15} color={accent}/></div>

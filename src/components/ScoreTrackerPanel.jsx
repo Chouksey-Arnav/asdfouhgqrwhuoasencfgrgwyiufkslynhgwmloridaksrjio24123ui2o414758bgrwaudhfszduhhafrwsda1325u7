@@ -436,7 +436,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
                 maintainAspectRatio:false,
                 plugins:{legend:{display: chartView === 'subscores', labels: {color: C.t2, font: {size: 11}}}},
                 scales:{
-                  y:{grid: {color: 'rgba(255,255,255,0.05)'}, ticks:{color:C.t3, font:{family: C.FM}}},
+                  y:{grid: {color: C.b1}, ticks:{color:C.t3, font:{family: C.FM}}},
                   x:{grid: {display: false}, ticks:{color:C.t3}}
                 }
               }}

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { Plus, Trash2, Award, ClipboardCopy, FileDown, TrendingUp, ShieldCheck, ShieldQuestion, Layers, Clock, GraduationCap } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
-import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint } from '../lib/theme';
+import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint, accentFill } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
@@ -209,7 +209,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
           <div><label style={lbl()}>Course rigor (optional)</label><input style={inp()} placeholder="e.g. 4 AP classes" value={gpaDraft.course_rigor} onChange={e=>setGpaDraft({...gpaDraft,course_rigor:e.target.value})} /></div>
           <div>
             <label style={lbl()}>Weighted?</label>
-            <button type="button" style={btnSm(gpaDraft.weighted?accent:'rgba(255,255,255,0.06)',{color:'#fff',width:'100%'})} onClick={()=>setGpaDraft({...gpaDraft,weighted:!gpaDraft.weighted})}>{gpaDraft.weighted?'Weighted':'Unweighted'}</button>
+            <button type="button" style={btnSm(gpaDraft.weighted?accentFill(accent):C.s3,{color:gpaDraft.weighted?C.onAccent:C.t1,width:'100%'})} onClick={()=>setGpaDraft({...gpaDraft,weighted:!gpaDraft.weighted})}>{gpaDraft.weighted?'Weighted':'Unweighted'}</button>
           </div>
         </div>
         <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:14,display:'inline-flex',alignItems:'center',gap:8}} onClick={addGpaEntry}><TrendingUp size={14}/>Add GPA Entry</button>
@@ -252,7 +252,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
             <label style={lbl()}>Status</label>
             <div style={R({gap:6})}>
               {STATUSES.map(s => (
-                <button key={s} type="button" style={btnSm(draft.status===s?accent:'rgba(255,255,255,0.06)',{color:'#fff',flex:1,textTransform:'capitalize'})} onClick={()=>setDraft({...draft,status:s})}>{s}</button>
+                <button key={s} type="button" style={btnSm(draft.status===s?accentFill(accent):C.s3,{color:draft.status===s?C.onAccent:C.t1,flex:1,textTransform:'capitalize'})} onClick={()=>setDraft({...draft,status:s})}>{s}</button>
               ))}
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
           <label style={lbl()}>Grade levels involved</label>
           <div style={R({gap:6,flexWrap:'wrap'})}>
             {GRADE_LEVELS.map(g => (
-              <button key={g} type="button" onClick={()=>toggleGrade(g)} style={btnSm(draft.grade_levels.includes(g)?accent:'rgba(255,255,255,0.06)',{color:'#fff'})}>{g}</button>
+              <button key={g} type="button" onClick={()=>toggleGrade(g)} style={btnSm(draft.grade_levels.includes(g)?accentFill(accent):C.s3,{color:draft.grade_levels.includes(g)?C.onAccent:C.t1})}>{g}</button>
             ))}
           </div>
         </div>
@@ -282,7 +282,7 @@ export default function ActivitiesResumePanel({ accent = C.blue, onResumeExporte
           <div><label style={lbl()}>Evidence link (optional)</label><input style={inp()} value={draft.evidence_url} onChange={e=>setDraft({...draft,evidence_url:e.target.value})} placeholder="Certificate, article, photo…" /></div>
         </div>
         <div style={{marginTop:10}}>
-          <button type="button" style={btnSm(draft.leadership_role?accent:'rgba(255,255,255,0.06)',{color:'#fff'})} onClick={()=>setDraft({...draft,leadership_role:!draft.leadership_role})}>{draft.leadership_role?'Leadership role ✓':'Mark as a leadership role'}</button>
+          <button type="button" style={btnSm(draft.leadership_role?accentFill(accent):C.s3,{color:draft.leadership_role?C.onAccent:C.t1})} onClick={()=>setDraft({...draft,leadership_role:!draft.leadership_role})}>{draft.leadership_role?'Leadership role ✓':'Mark as a leadership role'}</button>
         </div>
         <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:14}} onClick={addActivity}><Plus size={14}/>Add Activity</button>
       </div>

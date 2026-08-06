@@ -469,14 +469,34 @@ body::before {
   outline-offset: 3px !important;
 }
 
-/* Light-theme corrections for rules that assumed a dark backdrop. */
-:root[data-theme="light"] .mb-launcher::after {
+/* ── Light-family corrections ─────────────────────────────────────────────
+   Keyed off data-theme-family, not data-theme. There are now two light
+   palettes (Light and Balanced Light) and two dark ones, and every rule below
+   is a correction for "this assumed a dark backdrop" — which is a statement
+   about the family, not about one palette. applyTheme() writes the attribute;
+   see the note there. */
+:root[data-theme-family="light"] .mb-launcher::after {
   background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.65) 48%, rgba(255,255,255,0.1) 58%, transparent 75%);
 }
-:root[data-theme="light"] .mb-copy:hover {
+:root[data-theme-family="light"] .mb-copy:hover {
   border-color: var(--c-b3) !important;
   color: var(--c-t1) !important;
 }
-:root[data-theme="light"] .subnav-scroll::-webkit-scrollbar-track { background: rgba(15,23,42,0.06); }
-:root[data-theme="light"] .subnav-scroll::-webkit-scrollbar-thumb { border-color: rgba(15,23,42,0.08); }
-:root[data-theme="light"] .sat-choice:not(:disabled):hover { border-color: rgba(15,23,42,0.3); }
+:root[data-theme-family="light"] .subnav-scroll::-webkit-scrollbar-track { background: rgba(15,23,42,0.06); }
+:root[data-theme-family="light"] .subnav-scroll::-webkit-scrollbar-thumb { border-color: rgba(15,23,42,0.08); }
+:root[data-theme-family="light"] .sat-choice:not(:disabled):hover { border-color: rgba(15,23,42,0.3); }
+/* The pull-tab's diagonal sweep and the hover spotlight are both white washes
+   over the tab's accent gradient. On a light page the tab is the same accent,
+   so the sweep reads as a blank rectangle wiping the label away rather than as
+   a shine. Softened rather than removed — the affordance still animates. */
+:root[data-theme-family="light"] .mb-launcher::after { opacity: .45; }
+
+/* ── AI markdown (`renderMarkdown`, injected via dangerouslySetInnerHTML) ──
+   The renderer writes every color as a var(--c-*) so it repaints with the
+   theme (see the header note in src/lib/renderMarkdown.js). These rules cover
+   what an inline style on a generated element cannot: link color, table
+   borders, and making sure a long AI answer can't push the page sideways. */
+.msp-md { color: var(--c-t2); }
+.msp-md a { color: var(--c-blue); }
+.msp-md pre, .msp-md table { max-width: 100%; overflow-x: auto; }
+.msp-md strong, .msp-md b { color: var(--c-t1); font-weight: 700; }

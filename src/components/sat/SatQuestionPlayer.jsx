@@ -5,7 +5,7 @@ import {
   Calculator, BookOpen, LineChart, Brain, Lightbulb, Loader2, Eye, EyeOff, Keyboard,
   ShieldCheck, Wand2,
 } from 'lucide-react';
-import { C, glass, glass2, btnSm, btnG, inp, R, CC, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnSm, btnG, inp, R, CC, tint, pill, onTint, accentFill } from '../../lib/theme';
 import { skillMeta, DIFFICULTIES } from '../../data/sat/taxonomy';
 import { strategyFor } from '../../data/sat/strategies';
 import { shuffleChoices } from '../../lib/sat/shuffle';
@@ -118,7 +118,7 @@ function ToolButton({ icon: Icon, label, onClick, color = C.t2, active = false, 
       onClick={onClick} disabled={disabled} title={title || label}
       style={btnSm(active ? tint(color, 0.2) : 'rgba(255,255,255,0.035)', {
         border: `1px solid ${active ? tint(color, 0.42) : C.b1}`,
-        color: disabled ? C.t4 : active ? '#fff' : C.t2,
+        color: disabled ? C.t4 : active ? onTint(color) : C.t2,
         fontSize: 11.5, padding: '6px 11px', gap: 5,
         cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.55 : 1,
       })}
@@ -521,8 +521,8 @@ export default function SatQuestionPlayer({
                 >
                   <span style={{
                     flexShrink: 0, width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    border: `1px solid ${borderColor}`, background: isSel || isCorrect ? borderColor : 'transparent',
-                    color: isSel || isCorrect ? '#fff' : C.t3, fontSize: 11.5, fontWeight: 700, fontFamily: C.FM,
+                    border: `1px solid ${borderColor}`, background: isSel || isCorrect ? accentFill(borderColor) : 'transparent',
+                    color: isSel || isCorrect ? C.onAccent : C.t3, fontSize: 11.5, fontWeight: 700, fontFamily: C.FM,
                   }}>
                     {isCorrect ? <Check size={13} /> : isWrongPick ? <X size={13} /> : LETTERS[i]}
                   </span>

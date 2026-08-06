@@ -21,8 +21,9 @@ import { motion } from 'framer-motion';
 import {
   Sun, Moon, Monitor, Type, Contrast, Zap, MousePointer2, Eye,
   RotateCcw, Check, Accessibility, AlignLeft, Sparkles, Info, SunMoon,
+  MoonStar, CloudSun,
 } from 'lucide-react';
-import { C, DARK, LIGHT, BALANCED, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
+import { C, DARK, LIGHT, BALANCED, BALANCED_LIGHT, glass, glass2, btn, btnG, R, CC, pill, tint, lbl } from '../lib/theme';
 import { DEFAULTS, FONT_SCALE_STEPS, systemReducedMotion, motionReduced } from '../lib/a11y';
 
 // Which DEFAULTS keys belong to which card, so each card can show its own
@@ -62,10 +63,15 @@ function Toggle({ id, label, description, checked, onChange, accent = C.blue, ba
           border: `1px solid ${checked ? accent : C.b2}`,
           transition: 'background .2s, border-color .2s',
         }}>
+          {/* The knob is white on the accent when on, which is right in every
+              theme. Off, it sat on C.s4 — a light gray in the light themes, so
+              a white knob on it was a switch with no visible thumb. */}
           <div style={{
-            width: 18, height: 18, borderRadius: '50%', background: '#fff',
+            width: 18, height: 18, borderRadius: '50%',
+            background: checked ? '#fff' : C.s1,
+            border: checked ? 'none' : `1px solid ${C.b2}`,
             position: 'absolute', top: 3, left: checked ? 23 : 3,
-            transition: 'left .2s', boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+            transition: 'left .2s', boxShadow: C.shadowSm,
           }} />
         </div>
       </div>
@@ -173,14 +179,24 @@ function ThemePreview({ palette }) {
   );
 }
 
-// Ordered as a brightness ramp — Balanced, then the two ends, then "follow my
-// device" — so the picker itself shows that there is a middle now.
+// Ordered as an actual brightness ramp, darkest to lightest, then "follow my
+// device". Balanced used to be a single option, and it was a dark one — which
+// meant a student who wanted a light interface had exactly one choice and it
+// was the brightest surface the app can draw. There is now a middle on both
+// sides of the line, and the order of the cards is the ramp itself:
+//
+//   Dark ── Balanced Dark ──┼── Balanced Light ── Light
 const THEME_CHOICES = [
-  { value: 'balanced', label: 'Balanced', icon: SunMoon, palette: BALANCED, badge: 'Default',
-    note: 'The middle ground — softer than dark, no glare. Best for long sessions.' },
-  { value: 'dark',   label: 'Dark',        icon: Moon,    palette: DARK,  note: 'Deepest. Easier at night and in dim rooms.' },
-  { value: 'light',  label: 'Light',       icon: Sun,     palette: LIGHT, note: 'Brightest. Best in daylight and direct sun.' },
-  { value: 'system', label: 'Match device', icon: Monitor, palette: null, note: 'Light in the day, Balanced at night.' },
+  { value: 'dark', label: 'Dark', icon: Moon, palette: DARK,
+    note: 'Deepest. Easier at night and in dim rooms.' },
+  { value: 'balanced', label: 'Balanced Dark', icon: MoonStar, palette: BALANCED, badge: 'Default',
+    note: 'A dusk slate — dark without the glare of a black screen. Best for long evening sessions.' },
+  { value: 'balancedLight', label: 'Balanced Light', icon: CloudSun, palette: BALANCED_LIGHT,
+    note: 'A light interface with the brightness taken off — no white panels. Best for long daytime sessions.' },
+  { value: 'light', label: 'Light', icon: Sun, palette: LIGHT,
+    note: 'Brightest. Best in daylight and direct sun.' },
+  { value: 'system', label: 'Match device', icon: Monitor, palette: null,
+    note: 'Follows your device — Balanced Light by day, Balanced Dark at night.' },
 ];
 
 const NAV_SECTIONS = [
@@ -274,17 +290,18 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         ref={el => { sectionRefs.current.theme = el; }}
         icon={Sun} hue={C.amber}
         title="Theme"
-        subtitle="Every theme is fully built out — panels, charts and question surfaces are designed for each. Balanced is the app's default; the other two are the ends of the range if you want them."
+        subtitle="Every theme is fully built out — panels, charts, AI answers and question surfaces are designed for each. The two Balanced themes are the comfortable middle of each side; Dark and Light are the ends of the range if you want them."
       >
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(4,1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(184px,1fr))', gap: 12 }}>
           {THEME_CHOICES.map(choice => {
             const on = s.themeMode === choice.value;
             const Icon = choice.icon;
             // "Match device" has no palette of its own — show whichever it is
             // resolving to right now so the card isn't a blank. It resolves to
-            // Balanced rather than Dark on a dark device (see resolveMode).
+            // the Balanced variant on either side, never to an end of the ramp
+            // (see resolveMode).
             const palette = choice.palette
-              || (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches ? LIGHT : BALANCED);
+              || (typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: light)').matches ? BALANCED_LIGHT : BALANCED);
             return (
               <button
                 key={choice.value}

@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
-import { C, glass, tint } from '../lib/theme';
+import { C, glass, tint, accentGrad } from '../lib/theme';
 import { buildPrepSystemPrompt } from '../lib/studentProfile';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
@@ -127,7 +127,7 @@ export default function PrepMedabrain({
             >
               <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: `linear-gradient(135deg,${accent},${accent}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
                     <Brain size={17} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -191,7 +191,7 @@ export default function PrepMedabrain({
                 />
                 <button type="submit" disabled={loading || !input.trim()} style={{
                   width: 40, height: 40, borderRadius: 10, border: 'none', flexShrink: 0,
-                  background: `linear-gradient(135deg,${accent},${accent}cc)`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center',
                   cursor: loading || !input.trim() ? 'default' : 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
                 }}>
                   <Send size={15} color="#fff" />

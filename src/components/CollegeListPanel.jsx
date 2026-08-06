@@ -309,7 +309,7 @@ export default function CollegeListPanel({ accent = C.blue, studentSAT = null, a
                             <label style={lbl()}>Requires CSS Profile?</label>
                             <div onClick={()=>updateCollege(college.id,{css_profile_required:!college.css_profile_required})} style={{...R({gap:8,cursor:'pointer',height:38})}}>
                               <div style={{width:36,height:20,borderRadius:10,background:college.css_profile_required?accent:C.s4,position:'relative',transition:'background .2s',flexShrink:0,border:`1px solid ${college.css_profile_required?accent:C.b2}`}}>
-                                <div style={{width:14,height:14,borderRadius:'50%',background:'#fff',position:'absolute',top:2,left:college.css_profile_required?18:2,transition:'left .2s'}}/>
+                                <div style={{width:14,height:14,borderRadius:'50%',background:college.css_profile_required?'#fff':C.s1,border:college.css_profile_required?'none':`1px solid ${C.b2}`,position:'absolute',top:2,left:college.css_profile_required?18:2,transition:'left .2s'}}/>
                               </div>
                               <span style={{fontSize:12,color:C.t2}}>{college.css_profile_required?'Yes':'No'}</span>
                             </div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, WifiOff, RotateCcw, ExternalLink } from 'lucide-react';
-import { C, glass2, btnG, btnSm, R, tint } from '../../lib/theme';
+import { C, glass2, btnG, btnSm, R, tint, onTint } from '../../lib/theme';
 import {
   loadDesmos, createCalculator, desmosLoadState,
   loadGraphState, saveGraphState, clearGraphState,
@@ -218,5 +218,5 @@ export function resetCalculator(calc, mode = 'graphing') {
 /** Shared chrome-button styling for the calculator's own toolbar. */
 export const calcChromeButton = (active, accent = C.teal) => btnSm(
   active ? tint(accent, 0.22) : 'rgba(255,255,255,0.04)',
-  { border: `1px solid ${active ? tint(accent, 0.45) : C.b1}`, padding: '5px 10px', fontSize: 11.5, color: active ? '#fff' : C.t2 },
+  { border: `1px solid ${active ? tint(accent, 0.45) : C.b1}`, padding: '5px 10px', fontSize: 11.5, color: active ? onTint(accent) : C.t2 },
 );

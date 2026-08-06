@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Library, Search, ChevronDown, ExternalLink, Filter, Play, BookOpen, Star, X,
 } from 'lucide-react';
-import { C, glass, glass2, btnSm, btnG, inp, R, CC, G, tint, pill } from '../../lib/theme';
+import { C, glass, glass2, btnSm, btnG, inp, R, CC, G, tint, pill, onTint } from '../../lib/theme';
 import { SatPageHeader, SatCard, Segmented, satBtn, satWash } from './satUi';
 import { StatTile } from '../ui/PanelHero';
 import MathText from '../ui/MathText';
@@ -261,7 +261,7 @@ export default function SatLibraryPanel({
                               onClick={() => { setSkill(active ? null : s); setLimit(PAGE_SIZE); }}
                               style={btnSm(active ? tint(g.color, 0.2) : 'rgba(255,255,255,0.03)', {
                                 border: `1px solid ${active ? tint(g.color, 0.45) : C.b1}`,
-                                color: active ? '#fff' : C.t2, fontSize: 11.5, gap: 6,
+                                color: active ? onTint(g.color) : C.t2, fontSize: 11.5, gap: 6,
                               })}
                             >
                               {SAT_SKILLS[s].label}

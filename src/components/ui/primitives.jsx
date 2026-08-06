@@ -6,7 +6,7 @@
 // take their tokens from src/lib/theme.js rather than App.jsx's local copy of
 // the same palette (the two were byte-identical).
 import React, { useState, useEffect } from 'react';
-import { C, glass, R } from '../../lib/theme';
+import { C, glass, R, accentSweep } from '../../lib/theme';
 
 /**
  * Matches a CSS media query reactively. The app's mobile breakpoint is
@@ -84,7 +84,7 @@ export function Stat({ label, value, icon, color = C.blue, sub, onClick, m = fal
       <div style={R({ gap: m ? 10 : 12, alignItems: 'flex-start' })}>
         <div style={{ width: m ? 32 : 36, height: m ? 32 : 36, borderRadius: 10, background: `${color}18`, border: `1px solid ${color}25`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0, boxShadow: `0 4px 12px ${color}20` }}>{icon}</div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontSize: m ? 20 : 26, fontWeight: 800, fontFamily: C.FM, lineHeight: 1, marginBottom: 4, background: `linear-gradient(135deg,${color},${color}aa)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{value}</div>
+          <div style={{ fontSize: m ? 20 : 26, fontWeight: 800, fontFamily: C.FM, lineHeight: 1, marginBottom: 4, background: accentSweep(color), WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>{value}</div>
           <div style={{ fontSize: m ? 11 : 12, color: C.t2, fontWeight: 600 }}>{label}</div>
           {sub && <div style={{ fontSize: 10, color: C.t3, marginTop: 2 }}>{sub}</div>}
         </div>

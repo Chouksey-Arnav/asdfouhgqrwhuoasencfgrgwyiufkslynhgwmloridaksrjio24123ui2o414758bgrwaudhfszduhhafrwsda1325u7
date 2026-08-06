@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import toast from 'react-hot-toast';
 import { Search, Landmark, Plus, Sparkles, Loader2, ExternalLink, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { C, glass2, btn, inp, R, CC, pill, tint } from '../lib/theme';
+import { C, glass2, btn, inp, R, CC, pill, tint, onTint } from '../lib/theme';
 import { SCHOLARSHIPS, SCHOLARSHIP_CATEGORIES } from '../data/scholarships';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import TrackButton from './ui/TrackButton';
@@ -111,7 +111,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {SCHOLARSHIP_CATEGORIES.map(c => (
           <button key={c.id} onClick={() => setCategory(c.id)}
-            style={pill(category === c.id ? tint(accent, 0.22) : 'rgba(255,255,255,0.05)', category === c.id ? '#fff' : C.t3,
+            style={pill(category === c.id ? tint(accent, 0.22) : C.surf2, category === c.id ? onTint(accent) : C.t3,
               { cursor: 'pointer', border: `1px solid ${category === c.id ? tint(accent, 0.4) : C.b1}`, fontWeight: category === c.id ? 700 : 500 })}>
             {c.label}
           </button>

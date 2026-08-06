@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Play, Square, Check, ChevronDown, Sparkles } from 'lucide-react';
-import { C, glass2, R } from '../lib/theme';
+import { C, glass2, R, onTint, accentFill } from '../lib/theme';
 import * as speech from '../lib/speech';
 
 const SAMPLE_LINE = "Hi, thanks for coming in today — let's start with something easy. Tell me a bit about yourself.";
@@ -125,7 +125,7 @@ function VoiceRow({ opt, accent, selected, previewing, onPreview, onChoose }) {
         title={previewing ? 'Stop preview' : 'Preview this voice'}
         style={{
           width: 26, height: 26, borderRadius: '50%', flexShrink: 0, border: 'none', cursor: 'pointer',
-          display: 'grid', placeItems: 'center', background: previewing ? accent : `${accent}1c`, color: previewing ? '#fff' : accent,
+          display: 'grid', placeItems: 'center', background: previewing ? accentFill(accent) : `${accent}1c`, color: previewing ? C.onAccent : onTint(accent),
         }}
       >
         {previewing ? <Square size={10} fill="currentColor" /> : <Play size={11} fill="currentColor" style={{ marginLeft: 1 }} />}

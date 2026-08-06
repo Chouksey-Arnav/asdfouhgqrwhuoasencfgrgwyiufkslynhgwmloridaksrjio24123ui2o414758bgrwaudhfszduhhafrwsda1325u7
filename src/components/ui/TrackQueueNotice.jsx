@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CloudOff, LogIn, RefreshCw, Loader2 } from 'lucide-react';
-import { C, glass2, btnSm, R, CC, tint } from '../../lib/theme';
+import { C, glass2, btnSm, R, CC, tint, onTint } from '../../lib/theme';
 import { retryTracksNow } from '../../lib/trackQueue';
 
 // Surfaces the Track outbox (src/lib/trackQueue.js) so a queued track is a visible, explained,
@@ -47,7 +47,7 @@ export default function TrackQueueNotice({ entries = [], status = {}, onRetried 
         ))}
         {entries.length > 6 && <div style={{ fontSize: 11, color: C.t3 }}>…and {entries.length - 6} more</div>}
       </div>
-      <button onClick={retry} disabled={retrying} style={btnSm(tint(color, 0.16), { color: '#fff', cursor: retrying ? 'wait' : 'pointer' })}>
+      <button onClick={retry} disabled={retrying} style={btnSm(tint(color, 0.16), { color: onTint(color), cursor: retrying ? 'wait' : 'pointer' })}>
         {retrying ? <><Loader2 size={12} className="spin" />Retrying…</> : <><RefreshCw size={12} />Try saving now</>}
       </button>
       {status.lastError && !blocked.length && (

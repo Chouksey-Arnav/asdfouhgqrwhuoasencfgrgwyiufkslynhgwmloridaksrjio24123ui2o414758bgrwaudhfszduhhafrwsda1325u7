@@ -26,7 +26,7 @@ import {
   AlertTriangle, CheckCircle2, XCircle, Loader, Target, Lock, RotateCcw,
   BarChart3, Brain, ArrowRight, ShieldCheck, Zap,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp, accentFill } from '../../lib/theme';
 import { StatTile } from '../ui/PanelHero';
 import { SatPageHeader, SatCard, satBtn, satWash } from './satUi';
 import { SatVideoRecommendations } from './SatVideoRecs';
@@ -506,8 +506,8 @@ function Running({
                     >
                       <span style={{
                         width: 24, height: 24, borderRadius: 7, flexShrink: 0, display: 'grid', placeItems: 'center',
-                        border: `1.5px solid ${on ? accent : C.b2}`, background: on ? accent : 'transparent',
-                        color: on ? '#fff' : C.t3, fontSize: 12, fontWeight: 800, fontFamily: C.FM, marginTop: 1,
+                        border: `1.5px solid ${on ? accent : C.b2}`, background: on ? accentFill(accent) : 'transparent',
+                        color: on ? C.onAccent : C.t3, fontSize: 12, fontWeight: 800, fontFamily: C.FM, marginTop: 1,
                       }}>{'ABCD'[i]}</span>
                       <span style={{ minWidth: 0 }}><MathText text={choice} /></span>
                     </button>
