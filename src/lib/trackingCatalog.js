@@ -25,6 +25,22 @@
 //      as an explicit prompt to go look the real date up (see needsDeadlineDate below).
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ── Provenance ───────────────────────────────────────────────────────────────
+// The one string that marks a row as "this came out of our catalog, the student didn't build it
+// themselves". It is written into the row's free text by the builders below and read back by the
+// Tracked tab (src/lib/trackedItems.js), which uses it to tell a saved program the student still
+// has to act on from an activity they already do every week.
+//
+// It is a shared constant rather than a phrase duplicated at both ends because the reader and the
+// writer drifting apart is silent: a reworded note would simply stop matching, and every tracked
+// program would quietly drop off the follow-up board with nothing failing.
+export const CATALOG_MARKER = 'Sourced from the MedSchoolPrep';
+
+/** True when `text` (a row's notes/description) carries the catalog provenance marker. */
+export function isCatalogSourced(text) {
+  return String(text || '').includes(CATALOG_MARKER);
+}
+
 // ── Dedupe keys ──────────────────────────────────────────────────────────────
 // The stable identity of a tracked thing, used to (a) mark catalog entries as already-tracked in
 // the UI, (b) short-circuit a second Track tap, and (c) make outbox retries idempotent — a retry
@@ -70,7 +86,7 @@ export function findExistingByKey(resource, rows = [], key) {
 
 // ── Scholarships ─────────────────────────────────────────────────────────────
 const SCHOLARSHIP_SOURCE_NOTE =
-  'Sourced from the MedSchoolPrep scholarship database — confirm current amount/deadline/eligibility on the official program site before applying.';
+  `${CATALOG_MARKER} scholarship database — confirm current amount/deadline/eligibility on the official program site before applying.`;
 
 /** A curated src/data/scholarships.js entry -> a `scholarships` row. */
 export function scholarshipRowFromCatalog(entry) {
@@ -133,7 +149,7 @@ export function activityRowFromOpportunity(entry, { sortOrder = 0 } = {}) {
     entry.desc,
     entry.eligibility ? `Eligibility: ${entry.eligibility}` : null,
     [entry.type, entry.level, entry.effort ? `${entry.effort} entry` : null].filter(Boolean).join(' · '),
-    'Added from the MedSchoolPrep opportunities database — confirm current details with the program before applying.',
+    `${CATALOG_MARKER} opportunities database — confirm current details with the program before applying.`,
   ].filter(Boolean).join('\n\n');
   return {
     activity_type: activityTypeForOpportunity(entry),
@@ -166,7 +182,7 @@ export function scholarshipRowFromOpportunity(entry) {
     entry.eligibility ? `Eligibility: ${entry.eligibility}` : null,
     entry.desc,
     [entry.level, entry.effort ? `${entry.effort} entry` : null].filter(Boolean).join(' · '),
-    'Added from the MedSchoolPrep opportunities database — confirm current amount/deadline/eligibility on the official program site before applying.',
+    `${CATALOG_MARKER} opportunities database — confirm current amount/deadline/eligibility on the official program site before applying.`,
   ].filter(Boolean).join(' ');
   return { name: entry.name, notes, status: 'researching', amount: null, deadline: null };
 }

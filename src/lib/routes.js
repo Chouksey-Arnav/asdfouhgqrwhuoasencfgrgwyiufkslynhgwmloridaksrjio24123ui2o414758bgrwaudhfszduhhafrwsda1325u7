@@ -41,7 +41,7 @@ export const SUBVIEWS = {
   portfolio: {
     state: 'portfolioView',
     default: 'overview',
-    ids: ['overview', 'timeline', 'colleges', 'essays', 'deadlines', 'aid', 'resume', 'research', 'skills', 'clinical', 'recommenders', 'interview', 'scores', 'calc'],
+    ids: ['overview', 'tracked', 'timeline', 'colleges', 'essays', 'deadlines', 'aid', 'resume', 'research', 'skills', 'clinical', 'recommenders', 'interview', 'calc'],
   },
   progress: {
     state: 'progressView',

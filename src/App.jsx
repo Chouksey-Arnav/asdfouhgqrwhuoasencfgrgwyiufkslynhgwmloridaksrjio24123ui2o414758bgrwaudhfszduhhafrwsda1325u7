@@ -23,6 +23,8 @@ import {
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
   Highlighter, Accessibility, Gauge, Loader2, Info,
+  // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
+  Radar as RadarIcon,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -68,7 +70,6 @@ import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievement
 import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
-import ScoreTrackerPanel from './components/ScoreTrackerPanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import StreakHeatmap from './components/StreakHeatmap';
 import ActivitiesResumePanel from './components/ActivitiesResumePanel';
@@ -90,6 +91,8 @@ import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab from './components/PlansTab';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
+import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
+import TrackedPanel from './components/portfolio/TrackedPanel';
 import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
@@ -105,6 +108,8 @@ import { SCORE_DISCLAIMER } from './data/sat/scoring';
 import AppTour from './components/AppTour';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
+import { buildPortfolioSnapshot, snapshotItemCount } from './lib/portfolioData';
+import { buildTrackedItems, buildDailyReport } from './lib/trackedItems';
 import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
 import {
@@ -343,6 +348,10 @@ const PREP_SUBNAV = [
 ];
 const PORTFOLIO_SUBNAV = [
   {id:'overview',ic:Building2,label:'Overview',color:C.blue},
+  // Tracked sits second, right after Overview, because it is the follow-through surface for
+  // every Track button in the app — the place a tracked program stops being a bookmark and
+  // starts having a deadline, a status, and a daily Meta Brain report (see TrackedPanel.jsx).
+  {id:'tracked',ic:RadarIcon,label:'Tracked',color:C.violet},
   {id:'timeline',ic:Milestone,label:'Timeline',color:C.indigo},
   {id:'colleges',ic:GraduationCap,label:'College List',color:C.sky},
   {id:'essays',ic:ScrollText,label:'Essays',color:C.violet},
@@ -354,7 +363,10 @@ const PORTFOLIO_SUBNAV = [
   {id:'clinical',ic:Stethoscope,label:'Clinical Hours',color:C.pink},
   {id:'recommenders',ic:UserCheck,label:'Recommenders',color:C.fuchsia},
   {id:'interview',ic:Mic,label:'Interview Prep',color:C.orange},
-  {id:'scores',ic:TrendingUp,label:'Test Scores',color:C.lime},
+  // No 'scores' tab here on purpose. Test-score tracking lives in the SAT tab (/sat/scores),
+  // which owns the score report, the section breakdown, and the projection — a second, thinner
+  // copy of it inside Portfolio only ever split the same numbers across two places. The
+  // Admissions Calculator still reads the student's real test_scores rows (syncWithPortfolio).
   {id:'calc',ic:Calculator,label:'Admissions Calc',color:C.gold},
 ];
 const PROGRESS_SUBNAV = [
@@ -1150,6 +1162,12 @@ export default function App({ account, onAccountChange }) {
   const [portAwards,     setPortAwards]     = useState([]);
   const [portGpa,        setPortGpa]        = useState([]);
   const [portLoaded,     setPortLoaded]     = useState(false);
+  // One shared snapshot of EVERY portfolio resource (src/lib/portfolioData.js), fetched once per
+  // Portfolio visit and handed to the weekly-goal dashboards and the Tracked tab. Both surfaces
+  // read the same rows, so a goal bar and the tracking report can never disagree about what the
+  // student actually has.
+  const [portSnapshot,   setPortSnapshot]   = useState(null);
+  const [portSnapLoading,setPortSnapLoading]= useState(false);
   const [catPerf,  setCatPerf_] = useState({});
   const [achiev,   setAchiev_]  = useState(new Set());
   const [streak,   setStreak]   = useState(0);
@@ -1821,6 +1839,20 @@ export default function App({ account, onAccountChange }) {
     })();
   },[tab,portLoaded]);
 
+  // Full-portfolio snapshot for the Overview dashboards + Tracked tab. Kept separate from the
+  // three-resource load above (which predates it and feeds the activity/award/GPA lists) so a
+  // slow full fetch never delays the parts of Overview that were already fast.
+  const refreshPortSnapshot = useCallback(async()=>{
+    setPortSnapLoading(true);
+    try{ setPortSnapshot(await buildPortfolioSnapshot()); }
+    catch(e){ console.error('Portfolio snapshot error:',e); }
+    finally{ setPortSnapLoading(false); }
+  },[]);
+  useEffect(()=>{
+    if(tab!=='portfolio'||portSnapshot||portSnapLoading)return;
+    refreshPortSnapshot();
+  },[tab,portSnapshot,portSnapLoading,refreshPortSnapshot]);
+
   // ── Pathway pacing goal (loaded per active pathway) ───────────────────────────
   useEffect(()=>{
     if(!user)return;
@@ -1882,6 +1914,16 @@ export default function App({ account, onAccountChange }) {
 
   // Live view of the Track outbox, so an opportunity queued offline reads as "Queued" (and flips
   // to "Tracked" on its own once the flush lands) instead of looking untracked.
+  // Tracked-board summary for the Overview, derived from the same shared snapshot the Tracked tab
+  // renders from. Memoized here rather than computed inside tPort(): tPort is a plain function
+  // invoked during App's render, so anything built in its body is rebuilt on every unrelated state
+  // change in a 7,000-line component — classifying every tracked row and regenerating the daily
+  // report each time.
+  const trackedSummary = useMemo(()=>{
+    const items=portSnapshot?buildTrackedItems(portSnapshot):[];
+    return { items, report:buildDailyReport(items), needsAction:items.filter(i=>i.stage==='needs_action').length };
+  },[portSnapshot]);
+
   const pendingTracks = usePendingTrackKeys();
   const trackedActivityKeys = useMemo(()=>trackedKeySet('activities',portActivities),[portActivities]);
   const trackedScholarshipKeys = useMemo(()=>trackedKeySet('scholarships',portScholarships),[portScholarships]);
@@ -1897,6 +1939,10 @@ export default function App({ account, onAccountChange }) {
     if(res.status==='created'){
       if(resource==='activities')setPortActivities(p=>[...p,res.row]);
       else setPortScholarships(p=>[...p,res.row]);
+      // Keeps the Overview dashboards and the Tracked tab in step with the tap that just
+      // happened — without this, a freshly tracked program wouldn't appear on the Tracked board
+      // (or count toward this week's "opportunities tracked" goal) until the next visit.
+      setPortSnapshot(s=>s?{...s,[resource]:[...(s[resource]||[]),res.row]}:s);
     }
     return res;
   },[portActivities,portScholarships]);
@@ -2335,7 +2381,7 @@ export default function App({ account, onAccountChange }) {
     ProgressSync.resetSyncStatus();
     await DB.clearAllData();
     clearViewState();
-    setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
+    setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setPortSnapshot(null);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
     toast('Signed out. See you next time!');
   }
 
@@ -5423,16 +5469,70 @@ export default function App({ account, onAccountChange }) {
     // Each strength subscore carries its own color so the gauge breakdown reads
     // as four distinct dimensions, not four identical gray numbers.
     const subscoreMeta={academic:{col:C.blue,Ic:GraduationCap},clinical:{col:C.pink,Ic:Stethoscope},application:{col:C.violet,Ic:ScrollText},activities:{col:C.amber,Ic:Award}};
+    const {items:trackedItems,report:trackReport,needsAction:trackNeeds}=trackedSummary;
+
+    // The Portfolio section navigator. One row per real sub-view with its live count, so the
+    // Overview is the map of the tab rather than a second dashboard that happens to sit above it.
+    const sections=[
+      {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need action`:'all current',col:C.violet},
+      {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools',col:C.sky},
+      {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
+      {view:'deadlines',ic:CalendarDays,label:'Deadlines',value:(upcomingDeadlines||[]).length,sub:'upcoming',col:C.rose},
+      {view:'aid',ic:Handshake,label:'Financial Aid',value:scholarshipCount,sub:'scholarships',col:C.green},
+      {view:'resume',ic:Award,label:'Activities',value:portActivities.length,sub:'on your resume',col:C.amber},
+      {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'experiences',col:C.cyan},
+      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'credentials',col:C.teal},
+      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'logged',col:C.pink},
+      {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'tracked',col:C.fuchsia},
+      {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'mock sessions',col:C.orange},
+      {view:'timeline',ic:Milestone,label:'Timeline',value:null,sub:'your whole arc',col:C.indigo},
+    ];
+
     return(
       <div style={CC({gap:22})}>
         <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
-          eyebrow="Portfolio" title="Application Overview"
-          sub="Every piece of your application — activities, scores, essays, deadlines, letters — pulled into one place so nothing falls through the cracks."
+          eyebrow="Portfolio" title="Application Command Center"
+          sub="Every piece of your application in one place — with a weekly target on the things that matter, so this reads as work in progress rather than a filing cabinet."
           stats={[
             {value:portActivities.length,label:'activities',color:C.blueL},
-            {value:portAwards.length,label:'awards',color:C.amberL},
+            {value:trackedItems.length,label:'tracked',color:C.violetL},
             {value:clinicalHoursTotal,label:'clinical hrs',color:C.pinkL},
-          ]}/>
+          ]}
+          right={
+            <motion.button whileHover={{scale:1.03}} whileTap={{scale:0.97}} onClick={()=>goPortfolio('tracked')}
+              style={{...btnSm(tint(C.violet,0.18),{color:onTint(C.violet),fontSize:11.5,border:`1px solid ${tint(C.violet,0.3)}`})}}>
+              <RadarIcon size={12}/>{trackNeeds?`${trackNeeds} need action`:'Live tracking'}
+            </motion.button>
+          }/>
+
+        {/* ── This week ── the mini dashboards. Every important part of the application gets a
+            measured number, a bar, and a target the STUDENT set. Meta Brain recommends on every
+            single one of them and sets none of them — see WeeklyGoalsBoard.jsx. */}
+        <WeeklyGoalsBoard
+          user={user} snapshot={portSnapshot} loading={portSnapLoading} onSaveUser={saveUser} onOpen={goPortfolio}
+          askMedabrain={askPortfolioMedabrain} isMobile={isMobile}
+          benchmarks={benchmarks} clinicalHoursTotal={clinicalHoursTotal} accent={accent}/>
+
+        {/* ── Today's tracking, bound to the Tracked tab ── */}
+        <button onClick={()=>goPortfolio('tracked')} aria-label="Open the Tracked tab"
+          style={{
+            ...glass({padding:isMobile?14:16}), textAlign:'left', font:'inherit', color:'inherit', cursor:'pointer', width:'100%',
+            display:'flex', alignItems:'center', gap:14, flexWrap:'wrap',
+            background:`linear-gradient(120deg,${tint(trackNeeds?C.rose:C.violet,0.09)},rgba(255,255,255,0.02) 60%)`,
+            border:`1px solid ${tint(trackNeeds?C.rose:C.violet,0.24)}`,
+          }}>
+          <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${C.violet},${C.indigo})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <Brain size={17} color="#fff"/>
+          </div>
+          <div style={{flex:1,minWidth:200}}>
+            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.violet)}}>Meta Brain · today's tracking report</div>
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
+              {portSnapshot?trackReport.headline:'Pulling in everything you\u2019re tracking\u2026'}
+            </div>
+            {portSnapshot&&trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:3}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
+          </div>
+          <span style={{...pill(tint(C.violet,0.14),accentText(C.violet),{fontSize:11,gap:5}),flexShrink:0}}>Open Tracked<ArrowRight size={11}/></span>
+        </button>
 
         {user.masterPlan&&<PortfolioPlanWeek user={user} accent={C.blue} onOpenTask={openPlanResource}/>}
 
@@ -5442,7 +5542,7 @@ export default function App({ account, onAccountChange }) {
           <div style={{flex:1,minWidth:200}}>
             <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
             <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
-            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — updates as you fill in Portfolio.</div>
+            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — it moves when the weekly goals above get met.</div>
           </div>
           <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
             {Object.entries(strength.subscores).map(([k,v])=>{
@@ -5477,60 +5577,29 @@ export default function App({ account, onAccountChange }) {
           })}
         </div>}
 
-        {/* Cross-app snapshot — pulls every feature area into one view so Portfolio reads as the hub, not just a resume tracker */}
+        {/* ── Section navigator — every Portfolio sub-view with its live count, so Overview is the
+            map of this tab instead of a parallel dashboard that duplicates it. */}
         <div style={glass({padding:18})}>
-          <SL extra={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}><PIcon size={12}/>{curPath.label} · Level {lvl} {levelInfo.tier}</SL>
-          <div style={G(4,10,{},isMobile)}>
-            <div onClick={()=>goPrep('quizzes')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Layers size={13} color={C.green}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Quizzes</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{qTaken}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{ALL_QUIZZES.length}</span></div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{mastery}% pathway mastery</div>
-            </div>
-            <div onClick={()=>goPrep('flashcards')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Layers3 size={13} color={C.violet}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Flashcards</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{totalReviews}<span style={{fontSize:11,color:C.t3,fontWeight:600}}> reviews</span></div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{dueDecksSub(dueDeckCount)}</div>
-            </div>
-            <div onClick={()=>goPortfolio('interview')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Mic size={13} color={C.cyan}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Interview Prep</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{interviewCount}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>mock sessions practiced</div>
-            </div>
-            <div onClick={()=>goPrep('coach')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><MessageCircle size={13} color={C.blue}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>AI Coach</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{aiChatCount}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>chats with Medabrain</div>
-            </div>
-            <div onClick={()=>goPortfolio('colleges')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Building2 size={13} color={C.amber}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>College List</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.colleges}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>schools tracked</div>
-            </div>
-            <div onClick={()=>goPortfolio('essays')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><ScrollText size={13} color={C.orange}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Essays</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{appCounts.essays}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>drafts in progress</div>
-            </div>
-            <div onClick={()=>goPortfolio('deadlines')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><CalendarDays size={13} color={C.rose}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Deadlines</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{(upcomingDeadlines||[]).length}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>upcoming</div>
-            </div>
-            <div onClick={()=>goPortfolio('clinical')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Stethoscope size={13} color={accent}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Clinical Hours</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{clinicalHoursTotal}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>hours logged</div>
-            </div>
-            <div onClick={()=>goPortfolio('recommenders')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><UserCheck size={13} color={C.violetL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Recommenders</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{recommendersCount}</div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>tracked</div>
-            </div>
-            <div onClick={()=>setTab('progress')} style={{...glass2({padding:14,cursor:'pointer'})}}>
-              <div style={R({gap:6,marginBottom:6})}><Trophy size={13} color={C.amberL}/><span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>Achievements</span></div>
-              <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{achiev.size}<span style={{fontSize:11,color:C.t3,fontWeight:600}}>/{Object.keys(ACHIEVEMENTS).length}</span></div>
-              <div style={{fontSize:10,color:C.t3,marginTop:2}}>{streak}-day streak</div>
-            </div>
+          <div style={R({justifyContent:'space-between',marginBottom:14,gap:10,flexWrap:'wrap'})}>
+            <SL extra={{margin:0,display:'flex',alignItems:'center',gap:8}}><PIcon size={12}/>Your application · {curPath.label}</SL>
+            <span style={pill(C.s3,C.t3,{fontSize:10})}>Level {lvl} {levelInfo.tier} · {streak}-day streak</span>
+          </div>
+          <div style={{display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(auto-fill,minmax(160px,1fr))',gap:10}}>
+            {sections.map(s=>(
+              <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
+                style={{
+                  boxSizing:'border-box',textAlign:'left',font:'inherit',color:'inherit',cursor:'pointer',
+                  padding:13,borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,
+                  borderLeft:`3px solid ${s.col}`,
+                }}>
+                <div style={R({gap:6,marginBottom:6})}>
+                  <s.ic size={13} color={s.col}/>
+                  <span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>{s.label}</span>
+                </div>
+                <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{s.value==null?'—':s.value}</div>
+                <div style={{fontSize:10,color:C.t3,marginTop:2}}>{s.sub}</div>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -5542,18 +5611,20 @@ export default function App({ account, onAccountChange }) {
           <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
         </div>
 
-        {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks */}
+        {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks.
+            These are the LONG game (a whole-application benchmark); the weekly goals at the top are
+            how you actually move them. Both are shown so the week has a horizon behind it. */}
         <div style={glass({padding:18})}>
           <SL>Progress Toward {curPath?.label} Benchmarks</SL>
           {[
-            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent},
-            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue},
-            {l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber},
-            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet},
-          ].map(({l,val,target,col})=>(
+            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent,view:'clinical'},
+            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue,view:'resume'},
+            {l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber,view:'research'},
+            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet,view:'resume'},
+          ].map(({l,val,target,col,view})=>(
             <div key={l} style={{marginBottom:14}}>
               <div style={R({justifyContent:'space-between',marginBottom:6})}>
-                <span style={{fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</span>
+                <button onClick={()=>goPortfolio(view)} style={{all:'unset',cursor:'pointer',fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</button>
                 <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
               </div>
               <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
@@ -5580,9 +5651,15 @@ export default function App({ account, onAccountChange }) {
 
         {/* Opportunities & Competitions — searchable database, portfolio-ranked recommendations,
             and a Meta Brain blurb (purpose:'portfolio') grounded in this student's real activity
-            log; see src/components/OpportunitiesDatabase.jsx. */}
+            log; see src/components/OpportunitiesDatabase.jsx. Anything tracked from here lands on
+            the Tracked tab with a daily Meta Brain report on it. */}
         <div>
-          <SL extra={{marginBottom:16}}>Opportunities & Competitions</SL>
+          <div style={R({justifyContent:'space-between',marginBottom:16,gap:10,flexWrap:'wrap'})}>
+            <SL extra={{margin:0}}>Opportunities & Competitions</SL>
+            <button onClick={()=>goPortfolio('tracked')} style={btnSm(C.s3,{color:C.t2,fontSize:11})}>
+              <RadarIcon size={11}/>See what you're tracking
+            </button>
+          </div>
           <TrackQueueNotice entries={pendingTracks.entries.filter(e=>e.resource==='activities'||e.resource==='scholarships')} status={pendingTracks.status}/>
           <OpportunitiesDatabase accent={accent} onTrack={trackOpportunity}
             trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
@@ -6846,10 +6923,15 @@ export default function App({ account, onAccountChange }) {
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
     overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
+    // The follow-through board for every Track button in the app. Reads the same shared snapshot
+    // the Overview dashboards do (portSnapshot), so the two can never disagree, and files a
+    // deterministic daily report with an AI voice layered on top — see TrackedPanel.jsx.
+    tracked:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.tracked}
+      askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
+      pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/>,
     deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
-    scores:()=><ScoreTrackerPanel accent={portC.scores}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}/>,
     research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>{logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}/>,
