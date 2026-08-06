@@ -306,6 +306,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
           plan={plan} upcoming={upcoming} accent={accent} isMobile={isMobile} expandedDay={expandedDay} setExpandedDay={setExpandedDay}
           onToggleTask={handleToggleTask} jumpTo={jumpTo} extending={extending}
           onMoveTask={handleMoveTask} onReorderTasks={handleReorderTasks} onSnoozeTask={handleSnoozeTask}
+          reducedMotion={reducedMotion}
         />
       ) : (
         <RoadmapView plan={plan} accent={accent} isMobile={isMobile} expandedPhase={expandedPhase} setExpandedPhase={setExpandedPhase} />
@@ -618,7 +619,7 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, acce
 // of which days are currently expanded). Both funnel into the same
 // onMoveTask/onReorderTasks props, which is the only thing that actually
 // mutates the plan.
-function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending, onMoveTask, onReorderTasks, onSnoozeTask }) {
+function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending, onMoveTask, onReorderTasks, onSnoozeTask, reducedMotion = false }) {
   const today = todayStr();
   const todayEntry = upcoming.find(d => d.date === today) || null;
   const restOfWeek = upcoming.filter(d => d.date !== today);
@@ -694,6 +695,7 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
           expanded={expandedDay === day.date}
           onToggleExpand={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
           onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx}
+          reducedMotion={reducedMotion}
         />
       ))}
 
@@ -858,7 +860,7 @@ function PillarCard({ icon: Icon, title, text, color }) {
   );
 }
 
-function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask, jumpTo, dragCtx }) {
+function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask, jumpTo, dragCtx, reducedMotion = false }) {
   const doneCount = day.tasks.filter(t => t.done).length;
   const total = day.tasks.length;
   // Registered as a drop target even while collapsed — dropping a dragged task
@@ -894,8 +896,8 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
             <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {day.tasks.map(t => (
                 dragCtx
-                  ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} />
-                  : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} />
+                  ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} reducedMotion={reducedMotion} />
+                  : <TaskRow key={t.id} task={t} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} reducedMotion={reducedMotion} />
               ))}
               {day.reflectionPrompt && (
                 <div style={{ fontSize: 11.5, color: C.t2, fontStyle: 'italic', padding: '8px 12px', borderLeft: `2px solid ${C.amber}50`, marginTop: 4 }}>

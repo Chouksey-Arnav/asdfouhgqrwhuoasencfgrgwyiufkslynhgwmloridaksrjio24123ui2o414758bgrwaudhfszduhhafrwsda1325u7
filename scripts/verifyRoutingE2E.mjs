@@ -92,7 +92,7 @@ try {
   // ── 2. The app, driven like a student would ───────────────────────────────
   // The image ships one Chromium build (PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers);
   // point at it directly when the pinned playwright version expects a different one.
-  const executablePath = ['/opt/pw-browsers/chromium', '/opt/pw-browsers/chromium/chrome-linux/chrome'].find((p) => existsSync(p) && statSync(p).isFile());
+  const executablePath = ['/home/jules/.cache/ms-playwright/chromium-1208/chrome-linux64/chrome', '/opt/pw-browsers/chromium', '/opt/pw-browsers/chromium/chrome-linux/chrome'].find((p) => existsSync(p) && statSync(p).isFile());
   browser = await chromium.launch(executablePath ? { executablePath } : {});
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   await context.route('**/api/auth/me', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ user: ACCOUNT }) }));
