@@ -283,7 +283,7 @@ const VALID_DESTINATIONS = new Set([
   'prep:diagnostic', 'prep:pathway', 'prep:quizzes', 'prep:flashcards', 'prep:coach', 'prep:library',
   'portfolio:overview', 'portfolio:timeline', 'portfolio:colleges', 'portfolio:essays', 'portfolio:deadlines',
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
-  'portfolio:recommenders', 'portfolio:interview', 'portfolio:scores', 'portfolio:calc',
+  'portfolio:recommenders', 'portfolio:interview', 'portfolio:tracked', 'portfolio:calc',
   'progress:overview', 'progress:verified', 'progress:performance', 'progress:achievements',
   'sat:overview', 'sat:diagnostic', 'sat:practice', 'sat:tests', 'sat:review', 'sat:skills', 'sat:scores',
 ]);
@@ -326,7 +326,7 @@ const VIEW_LABELS = {
   'portfolio:essays': 'Essay Workspace', 'portfolio:deadlines': 'Deadlines Tracker', 'portfolio:aid': 'Financial Aid',
   'portfolio:resume': 'Activities & Resume', 'portfolio:research': 'Research Log', 'portfolio:skills': 'Skills & Certs',
   'portfolio:clinical': 'Clinical Hours Log', 'portfolio:recommenders': 'Recommenders', 'portfolio:interview': 'Interview Prep',
-  'portfolio:scores': 'Test Score Tracker', 'portfolio:calc': 'Admissions Calculator',
+  'portfolio:tracked': 'Tracked Applications', 'portfolio:calc': 'Admissions Calculator',
   'progress:overview': 'Progress Overview', 'progress:verified': 'Verified Progress',
   'progress:performance': 'Performance', 'progress:achievements': 'Achievements',
 };
