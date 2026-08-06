@@ -223,7 +223,7 @@ export default function SatDiagnosticPanel({
 
           <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
             <button onClick={() => onNavigate?.('practice')} style={satBtn(accent)}>
-              Start practising <ChevronRight size={14} />
+              Start practicing <ChevronRight size={14} />
             </button>
             <button onClick={() => onNavigate?.('overview')} style={btnG()}>See your overview</button>
           </div>

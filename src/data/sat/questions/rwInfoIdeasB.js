@@ -54,7 +54,7 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-cid-0103', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'too_extreme', targetSeconds: 70,
-    stimulus: 'Standardised shipping containers are usually credited with cutting the cost of moving goods. The cost fell, but the deeper change was to what could be moved at all. When loading a ship took a week and hand labour, only high-value cargo justified the trip. When it took hours, the calculation opened to goods that had never been worth shipping — and to supply chains that assumed they always would be.',
+    stimulus: 'Standardised shipping containers are usually credited with cutting the cost of moving goods. The cost fell, but the deeper change was to what could be moved at all. When loading a ship took a week and hand labor, only high-value cargo justified the trip. When it took hours, the calculation opened to goods that had never been worth shipping — and to supply chains that assumed they always would be.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Shipping containers reduced loading times from roughly a week to a few hours.',
@@ -103,7 +103,7 @@ export const RW_INFO_IDEAS_B = [
       'Photinus males have evolved increasingly elaborate flash patterns over time.',
     ],
     ans: 0,
-    exp: 'The passage moves from how the signal works to how Photuris turns it against the signaller — the last sentence states that reversal explicitly.',
+    exp: 'The passage moves from how the signal works to how Photuris turns it against the signaler — the last sentence states that reversal explicitly.',
     distractorExp: [
       'Correct. The predator exploits the very signal that finds a mate.',
       'True but a setup detail, not the point the passage builds to.',
@@ -196,7 +196,7 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-cet-0101', section: 'rw', domain: 'info_ideas', skill: 'command_evidence_text',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 80,
-    stimulus: 'A team studying Bronze Age tin ingots recovered from a Mediterranean wreck argues that the metal was mined in Cornwall, some 3,000 kilometres away, rather than anywhere in the eastern Mediterranean.',
+    stimulus: 'A team studying Bronze Age tin ingots recovered from a Mediterranean wreck argues that the metal was mined in Cornwall, some 3,000 kilometers away, rather than anywhere in the eastern Mediterranean.',
     q: 'Which finding, if true, would most directly support the team\'s argument?',
     ch: [
       'The wreck also carried pottery of a style manufactured widely across the Aegean.',
@@ -207,7 +207,7 @@ export const RW_INFO_IDEAS_B = [
     ans: 1,
     exp: 'Isotope ratios fingerprint an ore source. A match to Cornwall that excludes eastern deposits speaks directly to where the tin was mined.',
     distractorExp: [
-      'Pottery style says where the ship travelled, not where the tin came out of the ground.',
+      'Pottery style says where the ship traveled, not where the tin came out of the ground.',
       'Correct. Isotope matching identifies the ore source and rules out the alternative.',
       'Value explains why tin was traded, not where it originated.',
       'Hull construction locates the shipbuilding, not the mine.',
@@ -222,10 +222,10 @@ export const RW_INFO_IDEAS_B = [
       '"The liberty of the press is the one right from which the others are struck."',
       '"Set the whole in pica, for the small type wearies a reader by the second sheet."',
       '"I have read Mr. Burke and confess myself unpersuaded by his warmest passages."',
-      '"Let no man say the printer is merely a servant to the author\'s better judgement."',
+      '"Let no man say the printer is merely a servant to the author\'s better judgment."',
     ],
     ans: 1,
-    exp: 'Choosing a type size for the reader\'s comfort over a sheet is a compositor\'s working judgement — the kind of knowledge Raman says marks the author as a printer.',
+    exp: 'Choosing a type size for the reader\'s comfort over a sheet is a compositor\'s working judgment — the kind of knowledge Raman says marks the author as a printer.',
     distractorExp: [
       'A political sentiment about the press, available to any pamphleteer.',
       'Correct. A practical compositor\'s decision, made in trade vocabulary.',
@@ -241,7 +241,7 @@ export const RW_INFO_IDEAS_B = [
     ch: [
       'Males in poor physical condition build bowers less well than healthy males.',
       'Females typically inspect between eight and twelve bowers before choosing a mate.',
-      'Bower decorations are frequently stolen by rival males from neighbouring bowers.',
+      'Bower decorations are frequently stolen by rival males from neighboring bowers.',
       'Bowerbirds occupy a range of habitats across New Guinea and northern Australia.',
     ],
     ans: 0,
@@ -322,7 +322,7 @@ export const RW_INFO_IDEAS_B = [
       'Pigment layers dated centuries apart show the same preparation recipe and application order.',
       'The cave contains markings in at least three distinct styles of representation.',
       'Similar markings of comparable age have been documented in caves elsewhere in Asia.',
-      'The pigments used were made from ochre available within a few kilometres of the cave.',
+      'The pigments used were made from ochre available within a few kilometers of the cave.',
     ],
     ans: 0,
     exp: 'A shared recipe and sequence persisting across centuries is transmission — the technique was passed on, not independently rediscovered each time.',
@@ -564,12 +564,12 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-inf-0102', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 80,
-    stimulus: 'In a trial of a new tutoring programme, students assigned to it improved substantially more than students on the waiting list. Enrolment, however, required a parent to complete a written application and attend an evening meeting. The researchers acknowledge that this makes the comparison difficult to interpret, because the families who cleared those hurdles may well have ______',
+    stimulus: 'In a trial of a new tutoring program, students assigned to it improved substantially more than students on the waiting list. Enrolment, however, required a parent to complete a written application and attend an evening meeting. The researchers acknowledge that this makes the comparison difficult to interpret, because the families who cleared those hurdles may well have ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'been less able to help their children with schoolwork at home than others.',
       'differed from waiting-list families in ways that affect learning anyway.',
-      'enrolled their children in the programme somewhat later in the school year.',
+      'enrolled their children in the program somewhat later in the school year.',
       'been given more detailed information about how the trial would be conducted.',
     ],
     ans: 1,
@@ -690,7 +690,7 @@ export const RW_INFO_IDEAS_B = [
       'widened, since reviewers compensated for the missing information.',
       'disappeared, since the only difference between the proposals had been concealed.',
       'remained, since reviewers could infer the institution from the writing style.',
-      'reversed, since reviewers favoured proposals from less prestigious institutions.',
+      'reversed, since reviewers favored proposals from less prestigious institutions.',
     ],
     ans: 1,
     exp: 'The proposals were identical apart from the institution named. Remove that and nothing distinguishes them, so no systematic gap can survive.',

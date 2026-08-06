@@ -24,7 +24,7 @@ export const MATH_GEO_TRIG_B = [
   {
     id: 'sat-m-avl-0102', section: 'math', domain: 'geo_trig', skill: 'area_volume',
     difficulty: 'M', format: 'mcq', trap: 'reference_formula', targetSeconds: 75,
-    q: 'A rectangular prism has a volume of 240 cubic centimetres. Its base measures 8 cm by 5 cm. What is its height?',
+    q: 'A rectangular prism has a volume of 240 cubic centimeters. Its base measures 8 cm by 5 cm. What is its height?',
     ch: ['3 cm', '6 cm', '30 cm', '40 cm'],
     ans: 1,
     exp: 'Volume = base area × height. The base area is 8 × 5 = 40, so the height is 240/40 = 6 cm.',
@@ -52,9 +52,9 @@ export const MATH_GEO_TRIG_B = [
   {
     id: 'sat-m-avl-0104', section: 'math', domain: 'geo_trig', skill: 'area_volume',
     difficulty: 'M', format: 'spr', trap: 'unit_mismatch', targetSeconds: 80,
-    q: 'A rectangular garden measures 12 metres by 9 metres. A path 1 metre wide runs around the outside of the garden. What is the area, in square metres, of the path alone?',
+    q: 'A rectangular garden measures 12 meters by 9 meters. A path 1 meter wide runs around the outside of the garden. What is the area, in square meters, of the path alone?',
     sprAccept: { values: [46], tolerance: 0 },
-    exp: 'The outer rectangle including the path is 14 by 11, since the path adds 1 metre on each of two opposite sides. Its area is 154, and the garden itself is 12 × 9 = 108. The path is 154 − 108 = 46 square metres.',
+    exp: 'The outer rectangle including the path is 14 by 11, since the path adds 1 meter on each of two opposite sides. Its area is 154, and the garden itself is 12 × 9 = 108. The path is 154 − 108 = 46 square meters.',
     hint: 'A path on the outside adds twice its width to each dimension. Find the big rectangle, then subtract the garden.',
   },
 
@@ -176,8 +176,8 @@ export const MATH_GEO_TRIG_B = [
     ans: 2,
     exp: 'In (x − h)² + (y − k)² = r², the right-hand side is r², not r. So r² = 25 and the radius is 5.',
     distractorExp: [
-      '3 relates to the y-coordinate of the centre, which is −3.',
-      '4 is the x-coordinate of the centre.',
+      '3 relates to the y-coordinate of the center, which is −3.',
+      '4 is the x-coordinate of the center.',
       'Correct. r² = 25, so r = 5.',
       '25 is r², and the square root is still needed.',
     ],

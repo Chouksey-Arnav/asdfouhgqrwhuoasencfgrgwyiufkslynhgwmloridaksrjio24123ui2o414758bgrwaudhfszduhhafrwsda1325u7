@@ -177,7 +177,7 @@ export const RW_EXPRESSION_C = [
       'The surveys mapped ground surfaces beneath dense forest canopy.',
       'More than 60,000 previously unrecorded Maya structures were identified.',
       'Findings included causeways, terraces and defensive earthworks.',
-      'Ground survey of a single square kilometre had previously taken months.',
+      'Ground survey of a single square kilometer had previously taken months.',
       'Some archaeologists caution that lidar identifies shapes, not functions.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
@@ -189,7 +189,7 @@ export const RW_EXPRESSION_C = [
       'Although some archaeologists caution that lidar identifies shapes rather than functions, the surveys were flown between 2016 and 2018.',
     ],
     ans: 2,
-    exp: 'Two things are required: the speed (against months per square kilometre) and the caveat. Only one choice carries both, and it keeps the scale figure that makes the speed claim concrete.',
+    exp: 'Two things are required: the speed (against months per square kilometer) and the caveat. Only one choice carries both, and it keeps the scale figure that makes the speed claim concrete.',
     distractorExp: [
       'Describes what lidar does, with neither the pace comparison nor the limitation.',
       'Gives the scale of the discovery but omits the limitation the goal explicitly asks for.',
@@ -262,7 +262,7 @@ export const RW_EXPRESSION_C = [
   {
     id: 'sat-rw-trn-0205', section: 'rw', domain: 'expression', skill: 'transitions',
     difficulty: 'E', format: 'mcq', trap: 'wrong_transition', targetSeconds: 50,
-    stimulus: 'Sound travels roughly four times faster in water than in air. ______ a whale call can cross an ocean basin in hours, and low-frequency calls can be detected thousands of kilometres from the animal that made them.',
+    stimulus: 'Sound travels roughly four times faster in water than in air. ______ a whale call can cross an ocean basin in hours, and low-frequency calls can be detected thousands of kilometers from the animal that made them.',
     q: 'Which choice completes the text with the most logical transition?',
     ch: ['As a result,', 'Nonetheless,', 'By comparison,', 'Admittedly,'],
     ans: 0,

@@ -10,7 +10,7 @@ const SITE_TYPES = [
   'Hospital', 'Outpatient Clinic', 'Physician Office', 'Dental Office',
   'Pharmacy', 'PT/Rehab Clinic', 'Research Lab', 'Community Health / Free Clinic', 'Other',
 ];
-// Site types each get a colour so the per-site hour tiles and entry rows read
+// Site types each get a color so the per-site hour tiles and entry rows read
 // as distinct kinds of clinical exposure at a glance.
 const SITE_COLORS = {
   Hospital: C.rose, 'Outpatient Clinic': C.sky, 'Physician Office': C.blue, 'Dental Office': C.cyan,

@@ -48,7 +48,7 @@ function Toggle({ id, label, description, checked, onChange, accent = C.blue, ba
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{description}</div>
       </label>
       {/* A real checkbox underneath: it carries the role, the label association
-          and the keyboard behaviour for free. The visible switch is the styling
+          and the keyboard behavior for free. The visible switch is the styling
           on top of it, which is the only reliable way to get both. */}
       <div style={{ position: 'relative', flexShrink: 0, width: 44, height: 24 }}>
         <input
@@ -415,7 +415,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         <Toggle
           id="a11y-underline-links" accent={C.violet}
           label="Underline links"
-          description="Marks links with an underline instead of colour alone, so they're identifiable if colours are hard to tell apart."
+          description="Marks links with an underline instead of color alone, so they're identifiable if colors are hard to tell apart."
           checked={s.underlineLinks} onChange={v => set({ underlineLinks: v })}
         />
         <Toggle
@@ -449,7 +449,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
         <Toggle
           id="a11y-hide-decorative" accent={C.cyan}
           label="Hide decorative background"
-          description="Removes the ambient colour glow and film grain behind the app. Also worth turning on if your device feels sluggish."
+          description="Removes the ambient color glow and film grain behind the app. Also worth turning on if your device feels sluggish."
           checked={s.hideDecorative} onChange={v => set({ hideDecorative: v })}
         />
       </Card>

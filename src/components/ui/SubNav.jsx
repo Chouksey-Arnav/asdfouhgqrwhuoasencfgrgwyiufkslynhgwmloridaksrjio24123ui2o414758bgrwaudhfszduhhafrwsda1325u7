@@ -93,7 +93,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
       >
         {items.map(it => {
           const isActive = active === it.id;
-          // Each item may carry its own colour so a long sub-nav reads as a
+          // Each item may carry its own color so a long sub-nav reads as a
           // recognisable spectrum of sections rather than one flat accent.
           const c = it.color || accent;
           const Icon = it.icon || it.ic; // NAV configs use `ic`, older callers `icon`

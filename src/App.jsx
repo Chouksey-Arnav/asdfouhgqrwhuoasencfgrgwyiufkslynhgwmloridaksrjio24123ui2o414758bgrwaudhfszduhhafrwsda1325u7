@@ -305,10 +305,10 @@ const NAV = [
 // The SAT pillar. Sits second because onboarding sells score improvement harder
 // than anything else in the product, and until now nothing behind that promise
 // existed — see src/data/sat/taxonomy.js for the content model it runs on.
-// One identity colour across the whole pillar (see SatTab.jsx) — the SAT tab
+// One identity color across the whole pillar (see SatTab.jsx) — the SAT tab
 // holds itself to a stricter, assessment-grade visual standard than the rest
 // of the app, so its sub-views share C.sky rather than a per-view rainbow.
-// Review Log keeps rose because there the colour MEANS something: work owed.
+// Review Log keeps rose because there the color MEANS something: work owed.
 const SAT_SUBNAV = [
   {id:'overview',ic:Target,label:'Overview',color:C.sky},
   // Sits directly after Overview, ahead of the Diagnostic, because it is the
@@ -1516,7 +1516,7 @@ export default function App({ account, onAccountChange }) {
   // personal brief ("About you"). They live on one page rather than in separate
   // tabs because the brief is not a settings screen — it is the other half of
   // talking to Medabrain, and a student should be able to add to it the moment
-  // an answer makes them realise it doesn't know something.
+  // an answer makes them realize it doesn't know something.
   const [coachView,setCoachView]=useState('chat'); // 'chat' | 'about'
   // Model picker + quota breakdown, collapsed by default. This used to be
   // permanently pinned above the thread and cost ~180px of the conversation.
@@ -3980,7 +3980,7 @@ export default function App({ account, onAccountChange }) {
             <SectionTitle icon={ListFilter} color={C.greenL} extra={{marginBottom:0}}>Filter & Sort</SectionTitle>
             {filtersActive&&<button style={{...btnG({fontSize:10.5,padding:'4px 12px'}),display:'inline-flex',alignItems:'center',gap:5}} onClick={clearFilters}><RefreshCw size={10}/>Reset filters</button>}
           </div>
-          {/* Category identity chips — same colour language as the E-Library's category row */}
+          {/* Category identity chips — same color language as the E-Library's category row */}
           <div style={R({gap:8,flexWrap:'wrap',marginBottom:12})}>
             {['All','Life Sciences','Physical Sciences','Behavioral & Social Sciences'].map(c=>{
               const active=qCat===c;
@@ -5411,8 +5411,8 @@ export default function App({ account, onAccountChange }) {
     });
     const strengthColor=strength.score>=80?C.green:strength.score>=60?C.blue:strength.score>=35?C.amber:C.rose;
 
-    // Each strength subscore carries its own colour so the gauge breakdown reads
-    // as four distinct dimensions, not four identical grey numbers.
+    // Each strength subscore carries its own color so the gauge breakdown reads
+    // as four distinct dimensions, not four identical gray numbers.
     const subscoreMeta={academic:{col:C.blue,Ic:GraduationCap},clinical:{col:C.pink,Ic:Stethoscope},application:{col:C.violet,Ic:ScrollText},activities:{col:C.amber,Ic:Award}};
     return(
       <div style={CC({gap:22})}>
@@ -6831,7 +6831,7 @@ export default function App({ account, onAccountChange }) {
     );
   }
   // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
-  // Each sub-view inherits ITS OWN SubNav colour as its accent so the whole
+  // Each sub-view inherits ITS OWN SubNav color as its accent so the whole
   // Portfolio reads as a spectrum of distinct, recognisable sections (matching
   // the pill it was opened from) rather than one flat green everywhere.
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));

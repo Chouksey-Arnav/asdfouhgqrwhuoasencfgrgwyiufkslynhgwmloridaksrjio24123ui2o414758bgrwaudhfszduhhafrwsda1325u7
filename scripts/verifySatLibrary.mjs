@@ -10,10 +10,10 @@
 //      A 1,000-question bank filtered only by section and skill is a bank the
 //      student cannot get at, whatever the audit says is in it.
 //
-//   2. Whatever they filter to, they can PRACTISE. The Library used to offer
+//   2. Whatever they filter to, they can PRACTICE. The Library used to offer
 //      practice only once a leaf skill was selected, so "all the Hard grid-ins
 //      in Geometry" was browsable and undrillable — a slice you can read but
-//      not sit is a catalogue, not a study tool.
+//      not sit is a catalog, not a study tool.
 //
 // Usage:  npm run dev   (in another shell)
 //         node scripts/verifySatLibrary.mjs
@@ -99,27 +99,27 @@ await step('choosing a section narrows the domain choices to that section', asyn
   if (/Craft and Structure/.test(txt)) throw new Error('R&W domains still offered under Math');
 });
 
-await step('a filter with no skill selected can still be practised', async () => {
-  const btn = p.locator('button:has-text("Practise")').first();
-  if (!(await btn.count())) throw new Error('no practise button for a section-only filter');
+await step('a filter with no skill selected can still be practiced', async () => {
+  const btn = p.locator('button:has-text("Practice")').first();
+  if (!(await btn.count())) throw new Error('no practice button for a section-only filter');
   const label = await btn.innerText();
-  if (!/\d/.test(label)) throw new Error(`practise button does not state a count: "${label}"`);
+  if (!/\d/.test(label)) throw new Error(`practice button does not state a count: "${label}"`);
 });
 
-await step('narrowing to a domain keeps the set practisable', async () => {
+await step('narrowing to a domain keeps the set practicable', async () => {
   await p.locator('button.sat-seg', { hasText: /^Geometry and Trigonometry$/ }).first().click({ timeout: 10000 });
   await p.waitForTimeout(600);
-  const btn = p.locator('button:has-text("Practise")').first();
-  if (!(await btn.count())) throw new Error('no practise button for a domain filter');
+  const btn = p.locator('button:has-text("Practice")').first();
+  if (!(await btn.count())) throw new Error('no practice button for a domain filter');
 });
 
-await step('practising a filter starts a session on that slice', async () => {
-  await p.locator('button:has-text("Practise")').first().click({ timeout: 10000 });
+await step('practicing a filter starts a session on that slice', async () => {
+  await p.locator('button:has-text("Practice")').first().click({ timeout: 10000 });
   await p.waitForTimeout(2500);
   const choice = p.locator('[data-sat-choice="0"]');
   const spr = p.locator('[data-sat-spr]');
   if (!(await choice.count()) && !(await spr.count())) {
-    throw new Error('no question player after pressing practise');
+    throw new Error('no question player after pressing practice');
   }
 });
 

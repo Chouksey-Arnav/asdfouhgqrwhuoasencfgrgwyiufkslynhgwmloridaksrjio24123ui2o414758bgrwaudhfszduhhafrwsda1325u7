@@ -105,7 +105,7 @@ export const MEMORIZE_FORMULAS = [
     group: 'Circles in the xy-plane',
     color: 'emerald',
     items: [
-      { tex: '(x-h)^2 + (y-k)^2 = r^2', label: 'Centre (h, k), radius r' },
+      { tex: '(x-h)^2 + (y-k)^2 = r^2', label: 'Center (h, k), radius r' },
       { tex: 's = r\\theta', label: 'Arc length, θ in radians' },
       { tex: 'A = \\tfrac{1}{2}r^2\\theta', label: 'Sector area, θ in radians' },
       { tex: '\\theta_{\\text{rad}} = \\theta_{\\deg} \\cdot \\dfrac{\\pi}{180}', label: 'Degrees to radians' },
@@ -255,11 +255,11 @@ export const DESMOS_PLAYS = [
   },
   {
     id: 'circle',
-    title: 'Read a circle\'s centre and radius off the screen',
+    title: 'Read a circle\'s center and radius off the screen',
     when: 'Any circle equation, including one that needs completing the square.',
     steps: [
       'Type the equation exactly as given — Desmos handles the un-completed form too.',
-      'The centre and radius are visible on the graph paper.',
+      'The center and radius are visible on the graph paper.',
       'Zoom with the +/− buttons if the circle is off-screen.',
     ],
     expressions: ['\\left(x-3\\right)^2+\\left(y+2\\right)^2=25'],
@@ -282,7 +282,7 @@ export const DESMOS_PLAYS = [
 export const CALCULATOR_FACTS = [
   'Desmos is built into the Digital SAT and available on every question in the Math section — both modules, start to finish.',
   'There is no calculator on Reading & Writing, and no question there needs one.',
-  'You may also bring your own approved handheld calculator as a backup. Most students who practise with Desmos stop reaching for it.',
+  'You may also bring your own approved handheld calculator as a backup. Most students who practice with Desmos stop reaching for it.',
   'The reference sheet stays on screen for the whole Math section. Nothing on it is worth memorising; everything not on it is.',
 ];
 

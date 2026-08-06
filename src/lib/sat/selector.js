@@ -94,13 +94,13 @@ export function buildSkillDrill(skillId, { count = 10, seen = new Set(), seed = 
  *
  * Why this exists alongside buildSkillDrill. Every other builder in this file
  * decides FOR the student — that is the point of them, and it is right for most
- * sessions. This one is the deliberate exception: it is what "practise exactly
+ * sessions. This one is the deliberate exception: it is what "practice exactly
  * what I am looking at" means, and it only makes sense as a companion to the
  * Library, which is the one screen where the student has already done the
  * choosing. Any narrower a contract (skill only, as the deep link used to be)
  * throws away most of what they picked on the way to the player.
  *
- * Ordering and unseen-first behaviour match buildSkillDrill exactly, so a set
+ * Ordering and unseen-first behavior match buildSkillDrill exactly, so a set
  * that happens to describe one skill is indistinguishable from a Skill Drill.
  */
 export function buildFilteredSet(filter = {}, { count = 12, seen = new Set(), seed = Date.now() } = {}) {
@@ -228,7 +228,7 @@ export function buildSmartSet({
         label: SAT_SKILLS[skillId].label,
         reason: masteryMap[skillId]?.attempts
           ? `${Math.round((masteryMap[skillId].mastery) * 100)}% mastery · ${(examShare(skillId) * 98).toFixed(1)} questions per exam`
-          : 'not practised yet',
+          : 'not practiced yet',
       });
     }
   }

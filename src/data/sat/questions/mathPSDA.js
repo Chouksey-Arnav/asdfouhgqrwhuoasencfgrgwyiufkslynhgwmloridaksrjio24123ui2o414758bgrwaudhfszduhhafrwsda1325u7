@@ -142,7 +142,7 @@ export const MATH_PSDA_QUESTIONS = [
     q: 'A bag contains 5 red, 8 blue, and 7 green marbles. One marble is drawn at random. What is the probability that it is NOT blue? Give your answer as a decimal.',
     sprAccept: { values: [0.6, '3/5', '12/20'], tolerance: 0 },
     exp: 'Total marbles = 5 + 8 + 7 = 20. Not blue = 5 + 7 = 12. So the probability is 12/20 = 0.6.',
-    hint: 'Count the favourable outcomes directly, or use 1 − P(blue).',
+    hint: 'Count the favorable outcomes directly, or use 1 − P(blue).',
   },
 
   // ── Inference from Samples and Evaluating Claims ──────────────────────────

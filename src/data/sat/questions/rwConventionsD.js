@@ -3,7 +3,7 @@
 // Written against Table A33 of the Assessment Framework for the Digital SAT
 // Suite, which names the sub-points explicitly: for Boundaries, punctuation
 // BETWEEN sentences and WITHIN sentences (coordination, series, supplementary
-// elements, and recognising where no punctuation is needed); for Form,
+// elements, and recognizing where no punctuation is needed); for Form,
 // Structure and Sense, subject-verb agreement, pronoun-antecedent agreement,
 // verb finiteness (gerunds, participles, infinitives), verb tense and aspect,
 // modifier placement, and the plural/possessive/contraction distinctions.
@@ -85,7 +85,7 @@ export const RW_CONVENTIONS_D = [
   {
     id: 'sat-rw-bnd-0305', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'comma_splice', targetSeconds: 50,
-    stimulus: 'The archaeologist Zahi Hawass has argued for a single explanation of the pyramid builders’ workforce ______ they were paid labourers, not slaves, housed in a purpose-built settlement nearby.',
+    stimulus: 'The archaeologist Zahi Hawass has argued for a single explanation of the pyramid builders’ workforce ______ they were paid laborers, not slaves, housed in a purpose-built settlement nearby.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [':', ',', ' and', ' but'],
     ans: 0,
@@ -160,7 +160,7 @@ export const RW_CONVENTIONS_D = [
   {
     id: 'sat-rw-bnd-0310', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'comma_splice', targetSeconds: 50,
-    stimulus: 'The team catalogued three distinct call types in the recordings ______ a rising whistle, a two-note chirp, and a low pulsed rattle used only at night.',
+    stimulus: 'The team cataloged three distinct call types in the recordings ______ a rising whistle, a two-note chirp, and a low pulsed rattle used only at night.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [':', ';', ' and', ','],
     ans: 0,
@@ -175,7 +175,7 @@ export const RW_CONVENTIONS_D = [
   {
     id: 'sat-rw-bnd-0311', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'M', format: 'mcq', trap: 'comma_splice', targetSeconds: 50,
-    stimulus: 'Because the sediment cores were drilled from beneath more than a kilometre of ice ______ the team could date each layer against a known volcanic ash marker.',
+    stimulus: 'Because the sediment cores were drilled from beneath more than a kilometer of ice ______ the team could date each layer against a known volcanic ash marker.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [',', ';', ':', ''],
     ans: 0,
@@ -342,7 +342,7 @@ export const RW_CONVENTIONS_D = [
   {
     id: 'sat-rw-fss-0304', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'E', format: 'mcq', trap: 'tense_shift', targetSeconds: 40,
-    stimulus: 'In 1928, Alexander Fleming returned from holiday to find a mould growing on a forgotten culture plate. He ______ that the bacteria nearest the mould had died.',
+    stimulus: 'In 1928, Alexander Fleming returned from holiday to find a mold growing on a forgotten culture plate. He ______ that the bacteria nearest the mold had died.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['notices', 'will notice', 'noticed', 'is noticing'],
     ans: 2,
@@ -387,7 +387,7 @@ export const RW_CONVENTIONS_D = [
   {
     id: 'sat-rw-fss-0307', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'E', format: 'mcq', trap: 'pronoun_ambiguity', targetSeconds: 40,
-    stimulus: 'The octopus can change the texture of ______ skin as well as its colour, raising and flattening tiny projections in under a second.',
+    stimulus: 'The octopus can change the texture of ______ skin as well as its color, raising and flattening tiny projections in under a second.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['it’s', 'its', 'its’', 'their'],
     ans: 1,

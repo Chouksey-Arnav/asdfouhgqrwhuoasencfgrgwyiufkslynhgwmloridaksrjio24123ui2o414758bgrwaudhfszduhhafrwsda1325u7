@@ -18,10 +18,11 @@ key pool and a cost-appropriate default model:
 |--------------|-------------------------------------------------------------------------|--------------------|-----------------------------|
 | `coach`      | The head Medabrain chat coach (highest-volume, general purpose)       | Guide / auto       | *(shared pool)*             |
 | `interview`  | The mock-interview simulator (spoken, conversational)                 | Guide              | `GROQ_API_KEY_INTERVIEW`    |
-| `portfolio`  | Portfolio intelligence over a student's full application tracker      | Guide              | `GROQ_API_KEY_PORTFOLIO`    |
-| `prep`       | In-context prep help (a question about the current lesson/quiz/video) | Scout (cheapest)   | `GROQ_API_KEY_PREP`         |
-| `plan`       | The one-time onboarding "max-out plan" generation                     | Sage (best)        | `GROQ_API_KEY_PLAN`         |
-| `masterplan` | The **Plans tab**'s full day-by-day roadmap generation (rare, heaviest)| Oracle (biggest)   | `GROQ_API_KEY_MASTERPLAN`   |
+| `portfolio`  | Portfolio intelligence over a student's full application tracker      | Sage (best)        | `GROQ_API_KEY_PORTFOLIO`    |
+| `prep`       | In-context prep help (a question about the current lesson/quiz/video) | Guide (Balanced)   | `GROQ_API_KEY_PREP`         |
+| `plan`       | Onboarding plan generation fallback / legacy                          | Oracle (best)      | `GROQ_API_KEY_PLAN`         |
+| `masterplan` | The **Plans tab**'s full day-by-day roadmap generation (rare, heaviest)| Oracle (biggest)   | `GROQ_API_KEY_PLAN`         |
+| `sat`        | SAT drills, hints, step-by-step explanations, and coach               | Sage (best)        | `GROQ_API_KEY_SAT`          |
 
 **Every purpose falls back to the shared Medabrain pool** (`GROQ_API_KEY` / `_2` / `_3`) when its
 dedicated key isn't set — so the whole app works with a single key today, and simply gains more
@@ -43,8 +44,9 @@ GROQ_API_KEY_3=gsk_...        # optional, 3rd account
 GROQ_API_KEY_INTERVIEW=gsk_...    # 4th account → interview simulator
 GROQ_API_KEY_PORTFOLIO=gsk_...    # 5th account → portfolio tracker intelligence
 GROQ_API_KEY_PREP=gsk_...         # 6th account → in-context prep help
-GROQ_API_KEY_PLAN=gsk_...         # 7th account → onboarding max-out plan generation
-GROQ_API_KEY_MASTERPLAN=gsk_...   # 8th account → Plans tab full day-by-day roadmap generation
+GROQ_API_KEY_PLAN=gsk_...         # 7th account → Plans tab full day-by-day roadmap generation
+GROQ_API_KEY_SAT=gsk_...          # 8th account → SAT tab drills, hints, and explanations
+# GROQ_API_KEY_MASTERPLAN=gsk_... # Reserved for other purposes down the road
 ```
 
 Put the same values in a `.env.local` at the project root for local dev.

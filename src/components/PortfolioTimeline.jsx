@@ -71,7 +71,7 @@ export default function PortfolioTimeline({ accent = C.indigo }) {
   return (
     <div style={CC({ gap: 18 })}>
       {hero}
-      {/* Colour legend — one chip per event kind so the rail reads at a glance */}
+      {/* Color legend — one chip per event kind so the rail reads at a glance */}
       <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         {Object.values(KIND_META).map(m => (
           <span key={m.label} style={pill(tint(m.color, 0.12), m.color, { fontSize: 10, border: `1px solid ${tint(m.color, 0.25)}`, gap: 5 })}>

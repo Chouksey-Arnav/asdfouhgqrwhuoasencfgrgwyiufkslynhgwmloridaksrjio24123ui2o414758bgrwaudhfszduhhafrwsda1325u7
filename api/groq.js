@@ -113,8 +113,7 @@ const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss
 //   GROQ_API_KEY_INTERVIEW                          → interview simulator
 //   GROQ_API_KEY_PORTFOLIO                          → portfolio tracker intelligence
 //   GROQ_API_KEY_PREP                               → in-context prep help
-//   GROQ_API_KEY_PLAN                               → onboarding max-out plan generation
-//   GROQ_API_KEY_MASTERPLAN                         → Plans tab full day-by-day plan generation
+//   GROQ_API_KEY_PLAN                               → Plans tab full day-by-day plan generation (and onboarding max-out plan fallback)
 //   GROQ_API_KEY_SAT                                → SAT tab: generated practice, answer-key
 //                                                      verification, study plans, hints,
 //                                                      explanations and the SAT coach
@@ -124,7 +123,7 @@ const PURPOSE_KEYS = {
   portfolio: [process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
   prep: [process.env.GROQ_API_KEY_PREP].filter(Boolean),
   plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
-  masterplan: [process.env.GROQ_API_KEY_MASTERPLAN].filter(Boolean),
+  masterplan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   sat: [process.env.GROQ_API_KEY_SAT].filter(Boolean),
 };
 const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat']);
@@ -162,7 +161,7 @@ const PURPOSE_DEFAULT_TIER = {
   // its latency. This surface is also low-volume compared to the head coach.
   portfolio: 'sage',
   interview: 'guide',  // conversational, low-latency for spoken turns
-  plan: 'sage',        // one-time, max-quality — worth the 70B model
+  plan: 'oracle',      // one-time, max-quality — worth the biggest-output model (Oracle) for max completion/reasoning
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
   // The SAT tab pins its tier per call rather than leaning on this default,
   // because its three call shapes want three different models (see
@@ -339,7 +338,7 @@ export default async function handler(req, res) {
   // treated as ground truth) and the shared knowledge policy that tells the
   // model to use its full world knowledge rather than refusing anything outside
   // the student's tracked data. Both are appended near the end, and truncation
-  // here would silently cut the behavioural rules while leaving the raw data in
+  // here would silently cut the behavioral rules while leaving the raw data in
   // place — the exact inversion of what a cap is for. Input tokens are the cheap
   // half of a request, so headroom is the right trade.
   const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000 };

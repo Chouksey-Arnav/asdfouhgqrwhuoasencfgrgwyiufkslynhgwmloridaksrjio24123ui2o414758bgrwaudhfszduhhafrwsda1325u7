@@ -303,7 +303,7 @@ export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedab
           const days = daysUntil(d.due_date);
           const past = days < 0;
           const kind = KINDS.find(k=>k.id===d.kind) || KINDS[KINDS.length-1];
-          // Countdown chip colour escalates with urgency: rose ≤7d, amber ≤14d,
+          // Countdown chip color escalates with urgency: rose ≤7d, amber ≤14d,
           // sky ≤30d, calm neutral beyond that.
           const urgency = past ? C.t4 : days <= 7 ? C.rose : days <= 14 ? C.amber : days <= 30 ? C.sky : C.t3;
           return (

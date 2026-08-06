@@ -118,7 +118,7 @@ export default function SatScoreReport({ scored, responses = [], accent = C.viol
             <div style={{ ...glass2({ padding: 14 }), marginTop: 14 }}>
               <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.7 }}>
                 {pacing.overTimeAccuracy < pacing.onPaceAccuracy - 0.15
-                  ? `When you spent well over the target time you got ${Math.round(pacing.overTimeAccuracy * 100)}% right, versus ${Math.round(pacing.onPaceAccuracy * 100)}% when on pace. Extra time is not rescuing those questions — recognising and skipping them early would bank more points.`
+                  ? `When you spent well over the target time you got ${Math.round(pacing.overTimeAccuracy * 100)}% right, versus ${Math.round(pacing.onPaceAccuracy * 100)}% when on pace. Extra time is not rescuing those questions — recognizing and skipping them early would bank more points.`
                   : `Your accuracy holds up on the questions you spend longer on (${Math.round(pacing.overTimeAccuracy * 100)}% versus ${Math.round(pacing.onPaceAccuracy * 100)}% on pace), so the extra time is being spent well. The risk is running out of it.`}
               </div>
             </div>

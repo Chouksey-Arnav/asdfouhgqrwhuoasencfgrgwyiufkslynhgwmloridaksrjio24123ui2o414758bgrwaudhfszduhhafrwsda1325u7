@@ -55,7 +55,7 @@ export const RW_CONVENTIONS_C = [
   {
     id: 'sat-rw-bnd-0204', section: 'rw', domain: 'conventions', skill: 'boundaries',
     difficulty: 'E', format: 'mcq', trap: 'comma_splice', targetSeconds: 45,
-    stimulus: 'Because the harbour freezes for four months of the year ______ the town’s supplies arrive by ice road rather than by ship.',
+    stimulus: 'Because the harbor freezes for four months of the year ______ the town’s supplies arrive by ice road rather than by ship.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: [',', ';', '.', ', so'],
     ans: 0,
@@ -63,7 +63,7 @@ export const RW_CONVENTIONS_C = [
     distractorExp: [
       'Correct. Introductory dependent clause, then a comma.',
       'A semicolon needs an independent clause on both sides, and "Because…" is not one.',
-      'A full stop would leave "Because the harbour freezes…" as a fragment.',
+      'A full stop would leave "Because the harbor freezes…" as a fragment.',
       '"Because" and "so" both mark the same cause-effect link; using them together is redundant, and "so" also needs an independent clause before it.',
     ],
   },
@@ -242,7 +242,7 @@ export const RW_CONVENTIONS_C = [
   {
     id: 'sat-rw-fss-0206', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'M', format: 'mcq', trap: 'subject_verb', targetSeconds: 50,
-    stimulus: 'Among the artefacts recovered from the wreck ______ a bronze astrolabe, two ship’s bells and a chest of navigational dividers.',
+    stimulus: 'Among the artifacts recovered from the wreck ______ a bronze astrolabe, two ship’s bells and a chest of navigational dividers.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['were', 'was', 'is', 'has been'],
     ans: 0,
@@ -272,7 +272,7 @@ export const RW_CONVENTIONS_C = [
   {
     id: 'sat-rw-fss-0208', section: 'rw', domain: 'conventions', skill: 'form_structure_sense',
     difficulty: 'H', format: 'mcq', trap: 'pronoun_ambiguity', targetSeconds: 55,
-    stimulus: 'When the archive merged with the county library, ______ catalogue was retained for the older holdings while everything acquired since has been listed under the library’s system.',
+    stimulus: 'When the archive merged with the county library, ______ catalog was retained for the older holdings while everything acquired since has been listed under the library’s system.',
     q: 'Which choice completes the text so that it conforms to the conventions of Standard English?',
     ch: ['the archive’s', 'its', 'their', 'the former’s'],
     ans: 0,

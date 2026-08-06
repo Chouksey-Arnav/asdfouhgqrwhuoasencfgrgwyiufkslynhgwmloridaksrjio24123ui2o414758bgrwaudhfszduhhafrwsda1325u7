@@ -2,7 +2,7 @@
 //
 // WHY BATCH C EXISTS
 // Batches A and B were sized to make DRILLING work: enough items per skill that
-// a student practising Words in Context did not meet the same question twice.
+// a student practicing Words in Context did not meet the same question twice.
 // Batch C is sized for a different job — full-length FORMS. A form reserves
 // about 130 questions, so a bank of 328 could build exactly two tests that
 // shared nothing, and Form C onwards was largely a reshuffle of Forms A and B.
@@ -117,7 +117,7 @@ export const RW_CRAFT_STRUCTURE_C = [
     distractorExp: [
       'Unreliability is about accuracy. Nothing here suggests he reports events falsely — only that he reports them without affect.',
       'Correct. "Flat register" and refusing to direct the reader’s feeling is dispassion.',
-      '"Garrulous" means talkative; the sentence characterises his tone, not his volume.',
+      '"Garrulous" means talkative; the sentence characterizes his tone, not his volume.',
       'Remorse is a feeling, and the point is that he displays none.',
     ],
   },
@@ -211,13 +211,13 @@ export const RW_CRAFT_STRUCTURE_C = [
   {
     id: 'sat-rw-tsp-0203', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'E', format: 'mcq', trap: 'too_extreme', targetSeconds: 60,
-    stimulus: 'Archivists at the Schomburg Center spent four years cataloguing a collection of church programmes, funeral notices and dance-hall flyers from 1920s Harlem. Individually the items are unremarkable. Together they document which buildings were in use, on which nights, by whom — a street-level map of a neighbourhood that no census recorded.',
+    stimulus: 'Archivists at the Schomburg Center spent four years cataloging a collection of church programs, funeral notices and dance-hall flyers from 1920s Harlem. Individually the items are unremarkable. Together they document which buildings were in use, on which nights, by whom — a street-level map of a neighborhood that no census recorded.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
-      'The Schomburg Center’s cataloguing methods should be adopted by other archives.',
+      'The Schomburg Center’s cataloging methods should be adopted by other archives.',
       'Individually trivial documents can collectively record what official sources missed.',
       'Census records compiled in 1920s Harlem were deliberately falsified by officials.',
-      'Church programmes are the most historically valuable of the items in the collection.',
+      'Church programs are the most historically valuable of the items in the collection.',
     ],
     ans: 1,
     exp: 'The text turns on "Individually … Together": the value is in the aggregate, and what the aggregate captures is what the census did not.',
@@ -236,7 +236,7 @@ export const RW_CRAFT_STRUCTURE_C = [
     ch: [
       'To introduce a researcher whose evidence unsettles an accepted explanation.',
       'To explain in detail how high-speed imaging equipment works.',
-      'To argue that impurities have no effect on the behaviour of cast alloys.',
+      'To argue that impurities have no effect on the behavior of cast alloys.',
       'To recount the history of alloy casting from its origins to the present.',
     ],
     ans: 0,
@@ -271,13 +271,13 @@ export const RW_CRAFT_STRUCTURE_C = [
   {
     id: 'sat-rw-tsp-0206', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 65,
-    stimulus: 'For fifty years the standard account held that Polynesian navigators reached Rapa Nui by accident, blown off course. The account rested on a single assumption: that no one could hold a course across two thousand miles of open ocean without instruments. Between 1976 and 2000, crews sailing reconstructed voyaging canoes did precisely that, repeatedly, using stars, swell direction and bird behaviour.',
+    stimulus: 'For fifty years the standard account held that Polynesian navigators reached Rapa Nui by accident, blown off course. The account rested on a single assumption: that no one could hold a course across two thousand miles of open ocean without instruments. Between 1976 and 2000, crews sailing reconstructed voyaging canoes did precisely that, repeatedly, using stars, swell direction and bird behavior.',
     q: 'Which choice best describes the overall structure of the text?',
     ch: [
       'It presents a long-held account, isolates its key assumption, and reports evidence against it.',
       'It compares two competing theories and concludes that both of them are partly correct.',
       'It describes a navigational technique and then explains in detail how to learn it.',
-      'It traces the development of a research programme across several decades of work.',
+      'It traces the development of a research program across several decades of work.',
     ],
     ans: 0,
     exp: 'Three moves in three sentences: the account, the load-bearing assumption, and the voyages that broke it.',
@@ -285,7 +285,7 @@ export const RW_CRAFT_STRUCTURE_C = [
       'Correct. Account, assumption, counter-evidence.',
       'Only one account is described; the voyages are evidence, not a rival theory being reconciled with it.',
       'The techniques are listed in passing as evidence, not taught.',
-      'The dates are there to date the counter-evidence, not to narrate a programme’s development.',
+      'The dates are there to date the counter-evidence, not to narrate a program’s development.',
     ],
   },
   {
@@ -445,7 +445,7 @@ export const RW_CRAFT_STRUCTURE_C = [
     exp: 'Text 2’s point is that the gap shrinks once people can decline in advance — which suggests the in-person effect came from the awkwardness of refusing, not from wanting to give more. "Generosity" names the wrong mechanism.',
     distractorExp: [
       'The follow-up shrank the effect; it did not enlarge it.',
-      'Correct. Same behaviour, different mechanism: reluctance to refuse rather than increased willingness.',
+      'Correct. Same behavior, different mechanism: reluctance to refuse rather than increased willingness.',
       'The phrase is applied to in-person solicitation in Text 1, and Text 2 does not relocate it to email.',
       'Half right in that Text 2 questions the measure, but its objection is about what causes the giving, not about which units to report it in.',
     ],

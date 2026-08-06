@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// The catalogue of full-length tests a student can choose between.
+// The catalog of full-length tests a student can choose between.
 //
 // WHY NAMED FORMS AND NOT JUST A FRESH RANDOM SHUFFLE
 // The full-test panel used to build every test from `Date.now()` as its seed.
@@ -38,19 +38,20 @@
  * Order matters: src/lib/sat/forms.js apportions the bank in this order, so
  * earlier forms get first claim on the freshest questions and each later form
  * takes what is left. Appending a form therefore cannot disturb any existing
- * one, which is the property that makes the catalogue safe to grow.
+ * one, which is the property that makes the catalog safe to grow.
  *
  * HOW LONG THIS LIST IS ALLOWED TO BE
- * A form's footprint is around 145 bank questions, so the catalogue length is
+ * A form's footprint is around 145 bank questions, so the catalog length is
  * capped by the bank, not by taste. It was three for as long as the bank was
  * 466 questions: three tests that shared NOTHING was all that fitted, and a
  * fourth drafted against that bank came out 26% new, which is not a fourth
- * test, it is Form C with a coat of paint.
+ * test, it is Form C with a coat of paint. Shipping it would have made the
+ * picker a menu of four options where two were the same meal.
  *
  * Expansion batch D took the bank past a thousand questions, which is what
  * paid for Forms D and E. They were added the only way this list may grow: by
  * appending, and only after scripts/verifySatForms.mjs confirmed every form in
- * the catalogue still shares zero questions with every other. That audit is the
+ * the catalog still shares zero questions with every other. That audit is the
  * gate — it fails if ANY form here overlaps another, so the list cannot quietly
  * outrun the bank behind it.
  */

@@ -108,7 +108,7 @@ export const RW_EXPRESSION_QUESTIONS = [
   {
     id: 'sat-rw-trn-0002', section: 'rw', domain: 'expression', skill: 'transitions',
     difficulty: 'M', format: 'mcq', trap: 'wrong_transition', targetSeconds: 55,
-    stimulus: 'Advocates predicted that widespread remote work would sharply reduce commuting emissions. Total vehicle miles travelled in several metropolitan areas fell only slightly. ______ trips that had been consolidated into a single commute were replaced by many shorter, separate errands.',
+    stimulus: 'Advocates predicted that widespread remote work would sharply reduce commuting emissions. Total vehicle miles traveled in several metropolitan areas fell only slightly. ______ trips that had been consolidated into a single commute were replaced by many shorter, separate errands.',
     q: 'Which choice completes the text with the most logical transition?',
     ch: ['For example,', 'Apparently,', 'Regardless,', 'Instead,'],
     ans: 1,

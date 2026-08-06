@@ -51,7 +51,7 @@ import { MATH_GEO_TRIG_C }      from './mathGeoTrigC.js';
 // a single ten-question drill can avoid serving the same item twice — because
 // their share of the real exam is small and the bank had been kept roughly
 // blueprint-shaped. That is the right shape for assembling a test form and the
-// wrong shape for practising one topic, so batch D takes EVERY skill past
+// wrong shape for practicing one topic, so batch D takes EVERY skill past
 // thirty and the whole bank past a thousand.
 //
 // It is also the first batch written directly against College Board's

@@ -11,7 +11,7 @@ calculator, the reference sheet, or Medabrain.
 ### Why the real thing
 
 The Digital SAT embeds Desmos inside Bluebook and makes it available on **every
-Math question, in both modules, with no usage limit**. A student who practises
+Math question, in both modules, with no usage limit**. A student who practices
 with a different calculator — or with none — is rehearsing a workflow test day
 will not honour. So this app loads the genuine Desmos API rather than
 approximating it, and makes it reachable from every SAT screen rather than one.
@@ -133,7 +133,7 @@ conversational surface.
 | Inline hint | `hintForQuestion()` in `src/lib/sat/aiQuestions.js` |
 | Regrounded explanation | `explainQuestion()`, same file |
 
-### Two rules the prompt enforces, not the model's judgement
+### Two rules the prompt enforces, not the model's judgment
 
 **Score honesty.** The SAT tab's entire design premise is that no number appears
 without its evidence base (see the header comment in `SatOverviewPanel.jsx`). A

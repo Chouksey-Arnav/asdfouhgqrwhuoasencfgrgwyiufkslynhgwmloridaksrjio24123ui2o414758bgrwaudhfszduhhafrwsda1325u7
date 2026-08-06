@@ -280,7 +280,7 @@ const ACCURACY_SLOPE = 0.62;
 // getting it wrong silently under-scored every student.
 //
 // "Ability" here means the difficulty a student clears about half the time —
-// the conventional definition, and the one the band centres above are stated
+// the conventional definition, and the one the band centers above are stated
 // in. The staircase, however, deliberately steers to a HIGHER success rate
 // (SUCCESS_TARGET), which means it settles on items EASIER than the student's
 // ability by construction. Score against the staircase's own target and that
@@ -348,9 +348,9 @@ const ROUTE_BLEND = 0.08;
  * swing by hundreds of points between runs purely on which side of the cliff
  * the noise landed. Measured across simulated retakes, that one discontinuity
  * accounted for a 460-point run-to-run spread at ability 0.65 against ~250 for
- * neighbouring abilities.
+ * neighboring abilities.
  *
- * The uncertainty is real; the cliff was an artefact. So the score interpolates
+ * The uncertainty is real; the cliff was an artifact. So the score interpolates
  * smoothly here, and estimateConfidence() widens the reported band for students
  * near the bar instead — which says the true thing ("we cannot yet tell which
  * module you would route into, and that is worth a lot of points") rather than
@@ -404,7 +404,7 @@ function estimateConfidence(session) {
   const reversalRate = reversals / Math.max(1, rs.length - 1);
 
   // Sitting on the module-2 routing bar is a genuine source of uncertainty, not
-  // a modelling nuisance: which module a student routes into is worth a large
+  // a modeling nuisance: which module a student routes into is worth a large
   // chunk of the score, and a run that cannot tell which side they are on
   // should say so by widening the band rather than by picking one.
   // The penalty is large because the underlying uncertainty is large, and

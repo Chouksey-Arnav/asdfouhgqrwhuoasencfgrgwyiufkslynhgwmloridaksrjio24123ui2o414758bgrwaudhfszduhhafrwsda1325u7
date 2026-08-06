@@ -56,16 +56,16 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-wic-0303', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'M', format: 'mcq', trap: 'too_extreme', targetSeconds: 60,
-    stimulus: 'Reviewers praised the biography for its research but found its judgements ______ : the author rarely commits to a verdict on his subject’s more contested decisions, preferring to lay the evidence out and step back.',
+    stimulus: 'Reviewers praised the biography for its research but found its judgments ______ : the author rarely commits to a verdict on his subject’s more contested decisions, preferring to lay the evidence out and step back.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['reckless', 'tentative', 'hostile', 'unfounded'],
     ans: 1,
-    exp: 'The colon explains the word: the author avoids verdicts and steps back. That describes judgements offered cautiously and without commitment.',
+    exp: 'The colon explains the word: the author avoids verdicts and steps back. That describes judgments offered cautiously and without commitment.',
     distractorExp: [
       'Refusing to commit is the opposite of recklessness.',
       'Correct. The author withholds verdicts, which is a cautious, uncommitted stance.',
       'The passage credits the research and describes restraint, not antagonism.',
-      'The judgements rest on laid-out evidence, so they are not baseless.',
+      'The judgments rest on laid-out evidence, so they are not baseless.',
     ],
   },
   {
@@ -75,7 +75,7 @@ export const RW_CRAFT_STRUCTURE_D = [
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['vague', 'unequivocal', 'indifferent', 'apologetic'],
     ans: 1,
-    exp: 'The report states the figure plainly and repeats it, which is the behaviour of a document leaving no room for doubt.',
+    exp: 'The report states the figure plainly and repeats it, which is the behavior of a document leaving no room for doubt.',
     distractorExp: [
       'A plainly stated, repeated figure is the opposite of vague.',
       'Correct. The report leaves no room for doubt about the cost.',
@@ -86,7 +86,7 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-wic-0305', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 60,
-    stimulus: 'The dye was not adopted widely at first. Its colour was admired, but the process for fixing it to wool was so ______ — eleven separate baths, each held at a different temperature — that few workshops attempted it.',
+    stimulus: 'The dye was not adopted widely at first. Its color was admired, but the process for fixing it to wool was so ______ — eleven separate baths, each held at a different temperature — that few workshops attempted it.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['elegant', 'onerous', 'obscure', 'inexpensive'],
     ans: 1,
@@ -118,12 +118,12 @@ export const RW_CRAFT_STRUCTURE_D = [
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 70,
     stimulus: 'Whether the term "ecosystem services" clarifies or ______ conservation debate is disputed. Its defenders say it lets ecologists speak to economists; its critics answer that reducing a wetland to the flood protection it supplies quietly concedes that anything without a price is expendable.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
-    ch: ['distorts', 'summarises', 'extends', 'popularises'],
+    ch: ['distorts', 'summarizes', 'extends', 'popularises'],
     ans: 0,
     exp: 'The word must be the opposite of "clarifies", and the critics’ objection is that the term misrepresents what a wetland is. "Distorts" carries exactly that sense.',
     distractorExp: [
       'Correct. The critics say the term misrepresents what it names, the opposite of clarifying.',
-      'Summarising is a form of clarifying, not its opposite.',
+      'Summarizing is a form of clarifying, not its opposite.',
       'Extending a debate is not the opposite of clarifying it.',
       'The critics object to the term’s effect on meaning, not to its reach.',
     ],
@@ -169,7 +169,7 @@ export const RW_CRAFT_STRUCTURE_D = [
       'To explain how a pendulum clock keeps regular time.',
       'To argue that pendulum clocks are better than digital ones.',
       'To describe the history of clockmaking in one country.',
-      'To criticise a common misunderstanding about escapements.',
+      'To criticize a common misunderstanding about escapements.',
     ],
     ans: 0,
     exp: 'The passage lays out the mechanism step by step — regular swing, escapement, gear train, hands — and does nothing else.',
@@ -209,7 +209,7 @@ export const RW_CRAFT_STRUCTURE_D = [
       'To explain the substance of the disagreement between the two brothers.',
       'To show a character’s resolve collapsing before he can speak.',
       'To describe the house at which the meeting takes place.',
-      'To criticise Mr Ashby for his poor preparation.',
+      'To criticize Mr Ashby for his poor preparation.',
     ],
     ans: 1,
     exp: 'The passage tracks the gap between what Mr Ashby prepared and what he managed to say, and the collapse happens in a single look. Nothing else is developed.',
@@ -243,12 +243,12 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-tsp-0305', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 85,
-    stimulus: 'Ostrom’s fieldwork on shared irrigation systems is often summarised as a refutation of the tragedy of the commons. It is better read as a refutation of a particular modelling assumption within it — that users cannot communicate. Where they can, and where they can police one another cheaply, the tragedy does not follow.',
+    stimulus: 'Ostrom’s fieldwork on shared irrigation systems is often summarized as a refutation of the tragedy of the commons. It is better read as a refutation of a particular modeling assumption within it — that users cannot communicate. Where they can, and where they can police one another cheaply, the tragedy does not follow.',
     q: 'What is the main rhetorical purpose of the text?',
     ch: [
       'To praise Ostrom’s fieldwork for its methodological rigour.',
       'To narrow a broad claim commonly made about a body of research.',
-      'To summarise the tragedy of the commons for new readers.',
+      'To summarize the tragedy of the commons for new readers.',
       'To argue that shared irrigation systems rarely function well in practice.',
     ],
     ans: 1,
@@ -283,7 +283,7 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-tsp-0307', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 65,
-    stimulus: 'Sourdough bread rises without commercial yeast. A starter — flour and water left to stand — collects wild yeasts and bacteria from the air and the grain. The yeasts produce the gas that lifts the loaf; the bacteria produce the acids that give it its flavour.',
+    stimulus: 'Sourdough bread rises without commercial yeast. A starter — flour and water left to stand — collects wild yeasts and bacteria from the air and the grain. The yeasts produce the gas that lifts the loaf; the bacteria produce the acids that give it its flavor.',
     q: 'What is the main purpose of the text?',
     ch: [
       'To describe how a sourdough starter makes bread rise and taste sour.',
@@ -327,7 +327,7 @@ export const RW_CRAFT_STRUCTURE_D = [
     q: 'What is the main purpose of the text?',
     ch: [
       'To reveal the contents of the letter that Miss Carrow found on the table.',
-      'To convey a character’s reluctance through her physical behaviour.',
+      'To convey a character’s reluctance through her physical behavior.',
       'To describe the arrangement of the rooms in the house.',
       'To explain why the lamp had been lit an hour earlier.',
     ],
@@ -355,7 +355,7 @@ export const RW_CRAFT_STRUCTURE_D = [
     exp: 'The passage names what scholars usually do — treat the two features as one — says they should not, and then gives the evidence that separates them.',
     distractorExp: [
       'Correct. It names a habitual practice and argues against it with evidence.',
-      'No aesthetic judgement of the mosaic is offered.',
+      'No aesthetic judgment of the mosaic is offered.',
       'Only one practice is discussed, and no theories are named.',
       'No technical term is defined.',
     ],
@@ -385,7 +385,7 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-ctc-0301', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 90,
-    stimulus: 'Text 1\nMoving city freight at night reduces congestion sharply. Trials in three European cities cut peak-hour delivery traffic by more than a third without reducing the volume delivered.\n\nText 2\nNight freight simply relocates the cost. Residents along delivery routes in the same trials reported significantly disturbed sleep, and two of the three programmes were discontinued after a year.',
+    stimulus: 'Text 1\nMoving city freight at night reduces congestion sharply. Trials in three European cities cut peak-hour delivery traffic by more than a third without reducing the volume delivered.\n\nText 2\nNight freight simply relocates the cost. Residents along delivery routes in the same trials reported significantly disturbed sleep, and two of the three programs were discontinued after a year.',
     q: 'Based on the texts, how would the author of Text 2 most likely respond to the claim in Text 1?',
     ch: [
       'By disputing that peak-hour delivery traffic fell at all in the trials.',
@@ -405,7 +405,7 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-ctc-0302', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 90,
-    stimulus: 'Text 1\nThe rapid spread of the potter’s wheel across the region indicates extensive trade contact. A technique that specialised does not appear independently in a dozen places within a century.\n\nText 2\nThe wheel appears at twelve sites within a century, but at each one it appears alongside a distinct clay preparation. Shared need, not shared teachers, may be the simpler explanation.',
+    stimulus: 'Text 1\nThe rapid spread of the potter’s wheel across the region indicates extensive trade contact. A technique that specialized does not appear independently in a dozen places within a century.\n\nText 2\nThe wheel appears at twelve sites within a century, but at each one it appears alongside a distinct clay preparation. Shared need, not shared teachers, may be the simpler explanation.',
     q: 'Based on the texts, the author of Text 2 would most likely describe the inference in Text 1 as',
     ch: [
       'well supported by the distribution of distinct clay preparations.',
@@ -486,7 +486,7 @@ export const RW_CRAFT_STRUCTURE_D = [
     id: 'sat-rw-ctc-0306', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 90,
     stimulus: 'Text 1\nWolves returning to the valley changed the course of the river. By thinning the elk herd they let willow regrow along the banks, and the roots held the soil.\n\nText 2\nThe willow did return, but so did beaver, whose dams did most of the work on the channel. Attributing the change to wolves alone compresses a chain of several links into one.',
-    q: 'Based on the texts, how does Text 2 characterise the account given in Text 1?',
+    q: 'Based on the texts, how does Text 2 characterize the account given in Text 1?',
     ch: [
       'As entirely mistaken about the willow’s regrowth.',
       'As accurate in outline but too short a causal chain.',
@@ -605,10 +605,10 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-ctc-0312', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 90,
-    stimulus: 'Text 1\nBirdsong dialects arise because young birds learn from neighbours, so song varies from valley to valley.\n\nText 2\nIn this species the dialect boundary follows the boundary between two soil types, which changes the vegetation and therefore how sound carries. Learning may be shaping song to the acoustics of each place.',
+    stimulus: 'Text 1\nBirdsong dialects arise because young birds learn from neighbors, so song varies from valley to valley.\n\nText 2\nIn this species the dialect boundary follows the boundary between two soil types, which changes the vegetation and therefore how sound carries. Learning may be shaping song to the acoustics of each place.',
     q: 'Based on the texts, Text 2 adds to Text 1 primarily by',
     ch: [
-      'disputing that young birds learn their songs from neighbouring birds at all.',
+      'disputing that young birds learn their songs from neighboring birds at all.',
       'suggesting an environmental reason the dialects fall where they do.',
       'showing that the two valleys contain different bird species.',
       'demonstrating that song dialects change from year to year.',
@@ -665,7 +665,7 @@ export const RW_CRAFT_STRUCTURE_D = [
   {
     id: 'sat-rw-ctc-0315', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 100,
-    stimulus: 'Text 1\nThe crater’s ejecta layer and the extinction horizon are found in the same centimetre of rock across four continents. The impact caused the extinction.\n\nText 2\nA centimetre of that rock represents somewhere between two and twenty thousand years. Simultaneity at this resolution is compatible with the impact finishing a decline that volcanism had already begun.',
+    stimulus: 'Text 1\nThe crater’s ejecta layer and the extinction horizon are found in the same centimeter of rock across four continents. The impact caused the extinction.\n\nText 2\nA centimeter of that rock represents somewhere between two and twenty thousand years. Simultaneity at this resolution is compatible with the impact finishing a decline that volcanism had already begun.',
     q: 'Based on the texts, the author of Text 2 would most likely say that Text 1’s inference',
     ch: [
       'is contradicted by the position of the ejecta layer.',
@@ -674,10 +674,10 @@ export const RW_CRAFT_STRUCTURE_D = [
       'confuses the extinction horizon with the crater itself.',
     ],
     ans: 1,
-    exp: 'Text 2 accepts that both markers sit in the same centimetre and points out that a centimetre may span thousands of years — so "same layer" is far weaker than "same moment".',
+    exp: 'Text 2 accepts that both markers sit in the same centimeter and points out that a centimeter may span thousands of years — so "same layer" is far weaker than "same moment".',
     distractorExp: [
       'Text 2 accepts where the ejecta layer sits.',
-      'Correct. It says a centimetre is too coarse to establish simultaneity.',
+      'Correct. It says a centimeter is too coarse to establish simultaneity.',
       'Text 2 does not question the four-continent distribution.',
       'No such confusion is alleged.',
     ],

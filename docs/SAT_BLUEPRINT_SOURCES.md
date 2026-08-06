@@ -68,7 +68,7 @@ they are what batch D items were written from. The ones that had no
 representation in the bank before batch D, and now do:
 
 - **Ratios, rates, proportional relationships and units** — derived units from
-  products (kilowatt-hours) and quotients (population per square kilometre);
+  products (kilowatt-hours) and quotients (population per square kilometer);
   multistep and multidimensional unit conversion; scale drawings; the rule that
   a scale factor *k* on lengths is *k*² on areas and *k*³ on volumes.
 - **One-variable data** — frequency tables, histograms, dot plots and box
@@ -127,7 +127,7 @@ to an author's instinct. Examples that shaped batch D:
 
 ## Licensing — why none of this is copied
 
-College Board grants no commercial licence for official SAT items and its terms
+College Board grants no commercial license for official SAT items and its terms
 forbid their use with generative AI. Consequently:
 
 - No official item, passage, or answer explanation is reproduced in this repo.

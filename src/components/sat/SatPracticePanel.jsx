@@ -46,7 +46,7 @@ const MODES = [
   },
 ];
 
-/** What the AI Set screen says while it works. Two stages, honestly labelled. */
+/** What the AI Set screen says while it works. Two stages, honestly labeled. */
 const STAGE_COPY = {
   authoring: {
     title: 'Writing your questions',
@@ -87,7 +87,7 @@ export default function SatPracticePanel({
   //               and let the student see the recommendation before committing.
   //
   //   {filter}  — from the Library browser, where the student has ALREADY
-  //               chosen a slice of the bank and pressed practise. Dropping
+  //               chosen a slice of the bank and pressed practice. Dropping
   //               them back on a chooser would ask them to pick twice, so this
   //               one starts the session immediately.
   useEffect(() => {
@@ -624,7 +624,7 @@ export default function SatPracticePanel({
       {mode === 'timed' && (
         <SatCard title="Choose a section" icon={Clock} iconColor={C.amber} m={isMobile}>
           <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
-            One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practise committing under time.
+            One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practice committing under time.
           </div>
           <div style={G(2, 12, {}, isMobile)}>
             {Object.values(SAT_SECTIONS).map(s => (

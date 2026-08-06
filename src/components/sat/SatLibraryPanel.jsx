@@ -64,7 +64,7 @@ const FORMAT_FILTERS = [
 
 const PAGE_SIZE = 25;
 
-// How many questions a "practise these" set contains. Matches the Smart Set
+// How many questions a "practice these" set contains. Matches the Smart Set
 // length in SatPracticePanel — a set built from the Library is still a practice
 // set, and it should not be a different size just because of where it started.
 const PRACTICE_SET_SIZE = 12;
@@ -122,7 +122,7 @@ export default function SatLibraryPanel({
 
   const visible = results.slice(0, limit);
 
-  // How many questions the practise button would actually draw from. Deliberately
+  // How many questions the practice button would actually draw from. Deliberately
   // NOT results.length: results is narrowed by the free-text search as well, and
   // the set is built from the filter alone, so counting the searched list would
   // promise a number the session does not deliver.
@@ -303,7 +303,7 @@ export default function SatLibraryPanel({
               {skill ? ` in ${SAT_SKILLS[skill].label}` : ''}
               {query.trim() ? ' matching your search' : ''}
             </span>
-            {/* Practise WHAT IS ON SCREEN, not just the selected skill.
+            {/* Practice WHAT IS ON SCREEN, not just the selected skill.
                 This button used to appear only once a leaf skill was chosen,
                 which quietly said that a filter was for reading and a skill was
                 for working — so "all the Hard grid-ins in Geometry" was
@@ -318,7 +318,7 @@ export default function SatLibraryPanel({
                 title={filterLabel}
               >
                 <Play size={12} />
-                Practise {Math.min(PRACTICE_SET_SIZE, filterCount)} of these
+                Practice {Math.min(PRACTICE_SET_SIZE, filterCount)} of these
               </button>
             )}
           </div>

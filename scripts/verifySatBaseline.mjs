@@ -54,7 +54,7 @@ for (const seed of [1, 42, 999, 123456]) {
 }
 
 // ── Response model ──────────────────────────────────────────────────────────
-// Logistic in (ability - item difficulty). The slope is the one modelling
+// Logistic in (ability - item difficulty). The slope is the one modeling
 // assumption here; 6 puts a student one band above an item at roughly 85%
 // correct, which is about right for well-written items.
 const DISCRIMINATION = 6;

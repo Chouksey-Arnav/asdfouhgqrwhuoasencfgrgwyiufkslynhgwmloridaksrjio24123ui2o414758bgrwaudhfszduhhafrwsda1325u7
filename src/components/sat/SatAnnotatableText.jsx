@@ -34,8 +34,8 @@ import Portal from '../ui/Portal';
 // highlights an equation, and a wrong offset would corrupt the annotation.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Bluebook offers a small fixed palette. More colours is not more useful — the
-// point of a second colour is to separate two KINDS of mark (the claim versus
+// Bluebook offers a small fixed palette. More colors is not more useful — the
+// point of a second color is to separate two KINDS of mark (the claim versus
 // the trap), and past three nobody remembers their own scheme.
 export const HIGHLIGHT_COLORS = [
   { id: 'yellow', label: 'Yellow', bg: 'rgba(250, 204, 21, 0.32)', dot: '#facc15' },
@@ -52,7 +52,7 @@ export function hasMathMarkup(text = '') {
 
 /**
  * Merge a new range into an existing set, coalescing anything that overlaps or
- * abuts it and shares its colour. Without this, highlighting a sentence in
+ * abuts it and shares its color. Without this, highlighting a sentence in
  * three passes leaves three adjacent ranges that then have to be removed one at
  * a time — which is precisely the fiddliness that makes people stop using the
  * tool.
@@ -65,7 +65,7 @@ export function addRange(ranges, next) {
     if (overlaps && r.color === merged.color) {
       merged = { color: merged.color, start: Math.min(r.start, merged.start), end: Math.max(r.end, merged.end) };
     } else if (overlaps) {
-      // Different colour: the new highlight wins on the overlap, and whatever
+      // Different color: the new highlight wins on the overlap, and whatever
       // of the old range sticks out either side survives.
       if (r.start < merged.start) out.push({ ...r, end: merged.start });
       if (r.end > merged.end) out.push({ ...r, start: merged.end });

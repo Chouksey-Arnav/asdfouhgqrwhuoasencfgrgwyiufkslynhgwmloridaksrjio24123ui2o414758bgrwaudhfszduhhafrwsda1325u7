@@ -744,12 +744,12 @@ export const MATH_ADVANCED_D = [
   {
     id: 'sat-m-nfn-0306', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'M', format: 'mcq', trap: 'percent_of_what', targetSeconds: 90,
-    q: 'A population is modelled by P(t) = 800(1.05)ᵗ, where t is measured in years. What does the 800 represent?',
+    q: 'A population is modeled by P(t) = 800(1.05)ᵗ, where t is measured in years. What does the 800 represent?',
     ch: [
       'The population when t = 0.',
       'The annual increase in population.',
       'The population after one year.',
-      'The number of years modelled.',
+      'The number of years modeled.',
     ],
     ans: 0,
     exp: 'At t = 0 the growth factor is 1.05⁰ = 1, so P(0) = 800. The 800 is the initial value.',
@@ -763,7 +763,7 @@ export const MATH_ADVANCED_D = [
   {
     id: 'sat-m-nfn-0307', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'M', format: 'mcq', trap: 'percent_of_what', targetSeconds: 90,
-    q: 'A population is modelled by P(t) = 800(1.05)ᵗ, where t is measured in years. What does the 1.05 indicate?',
+    q: 'A population is modeled by P(t) = 800(1.05)ᵗ, where t is measured in years. What does the 1.05 indicate?',
     ch: [
       'The population grows by 105% each year.',
       'The population grows by 5% each year.',
@@ -890,7 +890,7 @@ export const MATH_ADVANCED_D = [
   {
     id: 'sat-m-nfn-0315', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 90,
-    q: 'A ball’s height is modelled by h(t) = −5t² + 20t, where h is in metres and t is in seconds. At what time does the ball return to the ground?',
+    q: 'A ball’s height is modeled by h(t) = −5t² + 20t, where h is in meters and t is in seconds. At what time does the ball return to the ground?',
     ch: ['t = 2', 't = 4', 't = 5', 't = 20'],
     ans: 1,
     exp: 'The ball is at ground level when h = 0: −5t² + 20t = 0, so −5t(t − 4) = 0 and t = 0 or t = 4. The return is at t = 4 seconds.',
@@ -904,9 +904,9 @@ export const MATH_ADVANCED_D = [
   {
     id: 'sat-m-nfn-0316', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'H', format: 'spr', targetSeconds: 105,
-    q: 'A ball’s height is modelled by h(t) = −5t² + 20t, where h is in metres and t is in seconds. What is the greatest height, in metres, that the ball reaches?',
+    q: 'A ball’s height is modeled by h(t) = −5t² + 20t, where h is in meters and t is in seconds. What is the greatest height, in meters, that the ball reaches?',
     sprAccept: { values: [20], tolerance: 0 },
-    exp: 'The greatest height is at the vertex, halfway between the two zeros t = 0 and t = 4, that is t = 2. Then h(2) = −20 + 40 = 20 metres.',
+    exp: 'The greatest height is at the vertex, halfway between the two zeros t = 0 and t = 4, that is t = 2. Then h(2) = −20 + 40 = 20 meters.',
     hint: 'The vertex sits halfway between the two times the ball is at ground level.',
   },
   {
@@ -977,7 +977,7 @@ export const MATH_ADVANCED_D = [
   {
     id: 'sat-m-nfn-0321', section: 'math', domain: 'advanced_math', skill: 'nonlinear_functions',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 90,
-    q: 'An investment is modelled by V(t) = 5,000(1.08)ᵗ, where t is in years. Which expression gives the value after 6 months, assuming the same model applies?',
+    q: 'An investment is modeled by V(t) = 5,000(1.08)ᵗ, where t is in years. Which expression gives the value after 6 months, assuming the same model applies?',
     ch: [
       '5,000(1.08)⁶',
       '5,000(1.08)⁰·⁵',

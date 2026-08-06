@@ -403,13 +403,13 @@ export default function SatOverviewPanel({
           always available, but the first visit needs to be told. */}
       {/* The three tiles below used to be teal / emerald / sky — three hues for
           three things that are simply "tools", which is exactly the kind of
-          colour-without-meaning the SAT palette policy rules out. They share
+          color-without-meaning the SAT palette policy rules out. They share
           the pillar accent now and are told apart by their icons and labels. */}
       <SatCard title="Your test-day tools" icon={Calculator} iconColor={accent} m={isMobile}>
         <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 14, maxWidth: 620 }}>
           The Digital SAT gives you Desmos on every Math question and keeps a formula sheet on
           screen for the whole section. Both are here, on every SAT screen — including mid-question
-          and mid-test — so the way you practise is the way you will actually sit the exam.
+          and mid-test — so the way you practice is the way you will actually sit the exam.
         </div>
         <div style={G(3, 12, {}, isMobile)}>
           <StatTile

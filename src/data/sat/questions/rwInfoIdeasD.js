@@ -4,7 +4,7 @@
 // Suite: Central Ideas and Details, Command of Evidence (Textual), Command of
 // Evidence (Quantitative), and Inferences.
 //
-// Two constraints from the framework are honoured literally in the
+// Two constraints from the framework are honored literally in the
 // quantitative items below. First, informational graphics in the Reading and
 // Writing section are limited to TABLES, BAR GRAPHS and LINE GRAPHS. Second,
 // questions associated with a graphic "do not require students to perform
@@ -15,7 +15,7 @@
 // Difficulty follows the Information and Ideas score bands in Skills Insight
 // (2026), which separate these skills mainly by text complexity and by how
 // directly the evidence bears on the claim:
-//   E  — a directly signalled detail; a quotation whose link to the claim is
+//   E  — a directly signaled detail; a quotation whose link to the claim is
 //        literal; locating one value in a graphic.
 //   M  — main idea at high-school complexity; comparing values across a
 //        graphic; a quotation whose link involves figurative language.
@@ -49,10 +49,10 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-cid-0302', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 65,
-    stimulus: 'Roman concrete used in harbour works has outlasted much modern concrete exposed to the same conditions. Seawater reacts with volcanic ash in the Roman mix to grow interlocking mineral crystals inside cracks, so the material becomes more coherent over time rather than less.',
+    stimulus: 'Roman concrete used in harbor works has outlasted much modern concrete exposed to the same conditions. Seawater reacts with volcanic ash in the Roman mix to grow interlocking mineral crystals inside cracks, so the material becomes more coherent over time rather than less.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
-      'Roman harbour concrete is strengthened over time by seawater reactions.',
+      'Roman harbor concrete is strengthened over time by seawater reactions.',
       'Roman engineers understood the chemistry of the volcanic ash they used.',
       'Modern concrete should be manufactured using volcanic ash whenever possible.',
       'Seawater is the main cause of damage to concrete structures worldwide.',
@@ -132,7 +132,7 @@ export const RW_INFO_IDEAS_D = [
     stimulus: 'Okonkwo’s survey of nineteenth-century patent records has been read as a story of exclusion, and the headline numbers support that reading. Her own emphasis falls elsewhere. Where women could not file in their own names, they filed through husbands, brothers and attorneys, and the correspondence attached to those filings is often unmistakably theirs.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
-      'Okonkwo emphasises the routes women found around a bar on filing.',
+      'Okonkwo emphasizes the routes women found around a bar on filing.',
       'Okonkwo rejects the claim that women were excluded from the patent system.',
       'Nineteenth-century patent attorneys frequently filed on behalf of women.',
       'The correspondence attached to patent filings is the most reliable record.',
@@ -198,7 +198,7 @@ export const RW_INFO_IDEAS_D = [
       'Door fittings are among the most informative objects found at the site.',
     ],
     ans: 1,
-    exp: 'Orderly departure over two generations, fittings removed, last houses near the wells — every detail points away from sudden abandonment and towards a managed retreat.',
+    exp: 'Orderly departure over two generations, fittings removed, last houses near the wells — every detail points away from sudden abandonment and toward a managed retreat.',
     distractorExp: [
       'No re-dating of the aqueduct failure is offered.',
       'Correct. The evidence describes a slow, orderly, managed departure.',
@@ -253,9 +253,9 @@ export const RW_INFO_IDEAS_D = [
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'The marginal drawings form a consistent system keyed to the text.',
-      'The manuscript’s author changed his mind more often than was realised.',
+      'The manuscript’s author changed his mind more often than was realized.',
       'Marginal drawings are common in manuscripts of this period and region.',
-      'The drawings are more skilfully executed than scholars had expected.',
+      'The drawings are more skillfully executed than scholars had expected.',
     ],
     ans: 0,
     exp: 'The passage overturns the "doodles" reading by showing each symbol has a fixed function tied to the text. That systematic keying is the point.',
@@ -309,11 +309,11 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-cid-0315', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 75,
-    stimulus: 'The bicycle’s effect on nineteenth-century clothing is usually told as a story of reform, with the safety bicycle prompting looser dress. The trade catalogues suggest something narrower. Alterations cluster in the skirt and the sleeve, the two places a bicycle actually interferes with, and elsewhere the silhouette barely moves.',
+    stimulus: 'The bicycle’s effect on nineteenth-century clothing is usually told as a story of reform, with the safety bicycle prompting looser dress. The trade catalogs suggest something narrower. Alterations cluster in the skirt and the sleeve, the two places a bicycle actually interferes with, and elsewhere the silhouette barely moves.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'The bicycle changed clothing only where it physically got in the way.',
-      'Trade catalogues are a better source for dress history than reform writing.',
+      'Trade catalogs are a better source for dress history than reform writing.',
       'The safety bicycle was adopted more slowly than historians have assumed.',
       'Nineteenth-century dress reform failed to achieve any of its stated aims.',
     ],
@@ -321,7 +321,7 @@ export const RW_INFO_IDEAS_D = [
     exp: 'The passage replaces a broad reform story with a narrow, mechanical one: changes appear exactly where the bicycle interferes and nowhere else.',
     distractorExp: [
       'Correct. Alterations appear only at the points of physical interference.',
-      'The passage uses the catalogues without ranking source types.',
+      'The passage uses the catalogs without ranking source types.',
       'Adoption speed is not discussed.',
       'The passage narrows the bicycle’s role without judging reform generally.',
     ],
@@ -371,19 +371,19 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-cet-0301', section: 'rw', domain: 'info_ideas', skill: 'command_evidence_text',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 75,
-    stimulus: 'A researcher claims that the hermit crab chooses a shell by weight rather than by appearance. To test the claim, she offered crabs pairs of shells identical in size and colour but differing in mass.',
+    stimulus: 'A researcher claims that the hermit crab chooses a shell by weight rather than by appearance. To test the claim, she offered crabs pairs of shells identical in size and color but differing in mass.',
     q: 'Which finding, if true, would most directly support the researcher’s claim?',
     ch: [
       'Crabs consistently selected the lighter shell of each identical pair.',
-      'Crabs took longer to choose when the two shells differed in colour.',
+      'Crabs took longer to choose when the two shells differed in color.',
       'Crabs rejected shells that had been previously occupied by other crabs.',
       'Crabs preferred shells whose openings faced the same way as their own.',
     ],
     ans: 0,
-    exp: 'The pairs were matched on size and colour and differed only in mass, so a consistent preference along that one dimension is direct evidence for the weight claim.',
+    exp: 'The pairs were matched on size and color and differed only in mass, so a consistent preference along that one dimension is direct evidence for the weight claim.',
     distractorExp: [
       'Correct. With mass as the only difference, a consistent choice shows weight matters.',
-      'Colour differences were deliberately removed from the test pairs.',
+      'Color differences were deliberately removed from the test pairs.',
       'Prior occupancy is a different variable from either weight or appearance.',
       'Opening orientation is a different variable from weight.',
     ],
@@ -443,7 +443,7 @@ export const RW_INFO_IDEAS_D = [
     exp: 'Shifting the landmarks while leaving the magnetic field alone puts the two cues in conflict. Searching where the landmarks point, and not where the cache actually is, is the result only the landmark hypothesis predicts.',
     distractorExp: [
       'Correct. The birds follow the landmarks even when they point to the wrong place.',
-      'Slower searching under magnetic change points towards magnetic cues.',
+      'Slower searching under magnetic change points toward magnetic cues.',
       'Success with nothing changed is consistent with either cue.',
       'A general error difference does not distinguish the two cues.',
     ],
@@ -451,7 +451,7 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-cet-0305', section: 'rw', domain: 'info_ideas', skill: 'command_evidence_text',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 85,
-    stimulus: 'An architectural historian argues that the hall was designed for speech rather than for music: its proportions and surfaces favour clarity over resonance. A student wants a piece of evidence that supports this claim.',
+    stimulus: 'An architectural historian argues that the hall was designed for speech rather than for music: its proportions and surfaces favor clarity over resonance. A student wants a piece of evidence that supports this claim.',
     q: 'Which finding would most directly support the historian’s claim?',
     ch: [
       'The hall’s surfaces are lined with a plaster that absorbs echo quickly.',
@@ -462,7 +462,7 @@ export const RW_INFO_IDEAS_D = [
     ans: 0,
     exp: 'Speech needs clarity, which means short echo; music generally wants resonance. Absorbent plaster is a design feature that serves the first and works against the second.',
     distractorExp: [
-      'Correct. Quick echo absorption favours speech clarity over musical resonance.',
+      'Correct. Quick echo absorption favors speech clarity over musical resonance.',
       'Chronology does not show what the acoustics were designed to do.',
       'The builder’s past commissions say nothing about this hall’s acoustics.',
       'Later use does not establish the original design intention.',
@@ -503,7 +503,7 @@ export const RW_INFO_IDEAS_D = [
     exp: 'The claim is about height, and the two groups differ only in light. A height difference in the predicted direction is the direct test.',
     distractorExp: [
       'Correct. Greater average height in shade is exactly the claim being made.',
-      'Leaf colour is a different measure from height.',
+      'Leaf color is a different measure from height.',
       'Flowering time is a different measure from height.',
       'Survival rate does not speak to height at all.',
     ],
@@ -651,12 +651,12 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-cet-0315', section: 'rw', domain: 'info_ideas', skill: 'command_evidence_text',
     difficulty: 'M', format: 'mcq', trap: 'out_of_scope', targetSeconds: 85,
-    stimulus: 'A team claims that a new tutoring programme improves reading scores, not merely attendance. Schools were assigned to the programme at random, and both scores and attendance were recorded.',
+    stimulus: 'A team claims that a new tutoring program improves reading scores, not merely attendance. Schools were assigned to the program at random, and both scores and attendance were recorded.',
     q: 'Which result would most directly support the team’s claim?',
     ch: [
-      'Reading scores rose in programme schools even where attendance did not.',
-      'Attendance rose in programme schools during the year of the trial.',
-      'Programme schools reported higher satisfaction with the tutoring sessions.',
+      'Reading scores rose in program schools even where attendance did not.',
+      'Attendance rose in program schools during the year of the trial.',
+      'Program schools reported higher satisfaction with the tutoring sessions.',
       'Reading scores across all schools in the region rose during the same year.',
     ],
     ans: 0,
@@ -665,7 +665,7 @@ export const RW_INFO_IDEAS_D = [
       'Correct. Scores rising without attendance rising isolates the reading effect.',
       'This is the attendance effect the claim is trying to rule out as the explanation.',
       'Satisfaction is not a measure of reading.',
-      'A region-wide rise is consistent with the programme having no effect.',
+      'A region-wide rise is consistent with the program having no effect.',
     ],
   },
   {
@@ -942,7 +942,7 @@ export const RW_INFO_IDEAS_D = [
       'The four mean scores fall within a range of eleven points of each other.',
     ],
     ans: 0,
-    exp: 'The warning is that small samples produce unstable means. Pairing the two highest means with the two smallest enrolments is exactly the evidence for it.',
+    exp: 'The warning is that small samples produce unstable means. Pairing the two highest means with the two smallest enrollments is exactly the evidence for it.',
     distractorExp: [
       'Correct. The top two means come from schools of 35 and 28 students.',
       'This names the large schools without connecting size to the means.',
@@ -1135,7 +1135,7 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-inf-0302', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 75,
-    stimulus: 'The pigment Prussian blue was first synthesised around 1706. Its distinctive spectrum can be identified without removing a sample from a painting. A work whose blue passages are confirmed as Prussian blue therefore ______',
+    stimulus: 'The pigment Prussian blue was first synthesized around 1706. Its distinctive spectrum can be identified without removing a sample from a painting. A work whose blue passages are confirmed as Prussian blue therefore ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'cannot have been painted before the early eighteenth century.',
@@ -1375,7 +1375,7 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-inf-0314', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'E', format: 'mcq', trap: 'out_of_scope', targetSeconds: 75,
-    stimulus: 'Sound travels faster through warm air than through cold air. On a clear night the air near the ground is often colder than the air above it, which bends sound waves back down towards the surface. Distant sounds on such nights therefore ______',
+    stimulus: 'Sound travels faster through warm air than through cold air. On a clear night the air near the ground is often colder than the air above it, which bends sound waves back down toward the surface. Distant sounds on such nights therefore ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'carry further than they do during a warm afternoon.',
@@ -1384,7 +1384,7 @@ export const RW_INFO_IDEAS_D = [
       'are absorbed more completely by the cold ground below.',
     ],
     ans: 0,
-    exp: 'Bending sound back towards the surface keeps it near the ground instead of letting it escape upwards, so it reaches a listener further away.',
+    exp: 'Bending sound back toward the surface keeps it near the ground instead of letting it escape upwards, so it reaches a listener further away.',
     distractorExp: [
       'Correct. Sound bent back to the surface travels further along the ground.',
       'The passage says cold air carries sound more slowly, not faster.',
@@ -1395,18 +1395,18 @@ export const RW_INFO_IDEAS_D = [
   {
     id: 'sat-rw-inf-0315', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'H', format: 'mcq', trap: 'too_extreme', targetSeconds: 95,
-    stimulus: 'The index lists every author whose work the library held in 1890, but a fire in 1884 destroyed a wing whose contents were never re-catalogued. An author absent from the index therefore ______',
+    stimulus: 'The index lists every author whose work the library held in 1890, but a fire in 1884 destroyed a wing whose contents were never re-cataloged. An author absent from the index therefore ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'may still have been held by the library before 1884.',
       'was certainly never held by the library at any point.',
       'must have published only after the index was compiled.',
-      'was deliberately excluded by the library’s cataloguers.',
+      'was deliberately excluded by the library’s catalogers.',
     ],
     ans: 0,
-    exp: 'The index records what was held in 1890, and a whole wing lost in 1884 never re-entered the catalogue. Absence from the index is therefore consistent with earlier presence.',
+    exp: 'The index records what was held in 1890, and a whole wing lost in 1884 never re-entered the catalog. Absence from the index is therefore consistent with earlier presence.',
     distractorExp: [
-      'Correct. The uncatalogued lost wing means absence is not proof of absence.',
+      'Correct. The uncataloged lost wing means absence is not proof of absence.',
       'The gap in the record rules out any such certainty.',
       'Nothing in the passage bears on publication dates.',
       'The passage describes an accident, not a policy of exclusion.',

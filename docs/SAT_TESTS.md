@@ -21,8 +21,8 @@ different-ish test each time and nothing a student could reason about:
 
 ## What replaced it
 
-A test is now something you pick from a catalogue (`SatTestPicker`), and the
-catalogue has three kinds of entry.
+A test is now something you pick from a catalog (`SatTestPicker`), and the
+catalog has three kinds of entry.
 
 ### 1. Official College Board tests — listed first
 
@@ -47,14 +47,14 @@ A **form** is a named, fixed selection of bank questions: identical for
 everyone, identical every time it is assembled. Its `seed` must never change
 once shipped — changing it silently rewrites a test students have already sat.
 
-Forms are apportioned once, in catalogue order, against a running set of
+Forms are apportioned once, in catalog order, against a running set of
 already-claimed questions (`src/lib/sat/forms.js`). Form A takes its share,
 Form B takes from what is left, and so on. Appending a form therefore cannot
 disturb an existing one.
 
 **The guarantee: no form shares a single question with any other form.**
 `scripts/verifySatForms.mjs` enforces it absolutely rather than as a percentage,
-because a threshold would let the catalogue's promise decay quietly as forms are
+because a threshold would let the catalog's promise decay quietly as forms are
 appended to a bank that cannot carry them.
 
 ### 3. Fresh mix
@@ -64,12 +64,12 @@ anywhere in the app. Maximum novelty; not reproducible, so not comparable.
 
 ## Why five forms, and why not six
 
-A form's footprint is about 145 bank questions, so the catalogue length is set
-by the bank and not by taste.
+A form's footprint is about 145 bank questions, so the catalog length is set by
+the bank and not by taste.
 
 The history is the argument. Six were drafted when the bank held 328 questions;
 only two were genuinely distinct and Form C onwards was a reshuffle. Expansion
-batch C took the bank to 466 and the catalogue to three fully distinct forms; a
+batch C took the bank to 466 and the catalog to three fully distinct forms; a
 fourth against that bank came out 26% new, which is not a fourth test, and it
 was cut. Expansion batch D took the bank past a thousand and paid for Forms D
 and E.
@@ -79,7 +79,7 @@ Six was tried again at 1,038 questions and still does not fit — Form F comes o
 is the number, and it is the number the audit permits rather than the number
 anyone chose.
 
-    forms in catalogue      5
+    forms in catalog        5
     fully fresh forms       5
     695 of 1038 bank questions committed to forms; 343 spare
 
@@ -111,7 +111,7 @@ whole class of problem.
 ## Commands
 
     npm run verify:sat-forms      forms are full-length, distinct, on-blueprint
-    npm run verify:sat-library    the whole bank is filterable and practisable
+    npm run verify:sat-library    the whole bank is filterable and practicable
     npm run audit:sat             bank integrity, including answer-shape bias
     npm run audit:sat-resources   every official link still resolves
 

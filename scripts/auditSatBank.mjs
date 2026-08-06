@@ -62,7 +62,7 @@ const HESITATION_PATTERNS = [
   /\bas posed\b/i,
   /\bI think\b/i,
 ];
-// Acceptable drift between a domain's realised share of the bank and its
+// Acceptable drift between a domain's realized share of the bank and its
 // blueprint share, in percentage points.
 const DOMAIN_SHARE_TOLERANCE = 12;
 
@@ -161,13 +161,13 @@ for (const q of SAT_QUESTIONS) {
 // selector would happily have served both in one drill set, which reads to a
 // student as the bank being smaller than it is.
 //
-// Normalisation strips punctuation and case so "What is its volume?" and
+// Normalization strips punctuation and case so "What is its volume?" and
 // "what is its volume" collide, which is the point: cosmetic differences are
 // exactly how duplicates hide.
-const normalise = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const byStem = new Map();
 for (const q of SAT_QUESTIONS) {
-  const key = `${normalise(q.q)}||${normalise(q.stimulus)}`;
+  const key = `${normalize(q.q)}||${normalize(q.stimulus)}`;
   if (!byStem.has(key)) byStem.set(key, []);
   byStem.get(key).push(q.id);
 }

@@ -101,7 +101,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
   // Whatever was already typed when dictation started. Speech results replace
   // the transcript wholesale on every update (that's how the API reports), so
   // without a fixed base the student's typed text would be clobbered by the
-  // first recognised word.
+  // first recognized word.
   const baseTextRef = useRef('');
 
   const sttOk = isSTTSupported();
@@ -278,7 +278,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
           }}
         />
 
-        {/* Live interim transcript — shows the recogniser is actually hearing
+        {/* Live interim transcript — shows the recognizer is actually hearing
             them, which is the single most reassuring thing during dictation. */}
         <AnimatePresence>
           {listening && interim && (

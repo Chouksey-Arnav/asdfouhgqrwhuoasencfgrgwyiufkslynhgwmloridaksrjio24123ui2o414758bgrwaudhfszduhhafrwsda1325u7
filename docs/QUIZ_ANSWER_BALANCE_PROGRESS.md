@@ -64,14 +64,16 @@ never silently goes stale.
 
 ## Batches (100 quizzes at a time, in `ALL_QUIZZES` order)
 
-| Batch | IDs | Quizzes | Questions | Status | PR |
+| Batch | IDs | Quizzes | Questions | Status | PR / Note |
 |---|---|---|---|---|---|
-| 1 | `bb01`–`bb100` (all of Life Sciences) | 100 | 1,337 | **Done** | "The First 100 Quizzes" |
-| 2 | `cp01`–`cp100` (all of Physical Sciences) | 100 | — | Not started | — |
-| 3 | `ps01`–`ps120` (all of Behavioral & Social Sciences) | 120 | — | Not started | — |
-| 4 | Lesson/career-guidance quizzes (`lessonQuizzes.js`, 42 quizzes) | 42 | — | Not started | — |
+| 1 | `bb01`–`bb100` (all of Life Sciences) | 100 | 1,337 | **In progress / Partially complete** | On this branch, 96/100 quizzes have violations; 4 are clean but not yet marked `lengthAudited` |
+| 2 | `cp01`–`cp100` (all of Physical Sciences) | 100 | 1,392 | **In progress / Partially complete** | 90/100 quizzes have violations; 10 are clean but not yet marked `lengthAudited` |
+| 3 | `ps01`–`ps120` (all of Behavioral & Social Sciences) | 120 | 1,549 | **In progress / Partially complete** | 114/120 quizzes have violations; 6 are clean but not yet marked `lengthAudited` |
+| 4 | Lesson/career-guidance quizzes (`lessonQuizzes.js`) | 42 | — | **Not started** | Career and skill-guidance quizzes |
 
 Total bank: 362 quizzes / 4,488 questions across 4 batches.
+
+> ℹ️ **Developer Note:** The state of the hand-written quiz bank on this clean branch has most quizzes un-audited (no `lengthAudited: true` markers in the source files). While some quizzes naturally have zero violations, they must be systematically audited, corrected for length bias using the `balanceViolations` rules, and marked `lengthAudited: true`.
 
 When starting the next batch: confirm the count with
 `node scripts/auditQuizBankBalance.mjs --prefix=<cp|ps>` (or `--ids=` a

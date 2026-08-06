@@ -29,7 +29,7 @@ import { satGrad, satWash } from './satUi';
 //      student has actually answered — and after the answer it becomes a full
 //      explainer. Handing over an answer during practice trades a point on test
 //      day for a moment of relief now, so the boundary is enforced in the
-//      prompt rather than left to the model's judgement.
+//      prompt rather than left to the model's judgment.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const GENERAL_SUGGESTIONS = [

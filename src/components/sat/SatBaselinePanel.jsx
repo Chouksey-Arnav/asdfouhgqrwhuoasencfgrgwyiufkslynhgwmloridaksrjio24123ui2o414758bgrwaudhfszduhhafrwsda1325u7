@@ -386,7 +386,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
             </div>
             <div style={R({ gap: 10, justifyContent: 'center', flexWrap: 'wrap' })}>
               <button onClick={() => onNavigate?.('review')} style={btnG({ fontSize: 12 })}>Open the Review Log</button>
-              <button onClick={() => onNavigate?.('practice')} style={btnG({ fontSize: 12 })}>Practise a weak skill</button>
+              <button onClick={() => onNavigate?.('practice')} style={btnG({ fontSize: 12 })}>Practice a weak skill</button>
             </div>
           </>
         )}
@@ -706,7 +706,7 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
         </div>
         <div style={R({ gap: 9, flexWrap: 'wrap' })}>
           <button onClick={() => onNavigate?.('review')} style={btnG({ fontSize: 12 })}>Review Log</button>
-          <button onClick={() => onNavigate?.('practice')} style={btn(C.blueGrad, { fontSize: 12 })}>Start practising <ArrowRight size={12} /></button>
+          <button onClick={() => onNavigate?.('practice')} style={btn(C.blueGrad, { fontSize: 12 })}>Start practicing <ArrowRight size={12} /></button>
           <button onClick={onDone} style={btnG({ fontSize: 12 })}>Done</button>
         </div>
       </div>

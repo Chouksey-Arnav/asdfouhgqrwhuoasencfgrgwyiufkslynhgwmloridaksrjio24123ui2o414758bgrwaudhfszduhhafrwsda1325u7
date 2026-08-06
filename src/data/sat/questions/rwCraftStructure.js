@@ -14,7 +14,7 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
       'Correct. Matches the described effect — readers losing their bearings in time.',
       '"Derivative" means unoriginal. Nothing in the sentence compares the novel to anything else.',
       '"Tedious" means boring. Readers came back to it, which argues against boredom.',
-      '"Objectionable" implies moral offence, which the evidence never raises.',
+      '"Objectionable" implies moral offense, which the evidence never raises.',
     ],
   },
   {
@@ -50,7 +50,7 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
   {
     id: 'sat-rw-wic-0004', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'H', format: 'mcq', trap: 'too_extreme', targetSeconds: 65,
-    stimulus: 'Hurston’s ethnographic writing resists the ______ of her contemporaries: where they flattened their subjects into types, she let contradictions stand, allowing one informant to be both devout and deeply sceptical within a single page.',
+    stimulus: 'Hurston’s ethnographic writing resists the ______ of her contemporaries: where they flattened their subjects into types, she let contradictions stand, allowing one informant to be both devout and deeply skeptical within a single page.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['erudition', 'reductiveness', 'sentimentality', 'obscurity'],
     ans: 1,
@@ -122,12 +122,12 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
   {
     id: 'sat-rw-tsp-0003', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'H', format: 'mcq', trap: 'out_of_scope', targetSeconds: 80,
-    stimulus: 'In her later canvases Agnes Martin abandoned the graphite grid that had made her name, replacing it with wide horizontal bands of washed colour. Critics who had praised the grids as rigorous read the bands as a softening, even a retreat. Martin herself described the change in the opposite terms: the grid, she said, had been a scaffold she no longer needed.',
+    stimulus: 'In her later canvases Agnes Martin abandoned the graphite grid that had made her name, replacing it with wide horizontal bands of washed color. Critics who had praised the grids as rigorous read the bands as a softening, even a retreat. Martin herself described the change in the opposite terms: the grid, she said, had been a scaffold she no longer needed.',
     q: 'What is the main purpose of the text?',
     ch: [
       'To argue that Martin’s later work is superior to her earlier work.',
-      'To contrast how critics and the artist interpreted the same change in her practice.',
-      'To trace the technical process by which Martin produced her colour bands.',
+      'To contrast how critics and the artist read the same change in her practice.',
+      'To trace the technical process by which Martin produced her color bands.',
       'To explain why critics initially resisted Martin’s graphite grids.',
     ],
     ans: 1,
@@ -142,7 +142,7 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
   {
     id: 'sat-rw-tsp-0004', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 70,
-    stimulus: 'The following is adapted from a 1915 essay.\n\nWe are told the machine will free the worker from drudgery. Perhaps. But observe the loom-tender, who once set the pace of her own labour and now matches the pace set for her; observe the clerk, whose ledger is now a keyboard. The machine has not abolished drudgery. It has redistributed the authority to define it.',
+    stimulus: 'The following is adapted from a 1915 essay.\n\nWe are told the machine will free the worker from drudgery. Perhaps. But observe the loom-tender, who once set the pace of her own labor and now matches the pace set for her; observe the clerk, whose ledger is now a keyboard. The machine has not abolished drudgery. It has redistributed the authority to define it.',
     q: 'What is the main rhetorical effect of the two "observe" clauses?',
     ch: [
       'They provide concrete cases that undercut the claim in the first sentence.',
@@ -205,7 +205,7 @@ export const RW_CRAFT_STRUCTURE_QUESTIONS = [
     id: 'sat-rw-ctc-0003', section: 'rw', domain: 'craft_structure', skill: 'cross_text_connections',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 90,
     stimulus: 'Text 1\nMuseums holding objects taken during colonial occupation have argued that they serve as universal custodians: the objects are better conserved, more widely seen, and studied by more scholars in a large metropolitan institution than they would be at their point of origin.\n\nText 2\nOkonkwo notes that the custodianship argument is rarely tested. When the Benin bronzes returned to Nigeria began drawing regional scholars and visitors in numbers comparable to their previous venues, the claim that access requires distance lost its strongest support.',
-    q: 'Based on the texts, Okonkwo would most likely characterise the "universal custodians" argument as',
+    q: 'Based on the texts, Okonkwo would most likely characterize the "universal custodians" argument as',
     ch: [
       'well founded but poorly communicated to the public.',
       'an empirical claim that available evidence fails to support.',

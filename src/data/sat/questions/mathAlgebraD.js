@@ -223,9 +223,9 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-le1-0316', section: 'math', domain: 'algebra', skill: 'linear_equations_1var',
     difficulty: 'M', format: 'spr', targetSeconds: 80,
-    q: 'A rectangle’s length is 3 centimetres more than twice its width. If the perimeter is 42 centimetres, what is the width, in centimetres?',
+    q: 'A rectangle’s length is 3 centimeters more than twice its width. If the perimeter is 42 centimeters, what is the width, in centimeters?',
     sprAccept: { values: [6], tolerance: 0 },
-    exp: 'With width w, the length is 2w + 3 and the perimeter gives 2(w + 2w + 3) = 42, so 6w + 6 = 42, 6w = 36 and w = 6 centimetres.',
+    exp: 'With width w, the length is 2w + 3 and the perimeter gives 2(w + 2w + 3) = 42, so 6w + 6 = 42, 6w = 36 and w = 6 centimeters.',
     hint: 'Write both dimensions in terms of w before using the perimeter.',
   },
   {
@@ -286,7 +286,7 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-le1-0321', section: 'math', domain: 'algebra', skill: 'linear_equations_1var',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 80,
-    q: 'A tank holds 240 litres of water and is drained at a constant rate of 8 litres per minute. Which equation gives the number of minutes, t, until the tank holds 96 litres?',
+    q: 'A tank holds 240 liters of water and is drained at a constant rate of 8 liters per minute. Which equation gives the number of minutes, t, until the tank holds 96 liters?',
     ch: [
       '240 + 8t = 96',
       '240 − 8t = 96',
@@ -294,10 +294,10 @@ export const MATH_ALGEBRA_D = [
       '240/8 = 96t',
     ],
     ans: 1,
-    exp: 'The tank starts at 240 litres and loses 8 litres every minute, so after t minutes it holds 240 − 8t litres. Setting that equal to 96 gives the equation.',
+    exp: 'The tank starts at 240 liters and loses 8 liters every minute, so after t minutes it holds 240 − 8t liters. Setting that equal to 96 gives the equation.',
     distractorExp: [
       'This has the tank filling rather than draining.',
-      'Correct. 240 − 8t = 96 models a tank draining from 240 litres.',
+      'Correct. 240 − 8t = 96 models a tank draining from 240 liters.',
       'This has the amount growing from a negative starting point.',
       'This divides the capacity by the rate and equates it to the wrong quantity.',
     ],
@@ -565,7 +565,7 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-le2-0316', section: 'math', domain: 'algebra', skill: 'linear_equations_2var',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 85,
-    q: 'A candle burns at a constant rate. It is 30 centimetres tall when lit and 22 centimetres tall after 4 hours. Which equation gives its height h, in centimetres, after t hours?',
+    q: 'A candle burns at a constant rate. It is 30 centimeters tall when lit and 22 centimeters tall after 4 hours. Which equation gives its height h, in centimeters, after t hours?',
     ch: [
       'h = 30t − 2',
       'h = 30 − 2t',
@@ -573,10 +573,10 @@ export const MATH_ALGEBRA_D = [
       'h = 2t + 30',
     ],
     ans: 1,
-    exp: 'The candle loses 30 − 22 = 8 centimetres in 4 hours, a rate of 2 centimetres per hour, and it starts at 30 centimetres. So h = 30 − 2t.',
+    exp: 'The candle loses 30 − 22 = 8 centimeters in 4 hours, a rate of 2 centimeters per hour, and it starts at 30 centimeters. So h = 30 − 2t.',
     distractorExp: [
       'This makes the initial height a rate and subtracts a fixed 2.',
-      'Correct. Starting height 30, falling 2 centimetres per hour.',
+      'Correct. Starting height 30, falling 2 centimeters per hour.',
       'This uses the height after 4 hours as the starting height.',
       'This has the candle growing rather than burning down.',
     ],
@@ -689,7 +689,7 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-le2-0325', section: 'math', domain: 'algebra', skill: 'linear_equations_2var',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 85,
-    q: 'A car’s fuel tank holds 50 litres and the car uses fuel at a constant 7 litres per 100 kilometres. Which equation gives the litres remaining, L, after d kilometres?',
+    q: 'A car’s fuel tank holds 50 liters and the car uses fuel at a constant 7 liters per 100 kilometers. Which equation gives the liters remaining, L, after d kilometers?',
     ch: [
       'L = 50 − 7d',
       'L = 50 − 0.07d',
@@ -697,12 +697,12 @@ export const MATH_ALGEBRA_D = [
       'L = 7d − 50',
     ],
     ans: 1,
-    exp: '7 litres per 100 kilometres is 0.07 litres per kilometre, so after d kilometres the tank holds 50 − 0.07d litres.',
+    exp: '7 liters per 100 kilometers is 0.07 liters per kilometer, so after d kilometers the tank holds 50 − 0.07d liters.',
     distractorExp: [
-      'This uses 7 litres per kilometre, a hundred times too fast.',
-      'Correct. 0.07 litres per kilometre, subtracted from a full 50-litre tank.',
+      'This uses 7 liters per kilometer, a hundred times too fast.',
+      'Correct. 0.07 liters per kilometer, subtracted from a full 50-liter tank.',
       'This has the tank filling as the car drives.',
-      'This starts the tank at −50 litres.',
+      'This starts the tank at −50 liters.',
     ],
   },
 
@@ -785,19 +785,19 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-lfn-0306', section: 'math', domain: 'algebra', skill: 'linear_functions',
     difficulty: 'H', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 95,
-    q: 'A delivery service models its charge with C(d) = 4.50 + 1.20d, where d is the distance in kilometres. What does 1.20 represent?',
+    q: 'A delivery service models its charge with C(d) = 4.50 + 1.20d, where d is the distance in kilometers. What does 1.20 represent?',
     ch: [
       'The charge for a delivery of zero distance.',
-      'The additional charge for each kilometre travelled.',
-      'The total charge for a one-kilometre delivery.',
+      'The additional charge for each kilometer traveled.',
+      'The total charge for a one-kilometer delivery.',
       'The greatest distance the service will travel.',
     ],
     ans: 1,
-    exp: 'The 1.20 multiplies the distance, so it is a rate: the charge added per extra kilometre. The total for one kilometre would be 4.50 + 1.20 = 5.70.',
+    exp: 'The 1.20 multiplies the distance, so it is a rate: the charge added per extra kilometer. The total for one kilometer would be 4.50 + 1.20 = 5.70.',
     distractorExp: [
       'That is the constant 4.50, the base charge.',
-      'Correct. The coefficient of d is the per-kilometre rate.',
-      'A one-kilometre delivery costs 5.70, which includes the base charge.',
+      'Correct. The coefficient of d is the per-kilometer rate.',
+      'A one-kilometer delivery costs 5.70, which includes the base charge.',
       'The rule sets no upper limit on d.',
     ],
   },
@@ -859,15 +859,15 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-lfn-0311', section: 'math', domain: 'algebra', skill: 'linear_functions',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 85,
-    q: 'A pool is drained by a linear function V(t) = 4,800 − 150t, where V is volume in litres and t is time in minutes. After how many minutes is the pool empty?',
+    q: 'A pool is drained by a linear function V(t) = 4,800 − 150t, where V is volume in liters and t is time in minutes. After how many minutes is the pool empty?',
     ch: ['16', '24', '32', '48'],
     ans: 2,
     exp: 'Setting 4,800 − 150t = 0 gives 150t = 4,800, so t = 32 minutes.',
     distractorExp: [
-      'This corresponds to a drain rate of 300 litres per minute.',
-      'This corresponds to a drain rate of 200 litres per minute.',
+      'This corresponds to a drain rate of 300 liters per minute.',
+      'This corresponds to a drain rate of 200 liters per minute.',
       'Correct. 4,800 ÷ 150 = 32 minutes.',
-      'This corresponds to a drain rate of 100 litres per minute.',
+      'This corresponds to a drain rate of 100 liters per minute.',
     ],
   },
   {
@@ -876,7 +876,7 @@ export const MATH_ALGEBRA_D = [
     q: 'A linear function f satisfies f(4) = 13 and has a rate of change of 2. What is the value of f(10)?',
     sprAccept: { values: [25], tolerance: 0 },
     exp: 'From x = 4 to x = 10 the input rises 6, so the output rises 6 × 2 = 12: f(10) = 13 + 12 = 25.',
-    hint: 'You do not need the rule itself, only the rate and the distance travelled.',
+    hint: 'You do not need the rule itself, only the rate and the distance traveled.',
   },
   {
     id: 'sat-m-lfn-0313', section: 'math', domain: 'algebra', skill: 'linear_functions',
@@ -945,8 +945,8 @@ export const MATH_ALGEBRA_D = [
     difficulty: 'H', format: 'spr', targetSeconds: 100,
     q: 'A technician charges a call-out fee plus an hourly rate. A two-hour job costs $170 and a five-hour job costs $305. What is the call-out fee, in dollars?',
     sprAccept: { values: [80], tolerance: 0 },
-    exp: 'The hourly rate is (305 − 170)/3 = $45. A two-hour job then contains 2 × 45 = $90 of labour, so the call-out fee is 170 − 90 = $80.',
-    hint: 'Find the hourly rate first, then strip the labour out of one of the totals.',
+    exp: 'The hourly rate is (305 − 170)/3 = $45. A two-hour job then contains 2 × 45 = $90 of labor, so the call-out fee is 170 − 90 = $80.',
+    hint: 'Find the hourly rate first, then strip the labor out of one of the totals.',
   },
   {
     id: 'sat-m-lfn-0318', section: 'math', domain: 'algebra', skill: 'linear_functions',
@@ -1011,7 +1011,7 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-lfn-0322', section: 'math', domain: 'algebra', skill: 'linear_functions',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 85,
-    q: 'A savings balance is modelled by B(w) = 240 + 35w, where w is the number of weeks. After how many weeks does the balance first exceed $800?',
+    q: 'A savings balance is modeled by B(w) = 240 + 35w, where w is the number of weeks. After how many weeks does the balance first exceed $800?',
     ch: ['14', '16', '17', '23'],
     ans: 2,
     exp: 'Setting 240 + 35w = 800 gives 35w = 560 and w = 16, which reaches exactly $800. To EXCEED it, w must be 17.',
@@ -1290,15 +1290,15 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-sys-0319', section: 'math', domain: 'algebra', skill: 'systems_linear',
     difficulty: 'M', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 95,
-    q: 'A chemist mixes a 20% acid solution with a 50% acid solution to make 60 millilitres of a 30% acid solution. How many millilitres of the 20% solution are used?',
+    q: 'A chemist mixes a 20% acid solution with a 50% acid solution to make 60 milliliters of a 30% acid solution. How many milliliters of the 20% solution are used?',
     ch: ['20', '30', '36', '40'],
     ans: 3,
-    exp: 'With x millilitres of the 20% solution and 60 − x of the 50% solution, 0.20x + 0.50(60 − x) = 0.30(60). That gives 30 − 0.30x = 18, so 0.30x = 12 and x = 40.',
+    exp: 'With x milliliters of the 20% solution and 60 − x of the 50% solution, 0.20x + 0.50(60 − x) = 0.30(60). That gives 30 − 0.30x = 18, so 0.30x = 12 and x = 40.',
     distractorExp: [
       'This is the amount of the 50% solution.',
       'This splits the mixture evenly, which would give a 35% solution.',
       'This corresponds to a 32% mixture.',
-      'Correct. 40 millilitres of 20% and 20 of 50% gives 8 + 10 = 18 millilitres of acid in 60.',
+      'Correct. 40 milliliters of 20% and 20 of 50% gives 8 + 10 = 18 milliliters of acid in 60.',
     ],
   },
   {
@@ -1340,15 +1340,15 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-sys-0323', section: 'math', domain: 'algebra', skill: 'systems_linear',
     difficulty: 'H', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 105,
-    q: 'A boat travels 60 kilometres downstream in 3 hours and the same 60 kilometres upstream in 5 hours. What is the speed of the current, in kilometres per hour?',
+    q: 'A boat travels 60 kilometers downstream in 3 hours and the same 60 kilometers upstream in 5 hours. What is the speed of the current, in kilometers per hour?',
     ch: ['2', '4', '8', '16'],
     ans: 1,
-    exp: 'Downstream speed is 60/3 = 20 and upstream speed is 60/5 = 12. With boat speed b and current speed c, b + c = 20 and b − c = 12. Subtracting the second equation from the first gives 2c = 8, so c = 4 kilometres per hour.',
+    exp: 'Downstream speed is 60/3 = 20 and upstream speed is 60/5 = 12. With boat speed b and current speed c, b + c = 20 and b − c = 12. Subtracting the second equation from the first gives 2c = 8, so c = 4 kilometers per hour.',
     distractorExp: [
       'This halves the difference of the two speeds one time too many.',
-      'Correct. 2c = 20 − 12 = 8, so the current is 4 kilometres per hour.',
+      'Correct. 2c = 20 − 12 = 8, so the current is 4 kilometers per hour.',
       'This is the full difference between the two speeds, which is twice the current.',
-      'This is the speed of the boat in still water, 16 kilometres per hour.',
+      'This is the speed of the boat in still water, 16 kilometers per hour.',
     ],
   },
 
@@ -1651,7 +1651,7 @@ export const MATH_ALGEBRA_D = [
   {
     id: 'sat-m-lin-0322', section: 'math', domain: 'algebra', skill: 'linear_inequalities',
     difficulty: 'H', format: 'mcq', trap: 'solved_for_wrong', targetSeconds: 100,
-    q: 'A shipping company accepts a parcel only if its combined length and girth is at most 300 centimetres. A parcel has a girth of 118 centimetres. Which inequality gives the acceptable lengths L, in centimetres?',
+    q: 'A shipping company accepts a parcel only if its combined length and girth is at most 300 centimeters. A parcel has a girth of 118 centimeters. Which inequality gives the acceptable lengths L, in centimeters?',
     ch: [
       '0 < L ≤ 182',
       'L ≥ 182',
@@ -1662,7 +1662,7 @@ export const MATH_ALGEBRA_D = [
     exp: 'The constraint is L + 118 ≤ 300, so L ≤ 182. A length must also be positive, which is what rules out the unbounded options.',
     distractorExp: [
       'Correct. L ≤ 300 − 118 = 182, and a length must be positive.',
-      'This requires the parcel to be at least 182 centimetres, reversing the constraint.',
+      'This requires the parcel to be at least 182 centimeters, reversing the constraint.',
       'This adds the girth to 300 rather than subtracting it.',
       'This both adds the girth and reverses the constraint.',
     ],

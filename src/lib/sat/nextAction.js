@@ -93,7 +93,7 @@ export function nextAction({
       id: 'first_full_test',
       tone: 'primary',
       title: 'Take your first full-length test',
-      body: 'You have enough practice behind you. A full adaptive test is the only way to get a real score estimate and to practise the routing between modules.',
+      body: 'You have enough practice behind you. A full adaptive test is the only way to get a real score estimate and to practice the routing between modules.',
       ctaLabel: 'Start a full test',
       view: 'tests',
     };
@@ -132,7 +132,7 @@ export function nextAction({
       title: `Work on ${top.label}`,
       body: top.attempts
         ? `You are at ${Math.round(top.mastery * 100)}% on this, and it is worth about ${perExam} questions per exam. That combination makes it your best available points.`
-        : `You have not practised this yet, and it is worth about ${perExam} questions per exam.`,
+        : `You have not practiced this yet, and it is worth about ${perExam} questions per exam.`,
       ctaLabel: 'Start a drill',
       view: 'practice',
       params: { skill: top.skill },
@@ -144,7 +144,7 @@ export function nextAction({
     tone: 'primary',
     title: 'Run a Smart Set',
     body: 'A mixed set weighted toward your weakest high-value skills.',
-    ctaLabel: 'Start practising',
+    ctaLabel: 'Start practicing',
     view: 'practice',
   };
 }
