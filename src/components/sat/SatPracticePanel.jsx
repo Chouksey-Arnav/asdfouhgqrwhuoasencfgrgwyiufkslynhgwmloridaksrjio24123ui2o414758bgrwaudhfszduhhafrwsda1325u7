@@ -10,7 +10,7 @@ import EmptyState from '../ui/EmptyState';
 import { Bar } from '../ui/primitives';
 import SatQuestionPlayer from './SatQuestionPlayer';
 import { useSatSession } from './useSatSession';
-import { buildSmartSet, buildSkillDrill, buildTimedSet, estimateMinutes, targetDifficulty } from '../../lib/sat/selector';
+import { buildSmartSet, buildSkillDrill, buildTimedSet, buildFilteredSet, estimateMinutes, targetDifficulty } from '../../lib/sat/selector';
 import { generateQuestions } from '../../lib/sat/aiQuestions';
 import { generatePracticeSet } from '../../lib/sat/aiPractice';
 import { planGeneratedSet } from '../../lib/sat/learnerProfile';
@@ -46,7 +46,7 @@ const MODES = [
   },
 ];
 
-/** What the AI Set screen says while it works. Two stages, honestly labelled. */
+/** What the AI Set screen says while it works. Two stages, honestly labeled. */
 const STAGE_COPY = {
   authoring: {
     title: 'Writing your questions',
@@ -79,13 +79,36 @@ export default function SatPracticePanel({
 
   useEffect(() => () => aiAbort.current?.abort(), []);
 
-  // Deep link from the Overview's next-best-action, or the Review Log.
+  // Deep links in. Two shapes, and they are not interchangeable:
+  //
+  //   {skill}   — from the Overview's next-best-action, the heat map or the
+  //               Review Log. These say "this skill is your problem", so they
+  //               land on the Skill Drill chooser with the skill preselected
+  //               and let the student see the recommendation before committing.
+  //
+  //   {filter}  — from the Library browser, where the student has ALREADY
+  //               chosen a slice of the bank and pressed practice. Dropping
+  //               them back on a chooser would ask them to pick twice, so this
+  //               one starts the session immediately.
   useEffect(() => {
+    if (params?.filter) {
+      const questions = buildFilteredSet(params.filter, { count: 12, seen: seenIds, seed: Date.now() });
+      onConsumeParams?.();
+      if (questions.length) {
+        setMode('drill');
+        startSession({
+          questions, mode: 'tutor', kind: 'drill',
+          skill: params.filter.skill || null,
+          rationale: params.filterLabel || null,
+        });
+      }
+      return;
+    }
     if (!params?.skill) return;
     setMode('drill');
     setDrillSkill(params.skill);
     onConsumeParams?.();
-  }, [params, onConsumeParams]);
+  }, [params, onConsumeParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const dueReviewIds = useMemo(
     () => openReviews.filter(r => (r.due || 0) <= Date.now()).map(r => r.questionId),

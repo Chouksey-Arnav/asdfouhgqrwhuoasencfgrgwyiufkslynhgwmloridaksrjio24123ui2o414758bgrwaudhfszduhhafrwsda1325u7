@@ -32,9 +32,18 @@ import {
 const VERBOSE = process.argv.includes('--verbose');
 
 // Minimum questions per leaf skill before adaptive selection starts repeating
-// itself noticeably. Raised from 2 to 6 with expansion batch B: at 2 a student
-// drilling one skill saw the same item on their third question.
-const MIN_PER_SKILL = 6;
+// itself noticeably.
+//
+// 2 → 6 with expansion batch B: at 2 a student drilling one skill saw the same
+// item on their third question.
+//
+// 6 → 24 with expansion batch D. Six was never the right number, it was the
+// number the bank could meet: nine of the twenty-eight skills sat at eight or
+// nine questions, so a SINGLE ten-question drill exhausted the pool and the
+// selector started re-serving items inside one session. The floor is now set
+// above one drill's worth with room to run several before repetition is even
+// possible. Batch D put every skill past 30, so this bites only on regression.
+const MIN_PER_SKILL = 24;
 
 // Phrases that mean the author was still working the problem out when they hit
 // save. Every one of these shipped in a first draft of expansion batch B, in an
@@ -152,13 +161,13 @@ for (const q of SAT_QUESTIONS) {
 // selector would happily have served both in one drill set, which reads to a
 // student as the bank being smaller than it is.
 //
-// Normalisation strips punctuation and case so "What is its volume?" and
+// Normalization strips punctuation and case so "What is its volume?" and
 // "what is its volume" collide, which is the point: cosmetic differences are
 // exactly how duplicates hide.
-const normalise = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+const normalize = (s) => String(s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 const byStem = new Map();
 for (const q of SAT_QUESTIONS) {
-  const key = `${normalise(q.q)}||${normalise(q.stimulus)}`;
+  const key = `${normalize(q.q)}||${normalize(q.stimulus)}`;
   if (!byStem.has(key)) byStem.set(key, []);
   byStem.get(key).push(q.id);
 }

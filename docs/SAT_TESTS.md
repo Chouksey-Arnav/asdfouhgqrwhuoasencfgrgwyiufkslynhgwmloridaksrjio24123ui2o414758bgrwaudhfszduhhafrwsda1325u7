@@ -41,7 +41,7 @@ An official score has no per-question evidence behind it, so it deliberately
 does *not* drive the skill heat map. Inventing per-skill data from a section
 score would be a fabrication.
 
-### 2. In-app forms — A, B, C
+### 2. In-app forms — A through E
 
 A **form** is a named, fixed selection of bank questions: identical for
 everyone, identical every time it is assembled. Its `seed` must never change
@@ -62,20 +62,29 @@ appended to a bank that cannot carry them.
 Seeded from the clock, excluding every question the student has answered
 anywhere in the app. Maximum novelty; not reproducible, so not comparable.
 
-## Why three forms and not six
+## Why five forms, and why not six
 
-A form's footprint is about 130 bank questions. Six were drafted; with the bank
-at 328 questions only two were genuinely distinct and Form C onwards was a
-reshuffle. Expansion batch C (138 new questions, weighted to the bands that ran
-out first) took the bank to 466 and the catalog to three fully distinct forms.
+A form's footprint is about 145 bank questions, so the catalog length is set by
+the bank and not by taste.
 
-A fourth came out 26% new, which is not a fourth test. It was cut. To add one,
-grow the bank until `npm run verify:sat-forms` goes quiet — the audit will not
-let the list outrun what is behind it.
+The history is the argument. Six were drafted when the bank held 328 questions;
+only two were genuinely distinct and Form C onwards was a reshuffle. Expansion
+batch C took the bank to 466 and the catalog to three fully distinct forms; a
+fourth against that bank came out 26% new, which is not a fourth test, and it
+was cut. Expansion batch D took the bank past a thousand and paid for Forms D
+and E.
 
-    forms in catalog      3
-    fully fresh forms       3
-    414 of 466 bank questions committed to forms; 52 spare
+Six was tried again at 1,038 questions and still does not fit — Form F comes out
+66% new and cannot fill Craft and Structure in its first module at all. So five
+is the number, and it is the number the audit permits rather than the number
+anyone chose.
+
+    forms in catalog        5
+    fully fresh forms       5
+    695 of 1038 bank questions committed to forms; 343 spare
+
+To add a sixth, grow the bank until `npm run verify:sat-forms` goes quiet — the
+audit will not let the list outrun what is behind it.
 
 ## Design decisions worth knowing
 
@@ -102,5 +111,9 @@ whole class of problem.
 ## Commands
 
     npm run verify:sat-forms      forms are full-length, distinct, on-blueprint
+    npm run verify:sat-library    the whole bank is filterable and practicable
     npm run audit:sat             bank integrity, including answer-shape bias
     npm run audit:sat-resources   every official link still resolves
+
+The blueprint every one of these checks is measured against, and the College
+Board documents it comes from, are recorded in `docs/SAT_BLUEPRINT_SOURCES.md`.
