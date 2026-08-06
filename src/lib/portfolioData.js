@@ -64,39 +64,9 @@ export async function buildPortfolioSnapshot() {
   return snapshot;
 }
 
-/** True when the student has literally nothing in their Portfolio yet. */
-export function isEmptySnapshot(snapshot) {
-  if (!snapshot) return true;
-  return Object.values(RESOURCE_MAP).every((key) => !(snapshot[key] || []).length)
-    && !(snapshot.interviewSessions || []).length;
-}
-
-/** Total across every resource — the "N things tracked" figure. */
-export function snapshotItemCount(snapshot) {
-  if (!snapshot) return 0;
-  return Object.values(RESOURCE_MAP).reduce((sum, key) => sum + (snapshot[key] || []).length, 0);
-}
-
-/**
- * Whole weeks until the student's nearest future deadline, or null when nothing is dated.
- * Feeds recommendTarget()'s deadline-pressure term — the only thing in the recommender allowed
- * to raise a number, and only because this comes from a real date the student entered.
- */
-export function weeksToNearestDeadline(snapshot, now = new Date()) {
-  const dates = [
-    ...(snapshot?.deadlines || []).map((d) => d.due_date),
-    ...(snapshot?.scholarships || []).map((s) => s.deadline),
-    ...(snapshot?.colleges || []).flatMap((c) => [c.ea_ed_deadline, c.rd_deadline, c.financial_aid_deadline]),
-    ...(snapshot?.recommenders || []).map((r) => r.due_date),
-  ].filter(Boolean).map((d) => new Date(`${String(d).slice(0, 10)}T00:00:00`).getTime()).filter((t) => !Number.isNaN(t));
-  const future = dates.filter((t) => t >= now.getTime()).sort((a, b) => a - b);
-  if (!future.length) return null;
-  return Math.max(0, (future[0] - now.getTime()) / (7 * 86400000));
-}
-
-/** Standing weekly commitment across ongoing activities — recommendTarget()'s load term. */
-export function currentLoadHours(snapshot) {
-  return (snapshot?.activities || [])
-    .filter((a) => a.status === 'ongoing')
-    .reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0), 0);
-}
+// The pure snapshot derivations (isEmptySnapshot / snapshotItemCount / weeksToNearestDeadline /
+// currentLoadHours) live in weeklyGoals.js and are re-exported here so callers can keep importing
+// "snapshot things" from one place. They are defined there because this module imports Dexie and
+// the data API, which makes it unimportable from a plain-Node verify script — and those four
+// functions are precisely the ones worth testing.
+export { isEmptySnapshot, snapshotItemCount, weeksToNearestDeadline, currentLoadHours } from './weeklyGoals';

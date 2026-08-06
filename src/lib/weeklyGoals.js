@@ -32,7 +32,7 @@
 // progress-sync snapshot (see db.js buildSyncSnapshot / mergeUserRecord), so goals follow the
 // student across devices without a new table or migration.
 // ─────────────────────────────────────────────────────────────────────────────
-import { getIsoWeekKey, getStartOfWeek } from './gamification';
+import { getIsoWeekKey, getStartOfWeek } from './gamification.js';
 
 export { getIsoWeekKey, getStartOfWeek };
 
@@ -659,4 +659,52 @@ export function weekHeadline(summary, { hasData = true } = {}) {
     return `${daysBit}. ${behind.metric.short} hasn't moved yet — ${behind.target} ${behind.metric.unit} to go.`;
   }
   return `${daysBit}. You're at ${summary.overallPct}% across ${summary.goalsSet} goal${summary.goalsSet === 1 ? '' : 's'}${behind ? ` — ${behind.metric.short} needs ${behind.remaining} more ${behind.metric.unit}` : ''}.`;
+}
+
+// ── Pure snapshot derivations ────────────────────────────────────────────────
+// These read a portfolio snapshot (see portfolioData.js) without touching the network, which is
+// why they live here rather than beside the fetcher: portfolioData.js imports Dexie and the data
+// API, so anything that imports it cannot run under plain Node — and these four are exactly the
+// functions the verify script needs to test.
+
+/** Every snapshot list key, in one place. */
+export const SNAPSHOT_KEYS = [
+  'activities', 'awards', 'colleges', 'deadlines', 'essays', 'essayVersions',
+  'scholarships', 'research', 'skills', 'clinicalHours', 'recommenders', 'gpaEntries',
+];
+
+/** True when the student has literally nothing in their Portfolio yet. */
+export function isEmptySnapshot(snapshot) {
+  if (!snapshot) return true;
+  return SNAPSHOT_KEYS.every((key) => !(snapshot[key] || []).length) && !(snapshot.interviewSessions || []).length;
+}
+
+/** Total rows across every resource — the "N things tracked" figure. */
+export function snapshotItemCount(snapshot) {
+  if (!snapshot) return 0;
+  return SNAPSHOT_KEYS.reduce((sum, key) => sum + (snapshot[key] || []).length, 0);
+}
+
+/**
+ * Whole weeks until the student's nearest future deadline, or null when nothing is dated.
+ * Feeds recommendTarget()'s deadline-pressure term — the only thing in the recommender allowed
+ * to raise a number, and only because this comes from a real date the student entered.
+ */
+export function weeksToNearestDeadline(snapshot, now = new Date()) {
+  const dates = [
+    ...(snapshot?.deadlines || []).map((d) => d.due_date),
+    ...(snapshot?.scholarships || []).map((s) => s.deadline),
+    ...(snapshot?.colleges || []).flatMap((c) => [c.ea_ed_deadline, c.rd_deadline, c.financial_aid_deadline]),
+    ...(snapshot?.recommenders || []).map((r) => r.due_date),
+  ].filter(Boolean).map((d) => toTime(String(d).slice(0, 10))).filter((t) => t !== null);
+  const future = dates.filter((t) => t >= now.getTime()).sort((a, b) => a - b);
+  if (!future.length) return null;
+  return Math.max(0, (future[0] - now.getTime()) / (7 * 86400000));
+}
+
+/** Standing weekly commitment across ongoing activities — recommendTarget()'s load term. */
+export function currentLoadHours(snapshot) {
+  return (snapshot?.activities || [])
+    .filter((a) => a.status === 'ongoing')
+    .reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0), 0);
 }

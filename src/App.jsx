@@ -5504,7 +5504,7 @@ export default function App({ account, onAccountChange }) {
             measured number, a bar, and a target the STUDENT set. Meta Brain recommends on every
             single one of them and sets none of them — see WeeklyGoalsBoard.jsx. */}
         <WeeklyGoalsBoard
-          user={user} snapshot={portSnapshot} onSaveUser={saveUser} onOpen={goPortfolio}
+          user={user} snapshot={portSnapshot} loading={portSnapLoading} onSaveUser={saveUser} onOpen={goPortfolio}
           askMedabrain={askPortfolioMedabrain} isMobile={isMobile}
           benchmarks={benchmarks} clinicalHoursTotal={clinicalHoursTotal} accent={accent}/>
 
@@ -5521,8 +5521,10 @@ export default function App({ account, onAccountChange }) {
           </div>
           <div style={{flex:1,minWidth:200}}>
             <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.violet)}}>Meta Brain · today's tracking report</div>
-            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>{trackReport.headline}</div>
-            {trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:3}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
+            <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
+              {portSnapshot?trackReport.headline:'Pulling in everything you\u2019re tracking\u2026'}
+            </div>
+            {portSnapshot&&trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:3}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
           </div>
           <span style={{...pill(tint(C.violet,0.14),accentText(C.violet),{fontSize:11,gap:5}),flexShrink:0}}>Open Tracked<ArrowRight size={11}/></span>
         </button>

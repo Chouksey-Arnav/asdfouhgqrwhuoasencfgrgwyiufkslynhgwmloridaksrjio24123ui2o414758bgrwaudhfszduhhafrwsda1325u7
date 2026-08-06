@@ -16,7 +16,7 @@
 // computed here and the AI blurb layered on top is commentary, not the report itself. That also
 // means the report can never hallucinate a status: every line it makes is derived from a column.
 // ─────────────────────────────────────────────────────────────────────────────
-import { toTime } from './weeklyGoals';
+import { toTime } from './weeklyGoals.js';
 
 const DAY = 86400000;
 

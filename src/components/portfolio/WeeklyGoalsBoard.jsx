@@ -30,7 +30,7 @@ import WeeklyGoalTile from './WeeklyGoalTile';
 // commitment. The urge to close the bar only shows up on the second kind.
 // ─────────────────────────────────────────────────────────────────────────────
 export default function WeeklyGoalsBoard({
-  user, snapshot, onSaveUser, onOpen, askMedabrain, isMobile = false,
+  user, snapshot, loading = false, onSaveUser, onOpen, askMedabrain, isMobile = false,
   benchmarks = {}, clinicalHoursTotal = 0, accent = C.blue,
 }) {
   const [picking, setPicking] = useState(false);
@@ -168,7 +168,11 @@ export default function WeeklyGoalsBoard({
                 ? `${summary.goalsMet} of ${summary.goalsSet} weekly goal${summary.goalsSet === 1 ? '' : 's'} met`
                 : 'Set your goals for this week'}
             </div>
-            <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.6, maxWidth: 620 }}>{headline}</div>
+            <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.6, maxWidth: 620 }}>
+              {/* Zeros drawn before the fetch lands read as "you did nothing this week", which is
+                  both false and demoralizing. Say what's actually happening instead. */}
+              {loading && !snapshot ? 'Measuring this week from your real Portfolio entries…' : headline}
+            </div>
           </div>
           <button onClick={() => setPicking((p) => !p)} aria-expanded={picking}
             style={btnSm(C.s3, { color: C.t2, fontSize: 11, alignSelf: 'center' })}>

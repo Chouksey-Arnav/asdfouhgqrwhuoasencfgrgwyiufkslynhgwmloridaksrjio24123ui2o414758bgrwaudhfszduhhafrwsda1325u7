@@ -140,12 +140,12 @@ export default function WeeklyGoalTile({
           </div>
         </div>
       ) : (
-        <div style={{
-          ...glass2({ padding: '9px 11px' }),
-          border: `1px dashed ${tint(color, 0.35)}`, background: tint(color, 0.05),
-          fontSize: 11, color: C.t2, lineHeight: 1.5,
-        }}>
-          No goal set for this week — you decide the number.
+        // Same shape as the filled state, deliberately: an empty track reads as "a bar that
+        // could be filling and isn't", which is the feeling that makes someone set a target.
+        // A dashed callout box here just added height and said the same thing as the button.
+        <div>
+          <div style={{ height: 7, background: C.s4, borderRadius: 7, opacity: 0.6 }} aria-hidden />
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 6 }}>No goal yet — you decide the number.</div>
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function WeeklyGoalTile({
           {!editing && target !== recommendation.target && (
             <button onClick={useRecommendation}
               style={btnSm(tint(C.violet, 0.16), { color: onTint(C.violet), fontSize: 10.5, alignSelf: 'flex-start', border: `1px solid ${tint(C.violet, 0.28)}` })}>
-              <Target size={11} />{hasGoal ? 'Switch to this number' : 'Make this my goal'}
+              <Target size={11} />{hasGoal ? `Switch to ${formatValue(recommendation.target)}` : `Use ${formatValue(recommendation.target)}`}
             </button>
           )}
         </div>
@@ -208,7 +208,7 @@ export default function WeeklyGoalTile({
         <div style={R({ gap: 6, flexWrap: 'wrap' })}>
           <button onClick={() => { setDraft(String(target ?? recommendation?.target ?? metric.defaultTarget)); setEditing(true); }}
             style={btnSm(hasGoal ? C.s3 : tint(color, 0.18), { color: hasGoal ? C.t2 : onTint(color), fontSize: 11 })}>
-            {hasGoal ? <><Pencil size={11} />Change goal</> : <><Target size={11} />Set my goal</>}
+            {hasGoal ? <><Pencil size={11} />Change goal</> : <><Pencil size={11} />Pick my own number</>}
           </button>
           {hasGoal && (
             <button onClick={() => onClearGoal?.(metric.id)} style={btnSm('transparent', { color: C.t3, fontSize: 11, border: `1px solid ${C.b1}` })}>
