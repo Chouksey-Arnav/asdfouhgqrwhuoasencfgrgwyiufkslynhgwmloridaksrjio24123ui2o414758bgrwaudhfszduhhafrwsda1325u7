@@ -240,6 +240,13 @@ export function buildCoachSystemPrompt({
   // Cross-app "what have they actually been doing" digest — see
   // src/lib/recentActivity.js. Null when nothing has been logged recently.
   recentActivitySummary = null,
+  // The student's generated application/prep timeline, pre-rendered by
+  // summarizeTimelineForPrompt() in src/lib/timeline.js. This is what stops the coach from
+  // reconstructing an admissions calendar out of training data every time it is asked "what
+  // is coming up" — which is where advice like "get your FAFSA in" to a ninth-grader comes
+  // from. The engine already gated every date on this student's class year, so the coach's
+  // job is to reason over the list, not to invent it.
+  timelineSummary = null,
 } = {}) {
   const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
@@ -317,6 +324,13 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
     ? `\n\n${recentActivitySummary} Reference something specific from this when it's natural (e.g. congratulate real momentum, or gently note a quiet stretch) instead of generic encouragement — this is real evidence of what they've been doing, not an inference.`
     : '';
 
+  // ── Their timeline — the dated half of "what should I be doing". Placed right
+  // after recent activity so the model reads what they've done and what's coming
+  // as one continuous picture.
+  const timelineNote = timelineSummary
+    ? `\n\n${timelineSummary} When they ask what's next, what they should be worrying about, or how much time they have, answer from THIS list — it is already filtered to their class year and their real data, and the Timeline tab inside Portfolio is where they can see all of it.`
+    : '';
+
   // ── Master plan awareness — the "meta brain" link. Scout, Guide, and Sage all
   // build their system prompt from this same function, so whichever tier answers
   // a given message, it knows the same plan the Plans tab shows the student.
@@ -339,7 +353,7 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
 
   const tail = `\n\nBe concise, warm, and encouraging — celebrate effort and progress, not just results, and when a student seems behind or discouraged, give one concrete, achievable next step rather than generic reassurance. Keep replies short: 2-4 sentences for a simple question, and only use longer, structured answers (bullets, multiple steps) when the question genuinely needs them — don't pad. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks or $...$ for formulas when helpful.${PERSONA_GUARDRAIL}`;
 
-  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + planNote + portfolioBrainNote + KNOWLEDGE_POLICY + tail;
+  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + planNote + portfolioBrainNote + KNOWLEDGE_POLICY + tail;
 }
 
 // ── Meta Brain — Portfolio Intelligence system prompt ─────────────────────────
@@ -366,6 +380,11 @@ export function buildPortfolioSystemPrompt({
   awards = [],
   gpaEntries = [],
   recentActivitySummary = null,
+  // Same generated timeline the student sees in Portfolio > Timeline, pre-rendered by
+  // summarizeTimelineForPrompt() (src/lib/timeline.js). The Portfolio specialist gets it for
+  // the same reason it gets the full tracker: so "what should I work on next" is answered
+  // against real dates that are already gated on this student's class year.
+  timelineSummary = null,
 } = {}) {
   const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialised on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
@@ -458,9 +477,13 @@ Questions that stray outside the application (a study-plan question, a science q
 
   const dataBlock = `\n\n── Their full Portfolio, as of right now ──\nCOLLEGES: ${collegeParts.join(' ')}\nESSAYS: ${essayParts.join(' ')}\nDEADLINES: ${deadlineParts.join(' ')}\nFINANCIAL AID: ${scholarshipParts.join(' ')}\nTEST SCORES: ${testScoreParts.join(' ')}\nACADEMICS: ${academicParts.join(' ')}\nOTHER: ${otherParts.join(' ')}${recentActivitySummary ? `\nRECENT ACTIVITY ACROSS THE WHOLE APP (not just Portfolio): ${recentActivitySummary}` : ''}`;
 
-  const rules = `\n\nRules: never invent a college on their list, a deadline they logged, a dollar amount, a test score, a GPA or an essay draft that isn't in the data above — those are claims about THEM and the data above is the only source for them. Facts about the wider admissions world are a different matter entirely: answer those from your own knowledge, in detail, and say when a date or policy is the kind of thing that shifts year to year. If a category is empty (no colleges, no essays, no clinical hours, no scores), answer the question first, then say plainly what isn't logged yet and name the exact panel that captures it. When asked "what should I work on next," prioritize real urgency (closest deadline, an essay for a school with no draft started, a category with nothing logged at all) over generic advice. Keep replies focused and concrete — 2-5 sentences unless a genuinely structured breakdown (e.g. ranking every upcoming deadline) is what was asked for. Format with markdown: **bold** key facts, bullet lists for multi-item breakdowns.${PERSONA_GUARDRAIL}`;
+  const timelineBlock = timelineSummary
+    ? `\n\n── Their timeline ──\n${timelineSummary}`
+    : '';
 
-  return base + buildPersonalBriefBlock(user) + dataBlock + KNOWLEDGE_POLICY + rules;
+  const rules = `\n\nRules: never invent a college on their list, a deadline they logged, a dollar amount, a test score, a GPA or an essay draft that isn't in the data above — those are claims about THEM and the data above is the only source for them. Facts about the wider admissions world are a different matter entirely: answer those from your own knowledge, in detail, and say when a date or policy is the kind of thing that shifts year to year. If a category is empty (no colleges, no essays, no clinical hours, no scores), answer the question first, then say plainly what isn't logged yet and name the exact panel that captures it. When asked "what should I work on next," prioritize real urgency (the soonest thing on their timeline, an essay for a school with no draft started, a category with nothing logged at all) over generic advice, and never point a student at a milestone their class year has not reached. Keep replies focused and concrete — 2-5 sentences unless a genuinely structured breakdown (e.g. ranking every upcoming deadline) is what was asked for. Format with markdown: **bold** key facts, bullet lists for multi-item breakdowns.${PERSONA_GUARDRAIL}`;
+
+  return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + KNOWLEDGE_POLICY + rules;
 }
 
 // ── Medabrain — Prep (pathway/lesson) system prompt ──────────────────────────

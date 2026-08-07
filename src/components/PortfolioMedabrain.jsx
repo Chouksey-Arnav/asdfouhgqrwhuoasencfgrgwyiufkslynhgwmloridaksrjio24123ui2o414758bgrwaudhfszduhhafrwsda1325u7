@@ -5,6 +5,7 @@ import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
+import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
 
@@ -70,6 +71,16 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
     setInput('');
     setLoading(true);
     try {
+      // The same generated timeline the student sees in Portfolio > Timeline. Built here from
+      // the full resource lists this panel already holds, so the specialist reasons over real
+      // dates — gated on the student's class year — instead of reconstructing an admissions
+      // calendar from training data every time it is asked what's next.
+      let timelineSummary = null;
+      try {
+        timelineSummary = summarizeTimelineForPrompt(buildTimeline({
+          user, snapshot: portfolioData || {}, testScores: portfolioData?.testScores || [],
+        }));
+      } catch { /* the prompt is still complete without it */ }
       const sys = buildPortfolioSystemPrompt({
         user, pathwayLabel, gradeLabel,
         colleges: portfolioData?.colleges || [], essays: portfolioData?.essays || [],
@@ -78,7 +89,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
         recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
         awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
-        recentActivitySummary,
+        recentActivitySummary, timelineSummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',

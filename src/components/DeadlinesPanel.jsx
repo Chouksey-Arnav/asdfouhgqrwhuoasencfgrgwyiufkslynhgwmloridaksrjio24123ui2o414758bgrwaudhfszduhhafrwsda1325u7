@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, CalendarClock, CalendarDays, CalendarX, Hourglass, AlertTriangle, History, Sparkles, Loader2, ListChecks } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint, onTint } from '../lib/theme';
+import { Plus, Trash2, CalendarDays, CalendarX, Hourglass, AlertTriangle, History, Sparkles, Loader2, ListChecks } from 'lucide-react';
+import { C, glass, glass2, btn, btnSm, inp, R, CC, G, pill, tint, onTint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
 import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
@@ -47,30 +47,6 @@ export function useDeadlines() {
     listItems('deadlines').then(setDeadlines).catch(() => setDeadlines([]));
   }, []);
   return deadlines;
-}
-
-export function NextDeadlineCard({ deadlines, accent = C.blue }) {
-  if (!deadlines) return null;
-  const upcoming = deadlines
-    .map(d => ({ ...d, days: daysUntil(d.due_date) }))
-    .filter(d => d.days >= 0)
-    .sort((a, b) => a.days - b.days)[0];
-  if (!upcoming) return null;
-  const urgent = upcoming.days <= 14;
-  return (
-    <div style={glass({padding:18,border:urgent?`1px solid ${C.rose}40`:undefined})}>
-      <div style={R({gap:8,marginBottom:6})}>
-        <CalendarClock size={14} color={urgent?C.roseL:accent}/>
-        <span style={lbl({marginBottom:0})}>Next Deadline</span>
-      </div>
-      <div style={R({gap:10,alignItems:'baseline'})}>
-        <span style={{fontSize:28,fontWeight:800,color:urgent?C.roseL:C.t1,fontFamily:C.FD}}>{upcoming.days}</span>
-        <span style={{fontSize:12,color:C.t3}}>day{upcoming.days===1?'':'s'} until</span>
-      </div>
-      <div style={{fontSize:13,fontWeight:600,color:C.t1,marginTop:4}}>{upcoming.title}</div>
-      <div style={{fontSize:11,color:C.t3,marginTop:2}}>{new Date(upcoming.due_date+'T00:00:00').toLocaleDateString(undefined,{month:'long',day:'numeric',year:'numeric'})}</div>
-    </div>
-  );
 }
 
 export default function DeadlinesPanel({ accent = C.blue, apIb = false, askMedabrain, onAdded }) {
