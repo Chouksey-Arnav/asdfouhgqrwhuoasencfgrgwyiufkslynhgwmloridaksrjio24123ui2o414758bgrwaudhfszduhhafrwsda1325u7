@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
+import { Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX, ChevronDown, ChevronUp, Building2, Users, FileText } from 'lucide-react';
+import { C, glass, glass2, btnSm, inp, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, updateItem, deleteItem } from '../lib/dataApi';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
 import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
-import { trackedKeySet, rowDedupeKey, needsDeadlineDate, normalizeKey } from '../lib/trackingCatalog';
+import { trackedKeySet, rowDedupeKey, needsDeadlineDate, normalizeKey, scholarshipRowFromResearch, formatScholarshipNotes } from '../lib/trackingCatalog';
+import { parseScholarshipNotes } from '../lib/scholarshipNotes';
 import TrackQueueNotice from './ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import ScholarshipDatabase from './ScholarshipDatabase';
+import ScholarshipResearchAdd from './ScholarshipResearchAdd';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = [
@@ -24,9 +26,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
   const [colleges, setColleges] = useState([]);
   const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [amount, setAmount] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
 
   const { byResource: pendingByResource, entries: pendingEntries, status: trackStatus, refresh: refreshPending } = usePendingTrackKeys();
 
@@ -63,20 +63,25 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
 
   const aidSchools = colleges.filter(c => c.css_profile_required || c.financial_aid_deadline);
 
-  async function addScholarship(e) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    if (amount && Number(amount) < 0) { toast.error('Amount can\'t be negative.'); return; }
-    const draft = { name: name.trim(), amount: amount ? Number(amount) : null, deadline: deadline || null, status: 'researching' };
-    const res = await trackItem('scholarships', draft, { dedupeKey: normalizeKey(draft.name), label: draft.name, existing: scholarships });
-    if (res.status === 'duplicate') { toast(`${draft.name} is already in your tracker`, { icon: '✓' }); return; }
-    setName(''); setAmount(''); setDeadline('');
+  // Used by ScholarshipResearchAdd (the "Add New Scholarship" flow below) — `fields` is whatever
+  // Medabrain researched (or the student's own manual entry if they skipped research), already
+  // reviewed/edited by the student before this fires. `researched` tells us which builder to use:
+  // a skipped-research row must NOT carry the "Researched by Medabrain" provenance marker, since
+  // Medabrain never actually looked at it — that would misrepresent the student's own free text as
+  // a model lookup. Throws on failure so the component's own error state can surface it.
+  async function addResearchedScholarship(name, fields, researched) {
+    const draft = researched
+      ? scholarshipRowFromResearch(name, fields)
+      : { name, notes: formatScholarshipNotes({ ...fields, sourceNote: null }) || null, status: 'researching', amount: null, deadline: null };
+    const res = await trackItem('scholarships', draft, { dedupeKey: normalizeKey(name), label: name, existing: scholarships });
+    if (res.status === 'duplicate') { toast(`${name} is already in your tracker`, { icon: '✓' }); return res; }
     if (res.status === 'created') {
       setScholarships(prev => [...prev, res.row]);
       showMedabrainToast('scholarship_added', { name: res.row.name });
     } else {
-      toast(`${draft.name} is saved on this device and will finish saving to your account shortly.`, { icon: '📥', duration: 6000 });
+      toast(`${name} is saved on this device and will finish saving to your account shortly.`, { icon: '📥', duration: 6000 });
     }
+    return res;
   }
 
   // Used by the ScholarshipDatabase search below. The row itself is built by
@@ -191,15 +196,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
         <ScholarshipDatabase accent={C.violet} onTrack={trackScholarship} trackedKeys={trackedScholarshipKeys} pendingKeys={pendingScholarshipKeys} askMedabrain={askMedabrain}/>
       </div>
 
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
-        <SectionTitle icon={Plus} color={accent}>Add a scholarship manually</SectionTitle>
-        <form onSubmit={addScholarship} style={R({gap:10,flexWrap:'wrap'})}>
-          <input style={inp({flex:1,minWidth:160})} placeholder="Scholarship name" value={name} onChange={e=>setName(e.target.value)} />
-          <input type="number" min="0" style={inp({width:120})} placeholder="Amount ($)" value={amount} onChange={e=>setAmount(e.target.value)} />
-          <input type="date" style={inp({width:'auto'})} value={deadline} onChange={e=>setDeadline(e.target.value)} />
-          <button type="submit" style={btn(accent!==C.blue?accent:C.blueGrad)}><Plus size={14}/>Add</button>
-        </form>
-      </div>
+      <ScholarshipResearchAdd accent={accent} onTrack={addResearchedScholarship}/>
 
       {!loading && scholarships.length === 0 ? (
         <div style={glass({padding:30,textAlign:'center'})}>
@@ -209,23 +206,46 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
         <div style={CC({gap:8})}>
           {scholarships.map(s => {
             const st = STATUSES.find(x => x.id === s.status) || STATUSES[0];
+            const details = parseScholarshipNotes(s.notes);
+            const isOpen = expandedId === s.id;
             return (
-              <div key={s.id} style={{...glass2({padding:14}),display:'flex',alignItems:'center',gap:14,borderLeft:`3px solid ${st.color}`,background:`linear-gradient(120deg,${tint(st.color,0.05)},rgba(255,255,255,0.02) 55%)`}}>
-                <div style={{width:34,height:34,borderRadius:10,background:tint(st.color,0.13),border:`1px solid ${tint(st.color,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                  {s.status==='awarded'?<Trophy size={15} color={st.color}/>:<DollarSign size={15} color={st.color}/>}
-                </div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1}}>{s.name}</div>
-                  <div style={R({gap:8,marginTop:3})}>
-                    {s.amount && <span style={{fontSize:11,color:s.status==='awarded'?C.greenL:C.t3,fontWeight:s.status==='awarded'?700:400,fontFamily:C.FM}}>${s.amount.toLocaleString()}</span>}
-                    {s.deadline && <span style={{fontSize:11,color:C.t3}}>Due {new Date(s.deadline+'T00:00:00').toLocaleDateString()}</span>}
-                    <span style={pill(tint(st.color,0.13),st.color,{fontSize:9})}>{st.label}</span>
+              <div key={s.id} style={{...glass2({padding:0,overflow:'hidden'}),borderLeft:`3px solid ${st.color}`,background:`linear-gradient(120deg,${tint(st.color,0.05)},rgba(255,255,255,0.02) 55%)`}}>
+                <div style={{display:'flex',alignItems:'center',gap:14,padding:14,cursor:details?'pointer':'default'}} onClick={()=>details&&setExpandedId(isOpen?null:s.id)}>
+                  <div style={{width:34,height:34,borderRadius:10,background:tint(st.color,0.13),border:`1px solid ${tint(st.color,0.25)}`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                    {s.status==='awarded'?<Trophy size={15} color={st.color}/>:<DollarSign size={15} color={st.color}/>}
                   </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:13,fontWeight:700,color:C.t1}}>{s.name}</div>
+                    <div style={R({gap:8,marginTop:3,flexWrap:'wrap'})}>
+                      {s.amount && <span style={{fontSize:11,color:s.status==='awarded'?C.greenL:C.t3,fontWeight:s.status==='awarded'?700:400,fontFamily:C.FM}}>${s.amount.toLocaleString()}</span>}
+                      {s.deadline ? <span style={{fontSize:11,color:C.t3}}>Due {new Date(s.deadline+'T00:00:00').toLocaleDateString()}</span>
+                        : details?.deadlineText && <span style={{fontSize:11,color:C.t4}}>{details.deadlineText}</span>}
+                      {details?.org && <span style={{fontSize:11,color:C.t4}}>· {details.org}</span>}
+                      <span style={pill(tint(st.color,0.13),st.color,{fontSize:9})}>{st.label}</span>
+                    </div>
+                  </div>
+                  <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={s.status} onClick={e=>e.stopPropagation()} onChange={e=>updateRow(s.id,{status:e.target.value})}>
+                    {STATUSES.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
+                  </select>
+                  <button style={btnSm(C.roseDim,{color:C.rose})} onClick={e=>{e.stopPropagation();removeRow(s.id);}}><Trash2 size={12}/></button>
+                  {details && (isOpen ? <ChevronUp size={15} color={C.t3}/> : <ChevronDown size={15} color={C.t3}/>)}
                 </div>
-                <select style={inp({width:'auto',fontSize:12,padding:'6px 10px'})} value={s.status} onChange={e=>updateRow(s.id,{status:e.target.value})}>
-                  {STATUSES.map(x => <option key={x.id} value={x.id}>{x.label}</option>)}
-                </select>
-                <button style={btnSm(C.roseDim,{color:C.rose})} onClick={()=>removeRow(s.id)}><Trash2 size={12}/></button>
+                {isOpen && details && (
+                  <div style={{padding:'0 14px 14px',borderTop:`1px solid ${C.b1}`,marginTop:2,paddingTop:12}}>
+                    <div style={CC({gap:8})}>
+                      {details.org && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><Building2 size={12} color={C.t3}/><span><b style={{color:C.t1}}>Organization:</b> {details.org}</span></div>}
+                      {details.eligibility && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2}}><Users size={12} color={C.t3} style={{marginTop:2}}/><span><b style={{color:C.t1}}>Eligibility:</b> {details.eligibility}</span></div>}
+                      {(details.amountText || details.deadlineText) && (
+                        <div style={{display:'flex',gap:16,flexWrap:'wrap'}}>
+                          {details.amountText && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><DollarSign size={12} color={C.t3}/><span><b style={{color:C.t1}}>Typical amount:</b> {details.amountText}</span></div>}
+                          {details.deadlineText && <div style={{...R({gap:8}),fontSize:12,color:C.t2}}><CalendarPlus size={12} color={C.t3}/><span><b style={{color:C.t1}}>Typical deadline:</b> {details.deadlineText}</span></div>}
+                        </div>
+                      )}
+                      {details.description && <div style={{...R({gap:8,alignItems:'flex-start'}),fontSize:12,color:C.t2,lineHeight:1.6}}><FileText size={12} color={C.t3} style={{marginTop:2,flexShrink:0}}/><span>{details.description}</span></div>}
+                      {details.sourceLabel && <div style={{fontSize:10,color:C.t4,marginTop:2}}>{details.sourceLabel==='ai'?'Researched by Medabrain — confirm details on the official site before applying.':'From the MedSchoolPrep scholarship database — confirm details on the official site before applying.'}</div>}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}

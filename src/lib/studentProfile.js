@@ -22,6 +22,7 @@ import {
   SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
 } from '../components/onboarding/Onboarding';
 import { buildPersonalBriefBlock } from './personalBrief';
+import { parseScholarshipNotes } from './scholarshipNotes';
 
 // ── The two-source knowledge contract ────────────────────────────────────────
 // Every Medabrain surface shares this block, and it exists because the original
@@ -427,12 +428,25 @@ Questions that stray outside the application (a study-plan question, a science q
   }
 
   // ── Financial aid / scholarships ──────────────────────────────────────────
+  // Each entry is named+dated+detailed (org/eligibility/typical amount or deadline pulled from
+  // the row's structured notes — see src/lib/scholarshipNotes.js) rather than just "name (status)",
+  // so a question like "what's the eligibility on the one I added" can be answered directly instead
+  // of "check the Financial Aid tab" — the whole point of this panel getting the FULL tracker.
   const scholarshipParts = [];
   if (scholarships.length) {
     const awarded = scholarships.filter(s => s.status === 'awarded');
-    scholarshipParts.push(`${scholarships.length} scholarship(s) tracked${awarded.length ? `, ${awarded.length} awarded (total $${awarded.reduce((s, x) => s + (x.amount || 0), 0).toLocaleString()})` : ''}: ${scholarships.slice(0, 10).map(s => `${s.name} (${s.status})`).join(', ')}${scholarships.length > 10 ? `, +${scholarships.length - 10} more` : ''}.`);
+    const describe = (s) => {
+      const details = parseScholarshipNotes(s.notes);
+      const bits = [`${s.name} (${s.status}${s.amount ? `, $${Number(s.amount).toLocaleString()}` : ''}${s.deadline ? `, due ${s.deadline}` : details?.deadlineText ? `, ${details.deadlineText}` : ''})`];
+      if (details?.org) bits.push(`org: ${details.org}`);
+      if (details?.eligibility) bits.push(`eligibility: ${details.eligibility}`);
+      return bits.join(' — ');
+    };
+    scholarshipParts.push(`${scholarships.length} scholarship(s) tracked${awarded.length ? `, ${awarded.length} awarded (total $${awarded.reduce((s, x) => s + (x.amount || 0), 0).toLocaleString()})` : ''}: ${scholarships.slice(0, 10).map(describe).join('; ')}${scholarships.length > 10 ? `; +${scholarships.length - 10} more` : ''}.`);
+    const missingDate = scholarships.filter(s => !s.deadline && !['awarded', 'denied'].includes(s.status)).length;
+    if (missingDate > 0) scholarshipParts.push(`${missingDate} of those don't have a real deadline date entered yet (they'll never count down or reach the Deadlines tab until one is added) — if asked, tell them to confirm the current date on the official site and add it in the Financial Aid tab.`);
   } else {
-    scholarshipParts.push(`No scholarships tracked yet — the Financial Aid tab has a searchable scholarship database if they ask where to start.`);
+    scholarshipParts.push(`No scholarships tracked yet — the Financial Aid tab has a searchable scholarship database, plus an "Add New Scholarship" flow that researches a program by name, if they ask where to start.`);
   }
 
   // ── Activities, research, skills, clinical hours, recommenders ───────────

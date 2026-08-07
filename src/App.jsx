@@ -72,6 +72,7 @@ import DeadlinesPanel, { useDeadlines } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
+import FinancialAidHomeCard from './components/FinancialAidHomeCard';
 import StreakHeatmap from './components/StreakHeatmap';
 import ActivitiesResumePanel from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
@@ -3556,6 +3557,13 @@ export default function App({ account, onAccountChange }) {
             day one — and it is the same feed the Portfolio Timeline tab shows, so the two can
             never disagree. */}
         <TimelineNextCard user={user} accent={accent} onNavigate={goAnywhere}/>
+
+        {/* Financial Aid & Scholarships — tracking something in the Financial Aid tab used to be a
+            dead end: it never surfaced anywhere else in the app unless it happened to carry a real
+            deadline date. This is the fix — every tracked scholarship (named, with its deadline/
+            org/eligibility) is one glance away from the dashboard, not buried three taps into
+            Portfolio. Hidden entirely when nothing is tracked yet, same as MyPlanCard above. */}
+        <FinancialAidHomeCard scholarships={portScholarships} accent={C.green} onOpen={()=>goPortfolio('aid')}/>
 
         {/* Stats */}
         <div style={G(4,14,{},isMobile)}>
