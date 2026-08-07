@@ -727,7 +727,7 @@ const PATHWAYS = [
 const PORTFOLIO_TOOLS = [
   { color: C.sky, lite: C.skyL, icon: GraduationCap, title: 'College List', desc: 'Schools tiered Likely / Target / Reach / Stretch against your GPA, scores, and hours.' },
   { color: C.violet, lite: C.violetL, icon: FileText, title: 'Essays', desc: 'A dedicated workspace for every supplement, from first draft to final.' },
-  { color: C.rose, lite: C.roseL, icon: Calendar, title: 'Deadlines', desc: "Every school's dates in one calendar, so nothing slips past you." },
+  { color: C.rose, lite: C.roseL, icon: Calendar, title: 'Milestones', desc: "Your deadlines and your whole class-year calendar in one countdown, so nothing slips past you." },
   { color: C.green, lite: C.greenL, icon: ShieldCheck, title: 'Financial Aid', desc: 'Track aid, scholarships, and what each school will really cost.' },
   { color: C.amber, lite: C.amberL, icon: ClipboardList, title: 'Activities & Resume', desc: 'Four years of activities, turned into an application-ready resume.' },
   { color: C.cyan, lite: C.cyanL, icon: Search, title: 'Research', desc: 'Log research experience the way admissions committees actually read it.' },

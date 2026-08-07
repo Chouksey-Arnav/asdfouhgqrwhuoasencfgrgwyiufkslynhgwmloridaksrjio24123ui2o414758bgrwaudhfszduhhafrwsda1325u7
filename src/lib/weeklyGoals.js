@@ -319,7 +319,7 @@ export const METRICS = [
     verb: 'handle',
     colorKey: 'rose',
     iconKey: 'calendarClock',
-    view: 'deadlines',
+    view: 'milestones',
     step: 1,
     min: 1,
     ceiling: 8,

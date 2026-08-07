@@ -68,7 +68,6 @@ import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
-import DeadlinesPanel, { useDeadlines } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
@@ -80,7 +79,9 @@ import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
-import PortfolioTimeline, { TimelineNextCard } from './components/PortfolioTimeline';
+// Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
+// generates the admissions calendar and edits the student's own dates. See PortfolioMilestones.jsx.
+import PortfolioMilestones, { TimelineNextCard, useDeadlines } from './components/PortfolioMilestones';
 import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
@@ -354,10 +355,13 @@ const PORTFOLIO_SUBNAV = [
   // every Track button in the app — the place a tracked program stops being a bookmark and
   // starts having a deadline, a status, and a daily Meta Brain report (see TrackedPanel.jsx).
   {id:'tracked',ic:RadarIcon,label:'Tracked',color:C.violet},
-  {id:'timeline',ic:Milestone,label:'Timeline',color:C.indigo},
+  // One tab, not two. 'Deadlines' (the dates you type) and 'Timeline' (the dates we generate)
+  // were the write half and the read half of the same calendar; splitting them meant a date added
+  // on one showed up on the other only after a reload, and the two could disagree about what was
+  // next. /portfolio/timeline and /portfolio/deadlines still resolve here — see routes.js aliases.
+  {id:'milestones',ic:Milestone,label:'Milestones',color:C.indigo},
   {id:'colleges',ic:GraduationCap,label:'College List',color:C.sky},
   {id:'essays',ic:ScrollText,label:'Essays',color:C.violet},
-  {id:'deadlines',ic:CalendarDays,label:'Deadlines',color:C.rose},
   {id:'aid',ic:Handshake,label:'Financial Aid',color:C.green},
   {id:'resume',ic:Award,label:'Activities & Resume',color:C.amber},
   {id:'research',ic:FlaskConical,label:'Research',color:C.cyan},
@@ -1262,11 +1266,11 @@ export default function App({ account, onAccountChange }) {
   // ── Prep / Portfolio sub-navigation ──────────────────────────────────────────
   // Prep and Portfolio each absorb several formerly-top-level tabs; these track
   // which absorbed view is active, switched via the SubNav pill bar.
-  // Sub-view ids are also URL segments (/prep/flashcards, /portfolio/deadlines …) — the
+  // Sub-view ids are also URL segments (/prep/flashcards, /portfolio/milestones …) — the
   // canonical list of each lives in src/lib/routes.js, which `npm run verify:routing`
   // pins to the *_SUBNAV arrays above so a new sub-tab can't ship without a URL.
   const [prepView, setPrepView] = useState(boot.prepView); // diagnostic|pathway|quizzes|flashcards|coach|library
-  const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|colleges|essays|deadlines|aid|resume|interview|scores|calc
+  const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|tracked|milestones|colleges|essays|aid|resume|interview|calc
   const [progressView, setProgressView] = useState(boot.progressView); // overview|verified|performance|achievements
   const [satView, setSatView] = useState(boot.satView); // overview|diagnostic|practice|tests|review|skills|scores
   // Deep-link params for the SAT tab (e.g. "drill this specific skill", "resume
@@ -5536,7 +5540,7 @@ export default function App({ account, onAccountChange }) {
       {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need action`:'all current',col:C.violet},
       {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools',col:C.sky},
       {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
-      {view:'deadlines',ic:CalendarDays,label:'Deadlines',value:(upcomingDeadlines||[]).length,sub:'upcoming',col:C.rose},
+      {view:'milestones',ic:Milestone,label:'Milestones',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'deadlines & timeline',col:C.indigo},
       {view:'aid',ic:Handshake,label:'Financial Aid',value:scholarshipCount,sub:'scholarships',col:C.green},
       {view:'resume',ic:Award,label:'Activities',value:portActivities.length,sub:'on your resume',col:C.amber},
       {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'experiences',col:C.cyan},
@@ -5544,7 +5548,6 @@ export default function App({ account, onAccountChange }) {
       {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'logged',col:C.pink},
       {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'tracked',col:C.fuchsia},
       {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'mock sessions',col:C.orange},
-      {view:'timeline',ic:Milestone,label:'Timeline',value:appTimeline?appTimeline.stats.upcoming:null,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'your whole arc',col:C.indigo},
     ];
 
     return(
@@ -6752,7 +6755,7 @@ export default function App({ account, onAccountChange }) {
             </button>
             <div>
               <div style={{fontSize:13,fontWeight:600,color:C.t1}}>I'm an AP/IB student</div>
-              <div style={{fontSize:11,color:C.t3,marginTop:1}}>Unlocks AP/IB exam deadline types on the Deadlines tab</div>
+              <div style={{fontSize:11,color:C.t3,marginTop:1}}>Unlocks AP/IB exam dates on your Milestones tab</div>
             </div>
           </div>
         </div>
@@ -6999,20 +7002,22 @@ export default function App({ account, onAccountChange }) {
       </div>
     );
   }
-  // ── Portfolio: overview + colleges/essays/deadlines/aid/resume/interview/scores/calc ──
+  // ── Portfolio: overview + milestones/colleges/essays/aid/resume/interview/calc ──
   // Each sub-view inherits ITS OWN SubNav color as its accent so the whole
   // Portfolio reads as a spectrum of distinct, recognisable sections (matching
   // the pill it was opened from) rather than one flat green everywhere.
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
-    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline} user={user} onNavigate={goAnywhere} isMobile={isMobile}/>,
+    overview:tPort, calc:tCalc,
+    milestones:()=><PortfolioMilestones accent={portC.milestones} user={user} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}
+      onNavigate={goAnywhere} isMobile={isMobile}
+      onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
     // The follow-through board for every Track button in the app. Reads the same shared snapshot
     // the Overview dashboards do (portSnapshot), so the two can never disagree, and files a
     // deterministic daily report with an AI voice layered on top — see TrackedPanel.jsx.
     tracked:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.tracked}
       askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
       pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/>,
-    deadlines:()=><DeadlinesPanel accent={portC.deadlines} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,

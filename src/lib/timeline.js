@@ -451,7 +451,7 @@ export const MILESTONES = [
     id: 'jr_finalize_list', title: 'Finalize the list and check every deadline', kind: 'planning', weight: P.important,
     grades: ['junior'], year: 'junior', monthDay: '07-20',
     detail: 'Lock the list, then put every school\'s EA/ED/RD and aid dates into the app from each college\'s own admissions page. Published dates beat remembered ones.',
-    action: { tab: 'portfolio', view: 'deadlines', label: 'Open deadlines' },
+    action: { tab: 'portfolio', view: 'milestones', label: 'Add the real date' },
     why: () => 'The list stops being editable the moment essays start, so it should be right before August.',
     done: (c) => c.collegesWithDates >= 3, doneLabel: 'Dates entered',
   },
@@ -537,7 +537,7 @@ export const MILESTONES = [
     id: 'sr_ea_ed', title: 'Early Action / Early Decision deadlines', kind: 'application', weight: P.critical,
     grades: ['senior', 'gap'], year: 'senior', monthDay: '11-01',
     detail: 'The most common early date. ED is binding — you may only apply ED to one school and you are committing to attend if admitted, before you see the aid offer.',
-    action: { tab: 'portfolio', view: 'deadlines', label: 'Open deadlines' },
+    action: { tab: 'portfolio', view: 'milestones', label: 'Add the real date' },
     when: (c) => !c.hasCollegeEarlyDates,
     why: () => 'None of your schools have an early deadline entered yet, so this is the typical date until you confirm each one.',
   },
@@ -545,7 +545,7 @@ export const MILESTONES = [
     id: 'sr_uc', title: 'University of California application deadline', kind: 'application', weight: P.critical,
     grades: ['senior', 'gap'], year: 'senior', monthDay: '11-30',
     detail: 'One application for all nine campuses, on its own system with its own Personal Insight Questions — and no extensions. It closes at the end of November regardless of what the Common App is doing.',
-    action: { tab: 'portfolio', view: 'deadlines', label: 'Open deadlines' },
+    action: { tab: 'portfolio', view: 'milestones', label: 'Add the real date' },
     when: (c) => c.hasUC,
     why: () => 'You have a University of California campus on your list, and the UC system runs on its own calendar.',
   },
@@ -585,7 +585,7 @@ export const MILESTONES = [
     id: 'sr_rd', title: 'Regular Decision deadlines', kind: 'application', weight: P.critical,
     grades: ['senior', 'gap'], year: 'senior', monthDay: '01-01',
     detail: 'January 1 and January 15 are the two most common. Submit on December 30 — support lines close for the holidays and portals do go down.',
-    action: { tab: 'portfolio', view: 'deadlines', label: 'Open deadlines' },
+    action: { tab: 'portfolio', view: 'milestones', label: 'Add the real date' },
     when: (c) => !c.hasCollegeRdDates,
     why: () => 'No regular-decision dates are entered from your college list yet, so this is the typical date until you confirm each school.',
   },
@@ -954,9 +954,14 @@ function profileEvents(ctx, snapshot, testScores) {
     out.push({
       id: `deadline_${d.id || d.title}_${d.due_date}`, date: d.due_date, title: d.title,
       kind: DEADLINE_KIND_MAP[d.kind] || 'application', weight: P.critical,
-      detail: 'A deadline you are tracking in the Deadlines panel.',
+      detail: 'A date you added yourself. It counts down here and on your Home dashboard.',
       source: 'profile', confidence: 'exact',
-      action: { tab: 'portfolio', view: 'deadlines', label: 'Open deadlines' },
+      // ownerRef marks the one class of event that is a real, editable row rather than a
+      // derived one — the Milestones tab renders these with a delete control so the feed is
+      // where you manage your own dates, not just where you read them. Everything else on
+      // the timeline is computed from data owned by another panel and must be edited there.
+      ownerRef: { resource: 'deadlines', id: d.id, kind: d.kind || 'custom' },
+      action: null,
       why: 'You added this one yourself.',
       ...classify(d.due_date, today, { weight: P.critical }),
     });
