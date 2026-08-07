@@ -1,235 +1,625 @@
 # AscendPrep (medschoolprep-dev)
 
-Welcome to **AscendPrep** (internally configured as `medschoolprep`), a React-based preparation platform built using Vite and Framer Motion. This workspace is specifically designed for high school and undergraduate students preparing for college, exams, and future admissions paths. All legacy graduate-level/medical depth has been removed or reframed, keeping focus on secondary-to-undergraduate pathways (e.g. SAT/ACT prep, application portfolios, and undergraduate pre-professional tracking).
+Welcome to **AscendPrep** (internally configured as `medschoolprep`), a comprehensive, production-grade, React-based preparation platform built using Vite, Tailwind CSS, and Framer Motion.
+
+This workspace is specifically engineered for high school and undergraduate students preparing for college admissions, exams, and future career pathways. All legacy graduate-level/medical depth has been removed or reframed, keeping focus strictly on secondary-to-undergraduate pathways (e.g. SAT/ACT prep, college application portfolios, financial aid, admissions planning, and undergraduate pre-professional tracking).
+
+This README acts as the complete, single source of truth for the entire application, containing its core architecture, system mechanisms, API routes, testing/verification engines, environment variables, and an exhaustive file directory mapping the exact purpose of **every single file in the repository**.
 
 ---
 
-## Deployments
+## 📖 Table of Contents
+1. [Platform Core & Workspace Architecture](#platform-core--workspace-architecture)
+2. [Platform-Wide Systems & Engines](#platform-wide-systems--engines)
+3. [Deployments & Environment Routing](#deployments--environment-routing)
+4. [Complete Environment Variables Reference](#complete-environment-variables-reference)
+5. [URLs, History Routing & SEO](#urls-history-routing--seo)
+6. [Offline Capabilities & Local Storage](#offline-capabilities--local-storage)
+7. [Testing, Audits & Quality Control Suites](#testing-audits--quality-control-suites)
+8. [Spelling Standards & Verification](#spelling-standards--verification)
+9. [Onboarding & Test Bypassing Mechanisms](#onboarding--test-bypassing-mechanisms)
+10. [Local Development Setup](#local-development-setup)
+11. [Branding & Legal Guidelines](#branding--legal-guidelines)
+12. [Comprehensive File Directory Mapping](#comprehensive-file-directory-mapping)
 
-The application is deployed in two distinct environments that require **separate configuration**. Setting environment variables in one deployment does not affect the other.
+---
 
-| Feature | Vercel (Test Environment) | Coolify / VPS (Production Environment) |
+## 🛠 Platform Core & Workspace Architecture
+
+AscendPrep consists of seven top-level tabs (`NAV` in `App.jsx` and `TABS` in `routes.js`):
+
+### 1. Home Tab (`/`)
+An interactive daily workspace and overview hub. Shows the daily streak, personalized nudges, study milestones, today's schedule, and the **RewardChest** overlay (daily check-in gamification component).
+
+### 2. SAT Hub (`/sat/...`)
+A state-of-the-art prep suite mirroring the Digital SAT framework. Features:
+- **Desmos Graphing Calculator:** A genuine, embedded Desmos API integration for real-time math graphing (`DesmosSurface.jsx` and `desmos.js`).
+- **Baseline Diagnostic:** A fast, adaptive baseline engine to measure current student performance using score curves (`SatBaselinePanel.jsx`).
+- **Adaptive Full-Length Tests:** 5 full length practice tests dynamically choosing Module 2 difficulty based on Module 1 performance (`SatFullTestPanel.jsx` and `adaptive.js`).
+- **Score Reports & Diagnostics:** Direct, domain-by-domain analytics including Reading/Writing and Math scores ranging from 400 to 1600 (`SatScoreReport.jsx`).
+- **Practice & Skills Panels:** Deep skill-by-skill drilling across Math and RW domains, mapped to real College Board difficulty tiers.
+
+### 3. Prep Hub (`/prep/...`)
+The core academic and tutoring gateway. Includes:
+- **Pathway Lessons:** Interactive learning pathways with 141 lessons across 10 units (e.g., Physician, Physician Assistant, Dentistry, Pharmacy, Nursing, Biomed Research, Public Health, Health Administration, etc.) adapted for high school to undergraduate exploration.
+- **Verification Quizzes:** Concept verification quizzes supporting randomized answer shuffling via `scrambleQuiz`.
+- **E-Library (`elib.js`):** A massive database of 623 verified real-world high-quality resources spanning six core categories (Life Sciences, Physical Sciences, Behavioral Sciences, Research Methods, Test Prep, Admissions & Planning). Includes a **Coaching Insights Banner** that updates dynamically depending on the active resource filter.
+- **Spaced-Repetition Flashcards:** Offline-first flashcards utilizing an Anki-grade FSRS scheduling algorithm with NLP-based automatic factual card extraction.
+
+### 4. Portfolio Hub (`/portfolio/...`)
+Admissions milestones, resumes, activities, and college selection dashboard. Features:
+- **Milestones (Timeline):** Date engine mapping grades and timelines (Freshman through Senior/Gap) to correct admissions phases.
+- **Common App Activity Builder & Honors Log:** Exports directly to standard formats.
+- **Financial Aid & Scholarship Databases:** Comprehensive tools to catalog, filter, and track scholarship deadlines.
+- **Essays Workspace:** An interactive editor to draft, review, and evaluate college admissions and supplemental essays with Medabrain AI.
+- **Clinical & Research Loggers:** Tracks pre-professional hours, milestones, and supervisor signatures.
+- **Interview Simulator:** Spoken back-and-forth mock interview training with real-time scoring.
+
+### 5. Plans Tab (`/plans`)
+Generates structured day-by-day and week-by-week study master roadmaps utilizing the high-reasoning **Oracle** model. Supports manual adjustments and accessibility-friendly animations (supporting `reducedMotion` state forwarding).
+
+### 6. Progress Tab (`/progress/...`)
+The analytics and gamification reporting dashboard. Visualizes lesson completion percentages, quiz histories, achievements earned, daily activity heatmaps, and total acquired XP.
+
+### 7. Settings Tab (`/settings`)
+Customizes UI configuration, account profile settings, dark/light theme options, accessibility controls (reduced motion, high-contrast ratios), speech synthesis voices, and reviews user subscription statuses.
+
+---
+
+## 🤖 Platform-Wide Systems & Engines
+
+### Medabrain AI Coaching & Intelligence Pool
+Medabrain operates on a purpose-scoped API key pool to maximize rate limit headroom on the free tier. When a call to `/api/groq.js` is triggered, it specifies a `purpose` and falls back gracefully to a shared key pool if no dedicated API key is configured.
+- **Scout** (`llama-3.1-8b-instant`): Ultralight, blisteringly fast for simple conversational turns.
+- **Guide** (`openai/gpt-oss-20b`): Balanced default model tier, powering primary conversations.
+- **Sage** (`llama-3.3-70b-versatile`): Highly capable model for complex reasoning, essay critiques, and deep SAT tutor guidance.
+- **Oracle** (`openai/gpt-oss-120b`): Server-side model with 131K context window, 32k completion window, and `high` reasoning effort. Powering `masterplan` generation.
+
+### Gamification Engine (`src/lib/gamification.js` & `rewards.js`)
+Calculates and awards XP, tracks streaks, issues achievements, and logs study events. Completing an E-Library study notes milestone awards +15 XP. Unlocking a milestone, verifying a unit, or logging daily check-ins is managed via a transactional, server-synchronized reward queue (`rewardClaimQueue.js`) to prevent double-claiming or progress loss.
+
+### Responsive Grid ('RG') and Media Layout Framework
+AscendPrep utilizes a custom grid layout architecture ('G' and 'RG' components) supporting automated column-stacking flags (`m` flags) on mobile screens. Video overlays utilize a specific mobile-responsive `VideoModal` capping max width at 1000px while defaulting to 95% width on small viewports.
+
+---
+
+## 🌐 Deployments & Environment Routing
+
+The application operates in a unified monorepo supporting two distinct hosting models:
+
+```
+                  ┌─────────────────────────────────────┐
+                  │          AscendPrep Monorepo        │
+                  └──────────────────┬──────────────────┘
+                                     │
+              ┌──────────────────────┴──────────────────────┐
+              ▼                                             ▼
+┌───────────────────────────┐                 ┌───────────────────────────┐
+│ Vercel (Test Environment) │                 │  Coolify/VPS (Production)  │
+├───────────────────────────┤                 ├───────────────────────────┤
+│ Serverless Function       │                 │ Node/Express Server       │
+│ File-system API Routing   │                 │ `server.js`               │
+│ (`api/**/*.js`)           │                 │ SPA Falling-back + Static │
+└───────────────────────────┘                 └───────────────────────────┘
+```
+
+> ⚠️ **Developer Constraint:**
+> If you create a new endpoint under `api/`, Vercel exposes it automatically as a serverless route. However, under Coolify/VPS, you **must manually import and mount it in `server.js`**. Otherwise, requests will return `404 Not Found` in production.
+
+---
+
+## 🔐 Complete Environment Variables Reference
+
+| Variable Name | Type | Purpose |
 | :--- | :--- | :--- |
-| **Domain** | `medschoolprep-dev.vercel.app` | `medschoolprep.cloud` |
-| **How `/api` is served** | Vercel auto-detects each `api/**/*.js` file and wires it up as a serverless function using Vercel-specific file-system routing. Each module exports a standard serverless `handler(req, res)`. | `server.js` (Express) imports those same handler modules and mounts them manually. It serves the pre-built `dist/` directory for client routes and SPA fallback. Build is handled via a `Dockerfile`. |
-| **Configuration Path** | Vercel Dashboard → Project Settings → Environment Variables | Coolify Dashboard → Application → Environment Variables tab |
-
-> ⚠️ **Important Developer Note on Routing Alignment:**
-> If you add a new file under the `api/` directory, it is automatically picked up by Vercel's file-system routing. However, on Coolify/VPS, you **must manually import and mount it in `server.js`**. Failing to do so will cause the endpoint to silently return `404 Not Found` in production, even if it runs perfectly on Vercel.
-
----
-
-## Complete Environment Variables Reference
-
-To ensure fully functional operations across database operations, email dispatch, AI-powered features, and advanced test suites, configure the following environment variables.
-
-### 1. Database Configuration (Supabase)
-This application utilizes Supabase solely as a server-side storage and synchronization engine. The client application never accesses Supabase directly or runs client-side SDK code; instead, all transactions and sync events are brokered through our custom `/api` endpoints using the **Supabase Service Role Key**. This enables per-user ownership to be validated and enforced programmatically at the API layer.
-
-| Variable Name | Type | Description / Value |
-| :--- | :--- | :--- |
-| `SUPABASE_URL` | String | The full URL of your Supabase project (e.g., `https://<project-ref>.supabase.co`). |
-| `SUPABASE_SERVICE_ROLE_KEY` | String | The high-privilege `service_role` API key (never use the `anon` key). |
-
-#### Google sign-in (Supabase Auth)
-"Sign in / up with Google" (`GoogleButton`, `src/lib/supabaseClient.js`) is the one place the browser talks to Supabase directly — `supabase.auth.signInWithOAuth` has to run client-side to redirect to Google. It uses the public **anon** key only, never the service-role key, and the resulting Supabase access token is immediately traded in at `/api/auth/google` for this app's own session token (same `sessions` table every other sign-in path uses) — the client still never reads/writes Supabase tables directly.
-
-| Variable Name | Type | Description / Value |
-| :--- | :--- | :--- |
-| `VITE_SUPABASE_URL` | String | Same value as `SUPABASE_URL`, exposed to the client build (must be prefixed `VITE_`). |
-| `VITE_SUPABASE_ANON_KEY` | String | The Supabase project's public **anon** key (Project Settings → API). Never the service role key. |
-
-Setup, once per Supabase project:
-1. Supabase Dashboard → Authentication → Providers → enable **Google**, with your Google OAuth Client ID/Secret.
-2. Supabase Dashboard → Authentication → URL Configuration → add `https://<your-domain>/auth/callback` (and the Vercel preview domain, if used) to **Redirect URLs**.
-3. Google Cloud Console → OAuth Client → Authorized redirect URIs → add the Supabase callback URL shown on the Google provider page (`https://<project-ref>.supabase.co/auth/v1/callback`).
-4. Set `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in both Vercel and Coolify — if unset, the Google button shows a friendly "not configured" error instead of breaking the page.
+| `SUPABASE_URL` | String | Full URL of the Supabase project. Used by Server API endpoints. |
+| `SUPABASE_SERVICE_ROLE_KEY` | String | Server-side high-privilege key used for DB writes and sync operations. |
+| `VITE_SUPABASE_URL` | String | Same as `SUPABASE_URL`, exposed to client build for Google sign-in. |
+| `VITE_SUPABASE_ANON_KEY` | String | Public anon key, used solely for OAuth callbacks on client side. |
+| `SMTP_HOST` / `SMTP_PORT` | String/Num | SMTP Relay host (Brevo, default) and TLS port (e.g., 587) for OTP emails. |
+| `SMTP_USER` / `SMTP_PASS` | String | SMTP email username and secret password. |
+| `GROQ_API_KEY` | String | **Required.** Primary Groq API key for conversational AI. |
+| `GROQ_API_KEY_2` / `_3` | String | Optional failover/pooling keys from alternative Groq accounts. |
+| `GROQ_API_KEY_INTERVIEW` | String | Dedicated key for the spoken interview simulator. |
+| `GROQ_API_KEY_PORTFOLIO` | String | Dedicated key for resume, essay review, and milestones coaching. |
+| `GROQ_API_KEY_PREP` | String | Dedicated key for lesson and library content help. |
+| `GROQ_API_KEY_PLAN` | String | Dedicated key for `masterplan` day-by-day generating. |
+| `GROQ_API_KEY_SAT` | String | Dedicated key for SAT math and rw explanations. |
+| `VITE_DESMOS_API_KEY` | String | Desmos Client API key. Falls back to a demo key if not configured. |
+| `SITE_ORIGIN` | String | Canonical site domain used to generate sitemap.xml. |
+| `PORT` | Number | Port binding for the production Express server (`server.js`, default: 3000). |
+| `SAT_CHECK_URL` | String | Target URL examined by SAT automated verification scripts (default: http://localhost:5173). |
+| `SAT_DESMOS_LIVE` | String/Num | Set to `1` during verification tests to run live external Desmos assertions. |
+| `E2E_PORT` | Number | Dynamic port used during E2E verification tests (default: 4319). |
+| `E2E_DEBUG` | String/Num | Set to `1` or `true` to enable verbose standard-error and stack-trace logs. |
 
 ---
 
-### 2. SMTP / Email Configuration (Brevo)
-Transactional emails (such as OTP registration and reset codes) are dispatched server-side using Nodemailer over an SMTP relay. The default configuration uses Brevo's SMTP service.
+## 🗺 URLs, History Routing & SEO
 
-| Variable Name | Type | Description / Value |
-| :--- | :--- | :--- |
-| `SMTP_HOST` | String | SMTP Relay host. Typically `smtp-relay.brevo.com`. |
-| `SMTP_PORT` | Number | SMTP Port. Recommended `587` (TLS/STARTTLS) or `465` (SSL). |
-| `SMTP_USER` | String | The verified account email address or credential registered with Brevo. |
-| `SMTP_PASS` | String | The SMTP secret key generated inside your Brevo Settings panel. |
-| `SMTP_FROM` | String | *(Optional)* The verified sender address. Falls back to `SMTP_USER` if not specified. |
-
----
-
-### 3. Medabrain AI Coaching & Intelligence (Groq API keys)
-**Medabrain** is the contextual AI coaching and tutoring workspace. To maximize rate-limit headroom on the free tier and enable precise cost/performance attribution, Medabrain uses a **purpose-scoped key pool** architecture.
-
-When a request is sent to `/api/groq.js`, it specifies a `purpose`. If a dedicated API key for that purpose is configured, the server uses it. Otherwise, it transparently falls back to the shared Medabrain key pool (`GROQ_API_KEY`, `GROQ_API_KEY_2`, and `GROQ_API_KEY_3`).
-
-#### Purpose-Scoped Routing Table
-| `purpose` | Subsystem Powered | Default Model Tier Used | Dedicated Key Variable |
-| :--- | :--- | :--- | :--- |
-| `coach` | Primary conversational coach | Guide (Balanced) / Auto | *(Uses shared pool)* |
-| `interview` | Conversational mock-interview simulator | Guide (Balanced) | `GROQ_API_KEY_INTERVIEW` |
-| `portfolio` | Rich resume, activities, essay, and college tracking advice | Sage (Deep) | `GROQ_API_KEY_PORTFOLIO` |
-| `prep` | In-context tutoring help (e.g. lesson, quiz, or video questions) | Guide (Balanced) | `GROQ_API_KEY_PREP` |
-| `plan` | Onboarding diagnostic plan fallback / legacy | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_PLAN` |
-| `masterplan` | Plans tab: detailed day-by-day roadmap generator | Oracle (Max Completion / Reasoning) | `GROQ_API_KEY_PLAN` |
-| `sat` | SAT drills, hints, step-by-step explanations, and coach | Sage (Deep) | `GROQ_API_KEY_SAT` |
-
-#### Key Configuration Variable Names
-| Variable Name | Type | Description / Value |
-| :--- | :--- | :--- |
-| `GROQ_API_KEY` | String | **Required.** Primary Groq API key (starts with `gsk_...`). |
-| `GROQ_API_KEY_2` | String | *(Optional)* Failover / pooling key from a second Groq account. |
-| `GROQ_API_KEY_3` | String | *(Optional)* Failover / pooling key from a third Groq account. |
-| `GROQ_API_KEY_INTERVIEW` | String | *(Optional)* Dedicated key for conversational interview simulation. |
-| `GROQ_API_KEY_PORTFOLIO` | String | *(Optional)* Dedicated key for Portfolio Meta Brain advice. |
-| `GROQ_API_KEY_PREP` | String | *(Optional)* Dedicated key for inline homework/prep help. |
-| `GROQ_API_KEY_PLAN` | String | *(Optional)* Dedicated key for the Plans tab master roadmap generation (and onboarding legacy fallback). |
-| `GROQ_API_KEY_SAT` | String | *(Optional)* Dedicated key for SAT tutor queries. |
-
-#### Model Tiers Overview
-Students never select a model or tier manually. The application automatically determines the optimal model dynamically using `classifyCoachTier()` based on message complexity and length:
-
-- **Scout** (`llama-3.1-8b-instant`): Ultralight, blisteringly fast. Perfect for quick conversational turns and short explanations.
-- **Guide** (`openai/gpt-oss-20b`): Our balanced default option, delivering structured reasoning and rich formatting without heavy overhead.
-- **Sage** (`llama-3.3-70b-versatile`): Highly capable model reserved for complex questions, deep strategic advice, and essay review feedback.
-- **Oracle** (`openai/gpt-oss-120b`): Server-side only model reserved for `purpose: 'masterplan'`. It leverages a 131K context window, a 32,768-token max completion window, and `reasoning_effort: 'high'` to craft reliable, extensive, day-by-day JSON plans.
-
----
-
-### 4. Client & Third-Party Keys
-These parameters are resolved or bundled at build-time or are client-facing.
-
-| Variable Name | Type | Description / Value |
-| :--- | :--- | :--- |
-| `VITE_DESMOS_API_KEY` | String | **Build-time variable.** Prefix `VITE_` forces Vite to bundle this key directly into the production JS assets. It powers the integrated SAT graphing calculator. Without it, the calculator will gracefully fall back to the public demo key, which has lower rate-limits. Get yours at [desmos.com/api](https://www.desmos.com/api). |
-
----
-
-### 5. Build, E2E Testing, and Script Variables
-These flags configure tests, automated script targets, port bindings, and sitemap generation parameters.
-
-| Variable Name | Type | Default Value | Description / Value |
-| :--- | :--- | :--- | :--- |
-| `SITE_ORIGIN` | String | `https://medschoolprep.cloud` | Used by `scripts/generateSitemap.mjs` to prepend the correct domain onto canonical URLs. |
-| `PORT` | Number | `3000` | The port binding used by the Express production server (`server.js`). |
-| `SAT_CHECK_URL` | String | `http://localhost:5173` | The target base URL examined by the SAT verification scripts (`verifySatTab.mjs`, `verifySatDesmos.mjs`, etc.). |
-| `SAT_DESMOS_LIVE` | Number/String | `0` (or unset) | Set to `1` during test execution to force the SAT Desmos script to run assertions against the live, genuine external Desmos API. |
-| `E2E_PORT` | Number | `4319` | The port on which the temporary Express server is launched during `verifyRoutingE2E.mjs` execution. |
-| `E2E_DEBUG` | Number/String | Unset | Set to `1` or `true` to enable verbose standard-error and stack-trace logs during end-to-end routing validation. |
-
----
-
-## URLs, Routing, and SEO
-
-AscendPrep utilizes a synchronized, state-preserving routing architecture designed to keep URLs in perfect harmony with the UI state. When a student navigates through the application, the URL is automatically mapped using HTML5 History API updates without causing unnecessary page re-renders.
-
-### Key Route Maps
+### URL Schema
 - **Home:** `/`
-- **General Tabs (No sub-navigation):** `/plans`, `/settings`
-- **Tabs with subviews:** `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements`
-- **Interactive Player Routes:**
+- **Root Tabs:** `/plans`, `/settings`
+- **Nested Subtabs:** `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements`
+- **Interactive Modals:**
   - Pathway Lesson: `/prep/pathway/lesson/<unitId>/<lessonId>`
   - Practice Quiz: `/prep/quizzes/quiz/<quizId>`
-- **Unauthenticated Pages:** `/login`, `/signup`, `/forgot-password`
+- **Auth Views:** `/login`, `/signup`, `/forgot-password`, `/auth/callback`
 
-### Sitemap & Search Engine Optimization
-To maximize SEO health while maintaining strict user privacy, only public landing, login, and registration routes are indexed.
-- `scripts/generateSitemap.mjs` automatically updates both `public/sitemap.xml` and `public/robots.txt` upon running `npm run build`.
-- Authentication-locked pages are deliberately omitted from the sitemap and utilize client-side `noindex` directives to prevent search engine indexing of duplicated landing content.
+### History Sync Invariant
+Every render computes the canonical path for the current state. Push a history entry **only** when that path differs from `location.pathname`. This ensures flawless hardware back-button navigation with no double-entry states.
 
-### File Request and SPA Routing Alignment
-To prevent server configurations from treating standard file requests (such as `.xml`, `.png`, or `.css`) as routing fallback requests, our servers utilize extension matching rules:
-- Any requested URL ending in a visible extension (e.g., `/sitemap.xml`) is handled strictly as a static file. If the file doesn't exist, the server returns a proper `404 Not Found` response instead of serving the SPA default layout.
-- This behavior is tested automatically via `npm run verify:routing-e2e` to prevent crawl failures.
+### Crawler Fallback Guard
+URLs ending in standard file extensions (e.g., `/sitemap.xml`, `/favicon.png`) are handled strictly as static files. If missing, the server returns a proper `404 Not Found` response instead of serving the SPA default layout to prevent search crawlers from indexing duplicate content.
 
 ---
 
-## Offline Features (No API Keys / No Network Needed)
+## 💾 Offline Capabilities & Local Storage
 
-To maximize reliability and ensure complete functionality without internet access, several core components of AscendPrep run entirely client-side:
-
-### Spaced-Repetition Flashcards
-- **Local Generation Engine:** Built using an in-browser parsing pipeline via `compromise` (MIT-Licensed). This allows students to paste rich notes and immediately compile a review deck locally. The system only extracts facts directly present in the pasted notes to avoid AI hallucinations.
-- **Scheduling Algorithm:** Downstream scheduling is powered natively in the browser by FSRS (`ts-fsrs`), matching Anki's gold-standard spaced-repetition logic. State is saved immediately to IndexedDB.
+To maximize reliability and ensure network-independent functionality, three key systems run completely inside the student's browser:
+1. **FSRS Scheduling Engine:** Powered natively by `ts-fsrs` and stored within IndexedDB under `db.flashcards`.
+2. **Local Flashcard Extraction:** Built using a client-side NLP parsing pipeline via `compromise` (MIT). This parses raw student notes locally and extracts facts without server dependencies or AI hallucination risks.
+3. **Durable Track Outbox (`trackQueue`):** Tracks and buffers user actions (tracking colleges, scholarships, activities) when offline or on unstable networks. Queued items are stored in `db.trackQueue` and are synchronized automatically once a connection is re-established.
 
 ---
 
-## Audits & Verification Suites
+## 🧪 Testing, Audits & Quality Control Suites
 
-The repository is equipped with a comprehensive suite of automated testing, structural audits, and quality control checks. Running these ensures that lesson pathways, video links, test parameters, and tracking metrics remain perfectly valid.
+The application features ten distinct automated checks. You can execute them individually or launch the full suite via:
+```bash
+npm run audit:all
+```
 
-| Command | Subsystem Scanned | Details / Operations Checked |
+| NPM Command | Target Area | Checked Constraints |
 | :--- | :--- | :--- |
-| `npm run audit:lessons` | Learning Pathways | Scans 141 lessons across 10 pathways. Verifies every lesson possesses objectives, proper Markdown structures, and either a validated YouTube ID or an explicit video-omitted developer comment. |
-| `npm run audit:videos` | Pathway Video Embeds | Resolves every lesson YouTube ID against Youtube's oEmbed endpoint to guarantee no dead URLs or title mismatches occur. |
-| `npm run audit:sat` | SAT Practice Bank | Validates the 466 SAT practice questions across 28 distinct academic skills. Audits character boundaries, option balances, and grid-in formatting. |
-| `npm run audit:sat-videos` | SAT Video Library | Checks the 130 videos assigned to the SAT skill database to confirm all IDs are live and resolve properly. |
-| `npm run audit:sat-resources`| SAT Resource Catalog | Cross-checks references between SAT skills, practice sets, and embedded resource links. |
-| `npm run verify:sat-scoring` | SAT Score Calculation | Unit tests the scaled-score calculation matrices for Reading/Writing and Math. |
-| `npm run verify:sat-forms` | SAT Interactive Inputs | Asserts that input controls, multiple-choice clicks, and Student-Produced Response text inputs handle all edge cases. |
-| `npm run verify:sat-baseline` | SAT Diagnostic Baseline| Asserts diagnostic scoring curves and diagnostic baseline recommendation profiles. |
-| `npm run verify:tracking` | Event Tracking & Logging | Audits user event emission schemas, milestone completions, and gamification rewards. |
-| `npm run verify:routing` | Route & SPA Static Map | Validates the route tables against physical `App.jsx` subview options and checks the static sitemap.xml. |
-| `npm run verify:timeline` | Application Timeline Engine | Asserts the milestone catalog and date engine behind Portfolio > Milestones: grade gating (a freshman is never shown financial-aid, application, or decision milestones), academic-year resolution across the August rollover, generated-vs-student-entered date labelling, and that logged rows satisfy milestones instead of nagging. |
-| `npm run verify:routing-e2e`| End-To-End Browser Route | Uses Playwright to drive a headless browser against a compiled build. Simulates back/forward navigation, deep links, page reloads, and scroll preservation. |
-| `npm run audit:all` | **Complete Health Check** | Executes every individual structural, video, data, and score test script sequentially. Returns zero on full success; exits with non-zero on any sub-test failure. |
+| `npm run audit:lessons` | Learning Pathways | Verifies objectives, formatting, and youtube ID fields across all 141 lessons. |
+| `npm run audit:videos` | YouTube Embeds | Checks lesson video IDs against YouTube's oEmbed endpoint to prevent broken links. |
+| `npm run audit:sat` | SAT Practice Bank | Verifies answer balance, question lengths, and student-produced math string layouts. |
+| `npm run audit:sat-videos` | SAT Video Recs | Resolves all 130 assigned videos in the SAT skill catalog. |
+| `npm run audit:sat-resources`| SAT Study Resources| Validates link references between external documentation and the study catalog. |
+| `npm run verify:sat-scoring` | SAT Score Matrices | Validates scaled score matrices for Reading/Writing and Math domains (400-1600). |
+| `npm run verify:sat-forms` | SAT Test Forms | Audits Form A through E question maps to ensure they share zero questions and contain exactly 147 questions. |
+| `npm run verify:sat-baseline` | Adaptive Baseline | Asserts baseline diagnostic calibration scores and difficulty banding curves. |
+| `npm run verify:tracking` | Event Tracking | Asserts that data tracking (saving opportunities, colleges, essays) is completely lossless, deduped, and idempotent. |
+| `npm run verify:timeline` | Milestones Engine | Validates date calculations and academic-year rollovers for freshman-to-senior grade-gated milestones. |
+| `npm run verify:routing` | Router Integrity | Confirms that routes round-trip perfectly and align with App subnav views. |
+| `npm run verify:routing-e2e`| Playwright Browser | Launches Playwright to perform end-to-end clicks, back/forward history actions, and sitemap exclusions in a headless browser. |
 
 ---
 
-## Local Development Setup & Execution
+## 🔠 Spelling Standards & Verification
 
-Setting up your workspace locally is simple and requires only Node.js (>= 22.0.0).
+AscendPrep standardizes strictly on **American English** spelling conventions (e.g., *practice*, *behavior*, *color*, *defense*, *license*, *kilometer*).
+
+To enforce this, a spelling verification script is available:
+```bash
+python3 /home/jules/self_created_tools/check_spelling.py
+```
+> ⚠️ **Exceptions to the Rule:**
+> Proper nouns, official names of universities/colleges (e.g. in `src/data/worldColleges.js`), and original external URLs (such as the International Baccalaureate URL in `src/data/elibExpansionD.js`) must preserve their original spellings to maintain factual correctness and avoid broken links.
+
+---
+
+## 🛡 Onboarding & Test Bypassing Mechanisms
+
+During automated browser testing or manual verification, initial page load triggers a Name Onboarding prompt (requires submitting a name, e.g. "Alex") followed by a daily check-in chest overlay (`RewardChest`) that must be cleared before navigating further.
+
+To bypass these gates during Playwright end-to-end tests:
+1. Write a session token (`msp_session_token`) to `localStorage`.
+2. Mock the GET `/api/auth/me` endpoint to return a valid JSON user profile:
+   ```json
+   {
+     "user": {
+       "name": "Test Student",
+       "onboardingComplete": true
+     }
+   }
+   ```
+
+---
+
+## 🚀 Local Development Setup
 
 ### 1. Install Dependencies
 ```bash
 npm install
 ```
 
-### 2. Configure Local Environment
-Create a `.env.local` file at the project root directory and add your keys:
-```env
-# Database & Backend Sync
-SUPABASE_URL=https://your-supabase-ref.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_secret
+### 2. Configure Environment variables
+Create a `.env.local` file at the project root directory using the fields documented in [Complete Environment Variables Reference](#complete-environment-variables-reference).
 
-# SMTP Email Relay
-SMTP_HOST=smtp-relay.brevo.com
-SMTP_PORT=587
-SMTP_USER=your-verified-brevo-email@domain.com
-SMTP_PASS=your_brevo_smtp_password_key
-
-# AI Medabrain API Keys
-GROQ_API_KEY=gsk_your_primary_shared_groq_key
-# Optional pools:
-# GROQ_API_KEY_2=gsk_your_second_pool_key
-# GROQ_API_KEY_SAT=gsk_your_sat_tutor_key
-
-# Frontend Calculator Integration
-VITE_DESMOS_API_KEY=your_desmos_client_key
-```
-
-### 3. Run Development Server
-Spins up Vite's local development server with hot-module reloading:
+### 3. Start Development Server
 ```bash
 npm run dev
 ```
 
-### 4. Build and Run Production Locally
-To mimic a production VPS environment locally, build the client assets first and then start the production Node server:
+### 4. Compile & Run Production Build
 ```bash
-# 1. Generate sitemap, run routing checks, and compile frontend assets to dist/
+# Compile and output optimized assets to dist/
 npm run build
 
-# 2. Start Express server (runs server.js) on port 3000
+# Start production Express server (server.js) on port 3000
 npm run start
 ```
 
 ---
 
-## Branding & Legal Guidelines
+## 📜 Branding & Legal Guidelines
 
-- **Product Name:** The consumer-facing coaching suite is branded as **"Medabrain"** or **"AscendPrep AI Coaching."**
-- **LLM Disclosures:** To remain fully compliant with consumer protection and advertising guidelines, avoid claiming that you own, trained, or built the underlying foundational models. A standard footer disclosure (such as *"Medabrain is powered by secure, large language model technology provided by leading vendors"*) is integrated into Settings and About panels.
-- **Offline Integrity:** Features that run entirely in the client browser (such as flashcard generation and FSRS scheduling) must be described as *"local client-side extraction technology"* rather than AI or cloud-generated, ensuring student transparency regarding data privacy and network-free operations.
+- **Product Identity:** The consumer-facing system is branded as **"AscendPrep"** or **"AscendPrep AI Coaching."** The tutoring agent is called **"Medabrain."**
+- **LLM Disclosures:** Do not claim that the application owns, trained, or built the underlying foundational models. Standard footers disclosing secure third-party vendor technology are required on Settings panels.
+- **Offline Integrity:** Features running in the client's browser (FSRS flashcards, NLP compromise fact extraction) must be described as *"local client-side extraction technology"* rather than cloud AI, ensuring transparency regarding data privacy and offline capability.
+
+---
+
+## 📂 Comprehensive File Directory Mapping
+
+This index provides a complete, itemized mapping of **every file in the entire repository** and its exact purpose in the AscendPrep ecosystem.
+
+### Root Configuration and Infrastructure Files
+- `package.json` — Defines project metadata, dependencies (React, Framer Motion, Dexie, ts-fsrs, Nodemailer, Express, compromise, Fuse.js, etc.), and script mappings for building, auditing, and executing the app.
+- `vite.config.js` — Vite bundler configuration. Customizes build outputs, handles fast module reloading, and defines the Service Worker navigation fallback exclusions list.
+- `vercel.json` — Configures rewrite routes, headers, and SPA routing fallback for the Vercel serverless environment.
+- `server.js` — Core Express production backend. Exposes static files, handles fallbacks, and manually imports/mounts Vercel serverless functions in the Coolify/VPS production environment.
+- `Dockerfile` — Configures the containerized build steps and runtime execution for production deployments on VPS.
+- `index.html` — The core SPA entry document. Integrates the asynchronous Google AdSense script inside the `<head>` and mounts the `#root` React component.
+- `possible lawsuits.md` — Documents a complete regulatory compliance, legal, privacy, and trademark risk audit of the repository.
+- `DEVELOPMENT.md` — High-level developer documentation outlining system setup.
+- `GROQ_SETUP.md` — Comprehensive guide to setting up purpose-scoped Groq keys.
+- `.gitignore` — Instructs Git on which local files (e.g., node_modules, dist, .env files) to omit from version control.
+- `.dockerignore` — Excludes local artifacts and caches from Docker image builds.
+
+---
+
+### Backend API Layer (`api/...`)
+These backend endpoints serve both Vercel Serverless and local Express routes.
+
+#### Auxiliary Library Modules (`api/_lib/...`)
+- `api/_lib/mailer.js` — Configures the Nodemailer SMTP mail transporter using Brevo settings for OTP emails.
+- `api/_lib/password.js` — Implements secure, server-side PBKDF2-based password hashing and verification algorithms.
+- `api/_lib/serializeUser.js` — Utility that filters out sensitive database fields (like password hashes) before sending user records to the client.
+- `api/_lib/session.js` — Manages server-side session tokens, validation routines, and security checks.
+- `api/_lib/supabaseAdmin.js` — Initializes the high-privilege administrative Supabase Client using the server-side service role key.
+- `api/_lib/verificationToken.js` — Generates and validates transient secure OTP tokens for user signup and password reset.
+
+#### Auth Endpoints (`api/auth/...`)
+- `api/auth/complete-signup.js` — Handles the final step of student registration, saving onboarding profiles after verification.
+- `api/auth/google.js` — Trades a Google OAuth token client-side for an AscendPrep session token, completing Google login.
+- `api/auth/login.js` — Authenticates email/password credentials, issuing secure user session cookies.
+- `api/auth/logout.js` — Revokes active user session tokens from the backend database.
+- `api/auth/me.js` — Retrieves and validates the current logged-in user's profile and onboarding states.
+- `api/auth/reset-password.js` — Verifies recovery OTP codes and updates user password hashes.
+- `api/auth/send-otp.js` — Generates and dispatches an authentication OTP code via email to a registering or recovering student.
+- `api/auth/verify-otp.js` — Validates email-entered OTP codes to activate or recover accounts.
+
+#### Content & Intelligent Routes (`api/...` root)
+- `api/data/[resource].js` — High-fidelity RESTful endpoint managing generic CRUD operations (colleges, activities, scholarships) against Supabase tables with per-user safety validation.
+- `api/groq.js` — Core router for Medabrain AI. Receives prompts, classifies model tiers, scopes keys, and queries Groq.
+- `api/progress-sync.js` — Synchronizes client-side Dexie states (XP, studied logs, milestones) with Supabase storage.
+- `api/reward-claim.js` — Handles server-side claims of gamification rewards to prevent double-claiming of XP.
+- `api/send-email.js` — Generic transactional endpoint supporting custom email dispatches (e.g., sharing plans or portfolios).
+
+---
+
+### Shared Frontend Libraries and Core State (`src/lib/...`)
+This layer handles background algorithms, client database management, tracking outboxes, and helper utilities.
+
+#### Core Flashcard Framework (`src/lib/flashcards/...`)
+- `src/lib/flashcards/aiPolish.js` — Calls the AI to format, refine, and improve flashcards generated by the local extractor.
+- `src/lib/flashcards/engine.js` — Schedules and filters cards queued for review.
+- `src/lib/flashcards/rank.js` — Ranks extracted factual blocks by student significance and clarity.
+- `src/lib/flashcards/segment.js` — Divides raw text inputs into logical academic paragraph blocks.
+- `src/lib/flashcards/text.js` — Performs clean, regular-expression-based string formatting on flashcard outputs.
+
+#### Local Fact Extractors (`src/lib/flashcards/extractors/...`)
+- `src/lib/flashcards/extractors/acronyms.js` — Extracts acronym definitions (e.g. "SAT - Scholastic Assessment Test").
+- `src/lib/flashcards/extractors/cloze.js` — Generates fill-in-the-blank style flashcards from raw study notes.
+- `src/lib/flashcards/extractors/comparisons.js` — Generates cards comparing distinct concepts (e.g., ACT vs. SAT).
+- `src/lib/flashcards/extractors/facts.js` — Extracts simple, high-impact factual assertions.
+- `src/lib/flashcards/extractors/lists.js` — Parses lists and ordered sequences into bulleted flashcard items.
+- `src/lib/flashcards/extractors/misconceptions.js` — Isolates and highlights frequent student errors or common pitfalls.
+- `src/lib/flashcards/extractors/numeric.js` — Identifies and extracts crucial statistical dates, scores, and values.
+- `src/lib/flashcards/extractors/process.js` — Parses logical multi-step academic processes.
+
+#### SAT Core Engines (`src/lib/sat/...`)
+- `src/lib/sat/activeTabStore.js` — Synchronous store making the current active tab available to non-component providers.
+- `src/lib/sat/adaptive.js` — Assembles adaptive SAT test modules, dynamically choosing Module 2 based on Module 1 scoring.
+- `src/lib/sat/aiPractice.js` — Generates high-fidelity SAT practice drills using structured Groq LLM pipelines.
+- `src/lib/sat/aiQuestions.js` — Parses in-context math or rw question strings into standard schemas.
+- `src/lib/sat/aiStudyPlan.js` — AI generator translating diagnostic weak points into specific study milestones.
+- `src/lib/sat/answerBalance.js` — Enforces length and distraction balance algorithms to eliminate answer-length bias.
+- `src/lib/sat/baseline.js` — Calibrates baseline scores and estimated ranges based on a student's diagnostic test answers.
+- `src/lib/sat/desmos.js` — Handles remote loading, sizing, states, and coordinates persistence for the Desmos graphing calculator.
+- `src/lib/sat/desmosSeed.js` — Converts SAT math variables and systems into equations ready for Desmos plotting.
+- `src/lib/sat/errorPatterns.js` — Classifies student mistakes into actionable cognitive patterns (e.g. calculation mistakes).
+- `src/lib/sat/forms.js` — Manages five distinct, curated SAT test forms (A, B, C, D, E) ensuring they share zero questions.
+- `src/lib/sat/learnerProfile.js` — Computes skill strengths, heatmaps, and diagnostic recommendations per student.
+- `src/lib/sat/mastery.js` — Calculates skill mastery points based on a running history of student drills.
+- `src/lib/sat/nextAction.js` — Offers diagnostic-driven "next-best actions" (e.g., take a math drill) based on weak points.
+- `src/lib/sat/projection.js` — Projects score trajectories based on current test progress and historical improvements.
+- `src/lib/sat/selector.js` — Selects balanced questions from the local database matching a specific skill and difficulty.
+- `src/lib/sat/shuffle.js` — Shuffles uniform answer options of SAT practice questions.
+- `src/lib/sat/useSatData.js` — React hook exposing user SAT progress, scores, and review logs.
+
+#### Shared Application Utilities (`src/lib/...` root)
+- `src/lib/a11y.js` — Accessibility helper supporting screen readers and custom themes.
+- `src/lib/academicIntel.js` — Aggregates GPA, test scores, and courses to evaluate a student's high school academic strength.
+- `src/lib/achievements.js` — Tracks and unlocks gamified student accomplishments.
+- `src/lib/activityIntel.js` — Categorizes and scores extracurricular activities for Common App readiness.
+- `src/lib/aiCache.js` — Local storage cache utility that speeds up recurring LLM requests.
+- `src/lib/aiFlashcards.js` — Connects the offline compromise engine and the Groq API to optimize card quality.
+- `src/lib/applicationStrength.js` — Aggregates academic and extracurricular intelligence into a cohesive application readiness index.
+- `src/lib/authApi.js` — Interface for interacting with email/password authentication endpoints.
+- `src/lib/autoDeadlines.js` — Automatically projects college, scholarship, and financial aid deadlines based on student grade levels.
+- `src/lib/celebrate.js` — Triggers fullscreen canvas confetti bursts upon major milestones or daily streak gains.
+- `src/lib/collegeRecommend.js` — Recommends colleges matching a student's GPA, Region, BSMD goals, and SAT/ACT midpoints.
+- `src/lib/commonApp.js` — Maps tracked milestones and extracurricular logs into Common App format structures.
+- `src/lib/cosmetics.js` — Manages visual accent styling across elements.
+- `src/lib/dailyCheckin.js` — Tracks checking states and updates user streak parameters.
+- `src/lib/dataApi.js` — Brokered API interface fetching and saving tracked list resources against `/api/data`.
+- `src/lib/dateUtils.js` — Formats, parses, and counts absolute or relative dates.
+- `src/lib/db.js` — Defines the IndexedDB schema via Dexie, declaring keys (notes, flashcards, events, track outboxes).
+- `src/lib/diagnosticEngine.js` — Tailors onboarding plans based on student grade, pacing, and diagnostic responses.
+- `src/lib/essayCritique.js` — Evaluates college admissions and supplemental essays with constructive Medabrain critiques.
+- `src/lib/eventLog.js` — Tracks student engagement events (lesson completed, video watched, streak logged) on-device.
+- `src/lib/exportPDF.js` — Compiles admissions portfolios, activities list, and achievements into print-ready PDFs.
+- `src/lib/fsrs.js` — Implements the full Free Spaced-Repetition Scheduler algorithm in JavaScript.
+- `src/lib/gamification.js` — Houses the calculation math behind user levels, ranks, and XP rewards.
+- `src/lib/icsExport.js` — Compiles tracked deadlines into standard `.ics` iCalendar calendar formats.
+- `src/lib/insights.js` — Contextual study recommendations matching filtered resource categories in E-Library.
+- `src/lib/interviewScore.js` — Evaluates simulated mock-interview texts and spoken feedback transcripts.
+- `src/lib/masterPlanGenerator.js` — Structures and parses detailed Oracle-grade day-by-day JSON plans.
+- `src/lib/medabrainComments.jsx` — Formats inline comments and speech-bubble dialogues for the Medabrain coaching UI.
+- `src/lib/noteFlashcardEngine.js` — Feeds local lesson notes directly into the flashcard system.
+- `src/lib/nudges.js` — Triggers relevant, contextual nudges based on recent student milestones.
+- `src/lib/personalBrief.js` — Summarizes custom student bios for personalized AI feedback.
+- `src/lib/planGenerator.js` — Drafts high school academic and test preparation plans.
+- `src/lib/portfolioCritique.js` — Offers comprehensive feedback on tracked portfolio extracurricular activities.
+- `src/lib/portfolioData.js` — Coordinates state synchronizations for the portfolio tracking engine.
+- `src/lib/progressSync.js` — Manages the synchronization cycle between Dexie local storage and Supabase remote databases.
+- `src/lib/recentActivity.js` — Formulates recent activity listings visualized in the Progress hub.
+- `src/lib/recommend.js` — Recommends resources matching a student's weaknesses or current units.
+- `src/lib/recommendOpportunities.js` — Recommends competitions, summer programs, and organizations matching student interests.
+- `src/lib/renderMarkdown.js` — Safe Markdown compiler transforming lesson text and AI insights into HTML.
+- `src/lib/rewardClaimQueue.js` — Prevents double-claiming of XP and coordinates syncing with backend claimed logs.
+- `src/lib/rewards.js` — Declares rewards, XP structures, and gamified achievement keys.
+- `src/lib/routes.js` — **SOT routing table.** Translates canonical paths to state objects and handles retired alias resolution.
+- `src/lib/scholarshipNotes.js` — Local note persistence manager for scholarship research records.
+- `src/lib/scholarshipResearch.js` — Manages research tracking logic for federal and institutional aid search.
+- `src/lib/search.js` — Implements fuzzy search across E-Library resources and personal notes.
+- `src/lib/seo.js` — Updates HTML head canonical URLs, robots directions, and meta tags dynamically based on the active path.
+- `src/lib/sounds.js` — Coordinates audible feedback sounds for clicks, milestones, achievements, and mistakes.
+- `src/lib/speech.js` — Manages Web Speech API components for spoken mock interviews and reading text aloud.
+- `src/lib/studentProfile.js` — Generates systems prompts, limits academic integrity bounds, and blocks medical/clinical advice.
+- `src/lib/supabaseClient.js` — Instantiates the client-side public Supabase module for Google OAuth callbacks.
+- `src/lib/supplementalPrompts.js` — Provides custom prompt variables for supplemental college essays review.
+- `src/lib/theme.js` — Declares Tailwind CSS color maps, dark/light variations, glass panels, and button styles.
+- `src/lib/timeline.js` — Date utility filtering milestones based on academic grade levels.
+- `src/lib/trackQueue.js` — Implements the durable, device-local tracking outbox. Runs retry loops and flushes saved lists.
+- `src/lib/trackedItems.js` — Evaluates active tracked opportunities and populates milestones calendars.
+- `src/lib/trackingCatalog.js` — Maps opportunities and scholarship entries into clean Supabase schema columns.
+- `src/lib/useAppRouter.js` — **History routing hook.** Listens to history pops, updates React state, and restores scroll offsets.
+- `src/lib/useTrackQueue.js` — React hooks surfacing pending queue states and manual outbox sync actions.
+- `src/lib/viewState.js` — Persists core subtab indexes and active overlay parameters to localStorage.
+- `src/lib/weeklyGoals.js` — Recommends weekly micro-actions (e.g. log 3 hours) and tracks completion rates.
+
+---
+
+### Static Databases and Structured Catalogs (`src/data/...`)
+- `src/data/VIDEO_CORRECTIONS.md` — Logs correct metadata corrections for pathway and SAT study videos.
+- `src/data/constants.js` — Declares school matrices (Region, mid-GPA, SAT/ACT scales, acceptance rates).
+- `src/data/elib.js` — The core E-Library catalog. 623 real-world high school and college prep resources.
+- `src/data/elibExpansionA.js` through `src/data/elibExpansionK.js` — Expansion datasets forming the E-Library catalog.
+- `src/data/elibExtra.js` — Extra curated resources for admissions and planning.
+- `src/data/interviewQuestions.js` — Library of mock interview questions across pathways.
+- `src/data/mmiCasperQuestions.js` — Multiple Mini Interview (MMI) and Casper situational response training scenarios.
+- `src/data/nudgeBank.js` — Repository of personalized prompts for the daily student coach.
+- `src/data/opportunities.js` — Curated list of 220 student competitions, summer programs, and internships.
+- `src/data/quizzes.js` — Maps unit lessons to corresponding concept quizzes.
+- `src/data/scholarships.js` — Database of verified high school and college scholarships.
+- `src/data/supplementalEssays.js` — Compilation of supplemental essay prompts from top-tier universities.
+
+#### Pathway Lessons Catalog (`src/data/lessonContent/...`)
+- `src/data/lessonContent/index.js` — Compiles and exports the 141 learning pathway lessons.
+- `src/data/lessonContent/biomedResearch.js` — Lessons on laboratory pipelines, journals, and pre-med research.
+- `src/data/lessonContent/dentistry.js` — Lessons covering dental careers, manual dexterity, and pre-dental routes.
+- `src/data/lessonContent/exploring.js` — Basic career exploration guidance for young students.
+- `src/data/lessonContent/healthAdmin.js` — Lessons on healthcare systems, policies, and health informatics.
+- `src/data/lessonContent/nursing.js` — Covers nursing specialties (RN, NP, CRNA) and pre-licensure academics.
+- `src/data/lessonContent/pharmacy.js` — Explores pharmaceutical roles, compounding, and PharmD pathways.
+- `src/data/lessonContent/physicalOccupTherapy.js` — Explores rehabilitation, occupational therapy, and DPT preparation.
+- `src/data/lessonContent/physician.js` — Pre-medical requirements, MCAT timelines, and medical specialty overviews.
+- `src/data/lessonContent/physicianAssistant.js` — Guides students on patient care hours and PA school admission requirements.
+- `src/data/lessonContent/publicHealth.js` — Public health systems, disease tracking, epidemiology, and biostatistics.
+
+#### Verification Quiz Bank (`src/data/quizzes/...`)
+- `src/data/quizzes/index.js` — Bundles and exports all concepts quizzes.
+- `src/data/quizzes/bioBiochem.js` — Biology and biochemistry verification questions.
+- `src/data/quizzes/chemPhys.js` — General chemistry and physical science quiz questions.
+- `src/data/quizzes/lessonQuizzes.js` — Individual lesson concept check quizzes.
+- `src/data/quizzes/psychSoc.js` — Behavioral science and sociology check questions.
+
+#### SAT Practice Bank & Catalogs (`src/data/sat/...`)
+- `src/data/sat/forms.js` — Curated questions mappings for Forms A through E.
+- `src/data/sat/reference.js` — Reference formulas (geometry, algebra) matching Digital SAT testing software.
+- `src/data/sat/resources.js` — SAT-specific external study materials and resource directories.
+- `src/data/sat/scoring.js` — Scale conversion matrix (raw correct answers to 400-1600 scaled ranges).
+- `src/data/sat/strategies.js` — Study and test-taking tips (e.g. process of elimination, backsolving).
+- `src/data/sat/taxonomy.js` — Hierarchical classification mapping 28 academic skills to Math/RW content domains.
+- `src/data/sat/videos.js` — Assigned video explanations for individual SAT skill competencies.
+
+#### SAT Question Databases (`src/data/sat/questions/...`)
+- `src/data/sat/questions/index.js` — Compiles and exports the complete 1,038 Digital SAT practice bank.
+- `src/data/sat/questions/mathAdvanced.js` through `mathAdvancedD.js` — Advanced math items (quadratic equations, non-linear systems).
+- `src/data/sat/questions/mathAlgebra.js` through `mathAlgebraD.js` — Algebra questions (linear equations, inequalities, graphs).
+- `src/data/sat/questions/mathGeoTrig.js` through `mathGeoTrigD.js` — Geometry and Trigonometry questions (theorems, circles, sine/cosine).
+- `src/data/sat/questions/mathPSDA.js` through `mathPSDAD.js` — Problem Solving and Data Analysis items (statistics, probability, models).
+- `src/data/sat/questions/rwConventions.js` through `rwConventionsD.js` — Conventions of Standard English (punctuation, grammar, syntax).
+- `src/data/sat/questions/rwCraftStructure.js` through `rwCraftStructureD.js` — Craft and Structure (vocabulary, cross-text, purpose).
+- `src/data/sat/questions/rwExpression.js` through `rwExpressionD.js` — Expression of Ideas (rhetorical synthesis, transitions).
+- `src/data/sat/questions/rwInfoIdeas.js` through `rwInfoIdeasD.js` — Information and Ideas (central ideas, command of evidence).
+
+---
+
+### React Components & UI Layouts (`src/components/...`)
+
+#### Tab Panels & Core Views (`src/components/...` root)
+- `src/App.jsx` — **Application shell and entry router.** Mounts desktop/mobile shells, synchronizes overlays, and manages IndexedDB initialization.
+- `src/components/AboutMePanel.jsx` — Personal bio workspace that saves profiles used to contextualize AI responses.
+- `src/components/ActivitiesResumePanel.jsx` — Extracurricular logging canvas with Common App classification tools.
+- `src/components/AnimatedLogo.jsx` — Violet-to-cyan visual logo utilizing smooth Framer Motion paths.
+- `src/components/AppTour.jsx` — Step-by-step guidance overlays that familiarize new students with workspaces.
+- `src/components/AppearanceSettings.jsx` — Adjusts color contrast tokens and toggles motion-reduction features.
+- `src/components/AuthGate.jsx` — Protects internal tabs, prompting signed-out students to log in.
+- `src/components/ClinicalHoursPanel.jsx` — Log sheet for clinical volunteering, shadowing, and patient-care hours.
+- `src/components/CollegeAutocomplete.jsx` — Search dropdown matching real-time user keystrokes against university records.
+- `src/components/CollegeListPanel.jsx` — Customizable application list classifying schools into Safety, Target, and Reach tiers.
+- `src/components/EssayCritique.jsx` — UI bubble delivering structured paragraph critiques and spelling feedback.
+- `src/components/EssayWorkspacePanel.jsx` — Full essay editing suite with revisions history and character counts.
+- `src/components/FinancialAidHomeCard.jsx` — Visual card summarizing tracked financial metrics.
+- `src/components/FinancialAidPanel.jsx` — Financial aid tracker detailing scholarship counts and pending requirements.
+- `src/components/HighlightableArticle.jsx` — Lesson reader with click/drag highlight triggers.
+- `src/components/InterviewHistoryPanel.jsx` — History explorer reviewing transcripts and scoring of spoken interview rounds.
+- `src/components/InterviewPrepPanel.jsx` — Selection board for launching simulated interviews.
+- `src/components/LandingPage.jsx` — Public marketing page showcasing features, core curricula, and pricing.
+- `src/components/LessonNotesPanel.jsx` — Sidebar notes editor that saves debounced drafts directly to IndexedDB.
+- `src/components/LiveVoiceInterview.jsx` — Conversational interface using browser microphones for voice mock-interviews.
+- `src/components/MedabrainLauncher.jsx` — Chat widget initiating the Medabrain coaching panel.
+- `src/components/MyPlanCard.jsx` — Visualization panel highlighting active daily roadmap targets.
+- `src/components/OpportunitiesDatabase.jsx` — Searchable catalog listing summer programs, competitions, and internships.
+- `src/components/PlansTab.jsx` — Roadmap visualizer with reduced-motion support.
+- `src/components/PortfolioMedabrain.jsx` — Sidebar AI coach delivering resume and portfolio reviews.
+- `src/components/PortfolioMilestones.jsx` — Calendar and timeline planner displaying upcoming deadlines.
+- `src/components/PortfolioPlanWeek.jsx` — Weekly target card showcasing milestones.
+- `src/components/PrepMedabrain.jsx` — Chat console helping students research pathways lessons.
+- `src/components/QuizPlanToday.jsx` — Inline component prompting daily verification checks.
+- `src/components/QuizRecommendationsPanel.jsx` — Suggests custom review quizzes based on weak performance fields.
+- `src/components/RecommendersPanel.jsx` — Recommender logs tracking recommendation letter requests and letters written.
+- `src/components/ResearchExperiencePanel.jsx` — Log sheet for independent studies and research activities.
+- `src/components/RewardChest.jsx` — Daily check-in overlay offering streaks validation and XP gains.
+- `src/components/ScholarshipDatabase.jsx` — Catalog of scholarships with custom deadline filters.
+- `src/components/ScholarshipResearchAdd.jsx` — Dialog allowing students to track custom scholarships.
+- `src/components/ScoreTrackerPanel.jsx` — SAT/ACT milestone trend tracker that calculates automatic superscores.
+- `src/components/SkillsCertificationsPanel.jsx` — Tracker for academic certifications, licenses, and technical credentials.
+- `src/components/StreakHeatmap.jsx` — Activity matrix detailing daily check-ins over a running calendar.
+- `src/components/SupplementalEssaysCard.jsx` — Lists supplemental prompt requirements per college.
+- `src/components/TodayPlanNudge.jsx` — Top header offering actionable suggestions based on active plans.
+- `src/components/VoiceSelector.jsx` — Settings dropdown for browser-supported TTS options.
+
+#### Authentication Forms (`src/components/auth/...`)
+- `src/components/auth/AuthShell.jsx` — Visually cohesive frame handling credential card dimensions and background effects.
+- `src/components/auth/ForgotPasswordView.jsx` — Form initiating password-recovery OTP emails and resetting hashes.
+- `src/components/auth/GoogleButton.jsx` — Interface triggering client-side Google OAuth redirects.
+- `src/components/auth/LoginView.jsx` — Form collecting email and password to open user sessions.
+- `src/components/auth/OAuthCallbackView.jsx` — Captures Google redirected logins and trades them for session cookies.
+- `src/components/auth/SignupView.jsx` — Multi-step registration form managing verification email dispatches.
+- `src/components/auth/ui.jsx` — Common styling presets, input layouts, and validation alerts for auth pages.
+
+#### Onboarding Curricula (`src/components/onboarding/...`)
+- `src/components/onboarding/Onboarding.jsx` — Main wizard coordinating onboarding transitions.
+- `src/components/onboarding/OnboardingShell.jsx` — Full-page frame featuring brand background animations.
+- `src/components/onboarding/brand.jsx` — Renders animated branding logotypes for the intro screen.
+- `src/components/onboarding/options.js` — Static arrays defining prep velocities, grades, and targets.
+- `src/components/onboarding/personalize.js` — Translates questionnaire answers into baseline profile targets.
+- `src/components/onboarding/primitives.jsx` — Button models and choice chips used during questionnaires.
+
+#### Onboarding Steps (`src/components/onboarding/steps/...`)
+- `src/components/onboarding/steps/BirthdateStep.jsx` — Collects user birth dates to calculate milestones ages.
+- `src/components/onboarding/steps/FeatureShowcaseStep.jsx` — Displays high-value components (SAT Desmos, Milestones) to students.
+- `src/components/onboarding/steps/GeneratingStep.jsx` — Renders loading sequences while the Oracle model crafts roadmaps.
+- `src/components/onboarding/steps/GradeScoreStep.jsx` — Questionnaire section logging high school graduation years.
+- `src/components/onboarding/steps/Intro.jsx` — Initial landing screen for onboarding.
+- `src/components/onboarding/steps/PlanReadyStep.jsx` — Confirms roadmap outputs are complete and ready for browsing.
+- `src/components/onboarding/steps/PlanSummaryStep.jsx` — Outlines key weekly milestones generated for the student.
+- `src/components/onboarding/steps/RealisticTargetStep.jsx` — Evaluates target SAT scores against current GPA realities.
+- `src/components/onboarding/steps/SaveProgressStep.jsx` — Encourages guests to register accounts to sync progress.
+- `src/components/onboarding/steps/SourceStep.jsx` — Questionnaire asking students how they discovered the platform.
+- `src/components/onboarding/steps/SpeedStep.jsx` — Captures target prep speeds (e.g. casual, intensive, sprint).
+- `src/components/onboarding/steps/TargetScoreStep.jsx` — Questionnaire registering target SAT or ACT scores.
+- `src/components/onboarding/steps/ThankYouStep.jsx` — Concludes guest onboarding questionnaires.
+- `src/components/onboarding/steps/emotional.jsx` — Collects student feelings about admissions to tailor coaching vibes.
+- `src/components/onboarding/steps/generic.jsx` — Catch-all form module for custom onboarding questions.
+
+#### Portfolio Auxiliary Panels (`src/components/portfolio/...`)
+- `src/components/portfolio/CommonAppExport.jsx` — Modal detailing instructions for moving Extracurricular activities to Common App.
+- `src/components/portfolio/MedabrainRead.jsx` — Conversational advice interface specifically scoped to portfolio assets.
+- `src/components/portfolio/TrackedPanel.jsx` — Overview card displaying count tallies for colleges, scholarships, and active programs.
+- `src/components/portfolio/WeeklyGoalTile.jsx` — Interactive check list elements for weekly roadmap micro-actions.
+- `src/components/portfolio/WeeklyGoalsBoard.jsx` — Progress tracking interface showing weekly completions.
+
+#### SAT Interactive Hub (`src/components/sat/...`)
+- `src/components/sat/DesmosCalculator.jsx` — Wraps the Desmos API in a responsive graph component.
+- `src/components/sat/DesmosSurface.jsx` — Handles container mounts and window resize triggers for Desmos.
+- `src/components/sat/SatAnnotatableText.jsx` — Renders passage texts with click-to-highlight/annotate features.
+- `src/components/sat/SatBaselinePanel.jsx` — Handles launch mechanisms for adaptive baseline tests.
+- `src/components/sat/SatDiagnosticPanel.jsx` — Tracks diagnostic scores and details question breakdowns.
+- `src/components/sat/SatFullTestPanel.jsx` — Interactive framework conducting full length modular adaptive SAT exams.
+- `src/components/sat/SatLibraryPanel.jsx` — Browser panel accessing the full 1,038 practice question bank.
+- `src/components/sat/SatMedabrain.jsx` — Chat side-panel offering help on active test-day questions.
+- `src/components/sat/SatOverviewPanel.jsx` — Central SAT dashboard showing scores, review log count, and skills mastered.
+- `src/components/sat/SatPracticePanel.jsx` — Interactive practice framework conducting targeted SAT drills.
+- `src/components/sat/SatQuestionPlayer.jsx` — Renders question passages, options, feedback, and SPR input boxes.
+- `src/components/sat/SatReferenceSheet.jsx` — Floating dialog displaying SAT geometry formulas.
+- `src/components/sat/SatReviewLogPanel.jsx` — Database compiling incorrect student responses for active review.
+- `src/components/sat/SatScoreReport.jsx` — Elaborate diagnostic dashboard explaining score conversions.
+- `src/components/sat/SatSkillHeatmap.jsx` — Color grid visualizing skill mastery across domains.
+- `src/components/sat/SatSkillsPanel.jsx` — Directory listing SAT content domains and skills.
+- `src/components/sat/SatStudyPlanCard.jsx` — Displays current study recommendation milestones.
+- `src/components/sat/SatTab.jsx` — Mounts sub-nav views and provides the SAT toolkit context.
+- `src/components/sat/SatTestPicker.jsx` — Selection modal for Form-based tests and Diagnostics.
+- `src/components/sat/SatToolkitPanel.jsx` — Collapsible sidebar hosting Desmos, reference formulas, and AI coach.
+- `src/components/sat/SatToolsContext.jsx` — React state context coordinating Desmos, annotations, and modal states.
+- `src/components/sat/SatVideoRecs.jsx` — Lists recommended video explanations matching incorrect skills.
+- `src/components/sat/satUi.jsx` — Form presets and style rules for SAT layouts.
+- `src/components/sat/useSatSession.js` — Custom hook conducting session state management for active exams.
+
+#### Generic Component Library (`src/components/ui/...`)
+- `src/components/ui/EmptyState.jsx` — Fallback panel displayed when listings are empty.
+- `src/components/ui/MathText.jsx` — Renders LaTeX equations safely using standard formatting.
+- `src/components/ui/PanelHero.jsx` — Standard header layout featuring gradient titles.
+- `src/components/ui/PlanTaskStrip.jsx` — Micro-action item row visualizing scheduled tasks.
+- `src/components/ui/Portal.jsx` — React portal that mounts overlay nodes (modals, toasts) to body.
+- `src/components/ui/SubNav.jsx` — Tab bar for navigating sub-views.
+- `src/components/ui/TrackButton.jsx` — Adaptive track button (Idle, Saving, Tracked, Queued).
+- `src/components/ui/TrackQueueNotice.jsx` — Indicator panel showing the status of offline pending sync entries.
+- `src/components/ui/primitives.jsx` — Common buttons, badges, input controls, and structural grid components (`RG`, `G`).
+
+---
+
+### Database Migration Layer (`supabase/...`)
+These migrations define and shape the secure Supabase storage engine.
+- `supabase/migrations/0000_base_schema.sql` — Establishes core user tables, profiles, sync tables, and authentication tables.
+- `supabase/migrations/0001_portfolio_credibility_expansion.sql` — Expands activities, college application lists, and essay drafts tables.
+- `supabase/migrations/0002_password_auth.sql` — Configures secure password hashes and salt storage for custom logins.
+- `supabase/migrations/0003_progress_sync.sql` — Installs synchronizations for verified units, flashcards, and XP parameters.
+- `supabase/migrations/0004_reward_and_counter_sync.sql` — Tracks claims, check-in history records, and gamification counters.
+
+---
+
+### Automated Auditing & Maintenance (`scripts/...`)
+These scripts are run during builds, pre-commit pipelines, and health reviews.
+- `scripts/auditLessonsCompleteness.mjs` — Scans 141 lessons across 10 pathways to verify structure, requirements, and video links.
+- `scripts/auditQuizBankBalance.mjs` — Audits the hand-written quiz bank to check answer-length bias.
+- `scripts/auditQuizBias.mjs` — Examines correct choices to flag if strict-longest patterns violate balance ratios.
+- `scripts/auditSatBank.mjs` — Performs comprehensive quality audits across the 1,038 SAT practice questions.
+- `scripts/auditSatResources.mjs` — Cross-checks reference resources linked inside SAT modules.
+- `scripts/auditSatVideos.mjs` — Ensures all SAT skill video links are live.
+- `scripts/auditVideoIds.mjs` — Resolves pathway video embeds against YouTube API endpoints to identify dead links.
+- `scripts/fixQuizLengthBias.mjs` — Auto-corrects answer length bias on marked hand-written quiz questions.
+- `scripts/generateSitemap.mjs` — Re-compiles `public/sitemap.xml` and `public/robots.txt` upon production builds.
+- `scripts/renderIcons.mjs` — Pre-renders Lucide vector assets into static assets.
+- `scripts/verifyOpportunities.mjs` — Unit tests catalog mapping properties and data structures for opportunities.
+- `scripts/verifyPaletteContrast.mjs` — Audits text-on-background color ratios across dark/light and high-contrast palettes.
+- `scripts/verifyResumeBuilder.mjs` — Validates state calculations and academic GPA matches in the Resume module.
+- `scripts/verifyRouting.mjs` — Validates sitemaps and confirms route tables map perfectly with actual React views.
+- `scripts/verifyRoutingE2E.mjs` — Runs headless Playwright browsers to verify deep link loading and history popped state.
+- `scripts/verifySatBaseline.mjs` — Simulates and unit tests the math and verbal adaptive baseline engines.
+- `scripts/verifySatDesmos.mjs` — Verifies Desmos API loading sequences and graph-state persistence.
+- `scripts/verifySatForms.mjs` — Tests full-length SAT Form matrices to guarantee perfect question-omission limits.
+- `scripts/verifySatGeneration.mjs` — Asserts correctness and formats of AI practice drills.
+- `scripts/verifySatLibrary.mjs` — Tests navigation flows through the SAT whole-bank library.
+- `scripts/verifySatScoring.mjs` — Asserts correctness of Reading/Writing and Math scaled score calculations.
+- `scripts/verifySatTab.mjs` — Runs comprehensive end-to-end clicks and workflows across the SAT Prep Hub.
+- `scripts/verifyTimeline.mjs` — Asserts freshman-to-senior gated milestones mapping logic.
+- `scripts/verifyTracking.mjs` — Verifies lossless outbox queue behavior and deduplication keys.
+- `scripts/verifyWeeklyGoals.mjs` — Asserts performance of weekly study goals recommended by Medabrain.
