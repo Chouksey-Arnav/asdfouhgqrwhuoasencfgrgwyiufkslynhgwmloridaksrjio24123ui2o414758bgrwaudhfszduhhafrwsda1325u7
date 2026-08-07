@@ -8,6 +8,9 @@ import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import { getWhyMedicineLabel, getDreamRoleLabel } from '../lib/studentProfile';
+import { buildEssayCriticPrompt, critiqueEssay } from '../lib/essayCritique';
+import EssayCritique from './EssayCritique';
+import SupplementalEssaysCard from './SupplementalEssaysCard';
 
 const STATUSES = [
   { id: 'not_started', label: 'Not Started', color: C.t3 },
@@ -21,7 +24,7 @@ function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function EssayWorkspacePanel({ accent = C.blue, user = null, askMedabrain = null, onCreated = null }) {
+export default function EssayWorkspacePanel({ accent = C.blue, user = null, gradeLabel = null, askMedabrain = null, onCreated = null }) {
   const [essays, setEssays] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,8 +32,13 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
   const [newTitle, setNewTitle] = useState('');
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState('');
-  const [portfolioCtx, setPortfolioCtx] = useState(null); // broader context for the ambient recommendation only — activities/research/clinical hours/awards
+  const [portfolioCtx, setPortfolioCtx] = useState(null); // shared by the ambient recommendation AND the critique engine — activities/research/clinical hours/awards
   const [brainTake, setBrainTake] = useState(null); // { loading, content, error }
+  // Critiques, keyed by essay id, so switching between essays doesn't lose the read you just
+  // waited on. Each entry: { loading, error, critique, ofWords } — `ofWords` is the word count the
+  // critique was run against, which is what lets the UI say "this critique is of an older draft"
+  // rather than silently presenting stale line-by-line notes about sentences that are already gone.
+  const [critiques, setCritiques] = useState({});
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -140,8 +148,57 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
     } catch (err) { toast.error(err.message); }
   }
 
+  // ── The critique pass ──────────────────────────────────────────────────────
+  // The whole point of the Essay Workspace. Everything above this line tracks a draft; this is
+  // the only thing in the app that actually reads one. It goes through purpose:'essay' (its own
+  // key pool and raised input cap — see api/groq.js) so the full draft, its prompt, the school
+  // it's for and the student's real logged experiences all arrive intact: a critique of a
+  // truncated essay is a confident verdict about writing the model never saw.
+  async function runCritique() {
+    if (!selected) return;
+    const text = draft.trim();
+    const words = wordCount(text);
+    if (words < 20) { toast.error("Write a few real sentences first — there's nothing to critique yet."); return; }
+    const id = selected.id;
+    setCritiques(prev => ({ ...prev, [id]: { loading: true, error: null, critique: null, ofWords: words } }));
+    try {
+      const linkedCollege = colleges.find(c => c.id === selected.college_id);
+      const system = buildEssayCriticPrompt({
+        user, gradeLabel,
+        title: selected.title || 'Untitled essay',
+        prompt: selected.prompt || '',
+        wordLimit: selected.word_limit || null,
+        collegeName: linkedCollege?.name || null,
+        mode: 'draft',
+        portfolio: portfolioCtx,
+        draftWordCount: words,
+      });
+      const critique = await critiqueEssay({ draft: text, system });
+      setCritiques(prev => ({ ...prev, [id]: { loading: false, error: null, critique, ofWords: words } }));
+    } catch (err) {
+      setCritiques(prev => ({ ...prev, [id]: { loading: false, error: err.message, critique: null, ofWords: words } }));
+    }
+  }
+
+  // Used by the supplemental trainer to drop a prompt (optionally with the practice answer the
+  // student just wrote against it) into the real workspace as a tracked essay.
+  async function createEssayFromSupplement({ title, prompt, word_limit, college_id, content }) {
+    const essay = await createItem('essays', {
+      title, prompt, word_limit: word_limit || 250, college_id: college_id || null,
+      status: content ? 'drafting' : 'not_started', content: content || '',
+    });
+    setEssays(prev => [...prev, essay]);
+    onCreated?.();
+    return essay;
+  }
+
   const wc = wordCount(draft);
   const over = selected && wc > selected.word_limit;
+  const activeCritique = selected ? critiques[selected.id] : null;
+  // A critique is "stale" once the draft has moved meaningfully away from the version it read.
+  // Word count is a coarse proxy, but it catches the case that actually matters — the student
+  // acted on the notes — without needing to diff text on every keystroke.
+  const critiqueStale = !!(activeCritique?.critique && Math.abs(wc - (activeCritique.ofWords || 0)) >= 15);
 
   const totalWords = essays.reduce((s, e) => s + wordCount(e.content), 0);
   const finals = essays.filter(e => e.status === 'final').length;
@@ -186,7 +243,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
       awardList ? `Awards: ${awardList}.` : '',
     ].filter(Boolean).join(' ');
 
-    askMedabrain(`Here is this student's real essay workspace and portfolio: ${contextParts} In 2-4 concise, warm sentences, give a specific, personalized recommendation for how to start or move forward on whichever essay most needs attention right now — suggest a concrete angle or story beat drawn from their OWN logged activities/research/why-medicine answer above, not generic essay advice. Only reference essays, activities, or experiences from this exact data — never invent one.`)
+    askMedabrain(`Here is this student's real essay workspace and portfolio: ${contextParts} In 2-4 concise sentences, as a demanding mentor rather than a cheerleader: name the single biggest problem with the state of their essay work right now — the essay that is furthest behind, the one whose word count says it has stalled, or the fact that nothing is started — say it plainly without opening with praise, and then give one concrete angle or story beat drawn from their OWN logged activities/research/why-medicine answer above that would fix it. No "great start", no "you're on the right track", no encouragement they haven't earned. Only reference essays, activities, or experiences from this exact data — never invent one.`)
       .then(content => { if (!cancelled) { setCached(brainCacheKey, content); setBrainTake({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { brainFetchedKeyRef.current = null; setBrainTake({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
@@ -197,7 +254,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia}
         eyebrow="Applications" title="Essay Workspace"
-        sub="Draft, revise, and track every personal statement and supplemental in one place — with version history so no rewrite is ever lost."
+        sub="Draft, revise, and track every personal statement and supplemental in one place — see the prompts your schools actually ask, and get a straight critique of what you write, not a pat on the back."
         stats={essays.length > 0 ? [{ value: essays.length, label: essays.length === 1 ? 'essay' : 'essays' }] : []}/>
 
       {essays.length > 0 && (
@@ -212,13 +269,22 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
         <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
           <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
             <Sparkles size={13} color={C.violetL}/>
-            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain's take</span>
+            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Medabrain's honest read</span>
           </div>
           {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your essays and portfolio…</div>}
-          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now.</div>}
+          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Medabrain right now.</div>}
           {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
         </div>
       )}
+
+      {/* Medabrain offering the supplements for a school that's actually on their list — the
+          "you have Duke on your list, here's what Duke asks" loop. Sits above the manual "start a
+          new essay" box on purpose: a student who doesn't know which essays they owe cannot title
+          one, and this is the surface that tells them. */}
+      <SupplementalEssaysCard
+        colleges={colleges} user={user} gradeLabel={gradeLabel} portfolioCtx={portfolioCtx}
+        accent={accent} existingEssays={essays} onCreateEssay={createEssayFromSupplement}
+      />
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
         <SectionTitle icon={Plus} color={accent}>Start a new essay</SectionTitle>
@@ -303,7 +369,29 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, askM
                 <div style={{height:'100%',width:`${selected.word_limit?Math.min(100,Math.round((wc/selected.word_limit)*100)):0}%`,background:over?C.rose:wc>=selected.word_limit*0.85?C.amber:accent,borderRadius:3,transition:'width .3s'}}/>
               </div>
             </div>
-            <button style={{...btn(accent!==C.blue?accent:C.blueGrad),marginTop:12}} onClick={saveVersion}>Save Version</button>
+            <div style={R({gap:10,marginTop:12,flexWrap:'wrap'})}>
+              <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={saveVersion}>Save Version</button>
+              {!activeCritique && (
+                <button
+                  style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`,{opacity:wc<20?0.5:1})}
+                  disabled={wc<20}
+                  onClick={runCritique}
+                >Get Medabrain's critique</button>
+              )}
+            </div>
+
+            {/* The critique itself. Rendered inside the editor rather than in a modal so the
+                student can read a line-by-line note and fix that line without losing either one. */}
+            {activeCritique && (
+              <div style={{marginTop:14}}>
+                {critiqueStale && (
+                  <div style={{fontSize:11,color:C.amberL,marginBottom:8,lineHeight:1.5}}>
+                    You've changed the draft since this critique — it's judging {activeCritique.ofWords} words, you now have {wc}. Re-run it when you're ready for a fresh read.
+                  </div>
+                )}
+                <EssayCritique state={activeCritique} onRun={runCritique} disabled={wc<20}/>
+              </div>
+            )}
 
             {versions.length > 0 && (
               <div style={{marginTop:20,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>

@@ -121,12 +121,16 @@ const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, proce
 const PURPOSE_KEYS = {
   interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
   portfolio: [process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
+  // Essay critique and supplemental-prompt generation. Falls back to the portfolio key when no
+  // dedicated one is set (it is portfolio work), and to the shared pool when neither exists —
+  // same "works with one key, improves as you add more" contract as every other purpose.
+  essay: [process.env.GROQ_API_KEY_ESSAY || process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
   prep: [process.env.GROQ_API_KEY_PREP].filter(Boolean),
   plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   masterplan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   sat: [process.env.GROQ_API_KEY_SAT].filter(Boolean),
 };
-const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat']);
+const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat', 'essay']);
 
 // Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
 // falls back to the shared Medabrain pool. Returns { primary, fallback } rather than one flat pool:
@@ -161,6 +165,11 @@ const PURPOSE_DEFAULT_TIER = {
   // its latency. This surface is also low-volume compared to the head coach.
   portfolio: 'sage',
   interview: 'guide',  // conversational, low-latency for spoken turns
+  // A line-by-line essay critique is the single hardest judgment call the app makes: it has to
+  // read 650 words closely, tell a cliché from a real detail, and defend a grade a student will
+  // argue with. Sage is the floor for that — a small model reads an essay and produces exactly the
+  // agreeable mush this feature exists to eliminate.
+  essay: 'sage',
   plan: 'oracle',      // one-time, max-quality — worth the biggest-output model (Oracle) for max completion/reasoning
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
   // The SAT tab pins its tier per call rather than leaning on this default,
@@ -240,7 +249,12 @@ function isMinuteLimited(ip) {
 // every item being asked for. That is the whole point of the feature — a
 // generator that only sees "make 6 Boundaries questions" cannot personalise
 // anything — and it does not fit in a chat-sized 2500-char budget.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000, sat: 9000 };
+// 'essay' carries a full draft (a 650-word personal statement is ~4000 chars on its own, and a
+// student may paste one well over the limit precisely because they want it cut down) plus the
+// prompt it answers and the portfolio context that lets the critique cite their real experiences.
+// The chat-sized 2500-char cap would silently truncate the essay mid-paragraph and then critique
+// the fragment as if it were the whole thing — a wrong verdict delivered confidently.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000, sat: 9000, essay: 14000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 
@@ -341,7 +355,7 @@ export default async function handler(req, res) {
   // here would silently cut the behavioral rules while leaving the raw data in
   // place — the exact inversion of what a cap is for. Input tokens are the cheap
   // half of a request, so headroom is the right trade.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000 };
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000, essay: 12000 };
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
@@ -406,7 +420,10 @@ export default async function handler(req, res) {
   // a rationale and four per-distractor rationales, runs a few thousand tokens.
   // Below this ceiling the JSON gets truncated mid-object and the whole batch is
   // discarded by the parser — expensive silence rather than a short set.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000, sat: 8000 };
+  // 'essay': a full critique is a verdict, a per-criterion rubric, several quoted lines with what
+  // is wrong with each, and a revision plan. Truncating it drops the fixes and keeps the verdict,
+  // which is the one shape of this response that would be actively harmful.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000, sat: 8000, essay: 4000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -433,7 +450,7 @@ export default async function handler(req, res) {
 
   // Heavier purposes get more time before we give up — a multi-thousand-token structured
   // generation on the 120B model legitimately takes longer than a chat reply.
-  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000, sat: 45000 };
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000, sat: 45000, essay: 45000 };
   const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
   const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
 
