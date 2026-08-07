@@ -9,10 +9,16 @@ import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
 
+// The first two are the questions this panel can now answer with real evidence rather than
+// generalities: it is handed the term-by-term GPA history and every activity with the
+// description and impact the student actually wrote (see buildPortfolioSystemPrompt), so
+// "what does my GPA open" and "is my activities list thin" are answerable from their record
+// instead of from a lecture about admissions.
 const SUGGESTIONS = [
+  'What does my GPA actually open up, and which schools should I target?',
+  'Is my activities list thin? Be honest.',
   'Which colleges on my list actually fit me?',
   "What's the single most urgent thing in my Portfolio right now?",
-  'Where are the biggest gaps in my portfolio?',
   'Rank my upcoming deadlines by urgency',
 ];
 

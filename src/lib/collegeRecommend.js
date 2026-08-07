@@ -7,7 +7,10 @@
 //
 // SCOPE: recommendations come only from SCHOOL_DATA (src/data/constants.js), which is
 // U.S. institutions only. See US_ONLY_NOTE.
-import { SCHOOL_DATA } from '../data/constants';
+// Explicit .js extension so Node's ESM resolver can load this module directly — scripts/
+// verifyResumeBuilder.mjs imports the matching engines that depend on this file, and Node
+// (unlike Vite) will not guess an extension.
+import { SCHOOL_DATA } from '../data/constants.js';
 
 // Official College Board/ACT concordance (ACT composite -> equivalent SAT total). Used in both
 // directions so a student who has only taken one test still gets compared against both of a

@@ -355,7 +355,16 @@ export default async function handler(req, res) {
   // here would silently cut the behavioral rules while leaving the raw data in
   // place — the exact inversion of what a cap is for. Input tokens are the cheap
   // half of a request, so headroom is the right trade.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 12000, essay: 12000 };
+  // 'portfolio' gets the largest budget of any purpose, and it earns it. Its prompts carry the
+  // student's tracked record verbatim — every activity with the description and impact THEY
+  // wrote, their term-by-term GPA history, and (for the Activities & Resume Builder's deep
+  // reads) a matched school slate with real admitted-student averages attached. That verbatim
+  // text is the entire point: a coach handed "4 activities logged" can only give generic advice,
+  // while a coach handed the sentences can quote the weak one back. Ten activities of real text
+  // plus the academic block plus the shared stance/knowledge-policy blocks runs past 12k, and
+  // truncation there cuts the behavioral rules at the end while leaving the data intact — the
+  // exact inversion of what a cap is for.
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 20000, essay: 12000 };
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)

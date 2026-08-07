@@ -5,7 +5,7 @@
   "description": "A personalized path into medicine for high schoolers \u2014 pathway diagnostic, SAT/ACT prep, and application portfolio",
   "scripts": {
     "dev": "vite",
-    "build": "npm run sitemap && npm run verify:routing && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:contrast && vite build",
+    "build": "npm run sitemap && npm run verify:routing && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:contrast && vite build",
     "sitemap": "node scripts/generateSitemap.mjs",
     "icons": "node scripts/renderIcons.mjs",
     "preview": "vite preview",
@@ -20,7 +20,7 @@
     "verify:routing": "node scripts/verifyRouting.mjs",
     "verify:contrast": "node scripts/verifyPaletteContrast.mjs",
     "verify:routing-e2e": "node scripts/verifyRoutingE2E.mjs",
-    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run audit:sat-videos && npm run audit:sat-resources && npm run verify:sat-scoring && npm run verify:sat-forms && npm run verify:sat-baseline && npm run verify:tracking && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:routing && npm run verify:contrast",
+    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run audit:sat-videos && npm run audit:sat-resources && npm run verify:sat-scoring && npm run verify:sat-forms && npm run verify:sat-baseline && npm run verify:tracking && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:routing && npm run verify:contrast",
     "verify:sat-tab": "node scripts/verifySatTab.mjs",
     "verify:sat-tools": "node scripts/verifySatDesmos.mjs",
     "verify:sat-generation": "node scripts/verifySatGeneration.mjs",
@@ -30,7 +30,8 @@
     "verify:sat-library": "node scripts/verifySatLibrary.mjs",
     "verify:goals": "node scripts/verifyWeeklyGoals.mjs",
     "verify:opportunities": "node scripts/verifyOpportunities.mjs",
-    "verify:timeline": "node scripts/verifyTimeline.mjs"
+    "verify:timeline": "node scripts/verifyTimeline.mjs",
+    "verify:resume": "node scripts/verifyResumeBuilder.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

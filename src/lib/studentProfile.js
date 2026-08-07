@@ -23,6 +23,7 @@ import {
 } from '../components/onboarding/Onboarding';
 import { buildPersonalBriefBlock } from './personalBrief';
 import { parseScholarshipNotes } from './scholarshipNotes';
+import { analyzeAcademics, gpaBand, gpaPercentileContext } from './academicIntel';
 
 // ── The two-source knowledge contract ────────────────────────────────────────
 // Every Medabrain surface shares this block, and it exists because the original
@@ -479,11 +480,36 @@ Questions that stray outside the application (a study-plan question, a science q
   }
 
   // ── Activities, research, skills, clinical hours, recommenders ───────────
+  // The activities block is deliberately the most detailed thing in this prompt after the
+  // college list. It used to be one line of `position at organization`, which meant the
+  // Portfolio specialist could count a student's activities but could not tell a 400-hour
+  // two-year leadership role from a club they attended twice — so every answer about the
+  // activities list was generic by construction. It now carries what the section is actually
+  // judged on: hours, years, whether a role is real, and the student's own description and
+  // impact text, verbatim, so the coach can quote the weak sentence back at them.
   const otherParts = [];
   if (activities.length) {
-    const totalHours = Math.round(activities.reduce((s, a) => s + ((Number(a.hours_per_week) || 0) * (Number(a.weeks_per_year) || 0)), 0));
-    otherParts.push(`${activities.length} activity/activities logged (~${totalHours}h/year combined): ${activities.slice(0, 10).map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}`).join(', ')}${activities.length > 10 ? `, +${activities.length - 10} more` : ''}.`);
-  } else otherParts.push(`No activities logged yet.`);
+    const yearHours = (a) => Math.round((Number(a.hours_per_week) || 0) * (Number(a.weeks_per_year) || 0));
+    const totalHours = activities.reduce((s, a) => s + yearHours(a), 0);
+    const leadership = activities.filter(a => a.leadership_role).length;
+    const withImpact = activities.filter(a => String(a.impact || '').trim()).length;
+    const withNumbers = activities.filter(a => /\d/.test(String(a.impact || ''))).length;
+    const multiYear = activities.filter(a => (a.grade_levels || []).length >= 2).length;
+    const weeklyLoad = activities.reduce((s, a) => s + (Number(a.hours_per_week) || 0), 0);
+    const heaviest = [...activities].sort((a, b) => yearHours(b) - yearHours(a))[0];
+
+    otherParts.push(`${activities.length} activity/activities logged, ~${totalHours}h/year combined (${weeklyLoad}h/week on top of school). ${leadership} marked as leadership roles, ${multiYear} spanning multiple grades, ${withImpact} with any impact line written and only ${withNumbers} containing an actual number. Largest single commitment: ${heaviest ? `"${heaviest.position}" at ${yearHours(heaviest)}h/year` : 'none'}.`);
+    otherParts.push(`Each activity, with the words THEY wrote (quote these back when the writing is the problem — never paraphrase into something better than what is there): ${activities.slice(0, 10).map(a => {
+      const bits = [`[${a.activity_type}] "${a.position}"${a.organization ? ` at ${a.organization}` : ' (no organization)'}`];
+      bits.push(`${yearHours(a)}h/yr`);
+      bits.push(`grades ${(a.grade_levels || []).join('/') || 'unrecorded'}`);
+      if (a.leadership_role) bits.push('LEADERSHIP');
+      bits.push(a.description ? `desc: "${String(a.description).slice(0, 160)}"` : 'NO DESCRIPTION WRITTEN');
+      bits.push(a.impact ? `impact: "${String(a.impact).slice(0, 120)}"` : 'NO IMPACT WRITTEN');
+      return bits.join(' — ');
+    }).join(' || ')}${activities.length > 10 ? ` || +${activities.length - 10} more` : ''}.`);
+    otherParts.push(`On the Common Application they get TEN activity slots and each description field caps at 150 characters, so ${activities.length > 10 ? `${activities.length - 10} of these will not make it onto any application` : `${10 - activities.length} slots are still empty`}. Depth beats breadth here; say so when the list is wide and thin.`);
+  } else otherParts.push(`No activities logged yet — the Activities & Resume Builder is the panel that captures them, and it exports straight into the Common App's real fields.`);
   if (research.length) otherParts.push(`${research.length} research experience(s): ${research.slice(0, 6).map(r => r.title).join(', ')}${research.length > 6 ? `, +${research.length - 6} more` : ''}.`);
   else otherParts.push(`No research experience logged yet.`);
   if (skills.length) otherParts.push(`${skills.length} skill/certification(s): ${skills.slice(0, 8).map(s => s.name).join(', ')}${skills.length > 8 ? `, +${skills.length - 8} more` : ''}.`);
@@ -509,14 +535,31 @@ Questions that stray outside the application (a study-plan question, a science q
   }
 
   // ── Awards & GPA ────────────────────────────────────────────────────────
+  // GPA used to be one line, picked by sorting the free-text term label alphabetically — which
+  // makes "Grade 9, Fall" the most recent entry for a senior, and quietly hands the coach the
+  // wrong number. It now runs through the same engine the Activities & Resume Builder uses
+  // (analyzeAcademics), so the coach gets a real chronology, a real trend, the unweighted
+  // equivalent that colleges actually compare against, and where that number sits across the
+  // whole school database. This is the single most decision-relevant fact about a student's
+  // application, and it was the thinnest line in the prompt.
   const academicParts = [];
   if (awards.length) {
-    academicParts.push(`${awards.length} award/honor(s): ${awards.slice(0, 10).map(a => `${a.title}${a.level ? ` (${a.level})` : ''}`).join(', ')}${awards.length > 10 ? `, +${awards.length - 10} more` : ''}.`);
-  } else academicParts.push(`No awards/honors logged yet.`);
+    const above = awards.filter(a => ['State/Regional', 'National', 'International'].includes(a.level)).length;
+    const noLevel = awards.filter(a => !a.level).length;
+    academicParts.push(`${awards.length} of the Common App's 5 honors slots used${above ? `, ${above} above school level` : ', all at school level or unspecified'}${noLevel ? `, ${noLevel} with no level of recognition set (a required field)` : ''}: ${awards.slice(0, 10).map(a => `"${a.title}"${a.level ? ` (${a.level}${a.grade_level ? `, grade ${a.grade_level}` : ''})` : ' (NO LEVEL SET)'}`).join(', ')}${awards.length > 10 ? `, +${awards.length - 10} more` : ''}.`);
+  } else academicParts.push(`No awards/honors logged yet — all five Common App honors slots are empty.`);
+
   if (gpaEntries.length) {
-    const latestGpa = [...gpaEntries].sort((a, b) => String(b.term || '').localeCompare(String(a.term || '')))[0];
-    academicParts.push(`${gpaEntries.length} GPA entr${gpaEntries.length === 1 ? 'y' : 'ies'} tracked, most recent: ${latestGpa.gpa}${latestGpa.weighted ? ' (weighted)' : ''}${latestGpa.term ? ` for ${latestGpa.term}` : ''}.`);
-  } else academicParts.push(`No GPA entries logged yet.`);
+    const ac = analyzeAcademics(gpaEntries);
+    const band = gpaBand(ac.comparableGpa);
+    const ctx = gpaPercentileContext(ac.comparableGpa);
+    academicParts.push(`ACADEMIC HISTORY — ${ac.count} term(s) logged, in real chronological order: ${ac.entries.map(e => `${e.term}: ${e.gpa}${e.weighted ? ' weighted' : ''}${e.course_rigor ? ` (rigor: ${e.course_rigor})` : ''}`).join('; ')}.`);
+    academicParts.push(`Latest GPA ${ac.latestGpa}${ac.latestWeighted ? ` weighted, which is roughly ${ac.comparableGpa} on the unweighted scale colleges compare against — always reason with the unweighted number, never the weighted one` : ' unweighted'}. Best ${ac.best}, lowest ${ac.worst}, mean ${ac.mean}. Trend: ${ac.trend}${ac.count >= 2 ? ` (${ac.delta >= 0 ? '+' : ''}${ac.delta} from first term to latest)` : ''}. This reads as: ${band.label}.${ctx ? ` They are at or above the admitted-student average at ${ctx.atOrAbove} of the ${ctx.total} U.S. schools this app tracks (${ctx.pct}%).` : ''}`);
+    if (ac.trend === 'falling') academicParts.push(`The downward trend is the most important academic fact about this student right now — a falling transcript costs more with admissions readers than the average itself does. Raise it when they ask anything about their chances or their list.`);
+    if (ac.trend === 'rising') academicParts.push(`The upward trend is genuinely in their favour and worth naming — readers explicitly look for it, and it is what makes an early weak term stop mattering.`);
+    if (!ac.hasRigorNote) academicParts.push(`No course rigor recorded on any term, so you cannot tell whether this GPA came from a demanding schedule or an easy one — say so rather than assuming either, and tell them the rigor field is what would settle it.`);
+    if (ac.anyWeighted && !ac.allWeighted) academicParts.push(`Their entries mix weighted and unweighted scales, so their own GPA chart is comparing two different things — worth flagging if they ask about their trend.`);
+  } else academicParts.push(`No GPA entries logged yet. This is the number admissions offices weight most heavily, so if they ask about their chances at any school, the honest answer starts with "I don't know your GPA yet" and points at the Activities & Resume Builder's Academic History section, which is where it goes and which also drives the app's college matching.`);
 
   const dataBlock = `\n\n── Their full Portfolio, as of right now ──\nCOLLEGES: ${collegeParts.join(' ')}\nESSAYS: ${essayParts.join(' ')}\nDEADLINES: ${deadlineParts.join(' ')}\nFINANCIAL AID: ${scholarshipParts.join(' ')}\nTEST SCORES: ${testScoreParts.join(' ')}\nACADEMICS: ${academicParts.join(' ')}\nOTHER: ${otherParts.join(' ')}${recentActivitySummary ? `\nRECENT ACTIVITY ACROSS THE WHOLE APP (not just Portfolio): ${recentActivitySummary}` : ''}`;
 

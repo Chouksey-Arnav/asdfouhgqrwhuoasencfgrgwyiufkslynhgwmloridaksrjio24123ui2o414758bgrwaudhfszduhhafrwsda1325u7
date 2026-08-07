@@ -47,6 +47,12 @@ const BANK = {
     `${p.name} — awarded. That's real money for real work. Genuinely nice going.`,
     `Won: ${p.name}. Log the amount if you haven't — your total is worth seeing add up.`,
   ]),
+  // Activities, awards and GPA entries are no longer commented on from this bank when they are
+  // added in the Activities & Resume Builder: that panel computes its reaction from the row
+  // itself (reactToActivity / reactToAward / reactToGpa) and passes the finished sentence to
+  // showMedabrainLine below, so a 400-hour leadership role and a two-hour club stop getting the
+  // same line. These entries remain as the generic fallback for any other surface that logs one
+  // of these resources without the analysis to hand.
   activity_added: (p) => pick([
     `${p.position || 'Activity'} logged. Depth (what you actually did) reads stronger than a long list — the description field is worth filling in.`,
     `Added to your activities. If it involved leadership or measurable impact, that's exactly what belongs in the impact field.`,
@@ -86,6 +92,23 @@ export function localComment(eventType, payload = {}) {
   try { return fn(payload); } catch { return null; }
 }
 
+// ── Computed lines beat picked lines ─────────────────────────────────────────
+// The bank above is a random pick from two or three sentences, which is the
+// right shape for events where the app genuinely knows nothing beyond "a thing
+// was added". It is the wrong shape wherever the app DOES know something: a
+// student who logs a 400-hour leadership role and a student who logs a two-hour
+// club should not get the same sentence, and until this escape hatch existed
+// they did.
+//
+// So the Activities & Resume Builder computes its reaction from the row that
+// was just saved (see reactToActivity / reactToAward in activityIntel.js and
+// reactToGpa in academicIntel.js) and hands the finished line here. Same toast,
+// same identity, no random pick — the sentence is a function of the data.
+export function showMedabrainLine(line, { duration = 6000, title = 'Medabrain' } = {}) {
+  if (!line || !String(line).trim()) return;
+  renderMedabrainToast(String(line).trim(), { duration, title });
+}
+
 // A distinct visual identity from both the plain react-hot-toast success/error
 // toasts and the amber achievement toast in App.jsx — violet/indigo, a Brain
 // icon, and an explicit "Medabrain" label, so a student learns to recognize
@@ -93,13 +116,17 @@ export function localComment(eventType, payload = {}) {
 export function showMedabrainToast(eventType, payload = {}) {
   const line = localComment(eventType, payload);
   if (!line) return;
+  renderMedabrainToast(line);
+}
+
+function renderMedabrainToast(line, { duration = 4200, title = 'Medabrain' } = {}) {
   toast.custom((t) => (
     <motion.div
       initial={{ scale: 0.85, opacity: 0, x: 20 }} animate={{ scale: 1, opacity: 1, x: 0 }} exit={{ scale: 0.85, opacity: 0 }}
       style={{
         background: C.s1, border: `1px solid ${tint(C.violet, 0.35)}`, borderRadius: 14, padding: '12px 16px',
         display: 'flex', alignItems: 'flex-start', gap: 12, boxShadow: `0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px ${tint(C.violet, 0.15)}`,
-        maxWidth: 320, fontFamily: C.FB, cursor: 'pointer',
+        maxWidth: 360, fontFamily: C.FB, cursor: 'pointer',
       }}
       onClick={() => toast.dismiss(t.id)}
     >
@@ -107,9 +134,9 @@ export function showMedabrainToast(eventType, payload = {}) {
         <Brain size={14} color={C.violetL} />
       </div>
       <div style={{ minWidth: 0 }}>
-        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 3 }}>Medabrain</div>
+        <div style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 3 }}>{title}</div>
         <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>{line}</div>
       </div>
     </motion.div>
-  ), { duration: 4200 });
+  ), { duration });
 }
