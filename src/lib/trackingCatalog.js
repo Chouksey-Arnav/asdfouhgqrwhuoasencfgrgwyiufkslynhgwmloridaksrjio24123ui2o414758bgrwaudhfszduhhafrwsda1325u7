@@ -41,6 +41,19 @@ export function isCatalogSourced(text) {
   return String(text || '').includes(CATALOG_MARKER);
 }
 
+// The second provenance marker: a scholarship the student typed the name of themselves, which
+// Medabrain then researched (see scholarshipRowFromResearch below and FinancialAidPanel.jsx's
+// "Add New Scholarship" flow). Distinct from CATALOG_MARKER so the Tracked tab and any future
+// reader can tell "we already had this in the curated database" apart from "Medabrain looked
+// this up on request" — the latter is a live model guess and deserves a different confidence
+// framing even though both end up as the same kind of row.
+export const AI_RESEARCH_MARKER = 'Researched by Medabrain';
+
+/** True when `text` carries the Medabrain-research provenance marker. */
+export function isAiResearched(text) {
+  return String(text || '').includes(AI_RESEARCH_MARKER);
+}
+
 // ── Dedupe keys ──────────────────────────────────────────────────────────────
 // The stable identity of a tracked thing, used to (a) mark catalog entries as already-tracked in
 // the UI, (b) short-circuit a second Track tap, and (c) make outbox retries idempotent — a retry
@@ -87,23 +100,55 @@ export function findExistingByKey(resource, rows = [], key) {
 // ── Scholarships ─────────────────────────────────────────────────────────────
 const SCHOLARSHIP_SOURCE_NOTE =
   `${CATALOG_MARKER} scholarship database — confirm current amount/deadline/eligibility on the official program site before applying.`;
+const AI_RESEARCH_SOURCE_NOTE =
+  `${AI_RESEARCH_MARKER} — confirm current amount/deadline/eligibility on the official program site before applying.`;
+
+/**
+ * Assembles a scholarship's org/eligibility/description/amount/deadline into the one `notes`
+ * paragraph format both builders below write and src/lib/scholarshipNotes.js reads back apart for
+ * display. Segments are blank-line-joined (not run together as one sentence) specifically so the
+ * reader can split them apart deterministically instead of guessing where one field ends and the
+ * next begins.
+ */
+export function formatScholarshipNotes({ org, eligibility, description, amount, deadline, sourceNote } = {}) {
+  return [
+    org || null,
+    eligibility ? `Eligibility: ${eligibility}` : null,
+    description || null,
+    amount ? `Typical amount: ${amount}.` : null,
+    deadline ? `Typical deadline: ${deadline}.` : null,
+    sourceNote || null,
+  ].filter(Boolean).join('\n\n');
+}
 
 /** A curated src/data/scholarships.js entry -> a `scholarships` row. */
 export function scholarshipRowFromCatalog(entry) {
-  const notes = [
-    entry.org,
-    entry.eligibility ? `Eligibility: ${entry.eligibility}` : null,
-    entry.description,
-    entry.amount ? `Typical amount: ${entry.amount}.` : null,
-    entry.deadline ? `Typical deadline: ${entry.deadline}.` : null,
-    SCHOLARSHIP_SOURCE_NOTE,
-  ].filter(Boolean).join(' ');
+  const notes = formatScholarshipNotes({
+    org: entry.org, eligibility: entry.eligibility, description: entry.description,
+    amount: entry.amount, deadline: entry.deadline, sourceNote: SCHOLARSHIP_SOURCE_NOTE,
+  });
   // amount/deadline stay null on purpose — see rule 2 in this file's header.
   return { name: entry.name, notes, status: 'researching', amount: null, deadline: null };
 }
 
 /** A free-text / AI-fallback scholarship the student chose to track anyway. */
 export function scholarshipRowFromCustom(name, notes) {
+  return { name, notes: notes || null, status: 'researching', amount: null, deadline: null };
+}
+
+/**
+ * A scholarship the student typed the name of themselves, researched live by Medabrain (see
+ * FinancialAidPanel.jsx's "Add New Scholarship" flow and src/lib/scholarshipResearch.js) rather
+ * than pulled from the curated catalog. Same shape and the same honesty rule as
+ * scholarshipRowFromCatalog — amount/deadline are prose, not invented typed dates — but tagged
+ * with AI_RESEARCH_MARKER instead of CATALOG_MARKER so the Tracked tab and Medabrain's own
+ * context can tell a live model lookup apart from a vetted curated entry.
+ */
+export function scholarshipRowFromResearch(name, research = {}) {
+  const notes = formatScholarshipNotes({
+    org: research.org, eligibility: research.eligibility, description: research.description,
+    amount: research.amount, deadline: research.deadline, sourceNote: AI_RESEARCH_SOURCE_NOTE,
+  });
   return { name, notes: notes || null, status: 'researching', amount: null, deadline: null };
 }
 
