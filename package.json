@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "npm run sitemap && npm run verify:routing && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:contrast && vite build",
     "sitemap": "node scripts/generateSitemap.mjs",
+    "icons": "node scripts/renderIcons.mjs",
     "preview": "vite preview",
     "start": "node server.js",
     "audit:lessons": "node scripts/auditLessonsCompleteness.mjs",

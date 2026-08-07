@@ -1,25 +1,100 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="MedSchoolPrep">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="100" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#274873"/>
-      <stop offset="1" stop-color="#13233b"/>
+    <!-- Deep-space tile the mark sits on -->
+    <radialGradient id="msp-tile" cx="50" cy="54" r="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#141d45"/>
+      <stop offset="0.52" stop-color="#0a0e24"/>
+      <stop offset="1" stop-color="#03050d"/>
+    </radialGradient>
+    <!-- Violet (left wing) -> cyan (right wing) sweep across the whole mark -->
+    <linearGradient id="msp-sweep" x1="10" y1="92" x2="90" y2="16" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A855F7"/>
+      <stop offset="0.2" stop-color="#8B5CF6"/>
+      <stop offset="0.42" stop-color="#6366F1"/>
+      <stop offset="0.62" stop-color="#3B82F6"/>
+      <stop offset="0.82" stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#67E8F9"/>
     </linearGradient>
-    <linearGradient id="gold" x1="50" y1="18" x2="50" y2="90" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#e3c47c"/>
-      <stop offset="1" stop-color="#b3894a"/>
+    <!-- Specular rim riding the inner edge of each wing -->
+    <linearGradient id="msp-rim" x1="50" y1="18" x2="50" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#BEEBFF" stop-opacity="0.6"/>
+      <stop offset="1" stop-color="#8FD7FF" stop-opacity="0.12"/>
     </linearGradient>
+    <!-- Light column climbing the centre of the M, between the two wings -->
+    <linearGradient id="msp-column" x1="50" y1="26" x2="50" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EAF9FF" stop-opacity="0.34"/>
+      <stop offset="0.55" stop-color="#7FB6FF" stop-opacity="0.09"/>
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0.16"/>
+    </linearGradient>
+    <radialGradient id="msp-head" cx="46.5" cy="13.5" r="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.35" stop-color="#C4E9FF"/>
+      <stop offset="1" stop-color="#5B8DF9"/>
+    </radialGradient>
+    <radialGradient id="msp-bloom" cx="50" cy="48" r="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4C6BFF" stop-opacity="0.36"/>
+      <stop offset="0.62" stop-color="#3B82F6" stop-opacity="0.1"/>
+      <stop offset="1" stop-color="#3B82F6" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="msp-glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="1.8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="msp-soft" x="-60%" y="-40%" width="220%" height="180%">
+      <feGaussianBlur stdDeviation="2.4"/>
+    </filter>
+    <clipPath id="msp-clip"><rect width="100" height="100" rx="22"/></clipPath>
   </defs>
-  <rect width="100" height="100" rx="22" fill="url(#bg)"/>
-  <!-- crest / shield -->
-  <path d="M50 21 L75 30.5 V54 C75 71 64.5 82 50 87 C35.5 82 25 71 25 54 V30.5 Z"
-        fill="#ffffff" fill-opacity="0.06" stroke="url(#gold)" stroke-width="3.4" stroke-linejoin="round"/>
-  <!-- open book -->
-  <path d="M50 47 V71 C46 67.5 41 65.5 34.5 65.5 V44 C41 44 46 45.5 50 47 Z"
-        fill="#f4ecd8" fill-opacity="0.92"/>
-  <path d="M50 47 V71 C54 67.5 59 65.5 65.5 65.5 V44 C59 44 54 45.5 50 47 Z"
-        fill="#f4ecd8" fill-opacity="0.75"/>
-  <path d="M50 47 V71" stroke="#13233b" stroke-width="1.1"/>
-  <!-- cross at the crest peak -->
-  <rect x="46.6" y="27" width="6.8" height="17" rx="1.2" fill="url(#gold)"/>
-  <rect x="41.5" y="32.1" width="17" height="6.8" rx="1.2" fill="url(#gold)"/>
+
+  <rect width="100" height="100" rx="22" fill="url(#msp-tile)"/>
+  <g clip-path="url(#msp-clip)">
+    <circle cx="50" cy="48" r="48" fill="url(#msp-bloom)"/>
+
+    <!-- Light column rising through the gap between the wings -->
+    <path d="M50 26 L53.6 90 H46.4 Z" fill="url(#msp-column)" filter="url(#msp-soft)"/>
+
+    <!-- The M: two mirrored wings, each a solid blade carrying a leaf-shaped
+         counter. One path per wing with evenodd, so the counter is a true hole
+         and the tile reads through it. -->
+    <g filter="url(#msp-glow)">
+      <g fill="url(#msp-sweep)" fill-rule="evenodd">
+        <path d="M12.5 88
+                 C9.5 60 12 29 24.5 16.5
+                 C30 11 37 12.5 40.5 19
+                 C46 28 48.5 55 47.2 88
+                 Z
+                 M30.5 27.5
+                 C38 36.5 42.5 60 35 84
+                 C25.5 76.5 21.5 48 30.5 27.5
+                 Z"/>
+        <path d="M87.5 88
+                 C90.5 60 88 29 75.5 16.5
+                 C70 11 63 12.5 59.5 19
+                 C54 28 51.5 55 52.8 88
+                 Z
+                 M69.5 27.5
+                 C62 36.5 57.5 60 65 84
+                 C74.5 76.5 78.5 48 69.5 27.5
+                 Z"/>
+      </g>
+      <!-- The brightest line in the mark: the two inner edges falling to centre -->
+      <g fill="none" stroke="url(#msp-rim)" stroke-width="1.3" stroke-linecap="round">
+        <path d="M42.6 23 C46.6 30 48.6 56 47.2 88"/>
+        <path d="M57.4 23 C53.4 30 51.4 56 52.8 88"/>
+      </g>
+    </g>
+
+    <!-- Stair-steps at the base of the column: the climb the mark is about -->
+    <g fill="#E4F6FF" filter="url(#msp-glow)">
+      <rect x="46.6" y="74.4" width="6.8" height="1.7" rx="0.85" opacity="0.95"/>
+      <rect x="45.4" y="78.2" width="9.2" height="1.8" rx="0.9" opacity="0.8"/>
+      <rect x="44.0" y="82.2" width="12.0" height="1.9" rx="0.95" opacity="0.62"/>
+      <rect x="42.5" y="86.4" width="15.0" height="2.0" rx="1.0" opacity="0.44"/>
+      <rect x="40.9" y="90.8" width="18.2" height="2.1" rx="1.05" opacity="0.26"/>
+    </g>
+
+    <!-- The figure rising between the wings -->
+    <circle cx="50" cy="17" r="8.4" fill="url(#msp-head)" filter="url(#msp-glow)"/>
+  </g>
 </svg>
