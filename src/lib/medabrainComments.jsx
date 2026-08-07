@@ -33,10 +33,10 @@ const BANK = {
   ]),
   essay_started: (p) => pick([
     `New essay draft started${p.title ? `: "${p.title}"` : ''}. First drafts are supposed to be rough — just get words down.`,
-    `Essay workspace opened${p.title ? ` for "${p.title}"` : ''}. Ping the Medabrain tab if you want a second pair of eyes once there's a draft.`,
+    `Essay workspace opened${p.title ? ` for "${p.title}"` : ''}. Once there's a real draft, hit "Get Medabrain's critique" — I'll tell you what's wrong with it, not what you want to hear.`,
   ]),
   essay_completed: (p) => pick([
-    `"${p.title}" marked final. Worth a last read-aloud pass before it ships — typos hide from silent reading.`,
+    `"${p.title}" marked final. Run one last critique on it before it ships — "final" and "good" aren't the same thing, and this is the last cheap moment to find out.`,
     `"${p.title}" is done. One more essay off the list — nice work seeing it through.`,
   ]),
   scholarship_added: (p) => pick([

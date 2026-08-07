@@ -7019,7 +7019,7 @@ export default function App({ account, onAccountChange }) {
       askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
       pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
     resume:()=><ActivitiesResumePanel accent={portC.resume} onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}/>,
     research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>{logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}/>,

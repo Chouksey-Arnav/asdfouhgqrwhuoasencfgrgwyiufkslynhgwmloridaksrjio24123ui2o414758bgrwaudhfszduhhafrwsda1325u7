@@ -23,6 +23,14 @@ key pool and a cost-appropriate default model:
 | `plan`       | Onboarding plan generation fallback / legacy                          | Oracle (best)      | `GROQ_API_KEY_PLAN`         |
 | `masterplan` | The **Plans tab**'s full day-by-day roadmap generation (rare, heaviest)| Oracle (biggest)   | `GROQ_API_KEY_PLAN`         |
 | `sat`        | SAT drills, hints, step-by-step explanations, and coach               | Sage (best)        | `GROQ_API_KEY_SAT`          |
+| `essay`      | Essay critique + supplemental-prompt lookup (Essay Workspace)         | Sage (best)        | `GROQ_API_KEY_ESSAY`        |
+
+`essay` is the one purpose with a two-step fallback: it uses `GROQ_API_KEY_ESSAY` if set, then
+`GROQ_API_KEY_PORTFOLIO` (essay critique *is* portfolio work), then the shared pool. It also runs
+on the widest input/output budget of any chat-shaped purpose — 14,000 input chars and 4,000 output
+tokens — because a critique has to receive a full draft intact and return a verdict, a rubric, the
+line-by-line notes and a revision plan. Truncating either end produces a confident verdict about
+writing the model never read.
 
 **Every purpose falls back to the shared Medabrain pool** (`GROQ_API_KEY` / `_2` / `_3`) when its
 dedicated key isn't set — so the whole app works with a single key today, and simply gains more
@@ -46,6 +54,7 @@ GROQ_API_KEY_PORTFOLIO=gsk_...    # 5th account → portfolio tracker intelligen
 GROQ_API_KEY_PREP=gsk_...         # 6th account → in-context prep help
 GROQ_API_KEY_PLAN=gsk_...         # 7th account → Plans tab full day-by-day roadmap generation
 GROQ_API_KEY_SAT=gsk_...          # 8th account → SAT tab drills, hints, and explanations
+GROQ_API_KEY_ESSAY=gsk_...        # 9th account → essay critique + supplemental essay prompts
 # GROQ_API_KEY_MASTERPLAN=gsk_... # Reserved for other purposes down the road
 ```
 
