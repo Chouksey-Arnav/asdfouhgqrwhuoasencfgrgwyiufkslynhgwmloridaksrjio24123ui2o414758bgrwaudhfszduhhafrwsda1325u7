@@ -23,7 +23,7 @@ failed to stick:
 | 1 | Request failed (offline / flaky / cold start / 500) | Red toast, item gone forever | Queued locally, retried automatically, never dropped |
 | 2 | Response lost after a successful POST | Nothing; a retry created a **second** row | Dedupe check against the server list before every retry |
 | 3 | Double-tap, or re-tracking something tracked last week | Duplicate rows; the button always said "Track" | Button reads "Tracked"; a repeat tap returns `duplicate` |
-| 4 | Fields silently dropped on the way in | A scholarship with no deadline that never reached the Deadlines tab | Full-fidelity capture + an explicit "needs a date" prompt |
+| 4 | Fields silently dropped on the way in | A scholarship with no deadline that never reached the Milestones tab | Full-fidelity capture + an explicit "needs a date" prompt |
 
 ## The pieces
 
@@ -108,9 +108,9 @@ because the student then sees a countdown they believe is real. This is the same
 data files and `autoDeadlines.js` already set.
 
 Rule 2 has a cost, and it's paid explicitly rather than silently: a scholarship with `deadline`
-null never reaches the Deadlines tab. So both `FinancialAidPanel` and `DeadlinesPanel` surface
-those rows under "tracked scholarships without a deadline", with a date field right there. The
-student is told what's missing instead of assuming it's handled.
+null never reaches the Milestones tab. So both `FinancialAidPanel` and `PortfolioMilestones`
+surface those rows under "tracked scholarships without a deadline", with a date field right there.
+The student is told what's missing instead of assuming it's handled.
 
 ## Routing
 

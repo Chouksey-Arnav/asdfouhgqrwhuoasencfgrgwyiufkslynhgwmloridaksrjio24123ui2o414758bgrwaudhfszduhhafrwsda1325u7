@@ -838,7 +838,7 @@ export const CLASS_YEAR_ROADMAP = {
       { key:'activity',    label:'Grow into a leadership or ongoing role in an activity', pillar:'portfolio', view:'resume' },
       { key:'clinical',    label:'Keep growing your shadowing / clinical hours', pillar:'portfolio', view:'clinical' },
       { key:'colleges',    label:'Start a loose college list — no commitment yet', pillar:'portfolio', view:'colleges' },
-      { key:'deadlines',   label:'Get in the habit of tracking deadlines', pillar:'portfolio', view:'deadlines' },
+      { key:'deadlines',   label:'Get in the habit of tracking deadlines', pillar:'portfolio', view:'milestones' },
     ],
   },
   junior: {
@@ -857,7 +857,7 @@ export const CLASS_YEAR_ROADMAP = {
       { key:'colleges',    label:'Finalize your college list and application plan', pillar:'portfolio', view:'colleges' },
       { key:'essays',      label:'Finish and polish your essays', pillar:'portfolio', view:'essays' },
       { key:'recommenders',label:'Confirm recommenders have submitted their letters', pillar:'portfolio', view:'recommenders' },
-      { key:'deadlines',   label:'Track every application deadline closely', pillar:'portfolio', view:'deadlines' },
+      { key:'deadlines',   label:'Track every application deadline closely', pillar:'portfolio', view:'milestones' },
       { key:'aid',         label:'Apply for financial aid & scholarships', pillar:'portfolio', view:'aid' },
     ],
   },
@@ -868,7 +868,7 @@ export const CLASS_YEAR_ROADMAP = {
       { key:'quiz',        label:'Stay sharp on core science fundamentals', pillar:'prep', view:'quizzes' },
       { key:'resume',      label:'Build a resume for pre-health clubs & jobs', pillar:'portfolio', view:'resume' },
       { key:'recommenders',label:'Keep track of who you\'ll need letters from', pillar:'portfolio', view:'recommenders' },
-      { key:'deadlines',   label:'Stay organized with upcoming deadlines', pillar:'portfolio', view:'deadlines' },
+      { key:'deadlines',   label:'Stay organized with upcoming deadlines', pillar:'portfolio', view:'milestones' },
     ],
   },
 };

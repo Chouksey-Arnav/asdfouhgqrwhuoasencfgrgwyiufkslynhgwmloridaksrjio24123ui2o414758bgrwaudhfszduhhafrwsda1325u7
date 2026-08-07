@@ -148,7 +148,7 @@ export function buildTrackedItems(snapshot = {}, now = Date.now()) {
       sub: d.kind ? labelize(d.kind) : 'Deadline',
       stage: until != null && until < 0 ? 'done' : 'in_progress',
       statusLabel: until == null ? 'No date' : until < 0 ? 'Passed' : `${until} day${until === 1 ? '' : 's'} out`,
-      dueDate: d.due_date || null, view: 'deadlines', kind: 'Deadline',
+      dueDate: d.due_date || null, view: 'milestones', kind: 'Deadline',
       addedAt: toTime(d.created_at), touchedAt: toTime(d.created_at),
       missingDate: !d.due_date,
       notes: '',

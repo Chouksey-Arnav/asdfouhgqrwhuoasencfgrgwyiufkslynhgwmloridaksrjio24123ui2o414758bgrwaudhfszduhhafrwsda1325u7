@@ -128,7 +128,7 @@ AscendPrep utilizes a synchronized, state-preserving routing architecture design
 ### Key Route Maps
 - **Home:** `/`
 - **General Tabs (No sub-navigation):** `/plans`, `/settings`
-- **Tabs with subviews:** `/sat/practice`, `/prep/flashcards`, `/portfolio/deadlines`, `/progress/achievements`
+- **Tabs with subviews:** `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements`
 - **Interactive Player Routes:**
   - Pathway Lesson: `/prep/pathway/lesson/<unitId>/<lessonId>`
   - Practice Quiz: `/prep/quizzes/quiz/<quizId>`
@@ -172,7 +172,7 @@ The repository is equipped with a comprehensive suite of automated testing, stru
 | `npm run verify:sat-baseline` | SAT Diagnostic Baseline| Asserts diagnostic scoring curves and diagnostic baseline recommendation profiles. |
 | `npm run verify:tracking` | Event Tracking & Logging | Audits user event emission schemas, milestone completions, and gamification rewards. |
 | `npm run verify:routing` | Route & SPA Static Map | Validates the route tables against physical `App.jsx` subview options and checks the static sitemap.xml. |
-| `npm run verify:timeline` | Application Timeline Engine | Asserts the milestone catalog and date engine behind Portfolio > Timeline: grade gating (a freshman is never shown financial-aid, application, or decision milestones), academic-year resolution across the August rollover, generated-vs-student-entered date labelling, and that logged rows satisfy milestones instead of nagging. |
+| `npm run verify:timeline` | Application Timeline Engine | Asserts the milestone catalog and date engine behind Portfolio > Milestones: grade gating (a freshman is never shown financial-aid, application, or decision milestones), academic-year resolution across the August rollover, generated-vs-student-entered date labelling, and that logged rows satisfy milestones instead of nagging. |
 | `npm run verify:routing-e2e`| End-To-End Browser Route | Uses Playwright to drive a headless browser against a compiled build. Simulates back/forward navigation, deep links, page reloads, and scroll preservation. |
 | `npm run audit:all` | **Complete Health Check** | Executes every individual structural, video, data, and score test script sequentially. Returns zero on full success; exits with non-zero on any sub-test failure. |
 

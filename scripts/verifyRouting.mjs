@@ -21,7 +21,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
 
 const routes = await import(pathToFileURL(path.join(ROOT, 'src/lib/routes.js')).href);
-const { TABS, SUBVIEWS, AUTH_VIEWS, formatPath, parsePath, bootRoute, normalizePath } = routes;
+const { TABS, SUBVIEWS, AUTH_VIEWS, formatPath, parsePath, bootRoute, normalizePath, resolveView } = routes;
 
 let failures = 0;
 const fail = (msg) => { failures += 1; console.error(`  ✗ ${msg}`); };
@@ -94,13 +94,35 @@ for (const [alias, expected] of [['/sat', '/sat/overview'], ['/prep', '/prep/pat
 if (Object.values(AUTH_VIEWS).some((p) => parsePath(p))) fail('an auth path parsed as an app route');
 ok('files, API paths, auth screens and typos are all rejected; aliases normalize');
 
+// ── 3b. Retired sub-view ids still resolve ──────────────────────────────────
+// Merging two tabs into one retires their ids, but those ids are already in
+// shared links, bookmarks, PWA start URLs, persisted view state, and every
+// history entry a returning student has. They must resolve to the survivor and
+// must NOT be canonical, or there would be two URLs for one screen.
+section('Retired sub-views alias forward');
+for (const [tab, sub] of Object.entries(SUBVIEWS)) {
+  for (const [alias, target] of Object.entries(sub.aliases || {})) {
+    if (sub.ids.includes(alias)) fail(`SUBVIEWS.${tab}.aliases.${alias} is also a live id — it can never be reached`);
+    if (!sub.ids.includes(target)) fail(`SUBVIEWS.${tab}.aliases.${alias} points at ${target}, which is not a live id`);
+    const parsed = parsePath(`/${tab}/${alias}`);
+    if (!parsed) { fail(`/${tab}/${alias} should still resolve`); continue; }
+    if (parsed.view !== target) fail(`/${tab}/${alias} resolved to ${parsed.view}, expected ${target}`);
+    if (formatPath(parsed) !== `/${tab}/${target}`) fail(`/${tab}/${alias} should normalize to /${tab}/${target}`);
+    if (resolveView(tab, alias) !== target) fail(`resolveView('${tab}','${alias}') should be ${target}`);
+    // …and a stale value sitting in localStorage lands on the survivor too.
+    const booted = bootRoute({ tab, [sub.state]: alias }, '/');
+    if (booted[sub.state] !== target) fail(`persisted ${sub.state}='${alias}' should boot into ${target}, got ${booted[sub.state]}`);
+  }
+}
+if (!failures) ok('every retired sub-view id resolves forward, normalizes, and never round-trips out of formatPath');
+
 // ── 4. Boot precedence: URL wins, persisted state fills the gaps ─────────────
 section('Boot route');
 const persisted = { tab: 'progress', prepView: 'coach', portfolioView: 'essays', progressView: 'performance', satView: 'skills' };
 const bootBare = bootRoute(persisted, '/');
 if (bootBare.tab !== 'progress' || bootBare.progressView !== 'performance') fail('a bare "/" should resume the persisted view');
-const bootDeep = bootRoute(persisted, '/portfolio/deadlines');
-if (bootDeep.tab !== 'portfolio' || bootDeep.portfolioView !== 'deadlines') fail('a deep link should win over persisted state');
+const bootDeep = bootRoute(persisted, '/portfolio/milestones');
+if (bootDeep.tab !== 'portfolio' || bootDeep.portfolioView !== 'milestones') fail('a deep link should win over persisted state');
 if (bootDeep.prepView !== 'coach') fail('a deep link should not discard the persisted state it says nothing about');
 const bootJunk = bootRoute(persisted, '/nope');
 if (bootJunk.tab !== 'progress') fail('an unknown URL should fall back to persisted state');

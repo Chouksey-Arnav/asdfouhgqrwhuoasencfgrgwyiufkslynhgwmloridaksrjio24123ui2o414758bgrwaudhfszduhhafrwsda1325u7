@@ -3,7 +3,7 @@
 Until now the app kept all of its navigation in React state and never touched the
 URL. Every screen was `medschoolprep.cloud/`, which meant the browser's back
 button had exactly one entry to go back to: whatever the student was looking at
-*before the site*. Backing out of Portfolio → Deadlines left the app entirely.
+*before the site*. Backing out of Portfolio → Milestones left the app entirely.
 
 Now every screen has an address, and history moves through them.
 
@@ -13,7 +13,7 @@ Now every screen has an address, and history moves through them.
 |---|---|
 | Home | `/` |
 | A tab with no sub-nav | `/plans`, `/settings` |
-| A tab with a sub-nav | `/sat/practice`, `/prep/flashcards`, `/portfolio/deadlines`, `/progress/achievements` |
+| A tab with a sub-nav | `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements` |
 | Lesson player | `/prep/pathway/lesson/<unitId>/<lessonId>` |
 | Quiz runner | `/prep/quizzes/quiz/<quizId>` |
 | Signed-out screens | `/login`, `/signup`, `/forgot-password` |
@@ -26,6 +26,17 @@ Aliases resolve but aren't canonical — `/sat` and `/portfolio/` normalize to
 `/sat/overview` and `/portfolio/overview` via `replaceState`, so they don't cost
 a history entry. An unrecognised path (`/nope`) falls back to the last-persisted
 screen and rewrites the URL in place.
+
+**Retired sub-views alias forward.** When two tabs merge, their ids do not stop
+existing — they are already in shared links, bookmarks, the PWA start URL, saved
+master plans, persisted view state, and every history entry a returning student
+has. `SUBVIEWS[tab].aliases` maps a retired id onto its survivor, so
+`/portfolio/deadlines` and `/portfolio/timeline` both open `/portfolio/milestones`
+and rewrite themselves in place. Aliases never come *out* of `formatPath()`,
+which is what keeps exactly one canonical URL per screen; `resolveView()` applies
+the same mapping to persisted state so a stale `portfolioView` doesn't silently
+dump the student on the Portfolio overview. `npm run verify:routing` asserts all
+of that.
 
 ## How it works
 

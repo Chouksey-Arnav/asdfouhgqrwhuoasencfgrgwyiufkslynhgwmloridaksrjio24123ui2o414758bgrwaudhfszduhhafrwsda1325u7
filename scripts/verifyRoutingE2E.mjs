@@ -139,9 +139,9 @@ try {
   await page.waitForURL('**/portfolio/**', { timeout: 10000 });
   check(url() === '/portfolio/overview', `Portfolio tab → /portfolio/overview (got ${url()})`);
 
-  await pill('Deadlines').click();
-  await page.waitForURL('**/portfolio/deadlines', { timeout: 10000 });
-  check(url() === '/portfolio/deadlines', `Portfolio sub-tab → /portfolio/deadlines (got ${url()})`);
+  await pill('Milestones').click();
+  await page.waitForURL('**/portfolio/milestones', { timeout: 10000 });
+  check(url() === '/portfolio/milestones', `Portfolio sub-tab → /portfolio/milestones (got ${url()})`);
 
   section('Back walks the exact path taken');
   const expectedBack = ['/portfolio/overview', '/sat/tests', '/sat/overview', '/'];
@@ -155,19 +155,19 @@ try {
     'the Home tab is the one marked active after backing all the way out');
 
   section('Forward replays it');
-  for (const expected of ['/sat/overview', '/sat/tests', '/portfolio/overview', '/portfolio/deadlines']) {
+  for (const expected of ['/sat/overview', '/sat/tests', '/portfolio/overview', '/portfolio/milestones']) {
     await page.goForward();
     await page.waitForTimeout(350);
     check(url() === expected, `forward → ${expected} (got ${url()})`);
   }
-  check(await page.locator('a[aria-current="page"]:has-text("Deadlines")').count() > 0,
-    'the Deadlines sub-tab is active again after going forward');
+  check(await page.locator('a[aria-current="page"]:has-text("Milestones")').count() > 0,
+    'the Milestones sub-tab is active again after going forward');
 
   section('A reload lands on the same screen, and back still works');
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.locator('a[aria-current="page"]:has-text("Deadlines")').waitFor({ timeout: 20000 });
+  await page.locator('a[aria-current="page"]:has-text("Milestones")').waitFor({ timeout: 20000 });
   await dismissChest();
-  check(url() === '/portfolio/deadlines', `reload stays on /portfolio/deadlines (got ${url()})`);
+  check(url() === '/portfolio/milestones', `reload stays on /portfolio/milestones (got ${url()})`);
   await page.goBack();
   await page.waitForTimeout(400);
   check(url() === '/portfolio/overview', `back after a reload → /portfolio/overview (got ${url()})`);

@@ -41,7 +41,15 @@ export const SUBVIEWS = {
   portfolio: {
     state: 'portfolioView',
     default: 'overview',
-    ids: ['overview', 'tracked', 'timeline', 'colleges', 'essays', 'deadlines', 'aid', 'resume', 'research', 'skills', 'clinical', 'recommenders', 'interview', 'calc'],
+    ids: ['overview', 'tracked', 'milestones', 'colleges', 'essays', 'aid', 'resume', 'research', 'skills', 'clinical', 'recommenders', 'interview', 'calc'],
+    // 'timeline' and 'deadlines' were two sibling tabs showing two halves of the
+    // same calendar; they are now one tab, 'milestones'. Both old ids stay
+    // parseable forever — they are in shared links, bookmarks, PWA start URLs,
+    // and every history entry a returning student already has. They resolve to
+    // the merged view and the router rewrites the address bar in place, so an
+    // old link works and stops being an old link. Aliases never round-trip out
+    // of formatPath(), which is what keeps exactly one canonical URL per screen.
+    aliases: { timeline: 'milestones', deadlines: 'milestones' },
   },
   progress: {
     state: 'progressView',
@@ -78,6 +86,21 @@ function unseg(value) {
   try { return decodeURIComponent(value); } catch { return value; }
 }
 
+/**
+ * The live sub-view id for `view` on `tab`: itself if it still exists, whatever
+ * replaced it if it is a retired alias, otherwise null.
+ *
+ * Used for persisted state as well as URLs — a student whose last screen was
+ * `/portfolio/deadlines` has that id sitting in localStorage, and without this
+ * they would be silently dumped on the Portfolio overview on their next visit.
+ */
+export function resolveView(tab, view) {
+  const sub = SUBVIEWS[tab];
+  if (!sub || !view) return null;
+  if (sub.ids.includes(view)) return view;
+  return sub.aliases?.[view] || null;
+}
+
 /** Normalizes a pathname for comparison: no trailing slash, always leading one. */
 export function normalizePath(pathname) {
   const p = String(pathname || '/').split('?')[0].split('#')[0];
@@ -110,7 +133,7 @@ export function formatPath(route) {
   if (tab !== 'home') parts.push(tab);
 
   const sub = SUBVIEWS[tab];
-  if (sub) parts.push(sub.ids.includes(route?.view) ? route.view : sub.default);
+  if (sub) parts.push(resolveView(tab, route?.view) || sub.default);
 
   const overlay = route?.overlay;
   if (overlay?.kind === 'lesson' && overlay.unitId && overlay.lessonId) {
@@ -147,6 +170,11 @@ export function parsePath(pathname) {
     // `/sat` (no sub-view) is a legitimate hand-typed URL: accept it and let the
     // caller's replaceState normalize it to /sat/overview.
     if (parts[1] && sub.ids.includes(parts[1])) { view = parts[1]; i = 2; }
+    // A retired sub-view id (see `aliases` above) resolves to whatever replaced
+    // it. The route it produces is canonical, so useAppRouter's state→URL sync
+    // finds the address bar disagreeing and replaces it — the student lands on
+    // the right screen with the right URL and no extra history entry.
+    else if (parts[1] && sub.aliases?.[parts[1]]) { view = sub.aliases[parts[1]]; i = 2; }
     else if (!parts[1]) { view = sub.default; i = 1; }
     else if (parts[1] === OVERLAY_SEGMENTS.lesson || parts[1] === OVERLAY_SEGMENTS.quiz) { view = sub.default; i = 1; }
     else return null; // /portfolio/nonsense — unknown, don't guess
@@ -180,7 +208,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
     tab: TABS.includes(persisted.tab) ? persisted.tab : 'home',
     satView: SUBVIEWS.sat.ids.includes(persisted.satView) ? persisted.satView : SUBVIEWS.sat.default,
     prepView: SUBVIEWS.prep.ids.includes(persisted.prepView) ? persisted.prepView : SUBVIEWS.prep.default,
-    portfolioView: SUBVIEWS.portfolio.ids.includes(persisted.portfolioView) ? persisted.portfolioView : SUBVIEWS.portfolio.default,
+    portfolioView: resolveView('portfolio', persisted.portfolioView) || SUBVIEWS.portfolio.default,
     progressView: SUBVIEWS.progress.ids.includes(persisted.progressView) ? persisted.progressView : SUBVIEWS.progress.default,
     overlay: null,
   };

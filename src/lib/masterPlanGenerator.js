@@ -281,15 +281,24 @@ async function callOracleWithRetry(args) {
 // link" instead of a broken navigation click.
 const VALID_DESTINATIONS = new Set([
   'prep:diagnostic', 'prep:pathway', 'prep:quizzes', 'prep:flashcards', 'prep:coach', 'prep:library',
-  'portfolio:overview', 'portfolio:timeline', 'portfolio:colleges', 'portfolio:essays', 'portfolio:deadlines',
+  'portfolio:overview', 'portfolio:milestones', 'portfolio:colleges', 'portfolio:essays',
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
   'portfolio:recommenders', 'portfolio:interview', 'portfolio:tracked', 'portfolio:calc',
   'progress:overview', 'progress:verified', 'progress:performance', 'progress:achievements',
   'sat:overview', 'sat:diagnostic', 'sat:practice', 'sat:tests', 'sat:review', 'sat:skills', 'sat:scores',
 ]);
+// Sub-views that were merged away. A master plan is stored on the student's
+// record and re-read for months, so plans generated before the Deadlines and
+// Timeline tabs became one still carry the old ids — they get remapped rather
+// than silently losing their link.
+const RETIRED_VIEWS = { 'portfolio:deadlines': 'milestones', 'portfolio:timeline': 'milestones' };
+
 function sanitizeDestination(tab, view) {
-  if (!tab || !view || !VALID_DESTINATIONS.has(`${tab}:${view}`)) return { resourceTab: null, resourceView: null };
-  return { resourceTab: tab, resourceView: view };
+  if (!tab || !view) return { resourceTab: null, resourceView: null };
+  const retired = RETIRED_VIEWS[`${tab}:${view}`];
+  const v = retired || view;
+  if (!VALID_DESTINATIONS.has(`${tab}:${v}`)) return { resourceTab: null, resourceView: null };
+  return { resourceTab: tab, resourceView: v };
 }
 const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'sat', 'rest']);
 // sat_practice / sat_review / sat_test route into the SAT tab. Before these
@@ -311,7 +320,7 @@ const TYPE_DEFAULT_DEST = {
   lesson: ['prep', 'pathway'], quiz: ['prep', 'quizzes'], flashcards: ['prep', 'flashcards'],
   reading: ['prep', 'library'], coach: ['prep', 'coach'],
   activity: ['portfolio', 'resume'], college: ['portfolio', 'colleges'], essay: ['portfolio', 'essays'],
-  deadline: ['portfolio', 'deadlines'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
+  deadline: ['portfolio', 'milestones'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
   recommender: ['portfolio', 'recommenders'], interview: ['portfolio', 'interview'],
   reflection: ['progress', 'overview'], rest: null,
   sat_practice: ['sat', 'practice'], sat_review: ['sat', 'review'], sat_test: ['sat', 'tests'],
@@ -322,8 +331,8 @@ const VIEW_LABELS = {
   'sat:overview': 'SAT Overview', 'sat:diagnostic': 'SAT Diagnostic', 'sat:practice': 'SAT Practice',
   'sat:tests': 'Full-Length Test', 'sat:review': 'SAT Review Log', 'sat:skills': 'SAT Skill Mastery',
   'sat:scores': 'Test Scores',
-  'portfolio:overview': 'Portfolio Overview', 'portfolio:timeline': 'Timeline', 'portfolio:colleges': 'College List',
-  'portfolio:essays': 'Essay Workspace', 'portfolio:deadlines': 'Deadlines Tracker', 'portfolio:aid': 'Financial Aid',
+  'portfolio:overview': 'Portfolio Overview', 'portfolio:milestones': 'Milestones', 'portfolio:colleges': 'College List',
+  'portfolio:essays': 'Essay Workspace', 'portfolio:aid': 'Financial Aid',
   'portfolio:resume': 'Activities & Resume', 'portfolio:research': 'Research Log', 'portfolio:skills': 'Skills & Certs',
   'portfolio:clinical': 'Clinical Hours Log', 'portfolio:recommenders': 'Recommenders', 'portfolio:interview': 'Interview Prep',
   'portfolio:tracked': 'Tracked Applications', 'portfolio:calc': 'Admissions Calculator',

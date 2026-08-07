@@ -212,6 +212,24 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
   const bare = build('senior');
   assert('with no college dates entered, the typical EA/ED date is shown',
     bare.events.some(e => e.id === 'sr_ea_ed' && e.confidence === 'typical'));
+
+  // ── ownerRef: which rows the Milestones tab is allowed to edit in place ────
+  // The merged Milestones tab renders a delete control on exactly the events
+  // that are backed by a real `deadlines` row, and links everything else to the
+  // panel that owns it. If ownerRef ever leaked onto a derived event, the UI
+  // would offer to delete something it cannot delete; if it vanished from the
+  // deadline events, the tab would silently become read-only again and the
+  // merge would be undone. Both directions are asserted here.
+  const owned = t.events.filter(e => e.ownerRef);
+  eq('exactly the student\'s own deadline rows carry ownerRef', owned.length, 1);
+  eq('...and it names the resource and row id', owned[0]?.ownerRef?.resource, 'deadlines');
+  eq('...with the real row id, not the event id', owned[0]?.ownerRef?.id, 'd1');
+  assert('an editable row never also carries a navigate-away action',
+    owned.every(e => !e.action));
+  assert('nothing derived from another panel is marked editable',
+    t.events.filter(e => e.source !== 'profile').every(e => !e.ownerRef));
+  assert('college-list and scholarship dates stay owned by their own panels',
+    t.events.filter(e => /Duke/.test(e.title)).every(e => !e.ownerRef && e.action?.view === 'colleges'));
 }
 
 // FAFSA/AP placeholders defer to a deadline row the student already keeps.
