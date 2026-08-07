@@ -56,7 +56,7 @@ export const SAT_VIDEOS = [
 
   { yt: 'fAHc6HnySgE', title: 'English SAT Hacks | Structure & Purpose', channel: 'Penguin Test Prep', scope: 'skill', skills: ['text_structure_purpose'], kind: 'lesson' },
   { yt: 'XSEnDLFjJz0', title: 'Digital SAT: Function of the Underlined Sentence Questions', channel: 'SAT Mastermind', scope: 'skill', skills: ['text_structure_purpose'], kind: 'lesson' },
-  { yt: 'mMpDeV_dOyU', title: 'Text Structure and Purpose — Quick example', channel: 'Khan Academy SAT', scope: 'skill', skills: ['text_structure_purpose'], kind: 'lesson' },
+  { yt: '1Iz8AbdIPgc', title: 'Khan Academy "Text Structure & Purpose" Questions (Advanced)', channel: '3-4-5 Tutoring - SAT®, ACT® & More', scope: 'skill', skills: ['text_structure_purpose'], kind: 'lesson' },
 
   { yt: 'hBbZtGoBA44', title: 'SAT Cross-Text Connections (Double Passages) Strategies & Practice', channel: 'Ivy League Mentors', scope: 'skill', skills: ['cross_text_connections'], kind: 'lesson' },
   { yt: 'gMAKyw9jbzY', title: 'Cross-Text Connections — learn how to answer these hard SAT Reading passages', channel: 'Settele Tutoring — SAT® Lessons and Strategies', scope: 'skill', skills: ['cross_text_connections'], kind: 'lesson' },
@@ -124,10 +124,10 @@ export const SAT_VIDEOS = [
   { yt: 'eHFr8frXTMA', title: 'The BEST Way to Solve SAT Linear Word Problems', channel: 'Penguin Test Prep', scope: 'skill', skills: ['linear_equations_2var', 'linear_functions'], kind: 'lesson' },
   { yt: 'GLACwW7Pb7k', title: 'SAT MATH Heart of Algebra Linear Equation Word Problem', channel: 'Mathodman', scope: 'skill', skills: ['linear_equations_2var'], kind: 'walkthrough' },
   { yt: 'PMPG2kEKrHI', title: 'SAT Slope Math Questions: How to interpret the slope on the SAT', channel: 'Brainblast SAT Prep App', scope: 'skill', skills: ['linear_functions'], kind: 'lesson' },
-  { yt: 'FgX3gLDDlzI', title: 'Solving systems of linear equations — Basic example', channel: 'Khan Academy SAT', scope: 'skill', skills: ['systems_linear'], kind: 'lesson' },
-  { yt: '-ylIGciS7_8', title: 'Solving systems of linear equations — Harder example', channel: 'Khan Academy SAT', scope: 'skill', skills: ['systems_linear'], kind: 'lesson' },
+  { yt: 'jZR7fs0bux8', title: 'SAT Khan Academy Solving Systems of Linear Equations', channel: 'Scalar Learning', scope: 'skill', skills: ['systems_linear'], kind: 'lesson' },
+  { yt: 'AdBwgFlfxJQ', title: 'SAT Khan Academy Solving Systems of Linear Equations Word Problems', channel: 'Scalar Learning', scope: 'skill', skills: ['systems_linear'], kind: 'lesson' },
   { yt: 'tx74WZPtpPo', title: 'Linear Systems 3 Cases: No Solutions, 1 Solution, Infinitely Many Solutions', channel: 'SAT Prep from a 1600 Scorer and Ivy League Grad', scope: 'skill', skills: ['systems_linear'], kind: 'lesson' },
-  { yt: '-5pXEsA68pk', title: 'Systems of linear inequalities word problems — Harder example', channel: 'Khan Academy SAT', scope: 'skill', skills: ['linear_inequalities'], kind: 'lesson' },
+  { yt: 'KO2SzlUOZ2M', title: 'SAT Khan Academy Solving Systems of Linear Inequalities Word Problems Level 2', channel: 'Scalar Learning', scope: 'skill', skills: ['linear_inequalities'], kind: 'lesson' },
   { yt: 'S8DKE_WIJ14', title: 'SAT MATH: Solving Linear Inequalities', channel: 'Juni Learning', scope: 'skill', skills: ['linear_inequalities'], kind: 'lesson' },
   { yt: 'u5Od6BBF9Qw', title: 'SAT Math: Linear Inequalities', channel: 'Point Avenue', scope: 'skill', skills: ['linear_inequalities'], kind: 'lesson' },
 

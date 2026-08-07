@@ -52,13 +52,17 @@ YouTube's oEmbed endpoint before adding or editing any pathway content.
 
 The SAT video library is maintained in `src/data/sat/videos.js` and contains curated YouTube videos for each of the 28 leaf academic skills on the SAT.
 
-During systematic verification utilizing `npm run audit:sat-videos` (which checks YouTube's public oEmbed endpoint), the following 4 video IDs were flagged as **DEAD** (returning HTTP 404):
+During systematic verification utilizing `npm run audit:sat-videos` (which checks YouTube's public oEmbed endpoint), the following 4 video IDs were flagged as **DEAD** (returning HTTP 404). All four were attributed to `channel: 'Khan Academy SAT'` — Khan Academy appears to have taken these specific videos down or reorganized their SAT content since the ids were added; the video pages themselves 404 rather than redirecting.
 
-| Video ID | Topic / Described Title | Channel | Scope / Skill | Status / Action |
-| --- | --- | --- | --- | --- |
-| `mMpDeV_dOyU` | Text Structure and Purpose — Quick example | Khan Academy SAT | `skill: text_structure_purpose` | **DEAD** — Needs confirmed replacement |
-| `FgX3gLDDlzI` | Solving systems of linear equations — Basic example | Khan Academy SAT | `skill: linear_systems` | **DEAD** — Needs confirmed replacement |
-| `-ylIGciS7_8` | Solving systems of linear equations — Harder example | Khan Academy SAT | `skill: linear_systems` | **DEAD** — Needs confirmed replacement |
-| `-5pXEsA68pk` | Systems of linear inequalities word problems — Harder example | Khan Academy SAT | `skill: linear_inequality_word` | **DEAD** — Needs confirmed replacement |
+Each was replaced with a WebSearch + oEmbed-verified, currently-live alternative covering the exact same skill. None of the replacements are actually hosted by Khan Academy, so — per this file's own rule that `title`/`channel` must be the literal values oEmbed returns, never a guess — both fields were rewritten to the real channel and title rather than kept as a stale Khan Academy attribution:
+
+| Original ID | Skill | Issue | Replacement | Replacement title | Replacement channel |
+| --- | --- | --- | --- | --- | --- |
+| `mMpDeV_dOyU` | `text_structure_purpose` | Doesn't resolve (404) | `1Iz8AbdIPgc` | Khan Academy "Text Structure & Purpose" Questions (Advanced) | 3-4-5 Tutoring - SAT®, ACT® & More |
+| `FgX3gLDDlzI` | `systems_linear` | Doesn't resolve (404) | `jZR7fs0bux8` | SAT Khan Academy Solving Systems of Linear Equations | Scalar Learning |
+| `-ylIGciS7_8` | `systems_linear` | Doesn't resolve (404) | `AdBwgFlfxJQ` | SAT Khan Academy Solving Systems of Linear Equations Word Problems | Scalar Learning |
+| `-5pXEsA68pk` | `linear_inequalities` | Doesn't resolve (404) | `KO2SzlUOZ2M` | SAT Khan Academy Solving Systems of Linear Inequalities Word Problems Level 2 | Scalar Learning |
+
+`npm run audit:sat-videos` now reports 130/130 live.
 
 Before adding any new video links or modifying existing ones in the SAT database, developers must execute `npm run audit:sat-videos` to verify ID status and guarantee students are only recommended functional and highly relevant educational instruction.
