@@ -64,7 +64,8 @@ export function GeneratingStep({ profile, onPlan, onNext }) {
             strokeDasharray={2 * Math.PI * 58} strokeDashoffset={2 * Math.PI * 58 * (1 - pct / 100)} style={{ filter: `drop-shadow(0 0 8px rgba(45,127,255,0.5))` }} />
           <defs>
             <linearGradient id="msp-gen-grad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#2d7fff" /><stop offset="100%" stopColor="#e3c47c" />
+              {/* Matches the logo's violet -> cyan sweep, since this ring frames the mark. */}
+              <stop offset="0%" stopColor="#A855F7" /><stop offset="55%" stopColor="#3B82F6" /><stop offset="100%" stopColor="#22D3EE" />
             </linearGradient>
           </defs>
         </svg>

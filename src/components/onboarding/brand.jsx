@@ -7,6 +7,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { C } from '../../lib/theme';
+import AnimatedLogo from '../AnimatedLogo';
 
 // ── Recognizable source/brand marks ──────────────────────────────────────────
 
@@ -95,9 +96,11 @@ export function FriendsMark({ size = 18 }) {
 
 // ── MedSchoolPrep logo, animated ─────────────────────────────────────────────
 
-// The crest logo with soft expanding pulse rings — the recurring brand moment
-// of the flow (splash, identity, commitment, generating). `pulse` turns the
-// rings on; `float` adds a slow breathing hover.
+// The MedSchoolPrep mark with soft expanding pulse rings — the recurring brand
+// moment of the flow (splash, identity, commitment, generating). `pulse` turns
+// the rings on; `float` adds a slow drifting hover. The mark itself comes from
+// AnimatedLogo so the onboarding flow shows exactly the logo (and the same idle
+// pulse) as the rest of the app.
 export function LogoMark({ size = 76, radius = size * 0.29, pulse = false, float = false, glow = true }) {
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
@@ -106,7 +109,7 @@ export function LogoMark({ size = 76, radius = size * 0.29, pulse = false, float
           initial={{ opacity: 0, scale: 1 }}
           animate={{ opacity: [0, 0.45, 0], scale: [1, 1.75] }}
           transition={{ duration: 2.6, delay: i * 1.3, repeat: Infinity, ease: 'easeOut' }}
-          style={{ position: 'absolute', inset: 0, borderRadius: radius * 1.35, border: '1.5px solid rgba(227,196,124,0.65)', pointerEvents: 'none' }}
+          style={{ position: 'absolute', inset: 0, borderRadius: radius * 1.35, border: `1.5px solid ${i % 2 ? 'rgba(34,211,238,0.6)' : 'rgba(168,85,247,0.6)'}`, pointerEvents: 'none' }}
         />
       ))}
       <motion.div
@@ -114,9 +117,9 @@ export function LogoMark({ size = 76, radius = size * 0.29, pulse = false, float
         transition={float ? { duration: 3.4, repeat: Infinity, ease: 'easeInOut' } : undefined}
         style={{
           width: size, height: size, borderRadius: radius, overflow: 'hidden',
-          boxShadow: glow ? '0 0 44px rgba(45,127,255,0.30), 0 0 90px rgba(227,196,124,0.14)' : 'none',
+          boxShadow: glow ? '0 0 44px rgba(59,130,246,0.32), 0 0 90px rgba(168,85,247,0.2)' : 'none',
         }}>
-        <img src="/icon.svg" width={size} height={size} alt="MedSchoolPrep" style={{ display: 'block' }} />
+        <AnimatedLogo size={size} variant="breathe" glow={false} rings={false} />
       </motion.div>
     </div>
   );
