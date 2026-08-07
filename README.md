@@ -116,8 +116,10 @@ The application operates in a unified monorepo supporting two distinct hosting m
 | `SUPABASE_SERVICE_ROLE_KEY` | String | Server-side high-privilege key used for DB writes and sync operations. |
 | `VITE_SUPABASE_URL` | String | Same as `SUPABASE_URL`, exposed to client build for Google sign-in. |
 | `VITE_SUPABASE_ANON_KEY` | String | Public anon key, used solely for OAuth callbacks on client side. |
-| `SMTP_HOST` / `SMTP_PORT` | String/Num | SMTP Relay host (Brevo, default) and TLS port (e.g., 587) for OTP emails. |
-| `SMTP_USER` / `SMTP_PASS` | String | SMTP email username and secret password. |
+| `BREVO_SMTP_HOST` / `BREVO_SMTP_PORT` | String/Num | SMTP relay host (default: `smtp-relay.brevo.com`) and TLS port (default: `587`), shared by all rotating Brevo accounts. |
+| `BREVO_SMTP_USER_1` / `BREVO_SMTP_PASS_1` (`_2`, `_3`, `_4`, ...) | String | SMTP login/password for each Brevo account in the rotation. OTP emails round-robin across every numbered account found (account 1, then 2, then 3, ...), multiplying the combined monthly send quota. |
+| `BREVO_SMTP_FROM_1` (`_2`, `_3`, `_4`, ...) | String | Optional verified "from" sender address for each numbered account. Falls back to that account's `BREVO_SMTP_USER_N`. |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | String/Num | Legacy single-account SMTP config. Used only if no `BREVO_SMTP_USER_1` is set. |
 | `GROQ_API_KEY` | String | **Required.** Primary Groq API key for conversational AI. |
 | `GROQ_API_KEY_2` / `_3` | String | Optional failover/pooling keys from alternative Groq accounts. |
 | `GROQ_API_KEY_INTERVIEW` | String | Dedicated key for the spoken interview simulator. |
