@@ -1,9 +1,11 @@
 // Live Voice Interview — a spoken, back-and-forth mock interview. The AI interviewer (a dedicated
 // Groq key pool, purpose:'interview') asks one question at a time, listens to the student's spoken
-// (or typed) answer, reacts warmly, adapts a follow-up, and at the end delivers a structured,
-// encouraging debrief. The interviewer's lines are spoken aloud via the Web Speech API in a warm,
-// unhurried voice (see src/lib/speech.js); the student answers with their mic (speech-to-text) or,
-// where that isn't supported, by typing — the experience works either way.
+// (or typed) answer, reacts, adapts a follow-up, and at the end delivers a blunt, specific debrief
+// scored the way a real interviewer would score it (see src/lib/interviewScore.js — the model's
+// number is capped by a deterministic ceiling, never shown raw). The interviewer's lines are spoken
+// aloud via the Web Speech API using one of five curated voice personas the student picks from
+// (see src/lib/speech.js); the student answers with their mic (speech-to-text) or, where that isn't
+// supported, by typing — the experience works either way.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -11,7 +13,7 @@ import { Mic, MicOff, Square, Play, Volume2, VolumeX, Send, Loader2, Sparkles, R
 import { C, glass, glass2, btn, btnG, R, CC, pill } from '../lib/theme';
 import * as speech from '../lib/speech';
 import * as DB from '../lib/db';
-import { parseInterviewScore } from '../lib/interviewScore';
+import { calibrateFeedback } from '../lib/interviewScore';
 import VoiceSelector from './VoiceSelector';
 
 // A rotating pool of focus areas the interviewer can draw on — passed as *inspiration*, with an
@@ -74,8 +76,16 @@ FLOW:
 }
 
 // The debrief is a separate call with its own instruction so the model shifts cleanly from
-// "interviewer" to "coach." Structured but still spoken-friendly and kind.
-const DEBRIEF_INSTRUCTION = `The interview is over. Step out of the interviewer role and give the student an honest debrief as their coach — the one they cannot get from a friend or a parent. Cover, in flowing spoken paragraphs (this is read aloud — no markdown or bullet symbols): (1) the single biggest weakness across their answers, named plainly and quoting what they actually said, opening with it rather than warming up to it; (2) two more concrete things to work on, each with a quick example of how; (3) anything that genuinely worked, but only if it did and only tied to a specific answer they gave — if nothing stood out, say that straight and move on rather than inventing a compliment. End with a line exactly like "Overall: X out of 10" where X is scored honestly against what a real interviewer expects: a session of vague, example-free answers is a 3-4 however sincere it sounded, 5-6 is competent, and 8 or above is reserved for a session that would stand out among real applicants. Be blunt about the work and never unkind about the person — they are a teenager, and every criticism you make must carry the fix with it. Under 240 words.`;
+// "interviewer" to "coach." Honest first, spoken-friendly second. Whatever number it lands on is
+// then capped by the deterministic ceiling in lib/interviewScore.js, computed from what the
+// student actually said across the session — prompt text alone does not hold a score down.
+const DEBRIEF_INSTRUCTION = `The interview is over. Step out of the interviewer role and give the student the honest debrief they cannot get from a friend or a parent — you are the interviewer who just sat across from them, not a supporter.
+
+Cover, in flowing spoken paragraphs (this is read aloud — no markdown or bullet symbols): (1) the single biggest weakness across their answers, named plainly in your very first sentence, quoting what they actually said — no warm-up, no softener, no "you did a nice job of"; (2) two more concrete things to work on, each with a quick example of how a stronger version of their own answer would have sounded; (3) anything that genuinely worked, but only if it did and only tied to a specific answer they gave — if nothing stood out, say exactly that and move on. An invented compliment is the single most damaging thing you can give them.
+
+End with a line exactly like "Overall: X out of 10", scored strictly: 1-2 is barely answering the questions; 3-4 is sincere but generic, no specific examples, no results — this is where most first sessions land and you should say so plainly; 5-6 is competent and forgettable; 7 is specific and well-structured; 8 is memorable; 9 would stand out among strong applicants; 10 does not exist. Assume the session is a 4 or 5 until it proves otherwise, and if you are about to give a 7 or higher, re-read the transcript and find the reason it is not one.
+
+Be blunt about the work and never unkind about the person — they are a teenager, and every criticism you make must carry the fix with it. Under 260 words.`;
 
 const MAX_QUESTIONS = 8; // soft cap; student can end sooner
 
@@ -87,11 +97,11 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   const [listening, setListening] = useState(false); // mic is capturing
   const [draft, setDraft] = useState('');            // current answer (typed or dictated)
   const [muted, setMuted] = useState(false);
-  const [debrief, setDebrief] = useState(null);
+  const [debrief, setDebrief] = useState(null);       // { text, score, band, reasons } from calibrateFeedback
   const [questionCount, setQuestionCount] = useState(0);
   const [style, setStyle] = useState('warm');         // 'warm' | 'balanced' | 'rigorous' — picked on the idle screen
   const [chosenFocus, setChosenFocus] = useState([]);  // areas explicitly picked on the idle screen; empty = let the interviewer pick at random
-  const [interviewerVoice, setInterviewerVoice] = useState(null); // SpeechSynthesisVoice — picked via VoiceSelector, defaults to pickInterviewerVoice()
+  const [interviewerVoice, setInterviewerVoice] = useState(null); // resolved voice persona — picked via VoiceSelector, defaults to pickInterviewerVoice()
 
   const sessionRef = useRef({ system: '', history: [] }); // history in OpenAI role format for the API
   const recognizerRef = useRef(null);
@@ -117,7 +127,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     if (!ttsSupported || mutedRef.current) return;
     setSpeaking(true);
     cancelSpeakRef.current = speech.speak(text, {
-      voice: voiceRef.current,
+      persona: voiceRef.current,
       onEnd: () => setSpeaking(false),
       onError: () => setSpeaking(false),
     });
@@ -209,12 +219,14 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     setLoading(true);
     setPhase('debrief');
     try {
-      const summary = await askInterviewer({ extraUser: DEBRIEF_INSTRUCTION, maxTokens: 520 });
-      setDebrief(summary);
+      const summary = await askInterviewer({ extraUser: DEBRIEF_INSTRUCTION, maxTokens: 560 });
+      // Grade the session against everything the student actually said, not the model's mood:
+      // the ceiling in lib/interviewScore.js can only lower the number it proposed.
+      const graded = calibrateFeedback(summary, turns.filter(t => t.role === 'student').map(t => t.text).join('\n\n'));
+      setDebrief(graded);
       setPhase('done');
-      speakLine(summary);
-      const score = parseInterviewScore(summary);
-      DB.addInterviewSession({ mode: 'live', pathwayKey: 'live', question: `Live voice interview · ${questionCount} questions`, score }).catch(() => {});
+      speakLine(graded.text);
+      DB.addInterviewSession({ mode: 'live', pathwayKey: 'live', question: `Live voice interview · ${questionCount} questions`, score: graded.score }).catch(() => {});
       onSessionComplete?.('live');
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not generate your debrief.');
@@ -240,7 +252,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
         </motion.div>
         <h3 style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', margin: 0 }}>Live Voice Interview</h3>
         <p style={{ fontSize: 13.5, color: C.t3, lineHeight: 1.65, maxWidth: 480, margin: '10px auto 0' }}>
-          A real back-and-forth with an AI interviewer that talks to you out loud, listens, and adapts its questions to your answers — then gives you a warm, honest debrief. Speak your answers with your mic{sttSupported ? '' : ' (or type them — your browser doesn’t support voice input)'}, just like the real thing.
+          A real back-and-forth with an AI interviewer that talks to you out loud, listens, and adapts its questions to your answers — then scores you the way an actual interviewer would, not the way a friend would. Speak your answers with your mic{sttSupported ? '' : ' (or type them — your browser doesn’t support voice input)'}, just like the real thing.
         </p>
         <div style={R({ gap: 8, justifyContent: 'center', marginTop: 16, flexWrap: 'wrap' })}>
           <span style={pill(C.s3, C.t3, { fontSize: 11 })}>{ttsSupported ? <><Volume2 size={11} style={{ marginRight: 4, verticalAlign: -1 }} />Voice interviewer</> : 'Text interviewer'}</span>
@@ -254,7 +266,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
         <div style={{ ...glass2({ padding: 16, marginTop: 20, textAlign: 'left' }) }}>
           {ttsSupported && (
             <div style={{ marginBottom: 18 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Interviewer Voice</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 10 }}>Interviewer Voice <span style={{ fontWeight: 500, textTransform: 'none', letterSpacing: 0, color: C.t4 }}>(tap ▶ to hear each one)</span></div>
               <VoiceSelector accent={accent} value={interviewerVoice} onChange={setInterviewerVoice} />
             </div>
           )}
@@ -347,13 +359,30 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             </div>
           </div>
         )}
-        {debrief && (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            style={{ ...glass2({ padding: 18 }), background: `linear-gradient(135deg, ${C.greenDim}, ${C.blueDim})`, border: `1px solid ${C.green}25`, marginTop: 4 }}>
-            <div style={R({ gap: 8, marginBottom: 10 })}><Sparkles size={15} color={C.green} /><span style={{ fontSize: 12, fontWeight: 700, color: C.green, textTransform: 'uppercase', letterSpacing: '.06em' }}>Your Debrief</span></div>
-            <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{debrief}</div>
-          </motion.div>
-        )}
+        {debrief && (() => {
+          const t = debriefTone(debrief.band.tone);
+          return (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              style={{ ...glass2({ padding: 18 }), background: `linear-gradient(135deg, ${t.dim}, transparent)`, border: `1px solid ${t.main}30`, marginTop: 4 }}>
+              <div style={R({ gap: 8, marginBottom: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8 })}><Sparkles size={15} color={t.main} /><span style={{ fontSize: 12, fontWeight: 700, color: t.main, textTransform: 'uppercase', letterSpacing: '.06em' }}>Your Debrief</span></div>
+                <div style={R({ gap: 8 })}>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: t.main, fontFamily: C.FD }}>{debrief.score}<span style={{ fontSize: 13, color: C.t3 }}>/10</span></span>
+                  <span style={pill(`${t.main}18`, t.main, { fontSize: 10.5 })}>{debrief.band.label}</span>
+                </div>
+              </div>
+              <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{debrief.text}</div>
+              {debrief.reasons.length > 0 && (
+                <div style={{ ...glass2({ padding: 14, marginTop: 14 }), background: C.s2 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What held this session back</div>
+                  <ul style={{ margin: 0, paddingLeft: 17, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {debrief.reasons.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{r}</li>)}
+                  </ul>
+                </div>
+              )}
+            </motion.div>
+          );
+        })()}
       </div>
 
       {/* Answer composer */}
@@ -387,5 +416,11 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
 
 // Functions, not literals: a module-level style object freezes the palette at
 // import time and never follows a theme switch (see theme.js's header note).
+const debriefTone = (tone) => (
+  tone === 'good' ? { main: C.green, dim: C.greenDim }
+  : tone === 'mid' ? { main: C.amberL, dim: C.amberDim }
+  : tone === 'bad' ? { main: C.roseL, dim: C.roseDim }
+  : { main: C.t3, dim: 'transparent' }
+);
 const iconBtn = () => ({ width: 32, height: 32, borderRadius: 9, display: 'grid', placeItems: 'center', background: C.s3, border: `1px solid ${C.b1}`, cursor: 'pointer' });
 const composerInput = () => ({ width: '100%', minHeight: 84, resize: 'vertical', background: C.s2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '11px 14px', color: C.t1, fontSize: 14, lineHeight: 1.6, fontFamily: C.FB, outline: 'none' });
