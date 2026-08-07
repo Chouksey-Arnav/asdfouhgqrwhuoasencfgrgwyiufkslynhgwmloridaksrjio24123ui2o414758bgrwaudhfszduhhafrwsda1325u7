@@ -63,11 +63,12 @@ import { summarizeRecentActivity } from './lib/recentActivity';
 import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { localDateStr } from './lib/dateUtils';
+import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
-import DeadlinesPanel, { useDeadlines, NextDeadlineCard } from './components/DeadlinesPanel';
+import DeadlinesPanel, { useDeadlines } from './components/DeadlinesPanel';
 import CollegeListPanel from './components/CollegeListPanel';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
@@ -78,7 +79,7 @@ import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
 import ResearchExperiencePanel from './components/ResearchExperiencePanel';
 import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
-import PortfolioTimeline from './components/PortfolioTimeline';
+import PortfolioTimeline, { TimelineNextCard } from './components/PortfolioTimeline';
 import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
@@ -1278,6 +1279,19 @@ export default function App({ account, onAccountChange }) {
   const goSettings = useCallback(()=>{ setTab('settings'); }, []);
   const [plansOpenDate,setPlansOpenDate]=useState(null);
   const goPlans = useCallback((dateStr)=>{ setTab('plans'); setPlansOpenDate(dateStr||null); }, []);
+  // One generic (tab, view) jump, for surfaces that carry their own deep links as data rather
+  // than as hard-coded callbacks — the Timeline's per-milestone actions (src/lib/timeline.js)
+  // are the first of them, so a milestone can say "this is handled in Portfolio > Financial Aid"
+  // in the catalog and have the button actually land there.
+  const goAnywhere = useCallback((tabId, view)=>{
+    if(tabId==='prep')return goPrep(view);
+    if(tabId==='sat')return goSat(view);
+    if(tabId==='portfolio')return goPortfolio(view);
+    if(tabId==='progress')return goProgress(view);
+    if(tabId==='plans')return goPlans();
+    if(tabId==='settings')return goSettings();
+    setTab('home');
+  }, [goPrep,goSat,goPortfolio,goProgress,goPlans,goSettings]);
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
@@ -2049,6 +2063,12 @@ export default function App({ account, onAccountChange }) {
       // makes both of those promises real instead of the answers being silently dropped.
       addBack:profile.addBack!==false, rollover:profile.rollover!==false,
       onboardingCompletedAt:Date.now(),
+      // The academic year this grade was recorded in. gradeStage is a snapshot that nobody
+      // ever goes back and edits, so without this stamp a sophomore who signed up in 2025 is
+      // still a sophomore in 2027 — and a timeline built off a two-year-stale grade shows the
+      // wrong year's deadlines with full confidence. See effectiveGradeStage() in
+      // src/lib/timeline.js, which advances the stored grade by the years elapsed since.
+      gradeStageYear:academicFallYear(new Date()),
     });
     AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
     if(profile.targetScore){
@@ -2664,6 +2684,36 @@ export default function App({ account, onAccountChange }) {
     });
   }
 
+  // ── The coach's copy of the student's timeline ─────────────────────────────
+  // Built from the same engine the Timeline tab and the Home card use, so Medabrain's answer
+  // to "what's coming up" is the exact list the student can go look at. App.jsx holds running
+  // counts rather than the Portfolio rows themselves, so those are passed through `counts`
+  // (see buildTimelineContext) — without them the coach would be told a student with nine
+  // schools on their list has none, and would cheerfully tell them to start a college list.
+  const appTimeline=useMemo(()=>{
+    if(!user?.gradeStage)return null;
+    try{
+      return buildTimeline({
+        user,
+        // Once the Portfolio tab has been opened, portSnapshot holds every row and the engine
+        // derives everything itself. Before that it hasn't been fetched, so we hand over the
+        // partial rows App does keep plus its running counts — enough for the engine to tell a
+        // student with nine schools on their list from one with none.
+        snapshot:portSnapshot||{ deadlines:upcomingDeadlines||[], clinicalHours:clinicalHoursEntries||[], scholarships:portScholarships||[] },
+        sat:{ projection:satProjection, diagnosticDone:!!user?.satDiagnostic },
+        counts:portSnapshot?null:{
+          colleges:appCounts.colleges, essays:appCounts.essays, activities:portActivities.length,
+          clinicalHours:clinicalHoursTotal, recommenders:recommendersCount,
+          scholarships:scholarshipCount, research:researchCount, skills:skillsCount,
+          interviewSessions:interviewCount,
+        },
+      });
+    }catch{ return null; }
+  },[user,portSnapshot,upcomingDeadlines,clinicalHoursEntries,portScholarships,satProjection,appCounts,portActivities.length,clinicalHoursTotal,recommendersCount,scholarshipCount,researchCount,skillsCount,interviewCount]);
+  const timelineSummary=useMemo(()=>{
+    try{ return summarizeTimelineForPrompt(appTimeline); }catch{ return null; }
+  },[appTimeline]);
+
   async function requestAIResponse(history,threadId,chatCountForAchievements=aiChatCount){
     setCLoad(true);
     try{
@@ -2684,6 +2734,7 @@ export default function App({ account, onAccountChange }) {
         dueCards,
         nextDeadlineTitle:nextDeadline?.title||null,
         nextDeadlineDays:nextDeadline?.days??null,
+        timelineSummary,
         portfolioActivityCount:portActivities.length,
         clinicalHours:clinicalHoursTotal,
         recommendersCount,
@@ -3497,14 +3548,14 @@ export default function App({ account, onAccountChange }) {
           ranked={[...rankedQuizzes.filter(p=>todayPlanTargets.quizIds.has(p.quiz.id)),...rankedQuizzes.filter(p=>!todayPlanTargets.quizIds.has(p.quiz.id))].slice(0,3)}
           onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds} compact/>}
 
-        {/* Deadline countdown */}
-        {upcomingDeadlines&&upcomingDeadlines.length>0&&<NextDeadlineCard deadlines={upcomingDeadlines} accent={accent}/>}
-        {upcomingDeadlines&&upcomingDeadlines.length===0&&(
-          <div style={{...glass({padding:16}),display:'flex',alignItems:'center',justifyContent:'space-between',gap:12,flexWrap:'wrap'}}>
-            <div style={{fontSize:13,color:C.t2}}>You haven't added any application deadlines yet.</div>
-            <button style={btnG({fontSize:12,padding:'8px 16px'})} onClick={()=>goPortfolio('deadlines')}>Add Deadlines</button>
-          </div>
-        )}
+        {/* What's next — the generated timeline, not just the deadlines table.
+            This used to be a countdown to the soonest row in the Deadlines panel, which meant
+            a student who had never typed a deadline (every new user, and most freshmen) was
+            told they had none. The timeline engine (src/lib/timeline.js) knows their class
+            year, courses, test track and college list, so Home can name a real next date on
+            day one — and it is the same feed the Portfolio Timeline tab shows, so the two can
+            never disagree. */}
+        <TimelineNextCard user={user} accent={accent} onNavigate={goAnywhere}/>
 
         {/* Stats */}
         <div style={G(4,14,{},isMobile)}>
@@ -5485,7 +5536,7 @@ export default function App({ account, onAccountChange }) {
       {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'logged',col:C.pink},
       {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'tracked',col:C.fuchsia},
       {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'mock sessions',col:C.orange},
-      {view:'timeline',ic:Milestone,label:'Timeline',value:null,sub:'your whole arc',col:C.indigo},
+      {view:'timeline',ic:Milestone,label:'Timeline',value:appTimeline?appTimeline.stats.upcoming:null,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'your whole arc',col:C.indigo},
     ];
 
     return(
@@ -6592,6 +6643,30 @@ export default function App({ account, onAccountChange }) {
 
         {/* ── Study Setup ──────────────────────────────────────────────────────── */}
         <Group icon={Route} title="Study Setup">
+        {/* Class year. Captured once during onboarding and, until now, editable nowhere — which
+            meant a student who mis-tapped it, or whose profile was rebuilt from their account on
+            a new device (that path only restores name/grade from the server), had no way to fix
+            the single field the whole Timeline is gated on. Saving here re-stamps gradeStageYear
+            so the auto-advance in effectiveGradeStage() counts from today, not from signup. */}
+        <div style={glass({padding:18})}>
+          <SL>Class year</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Drives your Timeline, your roadmap, and how Medabrain paces its advice — a freshman and a senior get completely different calendars. We move you up a year automatically each August.</p>
+          <div style={R({gap:8,flexWrap:'wrap'})}>
+            {GRADE_STAGES.map(g=>{
+              const on=(user?.gradeStage||null)===g.key;
+              return (
+                <button key={g.key} onClick={()=>{if(on)return;saveUser({...user,gradeStage:g.key,gradeStageYear:academicFallYear(new Date())});toast.success(`Class year set to ${g.label}`);}} style={{
+                  ...glass2({padding:'10px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                  textAlign:'left',
+                }}>
+                  <div style={{fontSize:12.5,fontWeight:700,color:on?accentText(accent):C.t2,fontFamily:C.FD}}>{g.label}</div>
+                  <div style={{fontSize:10.5,color:C.t3,marginTop:2}}>{g.sub}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div data-tour="settings-deep-examdate" style={glass({padding:18})}>
           <SL>Test Day</SL>
           <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
@@ -6922,7 +6997,7 @@ export default function App({ account, onAccountChange }) {
   // the pill it was opened from) rather than one flat green everywhere.
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
-    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline}/>,
+    overview:tPort, calc:tCalc, timeline:()=><PortfolioTimeline accent={portC.timeline} user={user} onNavigate={goAnywhere} isMobile={isMobile}/>,
     // The follow-through board for every Track button in the app. Reads the same shared snapshot
     // the Overview dashboards do (portSnapshot), so the two can never disagree, and files a
     // deterministic daily report with an AI voice layered on top — see TrackedPanel.jsx.
