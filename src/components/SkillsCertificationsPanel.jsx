@@ -1,10 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Plus, Trash2, BadgeCheck, ExternalLink, AlertTriangle, ShieldCheck, CalendarClock } from 'lucide-react';
+import { Plus, Trash2, BadgeCheck, ExternalLink, AlertTriangle, ShieldCheck, CalendarClock, Sparkles } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import SuggestInput from './ui/SuggestInput';
 import { showMedabrainToast } from '../lib/medabrainComments';
+import {
+  SKILL_CERT_CATALOG, POPULAR_SKILL_CERTS, ISSUING_BODIES,
+  searchSkillCerts, findCatalogEntry, computeExpiry,
+} from '../data/skillsCertifications';
 
 // New Portfolio resource — part of the "crazy in-depth" database expansion (see
 // supabase/migrations/0001_portfolio_credibility_expansion.sql). Certifications like CPR/BLS/EMT
@@ -17,6 +22,13 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
   const [earnedDate, setEarnedDate] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [certificateUrl, setCertificateUrl] = useState('');
+  // The catalog row behind the current name, when there is one. It drives the issuing-body
+  // suggestions and the auto-computed expiry date.
+  const [picked, setPicked] = useState(null);
+  // True while the expiry field holds a date we filled in from the credential's renewal cycle —
+  // it may be recomputed. The moment the student edits the field themselves, this clears and we
+  // stop touching their value.
+  const [expiryAuto, setExpiryAuto] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -25,6 +37,73 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
     finally { setLoading(false); }
   }, []);
   useEffect(() => { load(); }, [load]);
+
+  const trackedNames = useMemo(
+    () => new Set(entries.map(e => (e.name || '').trim().toLowerCase())),
+    [entries]
+  );
+
+  const toOption = useCallback((item) => ({
+    key: item.name,
+    label: item.name,
+    group: item.group,
+    sub: item.issuers[0] || (item.kind === 'skill' ? 'Skill / proficiency' : ''),
+    meta: trackedNames.has(item.name.toLowerCase())
+      ? 'Already added'
+      : item.validMonths ? `renews ${item.validMonths}mo` : '',
+  }), [trackedNames]);
+
+  // Empty query → the popular shortlist, so the menu is useful the instant the field is focused.
+  const nameOptions = useCallback((q) => {
+    const items = q.trim()
+      ? searchSkillCerts(q)
+      : POPULAR_SKILL_CERTS.map(findCatalogEntry).filter(Boolean);
+    return items.map(toOption);
+  }, [toOption]);
+
+  const issuerOptions = useCallback((q) => {
+    const needle = q.trim().toLowerCase();
+    // Issuers of the selected credential float to the top — for BLS that's AHA and Red Cross
+    // rather than the full alphabetical list of every organization in the catalog.
+    const preferred = picked?.issuers || [];
+    const ordered = [...preferred, ...ISSUING_BODIES.filter(b => !preferred.includes(b))];
+    return ordered
+      .filter(b => !needle || b.toLowerCase().includes(needle))
+      .slice(0, 12)
+      .map(b => ({ key: b, label: b, group: preferred.includes(b) ? 'Issues this credential' : 'All issuing bodies' }));
+  }, [picked]);
+
+  function pickCatalogEntry(opt) {
+    const item = findCatalogEntry(opt.label);
+    setPicked(item);
+    if (!item) return;
+    // Only fill fields the student has left alone — never overwrite something they typed.
+    if (!issuingBody.trim() && item.issuers[0]) setIssuingBody(item.issuers[0]);
+    if (item.validMonths && earnedDate && (!expiryDate || expiryAuto)) {
+      setExpiryDate(computeExpiry(earnedDate, item.validMonths));
+      setExpiryAuto(true);
+    }
+  }
+
+  function changeName(v) {
+    setName(v);
+    // Typing away from a picked credential (or onto an exact catalog name) re-syncs the link.
+    const match = findCatalogEntry(v);
+    if (match?.name !== picked?.name) setPicked(match);
+  }
+
+  function changeEarnedDate(v) {
+    setEarnedDate(v);
+    if (picked?.validMonths && (!expiryDate || expiryAuto)) {
+      setExpiryDate(computeExpiry(v, picked.validMonths));
+      setExpiryAuto(true);
+    }
+  }
+
+  function resetForm() {
+    setName(''); setIssuingBody(''); setEarnedDate(''); setExpiryDate(''); setCertificateUrl('');
+    setPicked(null); setExpiryAuto(false);
+  }
 
   async function addEntry(e) {
     e?.preventDefault();
@@ -36,7 +115,7 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
         certificate_url: certificateUrl.trim() || null,
       });
       setEntries(prev => [row, ...prev]);
-      setName(''); setIssuingBody(''); setEarnedDate(''); setExpiryDate(''); setCertificateUrl('');
+      resetForm();
       showMedabrainToast('skill_added', { name: row.name });
     } catch (err) { toast.error(err.message); }
   }
@@ -73,18 +152,40 @@ export default function SkillsCertificationsPanel({ accent = C.blue }) {
       )}
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
-        <SectionTitle icon={Plus} color={accent}>Add a Certification</SectionTitle>
+        <SectionTitle icon={Plus} color={accent}>Add a Skill or Certification</SectionTitle>
         <form onSubmit={addEntry} style={CC({gap:10})}>
-          <div style={R({gap:10,flexWrap:'wrap'})}>
-            <input style={inp({flex:1,minWidth:160})} placeholder="e.g. CPR/BLS for Healthcare Providers" value={name} onChange={e=>setName(e.target.value)} />
-            <input style={inp({flex:1,minWidth:160})} placeholder="Issuing body (e.g. American Red Cross)" value={issuingBody} onChange={e=>setIssuingBody(e.target.value)} />
+          <div style={R({gap:10,flexWrap:'wrap',alignItems:'flex-start'})}>
+            <SuggestInput
+              value={name} onChange={changeName} onPick={pickCatalogEntry}
+              getOptions={nameOptions}
+              placeholder="Start typing — e.g. CPR, EMT, CITI, phlebotomy"
+              emptyHint={`Most common credentials — or type any of ${SKILL_CERT_CATALOG.length}+ skills and certifications`}
+              inputStyle={{width:'100%'}} wrapperStyle={{flex:1,minWidth:200}}
+            />
+            <SuggestInput
+              value={issuingBody} onChange={v=>{ setIssuingBody(v); }}
+              getOptions={issuerOptions}
+              placeholder="Issuing body (e.g. American Red Cross)"
+              inputStyle={{width:'100%'}} wrapperStyle={{flex:1,minWidth:200}}
+            />
           </div>
+          {picked && (
+            <div style={{...R({gap:6,alignItems:'center'}),fontSize:11,color:C.t3}}>
+              <Sparkles size={11} color={accent}/>
+              <span>
+                {picked.group} · {picked.kind === 'skill' ? 'proficiency, no expiration' : picked.validMonths
+                  ? `typically renews every ${picked.validMonths} months — set the earned date and we'll fill in the expiry`
+                  : 'no expiration date'}
+              </span>
+            </div>
+          )}
           <div style={R({gap:10,flexWrap:'wrap'})}>
-            <input type="date" style={inp({width:'auto'})} placeholder="Earned" value={earnedDate} onChange={e=>setEarnedDate(e.target.value)} />
-            <input type="date" style={inp({width:'auto'})} placeholder="Expires" value={expiryDate} onChange={e=>setExpiryDate(e.target.value)} />
+            <input type="date" style={inp({width:'auto'})} placeholder="Earned" value={earnedDate} onChange={e=>changeEarnedDate(e.target.value)} />
+            <input type="date" style={inp({width:'auto'})} placeholder="Expires" value={expiryDate} onChange={e=>{ setExpiryDate(e.target.value); setExpiryAuto(false); }} />
+            {expiryAuto && expiryDate && <span style={pill(tint(accent,0.12),accent,{fontSize:10,alignSelf:'center'})}>auto-filled · editable</span>}
           </div>
           <input style={inp()} placeholder="Certificate link (optional)" value={certificateUrl} onChange={e=>setCertificateUrl(e.target.value)} />
-          <button type="submit" style={{...btn(accent!==C.blue?accent:C.blueGrad),alignSelf:'flex-start'}}><Plus size={14}/>Add Certification</button>
+          <button type="submit" style={{...btn(accent!==C.blue?accent:C.blueGrad),alignSelf:'flex-start'}}><Plus size={14}/>Add to Portfolio</button>
         </form>
       </div>
 
