@@ -25,7 +25,7 @@ export function FeatureShowcaseStep({ onNext }) {
         {FEATURES.map((f, i) => (
           <motion.div key={f.title} initial={{ opacity: 0, y: 14, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.15 + i * 0.12, type: 'spring', stiffness: 300, damping: 24 }}
-            style={{ display: 'flex', gap: 13, alignItems: 'center', padding: '12px 14px', borderRadius: 13, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, marginBottom: 9 }}>
+            style={{ display: 'flex', gap: 13, alignItems: 'center', padding: '12px 14px', borderRadius: 13, background: C.surf, border: `1px solid ${C.b1}`, marginBottom: 9 }}>
             <span style={{ width: 38, height: 38, borderRadius: 11, background: f.dim, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <f.icon size={19} color={f.color} />
             </span>
