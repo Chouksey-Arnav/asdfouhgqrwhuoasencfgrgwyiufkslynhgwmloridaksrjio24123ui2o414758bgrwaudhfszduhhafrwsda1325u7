@@ -11,6 +11,7 @@ import SectionIntro from './SectionIntro';
 import TrackQueueNotice from '../ui/TrackQueueNotice';
 import TrackButton from '../ui/TrackButton';
 import OpportunitiesDatabase from '../OpportunitiesDatabase';
+import Disclosure, { HelpNote, HowItWorks } from '../ui/Disclosure';
 import { OPPORTUNITIES, OPPORTUNITY_TYPES } from '../../data/opportunities';
 import {
   INTEREST_THEMES, THEME_BY_ID, EFFORT_APPETITES, COST_STANCES, FORMAT_PREFS,
@@ -184,12 +185,11 @@ export default function OpportunitiesPanel({
   return (
     <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-opportunities" icon={Trophy} color={C.gold} color2={C.orange} m={isMobile}
-        eyebrow="Opportunities & Competitions" title="What you should actually go do"
-        sub={`${OPPORTUNITIES.length} real programs — competitions, research, volunteering, leadership and summer pipelines — ranked against your interests, what you've already done, and the pathway you're aiming at.`}
+        eyebrow="Opportunities" title="Things you could actually go do"
+        sub={`${OPPORTUNITIES.length} real programs — competitions, research, volunteering, leadership and summer programs. We put the ones that fit you first.`}
         stats={[
-          { value: OPPORTUNITIES.length, label: 'programs', color: C.goldL },
-          { value: matches.length, label: 'matched to you', color: C.violetL },
-          { value: trackedOpportunityIds.length, label: 'tracked', color: C.greenL },
+          { value: matches.length, label: 'picked for you', color: C.violetL },
+          { value: trackedOpportunityIds.length, label: 'you’re tracking', color: C.greenL },
         ]}
         right={
           <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setTuning((t) => !t)}
@@ -197,6 +197,17 @@ export default function OpportunitiesPanel({
             <SlidersHorizontal size={12} />{pickedCount ? `${pickedCount} interests` : 'Pick your interests'}
           </motion.button>
         } />
+
+      {/* The three-step shape of this tab, said once. Without it the page opens on a tuning
+          banner, a percentage, and a 220-row catalog with no stated relationship between them. */}
+      <HowItWorks
+        id="opportunities" color={C.gold} m={isMobile}
+        steps={[
+          { title: 'Tell us what you like', body: 'Pick a few interests — everything below re-ranks instantly.' },
+          { title: 'Look at your matches', body: 'Each card shows a fit score and the actual reasons behind it.' },
+          { title: 'Track the one you want', body: 'It moves to your Tracked board with a deadline and a next step.' },
+        ]}
+      />
 
       {/* ── 1. Tune ──────────────────────────────────────────────────────────
           Open on demand, but the "we're guessing" banner below is always
@@ -214,10 +225,10 @@ export default function OpportunitiesPanel({
             <Wand2 size={16} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>Matching on a guess right now</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>We’re guessing right now</div>
             <div style={{ fontSize: 13, color: C.t1, fontWeight: 700, fontFamily: C.FD, marginTop: 3 }}>
               {profile.activeThemeIds.length
-                ? `We inferred ${profile.activeThemeIds.slice(0, 3).map((id) => THEME_BY_ID[id]?.label.toLowerCase()).join(', ')}${profile.activeThemeIds.length > 3 ? ` and ${profile.activeThemeIds.length - 3} more` : ''} from your signup answers and your portfolio.`
+                ? `From your signup answers, it looks like you’re into ${profile.activeThemeIds.slice(0, 3).map((id) => THEME_BY_ID[id]?.label.toLowerCase()).join(', ')}${profile.activeThemeIds.length > 3 ? ` and ${profile.activeThemeIds.length - 3} more` : ''}. Is that right?`
                 : 'Tell us what you actually care about and every pick below changes.'}
             </div>
           </div>
@@ -240,9 +251,9 @@ export default function OpportunitiesPanel({
             <div style={{ ...glass({ padding: isMobile ? 15 : 20 }), display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
                 <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Tune your matches</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Tell us about you</div>
                   <div style={{ fontSize: 11.5, color: C.t3, marginTop: 3, maxWidth: 560, lineHeight: 1.6 }}>
-                    Every choice here re-ranks the whole catalog instantly and is saved to your account. Nothing is a commitment — this is a lens, not a decision.
+                    Everything you tap here changes your picks straight away, and it’s saved. None of it commits you to anything — you can change it whenever you want.
                   </div>
                 </div>
                 <button onClick={() => setTuning(false)} style={btnSm(C.surfHi, { fontSize: 11.5, color: C.t2 })}><ChevronUp size={12} />Done</button>
@@ -296,7 +307,7 @@ export default function OpportunitiesPanel({
               </div>
 
               <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>
-                Cost and format are hard filters: a program you can't afford or can't attend is worse than one fewer suggestion. Grade is too — a program that only takes juniors is noise for a freshman. Everything else is a weight, not a gate.
+                Cost, format and grade actually hide programs — we won’t suggest something you can’t afford, can’t get to, or aren’t old enough for yet. Interests and selectivity just change the order.
               </div>
             </div>
           </motion.div>
@@ -308,8 +319,8 @@ export default function OpportunitiesPanel({
       {/* ── 2 + 3. Match and narrate ─────────────────────────────────────── */}
       <section aria-label="Your matched opportunities" style={CC({ gap: 14 })}>
         <SectionIntro icon={Sparkles} color={C.violet} color2={C.indigo} m={isMobile}
-          title="Your matches"
-          blurb="Ranked from your interests, the activities and hours already in your portfolio, your pathway and your grade — every card shows the actual reasons it's here."
+          title="Picked for you"
+          blurb="Chosen from your interests, what you've already done, and your grade. Every card tells you exactly why it's here."
           stats={[{ value: matches.length, label: 'picks', color: C.violetL }]}
           right={
             <div style={R({ gap: 6, flexWrap: 'wrap' })}>
@@ -324,21 +335,24 @@ export default function OpportunitiesPanel({
             </div>
           } />
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {OPPORTUNITY_TYPES.map((t) => (
-            <button key={t} onClick={() => setTypeFilter(t)}
-              style={pill(typeFilter === t ? tint(accent, 0.22) : C.surf2, typeFilter === t ? onTint(accent) : C.t3,
-                { cursor: 'pointer', border: `1px solid ${typeFilter === t ? tint(accent, 0.4) : C.b1}`, fontWeight: typeFilter === t ? 700 : 500, fontSize: 11 })}>
-              {t === 'All' ? 'All types' : t}
-            </button>
-          ))}
+        <div style={CC({ gap: 7 })}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10.5, color: C.t3, marginRight: 2 }}>Show:</span>
+            {OPPORTUNITY_TYPES.map((t) => (
+              <button key={t} onClick={() => setTypeFilter(t)}
+                style={pill(typeFilter === t ? tint(accent, 0.22) : C.surf2, typeFilter === t ? onTint(accent) : C.t3,
+                  { cursor: 'pointer', border: `1px solid ${typeFilter === t ? tint(accent, 0.4) : C.b1}`, fontWeight: typeFilter === t ? 700 : 500, fontSize: 11 })}>
+                {t === 'All' ? 'Everything' : t}
+              </button>
+            ))}
+          </div>
         </div>
 
         {thinThemes.length > 0 && (
           <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.24)}` }}>
             <Info size={12} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
             <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
-              Our curated catalog is thin on {thinThemes.map((t) => `${THEME_BY_ID[t.id]?.label.toLowerCase()} (${t.reach} program${t.reach === 1 ? '' : 's'})`).join(' and ')}. Those are still ranked first where they exist — the rest of the list is your next-best fit rather than a stretch of the same interest.
+              Heads up: we only have {thinThemes.map((t) => `${t.reach} ${THEME_BY_ID[t.id]?.label.toLowerCase()} program${t.reach === 1 ? '' : 's'}`).join(' and ')} in our catalog so far. Those come first — the rest below are the next-closest fit for you.
             </span>
           </div>
         )}
@@ -354,19 +368,19 @@ export default function OpportunitiesPanel({
               <div style={{ width: 26, height: 26, borderRadius: 9, background: C.violetGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Sparkles size={13} color="#fff" />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>Meta Brain · your read</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>Which one to start with</span>
               <button onClick={() => setBriefNonce((n) => n + 1)} disabled={brief?.loading}
                 style={{ ...btnSm(C.surfHi, { fontSize: 10.5, color: C.t3, marginLeft: 'auto', cursor: brief?.loading ? 'wait' : 'pointer' }) }}>
                 <RefreshCw size={10} />Regenerate
               </button>
             </div>
-            {brief?.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Reading your portfolio against {matches.length} shortlisted programs…</div>}
-            {brief?.error && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>Couldn't reach Meta Brain right now — the ranking below is computed from your real portfolio and doesn't need it.</div>}
+            {brief?.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Reading your portfolio…</div>}
+            {brief?.error && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>Couldn’t reach Meta Brain right now — the picks below don’t need it, they’re worked out from your own portfolio.</div>}
             {brief?.content && !brief.loading && (
               <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(brief.content) }} />
             )}
             <div style={{ fontSize: 10, color: C.t4, marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Info size={10} />Meta Brain can only recommend from the ranked list below — it never invents a program.
+              <Info size={10} />Meta Brain can only pick from the real programs below — it never makes one up.
             </div>
           </div>
         )}
@@ -399,17 +413,23 @@ export default function OpportunitiesPanel({
         )}
       </section>
 
-      {/* ── 4. Browse ────────────────────────────────────────────────────── */}
-      <section aria-label="Browse every program" style={CC({ gap: 14 })}>
-        <SectionIntro icon={Library} color={C.gold} color2={C.amber} m={isMobile}
-          title="Browse every program"
-          blurb="The full curated catalog — search by name, field or eligibility, and filter by grade, selectivity, cost, format, timing and reach. Anything you track lands on the Tracked tab with a daily Meta Brain report on it."
-          stats={[{ value: OPPORTUNITIES.length, label: 'programs', color: C.goldL }]} />
-        <OpportunitiesDatabase accent={accent} onTrack={onTrack}
-          trackedKeys={trackedKeys} pendingKeys={pendingKeys}
-          activityCount={profile.totalActivities}
-          askMedabrain={askMedabrain} />
-      </section>
+      {/* ── 4. Browse ──────────────────────────────────────────────────────
+          The full catalog is the biggest thing on this page by an order of magnitude — a search
+          box, seven filter groups and 220 rows. Rendering it directly under the six picks meant
+          the page ended in a wall of programs that nobody asked for, which is exactly the thing
+          that makes the picks above look like just another filter preset. It's a door now: open
+          when you want to shop, shut when you came here to be told what to do. */}
+      <Disclosure id="opportunities-catalog" icon={Library} color={C.gold} m={isMobile}
+        title={`Browse all ${OPPORTUNITIES.length} programs yourself`}
+        sub="Search by name or field and filter by grade, selectivity, cost, format and timing — for when you want to look around instead of being handed picks.">
+        <div style={CC({ gap: 12 })}>
+          <HelpNote>Anything you track from here shows up on your Tracked board with a deadline and a next step.</HelpNote>
+          <OpportunitiesDatabase accent={accent} onTrack={onTrack}
+            trackedKeys={trackedKeys} pendingKeys={pendingKeys}
+            activityCount={profile.totalActivities}
+            askMedabrain={askMedabrain} />
+        </div>
+      </Disclosure>
     </div>
   );
 }
