@@ -17,6 +17,7 @@ import {
 import PanelHero from '../ui/PanelHero';
 import TrackQueueNotice from '../ui/TrackQueueNotice';
 import EmptyState from '../ui/EmptyState';
+import { HelpNote, HowItWorks } from '../ui/Disclosure';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Tracked tab — where "Track" stops being a bookmark.
@@ -58,6 +59,9 @@ const STATUS_VERB = {
 
 const LOG_KEY = 'portfolioTrackerLog';
 const LOG_DAYS = 10;
+// Below this many tracked items the whole board fits on one screen, so a search box and six type
+// pills are furniture rather than help. The filters (and the state they hold) switch off entirely.
+const FILTER_THRESHOLD = 6;
 
 export default function TrackedPanel({
   snapshot, loading = false, accent = C.blue, askMedabrain, onOpen, onRefresh,
@@ -111,15 +115,19 @@ export default function TrackedPanel({
     });
   }, [report.headline, loading, snapshot, counts.needs_action, items.length]);
 
+  // Search/type filtering only applies while the controls that drive it are on screen — otherwise
+  // a student who filters a long board and then untracks their way below the threshold is left
+  // with a silently filtered list and no visible control to clear it.
+  const filtersActive = items.length >= FILTER_THRESHOLD;
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = filtersActive ? query.trim().toLowerCase() : '';
     return items.filter((i) => {
       if (stage !== 'all' && i.stage !== stage) return false;
-      if (kind !== 'all' && i.kind !== kind) return false;
+      if (filtersActive && kind !== 'all' && i.kind !== kind) return false;
       if (q && !`${i.name} ${i.sub} ${i.kind}`.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [items, stage, kind, query]);
+  }, [items, stage, kind, query, filtersActive]);
 
   async function patchRow(item, patch, successMsg) {
     setBusyKey(item.key);
@@ -156,12 +164,12 @@ export default function TrackedPanel({
     <div style={CC({ gap: 20 })}>
       <PanelHero
         tourTag="portfolio-tracked" icon={Radar} color={C.blue} color2={C.violet} m={isMobile}
-        eyebrow="Tracked" title="Live Application Tracking"
-        sub="Everything you've hit Track on, in one board — ranked by what actually needs you. Meta Brain files a report on it every day."
+        eyebrow="Tracked" title="Things you're keeping an eye on"
+        sub="Anything you hit Track on — a scholarship, a program, a school — lands here. The most urgent one is always at the top, and we check on all of them every day."
         stats={[
           { value: items.length, label: 'tracked', color: C.blueL },
-          { value: counts.needs_action || 0, label: 'need action', color: C.roseL },
-          { value: counts.done || 0, label: 'closed out', color: C.greenL },
+          { value: counts.needs_action || 0, label: 'need you', color: C.roseL },
+          { value: counts.done || 0, label: 'finished', color: C.greenL },
         ]}
         right={onRefresh && (
           <button onClick={onRefresh} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })} disabled={loading}>
@@ -171,6 +179,17 @@ export default function TrackedPanel({
       />
 
       <TrackQueueNotice entries={pendingEntries} status={trackStatus} onRetried={onRefresh} />
+
+      {/* Said once, at the top, in order — then dismissible. A board that sorts itself by urgency
+          is genuinely useful and completely invisible until somebody explains it. */}
+      <HowItWorks
+        id="tracked" color={C.violet} m={isMobile}
+        steps={[
+          { title: 'Track something', body: 'Hit Track on any scholarship, program or school anywhere in the app.' },
+          { title: 'We watch the dates', body: 'Each one gets a deadline, a status, and a plain next step.' },
+          { title: 'Do the top one', body: 'The list re-sorts every day so the most urgent thing is first.' },
+        ]}
+      />
 
       {/* ── Today's report ── */}
       <div style={{
@@ -187,12 +206,12 @@ export default function TrackedPanel({
           </div>
           <div style={{ flex: 1, minWidth: 180 }}>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>
-              Daily tracking report
+              Today’s check-in
             </div>
             <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{report.date}</div>
           </div>
           <button onClick={() => setShowLog((s) => !s)} aria-expanded={showLog} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })}>
-            <History size={12} />Report log
+            <History size={12} />Past days
           </button>
         </div>
 
@@ -250,7 +269,12 @@ export default function TrackedPanel({
         </AnimatePresence>
       </div>
 
-      {/* ── Stage tiles ── */}
+      {/* ── Stage tiles ──
+          Four buckets, and — crucially — four filter buttons. They looked like read-only stat
+          tiles for as long as nothing said otherwise, so the line under them says otherwise.
+          Hidden entirely when there is nothing tracked: four zeroes above an empty state is just
+          a more elaborate way of saying nothing. */}
+      {items.length > 0 && (<>
       <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
         {STAGES.map((s) => {
           const Icon = STAGE_ICONS[s.id];
@@ -274,27 +298,35 @@ export default function TrackedPanel({
         })}
       </div>
 
-      {/* ── Filters ── */}
-      <div style={CC({ gap: 10 })}>
-        <div style={R({ gap: 8 })}>
-          <Search size={14} color={C.t3} />
-          <input style={inp({ flex: 1 })} placeholder="Search everything you're tracking…" value={query} onChange={(e) => setQuery(e.target.value)} />
+      <HelpNote>Tap any box above to show only those — tap it again to go back to everything.</HelpNote>
+
+      {/* ── Filters ──
+          Search and six type pills are the right tools for forty tracked items and pure noise
+          above five, where the whole list already fits on one screen. They appear when the list
+          is big enough to need them. */}
+      {items.length >= FILTER_THRESHOLD && (
+        <div style={CC({ gap: 10 })}>
+          <div style={R({ gap: 8 })}>
+            <Search size={14} color={C.t3} />
+            <input style={inp({ flex: 1 })} placeholder="Search everything you're tracking…" value={query} onChange={(e) => setQuery(e.target.value)} />
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {KIND_FILTERS.map((k) => {
+              const active = kind === k.id;
+              const n = k.id === 'all' ? items.length : items.filter((i) => i.kind === k.id).length;
+              return (
+                <button key={k.id} onClick={() => setKind(k.id)} aria-pressed={active}
+                  style={pill(active ? tint(accent, 0.22) : C.surf2, active ? onTint(accent) : C.t3, {
+                    cursor: 'pointer', border: `1px solid ${active ? tint(accent, 0.4) : C.b1}`, fontWeight: active ? 700 : 500, gap: 6,
+                  })}>
+                  {k.label}<span style={{ fontFamily: C.FM, opacity: 0.75 }}>{n}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {KIND_FILTERS.map((k) => {
-            const active = kind === k.id;
-            const n = k.id === 'all' ? items.length : items.filter((i) => i.kind === k.id).length;
-            return (
-              <button key={k.id} onClick={() => setKind(k.id)} aria-pressed={active}
-                style={pill(active ? tint(accent, 0.22) : C.surf2, active ? onTint(accent) : C.t3, {
-                  cursor: 'pointer', border: `1px solid ${active ? tint(accent, 0.4) : C.b1}`, fontWeight: active ? 700 : 500, gap: 6,
-                })}>
-                {k.label}<span style={{ fontFamily: C.FM, opacity: 0.75 }}>{n}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      )}
+      </>)}
 
       {/* ── The board ── */}
       {loading && !items.length ? (
@@ -305,12 +337,16 @@ export default function TrackedPanel({
       ) : !items.length ? (
         <EmptyState
           icon={Compass} accent={accent} title="Nothing tracked yet"
-          body="Hit Track on any program, competition, or scholarship in the Opportunities database and it lands here — with a deadline countdown, a status, and a Meta Brain report on it every day."
-          actionLabel="Browse opportunities" onAction={() => onOpen?.('overview')}
+          body="Find a program, competition or scholarship under Opportunities and hit Track. It shows up here with a countdown to its deadline and a plain next step, and we check on it every day."
+          actionLabel="Find opportunities" onAction={() => onOpen?.('opportunities')}
         />
       ) : !filtered.length ? (
         <div style={{ ...glass2({ padding: 20, textAlign: 'center' }) }}>
-          <div style={{ fontSize: 12.5, color: C.t2 }}>Nothing matches that filter — try “Everything”.</div>
+          <div style={{ fontSize: 12.5, color: C.t2 }}>Nothing here right now.</div>
+          <button onClick={() => { setStage('all'); setKind('all'); setQuery(''); }}
+            style={{ ...btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11.5, marginTop: 10 }) }}>
+            Show everything again
+          </button>
         </div>
       ) : (
         <div style={CC({ gap: 8 })}>
@@ -336,8 +372,12 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
   const [open, setOpen] = useState(false);
   const stageMeta = STAGE_BY_ID[item.stage] || STAGES[2];
   const c = C[stageMeta.colorKey] || C.blue;
+  // A past date is past whether or not the row also earned the 'overdue' flag — a finished
+  // scholarship whose deadline has been and gone still has a negative day count, and rendering
+  // that raw ("due in -3d") is the kind of small nonsense that makes a whole board look broken.
+  const past = item.dueInDays != null && item.dueInDays < 0;
   const overdue = item.flags.includes('overdue');
-  const dueColor = overdue ? C.roseL : item.dueInDays != null && item.dueInDays <= 7 ? C.amberL : C.t3;
+  const dueColor = overdue ? C.roseL : past ? C.t3 : item.dueInDays != null && item.dueInDays <= 7 ? C.amberL : C.t3;
   const canDate = ['scholarships', 'deadlines', 'colleges', 'recommenders'].includes(item.resource);
 
   return (
@@ -356,7 +396,10 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
             {[item.sub, item.statusLabel].filter(Boolean).join(' · ')}
             {item.dueInDays != null && (
               <span style={{ color: dueColor, fontWeight: 600 }}>
-                {' · '}{overdue ? `${Math.abs(item.dueInDays)}d overdue` : `due in ${item.dueInDays}d`}
+                {' · '}{overdue ? `${Math.abs(item.dueInDays)} days overdue`
+                  : past ? `date passed ${Math.abs(item.dueInDays)} days ago`
+                    : item.dueInDays === 0 ? 'due today'
+                      : `due in ${item.dueInDays} day${item.dueInDays === 1 ? '' : 's'}`}
               </span>
             )}
           </div>
@@ -379,18 +422,19 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
               <div style={R({ gap: 8, marginTop: 10, flexWrap: 'wrap' })}>
                 {canAdvance && (
                   <button onClick={onAdvance} disabled={busy} style={btnSm(tint(accent, 0.18), { color: onTint(accent), fontSize: 11 })}>
-                    {busy ? <Loader2 size={11} className="spin" /> : <ArrowRight size={11} />}Move to next stage
+                    {busy ? <Loader2 size={11} className="spin" /> : <ArrowRight size={11} />}I did this — move it forward
                   </button>
                 )}
                 {canDate && (
                   <label style={R({ gap: 6, fontSize: 11, color: C.t3 })}>
                     <CalendarClock size={12} color={C.t3} />
+                    <span>Deadline</span>
                     <input type="date" defaultValue={item.dueDate ? String(item.dueDate).slice(0, 10) : ''}
                       onChange={(e) => onSetDate(e.target.value)} aria-label={`Deadline for ${item.name}`}
                       style={inp({ width: 'auto', fontSize: 11.5, padding: '6px 9px' })} />
                   </label>
                 )}
-                <button onClick={onOpen} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })}>Open in tracker<ArrowRight size={11} /></button>
+                <button onClick={onOpen} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })}>See full details<ArrowRight size={11} /></button>
                 {item.addedAt && (
                   <span style={{ marginLeft: 'auto', fontSize: 10.5, color: C.t4 }}>
                     Tracked {new Date(item.addedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}

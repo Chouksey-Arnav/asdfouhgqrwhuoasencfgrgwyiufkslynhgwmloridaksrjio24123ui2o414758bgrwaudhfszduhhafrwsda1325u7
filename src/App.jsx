@@ -95,6 +95,13 @@ import PlanTaskStrip from './components/ui/PlanTaskStrip';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
 import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
 import TrackedPanel from './components/portfolio/TrackedPanel';
+// Progressive disclosure + the Overview's "Start here" card. The Portfolio Overview used to open
+// with eleven equally-weighted blocks and no answer to "so what do I do"; these are what turn it
+// back into one decision up top and everything else one clearly-labelled tap down.
+import Disclosure, { HelpNote } from './components/ui/Disclosure';
+import NextStepsCard from './components/portfolio/NextStepsCard';
+import { buildNextSteps } from './lib/portfolioNextSteps';
+import { goalsForWeek } from './lib/weeklyGoals';
 import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
@@ -5620,30 +5627,74 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     // The Portfolio section navigator. One row per real sub-view with its live count, so the
     // Overview is the map of the tab rather than a second dashboard that happens to sit above it.
-    const sections=[
-      {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need action`:'all current',col:C.violet},
-      {view:'opportunities',ic:Trophy,label:'Opportunities',value:opportunityPreview.matches.length,sub:'matched to you',col:C.gold},
-      {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools',col:C.sky},
+    //
+    // Split into "the six most students need" and "everything else", because twelve identical
+    // tiles is a wall, not a map: a first-time student has no way to tell which of them they were
+    // supposed to open. Nothing is removed — the rest is one tap away under "Show everything
+    // else", and the tap is remembered, so a student who wants all twelve keeps all twelve.
+    const primarySections=[
+      // Activities & Résumé is one tab with five sections; the Clinical/Research/Skills tiles are
+      // doors into it, each landing on the section it names (see RESUME_SECTION_FOR_VIEW +
+      // goPortfolio) — merging those tabs must not put clinical hours one extra click away.
+      {view:'resume',ic:Award,label:'Activities & Résumé',value:portActivities.length,sub:'what you’ve done',col:C.amber},
+      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'hours logged',col:C.pink},
+      {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools saved',col:C.sky},
+      {view:'milestones',ic:Milestone,label:'Deadlines',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days} days`:'coming up',col:C.indigo},
       {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
-      {view:'milestones',ic:Milestone,label:'Milestones',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'deadlines & timeline',col:C.indigo},
       {view:'aid',ic:Handshake,label:'Financial Aid',value:scholarshipCount,sub:'scholarships',col:C.green},
-      // Activities & Résumé is one tab with five sections; these four tiles are four doors into
-      // it, each landing on the section it names (see RESUME_SECTION_FOR_VIEW + goPortfolio).
-      // The Overview stays the map of the whole application, so merging the tabs must not make
-      // clinical hours or certifications one click further away than they were.
-      {view:'resume',ic:Award,label:'Activities & Résumé',value:portActivities.length,sub:'activities & honors',col:C.amber},
-      {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'in Activities & Résumé',col:C.cyan},
-      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'in Activities & Résumé',col:C.teal},
-      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'in Activities & Résumé',col:C.pink},
-      {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'tracked',col:C.fuchsia},
-      {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'mock sessions',col:C.orange},
     ];
+    const moreSections=[
+      {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'projects',col:C.cyan},
+      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'certifications',col:C.teal},
+      {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'people noted',col:C.fuchsia},
+      {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'practice sessions',col:C.orange},
+      {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need you`:'all current',col:C.violet},
+      {view:'opportunities',ic:Trophy,label:'Opportunities',value:opportunityPreview.matches.length,sub:'matched to you',col:C.gold},
+    ];
+    const sectionTile=s=>(
+      <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
+        style={{
+          boxSizing:'border-box',textAlign:'left',font:'inherit',color:'inherit',cursor:'pointer',
+          padding:13,borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,
+          borderLeft:`3px solid ${s.col}`,
+        }}>
+        <div style={R({gap:6,marginBottom:6})}>
+          <s.ic size={13} color={s.col}/>
+          <span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>{s.label}</span>
+        </div>
+        <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{s.value==null?'—':s.value}</div>
+        <div style={{fontSize:10,color:C.t3,marginTop:2}}>{s.sub}</div>
+      </button>
+    );
+    const tileGrid={display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(auto-fill,minmax(160px,1fr))',gap:10};
+
+    // ── "What do I actually do next?" ────────────────────────────────────────
+    // Derived from the same rows every dashboard on this page reads, so it can never suggest
+    // something already done. See src/lib/portfolioNextSteps.js for the ordering rules.
+    const weekGoalCount=Object.keys(goalsForWeek(user)||{}).length;
+    const nextSteps=buildNextSteps({
+      trackedCount:trackedItems.length, trackNeeds, trackFocus:trackReport.focus,
+      goalsSet:weekGoalCount, activityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
+      collegeCount:appCounts.colleges, essayCount:appCounts.essays, recommenderCount:recommendersCount,
+      matchCount:opportunityPreview.matches.length,
+      hasInterests:!opportunityPreview.profile.usingInferredThemes&&opportunityPreview.profile.activeThemeIds.length>0,
+      gradeStage:user?.gradeStage||user?.gradeLevel||null,
+    });
+    const scrollToWeek=()=>{
+      document.getElementById('portfolio-weekly-goals')?.scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    // Plain-English translation of the strength score. The number alone reads as a grade someone
+    // handed you; this says what it's made of and what moves it.
+    const strengthPlain=strength.score>=80?'Strong across the board — keep the weekly goals ticking and you’re in good shape.'
+      :strength.score>=60?'Solid foundation. The lowest bar below is the one worth an hour this week.'
+        :strength.score>=35?'Early days, which is normal. Logging what you’ve already done usually moves this more than anything new.'
+          :'Just getting started. This number only measures what’s been entered — adding your real activities and hours is the fastest way to move it.';
 
     return(
       <div style={CC({gap:22})}>
         <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
-          eyebrow="Portfolio" title="Application Command Center"
-          sub="Every piece of your application in one place — with a weekly target on the things that matter, so this reads as work in progress rather than a filing cabinet."
+          eyebrow="Portfolio" title="Your Application"
+          sub="Everything you’re building for college, in one place. Start with the card below — it tells you the one thing worth doing next."
           stats={[
             {value:portActivities.length,label:'activities',color:C.blueL},
             {value:trackedItems.length,label:'tracked',color:C.violetL},
@@ -5656,13 +5707,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </motion.button>
           }/>
 
+        {/* ── The one decision on this page ──────────────────────────────────────────────────
+            Everything below reports; this card decides. It's first because a student who reads
+            only one block should read the one that tells them what to go do. */}
+        <NextStepsCard steps={nextSteps} insights={insights} onOpen={goPortfolio} onOpenPrep={goPrep}
+          onScrollTo={scrollToWeek} isMobile={isMobile} firstName={user?.name?.split(' ')[0]||null}/>
+
         {/* ── This week ── the mini dashboards. Every important part of the application gets a
             measured number, a bar, and a target the STUDENT set. Meta Brain recommends on every
             single one of them and sets none of them — see WeeklyGoalsBoard.jsx. */}
-        <WeeklyGoalsBoard
-          user={user} snapshot={portSnapshot} loading={portSnapLoading} onSaveUser={saveUser} onOpen={goPortfolio}
-          askMedabrain={askPortfolioMedabrain} isMobile={isMobile}
-          benchmarks={benchmarks} clinicalHoursTotal={clinicalHoursTotal} accent={accent}/>
+        <div id="portfolio-weekly-goals" style={{scrollMarginTop:80}}>
+          <WeeklyGoalsBoard
+            user={user} snapshot={portSnapshot} loading={portSnapLoading} onSaveUser={saveUser} onOpen={goPortfolio}
+            askMedabrain={askPortfolioMedabrain} isMobile={isMobile}
+            benchmarks={benchmarks} clinicalHoursTotal={clinicalHoursTotal} accent={accent}/>
+        </div>
 
         {/* ── Today's tracking, bound to the Tracked tab ── */}
         <button onClick={()=>goPortfolio('tracked')} aria-label="Open the Tracked tab"
@@ -5676,7 +5735,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <Brain size={17} color="#fff"/>
           </div>
           <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.violet)}}>Meta Brain · today's tracking report</div>
+            <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.violet)}}>Today’s check-in on what you’re tracking</div>
             <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
               {portSnapshot?trackReport.headline:'Pulling in everything you\u2019re tracking\u2026'}
             </div>
@@ -5701,16 +5760,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <Trophy size={17} color="#fff"/>
             </div>
             <div style={{flex:1,minWidth:200}}>
-              <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.gold)}}>Opportunities & Competitions</div>
+              <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.gold)}}>Things to go do</div>
               <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
                 {opportunityPreview.matches.length
-                  ?`${OPPORTUNITIES.length} real programs — here are the ${opportunityPreview.matches.length} that fit you best right now`
-                  :`${OPPORTUNITIES.length} real programs, matched to your interests and what you've already done`}
+                  ?`Your top ${opportunityPreview.matches.length} picks out of ${OPPORTUNITIES.length} real programs`
+                  :`${OPPORTUNITIES.length} real programs — competitions, research, volunteering and summer programs`}
               </div>
               <div style={{fontSize:11.5,color:C.t3,marginTop:3}}>
                 {opportunityPreview.profile.activeThemeIds.length
-                  ?`Matching on ${opportunityPreview.profile.activeThemeIds.slice(0,3).map(id=>THEME_BY_ID[id]?.label.toLowerCase()).filter(Boolean).join(', ')}${opportunityPreview.profile.usingInferredThemes?' — tap to confirm or change':''}`
-                  :'Pick what you actually care about and the whole catalog re-ranks around it'}
+                  ?`Picked for you because you’re into ${opportunityPreview.profile.activeThemeIds.slice(0,3).map(id=>THEME_BY_ID[id]?.label.toLowerCase()).filter(Boolean).join(', ')}${opportunityPreview.profile.usingInferredThemes?' — tap to confirm that’s right':''}`
+                  :'Tell us what you care about and these change to match'}
               </div>
             </div>
             <span style={{...pill(tint(C.gold,0.16),accentText(C.gold),{fontSize:11,gap:5}),flexShrink:0}}>Open Opportunities<ArrowRight size={11}/></span>
@@ -5737,118 +5796,133 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {user.masterPlan&&<PortfolioPlanWeek user={user} accent={C.blue} onOpenTask={openPlanResource}/>}
 
-        {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
-        <div style={{...glass({padding:20}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}12,transparent)`,border:`1px solid ${strengthColor}30`}}>
-          <Arc pct={strength.score} size={72} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
-          <div style={{flex:1,minWidth:200}}>
-            <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Application Strength</div>
-            <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
-            <div style={{fontSize:11,color:C.t3,marginTop:4}}>Blends pathway mastery, clinical exposure, recommenders/essays/colleges, and activity hours — it moves when the weekly goals above get met.</div>
-          </div>
-          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-            {Object.entries(strength.subscores).map(([k,v])=>{
-              const m=subscoreMeta[k]||{col:C.blue,Ic:Circle};
-              return(
-                <div key={k} style={{textAlign:'center',minWidth:76,padding:'10px 12px',borderRadius:12,background:`${m.col}0f`,border:`1px solid ${m.col}28`}}>
-                  <m.Ic size={13} color={m.col} style={{marginBottom:4}}/>
-                  <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:m.col}}>{v}%</div>
-                  <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
-                  <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,overflow:'hidden',marginTop:6}}>
-                    <div style={{height:'100%',width:`${Math.min(100,v)}%`,background:m.col,borderRadius:2}}/>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Same insight callouts Progress shows — surfaced here too so Portfolio is a place to
-            act on a gap (jump straight into Prep or the right Portfolio sub-view), not just a
-            second, disconnected place to look at the same numbers. */}
-        {insights.length>0&&<div style={CC({gap:8})}>
-          {insights.slice(0,3).map((ins,i)=>{
-            const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
-            return(
-              <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
-                <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
-                <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
-                {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
-              </div>
-            );
-          })}
-        </div>}
-
-        {/* ── Section navigator — every Portfolio sub-view with its live count, so Overview is the
-            map of this tab instead of a parallel dashboard that duplicates it. */}
+        {/* ── Where to go ──────────────────────────────────────────────────────────────────────
+            The map of the tab. Six doors up front — the ones nearly every student needs — and the
+            remaining six behind one remembered tap, so this reads as a menu rather than a wall. */}
         <div style={glass({padding:18})}>
-          <div style={R({justifyContent:'space-between',marginBottom:14,gap:10,flexWrap:'wrap'})}>
-            <SL extra={{margin:0,display:'flex',alignItems:'center',gap:8}}><PIcon size={12}/>Your application · {curPath.label}</SL>
+          <div style={R({justifyContent:'space-between',marginBottom:6,gap:10,flexWrap:'wrap'})}>
+            <SL extra={{margin:0,display:'flex',alignItems:'center',gap:8}}><PIcon size={12}/>Where do you want to work?</SL>
             <span style={pill(C.s3,C.t3,{fontSize:10})}>Level {lvl} {levelInfo.tier} · {streak}-day streak</span>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:isMobile?'repeat(2,1fr)':'repeat(auto-fill,minmax(160px,1fr))',gap:10}}>
-            {sections.map(s=>(
-              <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
-                style={{
-                  boxSizing:'border-box',textAlign:'left',font:'inherit',color:'inherit',cursor:'pointer',
-                  padding:13,borderRadius:12,background:C.surf2,border:`1px solid ${C.b1}`,
-                  borderLeft:`3px solid ${s.col}`,
-                }}>
-                <div style={R({gap:6,marginBottom:6})}>
-                  <s.ic size={13} color={s.col}/>
-                  <span style={{fontSize:10,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em'}}>{s.label}</span>
-                </div>
-                <div style={{fontSize:18,fontWeight:800,fontFamily:C.FM,color:C.t1}}>{s.value==null?'—':s.value}</div>
-                <div style={{fontSize:10,color:C.t3,marginTop:2}}>{s.sub}</div>
-              </button>
-            ))}
+          <div style={{marginBottom:13}}>
+            <HelpNote>Each box is one part of your application. The big number is how much you have in it so far — tap any of them to add to it.</HelpNote>
+          </div>
+          <div style={tileGrid}>{primarySections.map(sectionTile)}</div>
+          <div style={{marginTop:12}}>
+            <Disclosure id="port-overview-more-sections" title="Show everything else"
+              sub="Research, certifications, recommenders, interview practice, and your tracking boards." icon={Compass} color={accent} m={isMobile}>
+              <div style={tileGrid}>{moreSections.map(sectionTile)}</div>
+            </Disclosure>
           </div>
         </div>
 
-        {/* Summary stats — just the two numbers not already covered by the benchmark bars right
-            below (Leadership/Research/Volunteer hours used to be shown twice: as a bare number
-            here AND as a val/target progress bar below — trimmed to avoid the duplication). */}
-        <div style={G(2,14,{},isMobile)}>
-          <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
-          <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
-        </div>
-
-        {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks.
-            These are the LONG game (a whole-application benchmark); the weekly goals at the top are
-            how you actually move them. Both are shown so the week has a horizon behind it. */}
-        <div style={glass({padding:18})}>
-          <SL>Progress Toward {curPath?.label} Benchmarks</SL>
-          {[
-            {l:'Clinical / Shadowing Hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent,view:'clinical'},
-            {l:'Leadership Hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue,view:'resume'},
-            {l:'Research / Independent Project Hours',val:resH,target:100,col:C.amber,view:'research'},
-            {l:'Volunteer Hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet,view:'resume'},
-          ].map(({l,val,target,col,view})=>(
-            <div key={l} style={{marginBottom:14}}>
-              <div style={R({justifyContent:'space-between',marginBottom:6})}>
-                <button onClick={()=>goPortfolio(view)} style={{all:'unset',cursor:'pointer',fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</button>
-                <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
+        {/* ── The numbers, one tap down ────────────────────────────────────────────────────────
+            The strength gauge, the long-game benchmark bars and the summary stats are all reports
+            on work that has already happened. They belong on this page — they do not belong ABOVE
+            the thing the student is meant to do next, competing for the same attention. */}
+        <Disclosure id="port-overview-detail" title="How your application is doing"
+          sub={`Overall score ${strength.score}/100 · ${strength.label} — plus your hours against what ${curPath?.label||'this pathway'} usually looks for.`}
+          icon={TrendingUp} color={strengthColor} m={isMobile}>
+          <div style={CC({gap:16})}>
+            {/* Application-strength readiness gauge — one score synthesizing academics, clinical exposure, application progress, and activities */}
+            <div style={{...glass2({padding:16}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap',background:`linear-gradient(135deg,${strengthColor}10,transparent)`,border:`1px solid ${strengthColor}28`}}>
+              <Arc pct={strength.score} size={68} stroke={6} color={strengthColor} label={`${strength.score}`} sub="/100"/>
+              <div style={{flex:1,minWidth:210}}>
+                <div style={{fontSize:11,fontWeight:700,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase'}}>Overall application strength</div>
+                <div style={{fontSize:18,fontWeight:800,color:strengthColor,fontFamily:C.FD,marginTop:2}}>{strength.label}</div>
+                <div style={{fontSize:11.5,color:C.t2,marginTop:5,lineHeight:1.55}}>{strengthPlain}</div>
+                <div style={{fontSize:10.5,color:C.t4,marginTop:5,lineHeight:1.5}}>Made of four things: what you’ve studied, your clinical exposure, how far along the application itself is, and your activity hours.</div>
               </div>
-              <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
+              <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+                {Object.entries(strength.subscores).map(([k,v])=>{
+                  const m=subscoreMeta[k]||{col:C.blue,Ic:Circle};
+                  return(
+                    <div key={k} style={{textAlign:'center',minWidth:76,padding:'10px 12px',borderRadius:12,background:`${m.col}0f`,border:`1px solid ${m.col}28`}}>
+                      <m.Ic size={13} color={m.col} style={{marginBottom:4}}/>
+                      <div style={{fontSize:16,fontWeight:800,fontFamily:C.FM,color:m.col}}>{v}%</div>
+                      <div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.04em',marginTop:2}}>{k}</div>
+                      <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,overflow:'hidden',marginTop:6}}>
+                        <div style={{height:'100%',width:`${Math.min(100,v)}%`,background:m.col,borderRadius:2}}/>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          ))}
-        </div>
 
-        {/* Activity list */}
-        {portActivities.length>0&&<div style={CC({gap:8})}>
-          <SL>My Activities ({portActivities.length})</SL>
-          <AnimatePresence>
-            {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
-              <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
-                <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.position}{act.organization?` · ${act.organization}`:''}</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
+            {/* Progress bars toward recommended hours — parameterized off the active pathway's benchmarks.
+                These are the LONG game (a whole-application benchmark); the weekly goals at the top are
+                how you actually move them. Both are shown so the week has a horizon behind it. */}
+            <div>
+              <SL extra={{marginBottom:6}}>Your hours vs. what {curPath?.label} usually looks for</SL>
+              <div style={{marginBottom:12}}>
+                <HelpNote>These are whole-high-school totals, not weekly ones — most students take years to fill them. Tap a label to go log more.</HelpNote>
+              </div>
+              {[
+                {l:'Clinical / shadowing hours',val:clinicalHoursTotal,target:(benchmarks.clinicalHours||60)+(benchmarks.shadowingHours||20),col:accent,view:'clinical'},
+                {l:'Leadership hours',val:leadH,target:benchmarks.leadershipHours||100,col:C.blue,view:'resume'},
+                {l:'Research / independent project hours',val:resH,target:100,col:C.amber,view:'research'},
+                {l:'Volunteer hours',val:volH,target:benchmarks.volunteerHours||150,col:C.violet,view:'resume'},
+              ].map(({l,val,target,col,view})=>(
+                <div key={l} style={{marginBottom:14}}>
+                  <div style={R({justifyContent:'space-between',marginBottom:6})}>
+                    <button onClick={()=>goPortfolio(view)} style={{all:'unset',cursor:'pointer',fontSize:12,color:C.t2,fontFamily:C.FB}}>{l}</button>
+                    <span style={{fontSize:11,fontFamily:C.FM,color:val>=target?C.green:C.t3,display:'inline-flex',alignItems:'center',gap:4}}>{val} / {target}{val>=target&&<Check size={11}/>}</span>
+                  </div>
+                  <Bar pct={Math.min((val/target)*100,100)} color={val>=target?C.green:col} h={6} glow={val>=target}/>
                 </div>
-              </motion.div>
-            );})}
-          </AnimatePresence>
-          <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
-        </div>}
+              ))}
+            </div>
+
+            {/* Summary stats — just the two numbers not already covered by the benchmark bars above
+                (Leadership/Research/Volunteer hours used to be shown twice: as a bare number here
+                AND as a val/target progress bar, trimmed to avoid the duplication). */}
+            <div style={G(2,14,{},isMobile)}>
+              <Stat label="Est. Annual Hours" value={totH} icon={<Clock size={16}/>} color={accent} m={isMobile}/>
+              <Stat label="Current GPA" value={latestGpa!==null?latestGpa:'—'} icon={<TrendingUp size={16}/>} color={C.green} sub={ongoingCount?`${ongoingCount} ongoing activities`:'No GPA logged yet'} m={isMobile}/>
+            </div>
+
+            {/* The insight callouts Progress shows. The most urgent one or two already lead this
+                page inside "Start here" — these are the remainder, kept rather than duplicated. */}
+            {insights.length>1&&<div style={CC({gap:8})}>
+              <SL extra={{marginBottom:0}}>Other things worth knowing</SL>
+              {insights.slice(1,4).map((ins,i)=>{
+                const sevColor={high:C.rose,medium:C.amber,low:C.t3,positive:C.green}[ins.severity];
+                return(
+                  <div key={i} style={{...glass2({padding:14,display:'flex',alignItems:'center',gap:12}),borderLeft:`3px solid ${sevColor}`}}>
+                    <Lightbulb size={15} color={sevColor} style={{flexShrink:0}}/>
+                    <span style={{flex:1,fontSize:12.5,color:C.t2,lineHeight:1.5}}>{ins.text}</span>
+                    {ins.ctaLabel&&<button style={btnSm(`${sevColor}18`,{color:sevColor,border:`1px solid ${sevColor}30`,fontSize:11,flexShrink:0})} onClick={()=>ins.ctaTab==='prep'?goPrep(ins.ctaView):goPortfolio(ins.ctaView)}>{ins.ctaLabel}</button>}
+                  </div>
+                );
+              })}
+            </div>}
+          </div>
+        </Disclosure>
+
+        {/* Activity list — a read-only recap of rows that are edited in Activities & Résumé, so it
+            is reference material, not a workspace. Behind a door for the same reason. */}
+        {portActivities.length>0&&(
+          <Disclosure id="port-overview-activities" title={`Everything you’ve logged (${portActivities.length})`}
+            sub="A quick list of your activities. Add, edit or remove them in Activities & Résumé." icon={Award} color={C.amber} m={isMobile}>
+            <div style={CC({gap:8})}>
+              <AnimatePresence>
+                {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
+                  <motion.div key={act.id} initial={{opacity:0,x:-10}} animate={{opacity:1,x:0}} exit={{opacity:0,x:10}} style={{...glass2({display:'flex',alignItems:'center',gap:14,padding:'14px 18px'})}}>
+                    <div style={{width:4,height:44,borderRadius:2,background:`linear-gradient(180deg,${col},${col}60)`,flexShrink:0,boxShadow:`0 0 8px ${col}40`}}/>
+                    <div style={{flex:1,minWidth:0}}>
+                      <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{act.position}{act.organization?` · ${act.organization}`:''}</div>
+                      <div style={{fontSize:11,color:C.t3,marginTop:2,fontFamily:C.FM}}>{act.activity_type} · {Math.round(annualH(act))}h/yr · {act.status}</div>
+                    </div>
+                  </motion.div>
+                );})}
+              </AnimatePresence>
+              <button onClick={()=>goPortfolio('resume')} style={{...btnSm(tint(C.amber,0.16),{color:accentText(C.amber),fontSize:11.5,alignSelf:'flex-start'})}}>
+                Edit these in Activities & Résumé<ArrowRight size={11}/>
+              </button>
+            </div>
+          </Disclosure>
+        )}
 
       </div>
     );
