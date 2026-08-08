@@ -301,12 +301,16 @@ for (const metric of METRICS) {
 }
 assert('metric ids are unique', new Set(METRICS.map((x) => x.id)).size === METRICS.length);
 
-// Each metric's `view` must be a real Portfolio sub-view id, or its tile's action button
-// navigates nowhere. Checked against routes.js rather than a copy of the list.
-const { SUBVIEWS } = await import('../src/lib/routes.js');
+// Each metric's `view` must resolve to a real Portfolio sub-view, or its tile's action button
+// navigates nowhere. Checked against routes.js rather than a copy of the list, and through
+// resolveView rather than ids alone — a retired id like 'clinical' (now a section of
+// Activities & Résumé) is still a legitimate navigation target: goPortfolio and the URL
+// parser both forward it, which is the whole point of an alias.
+const { SUBVIEWS, resolveView } = await import('../src/lib/routes.js');
 for (const metric of METRICS) {
-  assert(`[${metric.id}] view "${metric.view}" is a real Portfolio sub-view`, SUBVIEWS.portfolio.ids.includes(metric.view));
+  assert(`[${metric.id}] view "${metric.view}" resolves to a real Portfolio sub-view`, !!resolveView('portfolio', metric.view));
 }
+assert('resolveView is being exercised against the live portfolio table', SUBVIEWS.portfolio.ids.includes('resume'));
 for (const stage of STAGES) {
   assert(`stage "${stage.id}" has a label and blurb`, !!stage.label && !!stage.blurb);
 }

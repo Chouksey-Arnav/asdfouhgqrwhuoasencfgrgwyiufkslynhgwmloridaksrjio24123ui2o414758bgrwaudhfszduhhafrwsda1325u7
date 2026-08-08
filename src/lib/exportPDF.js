@@ -158,9 +158,14 @@ export function exportSchoolList(schools, profile={}) {
   doc.save(`school-list-${Date.now()}.pdf`);
 }
 
-export function exportPortfolioResume(studentName, activities, awards, gpaEntries=[]) {
+// `extras` carries the three sections that used to be their own Portfolio tabs and were, until
+// the tabs were merged into Activities & Résumé, exported nowhere: clinical/shadowing hours,
+// research experience, and dated certifications. A student handing this PDF to a program
+// director was leaving out the part of their record that is hardest to argue with.
+export function exportPortfolioResume(studentName, activities, awards, gpaEntries=[], extras={}) {
+  const { clinical=[], research=[], certifications=[] } = extras || {};
   const doc = new jsPDF({ unit:'mm', format:'a4' });
-  let y = header(doc, `Student Profile: ${studentName || 'Student'}`, `Activities, honors & academic history · ${new Date().toLocaleDateString()}`);
+  let y = header(doc, `Student Profile: ${studentName || 'Student'}`, `Activities, honors, hours & academic history · ${new Date().toLocaleDateString()}`);
   let page = 1;
 
   function ensureRoom(needed) {
@@ -246,6 +251,68 @@ export function exportPortfolioResume(studentName, activities, awards, gpaEntrie
       y += 11;
     });
   }
+
+  // ── The three sections merged in from the retired Clinical Hours / Research / Skills &
+  //    Certs tabs. Same two-line row shape as Honors, so the whole document reads as one
+  //    résumé rather than three appendices bolted on.
+  function listSection(title, color, rows) {
+    if (!rows.length) return;
+    ensureRoom(12);
+    doc.setFillColor(...color);
+    doc.roundedRect(14, y, 182, 7, 1, 1, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(10);
+    doc.setFont('helvetica','bold');
+    doc.text(title, 18, y+5);
+    y += 11;
+    rows.forEach(({ head, sub }) => {
+      ensureRoom(10);
+      doc.setFillColor(248,250,252);
+      doc.rect(14, y, 182, 9, 'F');
+      doc.setDrawColor(230,234,240);
+      doc.line(14, y+9, 196, y+9);
+      doc.setTextColor(20,30,50);
+      doc.setFontSize(9);
+      doc.setFont('helvetica','bold');
+      doc.text(doc.splitTextToSize(head, 175)[0] || '', 17, y+4);
+      doc.setTextColor(...LIGHT);
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(7.5);
+      doc.text(doc.splitTextToSize(sub, 175)[0] || '', 17, y+8);
+      y += 11;
+    });
+  }
+
+  const clinicalHours = clinical.reduce((s, e) => s + (Number(e.hours) || 0), 0);
+  listSection(
+    `CLINICAL & SHADOWING HOURS (${clinicalHours} total across ${clinical.length} ${clinical.length === 1 ? 'entry' : 'entries'})`,
+    GREEN,
+    clinical.map((e) => ({
+      head: `${e.site_name || 'Site'} — ${e.hours || 0} hrs`,
+      sub: [e.site_type, e.entry_date, e.supervisor_name && `Supervisor: ${e.supervisor_name}`,
+        e.verification_status === 'verified' ? 'Verified' : 'Self-reported', e.notes].filter(Boolean).join(' · '),
+    })),
+  );
+
+  listSection(
+    `RESEARCH EXPERIENCE (${research.length})`,
+    BLUE,
+    research.map((e) => ({
+      head: `${e.title || 'Project'}${e.institution ? ` — ${e.institution}` : ''}`,
+      sub: [e.status, e.mentor_name && `Mentor: ${e.mentor_name}`, e.hours && `${e.hours} hrs`,
+        e.publication_url && 'Publication linked', e.description].filter(Boolean).join(' · '),
+    })),
+  );
+
+  listSection(
+    `SKILLS & CERTIFICATIONS (${certifications.length})`,
+    AMBER,
+    certifications.map((e) => ({
+      head: e.name || 'Certification',
+      sub: [e.issuing_body, e.earned_date && `Earned ${e.earned_date}`,
+        e.expiry_date && `Expires ${e.expiry_date}`].filter(Boolean).join(' · ') || 'No issuing body recorded',
+    })),
+  );
 
   footer(doc, page, page);
   doc.save(`portfolio-resume-${Date.now()}.pdf`);
