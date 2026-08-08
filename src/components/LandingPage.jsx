@@ -5,6 +5,8 @@ import {
   Flame, Settings, BookOpen, Layers, MessageCircle, Route, GraduationCap,
   Calendar, FileText, Menu, X, TrendingUp, Sparkles, Zap, ClipboardList,
 } from 'lucide-react';
+import { LEGAL_VIEWS } from '../lib/routes';
+import { LEGAL, TRADEMARK_NOTICE } from '../legal/legalConfig';
 
 // ── Design tokens — mirrors the app's `C` palette in App.jsx so every mockup on
 //    this page is pixel-honest with what users actually get after signing up. ──
@@ -742,18 +744,26 @@ const PORTFOLIO_TOOLS = [
 const FAQS = [
   { q: 'What is MedSchoolPrep?', a: 'A free platform for high schoolers exploring a career in medicine. It combines a pathway diagnostic, verified lessons, spaced-repetition flashcards, an AI study coach, and a full college-application portfolio — everything from "which path fits me" to "what\'s due this week."' },
   { q: 'How does the pathway diagnostic work?', a: "A short, scored quiz ranks how well you fit all 10 health-career pathways — Physician, Nursing, PA, Pharmacy, Dentistry, and more — instead of assuming you've already decided. You get a top match plus a full breakdown, and you can always explore any of the other nine." },
-  { q: 'Is it really free?', a: 'Yes — no paywall, no premium tier, no ads. Every pathway, lesson, flashcard deck, portfolio tool, and AI coach response is free to use, for good.' },
+  { q: 'Is it really free?', a: 'Yes — no paywall, no premium tier, nothing locked behind a subscription. Every pathway, lesson, flashcard deck, portfolio tool, and AI coach response is free to use, for good. Ads are what pay for it, and because our users are students, they are never personalised: we do not build advertising profiles and nothing you put into the app is used to target them.' },
+  { q: 'What do you do with my data?', a: "We don't sell it and we don't share it for advertising. Your essays, scores, activities, and coach conversations are used to run the features you're using and nothing else — they are never used to train AI models. You can export or delete everything at any time. The Privacy Policy spells all of this out, including every third party that touches your data." },
   { q: 'What does "verified" mean for a lesson?', a: "Every lesson ends with a real quiz. You need to score 70% or higher for it to count as verified — watching the article or video alone doesn't mark a lesson complete. It's the same bar used for pathway certificates." },
   { q: 'Do I need to already know I want to be a doctor?', a: 'No — that\'s exactly what the "Exploring" pathway and the diagnostic are for. Plenty of students start here undecided and get matched to nursing, PA, pharmacy, or something they hadn\'t considered.' },
   { q: 'Does it only cover becoming a physician?', a: 'No. Alongside Physician, there are full lesson tracks, quizzes, and application guidance for Nursing, Physician Assistant, Pharmacy, Dentistry, Biomedical & Clinical Research, Physical & Occupational Therapy, Public Health, and Health Administration.' },
 ];
 
-const MARQUEE_ITEMS = ['10 career pathways', '90+ verified lessons', 'Spaced-repetition flashcards', 'Medabrain AI coach', 'College list scored to your stats', 'MMI & CASPer interview prep', '100% free, always'];
+const MARQUEE_ITEMS = ['10 career pathways', '90+ verified lessons', 'Spaced-repetition flashcards', 'Medabrain AI coach', 'College list scored to your stats', 'MMI & CASPer interview prep', 'Free — nothing paywalled'];
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
-export default function LandingPage({ onGetStarted, onLogin }) {
+export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
   const handleSignIn = onLogin || onGetStarted;
+  // The footer links have to work whether or not AuthGate handed us a client-side
+  // navigator — a legal link that does nothing when clicked is worse than no link.
+  const goLegal = (path) => (e) => {
+    if (!onOpenLegal) return; // let the href do a normal navigation
+    e.preventDefault();
+    onOpenLegal(path);
+  };
   const [menuOpen, setMenuOpen] = useState(false);
   const rootRef = useRef(null);
 
@@ -952,7 +962,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                     <ShieldCheck size={11} />
                     100% free
                   </span>
-                  No paywall · No ads · Built for high schoolers
+                  No paywall · No personalised ads · Built for high schoolers
                 </span>
               </div>
 
@@ -1126,7 +1136,7 @@ export default function LandingPage({ onGetStarted, onLogin }) {
           <div className="lp-manifesto-grid lp-reveal lp-d1" style={{ marginTop: 44 }}>
             {[
               [C.greenL, '100%', 'Free, always', 'Every pathway, lesson, flashcard, portfolio tool, and coach response — no paywall, no premium tier, ever.'],
-              [C.blueL, '0 ads', 'No ads, no tracking', "We don't sell your data or rent your attention. Flashcards even run entirely on your own device."],
+              [C.blueL, '0', 'Trackers, and profiles built on you', "We don't sell your data, run analytics on you, or personalise ads. Ads keep the app free; they're chosen by the page, never by a profile of you. Flashcards even run entirely on your own device."],
               [C.violetL, '9–12', 'Built for high schoolers', 'Designed for the years that actually shape an application — not repackaged college-prep material.'],
             ].map(([color, stat, title, body]) => (
               <div key={title} className="lp-card-hover" style={glass({ padding: 26, borderRadius: 18 })}>
@@ -1202,12 +1212,26 @@ export default function LandingPage({ onGetStarted, onLogin }) {
                   <button onClick={onGetStarted} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>Get started</button>
                 </div>
               </div>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.t3, marginBottom: 14 }}>Legal</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <a href={LEGAL_VIEWS.terms} onClick={goLegal(LEGAL_VIEWS.terms)} style={{ color: C.t2, fontSize: 13.5 }}>Terms of Service</a>
+                  <a href={LEGAL_VIEWS.privacy} onClick={goLegal(LEGAL_VIEWS.privacy)} style={{ color: C.t2, fontSize: 13.5 }}>Privacy Policy</a>
+                  <a href={`mailto:${LEGAL.contactEmail}`} style={{ color: C.t2, fontSize: 13.5 }}>Contact</a>
+                </div>
+              </div>
             </div>
-            <div style={{ marginTop: 40, paddingTop: 22, borderTop: `1px solid ${C.b1}`, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, color: C.t3 }}>
+            <div style={{ marginTop: 32, paddingTop: 20, borderTop: `1px solid ${C.b1}`, fontSize: 11.5, lineHeight: 1.65, color: C.t4 || C.t3 }}>
+              <p style={{ margin: '0 0 8px' }}>
+                MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organisation, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, and career material — including anything the AI coach produces — are for general educational and career-exploration purposes only and are not medical, legal, financial, or professional advice. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result.
+              </p>
+              <p style={{ margin: 0 }}>{TRADEMARK_NOTICE[0]} {TRADEMARK_NOTICE[1]} {TRADEMARK_NOTICE[TRADEMARK_NOTICE.length - 1]}</p>
+            </div>
+            <div style={{ marginTop: 22, paddingTop: 20, borderTop: `1px solid ${C.b1}`, display: 'flex', flexWrap: 'wrap', gap: 12, justifyContent: 'space-between', alignItems: 'center', fontSize: 12.5, color: C.t3 }}>
               <span>© 2026 MedSchoolPrep. Free forever.</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.green, boxShadow: `0 0 8px ${C.green}` }} />
-                No paywall · No ads · Built for high schoolers
+                No paywall · No personalised ads · Built for high schoolers
               </span>
             </div>
           </div>

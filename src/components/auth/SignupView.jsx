@@ -4,7 +4,7 @@ import { Mail, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { C, btn, inp, lbl, CC } from '../../lib/theme';
 import * as AuthAPI from '../../lib/authApi';
-import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider } from './ui';
+import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider, ConsentNotice } from './ui';
 import GoogleButton from './GoogleButton';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -97,6 +97,7 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
                 <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create your account</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>We'll email you a 6-digit code to verify it's really you.</div>
               </div>
+              <ConsentNotice />
               <GoogleButton label="Sign up with Google" />
               <OrDivider />
               <div>
@@ -154,6 +155,16 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
               </div>
               <PasswordField label="Confirm password" value={confirm} onChange={setConfirm} autoComplete="new-password" placeholder="Re-enter your password" />
               <FieldError>{error}</FieldError>
+              {/*
+                Consent sits immediately above the button that forms the
+                contract, not in a footer and not behind a "learn more". That
+                placement is the whole ballgame for a clickwrap: courts ask
+                whether a reasonable user had notice of the terms and
+                manifested assent, and terms linked from somewhere else on the
+                page routinely fail that test. The links open in a new tab so
+                reading them cannot cost a half-finished signup.
+              */}
+              <ConsentNotice />
               <button type="submit" disabled={busy} style={btn(C.blueGrad, { width: '100%', opacity: busy ? 0.7 : 1 })}>
                 {busy ? 'Creating account…' : <>Create account <ArrowRight size={14} /></>}
               </button>

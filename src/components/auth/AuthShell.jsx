@@ -7,7 +7,13 @@ import AnimatedLogo from '../AnimatedLogo';
 const HIGHLIGHTS = [
   { icon: GraduationCap, title: '10 health career pathways', desc: 'Physician, Nursing, PA, Pharmacy, Dentistry, and more — matched to you, not assumed.' },
   { icon: Sparkles, title: 'A full application portfolio', desc: 'College list, essays, deadlines, activities, and test scores, all synced to your account.' },
-  { icon: ShieldCheck, title: '100% free, no ads', desc: 'Every lesson, flashcard deck, and portfolio tool — free for good.' },
+  // This used to read "100% free, no ads". The product does serve ads (Google
+  // AdSense, see index.html), so that line was simply false — and a false claim
+  // about advertising on a service used by minors is an FTC Act § 5 problem
+  // quite apart from anything in the privacy policy. What is actually true, and
+  // is the thing students care about, is that nothing is paywalled and that the
+  // ads are not personalised.
+  { icon: ShieldCheck, title: 'Free — nothing paywalled', desc: 'Every lesson, flashcard deck, and portfolio tool. Ads keep it free, and they are never personalised.' },
 ];
 
 function BrandPanel() {

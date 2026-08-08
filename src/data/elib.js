@@ -12,7 +12,7 @@
 //
 // Content-integrity cleanup (two rounds, applied to the original ~1023-entry
 // file this list used to be):
-//   Round 1 — 600 entries pointing to "ascendprep.edu" (a domain that does
+//   Round 1 — 600 entries pointing to "medschoolprep.edu" (a domain that does
 //   not exist — confirmed via DNS lookup returning NXDOMAIN) were removed.
 //   They followed an obviously templated pattern ("Interactive Practice:
 //   {topic}" / "Comprehensive Guide to {topic}", exactly 100 per category)

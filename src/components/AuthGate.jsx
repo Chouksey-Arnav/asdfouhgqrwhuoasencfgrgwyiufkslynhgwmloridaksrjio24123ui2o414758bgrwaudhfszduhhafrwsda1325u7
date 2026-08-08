@@ -3,9 +3,10 @@ import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { C, applyTheme, getStoredMode } from '../lib/theme';
 import { getToken, setToken, clearToken, fetchMe } from '../lib/authApi';
-import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath } from '../lib/routes';
+import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath } from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
+import LegalPage from './legal/LegalPage';
 import AuthShell from './auth/AuthShell';
 import LoginView from './auth/LoginView';
 import SignupView from './auth/SignupView';
@@ -25,6 +26,43 @@ export default function AuthGate({ children }) {
   // dropped into the moment they sign in.
   const landingPathRef = useRef(isAuthPath(window.location.pathname) ? '/' : normalizePath(window.location.pathname));
   const firstSyncRef = useRef(true);
+
+  // ── The legal documents sit outside the signed-in/signed-out split ────────
+  //
+  // Every other route in this app is gated one way or the other: a tab needs a
+  // session, an auth screen needs the absence of one. The Terms and the Privacy
+  // Policy need neither. They have to render the same for a signed-out visitor,
+  // a signed-in student, a parent who was sent the link, and a crawler —
+  // because a privacy policy you have to create an account to read is not
+  // notice, and "agree to these Terms" above a link you cannot open until after
+  // you have agreed is exactly the pattern that gets a clickwrap held
+  // unenforceable.
+  //
+  // So this is checked before `status` is even consulted, and it listens to
+  // popstate itself: the two effects further down bail out once signed in
+  // (App.jsx owns the URL from then on), and without its own listener a back
+  // press out of /legal/privacy would leave this component rendering the
+  // document over an address bar that had already moved on.
+  const [legalSlug, setLegalSlug] = useState(() => parseLegalPath(window.location.pathname));
+  useEffect(() => {
+    function onPop() { setLegalSlug(parseLegalPath(window.location.pathname)); }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const openLegal = useCallback((path) => {
+    window.history.pushState({}, '', path);
+    setLegalSlug(parseLegalPath(path));
+    applySeoMeta(path);
+  }, []);
+
+  const closeLegal = useCallback(() => {
+    // Prefer a real back press so the student lands wherever they actually came
+    // from — mid-signup, mid-lesson, or another site. Falling back to "/" only
+    // when this page IS the history entry (someone opened the link directly).
+    if (window.history.length > 1) window.history.back();
+    else { window.history.replaceState({}, '', '/'); setLegalSlug(null); }
+  }, []);
 
   const restore = useCallback(async () => {
     if (!getToken()) { setStatus('signedOut'); return; }
@@ -71,6 +109,10 @@ export default function AuthGate({ children }) {
   // Once signed in, App.jsx owns the URL and this stops touching it.
   useEffect(() => {
     if (status === 'signedIn') return;
+    // While a legal document is open the URL is /legal/…, which is not this
+    // component's `view` — syncing would immediately rewrite it back to the
+    // landing page and slam the document shut.
+    if (legalSlug) return;
     const current = normalizePath(window.location.pathname);
     const want = view === 'landing'
       ? (isAuthPath(current) ? landingPathRef.current : current)
@@ -81,7 +123,7 @@ export default function AuthGate({ children }) {
     if (current === want) return;
     if (first) window.history.replaceState(window.history.state, '', want);
     else window.history.pushState({}, '', want);
-  }, [view, status]);
+  }, [view, status, legalSlug]);
 
   // ── URL → view ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -102,6 +144,13 @@ export default function AuthGate({ children }) {
     setView(nextView);
   }
 
+  // Ahead of the `checking` spinner too: the documents do not depend on knowing
+  // who you are, so there is no reason to make anyone wait on a session probe
+  // to read them.
+  if (legalSlug) {
+    return <LegalPage slug={legalSlug} onBack={closeLegal} onNavigate={openLegal} />;
+  }
+
   if (status === 'checking') {
     return (
       <div style={{ height: 'var(--msp-vh)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
@@ -111,11 +160,13 @@ export default function AuthGate({ children }) {
   }
 
   if (status === 'signedIn') {
-    return children({ user, setUser });
+    // `openLegal` goes down to App so the in-app footer can open the documents
+    // without a full page load, keeping the student's place in the app.
+    return children({ user, setUser, openLegal });
   }
 
   if (view === 'landing') {
-    return <LandingPage onGetStarted={() => goTo('signup')} onLogin={() => goTo('login')} />;
+    return <LandingPage onGetStarted={() => goTo('signup')} onLogin={() => goTo('login')} onOpenLegal={openLegal} />;
   }
 
   return (

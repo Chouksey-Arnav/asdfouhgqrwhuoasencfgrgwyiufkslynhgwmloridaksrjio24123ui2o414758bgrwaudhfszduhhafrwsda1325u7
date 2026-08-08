@@ -1,6 +1,6 @@
 # Complete Legal & Policy Compliance Risk Audit: Possible Lawsuits & Policy Violations
 
-This document compiles a comprehensive, itemized legal, trademark, privacy, and regulatory audit of the **AscendPrep / Medschoolprep** platform. It covers everything from trademark infringement risks and privacy compliance gaps to professional liability and backend security issues. Actionable mitigations are provided for each identified vulnerability.
+This document compiles a comprehensive, itemized legal, trademark, privacy, and regulatory audit of the **MedSchoolPrep** platform. It covers everything from trademark infringement risks and privacy compliance gaps to professional liability and backend security issues. Actionable mitigations are provided for each identified vulnerability.
 
 ---
 
@@ -77,7 +77,7 @@ As an online learning and test preparation platform targeting high school studen
   - `api/auth/complete-signup.js`
   - Supabase table: `app_users`
 * **Legal Analysis:**
-  COPPA strictly prohibits the collection, use, or disclosure of personal information (such as name, email, or precise academic indicators) from children under the age of 13 without verifiable parental consent. Although AscendPrep targets high schoolers (typically 14–18), there is no age-gating mechanism, date-of-birth collection, or parental consent workflow during signup. If a student under 13 registers (such as an advanced middle schooler practicing for high school or early tests), the app will collect their name, email, and academic performance, and sync it to the backend server. This represents a direct, critical COPPA violation, carrying potential FTC fines of up to $51,744 per violation.
+  COPPA strictly prohibits the collection, use, or disclosure of personal information (such as name, email, or precise academic indicators) from children under the age of 13 without verifiable parental consent. Although MedSchoolPrep targets high schoolers (typically 14–18), there is no age-gating mechanism, date-of-birth collection, or parental consent workflow during signup. If a student under 13 registers (such as an advanced middle schooler practicing for high school or early tests), the app will collect their name, email, and academic performance, and sync it to the backend server. This represents a direct, critical COPPA violation, carrying potential FTC fines of up to $51,744 per violation.
 * **Actionable Mitigations:**
   - **Implement an Age-Gate:** Add an age/date-of-birth validation step during the registration flow. If the user is under 13, block registration or redirect to a parental consent flow.
   - **Require Parental Consent for Under-13s:** If children under 13 are allowed to use the platform, implement a standard "double opt-in" parental consent process via email.
@@ -92,7 +92,7 @@ As an online learning and test preparation platform targeting high school studen
   - `supabase/migrations/` (Schemas storing GPAs, scores, student milestones)
   - `api/progress-sync.js`
 * **Legal Analysis:**
-  If AscendPrep is marketed to, sold to, or integrated into school districts, high schools, or charter organizations where teachers use it to track or review student progress, it falls under FERPA jurisdiction. FERPA protects the privacy of student education records. Storing academic grades (GPAs), standardized test scores (SAT/ACT tracks), and student counseling profiles on a cloud database (Supabase) without formal school contracts, strict data-sharing agreements, or parent/student FERPA consent waivers violates federal educational privacy standards.
+  If MedSchoolPrep is marketed to, sold to, or integrated into school districts, high schools, or charter organizations where teachers use it to track or review student progress, it falls under FERPA jurisdiction. FERPA protects the privacy of student education records. Storing academic grades (GPAs), standardized test scores (SAT/ACT tracks), and student counseling profiles on a cloud database (Supabase) without formal school contracts, strict data-sharing agreements, or parent/student FERPA consent waivers violates federal educational privacy standards.
 * **Actionable Mitigations:**
   - **Publish Terms of Service for Institutional Use:** Draft a dedicated legal agreement for school districts, detailing compliance under the "School Official" exception of FERPA.
   - **Disable Institutional Tracking by Default:** Ensure there are no administrative dashboards that allow teachers to view student records without a formal educational data agreement in place.
@@ -107,7 +107,7 @@ As an online learning and test preparation platform targeting high school studen
   - `api/auth/logout.js`
   - Client-side IndexedDB usage (`src/lib/db.js`)
 * **Legal Analysis:**
-  Under GDPR, minors aged 13–16 (depending on the EU member state) require parental consent for data processing. Under CCPA/CPRA, businesses must obtain affirmative opt-in consent ("opt-in right") to sell or share the personal information of consumers under 16 years of age. Currently, AscendPrep does not offer a mechanism for users to request data deletion ("Right to Be Forgotten"), export their data, or opt-out of processing, which violates California and European data privacy laws.
+  Under GDPR, minors aged 13–16 (depending on the EU member state) require parental consent for data processing. Under CCPA/CPRA, businesses must obtain affirmative opt-in consent ("opt-in right") to sell or share the personal information of consumers under 16 years of age. Currently, MedSchoolPrep does not offer a mechanism for users to request data deletion ("Right to Be Forgotten"), export their data, or opt-out of processing, which violates California and European data privacy laws.
 * **Actionable Mitigations:**
   - **Add a "Delete My Account" Feature:** Create a button in the Settings panel (`src/components/AppearanceSettings.jsx` or general settings) that makes a DELETE request to an API endpoint, completely purging their record from the Supabase `app_users`, `sessions`, `progress_sync`, and other tracking tables.
   - **Do Not Sell or Share Minor Data:** Explicitly state in the Terms and Privacy Policy that the platform does not sell, lease, or share student data with third-party advertisers.
@@ -129,7 +129,7 @@ As an online learning and test preparation platform targeting high school studen
 * **Actionable Mitigations:**
   - **Include a Clear Educational Disclaimer:** Embed a persistent disclosure in the application footer and inside lesson dashboards:
     > *"All content, lessons, quizzes, and clinical scenarios provided on this platform are for educational and career-exploration purposes only. They do not constitute formal medical education, professional clinical training, medical advice, or legal guidance. Users should not make clinical decisions based on this material."*
-  - **De-emphasize Graduate/Medical Branding:** Transition fully away from the "MedSchoolPrep" branding in all user-facing settings, solidifying the "AscendPrep" brand name.
+  - **Resolved differently — disclaim rather than rename.** An earlier draft of this audit proposed retiring the "MedSchoolPrep" name in favour of a neutral one. That is no longer the plan: MedSchoolPrep is the product's name and the repo has been consolidated on it. The liability the rename was meant to address is instead handled by explicit, persistent disclaimers stating that MedSchoolPrep is not a medical school, provides no medical education or advice, and confers no credential — carried in the Terms of Service (§ 4), the landing-page colophon, and the in-app Settings → Legal panel, so the disclaimer appears on every surface a user can reach.
 
 ---
 

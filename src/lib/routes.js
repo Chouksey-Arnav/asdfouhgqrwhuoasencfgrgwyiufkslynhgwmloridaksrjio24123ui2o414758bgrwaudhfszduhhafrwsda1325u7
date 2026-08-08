@@ -75,6 +75,31 @@ export const AUTH_VIEWS = { login: '/login', signup: '/signup', forgot: '/forgot
 const AUTH_PATHS = Object.values(AUTH_VIEWS);
 
 /**
+ * The legal documents. These are the odd ones out in this file: every other
+ * route here is either an app tab (needs a session) or an auth screen (needs
+ * the absence of one). These need neither — they must render identically to a
+ * signed-out visitor, a signed-in student, a parent who was sent the link, and
+ * a crawler, because a privacy policy you have to log in to read is not notice.
+ *
+ * So AuthGate intercepts them ahead of its own signed-in/signed-out branch, and
+ * parsePath below deliberately does not claim them (`legal` is not in TABS, so
+ * it already returns null) — the app router leaves them alone.
+ */
+export const LEGAL_VIEWS = { terms: '/legal/terms', privacy: '/legal/privacy' };
+const LEGAL_PATHS = Object.values(LEGAL_VIEWS);
+
+/** True when `pathname` addresses one of the public legal documents. */
+export function isLegalPath(pathname) {
+  return LEGAL_PATHS.includes(normalizePath(pathname));
+}
+
+/** The legal doc slug (`terms`/`privacy`) a path names, or null. */
+export function parseLegalPath(pathname) {
+  const p = normalizePath(pathname);
+  return Object.keys(LEGAL_VIEWS).find((slug) => LEGAL_VIEWS[slug] === p) || null;
+}
+
+/**
  * Full-screen surfaces that sit *on top of* a tab: the lesson player and the
  * quiz runner. They replace the entire app shell, so without a URL of their own
  * the back button would swap the tab underneath while leaving the overlay
