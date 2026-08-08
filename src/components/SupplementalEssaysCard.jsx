@@ -33,9 +33,13 @@ const TONE_FG = { good: C.greenL, warn: C.amberL, critical: C.roseL };
 
 export default function SupplementalEssaysCard({
   colleges = [], user = null, gradeLabel = null, portfolioCtx = null,
-  accent = C.violet, onCreateEssay = null, existingEssays = [],
+  accent = C.violet, onCreateEssay = null, existingEssays = [], onDismiss = null,
 }) {
+  // Hiding this card used to be purely internal. It now renders inside a named disclosure on the
+  // Essays tab, where hiding only the contents would leave an open door with nothing behind it —
+  // so when the parent hands us a way to close the whole section, we use that instead.
   const [dismissed, setDismissed] = useState(false);
+  const dismiss = () => (onDismiss ? onDismiss() : setDismissed(true));
   const [activeId, setActiveId] = useState(colleges[0]?.id || null);
   const [resolved, setResolved] = useState({});   // collegeId -> { loading, error, data }
   const [openKey, setOpenKey] = useState(null);   // which prompt's practice composer is open
@@ -140,7 +144,7 @@ export default function SupplementalEssaysCard({
               <button style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { fontSize: 12.5, padding: '9px 16px' })} onClick={() => load(activeCollege)}>
                 Yes — show me {activeCollege?.name?.split(' ')[0] || 'them'}'s supplements
               </button>
-              <button style={btnG({ fontSize: 12.5, padding: '9px 16px' })} onClick={() => setDismissed(true)}>Not now</button>
+              <button style={btnG({ fontSize: 12.5, padding: '9px 16px' })} onClick={dismiss}>Not now</button>
             </div>
           </div>
         </div>
@@ -163,7 +167,7 @@ export default function SupplementalEssaysCard({
               {colleges.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 4 }} onClick={() => setDismissed(true)} title="Hide"><X size={15} /></button>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 4 }} onClick={dismiss} title="Hide"><X size={15} /></button>
         </div>
       </div>
 

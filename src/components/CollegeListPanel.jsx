@@ -12,6 +12,7 @@ import { normalizeKey, rowDedupeKey } from '../lib/trackingCatalog';
 import TrackQueueNotice from './ui/TrackQueueNotice';
 import CollegeAutocomplete from './CollegeAutocomplete';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import Disclosure, { HelpNote, HowItWorks } from './ui/Disclosure';
 import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
@@ -54,7 +55,7 @@ async function ensureChecklists(colleges, grouped, setChecklists) {
   }
 }
 
-export default function CollegeListPanel({ accent = C.blue, user = null, studentSAT = null, askMedabrain = null, onAdded = null }) {
+export default function CollegeListPanel({ accent = C.blue, user = null, studentSAT = null, askMedabrain = null, onAdded = null, isMobile = false }) {
   const { entries: pendingEntries, status: trackStatus } = usePendingTrackKeys();
   const [colleges, setColleges] = useState([]);
   const [checklists, setChecklists] = useState({}); // collegeId -> items[]
@@ -275,54 +276,82 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
 
   return (
     <div style={CC({gap: 22})}>
-      <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue}
-        eyebrow="Applications" title="College List & Application Tracker"
-        sub="Build a balanced list of reach, target, and safety schools — with per-school deadlines and a checklist so every application actually gets finished."
-        stats={colleges.length > 0 ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }] : []}/>
+      <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue} m={isMobile}
+        eyebrow="College List" title="Where you're going to apply"
+        sub="Every school you're thinking about, in one place — with its deadlines and a checklist, so no application gets left half-finished."
+        stats={colleges.length > 0
+          ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }, { value: submitted, label: 'submitted', color: C.violetL }]
+          : []}/>
 
-      {/* Scope note — stated up front so nobody hunts for a school abroad and assumes the search
-          is broken. Single source of truth lives in constants.js (US_ONLY_NOTE). */}
-      <div style={{...R({gap:10,padding:'11px 14px',alignItems:'flex-start'}),borderRadius:12,background:tint(C.blue,0.06),border:`1px solid ${tint(C.blue,0.18)}`}}>
-        <span style={{fontSize:15,lineHeight:1.2,flexShrink:0}} role="img" aria-label="United States">🇺🇸</span>
-        <span style={{fontSize:11.5,color:C.t3,lineHeight:1.55}}>{US_ONLY_NOTE}</span>
-      </div>
+      {/* The three-step shape of this tab, said once. Reach/target/safety is the single idea
+          this whole panel runs on and it was never explained anywhere — a student who doesn't
+          already know the vocabulary can't tell what the coloured pills are claiming. */}
+      <HowItWorks
+        id="colleges" color={accent} m={isMobile}
+        steps={[
+          { title: 'Add the schools you like', body: 'Start typing a name and pick it from the list. Nothing here commits you to applying.' },
+          { title: 'We sort them by odds', body: 'Reach means a stretch for your scores, target means a realistic fit, safety means very likely. Aim for some of each.' },
+          { title: 'Work the checklist', body: 'Open a school for its deadlines and its to-do list — essays, transcripts, recommendations, fees.' },
+        ]}
+      />
 
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'colleges')} status={trackStatus} onRetried={load}/>
 
-      {colleges.length > 0 && (
-        <div style={G(4,12,{},true)}>
-          <StatTile icon={School} value={catCount('reach')} label="Reach" color={C.rose}/>
-          <StatTile icon={School} value={catCount('target')} label="Target" color={C.blue}/>
-          <StatTile icon={School} value={catCount('safety')} label="Safety" color={C.green}/>
-          <StatTile icon={Send} value={submitted} label="Submitted" sub={`${inProgress} in progress · ${notStarted} researching`} color={C.violet}/>
+      {/* ── Add a school ────────────────────────────────────────────────────────
+          The one thing every visit to this tab starts with, and it used to sit below two large
+          AI cards and a recommendation slate — so the empty-list case opened on three blocks of
+          analysis about a list that didn't exist yet. It leads now. */}
+      <div style={{...glass({padding:isMobile?15:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+        <SectionTitle icon={Plus} color={accent}>Add a school</SectionTitle>
+        <div style={R({gap:10,flexWrap:'wrap'})}>
+          <CollegeAutocomplete
+            value={newName}
+            onChange={setNewName}
+            onSelectSchool={(school)=>{
+              // Suggest Reach/Target/Safety using the same rules as the recommender below, so a
+              // school added by hand is filed the same way the same school would be if it had been
+              // recommended. A helpful default, not a hard override — skipped once the student has
+              // picked a category by hand this round.
+              if(categoryTouched || !hintSat || school.sat==null) return;
+              const cat=categorizeSchool(school, hintSat);
+              if(cat) setNewCategory(cat);
+            }}
+            onKeyDown={e=>e.key==='Enter'&&addCollege()}
+          />
+          <select style={inp({width:'auto'})} value={newCategory} onChange={e=>{setNewCategory(e.target.value);setCategoryTouched(true);}}>
+            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+          <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addCollege}><Plus size={14}/>Add</button>
         </div>
-      )}
-
-      {brainTake && (
-        <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
-          <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
-            <Sparkles size={13} color={C.violetL}/>
-            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain's take</span>
-          </div>
-          {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Weighing your list balance…</div>}
-          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — your list below is still accurate.</div>}
-          {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
+        <div style={{...CC({gap:7}),marginTop:11}}>
+          {hintSat
+            ? <HelpNote>Pick a school from the dropdown and we'll guess Reach, Target or Safety for you by comparing its typical SAT/ACT against your {scores.primaryTest === 'ACT' && scores.act != null ? `ACT ${scores.act} (about SAT ${hintSat})` : `SAT ${hintSat}`}. Change it whenever you want.</HelpNote>
+            : <HelpNote>Not sure whether a school is a reach or a safety? Log an SAT or ACT score and we'll work it out for you.</HelpNote>}
+          {/* Scope note — stated where the search actually is, so nobody hunts for a school
+              abroad and assumes the search is broken. Source of truth: constants.js. */}
+          <HelpNote icon={Info}>{US_ONLY_NOTE}</HelpNote>
         </div>
-      )}
+      </div>
 
       {/* ── Matched to your scores ──────────────────────────────────────────────
           U.S. schools picked from the same database the tracker uses, categorized against the
           SAT/ACT the student actually logged. Every card shows the school's real SAT and ACT
           midpoints next to the student's own, so the reach/target/safety call is auditable
-          rather than a black box, and adds in one tap already correctly filed. */}
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
-        <SectionTitle icon={Target} color={C.violetL}>Matched to your scores</SectionTitle>
+          rather than a black box, and adds in one tap already correctly filed.
 
+          Behind a door, but one that stands open for exactly the student who needs it: with an
+          empty list this slate IS the tab, and with twelve schools on the list it's a sidebar. */}
+      <Disclosure id="colleges-matches" icon={Target} color={C.violet} m={isMobile}
+        defaultOpen={!loading && colleges.length === 0}
+        title="Schools that fit your scores"
+        sub={scores.hasScore
+          ? `${recommendations.length || 'No'} suggestion${recommendations.length === 1 ? '' : 's'} left, picked from ${SCHOOL_DATA.length} U.S. schools by comparing their SAT and ACT ranges to yours.`
+          : `We'll match you against ${SCHOOL_DATA.length} U.S. schools once you've logged a test score.`}>
+      <div>
         {!scores.hasScore ? (
           <div style={{fontSize:12.5,color:C.t3,lineHeight:1.6}}>
-            No SAT or ACT on file yet. Log a real score in the Score Tracker (or finish onboarding) and
-            MedSchoolPrep will match you against all {SCHOOL_DATA.length} U.S. schools it tracks and
-            recommend a reach/target/safety slate here.
+            You haven't logged an SAT or ACT yet. Put a real score into the Score Tracker and we'll compare it against
+            all {SCHOOL_DATA.length} U.S. schools we track, then suggest a mix of reach, target and safety schools right here.
           </div>
         ) : (
           <>
@@ -337,8 +366,12 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
                 <span style={pill(`${C.violet}18`, C.violetL)}>≈ SAT {actToSat(scores.act)}</span>
               )}
               <span style={{fontSize:11,color:C.t4,alignSelf:'center'}}>
-                Matching on SAT {scores.effectiveSat} · your stronger of the two
+                Matching on SAT {scores.effectiveSat} — your stronger of the two
               </span>
+            </div>
+
+            <div style={{marginBottom:14}}>
+              <HelpNote>Every suggestion shows the school's own SAT and ACT range next to yours, so you can see why we called it a reach or a safety. “Add” puts it on your list already filed; “Pass” hides it.</HelpNote>
             </div>
 
             {/* Insights — plain, computed statements about what the score means and what the
@@ -413,31 +446,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
           </>
         )}
       </div>
-
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
-        <SectionTitle icon={Plus} color={accent}>Add a school</SectionTitle>
-        <div style={R({gap:10,flexWrap:'wrap'})}>
-          <CollegeAutocomplete
-            value={newName}
-            onChange={setNewName}
-            onSelectSchool={(school)=>{
-              // Suggest Reach/Target/Safety using the same rules as the recommender above, so a
-              // school added by hand is filed the same way the same school would be if it had been
-              // recommended. A helpful default, not a hard override — skipped once the student has
-              // picked a category by hand this round.
-              if(categoryTouched || !hintSat || school.sat==null) return;
-              const cat=categorizeSchool(school, hintSat);
-              if(cat) setNewCategory(cat);
-            }}
-            onKeyDown={e=>e.key==='Enter'&&addCollege()}
-          />
-          <select style={inp({width:'auto'})} value={newCategory} onChange={e=>{setNewCategory(e.target.value);setCategoryTouched(true);}}>
-            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
-          <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addCollege}><Plus size={14}/>Add</button>
-        </div>
-        {hintSat && <p style={{fontSize:11,color:C.t3,marginTop:10,lineHeight:1.5}}>Pick a U.S. school from the dropdown and we'll suggest Reach/Target/Safety by comparing its SAT/ACT midpoints against your {scores.primaryTest === 'ACT' && scores.act != null ? `ACT ${scores.act} (≈ SAT ${hintSat})` : `SAT ${hintSat}`} — you can always change it.</p>}
-      </div>
+      </Disclosure>
 
       {loading ? (
         <div style={{fontSize:13,color:C.t3}}>Loading…</div>
@@ -446,10 +455,15 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
           <div style={{width:48,height:48,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
             <School size={22} color={accent}/>
           </div>
-          <div style={{fontSize:14,color:C.t2}}>No schools yet — add your first one above.</div>
+          <div style={{fontSize:14,color:C.t2}}>No schools on your list yet — add one above, or add one of the schools we've matched to your scores.</div>
         </div>
       ) : (
         <div style={CC({gap:10})}>
+          <div style={R({gap:8,flexWrap:'wrap'})}>
+            <School size={14} color={accent}/>
+            <span style={{fontSize:13.5,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Your list</span>
+            <span style={{fontSize:11.5,color:C.t3}}>Tap a school for its deadlines and checklist.</span>
+          </div>
           {colleges.map(college => {
             const cat = CATEGORIES.find(c => c.id === college.category) || CATEGORIES[1];
             const items = checklists[college.id] || [];
@@ -555,6 +569,40 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
             );
           })}
         </div>
+      )}
+
+      {/* ── How the list is shaped ──────────────────────────────────────────────
+          Four counters and a paragraph of AI analysis, both of which are about a list rather
+          than about a next action. Genuinely worth reading — a list of nine reaches and no
+          safety is the single most common way this goes wrong — but worth reading second, and
+          meaningless before there's a list at all. */}
+      {colleges.length > 0 && (
+        <Disclosure id="colleges-balance" icon={Target} color={C.violet} m={isMobile}
+          title="Is my list balanced?"
+          sub={`${catCount('reach')} reach · ${catCount('target')} target · ${catCount('safety')} safety — plus what Meta Brain makes of that.`}>
+          <div style={CC({gap:12})}>
+            <div style={G(4,12,{},true)}>
+              <StatTile icon={School} value={catCount('reach')} label="Reach" color={C.rose}/>
+              <StatTile icon={School} value={catCount('target')} label="Target" color={C.blue}/>
+              <StatTile icon={School} value={catCount('safety')} label="Safety" color={C.green}/>
+              <StatTile icon={Send} value={submitted} label="Submitted" sub={`${inProgress} in progress · ${notStarted} researching`} color={C.violet}/>
+            </div>
+
+            <HelpNote>Most students end up with a few of each. Too many reaches and nothing is certain; too many safeties and you've undersold yourself.</HelpNote>
+
+            {brainTake && (
+              <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
+                <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
+                  <Sparkles size={13} color={C.violetL}/>
+                  <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain on your list</span>
+                </div>
+                {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your list…</div>}
+                {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now — your list above is still correct.</div>}
+                {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
+              </div>
+            )}
+          </div>
+        </Disclosure>
       )}
     </div>
   );

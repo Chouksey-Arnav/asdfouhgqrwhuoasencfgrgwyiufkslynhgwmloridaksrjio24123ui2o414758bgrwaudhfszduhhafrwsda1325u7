@@ -4,6 +4,7 @@ import { Plus, Trash2, FileText, History, ScrollText, PenLine, CheckCircle2, Spa
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, createItem, updateItem, deleteItem } from '../lib/dataApi';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import Disclosure, { HelpNote, HowItWorks } from './ui/Disclosure';
 import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
@@ -24,12 +25,16 @@ function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
 }
 
-export default function EssayWorkspacePanel({ accent = C.blue, user = null, gradeLabel = null, askMedabrain = null, onCreated = null }) {
+export default function EssayWorkspacePanel({ accent = C.blue, user = null, gradeLabel = null, askMedabrain = null, onCreated = null, isMobile = false }) {
   const [essays, setEssays] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [newTitle, setNewTitle] = useState('');
+  // "Not now" on the supplemental-prompts card. Held here rather than inside the card because
+  // the card is the whole contents of a disclosure — hiding it alone would leave the door open
+  // onto nothing.
+  const [suppHidden, setSuppHidden] = useState(false);
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState('');
   const [portfolioCtx, setPortfolioCtx] = useState(null); // shared by the ambient recommendation AND the critique engine — activities/research/clinical hours/awards
@@ -252,45 +257,53 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
 
   return (
     <div style={CC({gap:22})}>
-      <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia}
-        eyebrow="Applications" title="Essay Workspace"
-        sub="Draft, revise, and track every personal statement and supplemental in one place — see the prompts your schools actually ask, and get a straight critique of what you write, not a pat on the back."
-        stats={essays.length > 0 ? [{ value: essays.length, label: essays.length === 1 ? 'essay' : 'essays' }] : []}/>
+      <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia} m={isMobile}
+        eyebrow="Essays" title="Write your essays here"
+        sub="Every personal statement and supplemental in one place, with your drafts saved as you type — and a straight critique of what you've written, not a pat on the back."
+        stats={essays.length > 0
+          ? [{ value: essays.length, label: essays.length === 1 ? 'essay' : 'essays' }, { value: finals, label: 'finished', color: C.greenL }]
+          : []}/>
 
-      {essays.length > 0 && (
-        <div style={G(3,12,{},true)}>
-          <StatTile icon={PenLine} value={inFlight} label="In progress" color={C.blue}/>
-          <StatTile icon={CheckCircle2} value={finals} label="Finalized" color={C.green}/>
-          <StatTile icon={FileText} value={totalWords.toLocaleString()} label="Words written" color={accent}/>
-        </div>
-      )}
-
-      {brainTake && (
-        <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
-          <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
-            <Sparkles size={13} color={C.violetL}/>
-            <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Medabrain's honest read</span>
-          </div>
-          {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your essays and portfolio…</div>}
-          {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Medabrain right now.</div>}
-          {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
-        </div>
-      )}
-
-      {/* Medabrain offering the supplements for a school that's actually on their list — the
-          "you have Duke on your list, here's what Duke asks" loop. Sits above the manual "start a
-          new essay" box on purpose: a student who doesn't know which essays they owe cannot title
-          one, and this is the surface that tells them. */}
-      <SupplementalEssaysCard
-        colleges={colleges} user={user} gradeLabel={gradeLabel} portfolioCtx={portfolioCtx}
-        accent={accent} existingEssays={essays} onCreateEssay={createEssayFromSupplement}
+      {/* The three-step shape of this tab, said once. The critique is the entire reason this
+          panel exists and it lives at the bottom of an editor nobody has opened yet, so a
+          first-time student had no way to know it was there. */}
+      <HowItWorks
+        id="essays" color={accent} m={isMobile}
+        steps={[
+          { title: 'Start an essay', body: 'Give it a name, or take a prompt one of your schools actually asks.' },
+          { title: 'Write the draft', body: 'It saves itself as you type, counts your words against the limit, and keeps every version.' },
+          { title: 'Get it torn apart', body: 'Meta Brain reads the real draft and tells you what’s weak — kindly is not the same as usefully.' },
+        ]}
       />
 
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
+      {/* Medabrain offering the supplements for a school that's actually on their list — the
+          "you have Duke on your list, here's what Duke asks" loop.
+
+          Still above the manual "start a new essay" box, and still open by default while there
+          are no essays, because the original reasoning holds: a student who doesn't know which
+          essays they owe cannot title one, and this is the surface that tells them. Once they
+          have essays it's a door, so the tab opens on their own work instead of on a pitch. */}
+      {colleges.length > 0 && !suppHidden && (
+        <Disclosure id="essays-supplements" icon={Sparkles} color={C.fuchsia} m={isMobile}
+          defaultOpen={!loading && essays.length === 0}
+          title="The prompts your schools actually ask"
+          sub={`Real supplemental questions from the ${colleges.length === 1 ? 'school' : `${colleges.length} schools`} on your college list — start one as a tracked essay in a tap.`}>
+          <SupplementalEssaysCard
+            colleges={colleges} user={user} gradeLabel={gradeLabel} portfolioCtx={portfolioCtx}
+            accent={accent} existingEssays={essays} onCreateEssay={createEssayFromSupplement}
+            onDismiss={() => setSuppHidden(true)}
+          />
+        </Disclosure>
+      )}
+
+      <div style={{...glass({padding:isMobile?15:18}),background:`linear-gradient(120deg,${tint(accent,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(accent,0.2)}`}}>
         <SectionTitle icon={Plus} color={accent}>Start a new essay</SectionTitle>
         <div style={R({gap:10,flexWrap:'wrap'})}>
           <input style={inp({flex:1,minWidth:180})} placeholder="e.g. Common App Personal Statement" value={newTitle} onChange={e=>setNewTitle(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addEssay()} />
           <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={addEssay}><Plus size={14}/>New Essay</button>
+        </div>
+        <div style={{marginTop:11}}>
+          <HelpNote>You can rename it later, and nothing here is submitted anywhere — this is your own workspace.</HelpNote>
         </div>
       </div>
 
@@ -299,11 +312,15 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
           <div style={{width:48,height:48,borderRadius:14,background:tint(accent,0.12),border:`1px solid ${tint(accent,0.28)}`,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px'}}>
             <FileText size={22} color={accent}/>
           </div>
-          <div style={{fontSize:14,color:C.t2}}>No essays yet. Start with your Common App personal statement.</div>
+          <div style={{fontSize:14,color:C.t2}}>No essays yet. Most people start with the Common App personal statement — it's the one nearly every school reads.</div>
         </div>
       )}
 
-      <div style={{display:'grid',gridTemplateColumns: selected ? '260px 1fr' : '1fr', gap:16}}>
+      {essays.length > 0 && !selected && (
+        <HelpNote>Tap an essay below to open it and start writing.</HelpNote>
+      )}
+
+      <div style={{display:'grid',gridTemplateColumns: selected && !isMobile ? '260px 1fr' : '1fr', gap:16}}>
         <div style={CC({gap:8})}>
           {essays.map(essay => {
             const st = STATUSES.find(s => s.id === essay.status) || STATUSES[0];
@@ -370,14 +387,21 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
               </div>
             </div>
             <div style={R({gap:10,marginTop:12,flexWrap:'wrap'})}>
-              <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={saveVersion}>Save Version</button>
+              <button style={btn(accent!==C.blue?accent:C.blueGrad)} onClick={saveVersion}>Save a copy of this draft</button>
               {!activeCritique && (
                 <button
                   style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`,{opacity:wc<20?0.5:1})}
                   disabled={wc<20}
                   onClick={runCritique}
-                >Get Medabrain's critique</button>
+                >Get a critique</button>
               )}
+            </div>
+            <div style={{marginTop:9}}>
+              <HelpNote>
+                {wc < 20
+                  ? 'Your draft saves by itself as you type. Write a few real sentences and the critique button switches on.'
+                  : 'Your draft saves by itself as you type — “Save a copy” keeps this exact version so you can look back at it later.'}
+              </HelpNote>
             </div>
 
             {/* The critique itself. Rendered inside the editor rather than in a modal so the
@@ -394,21 +418,57 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
             )}
 
             {versions.length > 0 && (
-              <div style={{marginTop:20,paddingTop:16,borderTop:`1px solid ${C.b1}`}}>
-                <div style={R({gap:6,marginBottom:10})}><History size={13} color={C.t3}/><span style={lbl({marginBottom:0})}>Version History</span></div>
-                <div style={CC({gap:6})}>
-                  {versions.map(v => (
-                    <div key={v.id} style={{...glass2({padding:'8px 12px'}),display:'flex',justifyContent:'space-between'}}>
-                      <span style={{fontSize:11,color:C.t2}}>{new Date(v.created_at).toLocaleString()}</span>
-                      <span style={{fontSize:11,color:C.t3}}>{v.word_count} words</span>
-                    </div>
-                  ))}
-                </div>
+              <div style={{marginTop:18}}>
+                <Disclosure id="essays-versions" icon={History} color={C.t3} m={isMobile}
+                  title={`Earlier drafts (${versions.length})`}
+                  sub="Every copy you've saved of this essay, newest first.">
+                  <div style={CC({gap:6})}>
+                    {versions.map(v => (
+                      <div key={v.id} style={{...glass2({padding:'8px 12px'}),display:'flex',justifyContent:'space-between'}}>
+                        <span style={{fontSize:11,color:C.t2}}>{new Date(v.created_at).toLocaleString()}</span>
+                        <span style={{fontSize:11,color:C.t3}}>{v.word_count} words</span>
+                      </div>
+                    ))}
+                  </div>
+                </Disclosure>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* ── How the whole set is going ──────────────────────────────────────────
+          Three counters and a deliberately blunt paragraph about the essay furthest behind.
+          Both are worth having; neither is what a student needs in the first screen, where the
+          job is "open a draft and write". Nothing here reports on an essay set of zero, so it
+          only appears once there is one. */}
+      {essays.length > 0 && (
+        <Disclosure id="essays-progress" icon={PenLine} color={C.violet} m={isMobile}
+          title="How your essays are going"
+          sub={`${inFlight} on the go · ${finals} finished · ${totalWords.toLocaleString()} words written so far`}>
+          <div style={CC({gap:12})}>
+            <div style={G(3,12,{},true)}>
+              <StatTile icon={PenLine} value={inFlight} label="In progress" color={C.blue}/>
+              <StatTile icon={CheckCircle2} value={finals} label="Finished" color={C.green}/>
+              <StatTile icon={FileText} value={totalWords.toLocaleString()} label="Words written" color={accent}/>
+            </div>
+
+            {brainTake && (
+              <div style={{...glass2({padding:16}),background:`linear-gradient(120deg,${tint(C.violet,0.08)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.25)}`}}>
+                <div style={R({gap:8,marginBottom:brainTake.loading?0:8})}>
+                  <Sparkles size={13} color={C.violetL}/>
+                  <span style={{fontSize:11,fontWeight:700,color:C.violetL,textTransform:'uppercase',letterSpacing:'.06em'}}>Meta Brain's honest read</span>
+                </div>
+                {brainTake.loading && <div style={R({gap:8,color:C.t3,fontSize:12})}><Loader2 size={13} className="spin"/>Reading your essays and portfolio…</div>}
+                {brainTake.error && <div style={{fontSize:12,color:C.t3}}>Couldn't reach Meta Brain right now.</div>}
+                {brainTake.content && !brainTake.loading && <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}} dangerouslySetInnerHTML={{__html:renderMarkdown(brainTake.content)}}/>}
+              </div>
+            )}
+
+            <HelpNote>This is deliberately blunt — it names whichever essay is furthest behind rather than telling you what you want to hear.</HelpNote>
+          </div>
+        </Disclosure>
+      )}
     </div>
   );
 }
