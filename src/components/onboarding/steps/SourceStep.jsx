@@ -1,9 +1,9 @@
 import React from 'react';
-import { StepHeader, ContinueButton, IconOptionRow } from '../primitives';
+import { IconOptionRow, useViewport } from '../primitives';
 import { AppStoreMark, TikTokMark, YouTubeMark, TVMark, XMark, InstagramMark, GoogleMark, FriendsMark } from '../brand';
 
-// Each source now shows its actual brand mark (drawn inline in brand.jsx) on a
-// brand-correct tile, instead of the old generic lucide placeholders.
+// Each source shows its actual brand mark (drawn inline in brand.jsx) on a
+// brand-correct tile, instead of generic lucide placeholders.
 const SOURCES = [
   { value: 'app_store', label: 'App Store', icon: <AppStoreMark />, bg: 'linear-gradient(135deg,#1d6ff2,#19c8fa)' },
   { value: 'tiktok', label: 'TikTok', icon: <TikTokMark />, bg: '#010101' },
@@ -15,16 +15,22 @@ const SOURCES = [
   { value: 'friend', label: 'Friend or family', icon: <FriendsMark />, bg: 'linear-gradient(135deg,#8b5cf6,#6d28d9)' },
 ];
 
-export function SourceStep({ value, onChange, onNext }) {
+/**
+ * "Where did you hear about us?" as a fragment rather than a screen of its own.
+ *
+ * It's an attribution question, not something the student came here to answer,
+ * so it no longer costs a dedicated step in the middle of the journey — it
+ * rides along on the final save screen, laid out as a compact grid.
+ */
+export function SourceGrid({ value, onChange, accent }) {
+  const { isMobile } = useViewport();
   return (
-    <>
-      <StepHeader title="Where did you hear about us?" subtitle="This helps us understand how students find MedSchoolPrep." />
-      <div style={{ flex: 1 }}>
-        {SOURCES.map(s => (
-          <IconOptionRow key={s.value} selected={value === s.value} onClick={() => onChange(s.value)} iconBg={s.bg} icon={s.icon} label={s.label} />
-        ))}
-      </div>
-      <ContinueButton disabled={!value} onClick={onNext}>Continue</ContinueButton>
-    </>
+    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: 9 }}>
+      {SOURCES.map(s => (
+        <IconOptionRow key={s.value} selected={value === s.value} onClick={() => onChange(s.value)} iconBg={s.bg} icon={s.icon} label={s.label} accent={accent} />
+      ))}
+    </div>
   );
 }
+
+export { SOURCES };

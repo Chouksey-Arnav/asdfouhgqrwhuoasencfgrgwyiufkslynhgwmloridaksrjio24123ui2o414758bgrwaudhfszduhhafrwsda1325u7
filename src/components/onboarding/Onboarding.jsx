@@ -2,21 +2,31 @@
 // warm-up → personalization → animated proof moments → plan-generation reveal
 // → save-progress) rebuilt around medicine rather than generic test prep.
 //
-// Structure of the journey, deliberately shaped as an emotional arc:
-//   1. WHY — why medicine, who they want to become, how sure they are, then an
-//      identity moment that names the future ("Future Physician").
-//   2. WHERE THEY ARE — grade/score, GPA, science courses, hands-on health
-//      experience, then an insight screen that normalizes a blank slate or
-//      celebrates a head start.
-//   3. WHERE THEY'RE GOING — goal, then ONE compact academics beat (target
-//      score + test timeline on a single screen), an HONEST timeline-aware
-//      trajectory verdict (a 1590→1600 student hears "your score is basically
-//      done"; a 600→1600-in-3-months ask gets a blunt reality check with the
-//      achievable number instead), a daily time commitment (minutes, not
-//      "points per week"), and a whole-journey projection.
-//   4. WHAT'S IN THE WAY — obstacles mirrored back with empathy, ambitions,
-//      potential.
-//   5. COMMITMENT & PAYOFF — a personal pledge, then real plan generation.
+// Structure of the journey, deliberately shaped as an emotional arc and named
+// in five chapters the student can see (see chapters.js):
+//   1. YOUR WHY — why medicine, who they want to become, how sure they are (one
+//      screen), then an identity moment that names the future.
+//   2. WHERE THEY ARE — grade/score/birthdate on one screen, GPA + sciences on
+//      the next, hands-on experience, then an insight beat that normalizes a
+//      blank slate or celebrates a head start.
+//   3. THEIR RHYTHM — hours, tools and prior apps together, then what the
+//      product actually is.
+//   4. WHERE THEY'RE GOING — goal + target score + test date on ONE screen, an
+//      honest timeline-aware verdict on that combination, a daily time
+//      commitment in minutes, and a whole-journey projection.
+//   5. THEIR PLAN — obstacles and ambitions together, empathy, potential, plan
+//      preferences, a personal pledge, then real plan generation.
+//
+// ── Why the screens are grouped the way they are ─────────────────────────────
+// The flow used to ask the same ~20 things across ~20 screens, one question per
+// screen, and a reviewer's honest reaction was "when is this going to end".
+// Nothing has been dropped — every answer the app consumed before is still
+// collected — but related questions now share a screen and reveal in immediate
+// sequence (see steps/grouped.jsx), which takes the interactive screen count
+// from twenty to ten. Two screens whose only interaction was a Continue button
+// (the standalone thank-you, the second of the two settings toggles) folded
+// into their neighbours. The student's progress through those ten is stated in
+// words on every screen: "3 more to go".
 //
 // Screens with no real product behind them (fake calendar connect, a
 // notifications ask that didn't wire anywhere, fake paywall/testimonials from
@@ -24,19 +34,18 @@
 // data the app actually uses (see completeOnboarding in App.jsx,
 // studentProfile.js, and planGenerator.js).
 import React, { useMemo, useState } from 'react';
-import { ThumbsDown, ThumbsUp, PlusCircle, Repeat } from 'lucide-react';
+import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import OnboardingShell from './OnboardingShell';
 import { SplashStep, WelcomeStep } from './steps/Intro';
-import { SourceStep } from './steps/SourceStep';
-import { SingleChoiceStep, ChecklistStep, ToggleQuestionStep, ProofGraphStep } from './steps/generic';
-import { GradeScoreStep } from './steps/GradeScoreStep';
-import { BirthdateStep, MONTHS as DOB_MONTHS, DAYS as DOB_DAYS, YEARS as DOB_YEARS } from './steps/BirthdateStep';
+import { ChecklistStep, ProofGraphStep, PlanPreferencesStep } from './steps/generic';
+import { GroupedStep } from './steps/grouped';
+import { StartingPointStep } from './steps/StartingPointStep';
+import { MONTHS as DOB_MONTHS, DAYS as DOB_DAYS, YEARS as DOB_YEARS } from './steps/BirthdateStep';
 import AgeBlockedStep from './steps/AgeBlockedStep';
 import { TargetScoreStep } from './steps/TargetScoreStep';
 import { RealisticTargetStep, PaceForecastStep } from './steps/RealisticTargetStep';
 import { SpeedStep } from './steps/SpeedStep';
 import { FeatureShowcaseStep } from './steps/FeatureShowcaseStep';
-import { ThankYouStep } from './steps/ThankYouStep';
 import { IdentityStep, ExperienceInsightStep, ObstacleEmpathyStep, CommitmentStep } from './steps/emotional';
 import { GeneratingStep } from './steps/GeneratingStep';
 import { PlanReadyStep } from './steps/PlanReadyStep';
@@ -44,6 +53,7 @@ import { PlanSummaryStep } from './steps/PlanSummaryStep';
 import { SaveProgressStep } from './steps/SaveProgressStep';
 import { obstacleEmpathy } from './personalize';
 import { C } from './primitives';
+import { CHAPTERS, STEP_CHAPTER } from './chapters';
 import { isUnderMinAge, isAgeBlocked, recordAgeBlocked } from '../../lib/ageGate';
 import {
   STUDY_HOURS_OPTIONS, GOAL_OPTIONS, STUDY_METHOD_OPTIONS, OBSTACLE_OPTIONS, ACCOMPLISH_OPTIONS,
@@ -67,15 +77,14 @@ export {
 function buildSteps(answers) {
   const steps = [
     'splash', 'welcome',
-    'whyMedicine', 'dreamRole', 'certainty', 'identity',
-    'gradeScore', 'birthdate', 'gpa', 'sciences', 'experience', 'expInsight',
-    'studyHours', 'studyMethod', 'triedApps', 'showcase', 'source',
-    'goal', 'targetScore', 'realistic', 'speed', 'paceForecast',
-    'obstacles',
+    'why', 'identity',
+    'startingPoint', 'academics', 'experience', 'expInsight',
+    'rhythm', 'showcase',
+    'target', 'realistic', 'speed', 'paceForecast',
+    'challenges',
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
-  steps.push('accomplish', 'potential', 'thankYou', 'toggleAddBack', 'toggleRollover', 'commitment',
-    'saveProgress');
+  steps.push('potential', 'prefs', 'commitment', 'saveProgress');
   return steps;
 }
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
@@ -83,9 +92,15 @@ const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
 const DEFAULT_ANSWERS = {
   // Warm-up / identity
   whyMedicine: null, dreamRole: null, certainty: null,
-  // Situation
-  gradeIdx: 2, testTrack: 'SAT', currentScore: 1000,
-  monthIdx: 0, dayIdx: 0, yearIdx: 4,
+  // Situation. gradeIdx starts null rather than pre-selecting junior: the
+  // grade question is now a row of tap targets, and a pre-ticked answer on a
+  // visible control is an answer the student never actually gave — which then
+  // rides into the plan, the timeline and the coach prompts as if it had.
+  gradeIdx: null, testTrack: 'SAT', currentScore: 1000,
+  // The birthdate wheels open on an age below the minimum on purpose; see
+  // BirthdateWheels. `dobTouched` is what makes the student answer rather than
+  // scroll past and get gated on a date they never picked.
+  monthIdx: 0, dayIdx: 0, yearIdx: 4, dobTouched: false,
   gpa: null, sciences: [], experience: [],
   studyHours: null, studyMethod: null, triedApps: null, source: null,
   // Direction
@@ -99,11 +114,11 @@ const DEFAULT_ANSWERS = {
 // Progress is mirrored to localStorage on every change and rehydrated on mount
 // (keyed per account so switching users doesn't leak a stranger's answers).
 // `preview` (Settings' dev-only flag) gets its own key suffix so previewing on
-// a signed-in account can't read or clobber that account's real draft. The v2
-// prefix retires drafts from earlier flow shapes, whose step keys no longer
-// line up with this one (v3: testTimeline folded into targetScore, proofPlan
-// replaced by the feature showcase).
-function draftKey(account, preview) { return `onboardingDraft:v3:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
+// a signed-in account can't read or clobber that account's real draft. The
+// version prefix retires drafts from earlier flow shapes, whose step keys no
+// longer line up with this one (v4: questions grouped onto shared screens, so
+// most step keys changed).
+function draftKey(account, preview) { return `onboardingDraft:v4:${preview ? 'preview:' : ''}${account?.email || 'anon'}`; }
 function loadDraft(account, preview) {
   try {
     const raw = localStorage.getItem(draftKey(account, preview));
@@ -119,6 +134,12 @@ function saveDraft(account, preview, stepKey, answers) {
 function clearDraft(account, preview) {
   try { localStorage.removeItem(draftKey(account, preview)); } catch { /* ignore */ }
 }
+
+/** The chapter's accent, resolved live so it follows a theme switch. */
+const accentFor = (stepKey) => {
+  const ch = CHAPTERS.find(c => c.key === STEP_CHAPTER[stepKey]);
+  return C[ch?.accent] || C.blue;
+};
 
 export default function Onboarding({ account, onComplete, preview = false }) {
   const draft = useMemo(() => loadDraft(account, preview), [account, preview]);
@@ -147,10 +168,10 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     day: DOB_DAYS[a.dayIdx],
   });
 
-  // Runs when the student leaves the birthdate step, not while they are still
-  // spinning the wheels — otherwise every pass through a young year on the way
-  // to an older one would trip the gate mid-scroll.
-  function advanceFromBirthdate() {
+  // Runs when the student leaves the screen holding the birthdate wheels, not
+  // while they are still spinning them — otherwise every pass through a young
+  // year on the way to an older one would trip the gate mid-scroll.
+  function advanceFromStartingPoint() {
     if (isUnderMinAge(birthdateFrom(answers))) {
       recordAgeBlocked();
       setBlocked(true);
@@ -164,15 +185,6 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   const update = (patch) => setAnswers(a => ({ ...a, ...patch }));
   const toggleInList = (key, val) => setAnswers(a => ({ ...a, [key]: a[key].includes(val) ? a[key].filter(v => v !== val) : [...a[key], val] }));
 
-  const progress = useMemo(() => {
-    const start = steps.indexOf('whyMedicine');
-    const end = steps.indexOf('saveProgress');
-    const i = steps.indexOf(stepKey);
-    if (i < start) return 0;
-    if (i > end) return 1;
-    return (i - start) / (end - start);
-  }, [steps, stepKey]);
-
   function finish(extra = {}) {
     clearDraft(account, preview);
     onComplete({ ...answers, ...extra });
@@ -180,6 +192,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
 
   const showBack = !NO_CHROME.has(stepKey) && stepIdx > 0;
   const showProgress = !NO_CHROME.has(stepKey);
+  const accent = accentFor(stepKey);
 
   let content = null;
   switch (stepKey) {
@@ -188,54 +201,113 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'welcome':
       content = <WelcomeStep account={account} onNext={next} />; break;
 
-    // ── Act 1: why medicine ──────────────────────────────────────────────
-    case 'whyMedicine':
-      content = <SingleChoiceStep eyebrow="Your why" title="What draws you to medicine?" subtitle="There's no wrong answer — your reason shapes your plan." options={WHY_MEDICINE_OPTIONS} value={answers.whyMedicine} onChange={v => update({ whyMedicine: v })} onNext={next} />; break;
-    case 'dreamRole':
-      content = <SingleChoiceStep eyebrow="Your future" title="Ten years from now — where do you see yourself?" subtitle="Picture the version of you that made it. We'll aim there together." options={DREAM_ROLE_OPTIONS} value={answers.dreamRole} onChange={v => update({ dreamRole: v })} onNext={next} />; break;
-    case 'certainty':
-      content = <SingleChoiceStep eyebrow="Honesty check" title="How sure are you about medicine?" subtitle="Both answers are great — your plan just leans differently." options={CERTAINTY_OPTIONS} value={answers.certainty} onChange={v => update({ certainty: v })} onNext={next} />; break;
+    // ── Chapter 1: why medicine ──────────────────────────────────────────
+    // Three questions about the same thing — the reason, the picture, the
+    // conviction — on one screen instead of three.
+    case 'why':
+      content = (
+        <GroupedStep
+          eyebrow="Your why" emoji="🩺" accent={accent}
+          title="Let's start with the part that isn't on any transcript."
+          subtitle="Three quick questions, right here on this screen. There are no wrong answers — your reasons shape the plan we build."
+          questions={[
+            {
+              key: 'whyMedicine', prompt: 'What draws you to medicine?', type: 'single',
+              options: WHY_MEDICINE_OPTIONS, value: answers.whyMedicine, onChange: v => update({ whyMedicine: v }),
+            },
+            {
+              key: 'dreamRole', prompt: 'Ten years from now — where do you see yourself?',
+              hint: "Picture the version of you that made it. We'll aim there together.", type: 'single',
+              options: DREAM_ROLE_OPTIONS, value: answers.dreamRole, onChange: v => update({ dreamRole: v }),
+            },
+            {
+              key: 'certainty', prompt: 'How sure are you about medicine?',
+              hint: 'Both answers are great — your plan just leans differently.', type: 'single',
+              options: CERTAINTY_OPTIONS, value: answers.certainty, onChange: v => update({ certainty: v }),
+            },
+          ]}
+          onNext={next} ctaLabel="That's me" />
+      ); break;
     case 'identity':
       content = <IdentityStep answers={answers} onNext={next} />; break;
 
-    // ── Act 2: where they are now ────────────────────────────────────────
-    case 'gradeScore':
-      content = <GradeScoreStep value={answers} onChange={patch => update(patch)} onNext={next} />; break;
-    case 'birthdate':
-      content = <BirthdateStep value={answers} onChange={patch => update(patch)} onNext={advanceFromBirthdate} />; break;
-    case 'gpa':
-      content = <SingleChoiceStep eyebrow="Your baseline" title="How are your grades right now?" subtitle="GPA matters for pre-health admissions — we'll factor it into your plan honestly." options={GPA_OPTIONS} value={answers.gpa} onChange={v => update({ gpa: v })} onNext={next} />; break;
-    case 'sciences':
-      content = <ChecklistStep eyebrow="Your foundation" title="Which science courses have you taken?" subtitle="Include what you're taking right now. Select all that apply." options={SCIENCE_OPTIONS} value={answers.sciences} onToggle={v => toggleInList('sciences', v)} onNext={next} />; break;
+    // ── Chapter 2: where they are now ────────────────────────────────────
+    case 'startingPoint':
+      content = <StartingPointStep value={answers} onChange={patch => update(patch)} onNext={advanceFromStartingPoint} accent={accent} />; break;
+    case 'academics':
+      content = (
+        <GroupedStep
+          eyebrow="Your foundation" emoji="📚" accent={accent}
+          title="Now the school side of it."
+          subtitle="GPA and science coursework are the two things pre-health admissions look at first. We'll factor both in honestly — no judgment attached to either."
+          questions={[
+            {
+              key: 'gpa', prompt: 'How are your grades right now?', type: 'single',
+              options: GPA_OPTIONS, value: answers.gpa, onChange: v => update({ gpa: v }),
+            },
+            {
+              key: 'sciences', prompt: 'Which science courses have you taken?',
+              hint: "Include what you're taking right now. Select all that apply.", type: 'multi',
+              options: SCIENCE_OPTIONS, value: answers.sciences, onChange: v => toggleInList('sciences', v),
+            },
+          ]}
+          onNext={next} />
+      ); break;
     case 'experience':
-      content = <ChecklistStep eyebrow="Real-world exposure" title="Any hands-on health experience yet?" subtitle="Be honest — 'nothing yet' is where most future doctors start." options={EXPERIENCE_OPTIONS} value={answers.experience} onToggle={v => toggleInList('experience', v)} onNext={next} />; break;
+      content = <ChecklistStep eyebrow="Real-world exposure" emoji="🏥" accent={accent} title="Any hands-on health experience yet?" subtitle="Be honest — 'nothing yet' is where most future doctors start, and it's the easiest thing on this list to change." options={EXPERIENCE_OPTIONS} value={answers.experience} onToggle={v => toggleInList('experience', v)} onNext={next} />; break;
     case 'expInsight':
       content = <ExperienceInsightStep answers={answers} onNext={next} />; break;
-    case 'studyHours':
-      content = <SingleChoiceStep eyebrow="Your rhythm" title="How much time do you already put into your future each week?" subtitle="Studying, clubs, volunteering — it all counts. We'll build from your real life, not an ideal one." options={STUDY_HOURS_OPTIONS} value={answers.studyHours} onChange={v => update({ studyHours: v })} onNext={next} />; break;
-    case 'studyMethod':
-      content = <SingleChoiceStep eyebrow="Your toolkit" title="Are you using anything to prepare right now?" subtitle="Whatever you're using, your plan will fit around it — not fight it." options={STUDY_METHOD_OPTIONS} value={answers.studyMethod} onChange={v => update({ studyMethod: v })} onNext={next} />; break;
-    case 'triedApps':
-      content = <SingleChoiceStep eyebrow="Been here before?" title="Have you tried other prep apps?" subtitle="Most of them stop at test questions. Medicine asks for more — and so do we." options={[{ value: 'no', label: 'No', icon: <ThumbsDown size={17} /> }, { value: 'yes', label: 'Yes', icon: <ThumbsUp size={17} /> }]} value={answers.triedApps} onChange={v => update({ triedApps: v })} onNext={next} />; break;
+
+    // ── Chapter 3: how they actually work ────────────────────────────────
+    case 'rhythm':
+      content = (
+        <GroupedStep
+          eyebrow="Your rhythm" emoji="⏱️" accent={accent}
+          title="How does your week actually look?"
+          subtitle="We build from your real life, not an ideal one. Three fast ones and this chapter's done."
+          questions={[
+            {
+              key: 'studyHours', prompt: 'How much time do you already put into your future each week?',
+              hint: "Studying, clubs, volunteering — it all counts.", type: 'single',
+              options: STUDY_HOURS_OPTIONS, value: answers.studyHours, onChange: v => update({ studyHours: v }),
+            },
+            {
+              key: 'studyMethod', prompt: 'Are you using anything to prepare right now?',
+              hint: "Whatever you're using, your plan will fit around it — not fight it.", type: 'single',
+              options: STUDY_METHOD_OPTIONS, value: answers.studyMethod, onChange: v => update({ studyMethod: v }),
+            },
+            {
+              key: 'triedApps', prompt: 'Have you tried other prep apps?',
+              hint: 'Most of them stop at test questions. Medicine asks for more — and so do we.', type: 'single',
+              options: [
+                { value: 'no', label: 'No, this is my first', emoji: '🆕', icon: <ThumbsDown size={17} /> },
+                { value: 'yes', label: "Yes, I've tried others", emoji: '🔁', icon: <ThumbsUp size={17} /> },
+              ],
+              columns: 2,
+              value: answers.triedApps, onChange: v => update({ triedApps: v }),
+            },
+          ]}
+          onNext={next} />
+      ); break;
     case 'showcase':
       content = <FeatureShowcaseStep onNext={next} />; break;
-    case 'source':
-      content = <SourceStep value={answers.source} onChange={v => update({ source: v })} onNext={next} />; break;
 
-    // ── Act 3: where they're going ───────────────────────────────────────
-    case 'goal':
-      // Seed a sensible target relative to where they actually are — never a
-      // flat 1200 that can sit *below* a strong student's current score.
-      content = <SingleChoiceStep eyebrow="Your mission" title="What matters most to you right now?" subtitle="Your plan leads with this — everything else supports it." options={GOAL_OPTIONS} value={answers.goal}
-        onChange={v => update({
-          goal: v,
-          targetScore: answers.testTrack === 'ACT'
-            ? Math.min(36, answers.currentScore + 4)
-            : Math.min(1600, Math.round((answers.currentScore + 150) / 10) * 10),
-        })} onNext={next} />; break;
-    case 'targetScore':
-      content = <TargetScoreStep testTrack={answers.testTrack} currentScore={answers.currentScore} value={answers.targetScore} timeline={answers.testTimeline}
-        onChange={v => update({ targetScore: v })} onTimeline={v => update({ testTimeline: v })} onNext={next} />; break;
+    // ── Chapter 4: where they're going ───────────────────────────────────
+    case 'target':
+      content = (
+        <TargetScoreStep
+          testTrack={answers.testTrack} currentScore={answers.currentScore} value={answers.targetScore}
+          timeline={answers.testTimeline} goal={answers.goal} accent={accent}
+          // Seed a sensible target relative to where they actually are — never
+          // a flat 1200 that can sit *below* a strong student's current score.
+          onGoal={v => update({
+            goal: v,
+            targetScore: answers.testTrack === 'ACT'
+              ? Math.min(36, answers.currentScore + 4)
+              : Math.min(1600, Math.round((answers.currentScore + 150) / 10) * 10),
+          })}
+          onChange={v => update({ targetScore: v })} onTimeline={v => update({ testTimeline: v })} onNext={next} />
+      ); break;
     case 'realistic':
       content = <RealisticTargetStep answers={answers} onNext={next} />; break;
     case 'speed':
@@ -243,28 +315,38 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'paceForecast':
       content = <PaceForecastStep answers={answers} onNext={next} />; break;
 
-    // ── Act 4: what's in the way ─────────────────────────────────────────
-    case 'obstacles':
-      content = <ChecklistStep eyebrow="The real talk" title="What's standing between you and medicine?" subtitle="Naming it is how we plan around it. Select all that apply." options={OBSTACLE_OPTIONS} value={answers.obstacles} onToggle={v => toggleInList('obstacles', v)} onNext={next} />; break;
+    // ── Chapter 5: what's in the way, and the plan ───────────────────────
+    case 'challenges':
+      content = (
+        <GroupedStep
+          eyebrow="The real talk" emoji="🧱" accent={accent}
+          title="What's in the way — and what you want out of this."
+          subtitle="Naming an obstacle is how we plan around it. Then tell us what a win looks like, and your plan will carry every one you pick."
+          questions={[
+            {
+              key: 'obstacles', prompt: "What's standing between you and medicine?",
+              hint: 'Select all that apply.', type: 'multi',
+              options: OBSTACLE_OPTIONS, value: answers.obstacles, onChange: v => toggleInList('obstacles', v),
+            },
+            {
+              key: 'accomplish', prompt: 'What do you want to walk away with?',
+              hint: 'Select all that apply.', type: 'multi',
+              options: ACCOMPLISH_OPTIONS, value: answers.accomplish, onChange: v => toggleInList('accomplish', v),
+            },
+          ]}
+          onNext={next} />
+      ); break;
     case 'obstacleEmpathy':
       content = <ObstacleEmpathyStep answers={answers} onNext={next} />; break;
-    case 'accomplish':
-      content = <ChecklistStep eyebrow="Your wins" title="What do you want to walk away with?" subtitle="Select all that apply — your plan will carry each one." options={ACCOMPLISH_OPTIONS} value={answers.accomplish} onToggle={v => toggleInList('accomplish', v)} onNext={next} />; break;
     case 'potential':
-      content = <ProofGraphStep eyebrow="The road ahead" title="Your road to the white coat starts exactly here."
+      content = <ProofGraphStep eyebrow="The road ahead" emoji="🥼" accent={accent} title="Your road to the white coat starts exactly here."
         subtitle="Every physician's path runs through the same early ground you're standing on — foundation, experiences, application. Yours now has a map."
         lines={[{ points: [0.08, 0.15, 0.28, 0.42, 0.6, 0.8, 0.98], color: C.green, width: 3, fill: true, endDot: true }]}
         xLabels={['Today', 'Application day']}
         milestones={[{ f: 0.32, label: 'Foundation' }, { f: 0.66, label: 'Experiences' }]}
         statLine="Students who follow a structured pre-med plan through high school apply with stronger scores, real clinical exposure, and a story that stands out — the three things admissions actually weighs." onNext={next} />; break;
-
-    // ── Act 5: commitment & payoff ───────────────────────────────────────
-    case 'thankYou':
-      content = <ThankYouStep onNext={next} />; break;
-    case 'toggleAddBack':
-      content = <ToggleQuestionStep icon={<PlusCircle size={26} color={C.blueL} />} title="Add extra study sessions back to your daily goal?" subtitle="If you study more than planned, we'll count it toward tomorrow too." note="You can change this anytime in Settings." value={answers.addBack} onChange={v => update({ addBack: v })} onNext={next} />; break;
-    case 'toggleRollover':
-      content = <ToggleQuestionStep icon={<Repeat size={26} color={C.blueL} />} title="Rollover unused study time to the next day?" subtitle="Missed a session? We'll fold it into tomorrow's plan instead of losing it." value={answers.rollover} onChange={v => update({ rollover: v })} onNext={next} />; break;
+    case 'prefs':
+      content = <PlanPreferencesStep prefs={answers} onChange={patch => update(patch)} onNext={next} accent={accent} />; break;
     case 'commitment':
       content = <CommitmentStep answers={answers} onNext={next} />; break;
     case 'generating':
@@ -274,7 +356,10 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'planSummary':
       content = <PlanSummaryStep profile={answers} plan={answers.generatedPlan} onNext={next} />; break;
     case 'saveProgress':
-      content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={() => finish()} />; break;
+      content = (
+        <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })}
+          source={answers.source} onSource={v => update({ source: v })} accent={accent} onNext={() => finish()} />
+      ); break;
     default:
       content = null;
   }
@@ -286,14 +371,14 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   // prevent.
   if (blocked) {
     return (
-      <OnboardingShell stepKey="ageBlocked" progress={0} showBack={false} showProgress={false}>
+      <OnboardingShell stepKey="ageBlocked" steps={[]} showBack={false} showProgress={false}>
         <AgeBlockedStep account={account} />
       </OnboardingShell>
     );
   }
 
   return (
-    <OnboardingShell stepKey={stepKey} progress={progress} onBack={back} showBack={showBack} showProgress={showProgress}>
+    <OnboardingShell stepKey={stepKey} steps={steps} onBack={back} showBack={showBack} showProgress={showProgress}>
       {content}
     </OnboardingShell>
   );

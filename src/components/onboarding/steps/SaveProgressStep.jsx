@@ -1,26 +1,55 @@
 import React from 'react';
-import { ShieldCheck } from 'lucide-react';
-import { StepHeader, ContinueButton, C } from '../primitives';
-import { inp, lbl } from '../../../lib/theme';
+import { GroupedStep } from './grouped';
+import { SourceGrid } from './SourceStep';
+import { flowAccentColor, C } from '../primitives';
+import { inp } from '../../../lib/theme';
 
-export function SaveProgressStep({ account, value, onChange, onNext }) {
+/**
+ * The last screen: your name, and where you found us.
+ *
+ * It absorbed two former steps — the standalone "where did you hear about us?"
+ * screen and the standalone "thank you for trusting us" screen, whose only
+ * interaction was a Continue button. The thank-you is now the subtitle here,
+ * which is where it actually belongs: said once, at the door, on the way in.
+ */
+export function SaveProgressStep({ account, value, onChange, source, onSource, onNext, accent = flowAccentColor() }) {
   return (
-    <>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8, marginBottom: 24 }}>
-        <div style={{ width: 64, height: 64, borderRadius: 20, background: C.greenDim, border: `1px solid rgba(16,185,129,0.25)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ShieldCheck size={30} color={C.greenL} />
-        </div>
-      </div>
-      <StepHeader title="Save your progress" subtitle="One last thing — what should we call you?" />
-      <div style={{ flex: 1 }}>
-        <span style={lbl()}>Your first name</span>
-        <input autoFocus value={value} onChange={e => onChange(e.target.value)} placeholder="e.g., Alex" maxLength={40}
-          style={inp({ fontSize: 15, padding: '13px 16px' })} onKeyDown={e => { if (e.key === 'Enter' && value.trim()) onNext(); }} />
-        <p style={{ fontSize: 12, color: C.t3, marginTop: 14, lineHeight: 1.6 }}>
-          Everything you just told us is saved to <strong style={{ color: C.t2 }}>{account?.email}</strong> — synced across every device.
-        </p>
-      </div>
-      <ContinueButton disabled={!value.trim()} onClick={onNext}>Save & Continue</ContinueButton>
-    </>
+    <GroupedStep
+      eyebrow="Last one"
+      emoji="🎉"
+      accent={accent}
+      title="Your plan is ready to be built."
+      subtitle="Thank you for trusting us with this. Getting into medicine can feel overwhelming — everything you just told us goes into making your path clear, structured, and honestly achievable."
+      questions={[
+        {
+          key: 'name',
+          prompt: 'What should we call you?',
+          value: (value || '').trim(),
+          onChange: () => {},
+          render: () => (
+            <div>
+              <input autoFocus value={value} onChange={e => onChange(e.target.value)} placeholder="e.g., Alex" maxLength={40}
+                style={inp({ fontSize: 16, padding: '15px 18px', borderRadius: 14 })}
+                onKeyDown={e => { if (e.key === 'Enter' && value.trim() && source) onNext(); }} />
+              <p style={{ fontSize: 12, color: C.t3, marginTop: 12, lineHeight: 1.6 }}>
+                Everything you just told us is saved to <strong style={{ color: C.t2 }}>{account?.email}</strong> — synced across every device, and yours to change any time.
+              </p>
+            </div>
+          ),
+        },
+        {
+          key: 'source',
+          prompt: 'Where did you hear about us?',
+          hint: 'Last question, promise — it just helps us understand how students find MedSchoolPrep.',
+          value: source,
+          onChange: onSource,
+          render: ({ accent: a }) => <SourceGrid value={source} onChange={onSource} accent={a} />,
+        },
+      ]}
+      onNext={onNext}
+      ctaLabel="Build my plan"
+      footerNote={null}
+      showCounter={false}
+    />
   );
 }

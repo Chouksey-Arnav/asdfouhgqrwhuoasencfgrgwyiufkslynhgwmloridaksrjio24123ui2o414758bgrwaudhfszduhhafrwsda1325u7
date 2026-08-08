@@ -52,7 +52,7 @@ export function ExperienceInsightStep({ answers, onNext }) {
     <>
       <StepHeader eyebrow={ins.variant === 'fresh' ? 'Good news' : 'Head start unlocked'} title={ins.title} subtitle={ins.sub} />
       <div style={{ flex: 1 }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: 16, padding: '22px 20px' }}>
+        <div style={{ background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 16, padding: '22px 20px' }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 16 }}>
             {ins.variant === 'fresh' ? 'How future med students actually start' : 'Hands-on experience, students your age'}
           </div>
@@ -131,7 +131,7 @@ export function CommitmentStep({ answers, onNext }) {
         {pledges.map((p, i) => (
           <motion.div key={i} initial={{ opacity: 0, x: -18 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.35 + i * 0.35, type: 'spring', stiffness: 260, damping: 22 }}
-            style={{ display: 'flex', gap: 13, alignItems: 'flex-start', padding: '13px 16px', borderRadius: 13, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, marginBottom: 10 }}>
+            style={{ display: 'flex', gap: 13, alignItems: 'flex-start', padding: '13px 16px', borderRadius: 13, background: C.surf, border: `1px solid ${C.b1}`, marginBottom: 10 }}>
             <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.55 + i * 0.35, type: 'spring', stiffness: 400 }}
               style={{ flexShrink: 0, marginTop: 1 }}>
               <p.icon size={18} color={p.color} />

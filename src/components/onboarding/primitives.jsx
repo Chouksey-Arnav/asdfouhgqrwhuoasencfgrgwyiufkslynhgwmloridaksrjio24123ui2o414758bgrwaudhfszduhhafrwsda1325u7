@@ -5,8 +5,44 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, ChevronLeft } from 'lucide-react';
-import { C, glass, btn as themeBtn } from '../../lib/theme';
+import { C, glass, tint, shade, accentGrad, btn as themeBtn } from '../../lib/theme';
 import { play } from '../../lib/sounds';
+
+/**
+ * One live measurement of the window, shared by the shell and the steps.
+ *
+ * Every style in this app is an inline object, so there is no stylesheet to put
+ * a media query in — the breakpoints have to come from JS. `isWide` is the line
+ * where the two-pane layout turns on; below it the flow is a single column that
+ * runs edge to edge instead of a 460px letterbox.
+ */
+// ── The chapter accent, as ambient state ─────────────────────────────────────
+// Every screen in a chapter is tinted with that chapter's color: the header
+// badge, the selected answers, the Continue button. Threading an `accent` prop
+// through a dozen step components and every primitive they use would be a lot
+// of plumbing for one value that is constant for the whole screen — so the
+// shell sets it once per render and the primitives read it, exactly the way the
+// app already treats the palette itself (see the `C` note in src/lib/theme.js).
+// It is a render-time default, not state: any component can still pass an
+// explicit `accent` and win.
+let flowAccent = null;
+export const setFlowAccent = (color) => { flowAccent = color || null; };
+export const flowAccentColor = () => flowAccent || C.blue;
+
+export function useViewport() {
+  const read = () => (typeof window === 'undefined' ? 1024 : window.innerWidth);
+  const [w, setW] = useState(read);
+  useEffect(() => {
+    let frame = 0;
+    const onResize = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setW(window.innerWidth));
+    };
+    window.addEventListener('resize', onResize);
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', onResize); };
+  }, []);
+  return { width: w, isMobile: w <= 640, isTablet: w > 640 && w < 1040, isWide: w >= 1040 };
+}
 
 export function useIsMobile() {
   const [m, setM] = useState(() => typeof window !== 'undefined' && window.innerWidth <= 480);
@@ -20,36 +56,67 @@ export function useIsMobile() {
   return m;
 }
 
-export function StepHeader({ eyebrow, title, subtitle }) {
+/**
+ * A question's headline. `emoji` is not decoration — the target user is
+ * fifteen, and a screen of plain 14px prose is the thing they close. Every
+ * question now leads with a mark that says at a glance what it's about.
+ */
+export function StepHeader({ eyebrow, title, subtitle, emoji, accent = flowAccentColor(), compact = false }) {
+  const { isMobile } = useViewport();
   return (
-    <div style={{ marginBottom: 28 }}>
-      {eyebrow && <div style={{ fontSize: 11, fontWeight: 700, color: C.blueL, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 10 }}>{eyebrow}</div>}
-      <h1 style={{ fontSize: 26, fontWeight: 800, color: C.t1, margin: '0 0 10px', letterSpacing: '-.03em', fontFamily: C.FD, lineHeight: 1.25 }}>{title}</h1>
-      {subtitle && <p style={{ fontSize: 14, color: C.t2, lineHeight: 1.6, margin: 0 }}>{subtitle}</p>}
+    <div style={{ marginBottom: compact ? 18 : isMobile ? 22 : 28 }}>
+      {emoji && (
+        <motion.div initial={{ scale: 0.5, opacity: 0, rotate: -10 }} animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+          style={{
+            width: 52, height: 52, borderRadius: 16, marginBottom: 14, fontSize: 26, lineHeight: 1,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.24)}`,
+          }}>{emoji}</motion.div>
+      )}
+      {eyebrow && <div style={{ fontSize: 11, fontWeight: 800, color: accent, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 10 }}>{eyebrow}</div>}
+      <h1 style={{ fontSize: isMobile ? 25 : 30, fontWeight: 800, color: C.t1, margin: '0 0 10px', letterSpacing: '-.03em', fontFamily: C.FD, lineHeight: 1.2 }}>{title}</h1>
+      {subtitle && <p style={{ fontSize: isMobile ? 14 : 15, color: C.t2, lineHeight: 1.6, margin: 0, maxWidth: 560 }}>{subtitle}</p>}
     </div>
   );
 }
 
-export function ContinueButton({ children = 'Continue', onClick, disabled, variant = 'primary', icon: Icon }) {
+/**
+ * The primary CTA. It sticks to the bottom of the scroll area rather than
+ * sitting at the end of the content: on a grouped screen the answers can run
+ * past the fold, and a "Continue" you have to go looking for is a drop-off.
+ */
+export function ContinueButton({ children = 'Continue', onClick, disabled, variant = 'primary', icon: Icon, hint, accent = flowAccentColor() }) {
+  const { isMobile } = useViewport();
   const styles = {
-    primary: { background: C.blueGrad, color: '#fff', border: 'none', shadow: '0 10px 30px rgba(45,127,255,0.35)' },
+    // accentGrad guarantees the fill is dark enough to carry C.onAccent, which
+    // a raw amber or rose chapter accent is not.
+    primary: { background: accentGrad(accent), color: C.onAccent, border: 'none', shadow: `0 10px 30px ${tint(accent, 0.35)}` },
     ghost: { background: 'transparent', color: C.t2, border: `1px solid ${C.b2}`, shadow: 'none' },
     dark: { background: C.s2, color: C.t1, border: `1px solid ${C.b1}`, shadow: 'none' },
   }[variant];
   return (
-    <motion.button
-      whileHover={!disabled ? { scale: 1.012 } : {}}
-      whileTap={!disabled ? { scale: 0.97 } : {}}
-      disabled={disabled}
-      onClick={() => { if (disabled) return; play('click'); onClick?.(); }}
-      style={{
-        width: '100%', padding: '16px 20px', borderRadius: 14, cursor: disabled ? 'not-allowed' : 'pointer',
-        background: disabled ? C.s3 : styles.background, color: disabled ? C.t3 : styles.color, border: styles.border,
-        fontWeight: 700, fontSize: 15, fontFamily: C.FB, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        boxShadow: disabled ? 'none' : styles.shadow, transition: 'box-shadow .2s,background .2s', letterSpacing: '.01em',
-      }}>
-      {children}{Icon && <Icon size={16} />}
-    </motion.button>
+    <div style={{
+      position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 16,
+      paddingBottom: isMobile ? 16 : 24,
+      background: `linear-gradient(to top, ${C.bg} 0%, ${C.bg} 68%, transparent 100%)`,
+    }}>
+      <motion.button
+        data-testid="onboarding-cta"
+        whileHover={!disabled ? { scale: 1.012 } : {}}
+        whileTap={!disabled ? { scale: 0.97 } : {}}
+        disabled={disabled}
+        onClick={() => { if (disabled) return; play('click'); onClick?.(); }}
+        style={{
+          width: '100%', padding: '17px 20px', borderRadius: 15, cursor: disabled ? 'not-allowed' : 'pointer',
+          background: disabled ? C.s3 : styles.background, color: disabled ? C.t3 : styles.color, border: styles.border,
+          fontWeight: 700, fontSize: 15.5, fontFamily: C.FB, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          boxShadow: disabled ? 'none' : styles.shadow, transition: 'box-shadow .2s,background .2s', letterSpacing: '.01em',
+        }}>
+        {children}{Icon && <Icon size={16} />}
+      </motion.button>
+      {hint && <p style={{ textAlign: 'center', fontSize: 11.5, color: C.t4, margin: '10px 0 0' }}>{hint}</p>}
+    </div>
   );
 }
 
@@ -61,63 +128,91 @@ export function TextLink({ children, onClick }) {
   );
 }
 
-export function OptionRow({ selected, onClick, icon, label, sublabel, dots }) {
+/**
+ * A single-select answer.
+ *
+ * The emoji tile on the left is the cheapest, most reliable way to give a
+ * question visual interest: it renders from the system font, needs no network
+ * (this is an offline-capable PWA), and reads instantly at any size. Options
+ * without an emoji fall back to the old icon slot and look exactly as before.
+ */
+export function OptionRow({ selected, onClick, icon, emoji, label, sublabel, dots, accent = flowAccentColor() }) {
+  const onAcc = C.onAccent || '#fff';
   return (
-    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.97 }} whileHover={selected ? {} : { x: 3 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+      onClick={() => { play('select'); onClick(); }}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 14, padding: '16px 18px',
-        borderRadius: 14, cursor: 'pointer', marginBottom: 10,
-        background: selected ? C.blueGrad : 'rgba(255,255,255,0.03)',
+        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '14px 16px',
+        borderRadius: 15, cursor: 'pointer',
+        background: selected ? accentGrad(accent) : C.surf,
         border: `1px solid ${selected ? 'transparent' : C.b1}`,
-        boxShadow: selected ? '0 8px 24px rgba(45,127,255,0.30)' : 'none',
-        transition: 'background .18s,box-shadow .18s',
+        boxShadow: selected ? `0 10px 26px ${tint(accent, 0.32)}` : C.shadowSm,
+        transition: 'background .18s,box-shadow .18s,border-color .18s',
       }}>
+      {emoji && (
+        <span style={{
+          width: 42, height: 42, borderRadius: 13, flexShrink: 0, fontSize: 21, lineHeight: 1,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: selected ? 'rgba(255,255,255,0.18)' : tint(accent, 0.12),
+          border: `1px solid ${selected ? 'rgba(255,255,255,0.22)' : tint(accent, 0.16)}`,
+        }}>{emoji}</span>
+      )}
       {dots != null && (
         <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-          {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i < dots ? (selected ? '#fff' : C.blueL) : (selected ? 'rgba(255,255,255,0.35)' : C.t4) }} />)}
+          {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i < dots ? (selected ? onAcc : accent) : (selected ? 'rgba(255,255,255,0.35)' : C.t4) }} />)}
         </div>
       )}
-      {icon && <span style={{ display: 'flex', flexShrink: 0, color: selected ? '#fff' : C.t2 }}>{icon}</span>}
-      <span style={{ flex: 1 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: selected ? '#fff' : C.t1, fontFamily: C.FB }}>{label}</div>
-        {sublabel && <div style={{ fontSize: 12, color: selected ? 'rgba(255,255,255,0.75)' : C.t3, marginTop: 2 }}>{sublabel}</div>}
+      {icon && !emoji && <span style={{ display: 'flex', flexShrink: 0, color: selected ? onAcc : C.t2 }}>{icon}</span>}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14.5, fontWeight: 700, color: selected ? onAcc : C.t1, fontFamily: C.FB, lineHeight: 1.3 }}>{label}</div>
+        {sublabel && <div style={{ fontSize: 12, color: selected ? 'rgba(255,255,255,0.82)' : C.t3, marginTop: 3, lineHeight: 1.4 }}>{sublabel}</div>}
+      </span>
+      <span style={{
+        width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: `1.5px solid ${selected ? 'rgba(255,255,255,0.85)' : C.b3}`, background: selected ? 'rgba(255,255,255,0.9)' : 'transparent',
+      }}>
+        {selected && <Check size={12} color={shade(accent, 0.3)} strokeWidth={3.5} />}
       </span>
     </motion.button>
   );
 }
 
-export function IconOptionRow({ selected, onClick, iconBg, icon, label }) {
+export function IconOptionRow({ selected, onClick, iconBg, icon, label, accent = flowAccentColor() }) {
   return (
-    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.96 }} whileHover={selected ? {} : { y: -2 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} onClick={() => { play('select'); onClick(); }}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '13px 16px',
-        borderRadius: 13, cursor: 'pointer', marginBottom: 8,
-        background: selected ? C.blueDim : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${selected ? C.blue : C.b1}`,
+        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+        borderRadius: 13, cursor: 'pointer',
+        background: selected ? tint(accent, 0.12) : C.surf,
+        border: `1px solid ${selected ? accent : C.b1}`,
       }}>
       <span style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</span>
-      <span style={{ fontSize: 14, fontWeight: 600, color: C.t1, flex: 1 }}>{label}</span>
-      {selected && <Check size={16} color={C.blueL} />}
+      <span style={{ fontSize: 13.5, fontWeight: 600, color: C.t1, flex: 1, minWidth: 0 }}>{label}</span>
+      {selected && <Check size={16} color={accent} />}
     </motion.button>
   );
 }
 
-export function CheckRow({ checked, onClick, label, sublabel }) {
+/** A multi-select answer. Same emoji treatment as OptionRow, with a checkbox. */
+export function CheckRow({ checked, onClick, label, sublabel, emoji, accent = flowAccentColor() }) {
   return (
-    <motion.button whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.97 }} whileHover={checked ? {} : { x: 3 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} onClick={() => { play('select'); onClick(); }}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '15px 16px',
-        borderRadius: 13, cursor: 'pointer', marginBottom: 9,
-        background: checked ? C.blueDim : 'rgba(255,255,255,0.03)',
-        border: `1px solid ${checked ? C.blue : C.b1}`,
+        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
+        borderRadius: 15, cursor: 'pointer',
+        background: checked ? tint(accent, 0.13) : C.surf,
+        border: `1px solid ${checked ? accent : C.b1}`,
+        boxShadow: checked ? `0 6px 18px ${tint(accent, 0.18)}` : C.shadowSm,
+        transition: 'background .18s,border-color .18s,box-shadow .18s',
       }}>
       <span style={{
-        width: 21, height: 21, borderRadius: 6, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: checked ? C.blueGrad : 'transparent', border: `1.5px solid ${checked ? 'transparent' : C.b3}`,
-      }}>{checked && <Check size={13} color="#fff" strokeWidth={3} />}</span>
-      <span style={{ flex: 1 }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: C.t1 }}>{label}</div>
-        {sublabel && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>{sublabel}</div>}
+        width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: checked ? accentGrad(accent) : 'transparent', border: `1.5px solid ${checked ? 'transparent' : C.b3}`,
+      }}>{checked && <Check size={13} color={C.onAccent || '#fff'} strokeWidth={3} />}</span>
+      {emoji && <span style={{ fontSize: 19, lineHeight: 1, flexShrink: 0 }}>{emoji}</span>}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.3 }}>{label}</div>
+        {sublabel && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.4 }}>{sublabel}</div>}
       </span>
     </motion.button>
   );
@@ -376,4 +471,4 @@ export function Card({ children, style }) {
   return <div style={glass({ padding: 20, ...style })}>{children}</div>;
 }
 
-export { C, glass, ChevronLeft };
+export { C, glass, tint, shade, accentGrad, ChevronLeft };

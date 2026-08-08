@@ -37,7 +37,7 @@ export function RealisticTargetStep({ answers, onNext }) {
     <>
       <StepHeader eyebrow={sc.band === 'reset' ? 'The honest read' : 'Your trajectory'} title={sc.headline} subtitle={sc.sub} />
       <div style={{ flex: 1 }}>
-        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: 16, padding: '22px 18px 14px' }}>
+        <div style={{ background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 16, padding: '22px 18px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 11, color: C.t3 }}>Today's {testTrack}</div>
@@ -82,7 +82,7 @@ export function PaceForecastStep({ answers, onNext }) {
       <StepHeader eyebrow="Your road into medicine" title={f.headline} subtitle={f.sub} />
       <div style={{ flex: 1 }}>
         {!scoreDone && (
-          <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: 16, padding: '18px 18px 12px', marginBottom: 14 }}>
+          <div style={{ background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 16, padding: '18px 18px 12px', marginBottom: 14 }}>
             <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
               {[{ label: 'With your MedSchoolPrep plan', color: C.blue }, { label: 'Without a plan', color: C.t4 }].map(l => (
                 <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -107,7 +107,7 @@ export function PaceForecastStep({ answers, onNext }) {
         {f.threads.map((t, i) => (
           <motion.div key={t.label} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 + i * 0.22, type: 'spring', stiffness: 280, damping: 24 }}
-            style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '13px 15px', borderRadius: 13, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, marginBottom: 9 }}>
+            style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '13px 15px', borderRadius: 13, background: C.surf, border: `1px solid ${C.b1}`, marginBottom: 9 }}>
             {i === 0 && !scoreDone ? <TrendingUp size={17} color={C.blueL} style={{ flexShrink: 0, marginTop: 1 }} /> : i === 0 ? <Stethoscope size={17} color={C.roseL} style={{ flexShrink: 0, marginTop: 1 }} /> : <CheckCircle2 size={17} color={i === 1 ? C.tealL : C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />}
             <span>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{t.label}</div>

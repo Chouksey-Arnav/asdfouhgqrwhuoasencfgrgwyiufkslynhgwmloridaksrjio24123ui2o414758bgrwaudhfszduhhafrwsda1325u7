@@ -84,7 +84,7 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
       <div
         style={{
           maxWidth: 400, width: '100%', padding: '14px 16px', borderRadius: 12,
-          background: failed ? 'rgba(244,63,94,0.10)' : 'rgba(255,255,255,0.04)',
+          background: failed ? C.roseDim : C.surf,
           border: `1px solid ${failed ? 'rgba(244,63,94,0.3)' : C.b1}`,
           fontSize: 13, lineHeight: 1.65, color: C.t2,
           display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left',
@@ -118,7 +118,7 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
         disabled={busy}
         style={{
           marginTop: 4, padding: '11px 24px', borderRadius: 11, border: `1px solid ${C.b2}`,
-          background: 'rgba(255,255,255,0.05)', color: C.t1, fontSize: 14, fontWeight: 600,
+          background: C.surfHi, color: C.t1, fontSize: 14, fontWeight: 600,
           fontFamily: 'inherit', cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
         }}
       >
