@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { C, tint, onTint, accentFill } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
+import { LockedPill } from '../NextUnlockCard';
 
 // Pill/segmented sub-navigation bar used inside the Prep and Portfolio shells
 // so several absorbed features can live under one top-level tab and switch
@@ -17,7 +18,14 @@ import { isPlainLeftClick } from '../../lib/useAppRouter';
 // click still switches views in place — the href exists so the row behaves like
 // navigation actually is: ⌘-click opens a sub-tab in a new tab, the status bar shows
 // where a pill goes, and "Copy link address" produces a URL that works.
-export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix, hrefFor }) {
+// `locked` (optional) is the next not-yet-unlocked sub-view for this pillar, from
+// unlockState().locked(tab) — see src/lib/featureUnlock.js. It renders as a dimmed,
+// inert ghost pill at the end of the row carrying the sentence that opens it. That
+// trailing pill is doing real work: without it the row is simply shorter than it
+// used to be and the student has no way to know more is coming or how to get it,
+// which is how progressive disclosure turns into "features that mysteriously don't
+// exist". With it, the sub-nav reads as a sequence with a visible next step.
+export default function SubNav({ items, active, onChange, accent = C.blue, m = false, tourPrefix, hrefFor, locked = null }) {
   const scrollRef = useRef(null);
   const btnRefs = useRef({});
   const [canLeft, setCanLeft] = useState(false);
@@ -143,6 +151,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
             </Pill>
           );
         })}
+        <LockedPill item={locked} m={m} />
       </div>
 
       {/* Edge fades + chevrons — only rendered once there's actually overflow to scroll to,

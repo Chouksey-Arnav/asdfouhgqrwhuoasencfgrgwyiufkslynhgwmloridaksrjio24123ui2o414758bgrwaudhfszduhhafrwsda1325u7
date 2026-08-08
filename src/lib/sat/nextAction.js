@@ -7,7 +7,7 @@
 // information. This module makes that choice, in a fixed priority order derived
 // from what actually moves scores:
 //
-//   1. Measure before prescribing            -> diagnostic
+//   1. Measure before prescribing            -> baseline, then diagnostic
 //   2. Finish what you started               -> resume
 //   3. Learn from misses before making more  -> review log
 //   4. Re-measure periodically               -> full test
@@ -29,11 +29,12 @@ const daysSince = (ts) => (ts ? (Date.now() - ts) / 86400000 : Infinity);
  * @param {Array}  ctx.reviewLog    satReviewLog rows
  * @param {object} ctx.masteryMap   from computeAllMastery()
  * @param {number} ctx.responseCount
+ * @param {boolean} ctx.hasBaseline  a completed adaptive baseline exists
  * @param {number|null} ctx.daysToExam
  * @returns {{id, title, body, ctaLabel, view, params?, tone}}
  */
 export function nextAction({
-  attempts = [], reviewLog = [], masteryMap = {}, responseCount = 0, daysToExam = null,
+  attempts = [], reviewLog = [], masteryMap = {}, responseCount = 0, hasBaseline = false, daysToExam = null,
 } = {}) {
   const openReviews = reviewLog.filter(r => !r.resolved);
   const untriaged = openReviews.filter(r => !r.errorType);
@@ -56,7 +57,30 @@ export function nextAction({
     };
   }
 
-  // ── 2. Measure first ──
+  // ── 2a. Place yourself before anything else ──
+  // Ahead of the diagnostic on purpose, and it used to be the other way round.
+  // Both measure, but they measure different things and cost very different
+  // amounts: the baseline is ~10 adaptive minutes that answer "where am I
+  // scoring right now", the diagnostic is ~30 that answer "which of the 28
+  // skills is costing me points". Handing a brand-new student the 30-minute
+  // one as their first ever instruction is the surest way to get a student who
+  // never comes back — and every other panel's advice reads differently at
+  // 1050 than at 1400, so the cheap measurement genuinely does come first.
+  // This is also the order the SAT rail itself teaches (Baseline sits directly
+  // after Overview) and the order progressive unlocking enforces, so all three
+  // now say the same thing instead of two of them contradicting the nav.
+  if (!hasBaseline) {
+    return {
+      id: 'baseline',
+      tone: 'primary',
+      title: 'Set your baseline',
+      body: 'About 10 minutes, and every question adapts to how the last one went. It tells you roughly where you score today, which is what everything else here plans against.',
+      ctaLabel: 'Set your baseline',
+      view: 'baseline',
+    };
+  }
+
+  // ── 2b. Then find out which skills are costing the points ──
   const hasDiagnostic = attempts.some(a => a.kind === 'diagnostic' && a.status === 'complete');
   if (!hasDiagnostic) {
     return {
@@ -153,9 +177,18 @@ export function nextAction({
  * Secondary suggestions shown beneath the primary action, so the student always
  * has a legitimate alternative without being handed a wall of equal choices.
  */
-export function secondaryActions({ attempts = [], reviewLog = [], masteryMap = {} } = {}) {
+export function secondaryActions({ attempts = [], reviewLog = [], masteryMap = {}, hasBaseline = false } = {}) {
   const out = [];
   const openReviews = reviewLog.filter(r => !r.resolved);
+
+  // Before a baseline exists there is nothing to rank, so the "drill this
+  // skill" suggestions below would be picked purely by exam share — arbitrary
+  // advice dressed up as personalized advice, offered to the one student least
+  // equipped to notice. The primary action already says what to do; a student
+  // with no measurement gets one instruction, not four.
+  if (!hasBaseline && !attempts.some(a => a.status === 'complete')) {
+    return openReviews.length ? [{ id: 'review', label: `Review log (${openReviews.length})`, view: 'review' }] : [];
+  }
 
   if (openReviews.length) {
     out.push({ id: 'review', label: `Review log (${openReviews.length})`, view: 'review' });
