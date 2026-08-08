@@ -7282,8 +7282,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
       pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
       pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
     // Activities & Résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,

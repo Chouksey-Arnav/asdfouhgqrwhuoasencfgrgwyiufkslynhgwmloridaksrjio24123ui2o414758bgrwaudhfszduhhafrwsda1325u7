@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, HelpCircle } from 'lucide-react';
 import { C, glass, glass2, R, tint, accentText } from '../../lib/theme';
@@ -28,6 +28,11 @@ function readOpen(id, fallback) {
   } catch { return fallback; }
 }
 
+/** Whether this student has ever opened or closed this particular door. */
+function hasChoice(id) {
+  try { return localStorage.getItem(KEY(id)) != null; } catch { return false; }
+}
+
 /**
  * A named, remembered "show more" section.
  *
@@ -41,7 +46,17 @@ export default function Disclosure({
 }) {
   const [open, setOpen] = useState(() => readOpen(id, defaultOpen));
 
+  // Until the student has actually opened or closed this door, it keeps following whatever the
+  // caller says the default should be. That matters because callers derive `defaultOpen` from
+  // data they are still fetching on the first render — "open the recommendations if the college
+  // list is empty" is true for the one frame before the list arrives, and a door that latched
+  // onto that frame would stand open for every student who has three schools already. Once they
+  // choose, the choice is theirs and nothing overrides it.
+  const chosen = useRef(hasChoice(id));
+  useEffect(() => { if (!chosen.current) setOpen(defaultOpen); }, [defaultOpen]);
+
   function toggle() {
+    chosen.current = true;
     setOpen((o) => {
       const next = !o;
       try { localStorage.setItem(KEY(id), next ? '1' : '0'); } catch { /* the memory is a nicety */ }

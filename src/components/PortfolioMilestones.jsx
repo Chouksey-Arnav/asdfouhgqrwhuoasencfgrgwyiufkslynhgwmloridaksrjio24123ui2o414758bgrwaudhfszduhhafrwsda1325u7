@@ -65,6 +65,7 @@ import { renderMarkdown } from '../lib/renderMarkdown';
 import { downloadIcs } from '../lib/icsExport';
 import TrackQueueNotice from './ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import Disclosure, { HelpNote, HowItWorks } from './ui/Disclosure';
 
 // The engine returns theme KEY names (it has to stay importable from plain Node
 // for scripts/verifyTimeline.mjs), so the palette lookup happens here.
@@ -124,6 +125,12 @@ const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Se
 
 const fmtDate = (d, withYear = true) =>
   new Date(d + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) });
+
+/** "2026-03" → "March 2026", for saying which month a filter has narrowed the feed to. */
+const fmtMonth = (key) => {
+  const [y, m] = String(key).split('-');
+  return `${new Date(Number(y), Number(m) - 1, 1).toLocaleDateString(undefined, { month: 'long' })} ${y}`;
+};
 
 const countdown = (days) => (days === 0 ? 'today' : days === 1 ? 'tomorrow' : days > 0 ? `in ${days} days` : `${Math.abs(days)} days ago`);
 
@@ -197,8 +204,6 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const [kindFilter, setKindFilter] = useState(null);
   const [monthFilter, setMonthFilter] = useState(null);
   const [openId, setOpenId] = useState(null);
-  const [showDone, setShowDone] = useState(false);
-  const [showPast, setShowPast] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [addingAll, setAddingAll] = useState(false);
   const [seeding, setSeeding] = useState(false);
@@ -313,6 +318,14 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
       .filter(g => g.items.length);
   }, [timeline, matches]);
 
+  // How much of the feed renders inline. The "slipped past / this week / next 30 days" buckets
+  // always do — those are the ones a student can act on — and then enough calendar months to
+  // make the page feel like a year rather than a stub, before the rest goes behind a door.
+  const NEAR_GROUPS = 4;
+  const nearGroups = useMemo(() => filteredGroups.slice(0, NEAR_GROUPS), [filteredGroups]);
+  const laterGroups = useMemo(() => filteredGroups.slice(NEAR_GROUPS), [filteredGroups]);
+  const laterCount = useMemo(() => laterGroups.reduce((n, g) => n + g.items.length, 0), [laterGroups]);
+
   const visibleUpcoming = useMemo(
     () => (timeline ? timeline.upcoming.filter(matches) : []),
     [timeline, matches]
@@ -367,6 +380,18 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
 
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'deadlines')} status={trackStatus} onRetried={refresh} />
 
+      {/* The shape of this tab, said once. Two kinds of date live in one feed here and the
+          difference between them matters — without a sentence saying so, a generated "typical"
+          date and a deadline the student confirmed themselves look identical. */}
+      <HowItWorks
+        id="milestones" color={accent} m={isMobile}
+        steps={[
+          { title: 'Your dates go in', body: 'Add anything with a date, or let your college list and scholarships fill it in.' },
+          { title: 'We add the usual ones', body: 'Marked “typical” — the dates a student in your year normally has. Confirm them on the school’s site.' },
+          { title: 'Work down the list', body: 'Everything sits in date order, soonest first. Export it to your phone’s calendar when you like.' },
+        ]}
+      />
+
       {/* No class year on file. This is a prompt, not a gate — the old Timeline
           tab returned early here, which in a merged tab would take the deadline
           editor away from exactly the students who most need somewhere to put a
@@ -387,51 +412,24 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
         </CalloutCard>
       )}
 
-      {/* The numbers, as controls. Each tile is the filter for the thing it
-          counts, so reading "3 slipped past" and acting on it is one click and
-          not a scroll hunt. */}
-      <div style={G(4, 12, {}, isMobile)}>
-        <StatTile icon={Hourglass}
-          value={next ? (next.days === 0 ? 'Today' : next.days < 0 ? 'Overdue' : `${next.days}d`) : '—'}
-          label={next ? truncate(next.title, 30) : 'nothing ahead'}
-          sub={next ? fmtDate(next.date) : null}
-          color={!next ? C.t3 : next.status === 'missed' ? C.rose : next.days <= 14 ? C.amber : C.sky}
-          onClick={next ? () => { clearFilters(); setOpenId(next.id); } : undefined} />
-        <StatTile icon={AlertTriangle} value={stats.soon} label="due within 14 days"
-          color={stats.soon > 0 ? C.amber : C.green} />
-        <StatTile icon={AlertTriangle} value={stats.missed} label="slipped past, still open"
-          color={stats.missed > 0 ? C.rose : C.green} />
-        <StatTile icon={CheckCircle2} value={yoursCount} label="dates you added"
-          sub={`${stats.fromYourData} exact · ${stats.generated} typical`}
-          color={C.violet}
-          onClick={() => { setKindFilter(null); setMonthFilter(null); setLens(lens === 'mine' ? 'all' : 'mine'); }} />
-      </div>
-
+      {/* What to do first. Meta Brain's read is the only thing on this page that
+          weighs the whole calendar and says a sentence about it, so it leads —
+          everything below it is the calendar itself. */}
       <BrainTake summary={brainSummary} />
-
-      {/* Where these dates come from — said once, plainly, so a generated date is
-          never mistaken for one the student confirmed. */}
-      <div style={{ ...glass2({ padding: '11px 14px' }), display: 'flex', gap: 9, alignItems: 'flex-start' }}>
-        <Info size={13} color={C.t3} style={{ marginTop: 2, flexShrink: 0 }} />
-        <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
-          <b style={{ color: C.t2 }}>{stats.fromYourData}</b> of these came from what you've logged — those dates are exact.{' '}
-          <b style={{ color: C.t2 }}>{stats.generated}</b> are typical-year dates generated from your class year, courses, test track, and college list; they're marked <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span> and should be confirmed on the official site before you plan around them.
-        </div>
-      </div>
 
       <AddMilestone accent={accent} open={composerOpen} setOpen={setComposerOpen} onAdd={addDeadline} />
 
       {suggestions.length > 0 && (
         <CalloutCard color={C.violet} icon={ListChecks}
-          title={`Ready to add from your Portfolio (${suggestions.length})`}
+          title={`${suggestions.length} date${suggestions.length === 1 ? '' : 's'} we can add for you`}
           right={
             <button style={btnSm(tint(C.violet, 0.2), { color: onTint(C.violet) })} disabled={addingAll} onClick={addAllSuggestions}>
               {addingAll ? <Loader2 size={12} className="spin" /> : <Plus size={12} />}Add all
             </button>
           }>
           <p style={{ fontSize: 11.5, color: C.t3, marginBottom: 12, lineHeight: 1.5, marginTop: 0 }}>
-            Pulled from dates you already entered on College List and Financial Aid (plus FAFSA/AP/IB). Nothing here is guessed —
-            adding one turns it into an exact date on the feed below.
+            These come from dates you already entered on College List and Financial Aid, plus FAFSA and AP/IB. None of them are
+            guesses — add one and it becomes an exact date in the list below.
           </p>
           <div style={CC({ gap: 6 })}>
             {suggestions.map((s, i) => (
@@ -476,7 +474,74 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
         </CalloutCard>
       )}
 
-      {/* ── The controls for the feed ── lens, category, month. */}
+      {/* The counts, and where the dates came from.
+          Four number tiles and a two-clause sentence about data provenance are the right thing
+          to read second — after you know what's next — and completely the wrong thing to open
+          a page with. The tiles are still filters (each one selects what it counts), which is
+          why the line under them now says so out loud. */}
+      <Disclosure id="milestones-numbers" icon={ListChecks} color={C.violet} m={isMobile}
+        title="Your timeline in numbers"
+        sub={`${stats.upcoming} ahead · ${stats.soon} due within two weeks · ${stats.missed} slipped past`}>
+        <div style={CC({ gap: 12 })}>
+          <div style={G(4, 12, {}, isMobile)}>
+            <StatTile icon={Hourglass}
+              value={next ? (next.days === 0 ? 'Today' : next.days < 0 ? 'Overdue' : `${next.days}d`) : '—'}
+              label={next ? truncate(next.title, 30) : 'nothing ahead'}
+              sub={next ? fmtDate(next.date) : null}
+              color={!next ? C.t3 : next.status === 'missed' ? C.rose : next.days <= 14 ? C.amber : C.sky}
+              onClick={next ? () => { clearFilters(); setOpenId(next.id); } : undefined} />
+            <StatTile icon={AlertTriangle} value={stats.soon} label="due within 14 days"
+              color={stats.soon > 0 ? C.amber : C.green} />
+            <StatTile icon={AlertTriangle} value={stats.missed} label="slipped past, still open"
+              color={stats.missed > 0 ? C.rose : C.green} />
+            <StatTile icon={CheckCircle2} value={yoursCount} label="dates you added"
+              sub={`${stats.fromYourData} exact · ${stats.generated} typical`}
+              color={C.violet}
+              onClick={() => { setKindFilter(null); setMonthFilter(null); setLens(lens === 'mine' ? 'all' : 'mine'); }} />
+          </div>
+
+          <HelpNote>Tap the first box to open that date in the list below; tap the last one to show only the dates you added yourself.</HelpNote>
+
+          {/* Where these dates come from — said once, plainly, so a generated date is
+              never mistaken for one the student confirmed. */}
+          <div style={{ ...glass2({ padding: '11px 14px' }), display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+            <Info size={13} color={C.t3} style={{ marginTop: 2, flexShrink: 0 }} />
+            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+              <b style={{ color: C.t2 }}>{stats.fromYourData}</b> of these came from what you've logged — those dates are exact.{' '}
+              <b style={{ color: C.t2 }}>{stats.generated}</b> are typical-year dates worked out from your class year, courses, test track and college list. They're marked <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span> — check them on the school's own site before you plan around them.
+            </div>
+          </div>
+        </div>
+      </Disclosure>
+
+      {/* ── The controls for the feed ── lens, category, month.
+          Three stacked rows of pills plus a bar chart, all of which only narrow a list the
+          student hasn't read yet. They're a door now, so the feed starts immediately under the
+          things that ask something of you.
+
+          The one thing that must never hide behind that door is the fact that a filter is ON:
+          a closed panel with an active month filter is a feed that has silently lost most of
+          its rows. So whenever anything is filtering, the state and the way out are printed
+          outside the door, in words. */}
+      {filtersOn && (
+        <div style={{ ...glass2({ padding: '10px 13px' }), display: 'flex', gap: 9, alignItems: 'center', flexWrap: 'wrap', border: `1px solid ${tint(accent, 0.28)}` }}>
+          <Filter size={12} color={accent} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, minWidth: 160, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
+            You're only seeing {[
+              lens === 'mine' ? 'dates you added yourself' : lens === 'generated' ? 'typical dates' : null,
+              kindFilter ? (TIMELINE_KINDS.find(k => k.id === kindFilter)?.label || 'one category').toLowerCase() : null,
+              monthFilter ? fmtMonth(monthFilter) : null,
+            ].filter(Boolean).join(' · ')} — some of your dates are hidden.
+          </span>
+          <button onClick={clearFilters} style={btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11, padding: '5px 12px', flexShrink: 0 })}>
+            <X size={11} />Show everything
+          </button>
+        </div>
+      )}
+
+      <Disclosure id="milestones-filters" icon={Filter} color={accent} m={isMobile}
+        title="Find a particular date"
+        sub="Narrow the feed down to just your own dates, one category, or one month.">
       <div style={CC({ gap: 10 })}>
         <div style={R({ gap: 7, flexWrap: 'wrap' })}>
           {LENSES.map(l => {
@@ -530,7 +595,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
         )}
 
         <MonthStrip events={stripEvents} active={monthFilter} onPick={setMonthFilter} accent={accent} />
+        <HelpNote>Tap a bar to jump to that month — tap it again to come back to the whole year.</HelpNote>
       </div>
+      </Disclosure>
 
       {filteredGroups.length === 0 && (
         <EmptyNote accent={accent} icon={filtersOn ? ListChecks : CalendarDays}
@@ -546,25 +613,45 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
               : null} />
       )}
 
-      {filteredGroups.map(group => (
+      {/* The feed itself, cut where a student stops being able to act.
+          buildTimeline() groups coarsely near today and by calendar month after that, which is
+          right — but rendering every group means a junior's page is sixteen month cards deep,
+          and the four that describe next week look exactly like the one for July. Everything
+          from the fourth group on is real, still here, and one tap down: nothing between now
+          and the end of the month is ever hidden, because those are the ones with something
+          to do about them. */}
+      {nearGroups.map(group => (
         <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
           onGo={go} onDelete={removeDeadline} isMobile={isMobile} />
       ))}
+
+      {laterGroups.length > 0 && (
+        <Disclosure id="milestones-later" icon={CalendarDays} color={C.sky} m={isMobile}
+          title={`Further ahead (${laterCount} ${laterCount === 1 ? 'date' : 'dates'})`}
+          sub={`Everything from ${laterGroups[0].label} onwards — worth knowing about, nothing you can do today.`}>
+          <div style={CC({ gap: 14 })}>
+            {laterGroups.map(group => (
+              <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
+                onGo={go} onDelete={removeDeadline} isMobile={isMobile} />
+            ))}
+          </div>
+        </Disclosure>
+      )}
 
       {/* Already handled — kept out of the feed so it reads as work left, but
           visible on demand so the student can see the engine noticing. */}
       {timeline.done.length > 0 && (
         <CollapsibleList
+          id="milestones-done"
           title={`Already handled (${timeline.done.length})`} icon={CheckCircle2} color={C.green}
-          open={showDone} onToggle={() => setShowDone(v => !v)}
-          blurb="Milestones your logged data already satisfies. Nothing here is nagging you — it's the app noticing you're ahead."
+          blurb="Dates you've already satisfied with something you logged. Nothing here is nagging you — it's the app noticing you're ahead."
           items={timeline.done.filter(e => !hidden.has(e.id))} onGo={go} onDelete={removeDeadline} />
       )}
 
       {timeline.past.length > 0 && (
         <CollapsibleList
+          id="milestones-past"
           title={`Your record (${timeline.past.length})`} icon={History} color={C.t3}
-          open={showPast} onToggle={() => setShowPast(v => !v)}
           blurb="Everything already behind you — hours logged, scores earned, dates that have passed."
           items={timeline.past.filter(e => !hidden.has(e.id))} onGo={go} onDelete={removeDeadline} dim />
       )}
@@ -591,16 +678,15 @@ function Hero({ accent, timeline, isMobile, onExport }) {
   const gradYear = timeline?.years?.gradYear;
   return (
     <PanelHero tourTag="portfolio-deep-milestones" icon={Milestone} color={accent} color2={C.rose} m={isMobile}
-      eyebrow="Portfolio"
-      title="Milestones"
+      eyebrow="Milestones"
+      title="Every date you have to hit"
       sub={gradeLabel
-        ? `Every dated thing in your application, in one feed — your own deadlines merged with the dates a ${gradeLabel.toLowerCase()}${gradYear ? `, class of ${gradYear},` : ''} on your track actually has to care about, and nothing from four years away.`
-        : 'Every deadline, test date, and milestone in one chronological feed. Add your own dates below; set your class year in Settings and the rest of the admissions calendar fills in around them.'}
+        ? `Deadlines, test dates and application milestones in one list, soonest first — yours, plus the ones a ${gradeLabel.toLowerCase()}${gradYear ? ` graduating in ${gradYear}` : ''} normally has. Nothing from four years away.`
+        : 'Deadlines, test dates and application milestones in one list, soonest first. Add your own below — and set your class year in Settings and we fill in the rest of the admissions calendar around them.'}
       stats={stats ? [
-        { value: stats.upcoming, label: 'ahead', color: C.skyL },
-        ...(stats.missed ? [{ value: stats.missed, label: 'slipped', color: C.roseL }] : []),
-        ...(stats.done ? [{ value: stats.done, label: 'handled', color: C.greenL }] : []),
-        ...(next ? [{ value: next.days === 0 ? 'today' : `${next.days}d`, label: 'to next', color: next.days <= 14 ? C.amberL : C.indigoL }] : []),
+        ...(next ? [{ value: next.days === 0 ? 'today' : `${next.days}d`, label: 'to your next one', color: next.days <= 14 ? C.amberL : C.indigoL }] : []),
+        { value: stats.upcoming, label: 'coming up', color: C.skyL },
+        ...(stats.missed ? [{ value: stats.missed, label: 'slipped past', color: C.roseL }] : []),
       ] : []}
       right={onExport && (
         <button onClick={onExport} title="Download an .ics file of everything upcoming" style={btnSm(tint(accent, 0.18), { color: onTint(accent), fontSize: 11.5, border: `1px solid ${tint(accent, 0.32)}` })}>
@@ -649,14 +735,17 @@ function useBrainTake(askMedabrain, events) {
 
 function BrainTake({ summary }) {
   if (!summary) return null;
+  // This card now leads the tab, so a failed model call would put "we couldn't reach Meta Brain"
+  // at the very top of a page whose every date is sitting right there and perfectly correct.
+  // Nothing is lost by staying quiet about it: the feed below never needed the summary.
+  if (summary.error) return null;
   return (
     <div style={{ ...glass2({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.25)}` }}>
       <div style={R({ gap: 8, marginBottom: summary.loading ? 0 : 8 })}>
         <Sparkles size={13} color={C.violetL} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>Meta Brain's take</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>What to do first</span>
       </div>
-      {summary.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Weighing what's most urgent…</div>}
-      {summary.error && <div style={{ fontSize: 12, color: C.t3 }}>Couldn't reach Meta Brain right now — the timeline below is still accurate.</div>}
+      {summary.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Working out what's most urgent…</div>}
       {summary.content && !summary.loading && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(summary.content) }} />}
     </div>
   );
@@ -874,27 +963,23 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
   );
 }
 
-function CollapsibleList({ title, icon: Icon, color, open, onToggle, blurb, items, onGo, onDelete, dim = false }) {
+/**
+ * Everything behind you, on a door that remembers whether you opened it. The
+ * shell is the shared Disclosure so this reads as the same kind of "more, if you
+ * want it" as every other one in Portfolio — the blurb becomes the sub-line, so
+ * what's inside is described before it's opened rather than after.
+ */
+function CollapsibleList({ id, title, icon: Icon, color, blurb, items, onGo, onDelete, dim = false }) {
   if (!items.length) return null;
   return (
-    <div style={glass({ padding: 18 })}>
-      <button onClick={onToggle} style={{ all: 'unset', cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', gap: 8 }} aria-expanded={open}>
-        <Icon size={13} color={color} />
-        <span style={{ fontSize: 11, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '.08em', flex: 1 }}>{title}</span>
-        <ChevronRight size={14} color={C.t3} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
-      </button>
-      {open && (
-        <div style={{ marginTop: 14 }}>
-          {blurb && <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>{blurb}</div>}
-          <div style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: tint(color, 0.18), borderRadius: 2 }} />
-            <div style={CC({ gap: 8 })}>
-              {items.map(e => <MilestoneRow key={e.id} e={e} open={false} onToggle={() => {}} onGo={onGo} onDelete={onDelete} dim={dim} />)}
-            </div>
-          </div>
+    <Disclosure id={id} title={title} sub={blurb} icon={Icon} color={color}>
+      <div style={{ position: 'relative' }}>
+        <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: tint(color, 0.18), borderRadius: 2 }} />
+        <div style={CC({ gap: 8 })}>
+          {items.map(e => <MilestoneRow key={e.id} e={e} open={false} onToggle={() => {}} onGo={onGo} onDelete={onDelete} dim={dim} />)}
         </div>
-      )}
-    </div>
+      </div>
+    </Disclosure>
   );
 }
 
