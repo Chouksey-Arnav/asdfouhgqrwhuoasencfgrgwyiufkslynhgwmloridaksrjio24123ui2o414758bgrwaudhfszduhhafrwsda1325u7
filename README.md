@@ -468,12 +468,11 @@ This layer handles background algorithms, client database management, tracking o
 #### Tab Panels & Core Views (`src/components/...` root)
 - `src/App.jsx` — **Application shell and entry router.** Mounts desktop/mobile shells, synchronizes overlays, and manages IndexedDB initialization.
 - `src/components/AboutMePanel.jsx` — Personal bio workspace that saves profiles used to contextualize AI responses.
-- `src/components/ActivitiesResumePanel.jsx` — Extracurricular logging canvas with Common App classification tools.
+- `src/components/ActivitiesResumePanel.jsx` — Activities & Résumé: the merged tab holding activities/honors, academics, clinical hours, research, and certifications as five switchable sections.
 - `src/components/AnimatedLogo.jsx` — Violet-to-cyan visual logo utilizing smooth Framer Motion paths.
 - `src/components/AppTour.jsx` — Step-by-step guidance overlays that familiarize new students with workspaces.
 - `src/components/AppearanceSettings.jsx` — Adjusts color contrast tokens and toggles motion-reduction features.
 - `src/components/AuthGate.jsx` — Protects internal tabs, prompting signed-out students to log in.
-- `src/components/ClinicalHoursPanel.jsx` — Log sheet for clinical volunteering, shadowing, and patient-care hours.
 - `src/components/CollegeAutocomplete.jsx` — Search dropdown matching real-time user keystrokes against university records.
 - `src/components/CollegeListPanel.jsx` — Customizable application list classifying schools into Safety, Target, and Reach tiers.
 - `src/components/EssayCritique.jsx` — UI bubble delivering structured paragraph critiques and spelling feedback.
@@ -497,12 +496,10 @@ This layer handles background algorithms, client database management, tracking o
 - `src/components/QuizPlanToday.jsx` — Inline component prompting daily verification checks.
 - `src/components/QuizRecommendationsPanel.jsx` — Suggests custom review quizzes based on weak performance fields.
 - `src/components/RecommendersPanel.jsx` — Recommender logs tracking recommendation letter requests and letters written.
-- `src/components/ResearchExperiencePanel.jsx` — Log sheet for independent studies and research activities.
 - `src/components/RewardChest.jsx` — Daily check-in overlay offering streaks validation and XP gains.
 - `src/components/ScholarshipDatabase.jsx` — Catalog of scholarships with custom deadline filters.
 - `src/components/ScholarshipResearchAdd.jsx` — Dialog allowing students to track custom scholarships.
 - `src/components/ScoreTrackerPanel.jsx` — SAT/ACT milestone trend tracker that calculates automatic superscores.
-- `src/components/SkillsCertificationsPanel.jsx` — Tracker for academic certifications, licenses, and technical credentials.
 - `src/components/StreakHeatmap.jsx` — Activity matrix detailing daily check-ins over a running calendar.
 - `src/components/SupplementalEssaysCard.jsx` — Lists supplemental prompt requirements per college.
 - `src/components/TodayPlanNudge.jsx` — Top header offering actionable suggestions based on active plans.
@@ -543,6 +540,10 @@ This layer handles background algorithms, client database management, tracking o
 - `src/components/onboarding/steps/generic.jsx` — Catch-all form module for custom onboarding questions.
 
 #### Portfolio Auxiliary Panels (`src/components/portfolio/...`)
+- `src/components/portfolio/ClinicalHoursSection.jsx` — Clinical Hours section of Activities & Résumé: log sheet for clinical volunteering, shadowing, and patient-care hours.
+- `src/components/portfolio/ResearchSection.jsx` — Research section of Activities & Résumé: log sheet for independent studies and mentored research.
+- `src/components/portfolio/CredentialsSection.jsx` — Skills & Certs section of Activities & Résumé: tracker for certifications, licenses, and technical credentials with expiry dates.
+- `src/components/portfolio/SectionIntro.jsx` — Section header band shared by the sections inside Activities & Résumé.
 - `src/components/portfolio/CommonAppExport.jsx` — Modal detailing instructions for moving Extracurricular activities to Common App.
 - `src/components/portfolio/MedabrainRead.jsx` — Conversational advice interface specifically scoped to portfolio assets.
 - `src/components/portfolio/TrackedPanel.jsx` — Overview card displaying count tallies for colleges, scholarships, and active programs.

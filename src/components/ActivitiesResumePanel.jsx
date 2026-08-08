@@ -4,6 +4,7 @@ import {
   Plus, Trash2, Award, ClipboardList, FileDown, TrendingUp, TrendingDown, Minus,
   ShieldCheck, ShieldQuestion, Layers, Clock, GraduationCap, Sparkles, Target,
   AlertTriangle, Info, CheckCircle2, ChevronDown, School, Crown, Gauge, Loader2,
+  Stethoscope, FlaskConical, BadgeCheck, ArrowRight,
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint, accentFill } from '../lib/theme';
@@ -22,33 +23,45 @@ import {
 import { CA_LIMITS } from '../lib/commonApp';
 import MedabrainRead, { InsightList } from './portfolio/MedabrainRead';
 import CommonAppExport from './portfolio/CommonAppExport';
+import SectionIntro from './portfolio/SectionIntro';
+import ClinicalHoursSection, { clinicalTotalHours } from './portfolio/ClinicalHoursSection';
+import ResearchSection, { researchTotalHours } from './portfolio/ResearchSection';
+import CredentialsSection, { isCertExpired, isCertExpiringSoon } from './portfolio/CredentialsSection';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Activities & Resume Builder.
+// Activities & Résumé.
 //
-// This panel used to be three forms, a chart, and a button that copied prose
-// pretending to be the Common App format. Everything a student entered here
-// went into a database row and stopped: the GPA drew a line, the activities
-// stacked up, and nothing in the app read any of it back to them. The Portfolio
-// had an AI that could see this data, but only if the student went and asked.
+// This is the tab that holds everything a student *did*, as opposed to where
+// they are applying (College List), what they wrote (Essays), or when it is due
+// (Milestones). It used to be four separate Portfolio tabs — Activities &
+// Resume, Research, Skills & Certs, and Clinical Hours — which meant the four
+// halves of one story sat behind four different pills, none of them able to see
+// the others. The activities list would tell a student they had no clinical
+// exposure while a hundred logged shadowing hours sat one tab away, and the
+// résumé they exported contained neither those hours nor their certifications.
 //
-// It is now built on the same two-layer contract the college list uses:
+// They are now five sections of one tab, switched by the row under the hero:
+//
+//   Activities & Honors — the Common App slate, scored and read back.
+//   Academics          — GPA history, and the college matching it drives.
+//   Clinical Hours     — shadowing/volunteer/patient-care hours, by site.
+//   Research           — mentored and independent projects, with publications.
+//   Skills & Certs     — dated, verifiable credentials.
+//
+// Nothing was dropped in the merge and the sections are not sealed off from each
+// other: clinical and research hours count toward the pillar coverage the
+// activities section grades, the glance row totals hours across all three, the
+// deep read is told what is logged in the other sections, and one résumé PDF
+// carries all five.
+//
+// The two-layer contract each section inherits is unchanged:
 //
 //   COMPUTED (activityIntel.js / academicIntel.js / commonApp.js) — always
-//   present, always right, no network. Entry scores, the six pillars of a
-//   health-track application, the GPA trend, the real Common App field limits,
-//   and college matches computed from the student's own transcript, score, and
-//   the career they told us they want at signup.
+//   present, always right, no network.
 //
-//   READ (portfolioCritique.js, via MedabrainRead) — four on-demand deep reads
-//   layered on top: the whole slate, one activity, the academic record, the
-//   honors section. Each gets the student's real rows verbatim and a fixed
-//   output contract, and each renders over the computed layer rather than
-//   replacing it, so an outage degrades the panel instead of emptying it.
-//
-// The academic history is the spine. It is not a chart any more — it decides
-// the college recommendations on this page, it feeds every Medabrain surface in
-// the app, and it answers back the moment a GPA is saved.
+//   READ (portfolioCritique.js, via MedabrainRead) — on-demand deep reads
+//   layered over the computed layer rather than replacing it, so an outage
+//   degrades the panel instead of emptying it.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ACT_TYPES = ['Clinical/Shadowing','Patient Care (paid)','Health Club/HOSA','Leadership','Volunteering','Research','Athletics','Arts & Performance','Work Experience','Clubs & Organizations','Other'];
@@ -62,6 +75,21 @@ const ACT_COLORS = {
 const GRADE_LEVELS = ['9','10','11','12','Post-graduate'];
 const STATUSES = ['ongoing','completed'];
 const CATEGORY_COLOR = { reach: C.rose, target: C.blue, safety: C.green };
+
+// The five sections of this tab, in the order the row renders them. Each keeps
+// the color its old tab had in the Portfolio SubNav, so a student who used to
+// navigate by color still can — Clinical is still pink, Research still cyan,
+// Skills still teal. `id`s are also the deep-link targets: App.jsx maps the
+// retired /portfolio/clinical, /portfolio/research and /portfolio/skills URLs
+// (and every in-app link that still names them) onto them.
+export const RESUME_SECTIONS = [
+  { id: 'activities',  ic: Layers,       label: 'Activities & Honors', color: C.amber, blurb: 'Your Common App slate' },
+  { id: 'academics',   ic: GraduationCap,label: 'Academics',           color: C.green, blurb: 'GPA history & college matches' },
+  { id: 'clinical',    ic: Stethoscope,  label: 'Clinical Hours',      color: C.pink,  blurb: 'Shadowing & patient care' },
+  { id: 'research',    ic: FlaskConical, label: 'Research',            color: C.cyan,  blurb: 'Projects & publications' },
+  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & Certs',      color: C.teal,  blurb: 'Dated, verifiable credentials' },
+];
+export const DEFAULT_RESUME_SECTION = 'activities';
 
 function emptyActivity() {
   return { activity_type: ACT_TYPES[0], position: '', organization: '', description: '', impact: '', status: 'ongoing', hours_per_week: '', weeks_per_year: '', grade_levels: [], evidence_url: '', skills_tags: '', leadership_role: false };
@@ -111,6 +139,46 @@ function CharCap({ value, limit, note = null }) {
     <span style={{ fontSize: 9.5, fontFamily: C.FM, color: over ? C.rose : near ? C.amber : C.t4, fontWeight: over ? 800 : 500, marginLeft: 7 }}>
       {len}/{limit}{over ? ` · ${len - limit} over the Common App limit` : note ? ` · ${note}` : ''}
     </span>
+  );
+}
+
+// The section switcher. Deliberately not a second SubNav: this row sits inside
+// a tab that already has one, so it reads as five parts of one page — each pill
+// carrying its section's color, its live count, and (on desktop) the one line
+// that says what lives in it.
+function SectionRow({ section, onChange, counts, isMobile }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : `repeat(${RESUME_SECTIONS.length},1fr)`,
+      gap: 8,
+    }}>
+      {RESUME_SECTIONS.map(s => {
+        const on = section === s.id;
+        const count = counts[s.id];
+        return (
+          <button key={s.id} type="button" onClick={() => onChange(s.id)}
+            aria-current={on ? 'true' : undefined}
+            style={{
+              boxSizing: 'border-box', textAlign: 'left', font: 'inherit', cursor: 'pointer',
+              padding: isMobile ? '10px 11px' : '11px 13px', borderRadius: 12,
+              background: on ? `linear-gradient(135deg,${tint(s.color, 0.20)},${tint(s.color, 0.07)})` : C.surf2,
+              border: `1px solid ${on ? tint(s.color, 0.45) : C.b1}`,
+              boxShadow: on ? `0 6px 18px ${tint(s.color, 0.22)}` : 'none',
+              transition: 'background .18s, border-color .18s, box-shadow .18s',
+            }}>
+            <div style={R({ gap: 7, justifyContent: 'space-between' })}>
+              <span style={R({ gap: 6, minWidth: 0 })}>
+                <s.ic size={13} color={on ? s.color : C.t3} style={{ flexShrink: 0 }} />
+                <span style={{ fontSize: 11.5, fontWeight: 800, color: on ? C.t1 : C.t2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
+              </span>
+              {count ? <span style={pill(tint(s.color, on ? 0.2 : 0.12), s.color, { fontSize: 9.5, fontFamily: C.FM, flexShrink: 0 })}>{count}</span> : null}
+            </div>
+            {!isMobile && <div style={{ fontSize: 10, color: C.t4, marginTop: 4, lineHeight: 1.4 }}>{s.blurb}</div>}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -201,13 +269,21 @@ function ActivityCard({ a, accent, user, gradeLabel, analysis, onRemove }) {
 
 export default function ActivitiesResumePanel({
   accent = C.blue, user = null, gradeLabel = null, isMobile = false,
+  // Which section is open. Owned by App.jsx so a deep link (or an old
+  // /portfolio/clinical URL, or a Home tile) can land on the right one — see
+  // resumeSection there.
+  section = DEFAULT_RESUME_SECTION, onSectionChange = null,
   onResumeExported, onActivityLogged, onCollegeAdded,
+  onClinicalLogged, onResearchLogged, onCredentialChanged,
 }) {
   const [activities, setActivities] = useState([]);
   const [awards, setAwards] = useState([]);
   const [gpaEntries, setGpaEntries] = useState([]);
   const [testScores, setTestScores] = useState([]);
   const [colleges, setColleges] = useState([]);
+  const [clinical, setClinical] = useState([]);
+  const [research, setResearch] = useState([]);
+  const [certs, setCerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState(emptyActivity());
   const [awardDraft, setAwardDraft] = useState(emptyAward());
@@ -216,19 +292,31 @@ export default function ActivitiesResumePanel({
   const [gpaReaction, setGpaReaction] = useState(null);
   const [addingCollege, setAddingCollege] = useState(null);
   const [dismissedPicks, setDismissedPicks] = useState([]);
+  // Uncontrolled fallback: the panel still works standalone if no owner passes a
+  // section down. App.jsx always does.
+  const [localSection, setLocalSection] = useState(section);
+  const activeSection = onSectionChange ? section : localSection;
+  const setSection = useCallback((id) => {
+    setLocalSection(id);
+    onSectionChange?.(id);
+  }, [onSectionChange]);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      // Test scores and the college list are read here (not just activities/
-      // awards/GPA) because the academic matching on this page reasons over all
-      // four: the GPA against admitted averages, the score against midpoints,
-      // and the existing list so we never recommend a school they already have.
-      const [a, w, g, ts, col] = await Promise.all([
+      // One load for the whole tab. Test scores and the college list are read
+      // here (not just activities/awards/GPA) because the academic matching
+      // reasons over all four; clinical hours, research and certifications are
+      // read because they are now sections of this same tab and because the
+      // activities section's pillar coverage counts them.
+      const [a, w, g, ts, col, cl, rs, ce] = await Promise.all([
         listItems('activities'), listItems('awards'), listItems('gpa_entries'),
         listItems('test_scores').catch(() => []), listItems('colleges').catch(() => []),
+        listItems('clinical_hours').catch(() => []), listItems('research_experience').catch(() => []),
+        listItems('skills_certifications').catch(() => []),
       ]);
       setActivities(a); setAwards(w); setGpaEntries(g); setTestScores(ts); setColleges(col);
+      setClinical(cl); setResearch(rs); setCerts(ce);
     } catch (err) { toast.error(err.message); }
     finally { setLoading(false); }
   }, []);
@@ -247,6 +335,34 @@ export default function ActivitiesResumePanel({
   );
   const draftCoaching = useMemo(() => coachDraft(draft), [draft]);
   const profile = roleProfile(user?.dreamRole);
+
+  const clinicalHours = useMemo(() => clinicalTotalHours(clinical), [clinical]);
+  const researchHours = useMemo(() => researchTotalHours(research), [research]);
+  const activeCerts = useMemo(() => certs.filter(c => !isCertExpired(c.expiry_date)).length, [certs]);
+  const certsToRenew = useMemo(() => certs.filter(c => isCertExpiringSoon(c.expiry_date) || isCertExpired(c.expiry_date)).length, [certs]);
+
+  // ── Coverage, across the whole tab ─────────────────────────────────────────
+  // analyzeSlate can only see the activities list. Now that clinical hours and
+  // research live in this tab too, a pillar they satisfy is genuinely covered —
+  // telling a student with 120 logged shadowing hours that they have no clinical
+  // exposure was the single most wrong thing the old four-tab split produced.
+  const coverage = useMemo(() => {
+    const extra = {};
+    if (clinical.length && !analysis.covered.includes('clinical')) extra.clinical = 'clinical';
+    if (research.length && !analysis.covered.includes('research')) extra.research = 'research';
+    const covered = [...analysis.covered, ...Object.keys(extra)];
+    const totalWeight = PILLARS.reduce((s, p) => s + p.weight, 0);
+    const score = Math.round((PILLARS.filter(p => covered.includes(p.id)).reduce((s, p) => s + p.weight, 0) / totalWeight) * 100);
+    return { covered, fromOtherSection: extra, score };
+  }, [analysis.covered, clinical.length, research.length]);
+
+  const sectionCounts = useMemo(() => ({
+    activities: activities.length + awards.length || null,
+    academics: academics.count || null,
+    clinical: clinical.length ? `${clinicalHours}h` : null,
+    research: research.length || null,
+    credentials: certs.length || null,
+  }), [activities.length, awards.length, academics.count, clinical.length, clinicalHours, research.length, certs.length]);
 
   async function addActivity() {
     if (!draft.position.trim()) return;
@@ -346,8 +462,12 @@ export default function ActivitiesResumePanel({
     setDraft(prev => ({ ...prev, grade_levels: prev.grade_levels.includes(g) ? prev.grade_levels.filter(x => x !== g) : [...prev.grade_levels, g] }));
   }
 
+  // One résumé for the whole tab: activities, honors and GPA as before, plus the
+  // clinical hours, research and certifications that used to be exported nowhere.
   function exportPdf() {
-    exportPortfolioResume(null, activities, awards, gpaEntries);
+    exportPortfolioResume(user?.name || null, activities, awards, gpaEntries, {
+      clinical, research, certifications: certs,
+    });
     showMedabrainToast('resume_exported');
     onResumeExported?.();
   }
@@ -373,407 +493,482 @@ export default function ActivitiesResumePanel({
   }), [academics.entries]);
 
   const totalHours = analysis.totalHours;
+  const hoursOnRecord = Math.round(totalHours + clinicalHours + researchHours);
   const band = academics.hasData ? gpaBand(academics.comparableGpa) : null;
   const TrendIcon = academics.trend === 'rising' ? TrendingUp : academics.trend === 'falling' ? TrendingDown : Minus;
-  const hasAnything = activities.length > 0 || awards.length > 0 || gpaEntries.length > 0;
+  const hasAnything = activities.length > 0 || awards.length > 0 || gpaEntries.length > 0 || clinical.length > 0 || research.length > 0 || certs.length > 0;
+  const canExport = activities.length > 0 || awards.length > 0 || clinical.length > 0 || research.length > 0 || certs.length > 0;
 
   return (
     <div style={CC({ gap: 22 })}>
-      <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange}
-        eyebrow="Applications" title="Activities & Resume Builder"
-        sub="Log every extracurricular, job, leadership role and honor with real hours and impact — then export it into the Common Application's actual fields, character limits and all. Your GPA history here drives the college matching and everything Medabrain knows about you."
-        right={(activities.length > 0 || awards.length > 0) ? (
+      <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange} m={isMobile}
+        eyebrow="Applications" title="Activities & Résumé"
+        sub="Everything you have actually done, in one place: extracurriculars and honors with real hours and impact, your GPA history, clinical and shadowing hours, research, and dated certifications. Export it into the Common Application's actual fields — character limits and all — or as one résumé PDF that carries all five."
+        right={canExport ? (
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button style={btnG({ fontSize: 12 })} onClick={() => setExportOpen(true)}><ClipboardList size={13} />Export to Common App</button>
             <button style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { fontSize: 12, boxShadow: `0 4px 14px ${tint(accent, 0.35)}` }), display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={exportPdf}><FileDown size={13} />Résumé PDF</button>
           </div>
         ) : undefined} />
 
+      <SectionRow section={activeSection} onChange={setSection} counts={sectionCounts} isMobile={isMobile} />
+
+      {/* The whole tab in four numbers, on every section — so switching between
+          Clinical and Activities never feels like switching products. */}
       {hasAnything && (
-        <div style={G(4, 12, {}, true)}>
+        <div style={G(4, 12, {}, isMobile)}>
           <StatTile icon={Layers} value={`${analysis.slotsUsed}/10`} label="Common App activity slots" sub={analysis.slotsFree > 0 ? `${analysis.slotsFree} still free` : 'full — ranked by weight'} color={C.blue} />
-          <StatTile icon={Clock} value={`${totalHours.toLocaleString()}h`} label="Est. hours / year" sub={analysis.weeklyPeak ? `${analysis.weeklyPeak} hrs/week combined` : undefined} color={C.violet} />
-          <StatTile icon={Award} value={`${analysis.awardCount}/5`} label="Honors slots" sub={analysis.unleveled ? `${analysis.unleveled} missing a level` : undefined} color={C.gold} />
+          <StatTile icon={Clock} value={`${hoursOnRecord.toLocaleString()}h`} label="Hours on record" sub={`${Math.round(totalHours)}h activities · ${clinicalHours}h clinical · ${researchHours}h research`} color={C.violet} />
           <StatTile icon={GraduationCap} value={academics.hasData ? academics.latestGpa : '—'} label={academics.hasData ? `GPA · ${band.label}` : 'No GPA yet'} sub={academics.hasData && academics.count > 1 ? `${academics.trend}${academics.delta ? ` (${academics.delta > 0 ? '+' : ''}${academics.delta})` : ''}` : undefined} color={C.green} />
+          <StatTile icon={BadgeCheck} value={`${analysis.awardCount}/5`} label="Honors slots" sub={certs.length ? `${activeCerts} active credential${activeCerts === 1 ? '' : 's'}${certsToRenew ? ` · ${certsToRenew} to renew` : ''}` : analysis.unleveled ? `${analysis.unleveled} missing a level` : undefined} color={C.gold} />
         </div>
       )}
 
-      {/* Coverage of the six pillars — the one view that shows a student what
-          their application is actually missing rather than what it contains. */}
-      {activities.length > 0 && (
-        <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.16)}` }}>
-          <div style={R({ justifyContent: 'space-between', marginBottom: 13, flexWrap: 'wrap', gap: 8 })}>
-            <SectionTitle icon={Gauge} color={C.violetL} extra={{ marginBottom: 0 }}>What your application is made of</SectionTitle>
-            <span style={pill(tint(C.violet, 0.14), C.violetL, { fontFamily: C.FM, fontSize: 11 })}>{analysis.coverageScore}% covered</span>
-          </div>
-          <div style={G(3, 9, {}, true)}>
-            {PILLARS.map(p => {
-              const has = analysis.covered.includes(p.id);
-              const c = has ? C.green : p.id === 'clinical' ? C.rose : C.amber;
-              return (
-                <div key={p.id} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '10px 12px' }), borderRadius: 10, background: tint(c, has ? 0.06 : 0.05), border: `1px solid ${tint(c, has ? 0.18 : 0.14)}` }}>
-                  {has ? <CheckCircle2 size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} />}
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 11.5, fontWeight: 700, color: has ? C.t1 : c }}>{p.label}</div>
-                    <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{has ? p.why : 'Nothing logged here yet.'}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      {/* ═══ ACTIVITIES & HONORS ═════════════════════════════════════════════ */}
+      {activeSection === 'activities' && (
+        <>
+          <SectionIntro icon={Layers} color={accent} color2={C.orange} m={isMobile}
+            title="Activities & Honors"
+            blurb="Log every extracurricular, job, leadership role and honor with real hours and impact. Each entry is scored on how much of it actually made it into the record — because three words is what a reader gets, no matter how much the activity meant."
+            stats={[
+              { value: `${analysis.slotsUsed}/10`, label: 'activity slots', color: accent },
+              { value: `${analysis.awardCount}/${CA_LIMITS.maxHonors}`, label: 'honors slots', color: C.goldL },
+            ]} />
 
-      {/* ── Academic History ──────────────────────────────────────────────────
-          The spine of the panel. Everything entered here decides the college
-          matches below it and is handed to every Medabrain surface in the app. */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.green, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.green, 0.18)}` }}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
-          <SectionTitle icon={TrendingUp} color={C.greenL} extra={{ marginBottom: 0 }}>Academic History</SectionTitle>
-          {academics.hasData && (
-            <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-              <span style={pill(tint(C.green, 0.15), C.greenL, { fontFamily: C.FM })}>{academics.latestGpa}{academics.latestWeighted ? ' weighted' : ''}</span>
-              {academics.latestWeighted && <span style={pill(tint(C.blue, 0.13), C.blueL, { fontFamily: C.FM })}>≈ {academics.comparableGpa} unweighted</span>}
-              {academics.count > 1 && (
-                <span style={pill(tint(academics.trend === 'rising' ? C.green : academics.trend === 'falling' ? C.rose : C.blue, 0.13), academics.trend === 'rising' ? C.greenL : academics.trend === 'falling' ? C.roseL : C.blueL)}>
-                  <TrendIcon size={10} style={{ marginRight: 3 }} />{academics.trend}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-
-        <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
-          This is the number admissions offices weight most heavily, and here it actually does something: every term you log re-decides the college matches on this page and goes straight to Medabrain, so it reasons about your list from your real transcript instead of a guess.
-        </div>
-
-        {academics.count > 1 && (
-          <div style={{ height: 180, marginBottom: 18 }}>
-            <Line data={chartData} options={chartOptions} />
-          </div>
-        )}
-
-        <div style={G(4, 10, {}, true)}>
-          <div><label style={lbl()}>Term</label><input style={inp()} placeholder="e.g. Grade 11, Fall" value={gpaDraft.term} onChange={e => setGpaDraft({ ...gpaDraft, term: e.target.value })} /></div>
-          <div>
-            {/* No character counter here — GPA is a number, not one of the Common App's capped
-                text fields. What matters is which scale it is on, because that decides what it
-                gets compared against. */}
-            <label style={lbl()}>GPA <span style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM }}>· {gpaDraft.weighted ? 'weighted scale (0–6.0)' : 'unweighted scale (0–4.3)'}</span></label>
-            <input type="number" step="0.01" min="0" max={gpaDraft.weighted ? 6 : 4.3} style={inp()} placeholder={gpaDraft.weighted ? '4.42' : '3.85'} value={gpaDraft.gpa} onChange={e => setGpaDraft({ ...gpaDraft, gpa: e.target.value })} />
-          </div>
-          <div><label style={lbl()}>Course rigor (matters a lot)</label><input style={inp()} placeholder="e.g. 4 AP classes, 2 honors" value={gpaDraft.course_rigor} onChange={e => setGpaDraft({ ...gpaDraft, course_rigor: e.target.value })} /></div>
-          <div>
-            <label style={lbl()}>Scale</label>
-            <button type="button" style={btnSm(gpaDraft.weighted ? accentFill(accent) : C.s3, { color: gpaDraft.weighted ? C.onAccent : C.t1, width: '100%' })} onClick={() => setGpaDraft({ ...gpaDraft, weighted: !gpaDraft.weighted })}>{gpaDraft.weighted ? 'Weighted' : 'Unweighted'}</button>
-          </div>
-        </div>
-        {gpaDraft.gpa && !gpaDraft.course_rigor && (
-          <CoachStrip label="Medabrain" lines={[{ level: 'tip', text: 'Add the course rigor. A 3.8 with five APs and a 3.8 with none are different applications, and rigor is the only field that tells them apart — it also gets handed to Medabrain when it reasons about your college list.' }]} />
-        )}
-        <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA Entry</button>
-
-        {/* The reaction to the number they just entered. */}
-        {gpaReaction && (
-          <div style={{ ...glass2({ padding: 16 }), marginTop: 16, border: `1px solid ${tint(gpaReaction.tone === 'critical' ? C.rose : gpaReaction.tone === 'warn' ? C.amber : C.green, 0.3)}`, background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 60%)` }}>
-            <div style={R({ gap: 8, marginBottom: 9 })}>
-              <Sparkles size={13} color={C.violetL} />
-              <span style={{ fontSize: 10.5, fontWeight: 800, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.07em' }}>Medabrain on your GPA</span>
-            </div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.5, marginBottom: 8 }}>{gpaReaction.headline}</div>
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>{gpaReaction.verdict}</div>
-            {gpaReaction.trend && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, marginTop: 9 }}>{gpaReaction.trend}</div>}
-            {gpaReaction.context && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginTop: 9 }}>{gpaReaction.context}</div>}
-            {gpaReaction.picks.length > 0 && (
-              <div style={{ marginTop: 13 }}>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 9 }}>{gpaReaction.careerLine}</div>
-                <div style={CC({ gap: 7 })}>
-                  {gpaReaction.picks.map(p => (
-                    <div key={p.name} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '9px 12px' }), borderRadius: 9, background: tint(CATEGORY_COLOR[p.category] || C.blue, 0.06), border: `1px solid ${tint(CATEGORY_COLOR[p.category] || C.blue, 0.2)}` }}>
-                      <School size={13} color={CATEGORY_COLOR[p.category] || C.blue} style={{ flexShrink: 0, marginTop: 2 }} />
-                      <div style={{ minWidth: 0 }}>
-                        <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-                          <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{p.name}</span>
-                          <span style={pill(tint(CATEGORY_COLOR[p.category] || C.blue, 0.16), CATEGORY_COLOR[p.category] || C.blue, { fontSize: 9.5, textTransform: 'capitalize' })}>{p.category}</span>
-                          <span style={pill(tint(C.violet, 0.13), C.violetL, { fontSize: 9.5 })}>{p.fit}% fit</span>
-                        </div>
-                        <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{p.reason}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          {/* Coverage of the six pillars — the one view that shows a student what
+              their application is actually missing rather than what it contains.
+              It counts this tab's clinical and research sections, not just rows
+              in the activities list. */}
+          {(activities.length > 0 || clinical.length > 0 || research.length > 0) && (
+            <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.16)}` }}>
+              <div style={R({ justifyContent: 'space-between', marginBottom: 13, flexWrap: 'wrap', gap: 8 })}>
+                <SectionTitle icon={Gauge} color={C.violetL} extra={{ marginBottom: 0 }}>What your application is made of</SectionTitle>
+                <span style={pill(tint(C.violet, 0.14), C.violetL, { fontFamily: C.FM, fontSize: 11 })}>{coverage.score}% covered</span>
               </div>
-            )}
-            {gpaReaction.belief && (
-              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.65, marginTop: 13, paddingLeft: 11, borderLeft: `3px solid ${C.violetL}` }}>{gpaReaction.belief}</div>
-            )}
-            <div style={R({ gap: 8, marginTop: 13, flexWrap: 'wrap' })}>
-              <button style={btnSm(C.s3, { fontSize: 11.5 })} onClick={() => setGpaReaction(null)}>Dismiss</button>
-              <span style={{ fontSize: 10.5, color: C.t4, alignSelf: 'center' }}>The full matched slate is below, with an Add button on each.</span>
-            </div>
-          </div>
-        )}
-
-        {!loading && academics.count > 0 && (
-          <div style={{ ...CC({ gap: 8 }), marginTop: 16 }}>
-            {academics.entries.map((g, i) => {
-              const prev = i > 0 ? Number(academics.entries[i - 1].gpa) : null;
-              const d = prev != null ? Math.round((Number(g.gpa) - prev) * 100) / 100 : null;
-              return (
-                <div key={g.id} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{g.term}</span>
-                    <span style={{ fontSize: 12, color: C.t3, marginLeft: 8, fontFamily: C.FM }}>GPA {g.gpa}{g.weighted ? ' (weighted)' : ''}{g.course_rigor ? ` · ${g.course_rigor}` : ''}</span>
-                    {d != null && d !== 0 && (
-                      <span style={{ fontSize: 11, marginLeft: 8, fontFamily: C.FM, fontWeight: 700, color: d > 0 ? C.greenL : C.roseL }}>{d > 0 ? '+' : ''}{d}</span>
-                    )}
-                  </div>
-                  <button style={btnSm(C.roseDim, { color: C.rose })} onClick={() => removeGpaEntry(g.id)} aria-label="Delete GPA entry"><Trash2 size={12} /></button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        <div style={{ marginTop: 16 }}>
-          <MedabrainRead
-            kind="academics"
-            title="Medabrain on your academic record"
-            runLabel="Read my transcript and tell me where I stand"
-            idleHint="A full read of your GPA history against real admitted-student averages: what this record opens, whether your GPA or your test score is the binding constraint, which schools to apply to first, and the one academic move that would change the most from here."
-            fallback={<InsightList insights={acInsights} max={5} />}
-            disabled={!academics.hasData}
-            disabledHint="Log a GPA term above and Medabrain will read your academic record against real admitted-student averages."
-            args={{ user, gradeLabel, gpaEntries, scores, colleges, activities }}
-          />
-        </div>
-      </div>
-
-      {/* ── Colleges matched to the academic record ───────────────────────────
-          The payoff for entering a transcript. Matched on GPA against admitted
-          averages, on score against midpoints, and on the career the student
-          named at signup — so two students with identical numbers and different
-          goals get different slates. */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.2)}` }}>
-        <SectionTitle icon={Target} color={C.violetL}>Colleges matched to your academic record</SectionTitle>
-        {!academics.hasData && !scores.hasScore ? (
-          <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
-            Nothing to match on yet. Add a GPA term above (or log a real SAT/ACT in the Score Tracker) and this fills with U.S. schools picked from your actual numbers and the career you told us you want — each one addable to your college list in a tap, already categorized.
-          </div>
-        ) : (
-          <>
-            <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 13 })}>
-              {academics.hasData && <span style={pill(tint(C.green, 0.14), C.greenL, { fontFamily: C.FM })}>GPA {academics.comparableGpa} unweighted</span>}
-              {scores.hasScore && <span style={pill(tint(C.blue, 0.14), C.blueL, { fontFamily: C.FM })}>SAT {scores.effectiveSat} effective</span>}
-              <span style={pill(tint(C.violet, 0.13), C.violetL)}>Aiming at {profile.label}</span>
-              <span style={{ fontSize: 10.5, color: C.t4, alignSelf: 'center', lineHeight: 1.5 }}>
-                {!scores.hasScore ? 'Matching on GPA alone — a logged test score sharpens every result.' : !academics.hasData ? 'Matching on test score alone — add a GPA term and these re-rank.' : 'Matched on both, with the stricter of the two deciding each category.'}
-              </span>
-            </div>
-            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
-              For {profile.label}, {profile.note}. That is weighted into every fit score below, not just the numbers.
-            </div>
-            {picks.length === 0 ? (
-              <div style={R({ gap: 8, fontSize: 12.5, color: C.t3 })}>
-                <Info size={13} />Every school we'd match to your record is already on your college list.
-                {dismissedPicks.length > 0 && <button style={btnSm(C.s4, { marginLeft: 4 })} onClick={() => setDismissedPicks([])}>Show passed-on schools</button>}
-              </div>
-            ) : (
-              <div style={CC({ gap: 9 })}>
-                {picks.map(p => {
-                  const cc = CATEGORY_COLOR[p.category] || C.blue;
-                  const busy = addingCollege === p.name;
+              <div style={G(3, 9, {}, isMobile)}>
+                {PILLARS.map(p => {
+                  const has = coverage.covered.includes(p.id);
+                  const elsewhere = coverage.fromOtherSection[p.id];
+                  const c = has ? C.green : p.id === 'clinical' ? C.rose : C.amber;
                   return (
-                    <div key={p.name} style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${cc}`, background: `linear-gradient(120deg,${tint(cc, 0.05)},rgba(255,255,255,0.02) 50%)` }}>
-                      <div style={R({ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' })}>
-                        <div style={{ flex: 1, minWidth: 180 }}>
-                          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-                            <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.name}</span>
-                            <span style={pill(tint(cc, 0.16), cc, { textTransform: 'capitalize' })}>{p.category}</span>
-                            <span style={pill(tint(C.violet, 0.13), C.violetL)}>{p.fit}% fit</span>
-                            {p.school.bsmd && <span style={pill(tint(C.green, 0.14), C.greenL)}>BS/MD</span>}
-                            {p.driver === 'gpa' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>GPA decides this</span>}
-                            {p.driver === 'score' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>Score decides this</span>}
-                          </div>
-                          <div style={{ fontSize: 11, color: C.t3, marginTop: 5, fontFamily: C.FM }}>
-                            {p.school.state} · {p.school.type} · admitted GPA {p.school.gpa} · SAT {p.school.sat} · ACT {p.school.act} · {p.school.accept}% admit · strong in {p.school.specialtyStrong}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 6, lineHeight: 1.55 }}>{p.reason}</div>
-                        </div>
-                        <div style={R({ gap: 6, flexShrink: 0 })}>
-                          <button style={btn(accent !== C.blue ? accent : C.blueGrad, { fontSize: 12, padding: '7px 12px' })} disabled={busy} onClick={() => addPick(p)}>
-                            {busy ? <Loader2 size={13} className="spin" /> : <Plus size={13} />}Add
+                    <div key={p.id} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '10px 12px' }), borderRadius: 10, background: tint(c, has ? 0.06 : 0.05), border: `1px solid ${tint(c, has ? 0.18 : 0.14)}` }}>
+                      {has ? <CheckCircle2 size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} />}
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 700, color: has ? C.t1 : c }}>{p.label}</div>
+                        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{has ? p.why : 'Nothing logged here yet.'}</div>
+                        {elsewhere && (
+                          <button type="button" onClick={() => setSection(elsewhere)}
+                            style={{ ...R({ gap: 4, marginTop: 5 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.greenL, fontSize: 10, fontWeight: 700, fontFamily: C.FB }}>
+                            Covered by your {elsewhere === 'clinical' ? 'Clinical Hours' : 'Research'} section<ArrowRight size={10} />
                           </button>
-                          <button style={btnSm(C.s4)} title="Not interested" onClick={() => setDismissedPicks(prev => [...prev, p.name])}>Pass</button>
-                        </div>
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
-            )}
-          </>
-        )}
-      </div>
+              {Object.keys(coverage.fromOtherSection).length > 0 && (
+                <div style={{ fontSize: 10.5, color: C.t4, marginTop: 11, lineHeight: 1.55 }}>
+                  Pillars marked as covered by another section are counted from your logged hours there. Adding a matching entry to the activities list is still what puts it on the Common App — the ten slots below are the only thing a reader sees.
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* ── Add an activity ───────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
-        <SectionTitle icon={Plus} color={accent}>Add an activity</SectionTitle>
-        <div style={G(2, 10, {}, true)}>
-          <div>
-            <label style={lbl()}>Type</label>
-            <select style={inp()} value={draft.activity_type} onChange={e => setDraft({ ...draft, activity_type: e.target.value })}>
-              {ACT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-            </select>
+          {/* ── Add an activity ───────────────────────────────────────────── */}
+          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
+            <SectionTitle icon={Plus} color={accent}>Add an activity</SectionTitle>
+            <div style={G(2, 10, {}, true)}>
+              <div>
+                <label style={lbl()}>Type</label>
+                <select style={inp()} value={draft.activity_type} onChange={e => setDraft({ ...draft, activity_type: e.target.value })}>
+                  {ACT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={lbl()}>Position / Leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
+                <input style={inp()} value={draft.position} onChange={e => setDraft({ ...draft, position: e.target.value })} placeholder="e.g. Team Captain" />
+              </div>
+            </div>
+            <div style={G(2, 10, { marginTop: 10 }, true)}>
+              <div>
+                <label style={lbl()}>Organization<CharCap value={draft.organization} limit={CA_LIMITS.organization} /></label>
+                <input style={inp()} value={draft.organization} onChange={e => setDraft({ ...draft, organization: e.target.value })} placeholder="e.g. Lincoln High School Debate Club" />
+              </div>
+              <div>
+                <label style={lbl()}>Status</label>
+                <div style={R({ gap: 6 })}>
+                  {STATUSES.map(s => (
+                    <button key={s} type="button" style={btnSm(draft.status === s ? accentFill(accent) : C.s3, { color: draft.status === s ? C.onAccent : C.t1, flex: 1, textTransform: 'capitalize' })} onClick={() => setDraft({ ...draft, status: s })}>{s}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <label style={lbl()}>Description<CharCap value={draft.description} limit={CA_LIMITS.description} note="shares one 150-char Common App field with your impact line" /></label>
+              <textarea style={{ ...inp(), minHeight: 60, resize: 'vertical' }} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} placeholder="What did you actually do? Lead with the verb — ran, built, trained, raised, taught." />
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <label style={lbl()}>Impact / results</label>
+              <textarea style={{ ...inp(), minHeight: 44, resize: 'vertical' }} value={draft.impact} onChange={e => setDraft({ ...draft, impact: e.target.value })} placeholder="What changed because you were there? e.g. Grew membership from 12 to 40 students" />
+            </div>
+            <div style={G(2, 10, { marginTop: 10 }, true)}>
+              <div><label style={lbl()}>Hours / week</label><input type="number" min="0" style={inp()} value={draft.hours_per_week} onChange={e => setDraft({ ...draft, hours_per_week: e.target.value })} /></div>
+              <div><label style={lbl()}>Weeks / year</label><input type="number" min="0" style={inp()} value={draft.weeks_per_year} onChange={e => setDraft({ ...draft, weeks_per_year: e.target.value })} /></div>
+            </div>
+            {(Number(draft.hours_per_week) > 0 && Number(draft.weeks_per_year) > 0) && (
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 6, fontFamily: C.FM }}>
+                ≈ {Math.round(Number(draft.hours_per_week) * Number(draft.weeks_per_year))} hours a year · {Number(draft.weeks_per_year) >= 40 ? 'All year' : Number(draft.weeks_per_year) <= 14 ? 'School break' : 'School year'} on the Common App's timing field
+              </div>
+            )}
+            <div style={{ marginTop: 10 }}>
+              <label style={lbl()}>Grade levels involved</label>
+              <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+                {GRADE_LEVELS.map(g => (
+                  <button key={g} type="button" onClick={() => toggleGrade(g)} style={btnSm(draft.grade_levels.includes(g) ? accentFill(accent) : C.s3, { color: draft.grade_levels.includes(g) ? C.onAccent : C.t1 })}>{g}</button>
+                ))}
+              </div>
+            </div>
+            <div style={G(2, 10, { marginTop: 10 }, true)}>
+              <div><label style={lbl()}>Skills gained (comma-separated, optional)</label><input style={inp()} value={draft.skills_tags} onChange={e => setDraft({ ...draft, skills_tags: e.target.value })} placeholder="e.g. public speaking, triage, teamwork" /></div>
+              <div><label style={lbl()}>Evidence link (optional)</label><input style={inp()} value={draft.evidence_url} onChange={e => setDraft({ ...draft, evidence_url: e.target.value })} placeholder="Certificate, article, photo…" /></div>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <button type="button" style={btnSm(draft.leadership_role ? accentFill(accent) : C.s3, { color: draft.leadership_role ? C.onAccent : C.t1 })} onClick={() => setDraft({ ...draft, leadership_role: !draft.leadership_role })}>{draft.leadership_role ? 'Leadership role ✓' : 'Mark as a leadership role'}</button>
+            </div>
+
+            <CoachStrip lines={draftCoaching} />
+
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addActivity}><Plus size={14} />Add Activity</button>
+            {draft.activity_type === 'Clinical/Shadowing' && (
+              <div style={{ ...R({ gap: 6, marginTop: 10 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
+                <Stethoscope size={12} color={C.pink} style={{ flexShrink: 0 }} />
+                <span>Logging the shift-by-shift hours too? The <button type="button" onClick={() => setSection('clinical')} style={{ all: 'unset', cursor: 'pointer', color: C.pinkL, fontWeight: 700 }}>Clinical Hours</button> section keeps the dated, per-site record with a supervisor for verification. This entry is the one that reaches the Common App.</span>
+              </div>
+            )}
           </div>
-          <div>
-            <label style={lbl()}>Position / Leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
-            <input style={inp()} value={draft.position} onChange={e => setDraft({ ...draft, position: e.target.value })} placeholder="e.g. Team Captain" />
-          </div>
-        </div>
-        <div style={G(2, 10, { marginTop: 10 }, true)}>
-          <div>
-            <label style={lbl()}>Organization<CharCap value={draft.organization} limit={CA_LIMITS.organization} /></label>
-            <input style={inp()} value={draft.organization} onChange={e => setDraft({ ...draft, organization: e.target.value })} placeholder="e.g. Lincoln High School Debate Club" />
-          </div>
-          <div>
-            <label style={lbl()}>Status</label>
-            <div style={R({ gap: 6 })}>
-              {STATUSES.map(s => (
-                <button key={s} type="button" style={btnSm(draft.status === s ? accentFill(accent) : C.s3, { color: draft.status === s ? C.onAccent : C.t1, flex: 1, textTransform: 'capitalize' })} onClick={() => setDraft({ ...draft, status: s })}>{s}</button>
+
+          {/* ── The slate ─────────────────────────────────────────────────── */}
+          {!loading && activities.length > 0 && (
+            <div style={CC({ gap: 12 })}>
+              <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 })}>
+                <SectionTitle icon={Layers} color={accent} extra={{ marginBottom: 0 }}>My Activities ({activities.length})</SectionTitle>
+                <span style={{ fontSize: 10.5, color: C.t4 }}>Scored on how much of each activity actually made it into the record</span>
+              </div>
+
+              <MedabrainRead
+                kind="slate"
+                title="Medabrain on your whole activities list"
+                runLabel="Read my whole list as an admissions officer would"
+                idleHint="A read of the list as one application, not eleven rows: what forty seconds of it communicates, your strongest and weakest entries with the words you actually wrote, a slot-by-slot pass, and the one gap worth closing next."
+                fallback={<InsightList insights={insights} max={6} />}
+                args={{
+                  user, gradeLabel, activities, awards, analysis, colleges,
+                  // The read is given what the other sections of this tab hold, so it
+                  // stops telling students to go get clinical hours they already have.
+                  elsewhere: { clinicalHours, clinicalEntries: clinical.length, researchProjects: research.length, researchHours, certifications: certs.map(c => c.name).slice(0, 8) },
+                }}
+              />
+
+              {activities.map(a => (
+                <ActivityCard key={a.id} a={a} accent={accent} user={user} gradeLabel={gradeLabel} analysis={analysis} onRemove={() => removeActivity(a.id)} />
               ))}
             </div>
-          </div>
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <label style={lbl()}>Description<CharCap value={draft.description} limit={CA_LIMITS.description} note="shares one 150-char Common App field with your impact line" /></label>
-          <textarea style={{ ...inp(), minHeight: 60, resize: 'vertical' }} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} placeholder="What did you actually do? Lead with the verb — ran, built, trained, raised, taught." />
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <label style={lbl()}>Impact / results</label>
-          <textarea style={{ ...inp(), minHeight: 44, resize: 'vertical' }} value={draft.impact} onChange={e => setDraft({ ...draft, impact: e.target.value })} placeholder="What changed because you were there? e.g. Grew membership from 12 to 40 students" />
-        </div>
-        <div style={G(2, 10, { marginTop: 10 }, true)}>
-          <div><label style={lbl()}>Hours / week</label><input type="number" min="0" style={inp()} value={draft.hours_per_week} onChange={e => setDraft({ ...draft, hours_per_week: e.target.value })} /></div>
-          <div><label style={lbl()}>Weeks / year</label><input type="number" min="0" style={inp()} value={draft.weeks_per_year} onChange={e => setDraft({ ...draft, weeks_per_year: e.target.value })} /></div>
-        </div>
-        {(Number(draft.hours_per_week) > 0 && Number(draft.weeks_per_year) > 0) && (
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 6, fontFamily: C.FM }}>
-            ≈ {Math.round(Number(draft.hours_per_week) * Number(draft.weeks_per_year))} hours a year · {Number(draft.weeks_per_year) >= 40 ? 'All year' : Number(draft.weeks_per_year) <= 14 ? 'School break' : 'School year'} on the Common App's timing field
-          </div>
-        )}
-        <div style={{ marginTop: 10 }}>
-          <label style={lbl()}>Grade levels involved</label>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
-            {GRADE_LEVELS.map(g => (
-              <button key={g} type="button" onClick={() => toggleGrade(g)} style={btnSm(draft.grade_levels.includes(g) ? accentFill(accent) : C.s3, { color: draft.grade_levels.includes(g) ? C.onAccent : C.t1 })}>{g}</button>
-            ))}
-          </div>
-        </div>
-        <div style={G(2, 10, { marginTop: 10 }, true)}>
-          <div><label style={lbl()}>Skills gained (comma-separated, optional)</label><input style={inp()} value={draft.skills_tags} onChange={e => setDraft({ ...draft, skills_tags: e.target.value })} placeholder="e.g. public speaking, triage, teamwork" /></div>
-          <div><label style={lbl()}>Evidence link (optional)</label><input style={inp()} value={draft.evidence_url} onChange={e => setDraft({ ...draft, evidence_url: e.target.value })} placeholder="Certificate, article, photo…" /></div>
-        </div>
-        <div style={{ marginTop: 10 }}>
-          <button type="button" style={btnSm(draft.leadership_role ? accentFill(accent) : C.s3, { color: draft.leadership_role ? C.onAccent : C.t1 })} onClick={() => setDraft({ ...draft, leadership_role: !draft.leadership_role })}>{draft.leadership_role ? 'Leadership role ✓' : 'Mark as a leadership role'}</button>
-        </div>
+          )}
 
-        <CoachStrip lines={draftCoaching} />
-
-        <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addActivity}><Plus size={14} />Add Activity</button>
-      </div>
-
-      {/* ── The slate ─────────────────────────────────────────────────────── */}
-      {!loading && activities.length > 0 && (
-        <div style={CC({ gap: 12 })}>
-          <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 })}>
-            <SectionTitle icon={Layers} color={accent} extra={{ marginBottom: 0 }}>My Activities ({activities.length})</SectionTitle>
-            <span style={{ fontSize: 10.5, color: C.t4 }}>Scored on how much of each activity actually made it into the record</span>
-          </div>
-
-          <MedabrainRead
-            kind="slate"
-            title="Medabrain on your whole activities list"
-            runLabel="Read my whole list as an admissions officer would"
-            idleHint="A read of the list as one application, not eleven rows: what forty seconds of it communicates, your strongest and weakest entries with the words you actually wrote, a slot-by-slot pass, and the one gap worth closing next."
-            fallback={<InsightList insights={insights} max={6} />}
-            args={{ user, gradeLabel, activities, awards, analysis, colleges }}
-          />
-
-          {activities.map(a => (
-            <ActivityCard key={a.id} a={a} accent={accent} user={user} gradeLabel={gradeLabel} analysis={analysis} onRemove={() => removeActivity(a.id)} />
-          ))}
-        </div>
-      )}
-
-      {!loading && activities.length === 0 && (
-        <div style={{ ...glass2({ padding: 16 }), border: `1px solid ${tint(C.violet, 0.2)}` }}>
-          <InsightList insights={insights} />
-        </div>
-      )}
-
-      {/* ── Honors ────────────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.gold, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.gold, 0.2)}` }}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
-          <SectionTitle icon={Award} color={C.goldL} extra={{ marginBottom: 0 }}>Add an honor or award</SectionTitle>
-          <span style={pill(tint(C.gold, 0.13), C.goldL, { fontFamily: C.FM })}>{awards.length}/{CA_LIMITS.maxHonors} Common App slots</span>
-        </div>
-        <div style={G(3, 10, {}, true)}>
-          <div>
-            <label style={lbl()}>Award title<CharCap value={awardDraft.title} limit={CA_LIMITS.honorTitle} /></label>
-            <input style={inp()} placeholder="e.g. National Merit Semifinalist" value={awardDraft.title} onChange={e => setAwardDraft({ ...awardDraft, title: e.target.value })} />
-          </div>
-          <div>
-            <label style={lbl()}>Grade level</label>
-            <select style={inp()} value={awardDraft.grade_level} onChange={e => setAwardDraft({ ...awardDraft, grade_level: e.target.value })}>
-              <option value="">Grade level</option>
-              {GRADE_LEVELS.map(g => <option key={g} value={g}>{g}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={lbl()}>Recognition level</label>
-            <select style={inp()} value={awardDraft.level} onChange={e => setAwardDraft({ ...awardDraft, level: e.target.value })}>
-              <option value="">Recognition level</option>
-              <option>School</option><option>State/Regional</option><option>National</option><option>International</option>
-            </select>
-          </div>
-        </div>
-        <div style={G(2, 10, { marginTop: 10 }, true)}>
-          <input style={inp()} placeholder="Issuing organization (optional)" value={awardDraft.issuing_organization} onChange={e => setAwardDraft({ ...awardDraft, issuing_organization: e.target.value })} />
-          <input style={inp()} placeholder="Certificate link (optional)" value={awardDraft.certificate_url} onChange={e => setAwardDraft({ ...awardDraft, certificate_url: e.target.value })} />
-        </div>
-        {awardDraft.title && !awardDraft.level && (
-          <CoachStrip label="Medabrain" lines={[{ level: 'warn', text: 'Set the level of recognition. It is a required field on the form and it is most of what the honor communicates — "Science Award" and "Science Award, National" are different lines to a reader.' }]} />
-        )}
-        <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addAward}><Plus size={14} />Add Award</button>
-      </div>
-
-      {!loading && (
-        <div style={CC({ gap: 9 })}>
-          <MedabrainRead
-            kind="honors"
-            title="Medabrain on your honors section"
-            runLabel="Read my honors section"
-            idleHint="How your five slots should be ordered, which honors your own activities suggest you may already hold and simply have not logged, and one recognition worth going after next."
-            fallback={<InsightList insights={hInsights} max={4} />}
-            disabled={awards.length === 0 && activities.length === 0}
-            disabledHint="Log an honor or an activity and Medabrain will read this section."
-            args={{ user, gradeLabel, awards, activities, analysis }}
-          />
-          {awards.length > 0 && awards.map(a => (
-            <div key={a.id} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 12, borderLeft: `3px solid ${C.gold}`, background: `linear-gradient(120deg,${tint(C.gold, 0.05)},rgba(255,255,255,0.02) 55%)` }}>
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(C.gold, 0.13), border: `1px solid ${tint(C.gold, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Award size={14} color={C.goldL} /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>{a.title}</span>
-                <span style={{ fontSize: 11, color: C.t3, marginLeft: 8 }}>{[a.level, a.grade_level && `Grade ${a.grade_level}`, a.issuing_organization].filter(Boolean).join(' · ')}</span>
-                {!a.level && <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 6 })}>No level set</span>}
-                {a.certificate_url && <a href={a.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, marginLeft: 8 }}>View certificate →</a>}
-              </div>
-              <VerificationBadge status={a.verification_status} />
-              <button style={btnSm(C.roseDim, { color: C.rose })} onClick={() => removeAward(a.id)} aria-label="Delete award"><Trash2 size={12} /></button>
+          {!loading && activities.length === 0 && (
+            <div style={{ ...glass2({ padding: 16 }), border: `1px solid ${tint(C.violet, 0.2)}` }}>
+              <InsightList insights={insights} />
             </div>
-          ))}
-        </div>
+          )}
+
+          {/* ── Honors ────────────────────────────────────────────────────── */}
+          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.gold, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.gold, 0.2)}` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+              <SectionTitle icon={Award} color={C.goldL} extra={{ marginBottom: 0 }}>Add an honor or award</SectionTitle>
+              <span style={pill(tint(C.gold, 0.13), C.goldL, { fontFamily: C.FM })}>{awards.length}/{CA_LIMITS.maxHonors} Common App slots</span>
+            </div>
+            <div style={G(3, 10, {}, true)}>
+              <div>
+                <label style={lbl()}>Award title<CharCap value={awardDraft.title} limit={CA_LIMITS.honorTitle} /></label>
+                <input style={inp()} placeholder="e.g. National Merit Semifinalist" value={awardDraft.title} onChange={e => setAwardDraft({ ...awardDraft, title: e.target.value })} />
+              </div>
+              <div>
+                <label style={lbl()}>Grade level</label>
+                <select style={inp()} value={awardDraft.grade_level} onChange={e => setAwardDraft({ ...awardDraft, grade_level: e.target.value })}>
+                  <option value="">Grade level</option>
+                  {GRADE_LEVELS.map(g => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={lbl()}>Recognition level</label>
+                <select style={inp()} value={awardDraft.level} onChange={e => setAwardDraft({ ...awardDraft, level: e.target.value })}>
+                  <option value="">Recognition level</option>
+                  <option>School</option><option>State/Regional</option><option>National</option><option>International</option>
+                </select>
+              </div>
+            </div>
+            <div style={G(2, 10, { marginTop: 10 }, true)}>
+              <input style={inp()} placeholder="Issuing organization (optional)" value={awardDraft.issuing_organization} onChange={e => setAwardDraft({ ...awardDraft, issuing_organization: e.target.value })} />
+              <input style={inp()} placeholder="Certificate link (optional)" value={awardDraft.certificate_url} onChange={e => setAwardDraft({ ...awardDraft, certificate_url: e.target.value })} />
+            </div>
+            {awardDraft.title && !awardDraft.level && (
+              <CoachStrip label="Medabrain" lines={[{ level: 'warn', text: 'Set the level of recognition. It is a required field on the form and it is most of what the honor communicates — "Science Award" and "Science Award, National" are different lines to a reader.' }]} />
+            )}
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addAward}><Plus size={14} />Add Award</button>
+            <div style={{ ...R({ gap: 6, marginTop: 10 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
+              <BadgeCheck size={12} color={C.teal} style={{ flexShrink: 0 }} />
+              <span>A certification is not an honor — CPR, EMT, lifeguard and lab-safety credentials belong in <button type="button" onClick={() => setSection('credentials')} style={{ all: 'unset', cursor: 'pointer', color: C.tealL, fontWeight: 700 }}>Skills &amp; Certs</button>, where their expiry dates get tracked. Both end up on your résumé PDF.</span>
+            </div>
+          </div>
+
+          {!loading && (
+            <div style={CC({ gap: 9 })}>
+              <MedabrainRead
+                kind="honors"
+                title="Medabrain on your honors section"
+                runLabel="Read my honors section"
+                idleHint="How your five slots should be ordered, which honors your own activities suggest you may already hold and simply have not logged, and one recognition worth going after next."
+                fallback={<InsightList insights={hInsights} max={4} />}
+                disabled={awards.length === 0 && activities.length === 0}
+                disabledHint="Log an honor or an activity and Medabrain will read this section."
+                args={{ user, gradeLabel, awards, activities, analysis }}
+              />
+              {awards.length > 0 && awards.map(a => (
+                <div key={a.id} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 12, borderLeft: `3px solid ${C.gold}`, background: `linear-gradient(120deg,${tint(C.gold, 0.05)},rgba(255,255,255,0.02) 55%)` }}>
+                  <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(C.gold, 0.13), border: `1px solid ${tint(C.gold, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Award size={14} color={C.goldL} /></div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>{a.title}</span>
+                    <span style={{ fontSize: 11, color: C.t3, marginLeft: 8 }}>{[a.level, a.grade_level && `Grade ${a.grade_level}`, a.issuing_organization].filter(Boolean).join(' · ')}</span>
+                    {!a.level && <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 6 })}>No level set</span>}
+                    {a.certificate_url && <a href={a.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, marginLeft: 8 }}>View certificate →</a>}
+                  </div>
+                  <VerificationBadge status={a.verification_status} />
+                  <button style={btnSm(C.roseDim, { color: C.rose })} onClick={() => removeAward(a.id)} aria-label="Delete award"><Trash2 size={12} /></button>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ═══ ACADEMICS ═══════════════════════════════════════════════════════ */}
+      {activeSection === 'academics' && (
+        <>
+          <SectionIntro icon={GraduationCap} color={C.green} color2={C.blue} m={isMobile}
+            title="Academic History"
+            blurb="The number admissions offices weight most heavily — and here it actually does something. Every term you log re-decides the college matches below it and goes straight to Medabrain, so it reasons about your list from your real transcript instead of a guess."
+            stats={academics.hasData ? [
+              { value: academics.latestGpa, label: academics.latestWeighted ? 'weighted' : 'unweighted', color: C.greenL },
+              { value: academics.count, label: academics.count === 1 ? 'term' : 'terms', color: C.blueL },
+            ] : []} />
+
+          {/* ── Academic History ────────────────────────────────────────────
+              The spine of the tab. Everything entered here decides the college
+              matches below it and is handed to every Medabrain surface. */}
+          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.green, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.green, 0.18)}` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+              <SectionTitle icon={TrendingUp} color={C.greenL} extra={{ marginBottom: 0 }}>Log a term</SectionTitle>
+              {academics.hasData && (
+                <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                  <span style={pill(tint(C.green, 0.15), C.greenL, { fontFamily: C.FM })}>{academics.latestGpa}{academics.latestWeighted ? ' weighted' : ''}</span>
+                  {academics.latestWeighted && <span style={pill(tint(C.blue, 0.13), C.blueL, { fontFamily: C.FM })}>≈ {academics.comparableGpa} unweighted</span>}
+                  {academics.count > 1 && (
+                    <span style={pill(tint(academics.trend === 'rising' ? C.green : academics.trend === 'falling' ? C.rose : C.blue, 0.13), academics.trend === 'rising' ? C.greenL : academics.trend === 'falling' ? C.roseL : C.blueL)}>
+                      <TrendIcon size={10} style={{ marginRight: 3 }} />{academics.trend}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {academics.count > 1 && (
+              <div style={{ height: 180, marginBottom: 18 }}>
+                <Line data={chartData} options={chartOptions} />
+              </div>
+            )}
+
+            <div style={G(4, 10, {}, true)}>
+              <div><label style={lbl()}>Term</label><input style={inp()} placeholder="e.g. Grade 11, Fall" value={gpaDraft.term} onChange={e => setGpaDraft({ ...gpaDraft, term: e.target.value })} /></div>
+              <div>
+                {/* No character counter here — GPA is a number, not one of the Common App's capped
+                    text fields. What matters is which scale it is on, because that decides what it
+                    gets compared against. */}
+                <label style={lbl()}>GPA <span style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM }}>· {gpaDraft.weighted ? 'weighted scale (0–6.0)' : 'unweighted scale (0–4.3)'}</span></label>
+                <input type="number" step="0.01" min="0" max={gpaDraft.weighted ? 6 : 4.3} style={inp()} placeholder={gpaDraft.weighted ? '4.42' : '3.85'} value={gpaDraft.gpa} onChange={e => setGpaDraft({ ...gpaDraft, gpa: e.target.value })} />
+              </div>
+              <div><label style={lbl()}>Course rigor (matters a lot)</label><input style={inp()} placeholder="e.g. 4 AP classes, 2 honors" value={gpaDraft.course_rigor} onChange={e => setGpaDraft({ ...gpaDraft, course_rigor: e.target.value })} /></div>
+              <div>
+                <label style={lbl()}>Scale</label>
+                <button type="button" style={btnSm(gpaDraft.weighted ? accentFill(accent) : C.s3, { color: gpaDraft.weighted ? C.onAccent : C.t1, width: '100%' })} onClick={() => setGpaDraft({ ...gpaDraft, weighted: !gpaDraft.weighted })}>{gpaDraft.weighted ? 'Weighted' : 'Unweighted'}</button>
+              </div>
+            </div>
+            {gpaDraft.gpa && !gpaDraft.course_rigor && (
+              <CoachStrip label="Medabrain" lines={[{ level: 'tip', text: 'Add the course rigor. A 3.8 with five APs and a 3.8 with none are different applications, and rigor is the only field that tells them apart — it also gets handed to Medabrain when it reasons about your college list.' }]} />
+            )}
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA Entry</button>
+
+            {/* The reaction to the number they just entered. */}
+            {gpaReaction && (
+              <div style={{ ...glass2({ padding: 16 }), marginTop: 16, border: `1px solid ${tint(gpaReaction.tone === 'critical' ? C.rose : gpaReaction.tone === 'warn' ? C.amber : C.green, 0.3)}`, background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 60%)` }}>
+                <div style={R({ gap: 8, marginBottom: 9 })}>
+                  <Sparkles size={13} color={C.violetL} />
+                  <span style={{ fontSize: 10.5, fontWeight: 800, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.07em' }}>Medabrain on your GPA</span>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.5, marginBottom: 8 }}>{gpaReaction.headline}</div>
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>{gpaReaction.verdict}</div>
+                {gpaReaction.trend && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, marginTop: 9 }}>{gpaReaction.trend}</div>}
+                {gpaReaction.context && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginTop: 9 }}>{gpaReaction.context}</div>}
+                {gpaReaction.picks.length > 0 && (
+                  <div style={{ marginTop: 13 }}>
+                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 9 }}>{gpaReaction.careerLine}</div>
+                    <div style={CC({ gap: 7 })}>
+                      {gpaReaction.picks.map(p => (
+                        <div key={p.name} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '9px 12px' }), borderRadius: 9, background: tint(CATEGORY_COLOR[p.category] || C.blue, 0.06), border: `1px solid ${tint(CATEGORY_COLOR[p.category] || C.blue, 0.2)}` }}>
+                          <School size={13} color={CATEGORY_COLOR[p.category] || C.blue} style={{ flexShrink: 0, marginTop: 2 }} />
+                          <div style={{ minWidth: 0 }}>
+                            <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                              <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{p.name}</span>
+                              <span style={pill(tint(CATEGORY_COLOR[p.category] || C.blue, 0.16), CATEGORY_COLOR[p.category] || C.blue, { fontSize: 9.5, textTransform: 'capitalize' })}>{p.category}</span>
+                              <span style={pill(tint(C.violet, 0.13), C.violetL, { fontSize: 9.5 })}>{p.fit}% fit</span>
+                            </div>
+                            <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{p.reason}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {gpaReaction.belief && (
+                  <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.65, marginTop: 13, paddingLeft: 11, borderLeft: `3px solid ${C.violetL}` }}>{gpaReaction.belief}</div>
+                )}
+                <div style={R({ gap: 8, marginTop: 13, flexWrap: 'wrap' })}>
+                  <button style={btnSm(C.s3, { fontSize: 11.5 })} onClick={() => setGpaReaction(null)}>Dismiss</button>
+                  <span style={{ fontSize: 10.5, color: C.t4, alignSelf: 'center' }}>The full matched slate is below, with an Add button on each.</span>
+                </div>
+              </div>
+            )}
+
+            {!loading && academics.count > 0 && (
+              <div style={{ ...CC({ gap: 8 }), marginTop: 16 }}>
+                {academics.entries.map((g, i) => {
+                  const prev = i > 0 ? Number(academics.entries[i - 1].gpa) : null;
+                  const d = prev != null ? Math.round((Number(g.gpa) - prev) * 100) / 100 : null;
+                  return (
+                    <div key={g.id} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{g.term}</span>
+                        <span style={{ fontSize: 12, color: C.t3, marginLeft: 8, fontFamily: C.FM }}>GPA {g.gpa}{g.weighted ? ' (weighted)' : ''}{g.course_rigor ? ` · ${g.course_rigor}` : ''}</span>
+                        {d != null && d !== 0 && (
+                          <span style={{ fontSize: 11, marginLeft: 8, fontFamily: C.FM, fontWeight: 700, color: d > 0 ? C.greenL : C.roseL }}>{d > 0 ? '+' : ''}{d}</span>
+                        )}
+                      </div>
+                      <button style={btnSm(C.roseDim, { color: C.rose })} onClick={() => removeGpaEntry(g.id)} aria-label="Delete GPA entry"><Trash2 size={12} /></button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div style={{ marginTop: 16 }}>
+              <MedabrainRead
+                kind="academics"
+                title="Medabrain on your academic record"
+                runLabel="Read my transcript and tell me where I stand"
+                idleHint="A full read of your GPA history against real admitted-student averages: what this record opens, whether your GPA or your test score is the binding constraint, which schools to apply to first, and the one academic move that would change the most from here."
+                fallback={<InsightList insights={acInsights} max={5} />}
+                disabled={!academics.hasData}
+                disabledHint="Log a GPA term above and Medabrain will read your academic record against real admitted-student averages."
+                args={{ user, gradeLabel, gpaEntries, scores, colleges, activities }}
+              />
+            </div>
+          </div>
+
+          {/* ── Colleges matched to the academic record ────────────────────
+              The payoff for entering a transcript. Matched on GPA against
+              admitted averages, on score against midpoints, and on the career
+              the student named at signup — so two students with identical
+              numbers and different goals get different slates. */}
+          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.2)}` }}>
+            <SectionTitle icon={Target} color={C.violetL}>Colleges matched to your academic record</SectionTitle>
+            {!academics.hasData && !scores.hasScore ? (
+              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+                Nothing to match on yet. Add a GPA term above (or log a real SAT/ACT in the Score Tracker) and this fills with U.S. schools picked from your actual numbers and the career you told us you want — each one addable to your college list in a tap, already categorized.
+              </div>
+            ) : (
+              <>
+                <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 13 })}>
+                  {academics.hasData && <span style={pill(tint(C.green, 0.14), C.greenL, { fontFamily: C.FM })}>GPA {academics.comparableGpa} unweighted</span>}
+                  {scores.hasScore && <span style={pill(tint(C.blue, 0.14), C.blueL, { fontFamily: C.FM })}>SAT {scores.effectiveSat} effective</span>}
+                  <span style={pill(tint(C.violet, 0.13), C.violetL)}>Aiming at {profile.label}</span>
+                  <span style={{ fontSize: 10.5, color: C.t4, alignSelf: 'center', lineHeight: 1.5 }}>
+                    {!scores.hasScore ? 'Matching on GPA alone — a logged test score sharpens every result.' : !academics.hasData ? 'Matching on test score alone — add a GPA term and these re-rank.' : 'Matched on both, with the stricter of the two deciding each category.'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+                  For {profile.label}, {profile.note}. That is weighted into every fit score below, not just the numbers.
+                </div>
+                {picks.length === 0 ? (
+                  <div style={R({ gap: 8, fontSize: 12.5, color: C.t3 })}>
+                    <Info size={13} />Every school we'd match to your record is already on your college list.
+                    {dismissedPicks.length > 0 && <button style={btnSm(C.s4, { marginLeft: 4 })} onClick={() => setDismissedPicks([])}>Show passed-on schools</button>}
+                  </div>
+                ) : (
+                  <div style={CC({ gap: 9 })}>
+                    {picks.map(p => {
+                      const cc = CATEGORY_COLOR[p.category] || C.blue;
+                      const busy = addingCollege === p.name;
+                      return (
+                        <div key={p.name} style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${cc}`, background: `linear-gradient(120deg,${tint(cc, 0.05)},rgba(255,255,255,0.02) 50%)` }}>
+                          <div style={R({ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' })}>
+                            <div style={{ flex: 1, minWidth: 180 }}>
+                              <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                                <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.name}</span>
+                                <span style={pill(tint(cc, 0.16), cc, { textTransform: 'capitalize' })}>{p.category}</span>
+                                <span style={pill(tint(C.violet, 0.13), C.violetL)}>{p.fit}% fit</span>
+                                {p.school.bsmd && <span style={pill(tint(C.green, 0.14), C.greenL)}>BS/MD</span>}
+                                {p.driver === 'gpa' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>GPA decides this</span>}
+                                {p.driver === 'score' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>Score decides this</span>}
+                              </div>
+                              <div style={{ fontSize: 11, color: C.t3, marginTop: 5, fontFamily: C.FM }}>
+                                {p.school.state} · {p.school.type} · admitted GPA {p.school.gpa} · SAT {p.school.sat} · ACT {p.school.act} · {p.school.accept}% admit · strong in {p.school.specialtyStrong}
+                              </div>
+                              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 6, lineHeight: 1.55 }}>{p.reason}</div>
+                            </div>
+                            <div style={R({ gap: 6, flexShrink: 0 })}>
+                              <button style={btn(accent !== C.blue ? accent : C.blueGrad, { fontSize: 12, padding: '7px 12px' })} disabled={busy} onClick={() => addPick(p)}>
+                                {busy ? <Loader2 size={13} className="spin" /> : <Plus size={13} />}Add
+                              </button>
+                              <button style={btnSm(C.s4)} title="Not interested" onClick={() => setDismissedPicks(prev => [...prev, p.name])}>Pass</button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* ═══ CLINICAL HOURS ══════════════════════════════════════════════════ */}
+      {activeSection === 'clinical' && (
+        <ClinicalHoursSection accent={C.pink} entries={clinical} setEntries={setClinical}
+          loading={loading} isMobile={isMobile} onLogged={onClinicalLogged} />
+      )}
+
+      {/* ═══ RESEARCH ════════════════════════════════════════════════════════ */}
+      {activeSection === 'research' && (
+        <ResearchSection accent={C.cyan} entries={research} setEntries={setResearch}
+          loading={loading} isMobile={isMobile} onLogged={onResearchLogged} />
+      )}
+
+      {/* ═══ SKILLS & CERTIFICATIONS ═════════════════════════════════════════ */}
+      {activeSection === 'credentials' && (
+        <CredentialsSection accent={C.teal} entries={certs} setEntries={setCerts}
+          loading={loading} isMobile={isMobile} onChanged={onCredentialChanged} />
       )}
 
       <CommonAppExport

@@ -73,12 +73,9 @@ import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
 import StreakHeatmap from './components/StreakHeatmap';
-import ActivitiesResumePanel from './components/ActivitiesResumePanel';
+import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
-import ClinicalHoursPanel from './components/ClinicalHoursPanel';
 import RecommendersPanel from './components/RecommendersPanel';
-import ResearchExperiencePanel from './components/ResearchExperiencePanel';
-import SkillsCertificationsPanel from './components/SkillsCertificationsPanel';
 // Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
 // generates the admissions calendar and edits the student's own dates. See PortfolioMilestones.jsx.
 import PortfolioMilestones, { TimelineNextCard, useDeadlines } from './components/PortfolioMilestones';
@@ -111,7 +108,11 @@ import { SCORE_DISCLAIMER } from './data/sat/scoring';
 import AppTour from './components/AppTour';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
-import { buildPortfolioSnapshot, snapshotItemCount } from './lib/portfolioData';
+// snapshotItemCount is deliberately NOT re-exported here — it lives in weeklyGoals.js (see the
+// note at the top of portfolioData.js) and nothing in this file uses it. Importing it anyway was
+// only a warning to Rollup but a hard module error to the dev server's native ESM, which blanked
+// the whole app in development.
+import { buildPortfolioSnapshot } from './lib/portfolioData';
 import { buildTrackedItems, buildDailyReport } from './lib/trackedItems';
 import { buildInsights } from './lib/insights';
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
@@ -363,10 +364,15 @@ const PORTFOLIO_SUBNAV = [
   {id:'colleges',ic:GraduationCap,label:'College List',color:C.sky},
   {id:'essays',ic:ScrollText,label:'Essays',color:C.violet},
   {id:'aid',ic:Handshake,label:'Financial Aid',color:C.green},
-  {id:'resume',ic:Award,label:'Activities & Resume',color:C.amber},
-  {id:'research',ic:FlaskConical,label:'Research',color:C.cyan},
-  {id:'skills',ic:BadgeCheck,label:'Skills & Certs',color:C.teal},
-  {id:'clinical',ic:Stethoscope,label:'Clinical Hours',color:C.pink},
+  // One tab, not four. 'Activities & Resume', 'Research', 'Skills & Certs' and 'Clinical Hours'
+  // were four pills holding four parts of the same answer to one question — what has this
+  // student actually done — and none of them could see the others: the activities list would
+  // report no clinical exposure while a hundred logged shadowing hours sat one pill away, and
+  // the résumé it exported contained neither those hours nor any certification. They are now
+  // five sections inside Activities & Résumé (see RESUME_SECTIONS in ActivitiesResumePanel).
+  // /portfolio/research, /portfolio/skills and /portfolio/clinical still resolve here and open
+  // the exact section they used to be — see routes.js aliases + RESUME_SECTION_FOR_VIEW below.
+  {id:'resume',ic:Award,label:'Activities & Résumé',color:C.amber},
   {id:'recommenders',ic:UserCheck,label:'Recommenders',color:C.fuchsia},
   {id:'interview',ic:Mic,label:'Interview Prep',color:C.orange},
   // No 'scores' tab here on purpose. Test-score tracking lives in the SAT tab (/sat/scores),
@@ -375,6 +381,17 @@ const PORTFOLIO_SUBNAV = [
   // Admissions Calculator still reads the student's real test_scores rows (syncWithPortfolio).
   {id:'calc',ic:Calculator,label:'Admissions Calc',color:C.gold},
 ];
+// The three retired Portfolio tabs → the section of Activities & Résumé each of them became.
+// Every caller in the app (and every old URL) still names them by their tab id; this is the
+// one place that translation happens.
+const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials' };
+// The section an old-style URL names, if any: /portfolio/clinical → 'clinical'. routes.js
+// already forwards those paths to the `resume` view; this recovers the part it cannot carry,
+// since an alias by design never round-trips back out of formatPath().
+function resumeSectionFromPath(pathname=''){
+  const parts = String(pathname).split('/').filter(Boolean);
+  return (parts[0]==='portfolio' && RESUME_SECTION_FOR_VIEW[parts[1]]) || null;
+}
 const PROGRESS_SUBNAV = [
   {id:'overview',ic:LineChart,label:'Overview',color:C.blue},
   {id:'verified',ic:ShieldCheck,label:'Verified Progress',color:C.green},
@@ -1279,7 +1296,22 @@ export default function App({ account, onAccountChange }) {
   const [satParams, setSatParams] = useState(null);
   const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
   const goSat = useCallback((view, params=null)=>{ setTab('sat'); if(view) setSatView(view); setSatParams(params); }, []);
-  const goPortfolio = useCallback((view)=>{ setTab('portfolio'); if(view) setPortfolioView(view); }, []);
+  // Which section of Activities & Résumé is open. It lives here rather than inside the panel
+  // because the three tabs that were merged into it are still addressed by name from all over
+  // the app — the Home tiles, the weekly goals, the timeline's milestone actions, the class-year
+  // roadmap, and every old /portfolio/clinical URL in a student's history. Those callers should
+  // not have to know the merge happened: goPortfolio('clinical') still means "open the clinical
+  // hours form", it just opens it as a section instead of a tab.
+  const [resumeSection, setResumeSection] = useState(
+    ()=>resumeSectionFromPath(typeof window!=='undefined' ? window.location.pathname : '') || DEFAULT_RESUME_SECTION
+  );
+  const goPortfolio = useCallback((view)=>{
+    setTab('portfolio');
+    if(!view) return;
+    const section = RESUME_SECTION_FOR_VIEW[view];
+    if(section) setResumeSection(section);
+    setPortfolioView(section ? 'resume' : view);
+  }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
   const goSettings = useCallback(()=>{ setTab('settings'); }, []);
   const [plansOpenDate,setPlansOpenDate]=useState(null);
@@ -1357,6 +1389,12 @@ export default function App({ account, onAccountChange }) {
     ...NAV.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
     ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
+    // The three sections of Activities & Résumé that used to be tabs of their own. Without
+    // these, merging them would have made "clinical hours" un-findable in the one place a fast
+    // typist looks for anything — the sections still exist, so they still get a command.
+    { id:'port-clinical', label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
+    { id:'port-research', label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
+    { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
     ...PROGRESS_SUBNAV.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
     ...SAT_SUBNAV.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
   ],[goPrep,goPortfolio,goProgress]);
@@ -1430,7 +1468,14 @@ export default function App({ account, onAccountChange }) {
     if (sub && next.view) {
       if (next.tab === 'sat') setSatView(next.view);
       else if (next.tab === 'prep') setPrepView(next.view);
-      else if (next.tab === 'portfolio') setPortfolioView(next.view);
+      else if (next.tab === 'portfolio') {
+        setPortfolioView(next.view);
+        // A back/forward press onto an old /portfolio/clinical-style URL: the route already
+        // resolved to `resume`, so recover the section from the address bar itself (history has
+        // already updated window.location by the time this runs).
+        const section = resumeSectionFromPath(window.location.pathname);
+        if (section) setResumeSection(section);
+      }
       else if (next.tab === 'progress') setProgressView(next.view);
     }
 
@@ -5542,10 +5587,14 @@ export default function App({ account, onAccountChange }) {
       {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
       {view:'milestones',ic:Milestone,label:'Milestones',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'deadlines & timeline',col:C.indigo},
       {view:'aid',ic:Handshake,label:'Financial Aid',value:scholarshipCount,sub:'scholarships',col:C.green},
-      {view:'resume',ic:Award,label:'Activities',value:portActivities.length,sub:'on your resume',col:C.amber},
-      {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'experiences',col:C.cyan},
-      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'credentials',col:C.teal},
-      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'logged',col:C.pink},
+      // Activities & Résumé is one tab with five sections; these four tiles are four doors into
+      // it, each landing on the section it names (see RESUME_SECTION_FOR_VIEW + goPortfolio).
+      // The Overview stays the map of the whole application, so merging the tabs must not make
+      // clinical hours or certifications one click further away than they were.
+      {view:'resume',ic:Award,label:'Activities & Résumé',value:portActivities.length,sub:'activities & honors',col:C.amber},
+      {view:'research',ic:FlaskConical,label:'Research',value:researchCount,sub:'in Activities & Résumé',col:C.cyan},
+      {view:'skills',ic:BadgeCheck,label:'Skills & Certs',value:skillsCount,sub:'in Activities & Résumé',col:C.teal},
+      {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'in Activities & Résumé',col:C.pink},
       {view:'recommenders',ic:UserCheck,label:'Recommenders',value:recommendersCount,sub:'tracked',col:C.fuchsia},
       {view:'interview',ic:Mic,label:'Interview Prep',value:interviewCount,sub:'mock sessions',col:C.orange},
     ];
@@ -7021,17 +7070,24 @@ export default function App({ account, onAccountChange }) {
     colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
-    // The Activities & Resume Builder now reasons over the student's own academic history: it
-    // reads gpa_entries/test_scores/colleges itself and matches U.S. schools against their real
-    // GPA, score and the career they named at signup — so `user` and the grade label are load-
-    // bearing here, not decoration. onCollegeAdded keeps App.jsx's counters honest when a
-    // matched school is added straight from this panel.
+    // Activities & Résumé reasons over the student's own academic history: it reads
+    // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,
+    // score and the career they named at signup — so `user` and the grade label are load-bearing
+    // here, not decoration. onCollegeAdded keeps App.jsx's counters honest when a matched school
+    // is added straight from this panel.
+    //
+    // It is also the merge of the old Activities/Research/Skills/Clinical tabs. Every
+    // callback the four separate panels had is still wired, one per section, so logging clinical
+    // hours still moves the readiness gauge and the achievement counters exactly as it did when
+    // it was its own tab.
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
+      section={resumeSection} onSectionChange={setResumeSection}
       onCollegeAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}
-      onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}} onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}/>,
-    research:()=><ResearchExperiencePanel accent={portC.research} onLogged={()=>{logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}/>,
-    skills:()=><SkillsCertificationsPanel accent={portC.skills}/>,
-    clinical:()=><ClinicalHoursPanel accent={portC.clinical} onLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);logEvent('portfolio_item_added','clinical');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}/>,
+      onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}
+      onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}
+      onClinicalLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);logEvent('portfolio_item_added','clinical');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}
+      onResearchLogged={()=>{setResearchCount(c=>c+1);logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}
+      onCredentialChanged={()=>{setSkillsCount(c=>c+1);}}/>,
     recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
     interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
   };

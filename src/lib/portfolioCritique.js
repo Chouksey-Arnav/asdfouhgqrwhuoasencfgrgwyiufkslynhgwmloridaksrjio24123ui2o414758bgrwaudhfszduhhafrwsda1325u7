@@ -53,7 +53,7 @@ Your knowledge of the wider admissions world is a different matter: use it freel
 Do not write their content for them. You may show ONE short rewrite of a line they actually wrote, clearly marked as a demonstration of the technique, never as text to paste.`;
 
 // ── 1. The slate ─────────────────────────────────────────────────────────────
-export function buildSlatePrompt({ user = null, gradeLabel = null, activities = [], awards = [], analysis = null, colleges = [] }) {
+export function buildSlatePrompt({ user = null, gradeLabel = null, activities = [], awards = [], analysis = null, colleges = [], elsewhere = null }) {
   const A = analysis || analyzeSlate(activities, awards);
   const name = user?.name || 'This student';
   const dreamRole = getDreamRoleLabel(user?.dreamRole);
@@ -86,7 +86,21 @@ export function buildSlatePrompt({ user = null, gradeLabel = null, activities = 
     ? A.gaps.map(g => `${g.label} (${g.why})`).join('; ')
     : 'none — all six pillars have something in them';
 
-  const data = `
+  // What the rest of the Activities & Résumé tab holds. Clinical hours, research projects and
+  // certifications are tracked in their own sections of the same tab rather than as rows in the
+  // activities list, so without this block a read of the list would tell a student with 140
+  // logged shadowing hours to go get clinical exposure.
+  const elsewhereText = elsewhere && (elsewhere.clinicalEntries || elsewhere.researchProjects || (elsewhere.certifications || []).length)
+    ? `
+
+══ LOGGED ELSEWHERE IN THIS SAME TAB (real, theirs, not on the activities list above) ══
+- Clinical/shadowing hours: ${elsewhere.clinicalHours || 0} hours across ${elsewhere.clinicalEntries || 0} dated entries.
+- Research: ${elsewhere.researchProjects || 0} project(s), ${elsewhere.researchHours || 0} hours.
+- Certifications held: ${(elsewhere.certifications || []).length ? elsewhere.certifications.join(', ') : 'none'}.
+Treat these as things they have genuinely done — never tell them to go get experience they already have. Where one of them is missing from the ten activity slots above, that is the note worth making: it is real work that no reader of their application will ever see.`
+    : '';
+
+  const data = `${elsewhereText}
 
 ══ THEIR ACTUAL ACTIVITIES (${activities.length} logged, ~${A.totalHours} hours/year combined) ══
 ${rows || 'Nothing logged at all.'}
