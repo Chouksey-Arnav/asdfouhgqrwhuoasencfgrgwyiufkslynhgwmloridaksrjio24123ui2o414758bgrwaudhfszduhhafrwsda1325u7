@@ -41,7 +41,7 @@ export const SUBVIEWS = {
   portfolio: {
     state: 'portfolioView',
     default: 'overview',
-    ids: ['overview', 'tracked', 'milestones', 'colleges', 'essays', 'aid', 'resume', 'recommenders', 'interview', 'calc'],
+    ids: ['overview', 'tracked', 'opportunities', 'milestones', 'colleges', 'essays', 'aid', 'resume', 'recommenders', 'interview', 'calc'],
     // 'timeline' and 'deadlines' were two sibling tabs showing two halves of the
     // same calendar; they are now one tab, 'milestones'. 'research', 'skills'
     // and 'clinical' were three sibling tabs holding three parts of one record —
