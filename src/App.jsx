@@ -83,8 +83,9 @@ import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
 import LessonNotesPanel from './components/LessonNotesPanel';
-import OpportunitiesDatabase from './components/OpportunitiesDatabase';
-import TrackQueueNotice from './components/ui/TrackQueueNotice';
+import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
+import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID } from './lib/opportunityMatch';
+import { OPPORTUNITIES } from './data/opportunities';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
@@ -356,6 +357,14 @@ const PORTFOLIO_SUBNAV = [
   // every Track button in the app — the place a tracked program stops being a bookmark and
   // starts having a deadline, a status, and a daily Meta Brain report (see TrackedPanel.jsx).
   {id:'tracked',ic:RadarIcon,label:'Tracked',color:C.violet},
+  // Opportunities & Competitions was the LAST block of the Overview — under the weekly goals, the
+  // strength gauge, the insights, the section navigator, the summary stats, the benchmark bars and
+  // the whole activity list. A 220-program catalog with a personalized matcher on it was, in
+  // practice, unreachable: nothing on the Overview asks you to scroll that far, and the students
+  // who most need "what should I actually go do" are exactly the ones who never got there. It is
+  // its own tab now (see OpportunitiesPanel.jsx + src/lib/opportunityMatch.js), and the Overview
+  // keeps a card pointing at it rather than the surface itself.
+  {id:'opportunities',ic:Trophy,label:'Opportunities',color:C.gold},
   // One tab, not two. 'Deadlines' (the dates you type) and 'Timeline' (the dates we generate)
   // were the write half and the read half of the same calendar; splitting them meant a date added
   // on one showed up on the other only after a reload, and the two could disagree about what was
@@ -2201,6 +2210,14 @@ export default function App({ account, onAccountChange }) {
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'exploring';
   const curPath = PATHS[eSpec]||PATHS['exploring'];
+  // The Overview's Opportunities card shows the SAME top picks the Opportunities tab leads with —
+  // one matcher, one answer, so the card is a real preview of the tab rather than a second, quieter
+  // recommendation that happens to disagree with it. Memoized here for the same reason
+  // trackedSummary is: tPort() re-runs on every unrelated state change in this component.
+  const opportunityPreview = useMemo(()=>{
+    const profile = buildMatchProfile({ user, snapshot:portSnapshot, pathwayKey:eSpec, prefs:readPrefs(user) });
+    return { profile, matches: matchOpportunities({ opportunities:OPPORTUNITIES, profile, count:3 }) };
+  },[user,portSnapshot,eSpec]);
   // accentText, not the raw brand hex: a pathway's accent is fixed identity
   // (constants.js `physician: '#2d7fff'`), tuned as a fill, and this same value
   // is used as a TEXT color for unit kickers, stat numbers and taglines all
@@ -2714,10 +2731,13 @@ export default function App({ account, onAccountChange }) {
   // key pool, same as the rest of Portfolio's AI — but with a lightweight system prompt since it's
   // answering from general knowledge, not reasoning over the student's tracked data (that deeper,
   // grounded reasoning is what the Ask Meta Brain sidebar / buildPortfolioSystemPrompt is for).
-  async function askPortfolioMedabrain(question) {
+  // `maxTokens` defaults to the 400 every existing caller was built around. The Opportunities tab
+  // asks for more because its prompt is a whole profile plus a six-program shortlist and the answer
+  // has to name two specific programs and a gap — at 400 that answer was getting cut mid-sentence.
+  async function askPortfolioMedabrain(question, maxTokens = 400) {
     return callGroqAI(
       "You are Meta Brain, MedSchoolPrep's Portfolio Intelligence specialist. You do not have web access — answer only from general knowledge, and say so plainly if you don't actually recognize something instead of inventing details.",
-      question, 400, null, 'guide', 'portfolio',
+      question, maxTokens, null, 'guide', 'portfolio',
     );
   }
 
@@ -5583,6 +5603,7 @@ export default function App({ account, onAccountChange }) {
     // Overview is the map of the tab rather than a second dashboard that happens to sit above it.
     const sections=[
       {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need action`:'all current',col:C.violet},
+      {view:'opportunities',ic:Trophy,label:'Opportunities',value:opportunityPreview.matches.length,sub:'matched to you',col:C.gold},
       {view:'colleges',ic:GraduationCap,label:'College List',value:appCounts.colleges,sub:'schools',col:C.sky},
       {view:'essays',ic:ScrollText,label:'Essays',value:appCounts.essays,sub:'drafts',col:C.violetL},
       {view:'milestones',ic:Milestone,label:'Milestones',value:appTimeline?appTimeline.stats.upcoming:(upcomingDeadlines||[]).length,sub:appTimeline?.next?`next in ${appTimeline.next.days}d`:'deadlines & timeline',col:C.indigo},
@@ -5643,6 +5664,56 @@ export default function App({ account, onAccountChange }) {
             {portSnapshot&&trackReport.focus&&<div style={{fontSize:11.5,color:C.t3,marginTop:3}}>First up: {trackReport.focus.name} — {trackReport.focus.nextStep}</div>}
           </div>
           <span style={{...pill(tint(C.violet,0.14),accentText(C.violet),{fontSize:11,gap:5}),flexShrink:0}}>Open Tracked<ArrowRight size={11}/></span>
+        </button>
+
+        {/* ── Opportunities & Competitions, as a doorway ──────────────────────────────────────
+            The catalog itself used to be rendered inline HERE, at the very bottom of this page.
+            It is its own tab now; what stays is the part of it that belongs on a dashboard — the
+            three programs the matcher currently ranks highest for this student, straight from
+            src/lib/opportunityMatch.js so this card and the tab can never disagree. */}
+        <button onClick={()=>{goPortfolio('opportunities');play('click');}} aria-label="Open Opportunities & Competitions"
+          style={{
+            ...glass({padding:isMobile?14:18}), textAlign:'left', font:'inherit', color:'inherit', cursor:'pointer', width:'100%',
+            background:`linear-gradient(120deg,${tint(C.gold,0.11)},rgba(255,255,255,0.02) 62%)`,
+            border:`1px solid ${tint(C.gold,0.26)}`, display:'flex', flexDirection:'column', gap:12,
+          }}>
+          <div style={R({gap:12,flexWrap:'wrap'})}>
+            <div style={{width:34,height:34,borderRadius:10,background:`linear-gradient(135deg,${C.gold},${C.orange})`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Trophy size={17} color="#fff"/>
+            </div>
+            <div style={{flex:1,minWidth:200}}>
+              <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:accentText(C.gold)}}>Opportunities & Competitions</div>
+              <div style={{fontSize:13,fontWeight:700,color:C.t1,marginTop:3,fontFamily:C.FD}}>
+                {opportunityPreview.matches.length
+                  ?`${OPPORTUNITIES.length} real programs — here are the ${opportunityPreview.matches.length} that fit you best right now`
+                  :`${OPPORTUNITIES.length} real programs, matched to your interests and what you've already done`}
+              </div>
+              <div style={{fontSize:11.5,color:C.t3,marginTop:3}}>
+                {opportunityPreview.profile.activeThemeIds.length
+                  ?`Matching on ${opportunityPreview.profile.activeThemeIds.slice(0,3).map(id=>THEME_BY_ID[id]?.label.toLowerCase()).filter(Boolean).join(', ')}${opportunityPreview.profile.usingInferredThemes?' — tap to confirm or change':''}`
+                  :'Pick what you actually care about and the whole catalog re-ranks around it'}
+              </div>
+            </div>
+            <span style={{...pill(tint(C.gold,0.16),accentText(C.gold),{fontSize:11,gap:5}),flexShrink:0}}>Open Opportunities<ArrowRight size={11}/></span>
+          </div>
+          {opportunityPreview.matches.length>0&&(
+            <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(3,1fr)',gap:8}}>
+              {opportunityPreview.matches.map(m=>{
+                const mc=m.match>=80?C.green:m.match>=60?C.blue:C.amber;
+                return(
+                  <div key={m.item.id} style={{padding:'10px 12px',borderRadius:11,background:C.surf2,border:`1px solid ${C.b1}`,borderLeft:`3px solid ${mc}`}}>
+                    <div style={R({gap:6,marginBottom:4})}>
+                      <span style={{fontSize:12,fontWeight:800,fontFamily:C.FM,color:mc}}>{m.match}%</span>
+                      <span style={{fontSize:9,color:C.t4,letterSpacing:'.06em'}}>MATCH</span>
+                      <span style={{marginLeft:'auto',fontSize:9.5,color:C.t4}}>{m.item.type}</span>
+                    </div>
+                    <div style={{fontSize:11.5,fontWeight:700,color:C.t1,lineHeight:1.35}}>{m.item.name}</div>
+                    <div style={{fontSize:10.5,color:C.t3,marginTop:3,lineHeight:1.45,display:'-webkit-box',WebkitLineClamp:2,WebkitBoxOrient:'vertical',overflow:'hidden'}}>{m.reason}</div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </button>
 
         {user.masterPlan&&<PortfolioPlanWeek user={user} accent={C.blue} onOpenTask={openPlanResource}/>}
@@ -5760,24 +5831,6 @@ export default function App({ account, onAccountChange }) {
           <div style={{fontSize:11,color:C.t4}}>Edit or remove individual activities in the Resume Builder.</div>
         </div>}
 
-        {/* Opportunities & Competitions — searchable database, portfolio-ranked recommendations,
-            and a Meta Brain blurb (purpose:'portfolio') grounded in this student's real activity
-            log; see src/components/OpportunitiesDatabase.jsx. Anything tracked from here lands on
-            the Tracked tab with a daily Meta Brain report on it. */}
-        <div>
-          <div style={R({justifyContent:'space-between',marginBottom:16,gap:10,flexWrap:'wrap'})}>
-            <SL extra={{margin:0}}>Opportunities & Competitions</SL>
-            <button onClick={()=>goPortfolio('tracked')} style={btnSm(C.s3,{color:C.t2,fontSize:11})}>
-              <RadarIcon size={11}/>See what you're tracking
-            </button>
-          </div>
-          <TrackQueueNotice entries={pendingTracks.entries.filter(e=>e.resource==='activities'||e.resource==='scholarships')} status={pendingTracks.status}/>
-          <OpportunitiesDatabase accent={accent} onTrack={trackOpportunity}
-            trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
-            pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
-            activityCount={portActivities.length}
-            askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec} pathwayLabel={curPath?.label} user={user}/>
-        </div>
       </div>
     );
   }
@@ -7067,6 +7120,17 @@ export default function App({ account, onAccountChange }) {
     tracked:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.tracked}
       askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
       pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/>,
+    // Reads the SAME shared snapshot the Overview dashboards and the Tracked tab do, so the
+    // matcher reasons over exactly the activities/research/hours/awards the rest of Portfolio is
+    // showing — one fetch, one truth (see src/lib/portfolioData.js). Its tuning panel writes back
+    // through saveUser, so a student's interests live on their account, not on one device.
+    opportunities:()=><OpportunitiesPanel accent={portC.opportunities} user={user} onSaveUser={saveUser}
+      snapshot={portSnapshot} loading={portSnapLoading} pathwayKey={eSpec} pathwayLabel={curPath?.label}
+      askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onOpen={goPortfolio}
+      onTrack={trackOpportunity}
+      trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
+      pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
+      pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/>,
     colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
