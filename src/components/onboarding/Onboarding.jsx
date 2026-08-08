@@ -30,7 +30,8 @@ import { SplashStep, WelcomeStep } from './steps/Intro';
 import { SourceStep } from './steps/SourceStep';
 import { SingleChoiceStep, ChecklistStep, ToggleQuestionStep, ProofGraphStep } from './steps/generic';
 import { GradeScoreStep } from './steps/GradeScoreStep';
-import { BirthdateStep } from './steps/BirthdateStep';
+import { BirthdateStep, MONTHS as DOB_MONTHS, DAYS as DOB_DAYS, YEARS as DOB_YEARS } from './steps/BirthdateStep';
+import AgeBlockedStep from './steps/AgeBlockedStep';
 import { TargetScoreStep } from './steps/TargetScoreStep';
 import { RealisticTargetStep, PaceForecastStep } from './steps/RealisticTargetStep';
 import { SpeedStep } from './steps/SpeedStep';
@@ -43,6 +44,7 @@ import { PlanSummaryStep } from './steps/PlanSummaryStep';
 import { SaveProgressStep } from './steps/SaveProgressStep';
 import { obstacleEmpathy } from './personalize';
 import { C } from './primitives';
+import { isUnderMinAge, isAgeBlocked, recordAgeBlocked } from '../../lib/ageGate';
 import {
   STUDY_HOURS_OPTIONS, GOAL_OPTIONS, STUDY_METHOD_OPTIONS, OBSTACLE_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS,
@@ -130,6 +132,33 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   const stepKey = steps[Math.min(stepIdx, steps.length - 1)];
   React.useEffect(() => { saveDraft(account, preview, stepKey, answers); }, [account, preview, stepKey, answers]);
 
+  // ── Age gate ──────────────────────────────────────────────────────────────
+  // Onboarding is where we first learn how old the student is, which makes it
+  // where COPPA is first decided. `blocked` is initialised from storage so a
+  // failed screen survives a reload — a gate you get past by pressing refresh
+  // is not a gate. See src/lib/ageGate.js for why the block lives there.
+  const [blocked, setBlocked] = useState(() => isAgeBlocked());
+
+  /** The three wheel indices, as a real date. MONTHS/DAYS/YEARS are the exact
+   *  arrays the wheels render, so this stays correct if their ranges change. */
+  const birthdateFrom = (a) => ({
+    year: DOB_YEARS[a.yearIdx],
+    month: a.monthIdx + 1,          // DOB_MONTHS is Jan-first, so index+1 is the month number
+    day: DOB_DAYS[a.dayIdx],
+  });
+
+  // Runs when the student leaves the birthdate step, not while they are still
+  // spinning the wheels — otherwise every pass through a young year on the way
+  // to an older one would trip the gate mid-scroll.
+  function advanceFromBirthdate() {
+    if (isUnderMinAge(birthdateFrom(answers))) {
+      recordAgeBlocked();
+      setBlocked(true);
+      return;
+    }
+    next();
+  }
+
   const next = () => setStepIdx(i => Math.min(steps.length - 1, i + 1));
   const back = () => setStepIdx(i => Math.max(0, i - 1));
   const update = (patch) => setAnswers(a => ({ ...a, ...patch }));
@@ -173,7 +202,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'gradeScore':
       content = <GradeScoreStep value={answers} onChange={patch => update(patch)} onNext={next} />; break;
     case 'birthdate':
-      content = <BirthdateStep value={answers} onChange={patch => update(patch)} onNext={next} />; break;
+      content = <BirthdateStep value={answers} onChange={patch => update(patch)} onNext={advanceFromBirthdate} />; break;
     case 'gpa':
       content = <SingleChoiceStep eyebrow="Your baseline" title="How are your grades right now?" subtitle="GPA matters for pre-health admissions — we'll factor it into your plan honestly." options={GPA_OPTIONS} value={answers.gpa} onChange={v => update({ gpa: v })} onNext={next} />; break;
     case 'sciences':
@@ -248,6 +277,19 @@ export default function Onboarding({ account, onComplete, preview = false }) {
       content = <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })} onNext={() => finish()} />; break;
     default:
       content = null;
+  }
+
+  // Checked ahead of everything else, and rendered with no back button and no
+  // progress bar: once the age screen has been failed there is no step to
+  // return to and nothing left to make progress through. Offering either would
+  // be inviting the "guess a different birthday" retry that the gate exists to
+  // prevent.
+  if (blocked) {
+    return (
+      <OnboardingShell stepKey="ageBlocked" progress={0} showBack={false} showProgress={false}>
+        <AgeBlockedStep account={account} />
+      </OnboardingShell>
+    );
   }
 
   return (

@@ -58,3 +58,44 @@ export const googleAuth = (accessToken) => req('/auth/google', { method: 'POST',
 export const fetchMe = () => req('/auth/me', { method: 'GET' });
 export const updateMe = (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) });
 export const logout = () => req('/auth/logout', { method: 'POST' }).finally(clearToken);
+
+// ── Data rights (see src/legal/privacy.js § 12) ──────────────────────────────
+// The Privacy Policy tells users they can export and delete their data from the
+// app. These are what make that true rather than aspirational.
+
+/**
+ * Everything the server holds for this account, as a JSON file the browser
+ * saves. Deliberately not routed through `req()`: that helper parses the body
+ * as JSON to surface API errors, and here the body IS the deliverable — we want
+ * the bytes, not a parsed object, so a large export never gets materialised
+ * twice just to be re-serialised.
+ */
+export async function exportMyData() {
+  const token = getToken();
+  const res = await fetch('/api/auth/account', {
+    method: 'GET',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Could not export your data.');
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `medschoolprep-data-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Irreversibly deletes the account and everything attached to it. The server
+ * requires `confirmEmail` to match the session's email — see api/auth/account.js
+ * for why. Clears the local token either way: if the account is gone, holding a
+ * token for it only produces confusing 401s.
+ */
+export const deleteMyAccount = (confirmEmail) =>
+  req('/auth/account', { method: 'DELETE', body: JSON.stringify({ confirmEmail }) }).finally(clearToken);

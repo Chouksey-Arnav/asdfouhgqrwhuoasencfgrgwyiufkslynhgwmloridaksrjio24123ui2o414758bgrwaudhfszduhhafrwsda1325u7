@@ -3,24 +3,9 @@
 // since the client never talks to Supabase directly (RLS denies anon/authenticated).
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { getUserFromRequest } from '../_lib/session.js';
-
-const RESOURCES = new Set([
-  'colleges',
-  'college_checklist_items',
-  'deadlines',
-  'essays',
-  'essay_versions',
-  'test_scores',
-  'scholarships',
-  'activities',
-  'awards',
-  'gpa_entries',
-  'research_experience',
-  'skills_certifications',
-  'clinical_hours',
-  'recommenders',
-  'portfolio_evidence',
-]);
+// Shared with api/auth/account.js so a new table is exportable and deletable
+// the moment it is readable — see api/_lib/resources.js.
+import { RESOURCE_SET as RESOURCES } from '../_lib/resources.js';
 
 // Columns a client may write per resource (id, user_id, created_at are server-controlled).
 const WRITABLE = {

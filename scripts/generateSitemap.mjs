@@ -75,6 +75,25 @@ const ROUTES = [
     priority: '0.3',
     sources: ['src/components/auth/LoginView.jsx', 'src/components/auth/AuthShell.jsx'],
   },
+  // The legal documents are public by design (src/lib/routes.js LEGAL_VIEWS —
+  // AuthGate renders them ahead of its signed-in/signed-out branch). They are
+  // listed here because "where is your privacy policy" needs an answer that is
+  // a plain, crawlable URL: ad networks, app stores, school districts and
+  // regulators all check, and several of them check with a bot. `lastmod`
+  // tracks the content modules rather than the renderer, so editing a clause
+  // moves the date and re-rendering the page does not.
+  {
+    loc: '/legal/terms',
+    changefreq: 'yearly',
+    priority: '0.3',
+    sources: ['src/legal/terms.js', 'src/legal/legalConfig.js'],
+  },
+  {
+    loc: '/legal/privacy',
+    changefreq: 'yearly',
+    priority: '0.4',
+    sources: ['src/legal/privacy.js', 'src/legal/legalConfig.js'],
+  },
 ];
 
 /**

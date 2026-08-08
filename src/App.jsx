@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge, Loader2, Info,
+  Highlighter, Accessibility, Gauge, Loader2, Info, Download,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
 } from 'lucide-react';
@@ -44,7 +44,8 @@ import InterviewPrepPanel from './components/InterviewPrepPanel';
 import * as DB from './lib/db';
 import * as ProgressSync from './lib/progressSync';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
-import { SUBVIEWS, bootRoute, routeFromState, formatPath } from './lib/routes';
+import { SUBVIEWS, bootRoute, routeFromState, formatPath, LEGAL_VIEWS } from './lib/routes';
+import { LEGAL, TRADEMARK_NOTICE } from './legal/legalConfig';
 import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
 import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi';
@@ -582,6 +583,14 @@ function VideoModal({ytId,title,url,onClose,m=false}){
   },[frameId]);
 
   const broken=status==='error'||status==='timeout';
+  // Embeds use youtube-nocookie.com, not youtube.com. On the regular domain
+  // YouTube writes its ad/viewing-tracking cookies as soon as the iframe
+  // loads, whether or not the student ever presses play — so on a page a
+  // fourteen-year-old opened to watch a lesson, we would be handing Google a
+  // tracked impression for merely opening the lesson. Privacy-enhanced mode
+  // defers that to an actual play, which is what src/legal/privacy.js § 9 tells
+  // users happens. The player API, autoplay, and error events all behave
+  // identically on this domain.
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.93)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center',padding:m?12:24,backdropFilter:'blur(8px)'}} onClick={e=>{if(e.target===e.currentTarget)onClose();}}>
       <motion.div initial={{scale:.95,y:10}} animate={{scale:1,y:0}} exit={{scale:.95,y:10}} style={{width:'100%',maxWidth:920,...glass({padding:0,overflow:'hidden',borderRadius:m?12:20,border:`1px solid ${C.b2}`,boxShadow:'0 40px 100px rgba(0,0,0,0.9)'})}}>
@@ -593,7 +602,7 @@ function VideoModal({ytId,title,url,onClose,m=false}){
           <button onClick={onClose} style={{background:'none',border:'none',color:C.t3,cursor:'pointer',width:32,height:32,display:'flex',alignItems:'center',justifyContent:'center',borderRadius:8}} onMouseEnter={e=>e.currentTarget.style.color=C.t1} onMouseLeave={e=>e.currentTarget.style.color=C.t3}><X size={16}/></button>
         </div>
         <div style={{position:'relative',paddingBottom:'56.25%',height:0}}>
-          <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+          <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube-nocookie.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
           {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:C.s1,pointerEvents:'none'}}>
             <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
           </div>}
@@ -655,7 +664,7 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
   return(
     <div>
       <div style={{position:'relative',paddingBottom:'56.25%',height:0,borderRadius:14,overflow:'hidden',border:`1px solid ${C.b1}`,background:C.s1}}>
-        <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
+        <iframe id={frameId} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',border:'none',visibility:broken?'hidden':'visible'}} src={`https://www.youtube-nocookie.com/embed/${ytId}?rel=0&modestbranding=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`} title={title} allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen/>
         {status==='loading'&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',pointerEvents:'none'}}>
           <div style={{width:32,height:32,borderRadius:'50%',border:`3px solid ${C.b2}`,borderTopColor:C.blue,animation:'spin .8s linear infinite'}}/>
         </div>}
@@ -1177,7 +1186,17 @@ function showAchievementToast(achievement) {
   ), { duration:5000 });
 }
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
-export default function App({ account, onAccountChange }) {
+export default function App({ account, onAccountChange, onOpenLegal }) {
+  // The legal documents live above the app shell (AuthGate renders them ahead
+  // of the signed-in branch), so opening one from in here is a navigation, not
+  // a tab change. Falls back to letting the anchor's href do a normal page load
+  // if the callback is absent — a legal link that does nothing on click is
+  // worse than no link at all.
+  const openLegalLink = React.useCallback((path) => (e) => {
+    if (!onOpenLegal) return;
+    e.preventDefault();
+    onOpenLegal(path);
+  }, [onOpenLegal]);
   const isMobile = useMediaQuery('(max-width: 768px)');
 
   // ── DB loading ──────────────────────────────────────────────────────────────
@@ -6952,6 +6971,44 @@ export default function App({ account, onAccountChange }) {
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
         </div>
 
+        {/* ── Your data & your rights ──────────────────────────────────────
+            Not a courtesy feature. The Privacy Policy tells every user they can
+            export or delete their data from the app (src/legal/privacy.js § 12),
+            and these two buttons are what make that sentence true rather than a
+            promise the product cannot keep — which would be a deceptive
+            statement to consumers quite apart from GDPR Art. 15/17/20, the
+            CCPA's access and deletion rights, and the equivalents in the
+            Colorado, Connecticut, Virginia, Texas and Oregon acts. */}
+        <div style={glass({padding:18})}>
+          <SL>Your Data & Your Rights</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+            Your data is yours. Download everything we hold, or delete the account and all of it, whenever you want — no reason needed, and no penalty for asking. Read the <a href={LEGAL_VIEWS.privacy} onClick={openLegalLink(LEGAL_VIEWS.privacy)} style={{color:C.blueL,fontWeight:600}}>Privacy Policy</a> for exactly what we hold and who else ever sees it.
+          </p>
+          <div style={R({gap:10,flexWrap:'wrap'})}>
+            <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{
+              try{ await AuthAPI.exportMyData(); toast.success('Your data is downloading.'); }
+              catch(err){ toast.error(err.message||'Could not export your data.'); }
+            }}><Download size={14}/>Download my data</button>
+            <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{
+              // Two gates, deliberately. The first explains what is about to
+              // happen in plain words; the second makes the user type the
+              // account's own email, which the server independently re-checks
+              // (api/auth/account.js). Irreversible destruction of a student's
+              // essays and application record should not be one stray tap away.
+              if(!window.confirm('Delete your MedSchoolPrep account?\n\nThis permanently deletes your profile, essays, activities, colleges, deadlines, scores and everything else in your account. It cannot be undone.'))return;
+              const typed=window.prompt(`Type ${account?.email} to confirm.`);
+              if(!typed)return;
+              if(typed.trim().toLowerCase()!==String(account?.email||'').toLowerCase()){toast.error("That doesn't match the email on this account.");return;}
+              try{
+                await AuthAPI.deleteMyAccount(account.email);
+                await signOut();               // clear the local IndexedDB copy too
+                toast.success('Your account and data have been deleted.');
+                window.location.assign('/');
+              }catch(err){ toast.error(err.message||'Could not delete the account.'); }
+            }}><Trash2 size={14}/>Delete my account</button>
+          </div>
+        </div>
+
         <div data-tour="settings-deep-danger" style={{...glass({border:`1px solid rgba(244,63,94,0.2)`})}}>
           <SL extra={{color:C.rose}}>Danger Zone</SL>
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
@@ -6968,6 +7025,26 @@ export default function App({ account, onAccountChange }) {
             MedSchoolPrep v3.0 &nbsp;·&nbsp; {TOTAL_QUESTIONS} questions &nbsp;·&nbsp; {ELIB.length} resources &nbsp;·&nbsp; {Object.keys(FLASH_DECKS).length} decks<br/>
             Powered by: ts-fsrs (FSRS-4.5 spaced repetition) · compromise (offline NLP) · Medabrain on Groq · Fuse.js · Dexie.js · KaTeX · Chart.js · Framer Motion · react-hot-toast · canvas-confetti · jsPDF · marked<br/>
             Flashcard scheduling runs on FSRS, the open-source algorithm Anki uses by default · Flashcard generation runs fully offline on your device, extracting cards directly from your notes — no account, API key, or network call required · Medabrain is powered by large language model technology · Your progress is cached on this device via IndexedDB and synced to your account so it follows you to any browser you sign into
+          </div>
+        </div>
+
+        {/* ── Legal ────────────────────────────────────────────────────────
+            The in-app home for the documents and the standing disclaimers.
+            Signed-in students never see the landing page again after their
+            first visit, so without this the Terms, the Privacy Policy, the
+            trademark attributions and the "this is not medical advice" notice
+            would exist only on a surface their account has permanently left
+            behind. */}
+        <div style={glass({padding:18})}>
+          <SL>Legal</SL>
+          <div style={R({gap:14,flexWrap:'wrap',marginBottom:14})}>
+            <a href={LEGAL_VIEWS.terms} onClick={openLegalLink(LEGAL_VIEWS.terms)} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Terms of Service</a>
+            <a href={LEGAL_VIEWS.privacy} onClick={openLegalLink(LEGAL_VIEWS.privacy)} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Privacy Policy</a>
+            <a href={`mailto:${LEGAL.contactEmail}`} style={{fontSize:13,color:C.blueL,fontWeight:600}}>Contact us</a>
+          </div>
+          <div style={{fontSize:11,color:C.t3,lineHeight:1.8}}>
+            MedSchoolPrep is an independent study tool. It is not a medical school, is not affiliated with or endorsed by any testing organisation, university, or health system, and does not confer academic credit or any credential. All lessons, quizzes, career material and AI coach output are for general educational and career-exploration purposes only — they are not medical, legal, financial, or professional advice, and no clinical or health decision should be based on them. Score estimates are our own approximations, not official scores, and are not a prediction or guarantee of any result. Always confirm deadlines and requirements directly with the college, scholarship provider, or testing organisation.<br/><br/>
+            {TRADEMARK_NOTICE.map((line,i)=><React.Fragment key={i}>{line}{i<TRADEMARK_NOTICE.length-1?' ':''}</React.Fragment>)}
           </div>
         </div>
       </div>

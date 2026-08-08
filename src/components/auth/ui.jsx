@@ -2,6 +2,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Eye, EyeOff, ArrowLeft, Loader2 } from 'lucide-react';
 import { C, inp, lbl } from '../../lib/theme';
+import { LEGAL_VIEWS } from '../../lib/routes';
+import { LEGAL } from '../../legal/legalConfig';
 
 export const PASSWORD_MIN = 8;
 
@@ -209,6 +211,39 @@ export function OrDivider({ label = 'or' }) {
       <span style={{ fontSize: 11, color: C.t3, textTransform: 'uppercase', letterSpacing: '.05em' }}>{label}</span>
       <div style={{ flex: 1, height: 1, background: C.b1 }} />
     </div>
+  );
+}
+
+/**
+ * The consent line that turns "Create account" into an agreement.
+ *
+ * Rendered directly above whichever control actually creates the account —
+ * the password submit and the "Sign up with Google" button — because that
+ * adjacency is what a court looks for when deciding whether a clickwrap gave
+ * reasonable notice. Terms reachable only from a page footer, or behind an
+ * unlabelled icon, have repeatedly failed that test.
+ *
+ * The second sentence is not decoration either. Almost every user of this app
+ * is a minor, and a contract with a minor is voidable — so the Terms make the
+ * parent or guardian the contracting party for anyone under 18 (see
+ * src/legal/terms.js § 1). This is where that structure is actually put to the
+ * student, at the moment they act.
+ *
+ * Links open in a new tab so that reading the documents never costs a
+ * half-finished signup — a user who loses their progress for reading the terms
+ * learns not to read the terms.
+ */
+export function ConsentNotice() {
+  const link = { color: C.blueL, fontWeight: 600, textDecoration: 'underline' };
+  return (
+    <p style={{ margin: 0, fontSize: 11.5, lineHeight: 1.6, color: C.t3 }}>
+      By creating an account you agree to our{' '}
+      <a href={LEGAL_VIEWS.terms} target="_blank" rel="noopener noreferrer" style={link}>Terms of Service</a>
+      {' '}and{' '}
+      <a href={LEGAL_VIEWS.privacy} target="_blank" rel="noopener noreferrer" style={link}>Privacy Policy</a>.
+      {' '}You must be at least {LEGAL.minAge}. If you are under {LEGAL.minorAge}, a parent or
+      guardian must read and agree to them with you.
+    </p>
   );
 }
 

@@ -11,6 +11,8 @@ User-agent: *
 Allow: /$
 Allow: /signup
 Allow: /login
+Allow: /legal/terms
+Allow: /legal/privacy
 Disallow: /api/
 Disallow: /sat
 Disallow: /prep

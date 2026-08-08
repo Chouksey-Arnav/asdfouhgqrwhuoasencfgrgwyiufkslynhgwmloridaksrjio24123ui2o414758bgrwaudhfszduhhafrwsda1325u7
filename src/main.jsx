@@ -7,7 +7,9 @@ import './index.css';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <AuthGate>
-      {({ user, setUser }) => <App account={user} onAccountChange={setUser} />}
+      {({ user, setUser, openLegal }) => (
+        <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
+      )}
     </AuthGate>
   </React.StrictMode>
 );

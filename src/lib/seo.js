@@ -21,7 +21,12 @@ import { normalizePath } from './routes';
 const ORIGIN = 'https://medschoolprep.cloud';
 
 /** Paths a search engine is welcome to index. Mirrors ROUTES in scripts/generateSitemap.mjs. */
-const INDEXABLE = new Set(['/', '/login', '/signup']);
+// The legal documents belong here for a reason beyond SEO: "is this service's
+// privacy policy publicly available" is a question regulators, app stores, ad
+// networks, and school districts all ask, and the answer has to be a URL
+// anyone can open — no session, no crawler exception. Noindexing them would
+// undercut the whole point of publishing them.
+const INDEXABLE = new Set(['/', '/login', '/signup', '/legal/terms', '/legal/privacy']);
 
 function upsert(selector, create) {
   let el = document.head.querySelector(selector);

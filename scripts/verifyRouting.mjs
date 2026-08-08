@@ -21,7 +21,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
 
 const routes = await import(pathToFileURL(path.join(ROOT, 'src/lib/routes.js')).href);
-const { TABS, SUBVIEWS, AUTH_VIEWS, formatPath, parsePath, bootRoute, normalizePath, resolveView } = routes;
+const { TABS, SUBVIEWS, AUTH_VIEWS, LEGAL_VIEWS, formatPath, parsePath, bootRoute, normalizePath, resolveView } = routes;
 
 let failures = 0;
 const fail = (msg) => { failures += 1; console.error(`  ✗ ${msg}`); };
@@ -92,6 +92,7 @@ for (const [alias, expected] of [['/sat', '/sat/overview'], ['/prep', '/prep/pat
   else if (formatPath(parsed) !== expected) fail(`${alias} resolved to ${formatPath(parsed)}, expected ${expected}`);
 }
 if (Object.values(AUTH_VIEWS).some((p) => parsePath(p))) fail('an auth path parsed as an app route');
+if (Object.values(LEGAL_VIEWS).some((p) => parsePath(p))) fail('a legal path parsed as an app route — AuthGate owns /legal/*, the app router must leave it alone');
 ok('files, API paths, auth screens and typos are all rejected; aliases normalize');
 
 // ── 3b. Retired sub-view ids still resolve ──────────────────────────────────
@@ -142,10 +143,17 @@ if (!sitemap.trimEnd().endsWith('</urlset>')) fail('sitemap.xml is truncated');
 for (const loc of locs) {
   if (!loc.startsWith('https://')) fail(`sitemap <loc> must be absolute and https: ${loc}`);
   const p = normalizePath(new URL(loc).pathname);
-  // Every sitemap URL must be reachable without an account: the landing page or
-  // an auth screen. Anything the app itself routes is gated and must not be here.
+  // Every sitemap URL must be reachable without an account: the landing page,
+  // an auth screen, or a legal document. Anything the app itself routes is
+  // gated and must not be here.
+  //
+  // The legal documents qualify because AuthGate renders them ahead of its
+  // signed-in/signed-out branch (see LEGAL_VIEWS in src/lib/routes.js), so a
+  // crawler with no session gets the actual document rather than the landing
+  // page — which is the whole reason a gated route is disqualified here.
   const isAuth = Object.values(AUTH_VIEWS).includes(p);
-  if (p !== '/' && !isAuth) fail(`${p} is in the sitemap but is a signed-in app route — it would render the landing page to a crawler`);
+  const isLegal = Object.values(LEGAL_VIEWS).includes(p);
+  if (p !== '/' && !isAuth && !isLegal) fail(`${p} is in the sitemap but is a signed-in app route — it would render the landing page to a crawler`);
 }
 if (!robots.includes(`Sitemap: ${new URL(locs[0]).origin}/sitemap.xml`)) fail('robots.txt does not point at the sitemap on the same origin');
 for (const tab of TABS.filter((t) => t !== 'home')) {

@@ -1,6 +1,6 @@
-# AscendPrep (medschoolprep-dev)
+# MedSchoolPrep (medschoolprep-dev)
 
-Welcome to **AscendPrep** (internally configured as `medschoolprep`), a comprehensive, production-grade, React-based preparation platform built using Vite, Tailwind CSS, and Framer Motion.
+Welcome to **MedSchoolPrep** (internally configured as `medschoolprep`), a comprehensive, production-grade, React-based preparation platform built using Vite, Tailwind CSS, and Framer Motion.
 
 This workspace is specifically engineered for high school and undergraduate students preparing for college admissions, exams, and future career pathways. All legacy graduate-level/medical depth has been removed or reframed, keeping focus strictly on secondary-to-undergraduate pathways (e.g. SAT/ACT prep, college application portfolios, financial aid, admissions planning, and undergraduate pre-professional tracking).
 
@@ -26,7 +26,7 @@ This README acts as the complete, single source of truth for the entire applicat
 
 ## 🛠 Platform Core & Workspace Architecture
 
-AscendPrep consists of seven top-level tabs (`NAV` in `App.jsx` and `TABS` in `routes.js`):
+MedSchoolPrep consists of seven top-level tabs (`NAV` in `App.jsx` and `TABS` in `routes.js`):
 
 ### 1. Home Tab (`/`)
 An interactive daily workspace and overview hub. Shows the daily streak, personalized nudges, study milestones, today's schedule, and the **RewardChest** overlay (daily check-in gamification component).
@@ -79,7 +79,7 @@ Medabrain operates on a purpose-scoped API key pool to maximize rate limit headr
 Calculates and awards XP, tracks streaks, issues achievements, and logs study events. Completing an E-Library study notes milestone awards +15 XP. Unlocking a milestone, verifying a unit, or logging daily check-ins is managed via a transactional, server-synchronized reward queue (`rewardClaimQueue.js`) to prevent double-claiming or progress loss.
 
 ### Responsive Grid ('RG') and Media Layout Framework
-AscendPrep utilizes a custom grid layout architecture ('G' and 'RG' components) supporting automated column-stacking flags (`m` flags) on mobile screens. Video overlays utilize a specific mobile-responsive `VideoModal` capping max width at 1000px while defaulting to 95% width on small viewports.
+MedSchoolPrep utilizes a custom grid layout architecture ('G' and 'RG' components) supporting automated column-stacking flags (`m` flags) on mobile screens. Video overlays utilize a specific mobile-responsive `VideoModal` capping max width at 1000px while defaulting to 95% width on small viewports.
 
 ---
 
@@ -89,7 +89,7 @@ The application operates in a unified monorepo supporting two distinct hosting m
 
 ```
                   ┌─────────────────────────────────────┐
-                  │          AscendPrep Monorepo        │
+                  │          MedSchoolPrep Monorepo        │
                   └──────────────────┬──────────────────┘
                                      │
               ┌──────────────────────┴──────────────────────┐
@@ -191,7 +191,7 @@ npm run audit:all
 
 ## 🔠 Spelling Standards & Verification
 
-AscendPrep standardizes strictly on **American English** spelling conventions (e.g., *practice*, *behavior*, *color*, *defense*, *license*, *kilometer*).
+MedSchoolPrep standardizes strictly on **American English** spelling conventions (e.g., *practice*, *behavior*, *color*, *defense*, *license*, *kilometer*).
 
 To enforce this, a spelling verification script is available:
 ```bash
@@ -248,15 +248,38 @@ npm run start
 
 ## 📜 Branding & Legal Guidelines
 
-- **Product Identity:** The consumer-facing system is branded as **"AscendPrep"** or **"AscendPrep AI Coaching."** The tutoring agent is called **"Medabrain."**
+- **Product Identity:** The consumer-facing system is branded as **"MedSchoolPrep"** or **"MedSchoolPrep AI Coaching."** The tutoring agent is called **"Medabrain."**
 - **LLM Disclosures:** Do not claim that the application owns, trained, or built the underlying foundational models. Standard footers disclosing secure third-party vendor technology are required on Settings panels.
 - **Offline Integrity:** Features running in the client's browser (FSRS flashcards, NLP compromise fact extraction) must be described as *"local client-side extraction technology"* rather than cloud AI, ensuring transparency regarding data privacy and offline capability.
+
+### The legal documents
+
+The Terms of Service and Privacy Policy live in `src/legal/` as **structured data, not markup**, and render through one component (`src/components/legal/LegalPage.jsx`) at the public URLs `/legal/terms` and `/legal/privacy`. Those two routes are the odd ones out in `src/lib/routes.js`: `AuthGate` renders them *ahead of* its signed-in/signed-out branch, so they resolve identically for a student, a parent following a link, and a crawler with no session — a policy you must log in to read is not notice.
+
+| File | What it holds |
+| :--- | :--- |
+| `src/legal/legalConfig.js` | Every fact the documents assert about *us*: operator identity, contact and postal address, governing law, the age thresholds, document versions, the sub-processor table, and the trademark attributions. Change a value here and both documents, the landing-page colophon, and Settings → Legal all move together. |
+| `src/legal/terms.js` | 24 sections. Structured so the **parent or guardian is the contracting party for any user under 18** — the decision that gives the liability cap, the disclaimers, and the arbitration clause any force, since a contract with a minor is voidable. |
+| `src/legal/privacy.js` | 16 sections covering COPPA (amended Rule), FERPA, CCPA/CPRA, GDPR/UK GDPR, and the state minor-privacy laws. Every data category maps to real columns in `supabase/migrations/*.sql` or real keys in `src/lib/db.js`. |
+
+### `npm run verify:legal` — why the build can fail on a policy
+
+The danger with a privacy policy is not that it goes missing; it is that it quietly becomes **false**. Add an analytics SDK, change the ad tag, widen the birthdate wheel, or drop the deletion endpoint in a refactor, and the policy still tells users none of that happened — which is a deceptive practice in its own right, independent of any privacy statute, and trivially provable because the evidence is the source tree.
+
+`scripts/verifyLegal.mjs` runs on every build and pairs each written claim with the code that has to stay true for it. It fails the build if the documents become unreachable or unindexable, if the signup consent notice disappears, if AdSense loads untagged or the tag moves below the script, if any UI reintroduces a "no ads" claim while ads are served, if a YouTube embed reverts to the tracking domain, if export/deletion stop being reachable, if an undisclosed analytics SDK or sub-processor appears, or if the age gate's arithmetic regresses — that last one by importing `src/lib/ageGate.js` and **executing** it against fixed edge cases (leap-day birthdays, a birthday later this year) rather than grepping for it.
+
+### Compliance behaviour the code is required to have
+
+- **Minimum age 13**, enforced in onboarding via `src/lib/ageGate.js`. The birthdate wheel deliberately reaches down to age 5: it previously started at 12, which meant no user could enter a disqualifying birth year, so the gate screened out nobody and merely relabelled under-13s as 12. A failed check is persisted, is not retryable with a different date, and **deletes the already-created account** (`AgeBlockedStep.jsx`), because by that point an `app_users` row already holds a child's email.
+- **Non-personalised advertising for everyone.** `index.html` sets `tagForChildDirectedTreatment` *before* the AdSense script loads. Ordering matters — an ad request built before the flag is set is not retroactively de-personalised.
+- **`youtube-nocookie.com` for every embed**, so opening a lesson does not hand Google a tracked impression before the student presses play.
+- **Data export and account deletion** at `api/auth/account.js`, surfaced in Settings → Your Data & Your Rights. Deletion is one `app_users` row because every per-user table declares `on delete cascade`; `api/_lib/resources.js` is the shared table list so a new resource becomes readable, exportable and deletable at once.
 
 ---
 
 ## 📂 Comprehensive File Directory Mapping
 
-This index provides a complete, itemized mapping of **every file in the entire repository** and its exact purpose in the AscendPrep ecosystem.
+This index provides a complete, itemized mapping of **every file in the entire repository** and its exact purpose in the MedSchoolPrep ecosystem.
 
 ### Root Configuration and Infrastructure Files
 - `package.json` — Defines project metadata, dependencies (React, Framer Motion, Dexie, ts-fsrs, Nodemailer, Express, compromise, Fuse.js, etc.), and script mappings for building, auditing, and executing the app.
@@ -286,7 +309,7 @@ These backend endpoints serve both Vercel Serverless and local Express routes.
 
 #### Auth Endpoints (`api/auth/...`)
 - `api/auth/complete-signup.js` — Handles the final step of student registration, saving onboarding profiles after verification.
-- `api/auth/google.js` — Trades a Google OAuth token client-side for an AscendPrep session token, completing Google login.
+- `api/auth/google.js` — Trades a Google OAuth token client-side for an MedSchoolPrep session token, completing Google login.
 - `api/auth/login.js` — Authenticates email/password credentials, issuing secure user session cookies.
 - `api/auth/logout.js` — Revokes active user session tokens from the backend database.
 - `api/auth/me.js` — Retrieves and validates the current logged-in user's profile and onboarding states.
