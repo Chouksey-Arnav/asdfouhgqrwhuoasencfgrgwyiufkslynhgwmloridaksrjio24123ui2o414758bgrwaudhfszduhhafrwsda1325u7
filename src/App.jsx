@@ -116,6 +116,11 @@ import { projectScore } from './lib/sat/projection';
 import { computeAllMastery, rankSkillsByLeverage } from './lib/sat/mastery';
 import { SCORE_DISCLAIMER } from './data/sat/scoring';
 import AppTour from './components/AppTour';
+// Progressive feature unlocking — the nav shows what this student can use today,
+// not everything the product contains. See src/lib/featureUnlock.js for the ladder
+// and why day one is four doors instead of thirty-eight.
+import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, NAV_MODES } from './lib/featureUnlock';
+import NextUnlockCard from './components/NextUnlockCard';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 // snapshotItemCount is deliberately NOT re-exported here — it lives in weeklyGoals.js (see the
@@ -416,6 +421,17 @@ const PROGRESS_SUBNAV = [
   {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
   {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
 ];
+// Every destination's student-facing name, keyed the way featureUnlock.js keys them
+// ('portfolio', 'sat/review'). Built from the nav arrays themselves rather than
+// re-typed, so an unlock toast can never announce a tab under a name the nav doesn't
+// use — the one place two copies of a label would definitely drift.
+const UNLOCK_LABELS = Object.fromEntries([
+  ...NAV.map(n=>[n.id,n.label]),
+  ...SAT_SUBNAV.map(n=>[`sat/${n.id}`,n.label]),
+  ...PREP_SUBNAV.map(n=>[`prep/${n.id}`,n.label]),
+  ...PORTFOLIO_SUBNAV.map(n=>[`portfolio/${n.id}`,n.label]),
+  ...PROGRESS_SUBNAV.map(n=>[`progress/${n.id}`,n.label]),
+]);
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
     'Explain how to solve a system of equations simply',
@@ -1404,41 +1420,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     celebrateAchievement();
     setUser_(u=>{ if(!u) return u; const next={...u,tourCompletedAt:Date.now()}; DB.saveUser(next).catch(console.error); return next; });
   }, []);
-  // completeOnboarding() calls startTour() directly, right after the onboarding
-  // handoff — the tour's own first step (`nav-home`) already forces the tab back
-  // to Home via its onEnter, so there's no separate "wait until they land on Home"
-  // step needed; the whole point is the tour picks up the instant onboarding ends.
-  const TOUR_STEPS = useMemo(()=>[
-    { target:'nav-home', section:'Home', color:C.blue, title:'Your dashboard', body:"Streak, XP, and today's next lesson — every session starts here.", onEnter:()=>setTab('home') },
-    { target:'nav-sat', section:'SAT', color:C.sky, title:'Raise your score', body:"Diagnostic, adaptive practice, full-length tests, and a review log that brings back every question you missed.", onEnter:()=>goSat('overview') },
-    { target:'nav-prep', section:'Prep', color:C.violet, title:'Your curriculum', body:"A structured pathway, quiz library, flashcards, and an AI coach that knows your goals.", onEnter:()=>setTab('prep') },
-    { target:'nav-portfolio', section:'Portfolio', color:C.green, title:'Your application', body:"College list, essays, deadlines, and activities — everything admissions cares about, in one place.", onEnter:()=>setTab('portfolio') },
-    { target:'nav-plans', section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
-    { target:'nav-progress', section:'Progress', color:C.cyan, title:'Proof of the work', body:"Verified mastery, performance by topic, and every badge you've earned.", onEnter:()=>setTab('progress') },
-    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any tab. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[goSat]);
-
-  // ── Quick-switch command palette — one searchable jump point across every ────
-  // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
-  // absorbed sub-app inside them) reads as one thing you can move around in fast.
-  const COMMANDS = useMemo(()=>[
-    ...NAV.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
-    ...PREP_SUBNAV.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
-    ...PORTFOLIO_SUBNAV.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
-    // The three sections of Activities & Résumé that used to be tabs of their own. Without
-    // these, merging them would have made "clinical hours" un-findable in the one place a fast
-    // typist looks for anything — the sections still exist, so they still get a command.
-    { id:'port-clinical', label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
-    { id:'port-research', label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
-    { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
-    ...PROGRESS_SUBNAV.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
-    ...SAT_SUBNAV.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
-  ],[goPrep,goPortfolio,goProgress]);
-  const filteredCmds = useMemo(()=>{
-    const q=cmdQ.trim().toLowerCase();
-    if(!q) return COMMANDS;
-    return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
-  },[COMMANDS,cmdQ]);
   // Keyboard-navigable highlight index — arrow keys + Enter, not mouse-only,
   // since that's the whole point of a command palette for a fast typist.
   const [cmdActiveIdx,setCmdActiveIdx]=useState(0);
@@ -1452,12 +1433,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return ()=>document.removeEventListener('keydown',onKey);
   },[]);
   useEffect(()=>{ if(!cmdOpen) setCmdQ(''); },[cmdOpen]);
-  const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
-  const onCmdInputKeyDown=useCallback((e)=>{
-    if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
-    else if(e.key==='ArrowUp'){ e.preventDefault(); setCmdActiveIdx(i=>Math.max(i-1,0)); }
-    else if(e.key==='Enter'){ e.preventDefault(); const cmd=filteredCmds[cmdActiveIdx]; if(cmd)runCommand(cmd); }
-  },[filteredCmds,cmdActiveIdx,runCommand]);
 
   // ── Diagnostic ──────────────────────────────────────────────────────────────
   const [dStep,setDS]=useState(0);const [dAns,setDA]=useState([]);const [dDone,setDD]=useState(false);const [dRes,setDR]=useState(null);const [dCats,setDCats]=useState(null);const [dWhy,setDWhy]=useState(null);
@@ -2344,7 +2319,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [satProjection,setSatProjection]=useState(null);
   const [satWeakSkills,setSatWeakSkills]=useState([]);
   const [satOpenReviews,setSatOpenReviews]=useState(0);
-  const [satStats,setSatStats]=useState({diagnosticDone:false,fullTests:0,questions:0,logCleared:false,masteredSkills:0});
+  // baselineDone is read by the progressive-unlock ladder (src/lib/featureUnlock.js) as much as
+  // by the SAT panels: the Baseline is the gate that opens Diagnostic, Practice and Scores, so
+  // "has this student placed themselves yet" has to be a first-class signal here, not something
+  // only SatOverviewPanel knows.
+  const [satStats,setSatStats]=useState({loaded:false,diagnosticDone:false,baselineDone:false,fullTests:0,questions:0,logCleared:false,masteredSkills:0});
   // Cross-app "what has this student actually been doing" digest (src/lib/recentActivity.js,
   // reading the studyEvents log) — fed into every Medabrain surface (coach/prep/portfolio/sat/plan
   // generation) so MedaBrain's knowledge keeps expanding from real activity, not just onboarding
@@ -2357,8 +2336,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     let cancelled=false;
     (async()=>{
       try{
-        const [attempts,responses,reviewLog]=await Promise.all([
-          DB.getSatAttempts(),DB.getSatResponses(),DB.getSatReviewLog({includeResolved:true}),
+        const [attempts,responses,reviewLog,baselines]=await Promise.all([
+          DB.getSatAttempts(),DB.getSatResponses(),DB.getSatReviewLog({includeResolved:true}),DB.getSatBaselines(),
         ]);
         if(cancelled) return;
         const masteryMap=computeAllMastery(responses);
@@ -2367,17 +2346,187 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         setSatWeakSkills(rankSkillsByLeverage(masteryMap).filter(s=>s.attempts>0).slice(0,4));
         setSatOpenReviews(open.length);
         setSatStats({
+          // `loaded` gates the unlock toast below: until Dexie has reported in, every
+          // SAT counter reads zero, and a "you just unlocked 6 things" toast fired at
+          // the moment they stop reading zero would be a lie told to every returning
+          // student on every single load.
+          loaded:true,
           diagnosticDone:attempts.some(a=>a.kind==='diagnostic'&&a.status==='complete'),
+          baselineDone:(baselines||[]).some(b=>b.status==='complete'),
           fullTests:attempts.filter(a=>a.kind==='full'&&a.status==='complete').length,
           questions:responses.length,
           // Only counts as "cleared" if there was ever anything to clear.
           logCleared:reviewLog.length>0&&open.length===0,
           masteredSkills:Object.values(masteryMap).filter(m=>m.mastery>=0.8&&m.attempts>=8).length,
         });
-      }catch{ if(!cancelled){ setSatProjection(null); setSatWeakSkills([]); setSatOpenReviews(0); } }
+      }catch{ if(!cancelled){ setSatProjection(null); setSatWeakSkills([]); setSatOpenReviews(0); setSatStats(st=>({...st,loaded:true})); } }
     })();
     return()=>{cancelled=true;};
-  },[tab,satView]);
+    // user.xp is in here purely as a cheap "something happened" ping: every SAT action awards
+    // XP, and these counts now gate which SAT sub-tabs are even visible, so a student who
+    // finishes their Baseline must see Diagnostic/Practice/Scores appear immediately rather
+    // than on their next tab switch.
+  },[tab,satView,user?.xp]);
+
+  // ══ PROGRESSIVE FEATURE UNLOCKING ═════════════════════════════════════════════
+  // The nav used to be a directory of everything the product contains: seven top-level
+  // tabs and thirty-one sub-tabs, all visible in the first second of the first visit,
+  // to a fourteen-year-old who had done nothing yet. A Review Log with nothing to
+  // review, a Recommenders form for someone with no activities logged, an Admissions
+  // Calculator with no scores to put in it. Every one of those is a good screen shown
+  // at the wrong time, and thirty-eight simultaneous wrong times is the drop-off.
+  //
+  // Now the nav is a directory of what's useful to THIS student RIGHT NOW, and it grows
+  // as they do. The ladder, the reasoning, and the three guarantees that keep it safe
+  // (sticky, never unreachable, never silent) all live in src/lib/featureUnlock.js —
+  // this is only the wiring: real counters in, visible nav out.
+  const unlockSignals = useMemo(()=>({
+    quizzes: qTaken,
+    lessons: doneL,
+    satQuestions: satStats.questions,
+    satBaselineDone: satStats.baselineDone,
+    satDiagnosticDone: satStats.diagnosticDone,
+    satFullTests: satStats.fullTests,
+    colleges: appCounts.colleges,
+    essays: appCounts.essays,
+    activities: portActivities.length,
+    trackedItems: trackedSummary.items.length,
+    achievements: achiev.size,
+    level: lvl,
+    planBuilt: !!user?.masterPlan,
+    // A senior — or anyone already out of high school — does not get to spend three
+    // sessions earning their way into the application half of the product. For them
+    // the deadline is the thing, so Portfolio, Recommenders and Interview Prep are
+    // open from the first second. The ladder is for students who have time to climb it.
+    applicationUrgent: user?.gradeStage==='senior' || user?.gradeStage==='gap',
+  }),[qTaken,doneL,satStats,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user?.masterPlan,user?.gradeStage]);
+  const unlocks = useMemo(()=>unlockState(user,unlockSignals),[user,unlockSignals]);
+
+  // Two writes, both one-way, both here so nothing else in the app has to think about them.
+  //
+  // seedExistingAccount: nobody wakes up to a smaller app than they went to sleep with.
+  // An account that was already in use before this shipped gets every gate opened once,
+  // permanently — progressive disclosure is for people meeting the product, not for
+  // taking tabs away from someone mid-application.
+  //
+  // recordUnlocks: an unlock, once shown, is written down. It survives the signal that
+  // earned it going away (a deleted activity, a reset deck), because a tab that silently
+  // disappears is indistinguishable from a bug, and re-locking would punish the exact
+  // exploration this is meant to encourage.
+  useEffect(()=>{
+    if(!user||!dbReady) return;
+    const seeded=seedExistingAccount(user,unlockSignals);
+    if(seeded){ saveUser(seeded); return; }
+    const recorded=recordUnlocks(user,unlocks.pending);
+    if(recorded) saveUser(recorded);
+  },[user,dbReady,unlockSignals,unlocks.pending,saveUser]);
+
+  // Announce a newly-earned area rather than letting it quietly appear in the sidebar.
+  // The unlock IS the reward for the work that earned it, and a student who never
+  // notices Plans arriving gets no benefit from having waited for it. Only fires for
+  // gates crossed during this session (`seenUnlocks` starts as whatever was already
+  // recorded), so a returning student is never toasted about old news.
+  const seenUnlocks = useRef(new Set());
+  // Every counter behind unlockSignals starts at zero and climbs as Dexie resolves, so
+  // "earned since last render" is meaningless until all of them have reported in — on a
+  // returning account it would read as two dozen simultaneous unlocks, every load. Until
+  // then we keep re-baselining what counts as already-seen, so the first real toast can
+  // only be a gate this student crossed with their own hands.
+  const signalsSettled = dbReady && portLoaded && satStats.loaded;
+  useEffect(()=>{
+    if(!user) return;
+    if(!signalsSettled){ seenUnlocks.current=new Set([...(user.unlockedFeatures||[]),...unlocks.earned]); return; }
+    const fresh=unlocks.earned.filter(id=>!seenUnlocks.current.has(id));
+    if(!fresh.length) return;
+    fresh.forEach(id=>seenUnlocks.current.add(id));
+    // One toast even when several open at once — three stacked toasts reads as an error
+    // state, and the student only needs to be told to go look.
+    const names=fresh.map(id=>UNLOCK_LABELS[id]||id);
+    const headline=names.length===1?`${names[0]} unlocked`:`${names.length} new areas unlocked`;
+    toast.success(`${headline}${names.length>1?` — ${names.join(', ')}`:''}`,{icon:<Sparkles size={16}/>,duration:4200});
+    play('achieve');
+  },[unlocks.earned,user,signalsSettled]);
+
+  // What the student can actually see right now. Everything downstream — the sidebar, the
+  // mobile bar, every SubNav, ⌘K, the product tour, the browser title — reads these rather
+  // than the full arrays, so there is exactly one definition of "visible" in the app.
+  const navItems       = useMemo(()=>visibleItems(NAV,unlocks),[unlocks]);
+  const satSubnav      = useMemo(()=>visibleItems(SAT_SUBNAV,unlocks,'sat'),[unlocks]);
+  const prepSubnav     = useMemo(()=>visibleItems(PREP_SUBNAV,unlocks,'prep'),[unlocks]);
+  const portfolioSubnav= useMemo(()=>visibleItems(PORTFOLIO_SUBNAV,unlocks,'portfolio'),[unlocks]);
+  const progressSubnav = useMemo(()=>visibleItems(PROGRESS_SUBNAV,unlocks,'progress'),[unlocks]);
+
+  // Guarantee #2: nothing is ever unreachable. A locked surface still has a URL, and
+  // arriving at one directly — a link a friend sent, a bookmark, an old history entry,
+  // a ⌘K jump made before the gate closed — opens it for good instead of bouncing to a
+  // screen the student didn't ask for. A lock in this app means "we haven't put this in
+  // front of you yet", never "you may not have this".
+  useEffect(()=>{
+    if(!user||!dbReady) return;
+    const view={sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView}[tab]||null;
+    if(unlocks.isOpen(tab,view)) return;
+    const recorded=recordUnlocks(user,[tab,view?`${tab}/${view}`:null].filter(Boolean));
+    if(recorded) saveUser(recorded);
+  },[tab,satView,prepView,portfolioView,progressView,unlocks,user,dbReady,saveUser]);
+
+  // completeOnboarding() calls startTour() directly, right after the onboarding
+  // handoff — the tour's own first step (`nav-home`) already forces the tab back
+  // to Home via its onEnter, so there's no separate "wait until they land on Home"
+  // step needed; the whole point is the tour picks up the instant onboarding ends.
+  //
+  // Built from `navItems`, not NAV: the tour must never spotlight a pillar the
+  // student can't see. On a brand-new account that means a three-beat tour (Home,
+  // SAT, Prep) plus the ⌘K tip instead of a seven-beat march through tabs that
+  // won't exist when they get back to the app — which is a shorter, truer tour
+  // and exactly the direction the tour's own history says to go.
+  const TOUR_COPY = useMemo(()=>({
+    home:      { section:'Home', color:C.blue, title:'Your dashboard', body:"Streak, XP, and today's next lesson — every session starts here.", onEnter:()=>setTab('home') },
+    sat:       { section:'SAT', color:C.sky, title:'Raise your score', body:"Start with the Baseline — it places you, and everything else here aims at what it finds.", onEnter:()=>goSat('overview') },
+    prep:      { section:'Prep', color:C.violet, title:'Your curriculum', body:"Take the 2-minute diagnostic to find your pathway, then work through it lesson by lesson.", onEnter:()=>setTab('prep') },
+    portfolio: { section:'Portfolio', color:C.green, title:'Your application', body:"College list, essays, deadlines, and activities — everything admissions cares about, in one place.", onEnter:()=>setTab('portfolio') },
+    plans:     { section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
+    progress:  { section:'Progress', color:C.cyan, title:'Proof of the work', body:"Verified mastery, performance by topic, and every badge you've earned.", onEnter:()=>setTab('progress') },
+  }),[goSat]);
+  const TOUR_STEPS = useMemo(()=>[
+    ...navItems.filter(n=>TOUR_COPY[n.id]).map(n=>({ target:`nav-${n.id}`, ...TOUR_COPY[n.id] })),
+    { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any section. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
+  ],[navItems,TOUR_COPY]);
+
+  // ── Quick-switch command palette — one searchable jump point across every ────
+  // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
+  // absorbed sub-app inside them) reads as one thing you can move around in fast.
+  //
+  // Scoped to what's unlocked, for the same reason the nav is: a palette that
+  // offers to jump you to a Review Log holding nothing, or an Admissions
+  // Calculator with no scores in it, is the wall of options again with a search
+  // box in front of it. It re-grows automatically as the ladder opens.
+  const COMMANDS = useMemo(()=>[
+    ...navItems.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
+    ...prepSubnav.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
+    ...portfolioSubnav.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
+    // The three sections of Activities & Résumé that used to be tabs of their own. Without
+    // these, merging them would have made "clinical hours" un-findable in the one place a fast
+    // typist looks for anything — the sections still exist, so they still get a command. They
+    // ride on the Activities & Résumé unlock, since that's the tab that actually holds them.
+    ...(unlocks.isOpen('portfolio','resume')?[
+      { id:'port-clinical', label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
+      { id:'port-research', label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
+      { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
+    ]:[]),
+    ...progressSubnav.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
+    ...satSubnav.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
+  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat]);
+  const filteredCmds = useMemo(()=>{
+    const q=cmdQ.trim().toLowerCase();
+    if(!q) return COMMANDS;
+    return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
+  },[COMMANDS,cmdQ]);
+  const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
+  const onCmdInputKeyDown=useCallback((e)=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); setCmdActiveIdx(i=>Math.max(i-1,0)); }
+    else if(e.key==='Enter'){ e.preventDefault(); const cmd=filteredCmds[cmdActiveIdx]; if(cmd)runCommand(cmd); }
+  },[filteredCmds,cmdActiveIdx,runCommand]);
 
   // A built-in deck's cards get a progressed (FSRS-scheduled) copy saved into cDecks under the
   // same name the first time it's actually reviewed — see rateCard() below, which persists
@@ -3593,7 +3742,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
                 {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
-                {dueDeckCount>0&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
+                {/* Same rule as the nav badge: don't advertise decks from a tab this student
+                    hasn't unlocked yet. Flashcards open after their first quiz. */}
+                {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
                 {satProjection&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>SAT {satProjection.low}–{satProjection.high}</span>}
               </div>
@@ -3634,7 +3785,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 <div style={{fontSize:11,color:C.t3,marginTop:1}}>{topPick.reason}</div>
               </div>
             </div>
-            <button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>
+            {/* Home still hands a brand-new student their single best next quiz — that's the
+                one-decision dashboard working as intended. What it doesn't do is offer the
+                whole 200-quiz library before they've finished anything; taking this pick is
+                what opens it. */}
+            {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>}
           </div>}
         </div>}
 
@@ -3683,6 +3838,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </motion.div>
 
         {/* Quick Actions */}
+        {/* Filtered through the unlock ladder like every other route into the app. A quick
+            action is a shortcut, and a shortcut to a screen the nav has deliberately not shown
+            you yet is just the wall of options rebuilt on the dashboard — it would also trip
+            the deep-link unlock and quietly hand the student everything on their first click.
+            A brand-new account sees two of these (Diagnostic, Pathway), which is exactly the
+            "here is what to do first" the nav is now trying to say. */}
         <div>
           <SL>Quick Actions</SL>
           <div style={G(3,14,{},isMobile)}>
@@ -3693,7 +3854,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {Ic:MessageCircle,lbl:'AI Coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
               {Ic:Layers3,lbl:'Flashcards',sub:`${dueDeckCount>0?dueDecksSub(dueDeckCount):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueDeckCount>0?C.violet:C.orange},
               {Ic:Building2,lbl:'Admissions',sub:'School list builder',pillar:'portfolio',view:'calc',col:C.rose},
-            ].map((a,i)=>(
+            ].filter(a=>unlocks.isOpen(a.pillar,a.view)).map((a,i)=>(
               <motion.div key={i} whileHover={{y:-3,boxShadow:`0 12px 40px rgba(0,0,0,0.5),0 0 0 1px ${a.col}30`}} whileTap={{scale:.98}}
                 onClick={()=>{if(a.pillar==='prep')goPrep(a.view);else if(a.pillar==='portfolio')goPortfolio(a.view);play('click');}}
                 style={{...glass({padding:20}),cursor:'pointer',transition:'border-color .2s',position:'relative',overflow:'hidden'}}
@@ -3707,6 +3868,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             ))}
           </div>
         </div>
+
+        {/* What opens next. Home is where a new student actually starts, so this is the one
+            place the ladder is stated in full rather than one row at a time: three upcoming
+            areas, each with the sentence that opens it. It is the answer to the question the
+            reviewer couldn't answer on his own — "where do I go?" — and it disappears
+            entirely once there is nothing left to unlock. */}
+        {unlocks.locked().length>0&&(
+          <NextUnlockCard items={unlocks.locked()} variant="card" accent={C.violet}/>
+        )}
 
         {/* Achievements strip — clicking the header or any badge jumps to the full Progress >
             Achievements view (same data via the shared achievementProgress memo), which shows
@@ -6335,7 +6505,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           )}/>
         <div style={{marginTop:18}}>
-          <SubNav items={PROGRESS_SUBNAV} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub" hrefFor={progressHref}/>
+          <SubNav items={progressSubnav} active={progressView} onChange={setProgressView} accent={accent} m={isMobile} tourPrefix="progress-sub" hrefFor={progressHref} locked={unlocks.locked('progress')[0]}/>
         </div>
         <div style={{...CC({gap:22}),marginTop:18}}>
         {progressView==='overview'&&<>
@@ -6732,6 +6902,48 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             small cruelty. */}
         <Group icon={Accessibility} title="Appearance & Accessibility">
           <AppearanceSettings settings={a11y} onChange={updateA11y} isMobile={isMobile} accent={accent}/>
+        </Group>
+
+        {/* ── How much of the app to show ─────────────────────────────────────── */}
+        {/* The escape hatch for progressive unlocking. The default hides parts of the
+            app a student hasn't reached yet — which is right for the 95% who told us
+            the full nav was overwhelming, and wrong for the student who has already
+            mapped the product and wants all of it now. Rather than argue about which
+            of them is the real user, this is one switch, in the obvious place, that
+            settles it per account. Flipping it on is instant and total; flipping it
+            back off keeps everything already earned (unlocks are one-way, see
+            featureUnlock.js) and only re-hides what was never reached. */}
+        <Group icon={Compass} title="Navigation">
+          <div style={glass({padding:18})}>
+            <div style={R({justifyContent:'space-between',gap:16,flexWrap:'wrap'})}>
+              <div style={{flex:1,minWidth:240}}>
+                <SL extra={{marginBottom:6}}>Show every feature</SL>
+                <p style={{fontSize:12.5,color:C.t3,lineHeight:1.6,margin:0}}>
+                  {user.navMode===NAV_MODES.EVERYTHING
+                    ? <>Every tab and sub-tab is visible, including ones you haven't used yet.</>
+                    : <>We're showing you {navItems.length} main sections and unlocking the rest as you go, so you always know where to start. Turn this on to see all of it now.</>}
+                </p>
+                {user.navMode!==NAV_MODES.EVERYTHING&&unlocks.locked().length>0&&(
+                  <div style={{fontSize:11.5,color:C.t4,marginTop:8,fontFamily:C.FM}}>
+                    {unlocks.locked().length} section{unlocks.locked().length===1?'':'s'} still to unlock
+                  </div>
+                )}
+              </div>
+              <button
+                role="switch"
+                aria-checked={user.navMode===NAV_MODES.EVERYTHING}
+                onClick={()=>{
+                  const on=user.navMode!==NAV_MODES.EVERYTHING;
+                  saveUser({...user,navMode:on?NAV_MODES.EVERYTHING:NAV_MODES.GUIDED});
+                  play('select');
+                  toast.success(on?'Showing every feature.':'Back to guided — everything you’ve unlocked stays unlocked.');
+                }}
+                style={{...(user.navMode===NAV_MODES.EVERYTHING?btn(accentGrad(accent),{fontSize:12,padding:'9px 18px'}):btnG({fontSize:12,padding:'9px 18px'})),flexShrink:0}}
+              >
+                {user.navMode===NAV_MODES.EVERYTHING?<><Check size={14}/>Showing everything</>:<><Layers size={14}/>Show everything</>}
+              </button>
+            </div>
+          </div>
         </Group>
 
         {/* ── What Medabrain knows about you ─────────────────────────────────── */}
@@ -7227,7 +7439,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={{position:'relative'}}>
         <div style={{position:'fixed',inset:0,pointerEvents:'none',zIndex:0,transition:'background 0.7s ease',background:`radial-gradient(ellipse 65% 42% at 88% -6%,${pA}1a 0%,transparent 58%),radial-gradient(ellipse 55% 38% at -5% 102%,${pA2}14 0%,transparent 58%),radial-gradient(ellipse 40% 30% at 50% 40%,${pA}08 0%,transparent 60%)`}}/>
         <div style={{position:'relative',zIndex:1}}>
-          <SubNav items={PREP_SUBNAV.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref}/>
+          <SubNav items={prepSubnav.map(n=>n.id==='flashcards'&&dueDeckCount>0?{...n,badge:dueDeckCount}:n)} active={prepView} onChange={setPrepView} accent={pA} m={isMobile} tourPrefix="prep-sub" hrefFor={prepHref} locked={unlocks.locked('prep')[0]}/>
           {user.masterPlan&&(
             <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
               <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
@@ -7310,7 +7522,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function tPortWrap(){
     return(
       <div>
-        <SubNav items={PORTFOLIO_SUBNAV} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub" hrefFor={portfolioHref}/>
+        <SubNav items={portfolioSubnav} active={portfolioView} onChange={setPortfolioView} accent={portfolioAccent} m={isMobile} tourPrefix="portfolio-sub" hrefFor={portfolioHref} locked={unlocks.locked('portfolio')[0]}/>
         {user.masterPlan&&(
           <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
             <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
@@ -7443,7 +7655,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         params={satParams}
         onConsumeParams={()=>setSatParams(null)}
         onSessionComplete={(taskType)=>saveUser(applyPlanAutoComplete(user,typeMatch(taskType)))}
-        subnavItems={SAT_SUBNAV}
+        subnavItems={satSubnav}
+        subnavLocked={unlocks.locked('sat')[0]}
         subnavHrefFor={satHref}
         accent={satAccent}
         user={user}
@@ -7535,10 +7748,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
-              {NAV.map(n=>{
+              {navItems.map(n=>{
                 const active=tab===n.id;
                 const nc=navColor[n.id]||accent;
-                const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
+                // Gated on Flashcards actually being unlocked: a count badge advertising a
+                // sub-tab the student can't open yet is worse than no badge at all — it
+                // promises something behind the click that isn't there.
+                const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount:null;
                 const planDue=planPillarsDueToday.has(n.id);
                 return(
                   // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
@@ -7555,6 +7771,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 );
               })}
             </nav>
+            {/* What opens next, and what opens it. Without this the sidebar would just be
+                mysteriously short — a student who has heard about the AI coach from a friend
+                would conclude the app is broken rather than that they haven't reached it yet.
+                One item only: a list of six locked things here would rebuild the exact wall
+                of options this whole change exists to tear down. */}
+            <NextUnlockCard items={unlocks.locked('')} variant="rail" accent={accent}/>
             {/* Theme, one click from anywhere in the app. It used to live four
                 levels deep in Settings → Appearance, which in practice meant the
                 app picked the theme and the student lived with it. The full
@@ -7573,7 +7795,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             hard-coding the sidebar width. See src/components/sat/SatToolsContext.jsx. */}
         {/* tabIndex={-1} so the skip link can move focus here; without it the
             anchor scrolls but the next Tab press starts from the top again. */}
-        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?80:0,outline:'none'}}>
+        <main id="msp-main" tabIndex={-1} aria-label={`${NAV.find(n=>n.id===tab)?.label||'Main'} section`} data-app-content style={{flex:1,minWidth:0,overflowY:'auto',position:'relative',background:C.bg,paddingBottom:isMobile?(navItems.length<=5?84:80):0,outline:'none'}}>
           {!isMobile && <div style={{position:'sticky',top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,${navColor[tab]||accent}60,transparent)`,zIndex:5,transition:'background .3s'}}/>}
           {/* 1440px used to cap this well inside a typical 1920px laptop/monitor viewport (minus
               the 236px sidebar), leaving a large, unused gutter on both sides that only grew on
@@ -7591,10 +7813,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
         {/* ══ BOTTOM NAV (Mobile) ══════════════════════════════════════════════ */}
         {isMobile && (
-          <nav style={{position:'fixed',bottom:0,left:0,right:0,height:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
-            {NAV.map(n=>{
+          // Sized off the live item count, not the full seven. Progressive unlocking means a
+          // new student sees four items here instead of seven, and a four-item bar can afford
+          // what a seven-item bar could not: 22px icons and an 11px label with room around
+          // them. That is the difference between a phone-native bottom bar and a row of tiny
+          // grey glyphs — and "it looks like a 90s site, teenagers expect app-like nav" was
+          // the exact complaint. The bar shrinks back toward the compact treatment as more
+          // items unlock, by which point the student knows what each one is.
+          <nav style={{position:'fixed',bottom:0,left:0,right:0,height:navItems.length<=5?68:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
+            {navItems.map(n=>{
               const nc=navColor[n.id]||accent;
-              const badge=n.id==='prep'&&dueDeckCount>0?dueDeckCount:null;
+              const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount:null;
               const planDue=planPillarsDueToday.has(n.id);
               return(
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —
@@ -7602,14 +7831,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 // Plans made it 6.
                 <a key={n.id} href={tabHref(n.id)} aria-current={tab===n.id?'page':undefined} data-tour={`nav-${n.id}`} onClick={e=>onNavLinkClick(e,()=>setTab(n.id))} style={{position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:tab===n.id?nc:C.t3,cursor:'pointer',flex:'1 1 0',minWidth:0,padding:'0 2px',textDecoration:'none'}}>
                   <div style={{position:'relative',display:'flex'}}>
-                    <n.ic size={19} color={tab===n.id?nc:C.t3}/>
+                    <n.ic size={navItems.length<=5?22:19} color={tab===n.id?nc:C.t3}/>
                     {badge&&<span style={{position:'absolute',top:-4,right:-9,...pill(C.amberDim,C.amberL,{fontSize:9,padding:'0 5px'})}}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — offset to
                         the opposite corner from the due-deck badge above so both can show at once
                         without overlapping. */}
                     {planDue&&<span title="A plan task is due here today" aria-label="Plan task due today" style={{position:'absolute',bottom:-2,right:-3,width:7,height:7,borderRadius:'50%',background:C.violet,boxShadow:`0 0 0 2px ${C.s0}`}}/>}
                   </div>
-                  <span style={{fontSize:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
+                  <span style={{fontSize:navItems.length<=5?11:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
                 </a>
               );
             })}

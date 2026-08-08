@@ -73,15 +73,15 @@ export default function SatOverviewPanel({
     return Math.ceil((new Date(`${user.examDate}T00:00:00`) - new Date(new Date().toDateString())) / 86400000);
   }, [user?.examDate]);
 
-  const action = useMemo(
-    () => nextAction({ attempts, reviewLog, masteryMap, responseCount: responses.length, daysToExam }),
-    [attempts, reviewLog, masteryMap, responses.length, daysToExam],
-  );
-
   // The baseline lives in its own store rather than satAttempts (its questions
   // are generated and exist nowhere else), so it is loaded separately here to
   // surface on Overview — a placement test nobody discovers is a placement test
   // nobody takes.
+  //
+  // Loaded ABOVE nextAction because it is now the first thing that decision
+  // reads: for a student with no baseline, "do this next" is the ten-minute
+  // adaptive placement, not the thirty-minute diagnostic. See the ordering
+  // note in src/lib/sat/nextAction.js.
   const [baselines, setBaselines] = useState([]);
   useEffect(() => {
     let live = true;
@@ -91,18 +91,24 @@ export default function SatOverviewPanel({
     return () => { live = false; };
   }, [responses.length]);
 
+  const hasBaseline = baselines.some(b => b.status === 'complete');
+  const action = useMemo(
+    () => nextAction({ attempts, reviewLog, masteryMap, responseCount: responses.length, hasBaseline, daysToExam }),
+    [attempts, reviewLog, masteryMap, responses.length, hasBaseline, daysToExam],
+  );
+
   const latestBaseline = baselines[0]?.result || null;
   const baselineDelta = compareBaselines(latestBaseline, baselines[1]?.result || null);
   const baselineOpen = canStartBaseline(baselines[0]?.finishedAt || null);
   const baselineWait = cooldownLabel(baselines[0]?.finishedAt || null);
   const secondary = useMemo(
-    () => secondaryActions({ attempts, reviewLog, masteryMap }),
-    [attempts, reviewLog, masteryMap],
+    () => secondaryActions({ attempts, reviewLog, masteryMap, hasBaseline }),
+    [attempts, reviewLog, masteryMap, hasBaseline],
   );
 
   const targetScore = user?.onboardingTargetScore || null;
   const progress = useMemo(() => targetProgress(projection, targetScore), [projection, targetScore]);
-  const empty = projectionEmptyState(responses.length);
+  const empty = projectionEmptyState(responses.length, hasBaseline);
   const topWeak = ranked.filter(r => r.attempts > 0).slice(0, 4);
 
   const confColor = projection?.confidence === 'high' ? C.green : projection?.confidence === 'moderate' ? C.amber : C.orange;

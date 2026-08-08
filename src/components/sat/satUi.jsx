@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Lock } from 'lucide-react';
 import { C, tint, shade, btn, accentFill, contrastRatio } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 
@@ -88,7 +89,14 @@ const NAV_GROUPS = [
  * badge) and keeps its routing contract — `hrefFor` makes every tab a real
  * link so ⌘-click and "copy link address" behave like navigation.
  */
-export function SatNav({ items, active, onChange, accent = C.sky, m = false, hrefFor, tourPrefix = 'sat-sub' }) {
+// `locked` is the next SAT sub-view this student hasn't unlocked yet (see
+// src/lib/featureUnlock.js). The SAT rail starts at two tabs for a new account —
+// Overview and Baseline, because taking the baseline is the only thing a new
+// student should do here — and grows to ten as they work. This renders the next
+// step as a dimmed, inert tab at the end of the rail carrying the sentence that
+// opens it, so the rail reads as a path with a visible next move rather than as
+// a suspiciously short menu.
+export function SatNav({ items, active, onChange, accent = C.sky, m = false, hrefFor, tourPrefix = 'sat-sub', locked = null }) {
   const scrollRef = useRef(null);
   const btnRefs = useRef({});
   // Which edges have more rail behind them. Drives the fades below — a tab row
@@ -253,6 +261,24 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
             })}
           </div>
         ))}
+        {locked && (
+          <div style={{ display: 'flex', alignItems: 'stretch', flexShrink: 0 }}>
+            <div aria-hidden style={{ width: 1, alignSelf: 'center', height: 18, background: C.b1, margin: m ? '0 6px' : '0 12px' }} />
+            <span
+              title={locked.hint}
+              aria-label={`${locked.label} — locked. ${locked.hint}`}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 7,
+                padding: m ? '10px 10px 12px' : '10px 13px 13px',
+                color: C.t4, fontWeight: 500, fontSize: m ? 12 : 12.5, fontFamily: C.FB,
+                whiteSpace: 'nowrap', flexShrink: 0, cursor: 'default',
+              }}
+            >
+              <Lock size={m ? 12 : 13} color={C.t4} />
+              {locked.label}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Overflow fades. Pointer-events off so they never swallow a tab click,

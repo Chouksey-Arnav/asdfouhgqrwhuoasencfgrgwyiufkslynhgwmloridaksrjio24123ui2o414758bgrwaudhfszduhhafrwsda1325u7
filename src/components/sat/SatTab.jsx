@@ -28,7 +28,7 @@ import { buildLearnerProfile } from '../../lib/sat/learnerProfile';
 // way Bluebook keeps them available for a whole section rather than one screen.
 
 export default function SatTab({
-  view, onViewChange, params, onConsumeParams, subnavItems, subnavHrefFor,
+  view, onViewChange, params, onConsumeParams, subnavItems, subnavHrefFor, subnavLocked = null,
   accent = C.sky, user, gradeLabel = null, isMobile = false, planStrip = null, onSessionComplete,
   medabrainOpen = false, onMedabrainOpenChange, medabrainMessages = [], onMedabrainMessagesChange,
   recentActivitySummary = null,
@@ -106,6 +106,7 @@ export default function SatTab({
         <SatNav
           items={subnavItems} active={view} onChange={(v) => onViewChange(v, null)}
           accent={accent} m={isMobile} tourPrefix="sat-sub" hrefFor={subnavHrefFor}
+          locked={subnavLocked}
         />
         {planStrip}
         {(panels[view] || panels.overview)()}

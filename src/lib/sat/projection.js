@@ -145,8 +145,21 @@ export function projectScore({ masteryMap = {}, attempts = [], responses = [] } 
  * What to tell a student who has no projection yet. Returned separately so the
  * UI never has to invent copy for the empty state.
  */
-export function projectionEmptyState(responseCount = 0) {
+export function projectionEmptyState(responseCount = 0, hasBaseline = false) {
   if (responseCount === 0) {
+    // Before any measurement at all, point at the baseline rather than the
+    // diagnostic: ten adaptive minutes to find out where you score beats
+    // thirty to find out which skills are weak, when the answer to "where do
+    // I stand" is currently nothing. Same ordering as nextAction() and as the
+    // SAT rail itself — see the note in src/lib/sat/nextAction.js.
+    if (!hasBaseline) {
+      return {
+        title: 'No score estimate yet',
+        body: 'Set your baseline and we will show you where you actually stand — measured, not guessed. About 10 minutes.',
+        cta: 'Set your baseline',
+        view: 'baseline',
+      };
+    }
     return {
       title: 'No score estimate yet',
       body: 'Take the diagnostic and we will show you where you actually stand — measured, not guessed.',
