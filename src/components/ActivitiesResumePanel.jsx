@@ -503,7 +503,7 @@ export default function ActivitiesResumePanel({
     <div style={CC({ gap: 22 })}>
       <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange} m={isMobile}
         eyebrow="Applications" title="Activities & Résumé"
-        sub="Everything you have actually done, in one place: extracurriculars and honors with real hours and impact, your GPA history, clinical and shadowing hours, research, and dated certifications. Export it into the Common Application's actual fields — character limits and all — or as one résumé PDF that carries all five."
+        sub="Activities, GPA, hours, research and certifications — exportable to the Common App or one PDF."
         right={canExport ? (
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button style={btnG({ fontSize: 12 })} onClick={() => setExportOpen(true)}><ClipboardList size={13} />Export to Common App</button>

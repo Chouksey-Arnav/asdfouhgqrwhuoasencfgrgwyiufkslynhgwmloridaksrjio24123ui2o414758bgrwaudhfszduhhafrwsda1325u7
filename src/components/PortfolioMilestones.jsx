@@ -541,7 +541,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
 
       <Disclosure id="milestones-filters" icon={Filter} color={accent} m={isMobile}
         title="Find a particular date"
-        sub="Narrow the feed down to just your own dates, one category, or one month.">
+        sub="Narrow to your own dates, a category, or a month.">
       <div style={CC({ gap: 10 })}>
         <div style={R({ gap: 7, flexWrap: 'wrap' })}>
           {LENSES.map(l => {

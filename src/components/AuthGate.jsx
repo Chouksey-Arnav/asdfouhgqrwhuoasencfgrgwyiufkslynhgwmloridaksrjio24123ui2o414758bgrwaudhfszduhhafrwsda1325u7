@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import { C, applyTheme, getStoredMode } from '../lib/theme';
+import { C, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
+import { loadA11y, applyA11y } from '../lib/a11y';
 import { getToken, setToken, clearToken, fetchMe } from '../lib/authApi';
 import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath } from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
@@ -78,30 +79,57 @@ export default function AuthGate({ children }) {
 
   useEffect(() => { restore(); }, [restore]);
 
-  // ── The signed-out surfaces stay dark, whatever theme is stored ──────────
+  // ── One theme, from the landing page all the way into the app ────────────
   //
-  // Light mode is an APP setting, not a site-wide one. The landing page and the
-  // auth screens are a fixed-brand marketing piece: a dark hero with gradient
-  // headline text (WebkitTextFillColor: transparent over a light-on-dark
-  // gradient), a dark navigation bar, and a dark product mockup that is
-  // deliberately a picture of the app rather than the page's own chrome. Run
-  // that through the light palette and the headline renders near-white on
-  // near-white and the secondary call-to-action disappears entirely — which is
-  // exactly what happened before this existed.
+  // This used to pin every signed-out surface to the Dark palette regardless of
+  // what the student had chosen, on the reasoning that the marketing page was a
+  // fixed-brand piece and nobody expresses a theme preference before they have
+  // an account. Both halves of that turned out to be wrong in the same way.
   //
-  // Making 1,200 lines of marketing markup theme-aware would be a real project
-  // for no user benefit: nobody has expressed a theme preference before they
-  // have an account, and the stored one is very often just the default. So the
-  // pre-auth surfaces pin to dark, and the student's actual preference is
-  // reapplied by App.jsx the moment they are signed in.
+  // The visible symptom was the one users reported: a dark sign-up screen that
+  // snapped to a completely different palette the instant the account was
+  // created, because App.jsx then applied the real preference. A product that
+  // changes its entire appearance at the exact moment you commit to it reads as
+  // a bait and switch, whatever the palette. And the fix cannot be "pick a
+  // nicer default", because the flip happens whenever the two ends disagree.
+  //
+  // So the signed-out surfaces now render in exactly the theme the app will
+  // use, LandingPage and the auth screens are token-driven rather than
+  // hard-coded dark, and the toggle in the nav lets a visitor change it before
+  // they have an account — the preference is stored under the same key App.jsx
+  // reads, so whatever they picked out here follows them in. The theme changes
+  // when the student changes it, and at no other moment.
   const preAuth = status !== 'signedIn';
+  const [themeMode, setThemeMode] = useState(() => getStoredMode());
+
+  // Coming back out of the app (sign out), the stored preference is the source
+  // of truth — the student may have changed it in Settings while signed in.
+  useEffect(() => { if (preAuth) setThemeMode(getStoredMode()); }, [preAuth]);
+
+  // Applying a theme MUTATES the shared `C` token object (see the header of
+  // lib/theme.js), which inline styles from an already-committed render cannot
+  // observe. So the apply happens in an effect and bumps an epoch, and the
+  // epoch keys the pre-auth tree — the same two-pass dance App.jsx does.
+  const [themeEpoch, setThemeEpoch] = useState(0);
+  const appliedRef = useRef(null);
   useEffect(() => {
-    if (preAuth) applyTheme('dark');
-    // Signing in remounts App, whose own effect applies the stored preference,
-    // so there is nothing to restore here — but a student who signs OUT stays
-    // on this page, and should see it in the brand's dark, not their light.
-    return () => { if (preAuth) applyTheme(getStoredMode()); };
-  }, [preAuth]);
+    if (!preAuth) return undefined;
+    const apply = () => {
+      // The full a11y set, not just the palette: high contrast, the readable
+      // typeface and the interface scale are exactly as relevant to reading a
+      // sign-up form as to reading a lesson.
+      const resolved = applyA11y({ ...loadA11y(), themeMode });
+      if (appliedRef.current !== resolved) { appliedRef.current = resolved; setThemeEpoch(e => e + 1); }
+    };
+    apply();
+    if (themeMode !== 'system') return undefined;
+    return watchSystemTheme(apply);
+  }, [preAuth, themeMode]);
+
+  const changeTheme = useCallback((mode) => {
+    storeMode(mode);   // the key App.jsx's loadA11y() reads, so the choice carries in
+    setThemeMode(mode);
+  }, []);
 
   // ── view → URL ────────────────────────────────────────────────────────────
   // Same invariant the app-side router uses (src/lib/useAppRouter.js): push only when
@@ -166,11 +194,20 @@ export default function AuthGate({ children }) {
   }
 
   if (view === 'landing') {
-    return <LandingPage onGetStarted={() => goTo('signup')} onLogin={() => goTo('login')} onOpenLegal={openLegal} />;
+    return (
+      <LandingPage
+        key={themeEpoch}
+        onGetStarted={() => goTo('signup')}
+        onLogin={() => goTo('login')}
+        onOpenLegal={openLegal}
+        themeMode={themeMode}
+        onThemeChange={changeTheme}
+      />
+    );
   }
 
   return (
-    <AuthShell key={view}>
+    <AuthShell key={`${view}-${themeEpoch}`} themeMode={themeMode} onThemeChange={changeTheme}>
       {view === 'login' && (
         <LoginView
           initialEmail={prefillEmail}

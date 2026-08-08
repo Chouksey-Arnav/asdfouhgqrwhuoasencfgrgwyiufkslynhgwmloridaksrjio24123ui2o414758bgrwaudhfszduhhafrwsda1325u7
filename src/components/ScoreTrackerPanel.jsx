@@ -320,7 +320,7 @@ export default function ScoreTrackerPanel({ accent = C.blue }) {
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-scores" icon={TrendingUp} color={accent} color2={C.green} m={isMobile}
         eyebrow="Test Prep" title="SAT / ACT Score Tracker"
-        sub="Log every attempt and set a target — your scores here drive the countdown gap on Home and feed straight into the Admissions Calculator."
+        sub="Every attempt and your target. Feeds Home and the Admissions Calculator."
         right={
           <div style={R({ gap: 6 })}>
             {['SAT', 'ACT'].map(type => (

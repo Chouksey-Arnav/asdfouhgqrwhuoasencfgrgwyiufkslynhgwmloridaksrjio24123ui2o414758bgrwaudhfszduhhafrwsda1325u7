@@ -7,30 +7,28 @@ import {
 } from 'lucide-react';
 import { LEGAL_VIEWS } from '../lib/routes';
 import { LEGAL, TRADEMARK_NOTICE } from '../legal/legalConfig';
+import { C, tint, accentGrad, onTint } from '../lib/theme';
+import ThemeToggle from './ThemeToggle';
 
-// ── Design tokens — mirrors the app's `C` palette in App.jsx so every mockup on
-//    this page is pixel-honest with what users actually get after signing up. ──
-const C = {
-  bg: '#04060b', s0: '#060a15', s1: '#0a1020', s2: '#0f1828', s3: '#162032', s4: '#1d2a40',
-  b1: 'rgba(255,255,255,0.07)', b2: 'rgba(255,255,255,0.11)', b3: 'rgba(255,255,255,0.18)',
-  t1: '#eef2ff', t2: '#94a3c0', t3: '#506080',
-  blue: '#2d7fff', blueL: '#5da0ff', blueGrad: 'linear-gradient(135deg,#2d7fff 0%,#1d5fd9 100%)',
-  green: '#10b981', greenL: '#34d399',
-  amber: '#f59e0b', amberL: '#fbbf24',
-  rose: '#f43f5e', roseL: '#fb7185',
-  violet: '#8b5cf6', violetL: '#a78bfa',
-  cyan: '#06b6d4', cyanL: '#22d3ee',
-  indigo: '#6366f1', indigoL: '#818cf8',
-  sky: '#0ea5e9', skyL: '#38bdf8',
-  pink: '#ec4899', pinkL: '#f472b6',
-  FD: "'Bricolage Grotesque',-apple-system,sans-serif",
-  FB: "'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM: "'JetBrains Mono','SF Mono',monospace",
-};
-
+// ── Why this page reads the app's live tokens ────────────────────────────────
+// It used to carry its own frozen copy of the dark palette, and AuthGate pinned
+// every signed-out surface to Dark so the copy stayed accurate. The cost landed
+// on the student: sign up, and the entire product changed color in the same
+// frame the account was created. Reading `C` — the same mutable token object
+// every other screen renders from — is what makes the marketing page, the auth
+// screens and the app one continuous surface in whichever theme is chosen.
+//
+// Two rules follow from that, and both bit during the conversion:
+//   1. Nothing here may capture a token into a module-level object literal.
+//      `C` is mutated in place on a theme change (see the header of
+//      lib/theme.js), so a literal snapshots the palette at import time and
+//      never updates. Anything that needs a map builds it inside a function.
+//   2. No raw `rgba(255,255,255,…)` washes or `rgba(0,0,0,…)` shadows. Those
+//      encode "the page behind me is dark". C.surf / C.shadow / tint() carry
+//      the same intent and flip with the family.
 const glass = (x = {}) => ({
-  background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: 16,
-  boxShadow: '0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)', ...x,
+  background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 16,
+  boxShadow: C.shadow, ...x,
 });
 
 const pill = (bg, color, x = {}) => ({
@@ -59,8 +57,8 @@ function FeaturePill({ bg, color, icon, children }) {
 
 function CheckLi({ color, children }) {
   return (
-    <li style={{ display: 'flex', gap: 11, fontSize: 15, lineHeight: 1.55, color: 'rgba(238,242,255,0.92)' }}>
-      <span style={{ width: 20, height: 20, borderRadius: 7, background: `${color}1c`, border: `1px solid ${color}35`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+    <li style={{ display: 'flex', gap: 11, fontSize: 15, lineHeight: 1.55, color: C.t2 }}>
+      <span style={{ width: 20, height: 20, borderRadius: 7, background: tint(color, 0.12), border: `1px solid ${tint(color, 0.25)}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
         <Check size={12} color={color} strokeWidth={3} />
       </span>
       {children}
@@ -108,7 +106,7 @@ function MockSideItem({ icon: Ic, label, active, color = C.blue, badge, onClick 
       disabled={!interactive}
       style={{
         display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 8, width: '100%',
-        background: active ? `${color}18` : 'transparent', color: active ? '#fff' : C.t2,
+        background: active ? tint(color, 0.14) : 'transparent', color: active ? onTint(color) : C.t2,
         fontWeight: active ? 700 : 500, fontSize: 12, borderLeft: active ? `2px solid ${color}` : '2px solid transparent',
         border: 'none', borderLeftWidth: 2, textAlign: 'left', fontFamily: 'inherit',
         cursor: interactive ? 'pointer' : 'default',
@@ -116,7 +114,7 @@ function MockSideItem({ icon: Ic, label, active, color = C.blue, badge, onClick 
     >
       <Ic size={14} color={active ? color : undefined} style={{ opacity: active ? 1 : 0.7, flexShrink: 0 }} />
       <span style={{ flex: 1 }}>{label}</span>
-      {badge && <span style={pill('rgba(245,158,11,0.12)', C.amberL, { fontSize: 8.5, padding: '1px 6px' })}>{badge}</span>}
+      {badge && <span style={pill(tint(C.amber, 0.12), C.amberL, { fontSize: 8.5, padding: '1px 6px' })}>{badge}</span>}
     </button>
   );
 }
@@ -145,15 +143,15 @@ function AppReplica() {
   const [tab, setTab] = useState('home');
 
   return (
-    <div className="lp-replica-frame" style={{ borderRadius: 20, border: `1px solid ${C.b2}`, background: `linear-gradient(180deg,${C.s1},${C.bg})`, overflow: 'hidden', boxShadow: `0 0 0 1px rgba(45,127,255,0.08), 0 50px 140px -40px rgba(45,127,255,0.4), 0 30px 70px -35px rgba(0,0,0,0.9)` }}>
+    <div className="lp-replica-frame" style={{ borderRadius: 20, border: `1px solid ${C.b2}`, background: `linear-gradient(180deg,${C.s1},${C.bg})`, overflow: 'hidden', boxShadow: `0 0 0 1px ${tint(C.blue, 0.1)}, 0 50px 140px -40px ${tint(C.blue, 0.32)}, ${C.shadow}` }}>
       {/* Browser chrome */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderBottom: `1px solid ${C.b1}`, background: 'rgba(4,6,11,0.6)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', borderBottom: `1px solid ${C.b1}`, background: tint(C.bg, 0.6) }}>
         <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f43f5e' }} />
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: C.rose }} />
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: C.amber }} />
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: C.green }} />
         </div>
-        <div style={{ margin: '0 auto', maxWidth: 250, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: `1px solid ${C.b1}`, background: 'rgba(255,255,255,0.03)', padding: '4px 12px', fontFamily: C.FM, fontSize: 11, color: C.t3 }}>
+        <div style={{ margin: '0 auto', maxWidth: 250, flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, borderRadius: 7, border: `1px solid ${C.b1}`, background: C.surf, padding: '4px 12px', fontFamily: C.FM, fontSize: 11, color: C.t3 }}>
           <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
           medschoolprep.cloud
         </div>
@@ -176,7 +174,7 @@ function AppReplica() {
           </div>
           <div style={{ padding: '10px 12px', borderBottom: `1px solid ${C.b1}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, background: `linear-gradient(135deg,${C.blue}55,${C.blue}28)`, border: `1.5px solid ${C.blue}45`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 10.5, color: '#fff', flexShrink: 0 }}>M</div>
+              <div style={{ width: 26, height: 26, borderRadius: 8, background: `linear-gradient(135deg,${C.blue}55,${C.blue}28)`, border: `1.5px solid ${C.blue}45`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 10.5, color: C.onAccent, flexShrink: 0 }}>M</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, whiteSpace: 'nowrap' }}>Maya R.</div>
                 <div style={{ fontSize: 8, color: C.t3, whiteSpace: 'nowrap' }}>Lv.9 Scholar · Physician</div>
@@ -184,7 +182,7 @@ function AppReplica() {
             </div>
             <Bar pct={68} color={C.blue} h={3} />
             <div style={{ marginTop: 6 }}>
-              <span style={pill('rgba(245,158,11,0.12)', C.amberL, { fontSize: 8, padding: '2px 7px' })}><Flame size={8} />12d streak</span>
+              <span style={pill(tint(C.amber, 0.12), C.amberL, { fontSize: 8, padding: '2px 7px' })}><Flame size={8} />12d streak</span>
             </div>
           </div>
           <nav style={{ flex: 1, padding: '7px 7px', display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -202,7 +200,7 @@ function AppReplica() {
           <div style={{ padding: '16px 16px 18px', display: 'flex', flexDirection: 'column', gap: 11 }}>
 
             {/* Welcome card — radial glow, accent tile, pathway pill */}
-            <div style={glass({ padding: 15, background: 'linear-gradient(135deg,rgba(45,127,255,0.08),rgba(6,182,212,0.04))', border: `1px solid ${C.blue}26`, position: 'relative', overflow: 'hidden' })}>
+            <div style={glass({ padding: 15, background: `linear-gradient(135deg,${tint(C.blue, 0.08)},${tint(C.cyan, 0.04)})`, border: `1px solid ${C.blue}26`, position: 'relative', overflow: 'hidden' })}>
               <div style={{ position: 'absolute', right: -50, top: -50, width: 160, height: 160, borderRadius: '50%', background: `radial-gradient(circle,${C.blue}20,transparent 70%)`, pointerEvents: 'none' }} />
               <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', position: 'relative' }}>
                 <div style={{ width: 36, height: 36, borderRadius: 11, background: `${C.blue}1c`, border: `1.5px solid ${C.blue}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 0 18px ${C.blue}30` }}>
@@ -213,7 +211,7 @@ function AppReplica() {
                   <div style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 15.5, color: C.t1, letterSpacing: '-0.01em' }}>{HERO_COPY[tab].title}</div>
                   <div style={{ display: 'flex', gap: 5, marginTop: 6, flexWrap: 'wrap' }}>
                     <span style={pill(`${C.blue}22`, C.blueL, { fontSize: 8.5 })}>Physician (MD/DO)</span>
-                    <span style={pill('rgba(16,185,129,0.14)', C.greenL, { fontSize: 8.5 })}><ShieldCheck size={8} />3 verified this week</span>
+                    <span style={pill(tint(C.green, 0.14), C.greenL, { fontSize: 8.5 })}><ShieldCheck size={8} />3 verified this week</span>
                   </div>
                 </div>
               </div>
@@ -236,7 +234,7 @@ function AppReplica() {
                 <div style={glass({ padding: 13 })}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                     <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: '.1em', textTransform: 'uppercase', color: C.t3 }}>Next lesson · Unit 3</div>
-                    <span style={pill('rgba(16,185,129,0.12)', C.greenL, { fontSize: 8 })}><ShieldCheck size={8} />Verified quiz</span>
+                    <span style={pill(tint(C.green, 0.12), C.greenL, { fontSize: 8 })}><ShieldCheck size={8} />Verified quiz</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
                     <div style={{ width: 30, height: 30, borderRadius: 9, background: `${C.green}16`, border: `1px solid ${C.green}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -246,7 +244,7 @@ function AppReplica() {
                       <div style={{ fontSize: 11.5, fontWeight: 700, color: C.t1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Organic Chemistry: Functional Groups</div>
                       <div style={{ fontSize: 9, color: C.t2, marginTop: 1 }}>12 min read · 6 min video · pass at 70% to verify</div>
                     </div>
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', borderRadius: 8, background: C.blueGrad, color: '#fff', fontSize: 9.5, fontWeight: 700, flexShrink: 0, boxShadow: `0 4px 14px ${C.blue}35` }}>Start<ArrowRight size={10} /></span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '6px 11px', borderRadius: 8, background: C.blueGrad, color: C.onAccent, fontSize: 9.5, fontWeight: 700, flexShrink: 0, boxShadow: `0 4px 14px ${C.blue}35` }}>Start<ArrowRight size={10} /></span>
                   </div>
                 </div>
 
@@ -268,7 +266,7 @@ function AppReplica() {
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>3 decks due today</div>
                     <div style={{ fontSize: 9.5, color: C.t2, marginTop: 2 }}>Cell Biology · Organic Chemistry · SAT Math</div>
                   </div>
-                  <span style={{ background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, flexShrink: 0 }}>Review</span>
+                  <span style={{ background: accentGrad(C.violet), color: C.onAccent, fontSize: 9.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, flexShrink: 0 }}>Review</span>
                 </div>
                 <div style={glass({ padding: 13, display: 'flex', alignItems: 'center', gap: 10 })}>
                   <div style={{ width: 30, height: 30, borderRadius: 9, background: `${C.blue}1c`, border: `1px solid ${C.blue}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -278,7 +276,7 @@ function AppReplica() {
                     <div style={{ fontSize: 11.5, fontWeight: 700, color: C.t1 }}>Resume: Functional Groups</div>
                     <div style={{ fontSize: 9, color: C.t2, marginTop: 1 }}>Unit 3 · 40% through the article</div>
                   </div>
-                  <span style={{ background: C.blueGrad, color: '#fff', fontSize: 9.5, fontWeight: 700, padding: '6px 11px', borderRadius: 8, flexShrink: 0 }}>Resume</span>
+                  <span style={{ background: C.blueGrad, color: C.onAccent, fontSize: 9.5, fontWeight: 700, padding: '6px 11px', borderRadius: 8, flexShrink: 0 }}>Resume</span>
                 </div>
                 <div className="lp-replica-stats" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 9 }}>
                   <MockStat icon={Layers} color={C.violet} value="3" label="Decks due" />
@@ -300,7 +298,7 @@ function AppReplica() {
                     ['Ohio State University', C.blue, C.blueL, 'Target'],
                     ['Johns Hopkins University', C.rose, C.roseL, 'Stretch'],
                   ].map(([name, base, lite, tier], i) => (
-                    <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 10, background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.b1}`, marginBottom: i < 2 ? 6 : 0 }}>
+                    <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 10px', borderRadius: 10, background: C.surf2, border: `1px solid ${C.b1}`, marginBottom: i < 2 ? 6 : 0 }}>
                       <span style={{ width: 7, height: 7, borderRadius: '50%', background: base, flexShrink: 0 }} />
                       <span style={{ flex: 1, fontSize: 11, fontWeight: 700, color: C.t1 }}>{name}</span>
                       <span style={pill(`${base}1f`, lite, { fontSize: 8.5 })}>{tier}</span>
@@ -387,7 +385,7 @@ function LessonMock() {
           <div style={{ display: 'flex', gap: 7, marginTop: 14, flexWrap: 'wrap' }}>
             <span style={pill(C.s3, C.t2, { fontSize: 10.5 })}>12 min read</span>
             <span style={pill(C.s3, C.t2, { fontSize: 10.5 })}>6 min video</span>
-            <span style={pill('rgba(16,185,129,0.12)', C.greenL, { fontSize: 10.5 })}><ShieldCheck size={10} />70% to verify</span>
+            <span style={pill(tint(C.green, 0.12), C.greenL, { fontSize: 10.5 })}><ShieldCheck size={10} />70% to verify</span>
           </div>
           <div style={{ marginTop: 16, borderRadius: 13, background: `${C.blue}0a`, border: `1px solid ${C.blue}25`, padding: 14 }}>
             <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '.08em', textTransform: 'uppercase', color: C.blueL, marginBottom: 10 }}>Key takeaways</div>
@@ -397,7 +395,7 @@ function LessonMock() {
               </div>
             ))}
           </div>
-          <button onClick={startQuiz} className="lp-btn-primary" style={{ marginTop: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 12, borderRadius: 11, background: 'linear-gradient(135deg,#10b981,#059669)', color: '#fff', fontWeight: 700, fontSize: 13, boxShadow: '0 8px 24px -8px rgba(16,185,129,0.6)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={startQuiz} className="lp-btn-primary" style={{ marginTop: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: 12, borderRadius: 11, background: accentGrad(C.green), color: C.onAccent, fontWeight: 700, fontSize: 13, boxShadow: `0 8px 24px -8px ${tint(C.green, 0.45)}`, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
             Start verification quiz
             <ArrowRight size={14} />
           </button>
@@ -413,10 +411,10 @@ function LessonMock() {
           <div style={{ fontSize: 15, fontWeight: 600, color: C.t1, lineHeight: 1.5, marginBottom: 14 }}>{cur.q}</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {cur.opts.map((label, idx) => {
-              let bg = 'rgba(255,255,255,0.03)', bd = C.b2, col = C.t1, mark = '';
+              let bg = C.surf, bd = C.b2, col = C.t1, mark = '';
               if (pick !== null) {
-                if (idx === cur.correct) { bg = 'rgba(16,185,129,0.14)'; bd = 'rgba(16,185,129,0.5)'; col = C.greenL; mark = '✓'; }
-                else if (idx === pick) { bg = 'rgba(244,63,94,0.14)'; bd = 'rgba(244,63,94,0.5)'; col = C.roseL; mark = '✗'; }
+                if (idx === cur.correct) { bg = tint(C.green, 0.14); bd = tint(C.green, 0.5); col = C.greenL; mark = '✓'; }
+                else if (idx === pick) { bg = tint(C.rose, 0.14); bd = tint(C.rose, 0.5); col = C.roseL; mark = '✗'; }
                 else col = C.t3;
               }
               return (
@@ -431,7 +429,7 @@ function LessonMock() {
 
       {phase === 'done' && (
         <div style={{ marginTop: 16, textAlign: 'center', padding: '8px 0 4px' }}>
-          <div style={{ width: 56, height: 56, margin: '0 auto 12px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: passed ? 'rgba(16,185,129,0.14)' : 'rgba(244,63,94,0.14)', border: `1px solid ${passed ? 'rgba(16,185,129,0.4)' : 'rgba(244,63,94,0.4)'}`, color: passed ? C.greenL : C.roseL }}>
+          <div style={{ width: 56, height: 56, margin: '0 auto 12px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: passed ? tint(C.green, 0.14) : tint(C.rose, 0.14), border: `1px solid ${passed ? tint(C.green, 0.4) : tint(C.rose, 0.4)}`, color: passed ? C.greenL : C.roseL }}>
             <Check size={26} strokeWidth={2.6} />
           </div>
           <div style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 22, color: C.t1 }}>{passed ? 'Verified!' : 'Not quite yet'}</div>
@@ -439,7 +437,7 @@ function LessonMock() {
           <div style={{ fontSize: 12.5, color: C.t2, marginTop: 8, lineHeight: 1.5, maxWidth: '34ch', margin: '8px auto 0' }}>
             {passed ? 'You cleared the 70% bar — this lesson now counts as verified toward your pathway.' : 'You need 70% to verify. Review the article and give it another shot.'}
           </div>
-          <button onClick={startQuiz} className="lp-btn-secondary" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 10, background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b2}`, color: C.t1, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={startQuiz} className="lp-btn-secondary" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '10px 18px', borderRadius: 10, background: C.surf, border: `1px solid ${C.b2}`, color: C.t1, fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
             Retake quiz
           </button>
         </div>
@@ -479,11 +477,11 @@ function FlashcardsMock() {
           </div>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>Cell Biology Deck</div>
         </div>
-        <span style={pill('rgba(139,92,246,0.14)', C.violetL, { fontSize: 10 })}>{due} due today</span>
+        <span style={pill(tint(C.violet, 0.14), C.violetL, { fontSize: 10 })}>{due} due today</span>
       </div>
       <button
         onClick={() => setFlip((f) => !f)}
-        style={{ display: 'block', width: '100%', textAlign: 'center', border: 'none', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 15, background: `linear-gradient(135deg,${C.violet}18,rgba(15,24,40,0.5))`, borderWidth: 1, borderStyle: 'solid', borderColor: `${C.violet}30`, padding: '26px 20px', position: 'relative', overflow: 'hidden' }}
+        style={{ display: 'block', width: '100%', textAlign: 'center', border: 'none', cursor: 'pointer', fontFamily: 'inherit', borderRadius: 15, background: `linear-gradient(135deg,${C.violet}18,${tint(C.bg, 0.5)})`, borderWidth: 1, borderStyle: 'solid', borderColor: `${C.violet}30`, padding: '26px 20px', position: 'relative', overflow: 'hidden' }}
       >
         <div style={{ position: 'absolute', left: -40, bottom: -40, width: 130, height: 130, borderRadius: '50%', background: `radial-gradient(circle,${C.violet}22,transparent 70%)` }} />
         <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.violetL, marginBottom: 12, position: 'relative' }}>{flip ? 'Back' : 'Front'} · Card {i + 1} of {FLASHCARDS.length}</div>
@@ -629,11 +627,11 @@ function CoachMock() {
       {showSug && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginTop: 13 }}>
           {COACH_PRESETS.map((label) => (
-            <button key={label} onClick={() => send(label)} className="lp-btn-secondary" style={{ borderRadius: 999, border: `1px solid ${C.b2}`, background: 'rgba(255,255,255,0.02)', color: C.t2, padding: '7px 13px', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
+            <button key={label} onClick={() => send(label)} className="lp-btn-secondary" style={{ borderRadius: 999, border: `1px solid ${C.b2}`, background: C.surf2, color: C.t2, padding: '7px 13px', fontSize: 11.5, cursor: 'pointer', fontFamily: 'inherit' }}>{label}</button>
           ))}
         </div>
       )}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, borderRadius: 14, border: `1px solid ${C.b2}`, background: 'rgba(255,255,255,0.02)', padding: '6px 6px 6px 14px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, borderRadius: 14, border: `1px solid ${C.b2}`, background: C.surf2, padding: '6px 6px 6px 14px' }}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -641,7 +639,7 @@ function CoachMock() {
           placeholder="Ask Medabrain anything…"
           style={{ flex: 1, background: 'none', border: 'none', outline: 'none', color: C.t1, fontSize: 13, fontFamily: 'inherit', minWidth: 0 }}
         />
-        <button onClick={() => send(input)} aria-label="Send" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: 'linear-gradient(135deg,#8b5cf6,#6d28d9)', color: '#fff', border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={() => send(input)} aria-label="Send" style={{ width: 34, height: 34, flexShrink: 0, borderRadius: 10, background: accentGrad(C.violet), color: C.onAccent, border: 'none', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
           <ArrowRight size={15} style={{ transform: 'rotate(-45deg)' }} />
         </button>
       </div>
@@ -686,7 +684,7 @@ function CollegeListMock() {
         <span style={pill(`${C.sky}16`, C.skyL, { fontSize: 10 })}>Scored to your stats</span>
       </div>
       {rows.map(({ name, fit, tier, base, lite }) => (
-        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderRadius: 11, background: 'rgba(255,255,255,0.02)', border: `1px solid ${C.b1}`, marginBottom: 7 }}>
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px', borderRadius: 11, background: C.surf2, border: `1px solid ${C.b1}`, marginBottom: 7 }}>
           <span style={{ width: 8, height: 8, borderRadius: '50%', background: base, boxShadow: `0 0 8px ${base}90`, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: C.t1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>
@@ -713,32 +711,39 @@ function CollegeListMock() {
 
 // ── Data ──────────────────────────────────────────────────────────────────
 
-const PATHWAYS = [
-  { color: C.blue, lite: C.blueL, tag: 'MD', title: 'Physician', desc: 'Direct patient care, years of rigorous science.' },
-  { color: C.green, lite: C.greenL, tag: 'RN', title: 'Nursing', desc: 'Hands-on care, a faster path, huge range of specialties.' },
-  { color: C.violet, lite: C.violetL, tag: 'PA', title: 'Physician Assistant', desc: 'Broad clinical practice with more flexibility.' },
-  { color: C.cyan, lite: C.cyanL, tag: 'Rx', title: 'Pharmacy', desc: 'Medication expertise at the center of every plan.' },
-  { color: C.amber, lite: C.amberL, tag: 'DDS', title: 'Dentistry', desc: 'Surgical precision and your own practice, sooner.' },
-  { color: C.rose, lite: C.roseL, tag: 'PhD', title: 'Biomedical Research', desc: 'Push the science forward, not just apply it.' },
-  { color: C.sky, lite: C.skyL, tag: 'PT', title: 'Physical & Occupational Therapy', desc: 'Rebuild movement and independence, patient by patient.' },
-  { color: C.indigo, lite: C.indigoL, tag: 'MPH', title: 'Public Health', desc: 'Prevent disease at population scale.' },
-  { color: C.pink, lite: C.pinkL, tag: 'MHA', title: 'Health Administration', desc: 'Run the systems that make medicine work.' },
-  { color: '#94a3c0', lite: '#cbd5e1', tag: '?', title: 'Exploring', desc: 'Not sure yet? Start here — no pathway required.' },
+// Functions, not arrays: a module-level literal captures `C` at import time and
+// then paints the old palette forever. See the note at the top of this file.
+//
+// The one-line descriptions here used to be full sentences — twenty-two cards
+// each carrying twenty-odd words, which is a page of prose disguised as a grid.
+// The icon and the title do the work; the line underneath only has to say what
+// the title can't.
+const pathways = () => [
+  { color: C.blue,   lite: C.blueL,   tag: 'MD',  title: 'Physician',            desc: 'Direct patient care.' },
+  { color: C.green,  lite: C.greenL,  tag: 'RN',  title: 'Nursing',              desc: 'Hands-on, faster route in.' },
+  { color: C.violet, lite: C.violetL, tag: 'PA',  title: 'Physician Assistant',  desc: 'Broad practice, more flexibility.' },
+  { color: C.cyan,   lite: C.cyanL,   tag: 'Rx',  title: 'Pharmacy',             desc: 'Medication at the center.' },
+  { color: C.amber,  lite: C.amberL,  tag: 'DDS', title: 'Dentistry',            desc: 'Your own practice, sooner.' },
+  { color: C.rose,   lite: C.roseL,   tag: 'PhD', title: 'Biomedical Research',  desc: 'Push the science forward.' },
+  { color: C.sky,    lite: C.skyL,    tag: 'PT',  title: 'Physical & Occupational Therapy', desc: 'Rebuild movement.' },
+  { color: C.indigo, lite: C.indigoL, tag: 'MPH', title: 'Public Health',        desc: 'Prevention at scale.' },
+  { color: C.pink,   lite: C.pinkL,   tag: 'MHA', title: 'Health Administration', desc: 'Run the systems.' },
+  { color: C.t3,     lite: C.t2,      tag: '?',   title: 'Exploring',            desc: 'No pathway required.' },
 ];
 
-const PORTFOLIO_TOOLS = [
-  { color: C.sky, lite: C.skyL, icon: GraduationCap, title: 'College List', desc: 'Schools tiered Likely / Target / Reach / Stretch against your GPA, scores, and hours.' },
-  { color: C.violet, lite: C.violetL, icon: FileText, title: 'Essays', desc: 'A dedicated workspace for every supplement, from first draft to final.' },
-  { color: C.rose, lite: C.roseL, icon: Calendar, title: 'Milestones', desc: "Your deadlines and your whole class-year calendar in one countdown, so nothing slips past you." },
-  { color: C.green, lite: C.greenL, icon: ShieldCheck, title: 'Financial Aid', desc: 'Track aid, scholarships, and what each school will really cost.' },
-  { color: C.amber, lite: C.amberL, icon: ClipboardList, title: 'Activities & Resume', desc: 'Four years of activities, turned into an application-ready resume.' },
-  { color: C.cyan, lite: C.cyanL, icon: Search, title: 'Research', desc: 'Log research experience the way admissions committees actually read it.' },
-  { color: C.blue, lite: C.blueL, icon: Layers, title: 'Skills & Certifications', desc: 'Certifications and skills, tracked and ready to cite on any application.' },
-  { color: C.green, lite: C.greenL, icon: Zap, title: 'Clinical Hours', desc: 'Log shadowing and clinical hours the moment you earn them.' },
-  { color: C.indigo, lite: C.indigoL, icon: MessageCircle, title: 'Recommenders', desc: "Manage who's writing for you, and when each letter is due." },
-  { color: C.pink, lite: C.pinkL, icon: Sparkles, title: 'Interview Prep', desc: 'Real MMI and CASPer-style scenarios — not generic interview questions.' },
-  { color: C.amber, lite: C.amberL, icon: TrendingUp, title: 'Test Scores', desc: 'Track every SAT/ACT attempt and watch your trajectory over time.' },
-  { color: C.cyan, lite: C.cyanL, icon: LineChart, title: 'Admissions Calculator', desc: 'A real-time estimate of where you stand for each school on your list.' },
+const portfolioTools = () => [
+  { color: C.sky,    lite: C.skyL,    icon: GraduationCap, title: 'College List',   desc: 'Tiered against your stats' },
+  { color: C.violet, lite: C.violetL, icon: FileText,      title: 'Essays',         desc: 'Draft to final, per school' },
+  { color: C.rose,   lite: C.roseL,   icon: Calendar,      title: 'Milestones',     desc: 'Every deadline, counted down' },
+  { color: C.green,  lite: C.greenL,  icon: ShieldCheck,   title: 'Financial Aid',  desc: 'What each school really costs' },
+  { color: C.amber,  lite: C.amberL,  icon: ClipboardList, title: 'Activities & Resume', desc: 'Four years, application-ready' },
+  { color: C.cyan,   lite: C.cyanL,   icon: Search,        title: 'Research',       desc: 'Logged the way they read it' },
+  { color: C.blue,   lite: C.blueL,   icon: Layers,        title: 'Skills & Certifications', desc: 'Tracked and ready to cite' },
+  { color: C.green,  lite: C.greenL,  icon: Zap,           title: 'Clinical Hours', desc: 'Shadowing, logged as you go' },
+  { color: C.indigo, lite: C.indigoL, icon: MessageCircle, title: 'Recommenders',   desc: "Who's writing, and when it's due" },
+  { color: C.pink,   lite: C.pinkL,   icon: Sparkles,      title: 'Interview Prep', desc: 'Real MMI and CASPer scenarios' },
+  { color: C.amber,  lite: C.amberL,  icon: TrendingUp,    title: 'Test Scores',    desc: 'Every attempt, plotted' },
+  { color: C.cyan,   lite: C.cyanL,   icon: LineChart,     title: 'Admissions Calculator', desc: 'Where you stand, live' },
 ];
 
 const FAQS = [
@@ -755,7 +760,7 @@ const MARQUEE_ITEMS = ['10 career pathways', '90+ verified lessons', 'Spaced-rep
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
-export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
+export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeMode, onThemeChange }) {
   const handleSignIn = onLogin || onGetStarted;
   // The footer links have to work whether or not AuthGate handed us a client-side
   // navigator — a legal link that does nothing when clicked is worse than no link.
@@ -861,14 +866,14 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
 
         /* ── Cards & hovers ────────────────────────────────────────────── */
         .lp-card-hover { transition: transform .3s cubic-bezier(.16,1,.3,1), border-color .3s, box-shadow .3s, background .3s; }
-        .lp-card-hover:hover { transform: translateY(-5px); border-color: ${C.b3}; background: rgba(255,255,255,0.045); box-shadow: 0 22px 50px -26px rgba(45,127,255,0.55), 0 2px 12px rgba(0,0,0,0.4); }
+        .lp-card-hover:hover { transform: translateY(-5px); border-color: ${C.b3}; background: ${C.surfHi}; box-shadow: 0 22px 50px -26px ${tint(C.blue, 0.45)}, ${C.shadowSm}; }
         .lp-btn-primary { position: relative; overflow: hidden; transition: transform .2s cubic-bezier(.16,1,.3,1), filter .2s, box-shadow .2s; }
         .lp-btn-primary::after { content: ""; position: absolute; top: 0; left: -120%; width: 60%; height: 100%; background: linear-gradient(100deg,transparent,rgba(255,255,255,0.28),transparent); transform: skewX(-18deg); transition: left .6s ease; pointer-events: none; }
         .lp-btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
         .lp-btn-primary:hover::after { left: 130%; }
         .lp-btn-primary:active { transform: translateY(0); }
         .lp-btn-secondary { transition: background .2s, border-color .2s; }
-        .lp-btn-secondary:hover { background: rgba(255,255,255,0.07) !important; border-color: rgba(255,255,255,0.2) !important; }
+        .lp-btn-secondary:hover { background: ${C.surfHi} !important; border-color: ${C.b3} !important; }
 
         /* ── Scroll reveal ─────────────────────────────────────────────── */
         .lp-reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1); }
@@ -894,37 +899,37 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
         }
 
         /* ── FAQ ───────────────────────────────────────────────────────── */
-        .lp-faq { border-radius: 14px; border: 1px solid ${C.b1}; background: rgba(255,255,255,0.025); transition: border-color .2s, background .2s; }
-        .lp-faq[open] { border-color: rgba(45,127,255,0.3); background: rgba(45,127,255,0.04); }
+        .lp-faq { border-radius: 14px; border: 1px solid ${C.b1}; background: ${C.surf2}; transition: border-color .2s, background .2s; }
+        .lp-faq[open] { border-color: ${tint(C.blue, 0.3)}; background: ${tint(C.blue, 0.05)}; }
         .lp-faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 18px 20px; font-weight: 700; font-size: 15.5px; color: ${C.t1}; }
         .lp-faq summary::-webkit-details-marker { display: none; }
         .lp-faq .lp-faq-x { flex-shrink: 0; width: 24px; height: 24px; border-radius: 8px; border: 1px solid ${C.b2}; display: inline-flex; align-items: center; justify-content: center; color: ${C.t2}; font-size: 14px; transition: transform .25s, color .2s, border-color .2s; }
-        .lp-faq[open] .lp-faq-x { transform: rotate(45deg); color: ${C.blueL}; border-color: rgba(45,127,255,0.4); }
+        .lp-faq[open] .lp-faq-x { transform: rotate(45deg); color: ${C.blueL}; border-color: ${tint(C.blue, 0.4)}; }
 
         /* ── Mobile menu ───────────────────────────────────────────────── */
-        .lp-mobile-menu { position: fixed; inset: 66px 0 auto 0; z-index: 49; background: rgba(4,6,11,0.97); backdrop-filter: blur(20px); border-bottom: 1px solid ${C.b2}; padding: 10px 20px 22px; display: flex; flex-direction: column; gap: 2px; animation: lp-rise .25s ease forwards; }
+        .lp-mobile-menu { position: fixed; inset: 66px 0 auto 0; z-index: 49; background: ${tint(C.bg, 0.97)}; backdrop-filter: blur(20px); border-bottom: 1px solid ${C.b2}; padding: 10px 20px 22px; display: flex; flex-direction: column; gap: 2px; animation: lp-rise .25s ease forwards; }
         .lp-mobile-menu a, .lp-mobile-menu button { display: block; width: 100%; text-align: left; padding: 13px 10px; border-radius: 10px; font-size: 15px; font-weight: 600; color: ${C.t2}; background: none; border: none; cursor: pointer; font-family: inherit; }
-        .lp-mobile-menu a:active, .lp-mobile-menu a:hover { background: rgba(255,255,255,0.05); color: ${C.t1}; }
+        .lp-mobile-menu a:active, .lp-mobile-menu a:hover { background: ${C.surfHi}; color: ${C.t1}; }
 
         /* ── Range sliders (college-list scorer) — scoped to this page ──── */
         .lp input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 5px; border-radius: 5px; background: ${C.s3}; outline: none; }
-        .lp input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px rgba(45,127,255,0.7); cursor: pointer; border: 2px solid ${C.bg}; }
-        .lp input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px rgba(45,127,255,0.7); cursor: pointer; border: 2px solid ${C.bg}; }
+        .lp input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px ${tint(C.blue, 0.5)}; cursor: pointer; border: 2px solid ${C.bg}; }
+        .lp input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: ${C.blueL}; box-shadow: 0 0 10px ${tint(C.blue, 0.5)}; cursor: pointer; border: 2px solid ${C.bg}; }
       `}</style>
 
       {/* Atmosphere — layered aurora glows so the page breathes edge-to-edge
           instead of floating content on a flat black slab. */}
       <div aria-hidden style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 0 }}>
-        <div className="lp-orb" style={{ top: '-12%', right: '-8%', width: 'min(760px,70vw)', height: 'min(760px,70vw)', background: 'radial-gradient(circle,rgba(45,127,255,0.16),transparent 65%)' }} />
-        <div className="lp-orb" style={{ top: '4%', left: '-14%', width: 'min(560px,60vw)', height: 'min(560px,60vw)', background: 'radial-gradient(circle,rgba(139,92,246,0.11),transparent 65%)', animationDelay: '-5s' }} />
-        <div className="lp-orb" style={{ top: '46%', right: '-12%', width: 'min(620px,60vw)', height: 'min(620px,60vw)', background: 'radial-gradient(circle,rgba(6,182,212,0.09),transparent 65%)', animationDelay: '-9s' }} />
-        <div className="lp-orb" style={{ bottom: '-8%', left: '-8%', width: 'min(600px,60vw)', height: 'min(600px,60vw)', background: 'radial-gradient(circle,rgba(45,127,255,0.1),transparent 65%)', animationDelay: '-3s' }} />
+        <div className="lp-orb" style={{ top: '-12%', right: '-8%', width: 'min(760px,70vw)', height: 'min(760px,70vw)', background: `radial-gradient(circle,${tint(C.blue, 0.16)},transparent 65%)` }} />
+        <div className="lp-orb" style={{ top: '4%', left: '-14%', width: 'min(560px,60vw)', height: 'min(560px,60vw)', background: `radial-gradient(circle,${tint(C.violet, 0.11)},transparent 65%)`, animationDelay: '-5s' }} />
+        <div className="lp-orb" style={{ top: '46%', right: '-12%', width: 'min(620px,60vw)', height: 'min(620px,60vw)', background: `radial-gradient(circle,${tint(C.cyan, 0.09)},transparent 65%)`, animationDelay: '-9s' }} />
+        <div className="lp-orb" style={{ bottom: '-8%', left: '-8%', width: 'min(600px,60vw)', height: 'min(600px,60vw)', background: `radial-gradient(circle,${tint(C.blue, 0.1)},transparent 65%)`, animationDelay: '-3s' }} />
       </div>
 
       <div className="lp" style={{ position: 'relative', zIndex: 1 }}>
 
         {/* ── NAV ─────────────────────────────────────────────────────── */}
-        <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.b1}`, background: 'rgba(4,6,11,0.8)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
+        <nav style={{ position: 'sticky', top: 0, zIndex: 50, borderBottom: `1px solid ${C.b1}`, background: tint(C.bg, 0.85), backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
           <div className="lp-sec" style={{ height: 66, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
             <a href="#top" style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }} onClick={() => setMenuOpen(false)}>
               <AnimatedLogo size={34} variant="hover" glow={false} />
@@ -934,12 +939,16 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
               {navLinks.map(([href, label]) => <a key={href} className="lp-nav-link" href={href}>{label}</a>)}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+              {/* Before an account exists, not after. A visitor who picks Light
+                  here signs up into Light — the choice is stored under the same
+                  key the app reads, so nothing flips on them at sign-up. */}
+              {onThemeChange && <ThemeToggle mode={themeMode} onChange={onThemeChange} size={38} align="right" />}
               <button className="lp-nav-login" onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13.5, fontWeight: 600, color: C.t2, fontFamily: 'inherit' }}>Log in</button>
-              <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: C.blueGrad, color: '#fff', fontSize: 13.5, fontWeight: 700, boxShadow: '0 0 0 1px rgba(45,127,255,0.3),0 10px 26px -12px rgba(45,127,255,0.8)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 10, background: C.blueGrad, color: C.onAccent, fontSize: 13.5, fontWeight: 700, boxShadow: `0 0 0 1px ${tint(C.blue, 0.3)},0 10px 26px -12px ${tint(C.blue, 0.6)}`, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Get started free
                 <ArrowRight size={14} />
               </button>
-              <button className="lp-nav-burger" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(v => !v)} style={{ width: 38, height: 38, borderRadius: 10, border: `1px solid ${C.b2}`, background: 'rgba(255,255,255,0.03)', color: C.t1, cursor: 'pointer' }}>
+              <button className="lp-nav-burger" aria-label={menuOpen ? 'Close menu' : 'Open menu'} onClick={() => setMenuOpen(v => !v)} style={{ width: 38, height: 38, borderRadius: 10, border: `1px solid ${C.b2}`, background: C.surf, color: C.t1, cursor: 'pointer' }}>
                 {menuOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
             </div>
@@ -957,8 +966,8 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
           <div className="lp-hero-grid">
             <div className="lp-hero-copy">
               <div className="lp-hero-anim lp-ha1 lp-hero-badge" style={{ display: 'flex' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, borderRadius: 999, border: `1px solid ${C.b2}`, background: 'rgba(255,255,255,0.03)', padding: '7px 16px 7px 8px', fontSize: 12.5, fontWeight: 600, color: C.t2 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: 'rgba(45,127,255,0.15)', color: C.blueL, padding: '4px 10px', fontSize: 11, letterSpacing: '0.02em', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, borderRadius: 999, border: `1px solid ${C.b2}`, background: C.surf, padding: '7px 16px 7px 8px', fontSize: 12.5, fontWeight: 600, color: C.t2 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 999, background: tint(C.blue, 0.15), color: C.blueL, padding: '4px 10px', fontSize: 11, letterSpacing: '0.02em', fontWeight: 700 }}>
                     <ShieldCheck size={11} />
                     100% free
                   </span>
@@ -969,41 +978,41 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
               <h1 className="lp-hero-anim lp-ha2" style={{ margin: '24px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.035em', lineHeight: 1.02, fontSize: 'clamp(40px,4.8vw,74px)', color: C.t1, textWrap: 'balance' }}>
                 Find your path into medicine.
                 <br />
-                <span style={{ backgroundImage: 'linear-gradient(120deg,#5da0ff 0%,#22d3ee 55%,#a78bfa 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Then actually walk it.</span>
+                <span style={{ backgroundImage: `linear-gradient(120deg,${C.blueL} 0%,${C.cyanL} 55%,${C.violetL} 100%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Then actually walk it.</span>
               </h1>
 
               <p className="lp-hero-anim lp-ha3 lp-hero-sub" style={{ margin: '22px 0 0', maxWidth: '54ch', fontSize: 'clamp(16px,1.35vw,18.5px)', lineHeight: 1.65, color: C.t2 }}>
-                MedSchoolPrep figures out which health career actually fits you — Physician, Nursing, PA, and seven more — then hands you verified lessons, spaced-repetition flashcards, an AI study coach, and the entire application portfolio to get there.
+                Find the health career that fits you. Then get the lessons, the coach, and the whole application in one place.
               </p>
 
               <div className="lp-hero-anim lp-ha4 lp-hero-ctas" style={{ marginTop: 32, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 28px', borderRadius: 14, background: C.blueGrad, color: '#fff', fontSize: 15.5, fontWeight: 700, boxShadow: '0 0 0 1px rgba(45,127,255,0.3),0 18px 44px -16px rgba(45,127,255,0.9)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 28px', borderRadius: 14, background: C.blueGrad, color: C.onAccent, fontSize: 15.5, fontWeight: 700, boxShadow: `0 0 0 1px ${tint(C.blue, 0.3)},0 18px 44px -16px ${tint(C.blue, 0.65)}`, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                   Get started free
                   <ArrowRight size={16} />
                 </button>
-                <a className="lp-btn-secondary" href="#pathways" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 28px', borderRadius: 14, border: `1px solid ${C.b2}`, background: 'rgba(255,255,255,0.03)', color: C.t1, fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>
+                <a className="lp-btn-secondary" href="#pathways" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '16px 28px', borderRadius: 14, border: `1px solid ${C.b2}`, background: C.surf, color: C.t1, fontSize: 15.5, fontWeight: 700, cursor: 'pointer' }}>
                   See the 10 pathways
                 </a>
               </div>
-              <p className="lp-hero-anim lp-ha5" style={{ marginTop: 16, fontSize: 13, color: C.t3 }}>Free forever. Sign up in under a minute — just an email code and a password.</p>
+              <p className="lp-hero-anim lp-ha5" style={{ marginTop: 16, fontSize: 13, color: C.t3 }}>Free forever · under a minute to join</p>
             </div>
 
             <div className="lp-hero-visual">
-              <div aria-hidden style={{ position: 'absolute', inset: '-12% -10%', background: 'radial-gradient(ellipse 60% 55% at 55% 45%,rgba(45,127,255,0.14),transparent 70%)', pointerEvents: 'none' }} />
+              <div aria-hidden style={{ position: 'absolute', inset: '-12% -10%', background: `radial-gradient(ellipse 60% 55% at 55% 45%,${tint(C.blue, 0.14)},transparent 70%)`, pointerEvents: 'none' }} />
               <AppReplica />
             </div>
           </div>
         </header>
 
         {/* ── MARQUEE ─────────────────────────────────────────────────── */}
-        <div style={{ overflow: 'hidden', borderTop: `1px solid ${C.b1}`, borderBottom: `1px solid ${C.b1}`, padding: '18px 0', background: 'rgba(255,255,255,0.012)', WebkitMaskImage: 'linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)', maskImage: 'linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)' }}>
-          <div style={{ display: 'flex', width: 'max-content', gap: 44, whiteSpace: 'nowrap', fontSize: 14.5, fontWeight: 600, color: 'rgba(148,163,192,0.85)', animation: 'lp-marquee 38s linear infinite' }}>
+        <div style={{ overflow: 'hidden', borderTop: `1px solid ${C.b1}`, borderBottom: `1px solid ${C.b1}`, padding: '18px 0', background: C.surf2, WebkitMaskImage: 'linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)', maskImage: 'linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)' }}>
+          <div style={{ display: 'flex', width: 'max-content', gap: 44, whiteSpace: 'nowrap', fontSize: 14.5, fontWeight: 600, color: C.t2, animation: 'lp-marquee 38s linear infinite' }}>
             {[0, 1].map((i) => (
               <span key={i} aria-hidden={i === 1} style={{ display: 'flex', alignItems: 'center', gap: 44 }}>
                 {MARQUEE_ITEMS.map((t) => (
                   <React.Fragment key={t}>
                     <span>{t}</span>
-                    <span style={{ color: 'rgba(93,160,255,0.6)' }}>◆</span>
+                    <span style={{ color: tint(C.blue, 0.55) }}>◆</span>
                   </React.Fragment>
                 ))}
               </span>
@@ -1012,17 +1021,17 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
         </div>
 
         {/* ── PATHWAYS ────────────────────────────────────────────────── */}
-        <section id="pathways" style={{ borderTop: `1px solid ${C.b1}`, borderBottom: `1px solid ${C.b1}`, background: 'linear-gradient(180deg,rgba(45,127,255,0.05),transparent 60%)' }}>
+        <section id="pathways" style={{ borderTop: `1px solid ${C.b1}`, borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(180deg,${tint(C.blue, 0.05)},transparent 60%)` }}>
           <div className="lp-sec" style={{ paddingTop: 'clamp(64px,7vw,110px)', paddingBottom: 'clamp(64px,7vw,110px)' }}>
             <div className="lp-reveal" style={{ maxWidth: 720 }}>
               <Eyebrow color={C.blueL} glow={C.blue}>10 pathways</Eyebrow>
               <h2 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.07, fontSize: 'clamp(30px,3.6vw,50px)', color: C.t1, textWrap: 'balance' }}>Not sure which health career fits? Find out first.</h2>
-              <p style={{ marginTop: 16, fontSize: 16.5, lineHeight: 1.6, color: C.t2 }}>A short, scored diagnostic ranks how well you fit all ten health careers — instead of assuming you've already decided. Get a top match, a full breakdown, and the freedom to explore any of the other nine.</p>
+              <p style={{ marginTop: 16, fontSize: 16.5, lineHeight: 1.6, color: C.t2 }}>A short diagnostic scores you against all ten — then you explore any of them.</p>
             </div>
 
             <div className="lp-pathway-grid lp-reveal" style={{ marginTop: 48 }}>
-              {PATHWAYS.map((p) => (
-                <div key={p.title} className="lp-card-hover" style={{ borderRadius: 16, border: `1px solid ${C.b1}`, background: 'rgba(255,255,255,0.03)', padding: 18, boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}>
+              {pathways().map((p) => (
+                <div key={p.title} className="lp-card-hover" style={{ borderRadius: 16, border: `1px solid ${C.b1}`, background: C.surf, padding: 18, boxShadow: C.shadow }}>
                   <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 34, height: 24, padding: '0 9px', borderRadius: 8, background: `${p.color}1c`, border: `1px solid ${p.color}45`, fontFamily: C.FM, fontWeight: 700, fontSize: 11 }}>
                     <span style={{ color: p.lite }}>{p.tag}</span>
                   </div>
@@ -1038,9 +1047,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
         <section id="learn" className="lp-sec" style={{ paddingTop: 'clamp(72px,8vw,130px)', paddingBottom: 'clamp(48px,5vw,80px)' }}>
           <div className="lp-feature">
             <div className="lp-feat-copy lp-reveal">
-              <FeaturePill bg="rgba(45,127,255,0.12)" color={C.blueL} icon={<Route size={13} />}>Learning pathway</FeaturePill>
+              <FeaturePill bg={tint(C.blue, 0.12)} color={C.blueL} icon={<Route size={13} />}>Learning pathway</FeaturePill>
               <h3 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, fontSize: 'clamp(26px,3vw,40px)', color: C.t1 }}>Lessons that actually have to prove themselves.</h3>
-              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Every lesson pairs a written article with a topic-matched video, then locks the "done" checkmark behind a real verification quiz. Rewatching a video never counts as progress — passing at 70% does. <strong style={{ color: '#cbd7f0' }}>Try the quiz on the right.</strong></p>
+              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Article, video, then a quiz you have to pass at 70%. Watching something never counts as progress. <strong style={{ color: C.t1 }}>Try the quiz on the right.</strong></p>
               <ul style={{ margin: '24px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <CheckLi color={C.blueL}>Article + video for every lesson, across all 10 pathways</CheckLi>
                 <CheckLi color={C.blueL}>Pass a quiz at 70%+ to mark it verified, not just viewed</CheckLi>
@@ -1056,9 +1065,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
           <div className="lp-feature">
             <div className="lp-feat-visual lp-reveal lp-d1"><FlashcardsMock /></div>
             <div className="lp-feat-copy lp-reveal">
-              <FeaturePill bg="rgba(139,92,246,0.12)" color={C.violetL} icon={<Layers size={13} />}>Flashcards</FeaturePill>
+              <FeaturePill bg={tint(C.violet, 0.12)} color={C.violetL} icon={<Layers size={13} />}>Flashcards</FeaturePill>
               <h3 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, fontSize: 'clamp(26px,3vw,40px)', color: C.t1 }}>Turn your own notes into a study system.</h3>
-              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Paste your class notes and the engine extracts flashcards straight from what's actually in them — nothing invented, nothing hallucinated. Then spaced repetition takes over and schedules every review for you. <strong style={{ color: '#cbd7f0' }}>Flip the card and rate it.</strong></p>
+              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Paste your notes; cards come out of what's actually in them. Spaced repetition schedules every review. <strong style={{ color: C.t1 }}>Flip the card and rate it.</strong></p>
               <ul style={{ margin: '24px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <CheckLi color={C.violetL}>Cards are extracted from your notes, not generated from nowhere</CheckLi>
                 <CheckLi color={C.violetL}>FSRS spaced repetition — the same engine behind Anki</CheckLi>
@@ -1072,9 +1081,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
         <section className="lp-sec" style={{ paddingTop: 'clamp(48px,5vw,80px)', paddingBottom: 'clamp(48px,5vw,80px)' }}>
           <div className="lp-feature">
             <div className="lp-feat-copy lp-reveal">
-              <FeaturePill bg="rgba(139,92,246,0.12)" color={C.violetL} icon={<MessageCircle size={13} />}>Medabrain · AI coach</FeaturePill>
+              <FeaturePill bg={tint(C.violet, 0.12)} color={C.violetL} icon={<MessageCircle size={13} />}>Medabrain · AI coach</FeaturePill>
               <h3 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, fontSize: 'clamp(26px,3vw,40px)', color: C.t1 }}>Stuck on a concept at 11pm? Ask Medabrain.</h3>
-              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Medabrain explains whatever's blocking you — a systems-of-equations problem, a shaky grasp of photosynthesis, an SAT section you keep missing — and builds you a study plan around it. Free, unlimited, no upsell. <strong style={{ color: '#cbd7f0' }}>Watch it work — or ask it something yourself.</strong></p>
+              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Medabrain explains whatever's blocking you, then builds a plan around it. Free and unlimited. <strong style={{ color: C.t1 }}>Watch it work — or ask it something yourself.</strong></p>
               <ul style={{ margin: '24px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <CheckLi color={C.violetL}>Explains any concept, at whatever level you're actually at</CheckLi>
                 <CheckLi color={C.violetL}>Builds a study schedule for the section you're behind on</CheckLi>
@@ -1090,9 +1099,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
           <div className="lp-feature">
             <div className="lp-feat-visual lp-reveal lp-d1"><CollegeListMock /></div>
             <div className="lp-feat-copy lp-reveal">
-              <FeaturePill bg="rgba(14,165,233,0.12)" color={C.skyL} icon={<GraduationCap size={13} />}>Portfolio</FeaturePill>
+              <FeaturePill bg={tint(C.sky, 0.12)} color={C.skyL} icon={<GraduationCap size={13} />}>Portfolio</FeaturePill>
               <h3 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.02em', lineHeight: 1.1, fontSize: 'clamp(26px,3vw,40px)', color: C.t1 }}>A college list scored to your actual stats.</h3>
-              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Add schools and MedSchoolPrep tiers each one Likely / Target / Reach / Stretch against your GPA, test scores, and hours — and re-scores the moment any of them change. <strong style={{ color: '#cbd7f0' }}>Move the sliders and watch it re-tier.</strong></p>
+              <p style={{ marginTop: 16, fontSize: 16, lineHeight: 1.7, color: C.t2 }}>Every school tiered against your real GPA, scores and hours — and re-scored the moment they change. <strong style={{ color: C.t1 }}>Move the sliders and watch it re-tier.</strong></p>
               <ul style={{ margin: '24px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <CheckLi color={C.skyL}>Every school tiered against your real numbers</CheckLi>
                 <CheckLi color={C.skyL}>Tiers recompute as your GPA and scores grow</CheckLi>
@@ -1103,16 +1112,16 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
         </section>
 
         {/* ── PORTFOLIO ───────────────────────────────────────────────── */}
-        <section id="portfolio" style={{ borderTop: `1px solid ${C.b1}`, background: 'rgba(255,255,255,0.015)' }}>
+        <section id="portfolio" style={{ borderTop: `1px solid ${C.b1}`, background: C.surf2 }}>
           <div className="lp-sec" style={{ paddingTop: 'clamp(64px,7vw,110px)', paddingBottom: 'clamp(64px,7vw,110px)' }}>
             <div className="lp-reveal" style={{ maxWidth: 720 }}>
               <Eyebrow color={C.skyL} glow={C.sky}>The portfolio</Eyebrow>
               <h2 style={{ margin: '18px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, fontSize: 'clamp(30px,3.6vw,50px)', color: C.t1, textWrap: 'balance' }}>Everything your application needs, in one place.</h2>
-              <p style={{ marginTop: 16, fontSize: 16.5, lineHeight: 1.6, color: C.t2 }}>From your college list to your final essays — the entire application, tracked and scored as you go. Twelve tools that talk to each other, so nothing slips through the cracks.</p>
+              <p style={{ marginTop: 16, fontSize: 16.5, lineHeight: 1.6, color: C.t2 }}>Twelve tools that talk to each other, so nothing slips.</p>
             </div>
 
             <div className="lp-tools-grid lp-reveal" style={{ marginTop: 44 }}>
-              {PORTFOLIO_TOOLS.map((t) => (
+              {portfolioTools().map((t) => (
                 <div key={t.title} className="lp-card-hover" style={glass({ padding: 20, borderRadius: 16 })}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
                     <span style={{ width: 36, height: 36, borderRadius: 10, background: `${t.color}16`, border: `1px solid ${t.color}30`, color: t.lite, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -1135,9 +1144,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
           </div>
           <div className="lp-manifesto-grid lp-reveal lp-d1" style={{ marginTop: 44 }}>
             {[
-              [C.greenL, '100%', 'Free, always', 'Every pathway, lesson, flashcard, portfolio tool, and coach response — no paywall, no premium tier, ever.'],
-              [C.blueL, '0', 'Trackers, and profiles built on you', "We don't sell your data, run analytics on you, or personalise ads. Ads keep the app free; they're chosen by the page, never by a profile of you. Flashcards even run entirely on your own device."],
-              [C.violetL, '9–12', 'Built for high schoolers', 'Designed for the years that actually shape an application — not repackaged college-prep material.'],
+              [C.greenL, '100%', 'Free, always', 'Every lesson, tool and coach response. No premium tier, ever.'],
+              [C.blueL, '0', 'Trackers, and profiles built on you', "No data sold, no profile built on you. Ads are chosen by the page, never by you."],
+              [C.violetL, '9–12', 'Built for high schoolers', 'Built for the years that shape an application.'],
             ].map(([color, stat, title, body]) => (
               <div key={title} className="lp-card-hover" style={glass({ padding: 26, borderRadius: 18 })}>
                 <div style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 34, color, letterSpacing: '-0.02em' }}>{stat}</div>
@@ -1168,16 +1177,16 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
 
         {/* ── FINAL CTA ───────────────────────────────────────────────── */}
         <section className="lp-sec" style={{ paddingTop: 'clamp(40px,5vw,64px)', paddingBottom: 'clamp(64px,8vw,110px)' }}>
-          <div className="lp-reveal" style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: '1px solid rgba(45,127,255,0.25)', background: 'linear-gradient(135deg,rgba(45,127,255,0.14),rgba(139,92,246,0.08))', padding: 'clamp(40px,6vw,72px)', textAlign: 'center' }}>
-            <div aria-hidden style={{ position: 'absolute', right: '-10%', top: '-40%', width: '60%', height: '180%', borderRadius: '50%', background: 'radial-gradient(circle,rgba(45,127,255,0.18),transparent 70%)', pointerEvents: 'none' }} />
+          <div className="lp-reveal" style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: `1px solid ${tint(C.blue, 0.28)}`, background: `linear-gradient(135deg,${tint(C.blue, 0.14)},${tint(C.violet, 0.08)})`, padding: 'clamp(40px,6vw,72px)', textAlign: 'center' }}>
+            <div aria-hidden style={{ position: 'absolute', right: '-10%', top: '-40%', width: '60%', height: '180%', borderRadius: '50%', background: `radial-gradient(circle,${tint(C.blue, 0.18)},transparent 70%)`, pointerEvents: 'none' }} />
             <h2 style={{ position: 'relative', margin: 0, fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.05, fontSize: 'clamp(30px,4vw,54px)', color: C.t1, textWrap: 'balance' }}>Ready to find your path?</h2>
-            <p style={{ position: 'relative', margin: '18px auto 0', maxWidth: '52ch', fontSize: 'clamp(15px,1.3vw,18px)', lineHeight: 1.6, color: '#c3cfe8' }}>Take the diagnostic, get your top match, and start walking the path today — free, forever.</p>
+            <p style={{ position: 'relative', margin: '18px auto 0', maxWidth: '52ch', fontSize: 'clamp(15px,1.3vw,18px)', lineHeight: 1.6, color: C.t2 }}>Take the diagnostic. Get your match. Start today.</p>
             <div className="lp-cta-row" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', justifyContent: 'center', marginTop: 30, position: 'relative' }}>
-              <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 30px', borderRadius: 12, background: C.blueGrad, color: '#fff', fontSize: 16, fontWeight: 700, boxShadow: '0 16px 40px -14px rgba(45,127,255,0.9)', border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button className="lp-btn-primary" onClick={onGetStarted} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 30px', borderRadius: 12, background: C.blueGrad, color: C.onAccent, fontSize: 16, fontWeight: 700, boxShadow: `0 16px 40px -14px ${tint(C.blue, 0.65)}`, border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 Get started free
                 <ArrowRight size={16} />
               </button>
-              <a className="lp-btn-secondary" href="#pathways" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 26px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.14)', color: C.t1, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+              <a className="lp-btn-secondary" href="#pathways" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '15px 26px', borderRadius: 12, background: C.surfHi, border: `1px solid ${C.b2}`, color: C.t1, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
                 Explore the pathways
               </a>
             </div>
@@ -1193,7 +1202,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal }) {
                   <AnimatedLogo size={32} variant="hover" glow={false} />
                   <span style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 16, color: C.t1 }}>MedSchoolPrep</span>
                 </a>
-                <p style={{ margin: '14px 0 0', maxWidth: '38ch', fontSize: 13.5, lineHeight: 1.6, color: C.t2 }}>A free path into medicine for high schoolers — diagnostic, verified lessons, flashcards, an AI coach, and a full application portfolio.</p>
+                <p style={{ margin: '14px 0 0', maxWidth: '38ch', fontSize: 13.5, lineHeight: 1.6, color: C.t2 }}>A free path into medicine for high schoolers.</p>
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.t3, marginBottom: 14 }}>Product</div>

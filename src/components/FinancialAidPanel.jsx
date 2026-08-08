@@ -127,7 +127,7 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-aid" icon={Handshake} color={accent} color2={C.teal}
         eyebrow="Applications" title="Financial Aid & Scholarships"
-        sub="Track FAFSA, CSS Profile, and every scholarship you apply for — so when decisions come in, comparing real costs is easy."
+        sub="FAFSA, CSS Profile and every scholarship, so real costs are comparable."
         stats={scholarships.length > 0 ? [{ value: scholarships.length, label: 'tracked' }] : []}/>
 
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'scholarships' || e.resource === 'deadlines')} status={trackStatus} onRetried={load}/>

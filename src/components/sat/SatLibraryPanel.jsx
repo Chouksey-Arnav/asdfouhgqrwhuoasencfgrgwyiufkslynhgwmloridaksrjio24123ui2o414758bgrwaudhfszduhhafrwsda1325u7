@@ -190,7 +190,7 @@ export default function SatLibraryPanel({
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Library" title="Every question, and where the official ones live"
-        sub="Browse the whole bank by section, domain, skill and difficulty — or go straight to College Board's own free material. Both belong in a serious prep plan, and they are not interchangeable."
+        sub="The whole bank by section, domain, skill and difficulty — plus College Board’s own material."
         meta={[
           { value: counts.total, label: 'questions' },
           { value: Object.keys(SAT_SKILLS).length, label: 'skills covered' },

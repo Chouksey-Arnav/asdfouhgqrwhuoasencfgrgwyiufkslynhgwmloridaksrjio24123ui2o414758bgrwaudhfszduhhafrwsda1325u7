@@ -278,7 +278,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
     <div style={CC({gap: 22})}>
       <PanelHero tourTag="portfolio-deep-colleges" icon={GraduationCap} color={accent} color2={C.blue} m={isMobile}
         eyebrow="College List" title="Where you're going to apply"
-        sub="Every school you're thinking about, in one place — with its deadlines and a checklist, so no application gets left half-finished."
+        sub="Every school you’re considering, with its deadlines and checklist."
         stats={colleges.length > 0
           ? [{ value: colleges.length, label: colleges.length === 1 ? 'school' : 'schools' }, { value: submitted, label: 'submitted', color: C.violetL }]
           : []}/>

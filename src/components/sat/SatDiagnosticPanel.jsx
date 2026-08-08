@@ -127,7 +127,7 @@ export default function SatDiagnosticPanel({
         <SatPageHeader
           accent={C.green}
           eyebrow="Diagnostic complete" title={`${correct} of ${total} correct`}
-          sub="This is a starting map, not a score. It is deliberately wide and shallow — enough to aim your prep, not enough to predict a test result. Take a full-length test when you want a real estimate."
+          sub="A starting map, not a score. Take a full test for a real estimate."
           m={isMobile}
         />
 
@@ -239,7 +239,7 @@ export default function SatDiagnosticPanel({
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Diagnostic" title="Find out where you actually stand"
-        sub="About 30 questions spread across all 28 tested skills. It will not give you a score — it gives you a map of which skills are costing you points, so the rest of your prep is aimed instead of scattered."
+        sub="~30 questions across all 28 skills — a map of where you’re losing points."
         meta={[
           { value: preview.length, label: 'questions' },
           { value: `~${estimateMinutes(preview)}`, label: 'minutes' },

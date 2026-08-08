@@ -313,7 +313,7 @@ export default function SatFullTestPanel({
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Full-length test" title="Adaptive practice test"
-        sub="Two sections, four modules, with real routing: how you do on Module 1 decides whether you get the harder or easier Module 2 — and the easier one caps that section near 600, exactly like the real exam."
+        sub="Two sections, four modules, with the real exam’s adaptive routing."
         meta={[
           { value: completed.length, label: completed.length === 1 ? 'test taken' : 'tests taken' },
           ...(best ? [{ value: best.result.composite, label: 'best score', color: C.green }] : []),
