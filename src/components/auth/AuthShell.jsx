@@ -1,29 +1,33 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ShieldCheck, Sparkles, GraduationCap } from 'lucide-react';
-import { C, glass } from '../../lib/theme';
+import { C, glass, tint } from '../../lib/theme';
 import AnimatedLogo from '../AnimatedLogo';
+import ThemeToggle from '../ThemeToggle';
 
+// Three lines, not three paragraphs. The brand panel is read in the two seconds
+// before someone starts typing an email — it is a reason to keep going, not a
+// features page, and the version this replaced ran to ~40 words a bullet.
+// The claim about ads stays explicit: the product does serve Google AdSense
+// (see index.html), so "free" here has to say what pays for it rather than
+// implying nothing does.
 const HIGHLIGHTS = [
-  { icon: GraduationCap, title: '10 health career pathways', desc: 'Physician, Nursing, PA, Pharmacy, Dentistry, and more — matched to you, not assumed.' },
-  { icon: Sparkles, title: 'A full application portfolio', desc: 'College list, essays, deadlines, activities, and test scores, all synced to your account.' },
-  // This used to read "100% free, no ads". The product does serve ads (Google
-  // AdSense, see index.html), so that line was simply false — and a false claim
-  // about advertising on a service used by minors is an FTC Act § 5 problem
-  // quite apart from anything in the privacy policy. What is actually true, and
-  // is the thing students care about, is that nothing is paywalled and that the
-  // ads are not personalised.
-  { icon: ShieldCheck, title: 'Free — nothing paywalled', desc: 'Every lesson, flashcard deck, and portfolio tool. Ads keep it free, and they are never personalised.' },
+  { icon: GraduationCap, hue: () => C.blue,   title: '10 health careers', desc: 'Matched to you, not assumed.' },
+  { icon: Sparkles,      hue: () => C.violet, title: 'Your whole application', desc: 'Colleges, essays, deadlines, scores.' },
+  { icon: ShieldCheck,   hue: () => C.green,  title: 'Free — nothing paywalled', desc: 'Ads keep it free, never personalised.' },
 ];
 
 function BrandPanel() {
   return (
     <div className="msp-auth-brand" style={{
       position: 'relative', display: 'flex', flexDirection: 'column', justifyContent: 'center',
-      padding: 'clamp(40px,6vw,88px)', background: 'linear-gradient(160deg,#070c18 0%,#04060b 60%)',
+      padding: 'clamp(40px,6vw,88px)', background: `linear-gradient(160deg,${C.s0} 0%,${C.bg} 60%)`,
       borderRight: `1px solid ${C.b1}`, overflow: 'hidden',
     }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 70% 50% at 20% 10%, rgba(45,127,255,0.14) 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 90%, rgba(6,182,212,0.08) 0%, transparent 55%)', pointerEvents: 'none' }} />
+      <div aria-hidden style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none',
+        background: `radial-gradient(ellipse 70% 50% at 20% 10%, ${tint(C.blue, 0.14)} 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 90%, ${tint(C.cyan, 0.09)} 0%, transparent 55%)`,
+      }} />
       <div style={{ position: 'relative', maxWidth: 420 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
           <AnimatedLogo size={38} variant="pop" />
@@ -35,21 +39,24 @@ function BrandPanel() {
 
         <h1 style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 'clamp(26px,2.6vw,34px)', letterSpacing: '-0.03em', lineHeight: 1.15, color: C.t1, margin: 0 }}>
           Find your path into medicine.<br />
-          <span style={{ backgroundImage: 'linear-gradient(135deg,#5da0ff,#06b6d4)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Then actually walk it.</span>
+          <span style={{ backgroundImage: `linear-gradient(135deg,${C.blue},${C.cyan})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Then actually walk it.</span>
         </h1>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginTop: 44 }}>
-          {HIGHLIGHTS.map(({ icon: Icon, title, desc }) => (
-            <div key={title} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
-              <div style={{ width: 34, height: 34, borderRadius: 9, background: C.blueDim, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <Icon size={16} color={C.blueL} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 44 }}>
+          {HIGHLIGHTS.map(({ icon: Icon, hue, title, desc }) => {
+            const c = hue();
+            return (
+              <div key={title} style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 10, background: tint(c, 0.13), border: `1px solid ${tint(c, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Icon size={17} color={c} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: C.t1 }}>{title}</div>
+                  <div style={{ fontSize: 12.5, color: C.t3 }}>{desc}</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, marginBottom: 2 }}>{title}</div>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{desc}</div>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -60,11 +67,20 @@ function BrandPanel() {
 // a branded panel on wide viewports (hidden under 900px via CSS, see index.css) and a
 // scrollable, vertically-centered form column that fills the rest of the viewport on
 // every screen size, from phones up to ultrawide desktop monitors.
-export default function AuthShell({ children }) {
+//
+// The theme toggle is pinned to the form column rather than the brand panel so it
+// survives the 900px breakpoint that hides the panel — a phone is exactly where
+// someone is most likely to want the other palette.
+export default function AuthShell({ children, themeMode, onThemeChange }) {
   return (
     <div className="msp-auth-shell">
       <BrandPanel />
-      <div className="msp-auth-form-col" style={{ display: 'flex', justifyContent: 'center' }}>
+      <div className="msp-auth-form-col" style={{ display: 'flex', justifyContent: 'center', position: 'relative' }}>
+        {onThemeChange && (
+          <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 5 }}>
+            <ThemeToggle mode={themeMode} onChange={onThemeChange} align="right" />
+          </div>
+        )}
         <div style={{ width: '100%', maxWidth: 420, padding: '32px 24px', margin: 'auto 0' }}>
           <motion.div key={typeof children === 'object' && children?.key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} style={glass({ padding: 32 })}>
             {children}

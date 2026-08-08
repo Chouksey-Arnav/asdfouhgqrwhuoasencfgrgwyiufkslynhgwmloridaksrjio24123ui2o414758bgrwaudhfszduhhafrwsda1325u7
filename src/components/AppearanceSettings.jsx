@@ -199,7 +199,10 @@ const THEME_CHOICES = [
     note: 'Follows your device — Balanced Light by day, Balanced Dark at night.' },
 ];
 
-const NAV_SECTIONS = [
+// A function, not a literal: a module-level array would snapshot `C` at import
+// time and keep painting the previous theme's hues after a switch. Same reason
+// catMeta() in lib/theme.js is computed per call.
+const navSections = () => [
   { id: 'theme', label: 'Theme', icon: Sun, hue: C.amber },
   { id: 'text', label: 'Text & reading', icon: Type, hue: C.blue },
   { id: 'contrast', label: 'Contrast', icon: Contrast, hue: C.violet },
@@ -265,7 +268,7 @@ export default function AppearanceSettings({ settings, onChange, isMobile = fals
           Every control below applies immediately and stays saved on this device. Jump to a section:
         </p>
         <div role="tablist" aria-label="Jump to accessibility section" style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-          {NAV_SECTIONS.map(sec => {
+          {navSections().map(sec => {
             const Icon = sec.icon;
             const on = cardChanged(sec.id);
             return (

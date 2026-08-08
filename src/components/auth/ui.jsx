@@ -35,17 +35,20 @@ function passwordScore(password) {
   return Math.min(score, 4);
 }
 
-const STRENGTH_META = [
+// Built per call, never as a module-level literal: a frozen literal would
+// snapshot whichever palette happened to be loaded at import time and would
+// then ignore every theme change. See the header note in lib/theme.js.
+const strengthMeta = (score) => [
   { label: 'Too short', color: C.t4 },
   { label: 'Weak', color: C.roseL },
   { label: 'Fair', color: C.amberL },
   { label: 'Good', color: C.blueL },
   { label: 'Strong', color: C.greenL },
-];
+][score];
 
 export function PasswordStrengthMeter({ password }) {
   const score = passwordScore(password);
-  const meta = STRENGTH_META[score];
+  const meta = strengthMeta(score);
   if (!password) return null;
   return (
     <div style={{ marginTop: 8 }}>

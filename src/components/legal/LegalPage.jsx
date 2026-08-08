@@ -12,15 +12,19 @@
 //     it is linkable, it survives a refresh, and it can be sent to a parent.
 //     "Where is your privacy policy" should have a URL as its answer.
 //
-//  2. It renders in the dark brand palette regardless of the student's theme
-//     preference, for the same reason AuthGate pins the pre-auth surfaces to
-//     dark: this page is reachable while signed out, where no preference has
-//     been expressed, and a document that changes appearance depending on who
-//     is looking at it is the wrong kind of surprising.
+//  2. It renders in the student's own theme, like every other surface. It used
+//     to pin to the dark palette on the same reasoning AuthGate used to pin the
+//     signed-out screens — that no preference has been expressed yet. Once the
+//     landing page, the auth screens and the app all follow one theme, a legal
+//     document that ignores it is the only thing on the site that changes
+//     appearance when you open it, which is precisely the surprise the pinning
+//     was meant to avoid. `P` is the live token object, mutated in place on a
+//     theme change (see lib/theme.js), so nothing here may hoist it into a
+//     module-level literal.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, FileText, Shield, Link2, Check } from 'lucide-react';
-import { DARK as P } from '../../lib/theme';
+import { C as P } from '../../lib/theme';
 import { LEGAL, formatLegalDate } from '../../legal/legalConfig';
 import { TERMS_DOC } from '../../legal/terms';
 import { PRIVACY_DOC } from '../../legal/privacy';
@@ -57,7 +61,7 @@ function Emphasis({ children }) {
         lineHeight: 1.7,
         color: P.t1,
         fontWeight: 600,
-        background: 'rgba(255,255,255,0.04)',
+        background: P.surfHi,
         borderLeft: `3px solid ${P.blueL}`,
         borderRadius: '0 10px 10px 0',
       }}
@@ -174,7 +178,7 @@ function LegalTable({ caption, columns, rows, links }) {
                   fontSize: 12.5,
                   letterSpacing: '.03em',
                   textTransform: 'uppercase',
-                  background: 'rgba(255,255,255,0.05)',
+                  background: P.surfHi,
                   borderBottom: `1px solid ${P.b1}`,
                   whiteSpace: 'nowrap',
                 }}
@@ -405,7 +409,7 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
             gap: 8,
             padding: '9px 15px',
             marginBottom: 30,
-            background: 'rgba(255,255,255,0.05)',
+            background: P.surfHi,
             border: `1px solid ${P.b1}`,
             borderRadius: 10,
             color: P.t1,
@@ -424,7 +428,7 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
           style={{
             marginBottom: 36,
             padding: '16px 18px',
-            background: 'rgba(255,255,255,0.03)',
+            background: P.surf,
             border: `1px solid ${P.b1}`,
             borderRadius: 14,
           }}

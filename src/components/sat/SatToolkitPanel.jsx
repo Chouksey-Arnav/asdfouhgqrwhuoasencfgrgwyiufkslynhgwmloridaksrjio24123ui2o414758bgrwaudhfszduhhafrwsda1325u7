@@ -58,7 +58,7 @@ export default function SatToolkitPanel({ accent = C.teal, isMobile = false }) {
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Calculator" title="Desmos, the same one the exam gives you"
-        sub="The Digital SAT builds Desmos into every Math question — both modules, no time limit on using it. It is here on every SAT screen too, and it keeps your work between questions."
+        sub="Desmos on every Math question, on every SAT screen, work kept between questions."
         meta={[{ value: DESMOS_PLAYS.length, label: 'techniques' }]}
         m={isMobile}
         tourTag="sat-deep-toolkit"

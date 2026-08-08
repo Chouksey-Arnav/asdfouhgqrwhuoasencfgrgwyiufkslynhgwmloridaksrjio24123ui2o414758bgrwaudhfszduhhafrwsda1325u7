@@ -259,7 +259,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-essays" icon={ScrollText} color={accent} color2={C.fuchsia} m={isMobile}
         eyebrow="Essays" title="Write your essays here"
-        sub="Every personal statement and supplemental in one place, with your drafts saved as you type — and a straight critique of what you've written, not a pat on the back."
+        sub="Drafts saved as you type, plus a straight critique of each one."
         stats={essays.length > 0
           ? [{ value: essays.length, label: essays.length === 1 ? 'essay' : 'essays' }, { value: finals, label: 'finished', color: C.greenL }]
           : []}/>

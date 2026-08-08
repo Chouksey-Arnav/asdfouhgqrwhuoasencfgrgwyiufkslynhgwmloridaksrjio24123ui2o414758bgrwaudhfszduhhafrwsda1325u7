@@ -165,7 +165,7 @@ export default function TrackedPanel({
       <PanelHero
         tourTag="portfolio-tracked" icon={Radar} color={C.blue} color2={C.violet} m={isMobile}
         eyebrow="Tracked" title="Things you're keeping an eye on"
-        sub="Anything you hit Track on — a scholarship, a program, a school — lands here. The most urgent one is always at the top, and we check on all of them every day."
+        sub="Everything you’ve tracked, most urgent first, rechecked daily."
         stats={[
           { value: items.length, label: 'tracked', color: C.blueL },
           { value: counts.needs_action || 0, label: 'need you', color: C.roseL },
@@ -337,7 +337,7 @@ export default function TrackedPanel({
       ) : !items.length ? (
         <EmptyState
           icon={Compass} accent={accent} title="Nothing tracked yet"
-          body="Find a program, competition or scholarship under Opportunities and hit Track. It shows up here with a countdown to its deadline and a plain next step, and we check on it every day."
+          body="Hit Track on anything under Opportunities and it shows up here with a countdown."
           actionLabel="Find opportunities" onAction={() => onOpen?.('opportunities')}
         />
       ) : !filtered.length ? (

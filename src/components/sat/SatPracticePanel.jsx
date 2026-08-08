@@ -315,7 +315,7 @@ export default function SatPracticePanel({
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Practice" title="Targeted practice"
-        sub="Answering questions is not the same as improving. These modes aim your time at the skills that are actually costing you points."
+        sub="Modes that aim your time at the skills costing you points."
         meta={[
           { value: dueReviewIds.length, label: 'due retries' },
           { value: weakest.length ? `${Math.round(weakest[0].mastery * 100)}%` : '—', label: 'weakest skill' },

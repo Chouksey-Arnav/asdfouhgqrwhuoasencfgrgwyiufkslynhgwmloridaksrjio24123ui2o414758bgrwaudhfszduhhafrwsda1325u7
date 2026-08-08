@@ -195,9 +195,12 @@ body::before {
   .msp-auth-brand { display: none !important; }
   .msp-auth-form-col { flex: 1 1 100%; }
 }
-.msp-otp-box:focus { border-color: rgba(45,127,255,0.6) !important; box-shadow: 0 0 0 3px rgba(45,127,255,0.15) !important; }
+.msp-otp-box:focus { border-color: var(--c-blue) !important; box-shadow: 0 0 0 3px var(--c-blueDim) !important; }
 .msp-auth-link { background: none; border: none; cursor: pointer; font-family: inherit; padding: 0; }
-.msp-google-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.28) !important; background: rgba(255,255,255,0.06) !important; }
+/* The auth screens follow the student's theme now (see the note in AuthGate),
+   so the hover states can't assume a dark page underneath them: a white wash on
+   a light card is invisible, which made the Google button look dead on hover. */
+.msp-google-btn:hover:not(:disabled) { border-color: var(--c-b3) !important; background: var(--c-surfHi) !important; }
 
 /* SubNav (Prep/Portfolio pill tab bar) — a highlighted, unmissable horizontal scrollbar instead
    of the near-invisible 4px default above. `--subnav-accent` is set per-instance from the active

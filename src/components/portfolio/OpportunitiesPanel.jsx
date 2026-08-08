@@ -421,7 +421,7 @@ export default function OpportunitiesPanel({
           when you want to shop, shut when you came here to be told what to do. */}
       <Disclosure id="opportunities-catalog" icon={Library} color={C.gold} m={isMobile}
         title={`Browse all ${OPPORTUNITIES.length} programs yourself`}
-        sub="Search by name or field and filter by grade, selectivity, cost, format and timing — for when you want to look around instead of being handed picks.">
+        sub="Search and filter the whole catalogue yourself.">
         <div style={CC({ gap: 12 })}>
           <HelpNote>Anything you track from here shows up on your Tracked board with a deadline and a next step.</HelpNote>
           <OpportunitiesDatabase accent={accent} onTrack={onTrack}

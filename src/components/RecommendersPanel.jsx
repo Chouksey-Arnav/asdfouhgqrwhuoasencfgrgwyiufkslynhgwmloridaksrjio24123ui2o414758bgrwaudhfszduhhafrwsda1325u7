@@ -67,7 +67,7 @@ export default function RecommendersPanel({ accent = C.blue, onChange }) {
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-recommenders" icon={UserCheck} color={accent} color2={C.violet}
         eyebrow="Portfolio" title="Letters of Recommendation"
-        sub="Track who you're asking for a letter — a teacher, counselor, coach, or someone you shadowed — plus your school's pre-health committee letter if it has one. Most applications need 2-3."
+        sub="Who’s writing for you, and when each letter is due. Most applications need 2–3."
         stats={entries.length > 0 ? [{ value: entries.length, label: 'tracked' }] : []}/>
 
       {entries.length > 0 && (

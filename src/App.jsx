@@ -38,6 +38,7 @@ import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import AnimatedLogo from './components/AnimatedLogo';
+import ThemeToggle from './components/ThemeToggle';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueDecksBadge, dueDecksSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
 
@@ -4158,7 +4159,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={CC({gap:22})}>
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
           eyebrow="Quiz Library" title="Practice Quizzes"
-          sub="Exam-style questions across every subject — filter by category and difficulty, or let Medabrain rank what to take next."/>
+          sub="Exam-style questions across every subject."/>
         {/* This library is science content, not SAT content — a distinction that
             used to be invisible, since plan tasks labelled "SAT practice set"
             linked straight here. Say it plainly and point at the real thing. */}
@@ -4785,7 +4786,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={CC({gap:22})}>
         <PanelHero tourTag="prep-deep-flashcards" icon={Layers3} color={C.amber} color2={C.rose} m={isMobile}
           eyebrow="Flashcards" title="Study Decks"
-          sub="Spaced-repetition decks scheduled with FSRS — study what's due, or generate a new deck straight from your own notes."
+          sub="Scheduled with FSRS. Study what's due, or build a deck from your notes."
           right={<button style={{...btn(C.sunsetGrad,{fontSize:12,padding:'9px 18px',boxShadow:`0 4px 14px ${C.amber}35`}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setNewDeckOpen(true)}><Plus size={14}/>New Deck</button>}/>
 
         {/* Overview stats */}
@@ -5569,7 +5570,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               icon={ScrollText}
               accent={C.violet}
               title="No Study Notes Yet"
-              body="You haven't written any custom study notes. Click 'Notes' on any resource card to write key formulas, concepts, or takeaways!"
+              body="Hit 'Notes' on any resource card to start one."
               actionLabel="Browse All Resources"
               onAction={() => setLSubTab('all')}
             />
@@ -5694,7 +5695,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={CC({gap:22})}>
         <PanelHero tourTag="portfolio-deep-overview" icon={Building2} color={C.blue} color2={C.green} m={isMobile}
           eyebrow="Portfolio" title="Your Application"
-          sub="Everything you’re building for college, in one place. Start with the card below — it tells you the one thing worth doing next."
+          sub="Everything you’re building for college. Start with the card below."
           stats={[
             {value:portActivities.length,label:'activities',color:C.blueL},
             {value:trackedItems.length,label:'tracked',color:C.violetL},
@@ -5904,7 +5905,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             is reference material, not a workspace. Behind a door for the same reason. */}
         {portActivities.length>0&&(
           <Disclosure id="port-overview-activities" title={`Everything you’ve logged (${portActivities.length})`}
-            sub="A quick list of your activities. Add, edit or remove them in Activities & Résumé." icon={Award} color={C.amber} m={isMobile}>
+            sub="Edit these in Activities & Résumé." icon={Award} color={C.amber} m={isMobile}>
             <div style={CC({gap:8})}>
               <AnimatePresence>
                 {portActivities.map((act)=>{const col=actColors[act.activity_type]||C.blue;return(
@@ -5935,7 +5936,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       <div style={CC({gap:22})}>
         <PanelHero tourTag="portfolio-deep-calc" icon={Calculator} color={C.gold} color2={C.orange} m={isMobile}
           eyebrow="Admissions Calculator" title="Personalized College List & Match Index"
-          sub="Estimate your competitiveness at real schools from your GPA, test scores, rigor, and activities — or sync it all straight from your Portfolio."
+          sub="Your odds at real schools — or sync it from your Portfolio."
           right={
             <motion.button
               whileHover={{ scale: 1.03 }}
@@ -7400,7 +7401,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div style={CC({gap:22})}>
           <PanelHero icon={Compass} color={C.fuchsia} color2={C.violet} m={isMobile}
             eyebrow="Plans" title="Pick Your Pathway First"
-            sub="Your plan is built around a pathway — the health career track that shapes which units, quizzes, and milestones show up in your day-by-day roadmap. Take the diagnostic for a recommendation, or choose a pathway yourself. You can always switch later."/>
+            sub="Your pathway shapes your whole roadmap. Take the diagnostic, or pick one — you can switch later."/>
           <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} style={{...glass({padding:28,background:`linear-gradient(135deg,${C.cyanDim},${C.blueDim} 70%,transparent)`,border:`1px solid ${C.cyan}30`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
             <div style={{position:'absolute',inset:0,background:C.oceanGrad,opacity:0.05,pointerEvents:'none'}}/>
             <div style={{position:'relative',width:56,height:56,borderRadius:16,background:C.oceanGrad,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:`0 8px 22px ${C.cyan}40`}}><Compass size={26} color="#fff"/></div>
@@ -7492,6 +7493,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
             <div style={R({gap:10})}>
               <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
+              <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
               {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Flame size={10}/>{streak}d</span>}
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
@@ -7553,6 +7555,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 );
               })}
             </nav>
+            {/* Theme, one click from anywhere in the app. It used to live four
+                levels deep in Settings → Appearance, which in practice meant the
+                app picked the theme and the student lived with it. The full
+                picker (previews, high contrast, type size) is still there — this
+                is the switch itself, where a switch belongs. */}
+            <div style={{padding:'10px 14px',borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+              <span style={{fontSize:11,color:C.t3,fontWeight:600}}>Theme</span>
+              <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" placement="above" accent={accent}/>
+            </div>
           </aside>
         )}
 

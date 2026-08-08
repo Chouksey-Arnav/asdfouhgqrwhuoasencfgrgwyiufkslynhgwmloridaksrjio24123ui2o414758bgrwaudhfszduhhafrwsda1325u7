@@ -112,7 +112,7 @@ export default function SatOverviewPanel({
     <div style={CC({ gap: isMobile ? 14 : 18 })}>
       <SatPageHeader
         eyebrow="SAT · Digital" title="Score center"
-        sub="Everything here is measured from SAT questions you have actually answered. Nothing is inferred from other parts of the app."
+        sub="Measured only from SAT questions you’ve actually answered."
         meta={[
           ...(daysToExam != null ? [{ value: daysToExam, label: daysToExam === 1 ? 'day to test' : 'days to test', color: daysToExam <= 30 ? C.rose : accent }] : []),
           { value: responses.length, label: 'answered' },

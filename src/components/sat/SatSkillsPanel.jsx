@@ -56,7 +56,7 @@ export default function SatSkillsPanel({ accent = C.sky, satData, isMobile = fal
       <SatPageHeader
         accent={accent}
         eyebrow="SAT · Skill mastery" title="All 28 tested skills"
-        sub="Every skill the Digital SAT tests, with what we have actually measured about yours. Numbers you have barely any data for say so."
+        sub="Every tested skill, with how much data we actually have on yours."
         meta={[
           { value: measured, label: `of ${Object.keys(masteryMap).length} measured` },
         ]}
