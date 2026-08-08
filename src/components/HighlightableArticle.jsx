@@ -53,9 +53,18 @@ function buildSegments(text, highlights) {
   return segments;
 }
 
-export default function HighlightableArticle({ sections, highlights = [], onAdd, onRemove, accent = C.blue, m = false }) {
+export default function HighlightableArticle({ sections, highlights = [], onAdd, onRemove, accent = C.blue, m = false, activeSectionIdx = null }) {
   const containerRef = useRef(null);
   const [toolbar, setToolbar] = useState(null); // { x, y, sectionIdx, start, end, existingId }
+  // Set while a lesson is being read aloud (LessonAudioPlayer): the spoken block is tinted and
+  // scrolled into view so a student can follow along with their eyes, drop out to listen, and
+  // pick the thread back up without hunting for where the voice got to.
+  const sectionRefs = useRef({});
+
+  useEffect(() => {
+    if (activeSectionIdx == null) return;
+    sectionRefs.current[activeSectionIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [activeSectionIdx]);
 
   const byLine = {};
   for (const h of highlights) (byLine[h.sectionIdx] ||= []).push(h);
@@ -108,9 +117,21 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
     <div ref={containerRef} style={{ position: 'relative' }}>
       {sections.map((sec, i) => {
         const segs = buildSegments(sec.body, byLine[i] || []);
+        const speaking = activeSectionIdx === i;
         return (
-          <div key={i} style={{ marginBottom: 22 }}>
-            <h3 style={{ fontSize: m ? 15 : 17, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 8 }}>{sec.heading}</h3>
+          <div key={i} ref={(el) => { sectionRefs.current[i] = el; }}
+            style={{
+              marginBottom: 22,
+              // Deliberately a left rule + faint wash rather than a background block: it has to be
+              // distinguishable from a student's own text highlights, not compete with them.
+              borderLeft: `2px solid ${speaking ? accent : 'transparent'}`,
+              paddingLeft: speaking ? 12 : 0,
+              marginLeft: speaking ? -14 : 0,
+              background: speaking ? `${accent}0d` : 'transparent',
+              borderRadius: speaking ? 8 : 0,
+              transition: 'background .35s, padding .2s, border-color .2s',
+            }}>
+            <h3 style={{ fontSize: m ? 15 : 17, fontWeight: 700, color: speaking ? accent : C.t1, fontFamily: C.FD, marginBottom: 8, transition: 'color .25s' }}>{sec.heading}</h3>
             <p data-section-idx={i} style={{ fontSize: m ? 13.5 : 14.5, color: C.t2, lineHeight: 1.75, margin: 0, userSelect: 'text', WebkitUserSelect: 'text' }}>
               {segs.map((s, j) => s.highlight ? (
                 <mark key={j} onClick={(e) => clickExistingHighlight(e, s.highlight)}

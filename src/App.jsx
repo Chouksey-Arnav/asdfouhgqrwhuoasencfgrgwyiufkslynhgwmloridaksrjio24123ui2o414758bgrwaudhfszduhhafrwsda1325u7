@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge, Loader2, Info, Download,
+  Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
 } from 'lucide-react';
@@ -84,6 +84,12 @@ import PortfolioMilestones, { TimelineNextCard, useDeadlines } from './component
 import PortfolioMedabrain from './components/PortfolioMedabrain';
 import PrepMedabrain from './components/PrepMedabrain';
 import HighlightableArticle from './components/HighlightableArticle';
+import LessonAudioPlayer from './components/LessonAudioPlayer';
+import { buildArticleSegments } from './lib/lessonAudio';
+import {
+  buildVerificationQuiz, describeVerificationQuiz, getAttemptCount, recordAttempt, clearAttempts,
+  VERIFY_PASS_PCT,
+} from './lib/quizPersonalization';
 import LessonNotesPanel from './components/LessonNotesPanel';
 import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
 import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID } from './lib/opportunityMatch';
@@ -701,7 +707,7 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
           </div>
         </div>}
       </div>
-      {!broken&&<div style={{fontSize:11,color:C.t3,marginTop:8,textAlign:'center'}}>{watched?'Watched — you can continue.':'Watch to the end to unlock the verification quiz.'}</div>}
+      {!broken&&<div style={{fontSize:11,color:C.t3,marginTop:8,textAlign:'center'}}>{watched?'Watched — you can continue.':'Watch to the end to unlock the quiz.'}</div>}
     </div>
   );
 }
@@ -713,7 +719,7 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
 // pathway lesson never bounces the student out of the app. The Quiz step
 // hands off to the app's existing aQuiz/QuizEngine fullscreen gate (reusing
 // openVerifyQuiz/finishQuiz as-is) rather than duplicating quiz logic here.
-function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false,highlights=[],onAddHighlight,onRemoveHighlight}){
+function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false,highlights=[],onAddHighlight,onRemoveHighlight,quizBlurb=''}){
   const content = LESSON_CONTENT[lesson.id];
   const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
   const hasArticle = !!content?.article;
@@ -758,6 +764,17 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   const canContinueArticle = !hasArticle || articleRead;
   const canContinueVideo = !hasVideo || videoWatched;
 
+  // ── Listen mode ────────────────────────────────────────────────────────────
+  // The narration script is derived once per lesson; `speakingSection` is the
+  // article block currently being read aloud, which HighlightableArticle tints
+  // and scrolls to so the page follows the voice.
+  const audioSegments = useMemo(()=>hasArticle?buildArticleSegments(content,lesson.title):[],[content,lesson.title,hasArticle]);
+  const [speakingSection,setSpeakingSection] = useState(null);
+  // Reaching the end of the narration is the listener's equivalent of scrolling
+  // to the bottom — without this, a student who listened to the whole article on
+  // the bus would still be stuck behind a disabled "Continue" button.
+  const handleAudioFinished = useCallback(()=>{ if(!articleRead)onArticleRead(); },[articleRead,onArticleRead]);
+
   return(
     <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 60% at 50% -10%,${accent}1c 0%,transparent 60%),radial-gradient(ellipse 70% 50% at 100% 100%,${accent}12 0%,transparent 55%),${C.bg}`,color:C.t1,fontFamily:C.FB,display:'flex',flexDirection:'column'}}>
       {/* Thin pathway-colored top rule so the immersive lesson view still reads as "this pathway" at a glance */}
@@ -788,9 +805,15 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
               <h2 style={{fontSize:m?21:26,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{lesson.title}</h2>
               <div style={R({gap:14,flexWrap:'wrap'})}>
                 {hasArticle&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ScrollText size={11}/>{content.readMins||5} min read</span>}
-                {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Play size={10}/>Video</span>}
-                <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ShieldCheck size={11}/>Verified quiz</span>
+                {hasArticle&&<span style={{...pill(`${accent}18`,accent,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Headphones size={11}/>Or listen to it</span>}
+                {hasVideo&&<span style={{...pill(C.s3,C.t2,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><Play size={10}/>Watch to reinforce</span>}
+                <span style={{...pill(C.greenDim,C.greenL,{fontSize:10.5}),display:'inline-flex',alignItems:'center',gap:5}}><ShieldCheck size={11}/>Quiz to verify</span>
               </div>
+              {hasArticle&&(
+                <div style={{fontSize:11.5,color:C.t3,lineHeight:1.6,marginTop:-6}}>
+                  Reading isn't the only way through this — every article can be played as audio, so you can finish it on the bus or while you're doing something else.
+                </div>
+              )}
               {lesson.objectives?.length>0&&(
                 <div style={glass2({padding:16})}>
                   <div style={{fontSize:9.5,fontWeight:700,color:C.t3,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>What you'll learn</div>
@@ -811,10 +834,15 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
           )}
 
           {step==='article'&&hasArticle&&(
-            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(var(--msp-vh) - 210px)':'calc(var(--msp-vh) - 230px)',overflowY:'auto',paddingRight:4}}>
+            <div style={CC({gap:14})}>
+            {/* Audio sits above the scroll region, not inside it — a listener must be able to
+                pause without first scrolling back to the top of the article. */}
+            <LessonAudioPlayer segments={audioSegments} accent={accent} m={m}
+              onSpeakingSection={setSpeakingSection} onFinished={handleAudioFinished}/>
+            <div ref={articleScrollRef} onScroll={handleArticleScroll} style={{maxHeight:m?'calc(var(--msp-vh) - 296px)':'calc(var(--msp-vh) - 312px)',overflowY:'auto',paddingRight:4}}>
               <div style={CC({gap:22})}>
                 {!m&&<div style={{fontSize:10.5,color:C.t4,display:'flex',alignItems:'center',gap:6}}><Highlighter size={12}/>Select any passage to highlight it</div>}
-                <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m}/>
+                <HighlightableArticle sections={content.article.sections} highlights={highlights} onAdd={onAddHighlight} onRemove={onRemoveHighlight} accent={accent} m={m} activeSectionIdx={speakingSection}/>
                 {content.article.keyTakeaways?.length>0&&(
                   <div style={{...glass2({padding:16,background:`${accent}0a`,border:`1px solid ${accent}25`})}}>
                     <div style={{fontSize:9.5,fontWeight:700,color:accent,textTransform:'uppercase',letterSpacing:'.08em',marginBottom:10}}>Key takeaways</div>
@@ -826,13 +854,26 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
                   </div>
                 )}
                 <div style={{height:1}}/>
-                {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0'}}>Scroll to the end to continue</div>}
+                {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0'}}>Read to the end — or listen to the whole thing — to continue</div>}
               </div>
+            </div>
             </div>
           )}
 
           {step==='video'&&hasVideo&&(
             <div style={CC({gap:14})}>
+              {/* The old label for this step was "verification video", which reviewers read as
+                  "record yourself to prove you did the lesson" — the exact opposite of what it is.
+                  The heading and the line under it now say plainly who is watching whom, and why
+                  the step exists at all. */}
+              <div style={CC({gap:5})}>
+                <div style={{fontSize:m?16:18,fontWeight:800,color:C.t1,fontFamily:C.FD,display:'flex',alignItems:'center',gap:8}}>
+                  <Play size={15} color={accent}/>Watch to reinforce
+                </div>
+                <div style={{fontSize:12.5,color:C.t2,lineHeight:1.6}}>
+                  Watch to reinforce what you just read — seeing it explained visually helps it stick. Nothing is recorded, and nothing is asked of you here; just press play.
+                </div>
+              </div>
               <LessonVideoInline ytId={videoId} title={content?.video?.title||lesson.title} watched={videoWatched} onWatched={onVideoWatched}/>
               {content?.video?.channel&&<div style={{fontSize:11,color:C.t3,textAlign:'center'}}>via {content.video.channel}</div>}
             </div>
@@ -842,7 +883,10 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
             <div style={CC({gap:16,alignItems:'center',textAlign:'center',paddingTop:20})}>
               <div style={{width:64,height:64,borderRadius:18,background:`${C.green}18`,border:`1px solid ${C.green}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><ShieldCheck size={28} color={C.green}/></div>
               <h3 style={{fontSize:m?18:21,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:0}}>Ready to verify this lesson?</h3>
-              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>Pass the quiz at 70% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery.</p>
+              <p style={{fontSize:13,color:C.t2,lineHeight:1.7,maxWidth:420,margin:0}}>Pass the quiz at {VERIFY_PASS_PCT}% or higher to mark "{lesson.title}" verified — this is the only thing that actually counts toward unit and pathway mastery. The bar is the same {VERIFY_PASS_PCT}% for every student; the questions are not.</p>
+              {/* Says out loud that the draw is per-student — the personalization is real
+                  (lib/quizPersonalization.js) but invisible unless we name it. */}
+              {quizBlurb&&<div style={{fontSize:11.5,color:C.t3,lineHeight:1.6,maxWidth:420}}>{quizBlurb}</div>}
               {pathwayEntry?.quizScore!=null&&!isVerified&&<div style={{...pill(C.roseDim,C.rose,{fontSize:11})}}>Last attempt: {pathwayEntry.quizScore}% — try again below</div>}
               <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(`linear-gradient(135deg,${C.green},#059669)`,{padding:'13px 28px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onStartQuiz}>{pathwayEntry?.quizScore!=null?'Try Again':'Start Verification Quiz'}<ArrowRight size={15}/></motion.button>
             </div>
@@ -885,7 +929,10 @@ function QuizEngine({quiz,onFinish,onClose,accent=C.blue,readonly=false,m=false}
   const scoreRef=useRef(0);
   const [qi,setQi]=useState(0);const [sel,setSel]=useState(null);const [conf,setConf]=useState(false);
   const [answers,setAnswers]=useState([]);const [phase,setPhase]=useState('quiz');const [ri,setRi]=useState(0);
-  const [scrambledQs]=useState(()=>readonly?quiz.qs:scrambleQuiz(quiz));
+  // `preScrambled` quizzes (verification draws from lib/quizPersonalization) already have their
+  // question and choice order fixed by a per-student seed; re-running the Math.random scramble
+  // here would throw that determinism away and make a refreshed attempt a different quiz.
+  const [scrambledQs]=useState(()=>(readonly||quiz.preScrambled)?quiz.qs:scrambleQuiz(quiz));
   const [elapsed,setElapsed]=useState(0);
   const tot=scrambledQs.length,q=scrambledQs[qi],prog=Math.round(((qi+(conf?1:0))/tot)*100);
 
@@ -3208,7 +3255,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
 
   // ── Lesson Player (Overview → Article → Video → Quiz → Complete) ────────────
-  const VERIFY_PASS_PCT=70;
+  // VERIFY_PASS_PCT is imported from lib/quizPersonalization — it lives next to the
+  // per-student draw logic precisely so it's obvious that the *questions* vary per
+  // student while the *bar* never does.
   function getNextLesson(lesson){
     const flat=(curPath?.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
     const idx=flat.findIndex(x=>x.lesson.id===lesson.id);
@@ -3344,9 +3393,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(!activeLesson||reviewMode)return;
     if(pathway[activeLesson.lesson.id]?.verified&&lessonStep!=='complete')setLessonStep('complete');
   },[pathway,activeLesson,lessonStep,reviewMode]);
+  // Which quiz a student gets is no longer "the first id in the list" for everyone — the bank,
+  // the questions drawn from it, and their order are all derived from this student's onboarding
+  // profile, pathway and attempt number (lib/quizPersonalization.js). Same 70% bar for everyone.
   function openVerifyQuiz(lesson,unit){
-    const quiz=ALL_QUIZZES.find(q=>lesson.quizIds?.includes(q.id));
+    const attempt=getAttemptCount(lesson.id);
+    const quiz=buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:eSpec,attempt});
     if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
+    recordAttempt(lesson.id);
     logEvent('quiz_attempt',lesson.id);
     setVerifyCtx({lesson,unit});
     setAQ(quiz);
@@ -3361,6 +3415,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       const passed=pct>=VERIFY_PASS_PCT;
       if(passed){
         await DB.verifyLesson(lesson.id,pct);
+        // Passing closes the attempt series — a student who comes back to re-take this lesson
+        // later starts from the best-fit bank again rather than deep in the retry rotation.
+        clearAttempts(lesson.id);
         logEvent('unit_lesson_verified',lesson.id);
         setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
         const { finalXP, tier } = awardXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
@@ -7401,6 +7458,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           hasNextLesson={!!nextInfo}
           accent={curPath?.accent||C.blue} m={isMobile}
           highlights={lessonHighlights} onAddHighlight={addLessonHighlight} onRemoveHighlight={removeLessonHighlight}
+          quizBlurb={describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:eSpec,attempt:getAttemptCount(lesson.id)}))}
         />
         {/* Fills the right-side gutter of the immersive lesson view with a click-away Prep Meta
             Brain (purpose:'prep'), grounded in this exact lesson's content — see PrepMetaBrain.jsx. */}

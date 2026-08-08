@@ -42,7 +42,8 @@ A state-of-the-art prep suite mirroring the Digital SAT framework. Features:
 ### 3. Prep Hub (`/prep/...`)
 The core academic and tutoring gateway. Includes:
 - **Pathway Lessons:** Interactive learning pathways with 141 lessons across 10 units (e.g., Physician, Physician Assistant, Dentistry, Pharmacy, Nursing, Biomed Research, Public Health, Health Administration, etc.) adapted for high school to undergraduate exploration.
-- **Verification Quizzes:** Concept verification quizzes supporting randomized answer shuffling via `scrambleQuiz`.
+- **Listen to any lesson:** Every in-house lesson article can be played as audio (`lib/lessonAudio.js` + `LessonAudioPlayer`) — paragraph-level skip, adjustable speed, a choice of narrator, and a follow-along highlight that scrolls the article with the voice. Finishing the narration satisfies the same "read it" gate scrolling does, so a lesson can be completed entirely on the bus.
+- **Verification Quizzes:** Per-student quizzes (`lib/quizPersonalization.js`) — which bank, which questions, and what order are all derived from the student's onboarding profile, pathway and attempt number, so two students don't share a first attempt and a retry never re-serves the paper that just failed. The 70% pass bar is deliberately identical for everyone.
 - **E-Library (`elib.js`):** A massive database of 623 verified real-world high-quality resources spanning six core categories (Life Sciences, Physical Sciences, Behavioral Sciences, Research Methods, Test Prep, Admissions & Planning). Includes a **Coaching Insights Banner** that updates dynamically depending on the active resource filter.
 - **Spaced-Repetition Flashcards:** Offline-first flashcards utilizing an Anki-grade FSRS scheduling algorithm with NLP-based automatic factual card extraction.
 
