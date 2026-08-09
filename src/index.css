@@ -504,3 +504,9 @@ body::before {
 .msp-md a { color: var(--c-blue); }
 .msp-md pre, .msp-md table { max-width: 100%; overflow-x: auto; }
 .msp-md strong, .msp-md b { color: var(--c-t1); font-weight: 700; }
+
+/* ── BETA badges throughout the SAT section (.pbeta) ── */
+.pbeta {
+  user-select: none;
+  pointer-events: none;
+}

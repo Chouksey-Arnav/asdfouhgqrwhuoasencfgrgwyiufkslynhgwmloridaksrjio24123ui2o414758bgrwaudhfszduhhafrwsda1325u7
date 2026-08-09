@@ -7895,7 +7895,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   // the destination shows in the status bar on hover, and screen readers get
                   // a link with aria-current instead of an unlabelled clickable box.
                   <motion.a key={n.id} href={tabHref(n.id)} aria-current={active?'page':undefined} data-tour={`nav-${n.id}`} whileHover={{background:active?`${nc}22`:'rgba(255,255,255,0.04)',x:2}} onClick={e=>onNavLinkClick(e,()=>{setTab(n.id);play('click');})} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:9,cursor:'pointer',marginBottom:2,background:active?`${nc}18`:undefined,color:active?onTint(nc):C.t2,fontWeight:active?700:500,fontSize:14,fontFamily:C.FB,borderLeft:active?`2px solid ${nc}`:'2px solid transparent',transition:'all .2s',textDecoration:'none'}}>
-                    <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/><span style={{flex:1}}>{n.label}</span>
+                    <n.ic size={17} color={active?nc:undefined} style={{opacity:active?1:0.7}}/>
+                    <span style={{flex:1, display:'inline-flex', alignItems:'center', gap:6}}>
+                      <span>{n.label}</span>
+                      {n.id==='sat' && (
+                        <span className="pbeta" style={{
+                          fontSize:9,
+                          padding:'1px 5px',
+                          borderRadius:4,
+                          background: C.skyDim || tint(C.sky, 0.15),
+                          color: isLight() ? C.sky : C.skyL,
+                          border:`1px solid ${tint(C.sky, 0.35)}`,
+                          fontWeight:800,
+                          fontFamily:C.FM,
+                          lineHeight: 1
+                        }}>
+                          BETA
+                        </span>
+                      )}
+                    </span>
                     {badge&&<span style={pill(C.amberDim,C.amberL,{fontSize:9,padding:'1px 7px'})}>{badge}</span>}
                     {/* Medabrain: this pillar has an outstanding plan task due today — see
                         planPillarsDueToday above. Distinct violet dot (not the amber due-deck
@@ -7972,7 +7990,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                         without overlapping. */}
                     {planDue&&<span title="A plan task is due here today" aria-label="Plan task due today" style={{position:'absolute',bottom:-2,right:-3,width:7,height:7,borderRadius:'50%',background:C.violet,boxShadow:`0 0 0 2px ${C.s0}`}}/>}
                   </div>
-                  <span style={{fontSize:navItems.length<=5?11:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%'}}>{n.label}</span>
+                  <span style={{fontSize:navItems.length<=5?11:9.5,fontWeight:600,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',maxWidth:'100%',display:'inline-flex',alignItems:'center',gap:4}}>
+                    <span>{n.label}</span>
+                    {n.id==='sat' && (
+                      <span className="pbeta" style={{
+                        fontSize:8,
+                        padding:'0px 3px',
+                        borderRadius:3,
+                        background: C.skyDim || tint(C.sky, 0.15),
+                        color: isLight() ? C.sky : C.skyL,
+                        border:`1px solid ${tint(C.sky, 0.35)}`,
+                        fontWeight:800,
+                        fontFamily:C.FM,
+                        lineHeight: 1
+                      }}>
+                        BETA
+                      </span>
+                    )}
+                  </span>
                 </a>
               );
             })}

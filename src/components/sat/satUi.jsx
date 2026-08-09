@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Lock } from 'lucide-react';
-import { C, tint, shade, btn, accentFill, contrastRatio } from '../../lib/theme';
+import { C, tint, shade, btn, accentFill, contrastRatio, accentText } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -308,8 +308,25 @@ export function SatPageHeader({ eyebrow = 'SAT', title, sub, meta = [], right, m
         <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 6 }}>
           {eyebrow}
         </div>
-        <h2 style={{ fontSize: m ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0, lineHeight: 1.1 }}>
-          {title}
+        <h2 style={{ fontSize: m ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0, lineHeight: 1.1, display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span>{title}</span>
+          <span className="pbeta" style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            padding: '2px 8px',
+            borderRadius: 6,
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '.06em',
+            textTransform: 'uppercase',
+            background: tint(accent, 0.15),
+            color: accentText(accent),
+            border: `1px solid ${tint(accent, 0.35)}`,
+            fontFamily: C.FM,
+            verticalAlign: 'middle',
+          }}>
+            BETA
+          </span>
         </h2>
         {sub && (
           <p style={{ fontSize: m ? 11.5 : 12.5, color: C.t3, margin: '7px 0 0', lineHeight: 1.65, maxWidth: 620 }}>
