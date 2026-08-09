@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Award, ClipboardList, FileDown, TrendingUp, TrendingDown, Minus,
   ShieldCheck, ShieldQuestion, Layers, Clock, GraduationCap, Sparkles, Target,
   AlertTriangle, Info, CheckCircle2, ChevronDown, School, Crown, Gauge, Loader2,
-  Stethoscope, FlaskConical, BadgeCheck, ArrowRight,
+  Stethoscope, FlaskConical, BadgeCheck, ArrowRight, Lock,
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint, accentFill } from '../lib/theme';
@@ -146,7 +146,16 @@ function CharCap({ value, limit, note = null }) {
 // a tab that already has one, so it reads as five parts of one page — each pill
 // carrying its section's color, its live count, and (on desktop) the one line
 // that says what lives in it.
-function SectionRow({ section, onChange, counts, isMobile }) {
+//
+// `locks` (from unlockState().locked('portfolio/resume') — see featureUnlock.js)
+// is what keeps the row from being five simultaneous asks on day one. Merging
+// the four old tabs into five tiles fixed where these live; it did nothing about
+// when a fourteen-year-old should first be shown a publications form. A locked
+// section renders in place, dimmed, carrying the sentence that opens it — same
+// contract as the nav: visible, never silent, never a dead end (a direct
+// /portfolio/clinical link still opens it and unlocks it for good).
+function SectionRow({ section, onChange, counts, isMobile, locks = [] }) {
+  const lockBy = Object.fromEntries(locks.map(l => [l.id.split(':').pop(), l]));
   return (
     <div style={{
       display: 'grid',
@@ -156,6 +165,8 @@ function SectionRow({ section, onChange, counts, isMobile }) {
       {RESUME_SECTIONS.map(s => {
         const on = section === s.id;
         const count = counts[s.id];
+        const lock = !on && lockBy[s.id];
+        if (lock) return <LockedSectionTile key={s.id} s={s} lock={lock} isMobile={isMobile} />;
         return (
           <button key={s.id} type="button" onClick={() => onChange(s.id)}
             aria-current={on ? 'true' : undefined}
@@ -178,6 +189,33 @@ function SectionRow({ section, onChange, counts, isMobile }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+// A section this student hasn't reached yet: same tile, same footprint, dimmed,
+// with its unlock condition where the blurb goes. Non-interactive on purpose —
+// it is a signpost, not a door that says no — and it carries the same "2 of 3"
+// counter the rest of the ladder uses, so the condition reads as progress
+// rather than as a refusal.
+function LockedSectionTile({ s, lock, isMobile }) {
+  const [have, need] = lock.progress || [];
+  return (
+    <div
+      title={lock.hint}
+      aria-label={`${s.label} — locked. ${lock.hint}`}
+      style={{
+        boxSizing: 'border-box', padding: isMobile ? '10px 11px' : '11px 13px', borderRadius: 12,
+        background: 'transparent', border: `1px dashed ${C.b2}`, cursor: 'default',
+      }}>
+      <div style={R({ gap: 6, minWidth: 0 })}>
+        <Lock size={12} color={C.t4} style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 11.5, fontWeight: 800, color: C.t3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
+      </div>
+      {!isMobile && <div style={{ fontSize: 10, color: C.t4, marginTop: 4, lineHeight: 1.4 }}>{lock.hint}</div>}
+      {need > 0 && have < need && (
+        <div style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM, marginTop: 5 }}>{have} of {need}</div>
+      )}
     </div>
   );
 }
@@ -273,6 +311,10 @@ export default function ActivitiesResumePanel({
   // /portfolio/clinical URL, or a Home tile) can land on the right one — see
   // resumeSection there.
   section = DEFAULT_RESUME_SECTION, onSectionChange = null,
+  // Sections this student hasn't unlocked yet, from featureUnlock's ladder.
+  // Empty (the default) means every section is open, which is what a standalone
+  // render of this panel — and any account past the ladder — sees.
+  sectionLocks = [],
   onResumeExported, onActivityLogged, onCollegeAdded,
   onClinicalLogged, onResearchLogged, onCredentialChanged,
 }) {
@@ -511,7 +553,7 @@ export default function ActivitiesResumePanel({
           </div>
         ) : undefined} />
 
-      <SectionRow section={activeSection} onChange={setSection} counts={sectionCounts} isMobile={isMobile} />
+      <SectionRow section={activeSection} onChange={setSection} counts={sectionCounts} isMobile={isMobile} locks={sectionLocks} />
 
       {/* The whole tab in four numbers, on every section — so switching between
           Clinical and Activities never feels like switching products. */}
