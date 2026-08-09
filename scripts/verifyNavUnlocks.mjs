@@ -28,7 +28,7 @@ const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
 
 const { TABS, SUBVIEWS } = await import(pathToFileURL(path.join(ROOT, 'src/lib/routes.js')).href);
 const unlock = await import(pathToFileURL(path.join(ROOT, 'src/lib/featureUnlock.js')).href);
-const { UNLOCK_RULES, EMPTY_SIGNALS, GATED_IDS, unlockState, seedExistingAccount, NAV_MODES, key } = unlock;
+const { UNLOCK_RULES, EMPTY_SIGNALS, GATED_IDS, MARQUEE_IDS, unlockState, seedExistingAccount, NAV_MODES, key, parentScope } = unlock;
 
 let failures = 0;
 const fail = (msg) => { failures += 1; console.error(`  ✗ ${msg}`); };
@@ -41,7 +41,7 @@ const MAXED = {
   quizzes: 999, lessons: 999, satQuestions: 9999,
   satBaselineDone: true, satDiagnosticDone: true, satFullTests: 9,
   colleges: 20, essays: 20, activities: 20, trackedItems: 20,
-  achievements: 40, level: 50, planBuilt: true, applicationUrgent: true,
+  achievements: 40, level: 50, planBuilt: true, onboarded: true, planReady: true, applicationUrgent: true,
 };
 const FRESH = { ...EMPTY_SIGNALS };
 const NEW_USER = { name: 'A', xp: 0 };
@@ -64,12 +64,29 @@ for (const [tab, name] of Object.entries(SUBNAV_CONST)) {
   for (const m of block.matchAll(/\{id:'([^']+)',ic:\w+,label:'([^']+)'/g)) LABELS[`${tab}/${m[1]}`] = m[2];
 }
 for (const m of (app.slice(app.indexOf('const NAV = ['), app.indexOf('\n];', app.indexOf('const NAV = [')))).matchAll(/\{id:'([^']+)',ic:\w+,label:'([^']+)'/g)) LABELS[m[1]] = m[2];
+// The five sections of Activities & Résumé are gated one level below a sub-view
+// ('portfolio/resume:clinical'). They render from RESUME_SECTIONS in the panel
+// itself, so that array — not App.jsx — is what a section rule has to name.
+const resumePanel = read('src/components/ActivitiesResumePanel.jsx');
+const RESUME_SECTION_IDS = [];
+{
+  const start = resumePanel.indexOf('export const RESUME_SECTIONS = [');
+  const block = resumePanel.slice(start, resumePanel.indexOf('\n];', start));
+  for (const m of block.matchAll(/\{ id: '([^']+)',\s*ic: \w+,\s*label: '([^']+)'/g)) {
+    RESUME_SECTION_IDS.push(m[1]);
+    LABELS[`portfolio/resume:${m[1]}`] = m[2];
+  }
+  if (!RESUME_SECTION_IDS.length) fail('could not read RESUME_SECTIONS out of ActivitiesResumePanel.jsx');
+}
 
 if (new Set(GATED_IDS).size !== GATED_IDS.length) fail('UNLOCK_RULES contains a duplicate id');
 for (const rule of UNLOCK_RULES) {
-  const [tab, view] = rule.id.split('/');
+  const [tab, rest] = rule.id.split('/');
+  const [view, section] = (rest || '').split(':');
   if (!TABS.includes(tab)) { fail(`${rule.id}: '${tab}' is not a top-level tab`); continue; }
   if (view && !SUBVIEWS[tab]?.ids.includes(view)) { fail(`${rule.id}: '${view}' is not a sub-view of ${tab}`); continue; }
+  if (section && !RESUME_SECTION_IDS.includes(section)) { fail(`${rule.id}: '${section}' is not a section of ${tab}/${view}`); continue; }
+  if (section && rule.id.split('/')[1].split(':')[0] !== 'resume') { fail(`${rule.id}: only Activities & Résumé has gated sections`); continue; }
   const expected = LABELS[rule.id];
   // The label is student-facing copy in the "unlocks next" list; if it drifts
   // from the nav the same screen is advertised under two different names.
@@ -120,13 +137,19 @@ section('The ladder climbs');
 const STEPS = [
   ['after 1 quiz', { ...FRESH, quizzes: 1 }, ['portfolio', 'prep/quizzes', 'prep/flashcards', 'prep/coach']],
   ['after the SAT baseline', { ...FRESH, satBaselineDone: true, satQuestions: 22 }, ['sat/diagnostic', 'sat/practice', 'sat/scores', 'sat/review', 'sat/skills']],
-  ['after 5 sessions', { ...FRESH, quizzes: 3, lessons: 2 }, ['portfolio', 'plans', 'progress', 'prep/library']],
-  ['with a college list', { ...FRESH, quizzes: 1, colleges: 2 }, ['portfolio/essays', 'portfolio/resume', 'portfolio/aid']],
-  ['with logged activities', { ...FRESH, quizzes: 1, activities: 2 }, ['portfolio/opportunities', 'portfolio/tracked', 'portfolio/recommenders', 'portfolio/interview']],
+  ['after 5 sessions', { ...FRESH, quizzes: 3, lessons: 2 }, ['portfolio', 'progress', 'prep/library']],
+  ['onboarded + first lesson + ready to plan', { ...FRESH, onboarded: true, lessons: 1, planReady: true }, ['plans', 'portfolio/resume:clinical']],
+  ['with a college list', { ...FRESH, quizzes: 1, colleges: 2 }, ['portfolio/essays', 'portfolio/resume', 'portfolio/aid', 'portfolio/resume:academics']],
+  ['with logged activities', { ...FRESH, quizzes: 1, activities: 3 }, ['portfolio/opportunities', 'portfolio/tracked', 'portfolio/recommenders', 'portfolio/interview', 'portfolio/resume:research', 'portfolio/resume:credentials']],
 ];
+const openById = (st, id) => {
+  const [t, rest] = id.split('/');
+  const [v, sec] = (rest || '').split(':');
+  return st.isOpen(t, v || null, sec || null);
+};
 for (const [label, signals, expect] of STEPS) {
   const st = unlockState(NEW_USER, signals);
-  const missing = expect.filter((id) => { const [t, v] = id.split('/'); return !st.isOpen(t, v || null); });
+  const missing = expect.filter((id) => !openById(st, id));
   if (missing.length) fail(`${label}: expected ${missing.join(', ')} to be open`);
   else ok(`${label} → ${expect.join(', ')}`);
 }
@@ -141,19 +164,58 @@ if (!unlockState(recorded, FRESH).isOpen('portfolio')) fail('an unlocked tab re-
 else ok('unlocks are sticky across signal regression');
 
 const everything = unlockState({ ...NEW_USER, navMode: NAV_MODES.EVERYTHING }, FRESH);
-const stillHidden = GATED_IDS.filter((id) => { const [t, v] = id.split('/'); return !everything.isOpen(t, v || null); });
+const stillHidden = GATED_IDS.filter((id) => !openById(everything, id));
 if (stillHidden.length) fail(`navMode 'everything' still hides ${stillHidden.join(', ')}`);
 else if (everything.locked().length) fail("navMode 'everything' still advertises locked features");
 else ok(`Settings escape hatch opens all ${GATED_IDS.length} gated destinations`);
 
 const legacy = seedExistingAccount({ name: 'B', xp: 4200 }, FRESH);
-const lost = GATED_IDS.filter((id) => { const [t, v] = id.split('/'); return !unlockState(legacy, FRESH).isOpen(t, v || null); });
+const lost = GATED_IDS.filter((id) => !openById(unlockState(legacy, FRESH), id));
 if (lost.length) fail(`an established account lost access to ${lost.join(', ')}`);
 else ok('established accounts keep every feature they already had');
 const brandNew = seedExistingAccount(NEW_USER, FRESH);
 if (unlockState(brandNew, FRESH).isOpen('progress')) fail('a brand-new account was seeded as established');
 else ok('brand-new accounts still start at the bottom of the ladder');
 if (seedExistingAccount(brandNew, FRESH) !== null) fail('seedExistingAccount ran twice on the same account');
+
+// ── 5b. Activities & Résumé opens with one door, not five ───────────────────
+section('Résumé sections ladder');
+{
+  const openSections = RESUME_SECTION_IDS.filter((id) => fresh.isOpen('portfolio', 'resume', id));
+  if (!openSections.includes('activities')) fail("Activities & Résumé has no day-one section — 'activities' must stay open");
+  else if (openSections.length > 2) fail(`${openSections.length} résumé sections open on day one (${openSections.join(', ')}) — cap is 2`);
+  else ok(`résumé opens with: ${openSections.join(', ')} (${RESUME_SECTION_IDS.length - openSections.length} unlock later)`);
+  // The panel's own default must never be one of the gated ones, or a student
+  // arriving at /portfolio/resume lands on a section the row says they can't have.
+  const def = /DEFAULT_RESUME_SECTION = '([^']+)'/.exec(resumePanel)?.[1];
+  if (!def || !fresh.isOpen('portfolio', 'resume', def)) fail(`default résumé section '${def}' is locked on day one`);
+  // Scoping: the Portfolio SubNav must not advertise a section as if it were a tab.
+  if (fresh.locked('portfolio').some((r) => r.id.includes(':'))) fail("locked('portfolio') leaked a résumé section into the sub-tab list");
+  const sectionNext = fresh.locked('portfolio/resume');
+  if (!sectionNext.length) fail('a fresh account is shown no upcoming résumé sections');
+  else ok(`résumé section row shows ${sectionNext.length} upcoming: ${sectionNext.map((r) => r.label).join(' → ')}`);
+}
+
+// ── 5c. The milestone ───────────────────────────────────────────────────────
+section('The marquee milestone');
+{
+  if (MARQUEE_IDS.length !== 1) fail(`${MARQUEE_IDS.length} marquee gates — a milestone that fires more than once is a notification`);
+  for (const id of MARQUEE_IDS) {
+    const r = UNLOCK_RULES.find((x) => x.id === id);
+    // The celebration renders both sentences; either one missing is a half-empty modal.
+    if (!r.earned || !/[.!]$/.test(r.earned)) fail(`${id}: marquee rule needs an 'earned' sentence (what the student did)`);
+    if (!r.reward || !/[.!]$/.test(r.reward)) fail(`${id}: marquee rule needs a 'reward' sentence (what they now have)`);
+    if (!r.progress) fail(`${id}: the milestone must show progress toward itself`);
+    if (parentScope(id) !== '') fail(`${id}: the milestone should be a top-level destination`);
+    // It has to be genuinely earnable early — a milestone nobody reaches is a wall.
+    if (!r.at({ ...FRESH, onboarded: true, lessons: 1, planReady: true })) fail(`${id}: not open after onboarding + one pathway lesson + a buildable plan`);
+    if (r.at({ ...FRESH, onboarded: true })) fail(`${id}: opens on onboarding alone — nothing was earned`);
+    // The whole point of the milestone is that what's behind it works. A gate that can
+    // open while the generator itself would refuse turns a celebration into a lock screen.
+    if (r.at({ ...MAXED, planBuilt: false, planReady: false })) fail(`${id}: opens before the plan generator is ready to build — the milestone would land on its own lock screen`);
+  }
+  if (!failures) ok(`${MARQUEE_IDS.join(', ')} is the one milestone, and it never opens onto its own lock screen`);
+}
 
 // ── 6. Locked lists are scoped and student-readable ─────────────────────────
 section('"Unlocks next" copy');
@@ -169,6 +231,8 @@ for (const [needle, why] of [
   ['unlockState(', 'App.jsx never computes the unlock state'],
   ['visibleItems(NAV', 'the sidebar/bottom nav is not filtered'],
   ['navMode', 'the Settings escape hatch is not wired'],
+  ['sectionLocks=', 'Activities & Résumé is not told which of its sections are gated'],
+  ['<UnlockCelebration', 'the milestone unlock has no celebration — the reward loop never closes'],
 ]) {
   if (!app.includes(needle)) fail(why);
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Lock, Sparkles } from 'lucide-react';
+import { Lock, Sparkles, CalendarClock } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 
 // "What opens next, and what opens it."
@@ -32,6 +32,46 @@ function ProgressBar({ progress, accent }) {
         <div style={{ height: '100%', width: `${Math.round((have / need) * 100)}%`, background: accent, borderRadius: 2, transition: 'width .4s' }} />
       </div>
       <div style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM, marginTop: 4 }}>{have} of {need}</div>
+    </div>
+  );
+}
+
+/**
+ * The marquee gate, given the weight it actually carries.
+ *
+ * One rule in the ladder is flagged `marquee` (today: Plans, the full-plan
+ * generator). Rendered as another dashed row it read as another dashed row —
+ * the app's best feature queued behind "Financial Aid". Here it gets gold, the
+ * two sentences that say what it is, and the word "milestone", so the thing a
+ * student is working toward looks like a thing worth working toward.
+ */
+function MarqueeRow({ item }) {
+  const gold = C.gold;
+  return (
+    <div style={{
+      padding: '14px 15px', borderRadius: 12,
+      background: `linear-gradient(135deg,${tint(gold, 0.16)},${tint(gold, 0.04)})`,
+      border: `1px solid ${tint(gold, 0.42)}`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+        <CalendarClock size={14} color={gold} style={{ flexShrink: 0 }} />
+        <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{item.label}</span>
+        <span style={{
+          fontSize: 8.5, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase',
+          color: gold, background: tint(gold, 0.15), border: `1px solid ${tint(gold, 0.35)}`,
+          borderRadius: 999, padding: '3px 7px',
+        }}>Milestone</span>
+      </div>
+      {item.reward && (
+        <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 8 }}>{item.reward}</div>
+      )}
+      <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+        <Lock size={12} color={C.t4} style={{ flexShrink: 0, marginTop: 2 }} />
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{item.hint}</div>
+          <ProgressBar progress={item.progress} accent={gold} />
+        </div>
+      </div>
     </div>
   );
 }
@@ -82,7 +122,7 @@ export default function NextUnlockCard({
         </div>
       </div>
       <div style={{ display: 'grid', gap: 8 }}>
-        {shown.map(it => (
+        {shown.map(it => it.marquee ? <MarqueeRow key={it.id} item={it} /> : (
           <div key={it.id} style={{ display: 'flex', gap: 10, padding: '10px 12px', borderRadius: 10, background: C.s2, border: `1px dashed ${C.b2}` }}>
             <Lock size={13} color={C.t4} style={{ flexShrink: 0, marginTop: 2 }} />
             <div style={{ minWidth: 0, flex: 1 }}>

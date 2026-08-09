@@ -75,7 +75,7 @@ import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
 import StreakHeatmap from './components/StreakHeatmap';
-import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION } from './components/ActivitiesResumePanel';
+import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
 // Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
@@ -125,8 +125,9 @@ import AppTour from './components/AppTour';
 // Progressive feature unlocking — the nav shows what this student can use today,
 // not everything the product contains. See src/lib/featureUnlock.js for the ladder
 // and why day one is four doors instead of thirty-eight.
-import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, NAV_MODES } from './lib/featureUnlock';
+import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
 import NextUnlockCard from './components/NextUnlockCard';
+import UnlockCelebration from './components/UnlockCelebration';
 import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 // snapshotItemCount is deliberately NOT re-exported here — it lives in weeklyGoals.js (see the
@@ -136,7 +137,9 @@ import { computeApplicationStrength } from './lib/applicationStrength';
 import { buildPortfolioSnapshot } from './lib/portfolioData';
 import { buildTrackedItems, buildDailyReport } from './lib/trackedItems';
 import { buildInsights } from './lib/insights';
-import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness } from './lib/studentProfile';
+// computePlanReadiness is the Plans generator's own bar, read by the unlock ladder so that
+// tab opens only once it can actually build something — see the `planReady` signal below.
+import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness, computePlanReadiness } from './lib/studentProfile';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
   onTint, accentText, accentFill, accentGrad, accentSweep, shade, isLight,
@@ -437,6 +440,10 @@ const UNLOCK_LABELS = Object.fromEntries([
   ...PREP_SUBNAV.map(n=>[`prep/${n.id}`,n.label]),
   ...PORTFOLIO_SUBNAV.map(n=>[`portfolio/${n.id}`,n.label]),
   ...PROGRESS_SUBNAV.map(n=>[`progress/${n.id}`,n.label]),
+  // The five parts of Activities & Résumé are gated one level deeper than a
+  // sub-tab (see sectionKey in featureUnlock.js), and they get announced the
+  // same way, so their names come from the same single source.
+  ...RESUME_SECTIONS.map(s=>[`portfolio/resume:${s.id}`,s.label]),
 ]);
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
@@ -2427,6 +2434,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // as they do. The ladder, the reasoning, and the three guarantees that keep it safe
   // (sticky, never unreachable, never silent) all live in src/lib/featureUnlock.js —
   // this is only the wiring: real counters in, visible nav out.
+  // Everything a student has actually put into their Portfolio, counted the way PlansTab
+  // counts it (every resource row, not just activities) — the generator's third readiness
+  // gate is "one Portfolio item of any kind".
+  const portfolioItems = portActivities.length+portAwards.length+portGpa.length
+    +appCounts.colleges+appCounts.essays+trackedSummary.items.length;
   const unlockSignals = useMemo(()=>({
     quizzes: qTaken,
     lessons: doneL,
@@ -2441,12 +2453,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     achievements: achiev.size,
     level: lvl,
     planBuilt: !!user?.masterPlan,
+    // Half of the Plans milestone. `onboardingCompletedAt` is stamped by
+    // completeOnboarding(); the name fallback covers accounts created before it
+    // was, who have certainly finished onboarding — there is no other way to get
+    // a local user record.
+    onboarded: !!(user?.onboardingCompletedAt||user?.name),
+    // The other half: the Plans generator's own bar, computed by the same function its
+    // lock screen uses, so the nav and the tab can never disagree about whether a plan
+    // can actually be built. Deliberately conservative while Portfolio is still loading
+    // (0, not the null PlansTab passes): an unlock is written down permanently the moment
+    // it is earned, so guessing "ready" early would hand out the milestone on a load
+    // flicker. Under-reporting only delays it by one Dexie round-trip, and the
+    // celebration itself waits for signalsSettled either way.
+    planReady: computePlanReadiness(user,{quizzesTaken:qTaken,portfolioItemCount:portLoaded?portfolioItems:0}).ready,
     // A senior — or anyone already out of high school — does not get to spend three
     // sessions earning their way into the application half of the product. For them
     // the deadline is the thing, so Portfolio, Recommenders and Interview Prep are
     // open from the first second. The ladder is for students who have time to climb it.
     applicationUrgent: user?.gradeStage==='senior' || user?.gradeStage==='gap',
-  }),[qTaken,doneL,satStats,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user?.masterPlan,user?.gradeStage]);
+  }),[qTaken,doneL,satStats,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user,portLoaded,portfolioItems]);
   const unlocks = useMemo(()=>unlockState(user,unlockSignals),[user,unlockSignals]);
 
   // Two writes, both one-way, both here so nothing else in the app has to think about them.
@@ -2474,6 +2499,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // gates crossed during this session (`seenUnlocks` starts as whatever was already
   // recorded), so a returning student is never toasted about old news.
   const seenUnlocks = useRef(new Set());
+  // The one gate that gets a modal instead of a toast — null unless a marquee
+  // milestone opened in this session. See UnlockCelebration.jsx.
+  const [milestoneUnlock,setMilestoneUnlock] = useState(null);
   // Every counter behind unlockSignals starts at zero and climbs as Dexie resolves, so
   // "earned since last render" is meaningless until all of them have reported in — on a
   // returning account it would read as two dozen simultaneous unlocks, every load. Until
@@ -2486,9 +2514,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const fresh=unlocks.earned.filter(id=>!seenUnlocks.current.has(id));
     if(!fresh.length) return;
     fresh.forEach(id=>seenUnlocks.current.add(id));
+    // The milestone gets a moment, not a toast. Plans is the thing the whole ladder
+    // climbs toward — the generator that reads the entire student and writes back a
+    // day-by-day plan — and announcing it in the same three-second grey rectangle as
+    // "Flashcards unlocked" is how the app's best feature stayed invisible. A modal,
+    // the work that earned it named back at the student, and one button that walks
+    // them into it: that is the reward loop the unlock is supposed to close.
+    const marquee=fresh.find(id=>MARQUEE_IDS.includes(id));
+    const rest=fresh.filter(id=>id!==marquee);
+    if(marquee) setMilestoneUnlock(ruleCopy(marquee));
+    if(!rest.length) return;
     // One toast even when several open at once — three stacked toasts reads as an error
     // state, and the student only needs to be told to go look.
-    const names=fresh.map(id=>UNLOCK_LABELS[id]||id);
+    const names=rest.map(id=>UNLOCK_LABELS[id]||id);
     const headline=names.length===1?`${names[0]} unlocked`:`${names.length} new areas unlocked`;
     toast.success(`${headline}${names.length>1?` — ${names.join(', ')}`:''}`,{icon:<Sparkles size={16}/>,duration:4200});
     play('achieve');
@@ -2515,6 +2553,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const recorded=recordUnlocks(user,[tab,view?`${tab}/${view}`:null].filter(Boolean));
     if(recorded) saveUser(recorded);
   },[tab,satView,prepView,portfolioView,progressView,unlocks,user,dbReady,saveUser]);
+
+  // The same guarantee, one level deeper: the five sections of Activities & Résumé are
+  // gated too (a publications form is not a day-one ask), and /portfolio/clinical is a
+  // URL a student may already have in their history. Landing on a locked section — by
+  // link, by back button, or from a Home tile that names it — opens it for good rather
+  // than bouncing them to Activities.
+  const resumeSectionLocks = useMemo(()=>unlocks.locked('portfolio/resume'),[unlocks]);
+  useEffect(()=>{
+    if(!user||!dbReady) return;
+    if(tab!=='portfolio'||portfolioView!=='resume') return;
+    if(unlocks.isOpen('portfolio','resume',resumeSection)) return;
+    const recorded=recordUnlocks(user,[sectionKey('portfolio','resume',resumeSection)]);
+    if(recorded) saveUser(recorded);
+  },[tab,portfolioView,resumeSection,unlocks,user,dbReady,saveUser]);
 
   // completeOnboarding() calls startTour() directly, right after the onboarding
   // handoff — the tour's own first step (`nav-home`) already forces the tab back
@@ -5879,6 +5931,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       {view:'tracked',ic:RadarIcon,label:'Tracked',value:trackedItems.length,sub:trackNeeds?`${trackNeeds} need you`:'all current',col:C.violet},
       {view:'opportunities',ic:Trophy,label:'Opportunities',value:opportunityPreview.matches.length,sub:'matched to you',col:C.gold},
     ];
+    // The Overview's map has to obey the same ladder the sub-nav does, or it becomes a
+    // back door around it: twelve tiles here would hand a day-one student the Financial
+    // Aid comparison, the interview trainer and the clinical-hours log the SubNav was
+    // careful not to. A tile whose destination is a résumé section ('clinical', 'research',
+    // 'skills' — see RESUME_SECTION_FOR_VIEW) is judged on that section's own gate.
+    const tileOpen=view=>{
+      const sec=RESUME_SECTION_FOR_VIEW[view];
+      return sec ? unlocks.isOpen('portfolio','resume',sec) : unlocks.isOpen('portfolio',view);
+    };
     const sectionTile=s=>(
       <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
         style={{
@@ -6035,13 +6096,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <div style={{marginBottom:13}}>
             <HelpNote>Each box is one part of your application. The big number is how much you have in it so far — tap any of them to add to it.</HelpNote>
           </div>
-          <div style={tileGrid}>{primarySections.map(sectionTile)}</div>
-          <div style={{marginTop:12}}>
-            <Disclosure id="port-overview-more-sections" title="Show everything else"
-              sub="Research, certifications, recommenders, interview practice, and your tracking boards." icon={Compass} color={accent} m={isMobile}>
-              <div style={tileGrid}>{moreSections.map(sectionTile)}</div>
-            </Disclosure>
-          </div>
+          <div style={tileGrid}>{primarySections.filter(s=>tileOpen(s.view)).map(sectionTile)}</div>
+          {moreSections.some(s=>tileOpen(s.view))&&(
+            <div style={{marginTop:12}}>
+              <Disclosure id="port-overview-more-sections" title="Show everything else"
+                sub="Research, certifications, recommenders, interview practice, and your tracking boards." icon={Compass} color={accent} m={isMobile}>
+                <div style={tileGrid}>{moreSections.filter(s=>tileOpen(s.view)).map(sectionTile)}</div>
+              </Disclosure>
+            </div>
+          )}
         </div>
 
         {/* ── The numbers, one tap down ────────────────────────────────────────────────────────
@@ -7567,7 +7630,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // hours still moves the readiness gauge and the achievement counters exactly as it did when
     // it was its own tab.
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
-      section={resumeSection} onSectionChange={setResumeSection}
+      section={resumeSection} onSectionChange={setResumeSection} sectionLocks={resumeSectionLocks}
       onCollegeAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}
       onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}
       onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}
@@ -7749,6 +7812,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         cosmetic={chest?.cosmetic}
         onOpen={()=>{ chest?.onOpen?.(); }}
         onClose={closeChest}
+      />
+      {/* The milestone moment. Fires once, the instant a marquee gate opens (today: Plans),
+          and its one button walks the student straight into what they just earned — an
+          unlock nobody visits is the same as no unlock. */}
+      <UnlockCelebration
+        open={!!milestoneUnlock}
+        label={milestoneUnlock?.label}
+        earned={milestoneUnlock?.earned}
+        reward={milestoneUnlock?.reward}
+        cta={milestoneUnlock?.id==='plans'?'Build my plan':'Open it'}
+        reducedMotion={reducedMotion}
+        onGo={()=>{ const id=milestoneUnlock?.id; setMilestoneUnlock(null); if(id==='plans') goPlans(); else if(id) setTab(id.split('/')[0]); }}
+        onClose={()=>setMilestoneUnlock(null)}
       />
       {/* First focusable thing on the page. Without it a keyboard or switch user
           has to tab through an eleven-item sidebar on every single navigation. */}

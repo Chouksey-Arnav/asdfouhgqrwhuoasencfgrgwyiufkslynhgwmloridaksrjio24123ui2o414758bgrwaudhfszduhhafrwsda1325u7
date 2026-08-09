@@ -44,6 +44,32 @@
 /** How a student refers to a destination internally: 'portfolio', 'sat/review'. */
 export const key = (tab, view) => (view ? `${tab}/${view}` : tab);
 
+/**
+ * A section *inside* a sub-view — the five parts of Activities & Résumé, which
+ * are destinations in every sense that matters (they have their own URLs, their
+ * own forms, their own empty states) but are not sub-tabs. Written with a colon
+ * so a section id still parses as a sub-view id up to the separator, which is
+ * what lets every scope, label and route check treat it as living under
+ * `portfolio/resume`. `sectionKey('portfolio','resume','clinical')` →
+ * `'portfolio/resume:clinical'`.
+ */
+export const SECTION_SEP = ':';
+export const sectionKey = (tab, view, section) => `${key(tab, view)}${SECTION_SEP}${section}`;
+
+/**
+ * The thing a locked destination hangs off, for scoping "what opens next":
+ * 'plans' → '' (top level), 'sat/review' → 'sat', 'portfolio/resume:clinical'
+ * → 'portfolio/resume'. A SubNav asks for its own scope and therefore never
+ * advertises a section belonging to one of its views, and the résumé's section
+ * row asks for 'portfolio/resume' and gets exactly its own five.
+ */
+export function parentScope(id) {
+  const colon = id.indexOf(SECTION_SEP);
+  if (colon !== -1) return id.slice(0, colon);
+  const slash = id.indexOf('/');
+  return slash === -1 ? '' : id.slice(0, slash);
+}
+
 /** Escape hatch values for `user.navMode`. */
 export const NAV_MODES = { GUIDED: 'guided', EVERYTHING: 'everything' };
 
@@ -67,6 +93,11 @@ export const EMPTY_SIGNALS = {
   achievements: 0,
   level: 1,
   planBuilt: false,
+  onboarded: false,      // finished the onboarding interview (not just signed up)
+  // computePlanReadiness().ready — the generator's OWN bar (profile facts + a
+  // diagnostic, a quiz and one Portfolio item). Read here so the nav can never
+  // hand a student a tab whose first screen is a refusal; see the plans rule.
+  planReady: false,
   // Seniors and juniors in application season don't get to wait for the
   // application half of the product — for them it IS the product.
   applicationUrgent: false,
@@ -106,9 +137,34 @@ export const UNLOCK_RULES = [
   {
     id: 'plans',
     label: 'Plans',
-    hint: 'Complete 3 study sessions and we\'ll build you a day-by-day plan.',
-    at: (s) => studyActions(s) >= 3 || s.planBuilt,
-    progress: (s) => [Math.min(studyActions(s), 3), 3],
+    // ── The one the rest of the ladder is climbing toward ────────────────────
+    // Plans is the single most expensive thing this product does: it reads the
+    // whole student — onboarding answers, pathway, colleges, essays, deadlines,
+    // logged hours — and writes back a day-by-day schedule that keeps extending
+    // itself. Shipped as one tab among seven it read as one tab among seven,
+    // and a student who wandered into it on day one met a lock screen listing
+    // eight things they hadn't done: the app's best feature, introduced as a
+    // refusal.
+    //
+    // So it is the app's milestone: finish onboarding, finish one pathway lesson,
+    // and clear the generator's own readiness bar — all of which the app is
+    // already pushing you toward from day one — and when it opens it opens as an event
+    // (see UnlockCelebration.jsx) rather than as a seventh row appearing in the
+    // sidebar. `marquee` is what every surface reads to give it that treatment;
+    // `earned`/`reward` are the two sentences shown at the moment it lands.
+    marquee: true,
+    hint: 'Finish onboarding, your first pathway lesson, and a quiz — then Medabrain writes your full plan.',
+    earned: 'You finished onboarding, your first lesson, and enough practice for Medabrain to plan around.',
+    reward: 'Medabrain turns everything it knows about you — your pathway, your colleges, your deadlines, your hours — into a day-by-day plan, and keeps extending it as you go.',
+    // `planReady` is the non-negotiable half. The generator has always had its own
+    // bar (a diagnostic, a quiz, one Portfolio item — enough real signal that the
+    // plan is grounded in what a student DID, not only what they answered), and it
+    // states that bar as a checklist on its own screen. Unlocking the tab before
+    // that bar is met would mean celebrating a milestone and then opening a
+    // refusal, which is worse than not celebrating at all: the gate opens exactly
+    // when the thing behind it works.
+    at: (s) => s.planBuilt || (s.onboarded && s.lessons >= 1 && s.planReady),
+    progress: (s) => [(s.onboarded ? 1 : 0) + Math.min(s.lessons || 0, 1) + (s.planReady ? 1 : 0), 3],
   },
   {
     id: 'progress',
@@ -270,6 +326,52 @@ export const UNLOCK_RULES = [
     progress: (s) => [Math.min(s.activities, 2), 2],
   },
 
+  // ── Inside Activities & Résumé ───────────────────────────────────────────
+  // The four Portfolio tabs that were merged into one tab's five sections
+  // (Activities, Academics, Clinical Hours, Research, Skills & Certs) stopped
+  // being four doors on the nav and became five tiles on one screen — which
+  // fixed the navigation problem and left the day-one problem exactly where it
+  // was. A fourteen-year-old on their first visit still opened Activities &
+  // Résumé and met a grid asking them to log shadowing hours, publications and
+  // dated certifications. Those are not first steps; those are what the first
+  // steps eventually produce.
+  //
+  // So the sections ladder too, in the order a real record gets built: log what
+  // you do → say where you're aiming → the clinical hours that come out of a
+  // lesson about clinical work → research → the credentials that certify it.
+  // 'activities' is never gated: it is the door, and it is where every other
+  // section's unlock condition points.
+  {
+    id: 'portfolio/resume:academics',
+    label: 'Academics',
+    hint: 'Add one college — your GPA is read against the schools you\'re aiming at.',
+    at: (s) => s.colleges >= 1 || s.applicationUrgent,
+  },
+  {
+    id: 'portfolio/resume:clinical',
+    label: 'Clinical Hours',
+    // The example the review gave, and the clearest case in the app: the
+    // pathway's first lesson is what tells a student what shadowing IS and why
+    // hours are counted. Handing them the log first is handing them a form for
+    // a thing nobody has explained.
+    hint: 'Finish one pathway lesson — it explains what these hours are before you log them.',
+    at: (s) => s.lessons >= 1 || s.activities >= 1 || s.applicationUrgent,
+  },
+  {
+    id: 'portfolio/resume:research',
+    label: 'Research',
+    hint: 'Log 2 activities — research goes on top of a record, not instead of one.',
+    at: (s) => s.activities >= 2 || s.applicationUrgent,
+    progress: (s) => [Math.min(s.activities, 2), 2],
+  },
+  {
+    id: 'portfolio/resume:credentials',
+    label: 'Skills & Certs',
+    hint: 'Log 3 activities — certifications are the last layer of a résumé, not the first.',
+    at: (s) => s.activities >= 3 || s.applicationUrgent,
+    progress: (s) => [Math.min(s.activities, 3), 3],
+  },
+
   // ── Progress ─────────────────────────────────────────────────────────────
   {
     id: 'progress/performance',
@@ -297,6 +399,26 @@ const RULE_BY_ID = new Map(UNLOCK_RULES.map((r) => [r.id, r]));
 
 /** Every destination this module gates, in ladder order. */
 export const GATED_IDS = UNLOCK_RULES.map((r) => r.id);
+
+/**
+ * The gates that get an unlock *moment* rather than a toast. Kept to one on
+ * purpose — a milestone that fires four times is a notification, not a
+ * milestone — and exported so App.jsx can decide which celebration to run
+ * without re-stating which feature is the important one.
+ */
+export const MARQUEE_IDS = UNLOCK_RULES.filter((r) => r.marquee).map((r) => r.id);
+
+/**
+ * The student-facing copy attached to one gate, for surfaces that need it after
+ * the gate has already opened — `locked()` by definition can no longer supply
+ * it, and the unlock celebration fires at exactly the moment a rule stops being
+ * locked. Returns null for an id the ladder doesn't gate.
+ */
+export function ruleCopy(id) {
+  const r = RULE_BY_ID.get(id);
+  if (!r) return null;
+  return { id: r.id, label: r.label, hint: r.hint, earned: r.earned || null, reward: r.reward || null, marquee: !!r.marquee };
+}
 
 /**
  * The visibility snapshot for one student.
@@ -331,8 +453,12 @@ export function unlockState(user, rawSignals) {
     earned,
     sticky,
     pending: earned.filter((id) => !stickySet.has(id)),
-    isOpen(tab, view = null) {
-      const id = key(tab, view);
+    /**
+     * `section` addresses a part of a sub-view: isOpen('portfolio','resume',
+     * 'clinical'). Two args behave exactly as they always have.
+     */
+    isOpen(tab, view = null, section = null) {
+      const id = section ? sectionKey(tab, view, section) : key(tab, view);
       // Not a gated id at all → open since the first second.
       if (!RULE_BY_ID.has(id)) return true;
       if (everything) return true;
@@ -342,24 +468,29 @@ export function unlockState(user, rawSignals) {
     },
     /**
      * What is still to come, nearest first. `scope` narrows to one pillar's
-     * sub-views ('sat') or to the top level (''), which is how the sidebar
-     * shows "Portfolio unlocks next" while the SAT sub-nav shows its own.
+     * sub-views ('sat'), to one sub-view's sections ('portfolio/resume'), or to
+     * the top level (''), which is how the sidebar shows "Portfolio unlocks
+     * next" while the SAT sub-nav and the résumé's section row each show their
+     * own. Unscoped, the marquee milestone sorts to the front: on Home it is
+     * the thing worth telling a new student about, not the fourth row down.
      */
     locked(scope = null) {
       if (everything) return [];
-      return UNLOCK_RULES
+      const items = UNLOCK_RULES
         .filter((r) => !open.has(r.id))
-        .filter((r) => {
-          if (scope === null) return true;
-          const slash = r.id.indexOf('/');
-          return scope === '' ? slash === -1 : r.id.slice(0, slash) === scope;
-        })
+        .filter((r) => scope === null || parentScope(r.id) === scope)
         .map((r) => ({
           id: r.id,
           label: r.label,
           hint: r.hint,
+          marquee: !!r.marquee,
+          earned: r.earned || null,
+          reward: r.reward || null,
           progress: r.progress ? r.progress(s) : null,
         }));
+      return scope === null
+        ? [...items].sort((a, b) => Number(b.marquee) - Number(a.marquee))
+        : items;
     },
   };
 }
