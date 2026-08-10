@@ -1,6 +1,6 @@
 // /api/auth/me — returns the current user for a session token, or updates profile fields.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { getUserFromRequest } from '../_lib/session.js';
+import { requireUser } from '../_lib/session.js';
 import { serializeUser as serialize } from '../_lib/serializeUser.js';
 
 export default async function handler(req, res) {
@@ -9,8 +9,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   if (req.method === 'GET') {
     return res.status(200).json({ user: serialize(user) });

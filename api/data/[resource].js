@@ -2,7 +2,7 @@
 // Every row is scoped to the signed-in user (user_id), enforced server-side
 // since the client never talks to Supabase directly (RLS denies anon/authenticated).
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { getUserFromRequest } from '../_lib/session.js';
+import { requireStudent } from '../_lib/session.js';
 // Shared with api/auth/account.js so a new table is exportable and deletable
 // the moment it is readable — see api/_lib/resources.js.
 import { RESOURCE_SET as RESOURCES } from '../_lib/resources.js';
@@ -85,8 +85,8 @@ export default async function handler(req, res) {
   const { resource } = req.query;
   if (!RESOURCES.has(resource)) return res.status(404).json({ error: 'Unknown resource.' });
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireStudent(req, res);
+  if (!user) return;
 
   const supabase = getSupabaseAdmin();
   const table = supabase.from(resource);

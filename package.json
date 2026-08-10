@@ -35,7 +35,9 @@
     "verify:timeline": "node scripts/verifyTimeline.mjs",
     "verify:resume": "node scripts/verifyResumeBuilder.mjs",
     "verify:lesson-delivery": "node scripts/verifyLessonDelivery.mjs",
-    "verify:master-plan": "node scripts/verifyMasterPlan.mjs"
+    "verify:master-plan": "node scripts/verifyMasterPlan.mjs",
+    "verify:migrations": "node scripts/verifyMigrations.mjs",
+    "verify:parent": "node scripts/verifyParentDashboard.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

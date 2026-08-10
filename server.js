@@ -24,6 +24,9 @@ import masterPlan from './api/master-plan.js';
 import groq from './api/groq.js';
 import sendEmail from './api/send-email.js';
 import rewardClaim from './api/reward-claim.js';
+import parentLinks from './api/parent/links.js';
+import parentAccept from './api/parent/accept.js';
+import parentSummary from './api/parent/summary.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -46,6 +49,9 @@ app.all('/api/groq', groq);
 app.all('/api/progress-sync', progressSync);
 app.all('/api/master-plan', masterPlan);
 app.all('/api/reward-claim', rewardClaim);
+app.all('/api/parent/links', parentLinks);
+app.all('/api/parent/accept', parentAccept);
+app.all('/api/parent/summary', parentSummary);
 
 // The Vercel handler reads the resource name off req.query.resource (from
 // its [resource].js filename); Express puts route params on req.params, so
