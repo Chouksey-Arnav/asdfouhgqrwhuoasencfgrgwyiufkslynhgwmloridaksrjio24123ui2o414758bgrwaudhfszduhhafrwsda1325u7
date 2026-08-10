@@ -25,6 +25,9 @@
  *   5. THE SUMMARY IS AN ALLOWLIST. Built against a snapshot stuffed with private content, then
  *      scanned for any trace of it — coach transcripts, notes, highlights, per-question answers.
  *   6. THE DERIVATION IS CORRECT. Streaks, calendars and trends, against known inputs.
+ *   7. THE DIGEST DOES NOT EDITORIALISE. Every branch of the plain-language read is checked for
+ *      language that infers motive from an absence of rows, or that hands the parent an
+ *      enforcement instruction.
  *
  * Run:  npm run verify:parent
  */
@@ -354,7 +357,101 @@ function checkDerivation() {
     corrupt.effort.xp === 0 && corrupt.coursework.lessonsStarted === 0 && corrupt.effort.streakDays === 0);
 }
 
-// ── 7. The routes exist in both deployment targets ──────────────────────────
+// ── 7. The digest says only what it is allowed to say ───────────────────────
+
+/**
+ * Language that must never appear in a digest, and why each one is banned.
+ *
+ * These are not style preferences. Every phrase here either infers a motive from an absence of
+ * rows ("losing interest" from a quiet week) or hands the parent an enforcement instruction — and
+ * a dashboard that generates enforcement instructions is one that gets used against the student,
+ * whose rational response is to stop using the app honestly. That destroys the data the page is
+ * built from, so this is a product-integrity check as much as an ethical one.
+ */
+const BANNED_LANGUAGE = [
+  'lazy', 'falling behind', 'losing interest', 'struggling', 'distracted', 'unmotivated',
+  'make sure they', 'make them', 'you should push', 'needs to be pushed', 'hold them accountable',
+  'check up on', 'monitor',
+];
+
+function digestCases() {
+  const base = {
+    student: { name: 'Alex Kim', gradeLevel: '11th' },
+    effort: { xp: 0, level: 1, streakDays: 0, activeDaysLast7: 0, activeDaysLast28: 0, calendar: [], lastActiveAt: null },
+    coursework: { lessonsStarted: 0, lessonsVerified: 0, unitsVerified: 0, quizzes: { taken: 0, averageScore: null, trend: null } },
+    testing: null,
+    milestones: [],
+  };
+  const merge = (patch) => ({
+    ...base,
+    ...patch,
+    effort: { ...base.effort, ...(patch.effort || {}) },
+    coursework: {
+      ...base.coursework,
+      ...(patch.coursework || {}),
+      quizzes: { ...base.coursework.quizzes, ...(patch.coursework?.quizzes || {}) },
+    },
+  });
+
+  return {
+    neverStarted: base,
+    quietWeek: merge({ effort: { activeDaysLast7: 0, activeDaysLast28: 6, lastActiveAt: '2026-02-20' }, coursework: { quizzes: { taken: 4, averageScore: 72 } } }),
+    longQuiet: merge({ effort: { activeDaysLast7: 0, activeDaysLast28: 0, lastActiveAt: '2025-12-01' }, coursework: { lessonsStarted: 3 } }),
+    steady: merge({ effort: { activeDaysLast7: 2, activeDaysLast28: 9, lastActiveAt: '2026-03-09' }, coursework: { lessonsVerified: 4, quizzes: { taken: 8, averageScore: 74, trend: -6 } } }),
+    strong: merge({ effort: { activeDaysLast7: 5, activeDaysLast28: 20, streakDays: 9, lastActiveAt: '2026-03-10' }, coursework: { lessonsVerified: 12, quizzes: { taken: 20, averageScore: 84, trend: 7 } }, testing: { total: 1290, change: 60, testsTaken: 2 } }),
+    // A malformed summary must still produce a sentence rather than throw inside a render.
+    empty: {},
+  };
+}
+
+async function checkDigest() {
+  section('The parent digest says only what it is allowed to say');
+
+  const { buildParentDigest } = await import('../src/lib/parentDigest.js');
+  const cases = digestCases();
+
+  for (const [label, summary] of Object.entries(cases)) {
+    const d = buildParentDigest(summary);
+    assert(`${label}: produces a complete digest`,
+      !!d && !!d.headline && !!d.body && !!d.suggestion && !!d.tone,
+      JSON.stringify(d));
+
+    const text = `${d.headline} ${d.body} ${d.suggestion}`.toLowerCase();
+    const found = BANNED_LANGUAGE.filter((phrase) => text.includes(phrase));
+    assert(`${label}: no motive-inference or enforcement language`, found.length === 0,
+      found.length ? `found: ${found.join(', ')} — in "${text}"` : '');
+  }
+
+  // The branch most likely to be read as a verdict is the one with the least data behind it.
+  const fresh = buildParentDigest(cases.neverStarted);
+  assert('a student who never started is not characterised at all', fresh.tone === 'new'
+    && /nothing/i.test(fresh.headline + fresh.body));
+
+  const quiet = buildParentDigest(cases.quietWeek);
+  assert('a quiet week is stated without an explanation attached',
+    /hasn't studied/i.test(quiet.body) && !/because|seems|appears|probably/i.test(quiet.body),
+    quiet.body);
+  assert('a quiet week suggests a question, not a push', /ask|what are you working on/i.test(quiet.suggestion),
+    quiet.suggestion);
+
+  // A falling score is the moment a parent is most likely to act badly on this page, so the copy
+  // has to actively defuse it rather than merely avoid the banned words.
+  const dip = buildParentDigest(cases.steady);
+  assert('a score dip is framed as normal and not as a call for more hours',
+    /normal/i.test(dip.suggestion) && /not to push/i.test(dip.suggestion), dip.suggestion);
+
+  const strong = buildParentDigest(cases.strong);
+  assert('a strong week names something specific to say', strong.tone === 'strong'
+    && /quiz scores are up 7/i.test(strong.suggestion), strong.suggestion);
+
+  // The digest is derived, so it can only be as private as its input — but a template that
+  // interpolated a name or an email from somewhere else would sidestep the allowlist entirely.
+  const digestSrc = read('src/lib/parentDigest.js');
+  assert('the digest reads only the summary it is given',
+    !/progress_sync|snapshot|coachThreads|lessonNotes/.test(digestSrc));
+}
+
+// ── 8. The routes exist in both deployment targets ──────────────────────────
 
 function checkRouting(files) {
   section('Parent endpoints are reachable in both deployments');
@@ -384,6 +481,7 @@ checkRevocationIsImmediate();
 checkRoleIsWriteOnce(files);
 checkAllowlist();
 checkDerivation();
+await checkDigest();
 checkRouting(files);
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

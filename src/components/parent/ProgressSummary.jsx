@@ -12,9 +12,10 @@
 // the habit is forming, which is the only question they were really asking.
 import React from 'react';
 import {
-  Flame, TrendingUp, TrendingDown, Minus, Award, BookOpenCheck, Target, CalendarDays, Sparkles,
+  Flame, TrendingUp, TrendingDown, Minus, Award, BookOpenCheck, Target, CalendarDays, Sparkles, Brain,
 } from 'lucide-react';
 import { C, glass, glass2, G, CC, R, pill, tint } from '../../lib/theme';
+import { buildParentDigest } from '../../lib/parentDigest';
 
 const fmtDate = (value) => {
   if (!value) return null;
@@ -94,6 +95,31 @@ function Delta({ value, unit = '' }) {
   );
 }
 
+/**
+ * The Medabrain read on the week, in words.
+ *
+ * A parent who is handed six numbers and a heatmap has to decide for themselves what it means, and
+ * the most common wrong reading of a quiet week is the one that starts an argument. So the digest
+ * goes FIRST, above the numbers it is describing, and it ends in something to say rather than
+ * something to enforce — see the rules at the top of lib/parentDigest.js.
+ */
+function Digest({ summary }) {
+  const digest = buildParentDigest(summary);
+  const hue = { strong: C.green, steady: C.blue, quiet: C.amber, new: C.t3 }[digest.tone] || C.blue;
+  return (
+    <div style={glass({ padding: 20, borderColor: tint(hue, 0.28), background: tint(hue, 0.05) })}>
+      <div style={R({ gap: 9, marginBottom: 10 })}>
+        <Brain size={15} color={hue} />
+        <span style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{digest.headline}</span>
+      </div>
+      <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65 }}>{digest.body}</div>
+      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.b1}` }}>
+        {digest.suggestion}
+      </div>
+    </div>
+  );
+}
+
 export default function ProgressSummary({ summary }) {
   if (!summary) return null;
   const { student, effort, coursework, testing, milestones } = summary;
@@ -105,6 +131,8 @@ export default function ProgressSummary({ summary }) {
 
   return (
     <div style={CC({ gap: 16 })}>
+      <Digest summary={summary} />
+
       <div style={glass({ padding: 20 })}>
         <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
           <div>
