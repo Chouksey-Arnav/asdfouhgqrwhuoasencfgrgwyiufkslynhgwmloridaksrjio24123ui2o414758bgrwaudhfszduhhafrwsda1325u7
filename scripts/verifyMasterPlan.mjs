@@ -463,7 +463,12 @@ assert('the row is locked for the whole save', /for update/.test(migration));
 assert('history is trimmed so it cannot grow without bound', /MAX_REVISIONS/.test(migration));
 assert('identical plans are not archived', /existing\.plan is distinct from p_plan/.test(migration));
 
-assert('the endpoint requires a session', /if \(!user\) return res\.status\(401\)/.test(apiSrc));
+// requireStudent both authenticates and rejects parent accounts, and sends the response itself —
+// so the handler's obligation is to stop, not to build a 401 of its own. A plan is one student's
+// own work; a parent account writing one under its own id would be nonsense data in a table that
+// only students read. See api/_lib/session.js and scripts/verifyParentDashboard.mjs.
+assert('the endpoint requires a student session',
+  /const user = await requireStudent\(req, res\);\s*\n\s*if \(!user\) return;/.test(apiSrc));
 assert('the endpoint caps the payload', /MAX_BYTES/.test(apiSrc) && /413/.test(apiSrc));
 assert('the endpoint rejects a plan with no days', /Plan is missing its days/.test(apiSrc));
 assert('an un-migrated deployment degrades instead of erroring', /isMissingSchema/.test(apiSrc));

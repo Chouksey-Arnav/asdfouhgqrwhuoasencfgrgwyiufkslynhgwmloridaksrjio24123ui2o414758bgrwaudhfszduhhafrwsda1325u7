@@ -1,0 +1,83 @@
+# The checks that run on every push, and why this file exists at all.
+#
+# `npm run build` already gates a deploy on most of the verify:* scripts, which is what has kept
+# routing, legal copy and lesson delivery honest. Two of them cannot live there:
+#
+#   verify:migrations  needs a real PostgreSQL, so it would make every local build depend on one.
+#                      It is also the check that matters most — migrations here are applied BY HAND
+#                      to one live project, and 0005 reached production unapplied and silently broke
+#                      the Plans tab for every student who opened it. See the script's header.
+#   verify:parent      is fast and has no dependencies, but it is the structural audit that a new
+#                      endpoint went out without an authorization guard, which is exactly the kind
+#                      of thing a developer skips when their build is already green.
+#
+# So they run here, on a service container, against every push and pull request.
+name: verify
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  migrations:
+    name: Migrations apply, re-apply, and serialize
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        # gen_random_uuid() (pgcrypto in older releases) and the jsonb operators the chain uses are
+        # all core in 16, which is the version Supabase runs.
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # The migration harness shells out to psql; the runner image has a client, but pinning it to
+      # the server's major version keeps error messages and \-command behaviour consistent.
+      - name: Install the PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - run: npm ci
+
+      - name: Verify migrations
+        env:
+          MIGRATION_TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+        run: npm run verify:migrations
+
+  parent:
+    name: Parent dashboard authorization audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:parent
+
+  build:
+    name: Build (runs every other verify:* script)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
