@@ -18,6 +18,7 @@
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireParent, getActiveLink, getActiveLinksForParent, isUuid } from '../_lib/session.js';
 import { getParentSummary } from '../_lib/parentSummary.js';
+import { requireCompleteProfile } from '../_lib/parentProfile.js';
 
 const MISSING_SCHEMA = new Set(['42P01', '42883', 'PGRST202', 'PGRST205']);
 const isMissingSchema = (err) => !!err && (MISSING_SCHEMA.has(err.code) || /does not exist|schema cache/i.test(err.message || ''));
@@ -39,6 +40,12 @@ export default async function handler(req, res) {
   if (!parent) return;
 
   const supabase = getSupabaseAdmin();
+
+  // A third check, and the only one that is not about authorization: the account must have
+  // finished its declaration (see api/_lib/parentProfile.js). It is deliberately not load-bearing
+  // for privacy — the two guards above already are — so it fails open on a database without
+  // migration 0009 rather than locking out guardians whose children already consented.
+  if (!(await requireCompleteProfile(res, { supabase, userId: parent.id }))) return;
   const rawId = Array.isArray(req.query?.studentId) ? req.query.studentId[0] : req.query?.studentId;
   const studentId = rawId ? String(rawId) : null;
 

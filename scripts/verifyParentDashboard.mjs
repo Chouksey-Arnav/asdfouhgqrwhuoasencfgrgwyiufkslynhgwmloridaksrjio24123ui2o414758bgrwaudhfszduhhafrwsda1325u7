@@ -36,6 +36,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { buildParentSummary } from '../api/_lib/parentSummary.js';
+import { normalizeProfileInput, isProfileComplete, ATTESTATION_TEXT } from '../api/_lib/parentProfile.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const API_DIR = path.join(ROOT, 'api');
@@ -91,7 +92,7 @@ const STUDENT_ONLY = [
 ];
 
 /** Handlers that must be parent-only: they return another person's data. */
-const PARENT_ONLY = ['api/parent/summary.js'];
+const PARENT_ONLY = ['api/parent/summary.js', 'api/parent/profile.js'];
 
 /** Handlers legitimately used by both roles — profile, export, deletion, the link itself. */
 const EITHER_ROLE = ['api/auth/me.js', 'api/auth/account.js', 'api/parent/links.js', 'api/parent/accept.js'];
@@ -451,6 +452,105 @@ async function checkDigest() {
     !/progress_sync|snapshot|coachThreads|lessonNotes/.test(digestSrc));
 }
 
+// ── 7b. A parent account has to be built before it can ask for anything ─────
+//
+// The declaration (migration 0009) is NOT the authorization boundary — the student's consent is,
+// and these checks do not pretend otherwise. What they pin down is the thing the declaration
+// actually buys: an invitation that names a person, so the student's own recognition can do the
+// work no server-side check can. The failure mode is silent in both directions — a gate that
+// stopped being applied, or one that started failing closed on a database without 0009 and
+// locked out guardians whose children already consented.
+
+function checkProfileGate() {
+  section('A parent must declare who they are before they can ask for anything');
+
+  const links = read('api/parent/links.js');
+  assert('inviting requires a completed parent profile',
+    /isProfileComplete\(profile\)/.test(links) && /profile_incomplete/.test(links),
+    'without this, an account created ninety seconds ago can email a stranger\'s child');
+  assert('only parents are gated on it, not students inviting their own parent',
+    /if \(role === 'parent'\)[\s\S]{0,400}?isProfileComplete/.test(links),
+    'a student has nobody to be impersonating — gating them would just block the other direction');
+  assert('the claim is written onto the link row, not joined at read time',
+    /claimed_student_name:/.test(links) && /claimed_by_name:/.test(links),
+    'the student consents to what the invitation SAID; editing a profile later must not rewrite it');
+  assert('the claim columns are omitted when migration 0009 is absent',
+    /schemaMissing/.test(links) && /\.\.\.claimColumns/.test(links),
+    'naming an unknown column fails the whole insert, which would break inviting entirely');
+
+  const summary = read('api/parent/summary.js');
+  assert('the summary endpoint is gated on the declaration too',
+    /requireCompleteProfile/.test(summary));
+  assert('…and still behind requireParent and getActiveLink first',
+    summary.indexOf('requireParent') < summary.indexOf('requireCompleteProfile'),
+    'the declaration is an accountability check, not the thing keeping a stranger out');
+
+  const lib = read('api/_lib/parentProfile.js');
+  assert('the declaration gate fails OPEN on a database without migration 0009',
+    /if \(schemaMissing\) return true;/.test(lib),
+    'failing closed would lock out guardians whose children have already consented, to enforce a '
+    + 'check that was never the reason their access was safe');
+  assert('completed_at is derived server-side, never accepted from the client',
+    /completed_at: values\.attested \? now : null/.test(lib),
+    'a client-set completeness flag is a client-set authorization decision');
+
+  const mailer = read('api/_lib/parentLinks.js');
+  assert('the invitation states the claim to the student',
+    /claimedStudentName/.test(mailer) && /do not accept/i.test(mailer),
+    'an invitation that names nobody cannot be checked by the person receiving it');
+
+  const invite = read('src/components/parent/InviteScreen.jsx');
+  assert('the acceptance screen shows the claim before the button',
+    /claimedByName|claimedStudentName/.test(invite));
+}
+
+function checkProfileValidation() {
+  section('The declaration cannot be half-given');
+
+  const complete = {
+    fullName: 'Priya Shah', relationship: 'Mother', phone: '+1 555 000 1234',
+    studentFullName: 'Alex Shah', studentGrade: '11th grade', attested: true,
+  };
+
+  const ok = normalizeProfileInput(complete);
+  assert('a complete declaration passes', Object.keys(ok.errors).length === 0, JSON.stringify(ok.errors));
+
+  // The attestation is the one field whose absence is not a typo: it is the difference between a
+  // form and an agreement, and it is what the audit record is FOR.
+  const unattested = normalizeProfileInput({ ...complete, attested: false });
+  assert('an unattested declaration is rejected', !!unattested.errors.attested);
+
+  for (const [field, patch] of [
+    ['fullName', { fullName: 'P' }],
+    ['relationship', { relationship: '' }],
+    ['phone', { phone: '' }],
+    ['phone', { phone: 'call me maybe' }],
+    ['studentFullName', { studentFullName: '' }],
+  ]) {
+    const res = normalizeProfileInput({ ...complete, ...patch });
+    assert(`${field} rejects ${JSON.stringify(Object.values(patch)[0])}`, !!res.errors[field],
+      JSON.stringify(res.errors));
+  }
+
+  // Errors are keyed by field because this form is six inputs long, and one banner over six
+  // untouched-looking fields is how a form gets abandoned.
+  const several = normalizeProfileInput({});
+  assert('every failing field reports itself', Object.keys(several.errors).length >= 4,
+    JSON.stringify(several.errors));
+
+  assert('a row is only complete when it is both stamped and attested',
+    isProfileComplete({ completed_at: '2026-01-01', attested: true })
+    && !isProfileComplete({ completed_at: '2026-01-01', attested: false })
+    && !isProfileComplete({ completed_at: null, attested: true })
+    && !isProfileComplete(null));
+
+  // Stored verbatim rather than as a boolean alone: "they ticked a box" is not evidence of
+  // anything a year after the box's wording changed.
+  assert('the attestation names the guardian relationship and the student\'s veto',
+    /parent or legal guardian/i.test(ATTESTATION_TEXT) && /approve/i.test(ATTESTATION_TEXT),
+    ATTESTATION_TEXT);
+}
+
 // ── 8. The routes exist in both deployment targets ──────────────────────────
 
 function checkRouting(files) {
@@ -482,6 +582,8 @@ checkRoleIsWriteOnce(files);
 checkAllowlist();
 checkDerivation();
 await checkDigest();
+checkProfileGate();
+checkProfileValidation();
 checkRouting(files);
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

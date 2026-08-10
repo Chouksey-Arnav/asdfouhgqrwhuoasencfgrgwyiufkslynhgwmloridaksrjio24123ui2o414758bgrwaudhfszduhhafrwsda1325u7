@@ -84,10 +84,20 @@ const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => (
  * to their parent seeing their scores. It also states that either side can end it at any time,
  * because a consent that feels irreversible does not get given honestly.
  */
-export async function sendInviteEmail({ to, token, inviterName, inviterRole, relationship }) {
+export async function sendInviteEmail({ to, token, inviterName, inviterRole, relationship, claimedName, claimedStudentName }) {
   const url = inviteUrl(token);
-  const who = esc(inviterName || (inviterRole === 'parent' ? 'A parent' : 'A student'));
+  // The attested name from the parent's profile wins over the account's display name: the
+  // display name is a handle they can change at will, and the attested one is what they signed.
+  const who = esc(claimedName || inviterName || (inviterRole === 'parent' ? 'A parent' : 'A student'));
   const rel = relationship ? ` (${esc(relationship)})` : '';
+
+  // Names the student, in the requester's own words, when there is a claim to state. This is the
+  // line that makes the email checkable by the person receiving it: a request addressed to
+  // somebody else's name, or from a name they do not recognise, is visibly wrong at a glance —
+  // and no server-side check can do that job. See supabase/migrations/0009_parent_profiles.sql.
+  const claimLine = inviterRole === 'parent' && claimedStudentName
+    ? `They say they are the parent or guardian of <strong>${esc(claimedStudentName)}</strong>. If that is not you, or you do not recognise this person, do not accept — just ignore this email, and nothing is shared.`
+    : null;
 
   const asksToView = inviterRole === 'parent'
     ? `${who}${rel} is asking to follow your progress on MedSchoolPrep.`
@@ -104,11 +114,12 @@ export async function sendInviteEmail({ to, token, inviterName, inviterRole, rel
   await sendMail({
     to,
     subject: inviterRole === 'parent'
-      ? `${inviterName || 'A parent'} would like to follow your MedSchoolPrep progress`
+      ? `${claimedName || inviterName || 'A parent'} would like to follow your MedSchoolPrep progress`
       : `${inviterName || 'A student'} wants to share their MedSchoolPrep progress with you`,
     html: `
       <div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;margin:0 auto;padding:24px">
         <h2 style="margin:0 0 8px">${asksToView}</h2>
+        ${claimLine ? `<p style="color:#333;margin:0 0 12px">${claimLine}</p>` : ''}
         <p style="color:#555;margin:0 0 4px">${seeing}</p>
         <p style="color:#555;margin:0 0 20px">${notSeeing}</p>
         <p style="margin:0 0 20px">
@@ -118,6 +129,6 @@ export async function sendInviteEmail({ to, token, inviterName, inviterRole, rel
         <p style="color:#777;font-size:13px;margin:0">Either of you can end the connection at any time from Settings. If you weren't expecting this, ignore this email — nothing is shared unless you accept.</p>
       </div>
     `,
-    text: `${asksToView}\n\n${seeing}\n${notSeeing}\n\nReview this request: ${url}\n\nThis link expires in ${INVITE_TTL_DAYS} days. Nothing is shared unless you accept, and either of you can end the connection at any time.`,
+    text: `${asksToView}\n${claimedStudentName && inviterRole === 'parent' ? `They say they are the parent or guardian of ${claimedStudentName}. If that is not you, or you do not recognise this person, ignore this email — nothing is shared.\n` : ''}\n${seeing}\n${notSeeing}\n\nReview this request: ${url}\n\nThis link expires in ${INVITE_TTL_DAYS} days. Nothing is shared unless you accept, and either of you can end the connection at any time.`,
   });
 }

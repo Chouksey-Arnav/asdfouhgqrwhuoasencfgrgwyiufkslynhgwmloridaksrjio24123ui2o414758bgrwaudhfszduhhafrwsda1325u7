@@ -4,7 +4,10 @@ import { Loader2 } from 'lucide-react';
 import { C, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
 import { getToken, setToken, clearToken, fetchMe, logout } from '../lib/authApi';
-import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath } from '../lib/routes';
+import {
+  AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath,
+  isParentHubPath, PARENT_HUB_PATH,
+} from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
 import LegalPage from './legal/LegalPage';
@@ -15,6 +18,7 @@ import ForgotPasswordView from './auth/ForgotPasswordView';
 import OAuthCallbackView from './auth/OAuthCallbackView';
 import ParentApp from './parent/ParentApp';
 import InviteScreen from './parent/InviteScreen';
+import ParentsLanding from './parent/ParentsLanding';
 import { inviteTokenFromUrl } from '../lib/parentApi';
 
 export default function AuthGate({ children }) {
@@ -30,7 +34,11 @@ export default function AuthGate({ children }) {
   // Where "landing" lives. Normally "/", but someone who followed a deep link while
   // signed out (e.g. /portfolio/essays) should keep that URL: it's what they'll be
   // dropped into the moment they sign in.
-  const landingPathRef = useRef(isAuthPath(window.location.pathname) ? '/' : normalizePath(window.location.pathname));
+  const landingPathRef = useRef(
+    isAuthPath(window.location.pathname) || isParentHubPath(window.location.pathname)
+      ? '/'
+      : normalizePath(window.location.pathname),
+  );
   const firstSyncRef = useRef(true);
 
   // ── The legal documents sit outside the signed-in/signed-out split ────────
@@ -54,6 +62,38 @@ export default function AuthGate({ children }) {
     function onPop() { setLegalSlug(parseLegalPath(window.location.pathname)); }
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // ── /parents sits outside the split, for the same reason the documents do ─
+  //
+  // A parent deciding whether to create an account has to be able to read what the account does
+  // before creating one, so the page cannot require a session. It equally cannot require the
+  // ABSENCE of one: the most common way it gets opened is a student, signed in on the family
+  // laptop, showing it to their mother. So it is checked ahead of `status`, exactly like the
+  // Terms, and it owns its own popstate listener because the two view-sync effects below stop
+  // running once App.jsx takes over the URL.
+  const [parentHub, setParentHub] = useState(() => isParentHubPath(window.location.pathname));
+  useEffect(() => {
+    function onPop() { setParentHub(isParentHubPath(window.location.pathname)); }
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  const openParentHub = useCallback(() => {
+    if (normalizePath(window.location.pathname) !== PARENT_HUB_PATH) {
+      window.history.pushState({}, '', PARENT_HUB_PATH);
+    }
+    setParentHub(true);
+    applySeoMeta(PARENT_HUB_PATH);
+  }, []);
+
+  // Leaving the hub for one of the auth screens: drop the hub first, or the effect that mirrors
+  // `view` into the URL would fight the hub's own path and the screen would never appear.
+  const leaveParentHub = useCallback((next) => {
+    setParentHub(false);
+    if (next) setView(next);
+    else if (window.history.length > 1) window.history.back();
+    else window.history.replaceState({}, '', '/');
   }, []);
 
   // ── An invitation link sits outside the split for the same reason ────────
@@ -158,7 +198,7 @@ export default function AuthGate({ children }) {
     // While a legal document is open the URL is /legal/…, which is not this
     // component's `view` — syncing would immediately rewrite it back to the
     // landing page and slam the document shut.
-    if (legalSlug) return;
+    if (legalSlug || parentHub) return;
     const current = normalizePath(window.location.pathname);
     const want = view === 'landing'
       ? (isAuthPath(current) ? landingPathRef.current : current)
@@ -169,7 +209,7 @@ export default function AuthGate({ children }) {
     if (current === want) return;
     if (first) window.history.replaceState(window.history.state, '', want);
     else window.history.pushState({}, '', want);
-  }, [view, status, legalSlug]);
+  }, [view, status, legalSlug, parentHub]);
 
   // ── URL → view ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -196,6 +236,20 @@ export default function AuthGate({ children }) {
   // to read them.
   if (legalSlug) {
     return <LegalPage slug={legalSlug} onBack={closeLegal} onNavigate={openLegal} />;
+  }
+
+  if (parentHub) {
+    return (
+      <ParentsLanding
+        key={themeEpoch}
+        onSignUp={() => leaveParentHub('parentSignup')}
+        onLogin={() => leaveParentHub('parentLogin')}
+        onHome={() => { setParentHub(false); window.history.pushState({}, '', '/'); setView('landing'); }}
+        onOpenLegal={openLegal}
+        themeMode={themeMode}
+        onThemeChange={changeTheme}
+      />
+    );
   }
 
   if (status === 'checking') {
@@ -243,6 +297,7 @@ export default function AuthGate({ children }) {
         key={themeEpoch}
         onGetStarted={() => goTo('signup')}
         onLogin={() => goTo('login')}
+        onOpenParents={openParentHub}
         onOpenLegal={openLegal}
         themeMode={themeMode}
         onThemeChange={changeTheme}
@@ -252,21 +307,28 @@ export default function AuthGate({ children }) {
 
   return (
     <AuthShell key={`${view}-${themeEpoch}`} themeMode={themeMode} onThemeChange={changeTheme}>
-      {view === 'login' && (
+      {(view === 'login' || view === 'parentLogin') && (
         <LoginView
           initialEmail={prefillEmail}
-          onBack={() => goTo('landing')}
-          onGoSignup={(email) => goTo('signup', email)}
+          parentMode={view === 'parentLogin'}
+          onBack={() => (view === 'parentLogin' ? openParentHub() : goTo('landing'))}
+          onGoSignup={(email) => goTo(view === 'parentLogin' ? 'parentSignup' : 'signup', email)}
           onGoForgot={(email) => goTo('forgot', email)}
+          onGoParents={openParentHub}
           onAuthed={(token, u) => { handleAuthed(token, u); toast.success('Welcome back.'); }}
         />
       )}
-      {view === 'signup' && (
+      {(view === 'signup' || view === 'parentSignup') && (
         <SignupView
           initialEmail={prefillEmail}
-          initialRole={prefillRole}
-          onBack={() => goTo('landing')}
-          onGoLogin={(email) => goTo('login', email || prefillEmail)}
+          // /parents/signup is the parent's own front door, so the account type is decided by the
+          // URL rather than by finding a radio button — see `lockedRole` in SignupView. A parent
+          // who followed a "for parents" link should never be able to create a student account by
+          // accident and then discover, three screens later, that it cannot see anything.
+          initialRole={view === 'parentSignup' ? 'parent' : prefillRole}
+          lockedRole={view === 'parentSignup' ? 'parent' : null}
+          onBack={() => (view === 'parentSignup' ? openParentHub() : goTo('landing'))}
+          onGoLogin={(email) => goTo(view === 'parentSignup' ? 'parentLogin' : 'login', email || prefillEmail)}
           onAuthed={handleAuthed}
         />
       )}

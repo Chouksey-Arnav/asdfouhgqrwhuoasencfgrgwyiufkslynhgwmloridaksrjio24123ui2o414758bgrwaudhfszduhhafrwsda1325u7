@@ -26,7 +26,14 @@ const ORIGIN = 'https://medschoolprep.cloud';
 // networks, and school districts all ask, and the answer has to be a URL
 // anyone can open — no session, no crawler exception. Noindexing them would
 // undercut the whole point of publishing them.
-const INDEXABLE = new Set(['/', '/login', '/signup', '/legal/terms', '/legal/privacy']);
+//
+// /parents is here for the same class of reason: it is a real public page (AuthGate renders it
+// ahead of its signed-in/signed-out branch), and it is the only page on this site written for
+// someone searching on behalf of a student rather than as one. Noindexing it would leave that
+// search with nothing to find, which is the problem the page was built to solve.
+const INDEXABLE = new Set([
+  '/', '/login', '/signup', '/parents', '/parents/signup', '/legal/terms', '/legal/privacy',
+]);
 
 function upsert(selector, create) {
   let el = document.head.querySelector(selector);

@@ -13,6 +13,7 @@ import { requireUser, roleOf, isUuid } from '../_lib/session.js';
 import {
   EMAIL_RE, INVITE_TTL_DAYS, LINK_SELECT, mintInviteToken, sendInviteEmail, serializeLink,
 } from '../_lib/parentLinks.js';
+import { getParentProfile, isProfileComplete } from '../_lib/parentProfile.js';
 
 // A cap on live invitations per account. Without it, this endpoint is an authenticated way to send
 // branded email to arbitrary addresses — i.e. a spam relay wearing our domain's reputation. Five
@@ -73,6 +74,7 @@ export default async function handler(req, res) {
       if (!EMAIL_RE.test(email) || email.length > 254) {
         return res.status(400).json({ error: 'Enter a valid email address.' });
       }
+
       // Checked here as well as in the schema (parent_links_no_self_link) because the schema can
       // only see it once both ids exist, and this catches the far more common form: inviting your
       // own address, which would otherwise sit as a pending invite you can never accept.
@@ -80,6 +82,49 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "That's your own email address." });
       }
 
+      // ── Who is asking, in the invitation itself ──────────────────────────
+      //
+      // A parent must have finished their declaration (name, relationship, phone, the student's
+      // name, the attestation — see api/_lib/parentProfile.js) before they can send anything.
+      // Two reasons, neither of which is "this proves they are a parent", because it does not:
+      //
+      //   1. The invitation can then NAME the requester and their claimed relationship, so the
+      //      student is deciding about a person rather than about an email address. That is the
+      //      only check in this whole flow capable of catching an impersonator, and it happens in
+      //      the student's head — but only if we give them something to check.
+      //   2. Sending branded email to an arbitrary address is the abusable part of this endpoint
+      //      (see MAX_PENDING_INVITES), and making it cost a completed, attested profile raises
+      //      that floor a long way.
+      //
+      // Students are not gated: a student inviting their own parent is the other direction of the
+      // same link, and there is nobody for them to be impersonating.
+      //
+      // The claim columns are written only when migration 0009 is actually present. Naming a
+      // column PostgREST has never heard of fails the whole insert, which would turn "this
+      // deployment has not run 0009 yet" into "nobody can invite anyone" — the exact
+      // degrade-don't-break rule the catch at the bottom of this handler exists for.
+      let claimColumns = {};
+      let claimedRelationship = relationship;
+      if (role === 'parent') {
+        const { row: profile, schemaMissing } = await getParentProfile(supabase, user.id);
+        if (!schemaMissing) {
+          if (!isProfileComplete(profile)) {
+            return res.status(403).json({
+              error: 'Finish setting up your parent account before you invite a student.',
+              reason: 'profile_incomplete',
+            });
+          }
+          claimedRelationship = relationship || profile.relationship || null;
+          claimColumns = {
+            // Copied onto the link row, not joined at read time: the student is consenting to
+            // what the invitation SAID, and a parent editing their profile afterwards must not
+            // rewrite what was agreed to.
+            claimed_student_name: profile.student_full_name || null,
+            claimed_by_name: profile.full_name || null,
+            claimed_relationship: claimedRelationship,
+          };
+        }
+      }
       const { count: pending } = await supabase
         .from('parent_links')
         .select('id', { count: 'exact', head: true })
@@ -96,7 +141,8 @@ export default async function handler(req, res) {
           [mine]: user.id,
           status: 'pending',
           initiated_by: role,
-          relationship,
+          relationship: claimedRelationship,
+          ...claimColumns,
           invite_email: email,
           invite_token_hash: hash,
           invite_expires_at: new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
@@ -126,7 +172,9 @@ export default async function handler(req, res) {
           token,
           inviterName: user.name,
           inviterRole: role,
-          relationship,
+          relationship: claimedRelationship,
+          claimedName: claimColumns.claimed_by_name || null,
+          claimedStudentName: claimColumns.claimed_student_name || null,
         });
       } catch (err) {
         console.error('parent invite email failed:', err);

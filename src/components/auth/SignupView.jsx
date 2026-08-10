@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, ArrowRight, GraduationCap, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { C, btn, inp, lbl, CC, tint } from '../../lib/theme';
+import { AUTH_VIEWS } from '../../lib/routes';
 import * as AuthAPI from '../../lib/authApi';
 import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider, ConsentNotice } from './ui';
 import GoogleButton from './GoogleButton';
@@ -30,6 +31,38 @@ const ROLES = [
     desc: "Follow your student's progress once they accept. You won't have lessons of your own.",
   },
 ];
+
+/**
+ * The role, when the URL has already decided it.
+ *
+ * /parents/signup exists so a parent never has to find the right radio button — they followed a
+ * link that says "for parents" and the form should simply be the parent form. Rendered as a
+ * statement of what is being created rather than a disabled control, because a greyed-out picker
+ * invites people to try to click it.
+ */
+function LockedRole({ role }) {
+  const meta = ROLES.find((r) => r.id === role) || ROLES[0];
+  const Icon = meta.icon;
+  const c = meta.hue();
+  return (
+    <div style={{
+      display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 10,
+      background: tint(c, 0.10), border: `1px solid ${tint(c, 0.45)}`,
+    }}>
+      <div style={{
+        width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'flex',
+        alignItems: 'center', justifyContent: 'center',
+        background: tint(c, 0.13), border: `1px solid ${tint(c, 0.28)}`,
+      }}>
+        <Icon size={15} color={c} />
+      </div>
+      <div>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{meta.title}</div>
+        <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{meta.desc}</div>
+      </div>
+    </div>
+  );
+}
 
 function RolePicker({ value, onChange }) {
   return (
@@ -68,10 +101,10 @@ function RolePicker({ value, onChange }) {
   );
 }
 
-export default function SignupView({ initialEmail = '', initialRole = 'student', onBack, onGoLogin, onAuthed }) {
+export default function SignupView({ initialEmail = '', initialRole = 'student', lockedRole = null, onBack, onGoLogin, onAuthed }) {
   const [step, setStep] = useState('email'); // email | code | password
   const [email, setEmail] = useState(initialEmail);
-  const [role, setRole] = useState(initialRole === 'parent' ? 'parent' : 'student');
+  const [role, setRole] = useState(lockedRole || (initialRole === 'parent' ? 'parent' : 'student'));
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -147,16 +180,37 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
 
   return (
     <>
-      <BackButton onClick={step === 'email' ? onBack : () => { setStep('email'); setError(''); }} label={step === 'email' ? 'Back to home' : 'Use a different email'} />
+      <BackButton
+        onClick={step === 'email' ? onBack : () => { setStep('email'); setError(''); }}
+        label={step === 'email' ? (lockedRole === 'parent' ? 'Back to the parent page' : 'Back to home') : 'Use a different email'}
+      />
       <AnimatePresence mode="wait">
         {step === 'email' && (
           <motion.form key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleSendCode}>
             <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create your account</div>
-                <div style={{ fontSize: 13, color: C.t2 }}>We'll email you a 6-digit code to verify it's really you.</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
+                  {lockedRole === 'parent' ? 'Create your parent account' : 'Create your account'}
+                </div>
+                <div style={{ fontSize: 13, color: C.t2 }}>
+                  {lockedRole === 'parent'
+                    ? "Your own account, with your own email — never your student's. We'll email you a 6-digit code to verify it."
+                    : "We'll email you a 6-digit code to verify it's really you."}
+                </div>
               </div>
-              <RolePicker value={role} onChange={setRole} />
+              {lockedRole ? <LockedRole role={lockedRole} /> : <RolePicker value={role} onChange={setRole} />}
+              {/*
+                Stated at the top of the parent flow rather than sprung on them after the
+                password screen. A parent who learns only at the end that there is a form to fill
+                in and a student who has to approve them reads it as a bait and switch; a parent
+                told up front reads it as the reason the thing is safe.
+              */}
+              {lockedRole === 'parent' && (
+                <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>
+                  After this you'll tell us who you are and who you're here for, then send your
+                  student a request. Nothing about them is visible until they accept it.
+                </div>
+              )}
               <ConsentNotice />
               <GoogleButton label="Sign up with Google" role={role} />
               <OrDivider />
@@ -178,6 +232,12 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
                 Already have an account?{' '}
                 <button type="button" onClick={() => onGoLogin(email.trim())} className="msp-auth-link" style={{ color: C.blueL, fontWeight: 600 }}>Log in</button>
               </div>
+              {!lockedRole && (
+                <div style={{ textAlign: 'center', fontSize: 12.5, color: C.t3 }}>
+                  Setting this up for your child?{' '}
+                  <a href={AUTH_VIEWS.parentSignup} className="msp-auth-link" style={{ color: C.violetL, fontWeight: 600 }}>Create a parent account</a>
+                </div>
+              )}
             </div>
           </motion.form>
         )}

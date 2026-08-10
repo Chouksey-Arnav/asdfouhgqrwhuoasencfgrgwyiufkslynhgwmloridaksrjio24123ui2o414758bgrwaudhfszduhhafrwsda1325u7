@@ -82,6 +82,22 @@ const ROUTES = [
   // regulators all check, and several of them check with a bot. `lastmod`
   // tracks the content modules rather than the renderer, so editing a clause
   // moves the date and re-rendering the page does not.
+  // The parent page. Public in the same sense the legal documents are (AuthGate renders it ahead
+  // of the signed-in/signed-out branch), and the one page on this site whose whole job is to be
+  // found by someone who is not the student — a parent searching "medschoolprep parent dashboard"
+  // has, until now, had nothing to land on. Priority above the account screens for that reason.
+  {
+    loc: '/parents',
+    changefreq: 'monthly',
+    priority: '0.7',
+    sources: ['src/components/parent/ParentsLanding.jsx', 'src/components/parent/ParentApp.jsx'],
+  },
+  {
+    loc: '/parents/signup',
+    changefreq: 'monthly',
+    priority: '0.4',
+    sources: ['src/components/auth/SignupView.jsx', 'src/components/parent/ParentSetup.jsx'],
+  },
   {
     loc: '/legal/terms',
     changefreq: 'yearly',
@@ -102,7 +118,14 @@ const ROUTES = [
  * Kept as prefixes (not the full route list) so new sub-tabs are covered the day
  * they ship without anyone remembering to come back here.
  */
-const DISALLOW = ['/api/', '/sat', '/prep', '/portfolio', '/plans', '/progress', '/settings'];
+// /home is here now that the dashboard has a URL of its own (see HOME_PATH in src/lib/routes.js)
+// — it is as gated as any other tab, and a crawler that followed it would get the landing page.
+// /family is the parent application, gated the same way.
+//
+// /parents is deliberately NOT disallowed: it is a real public page, listed in ROUTES above, and
+// the Allow lines are emitted from those routes. The prefix rules below never touch it because
+// none of them is a prefix of it.
+const DISALLOW = ['/api/', '/home', '/sat', '/prep', '/portfolio', '/plans', '/progress', '/settings', '/family'];
 
 /** Newest commit date across `files`, as YYYY-MM-DD. Null if git can't say. */
 function gitLastModified(files) {

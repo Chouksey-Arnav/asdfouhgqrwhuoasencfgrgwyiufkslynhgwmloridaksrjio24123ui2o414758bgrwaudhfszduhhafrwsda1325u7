@@ -144,7 +144,10 @@ try {
   check(url() === '/portfolio/milestones', `Portfolio sub-tab → /portfolio/milestones (got ${url()})`);
 
   section('Back walks the exact path taken');
-  const expectedBack = ['/portfolio/overview', '/sat/tests', '/sat/overview', '/'];
+  // The last entry is /home, not '/': the boot URL is rewritten in place the moment the app
+  // knows which screen it is on (see HOME_PATH in src/lib/routes.js), so the bare '/' this test
+  // navigated to never became a history entry of its own.
+  const expectedBack = ['/portfolio/overview', '/sat/tests', '/sat/overview', '/home'];
   for (const expected of expectedBack) {
     await page.goBack();
     await page.waitForTimeout(350);
@@ -189,7 +192,7 @@ try {
   check(!url().startsWith('/total'), `an unknown URL is rewritten to a real screen (got ${url()})`);
 
   section('The lesson player is part of history, not on top of it');
-  await page.goto(`${BASE}/prep/pathway`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`${BASE}/prep/pathways`, { waitUntil: 'domcontentloaded' });
   await page.locator('a[aria-current="page"]:has-text("Pathway")').waitFor({ timeout: 20000 });
   await dismissChest();
   const startLesson = page.locator('button:has-text("Start Lesson")').first();
@@ -200,7 +203,7 @@ try {
     const lessonUrl = url();
     await page.goBack();
     await page.waitForTimeout(900);
-    check(url() === '/prep/pathway', `back leaves the lesson and lands on the tab under it (got ${url()})`);
+    check(url() === '/prep/pathways', `back leaves the lesson and lands on the tab under it (got ${url()})`);
     check(await page.locator('a[aria-current="page"]:has-text("Pathway")').count() > 0,
       'the Prep tab is really back on screen — the player did not stay up over it');
     await page.goForward();

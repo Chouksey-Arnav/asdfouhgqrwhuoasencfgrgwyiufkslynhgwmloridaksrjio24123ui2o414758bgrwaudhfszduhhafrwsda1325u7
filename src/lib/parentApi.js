@@ -46,6 +46,18 @@ export const previewInvite = (token) =>
 export const acceptInvite = (token) =>
   req('/accept', { method: 'POST', body: JSON.stringify({ token }) });
 
+/**
+ * The parent's own declaration — name, relationship, phone, the student they say they are here
+ * for, and the attestation. Parent sessions only, and about the caller's own row exclusively.
+ *
+ * `complete` is the server's verdict, not a field the client derives: the same value gates
+ * /api/parent/summary, and two implementations of one rule is how a client ends up showing a
+ * dashboard the server will refuse to fill.
+ */
+export const fetchProfile = () => req('/profile', { method: 'GET' });
+export const saveProfile = (profile) =>
+  req('/profile', { method: 'PUT', body: JSON.stringify(profile) });
+
 /** Progress for every connected student, or for one of them. Parent sessions only. */
 export const fetchSummaries = () => req('/summary', { method: 'GET' });
 export const fetchSummary = (studentId) =>

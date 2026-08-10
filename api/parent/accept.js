@@ -69,9 +69,32 @@ export default async function handler(req, res) {
       if (new Date(link.invite_expires_at) < new Date()) return res.status(410).json(REASONS.expired);
 
       const inviter = link.initiated_by === 'parent' ? link.parent : link.student;
+
+      // The claim the requester attested to when they sent this (migration 0009). Fetched in its
+      // own tolerant query rather than added to LINK_SELECT, because LINK_SELECT is used by every
+      // other read in this feature and naming a column that a not-yet-migrated deployment does
+      // not have would break all of them at once. Absent claim → the screen simply falls back to
+      // the account's display name, which is exactly the pre-0009 behaviour.
+      let claim = {};
+      const { data: claimRow } = await supabase
+        .from('parent_links')
+        .select('claimed_student_name, claimed_by_name, claimed_relationship')
+        .eq('id', link.id)
+        .maybeSingle();
+      if (claimRow) {
+        claim = {
+          claimedStudentName: claimRow.claimed_student_name || null,
+          claimedByName: claimRow.claimed_by_name || null,
+          claimedRelationship: claimRow.claimed_relationship || null,
+        };
+      }
+
       return res.status(200).json({
         invite: {
-          from: { name: inviter?.name || null, email: inviter?.email || null },
+          ...claim,
+          // The attested name, when there is one, is the name the screen leads with — see
+          // sendInviteEmail for why it beats the freely-editable account display name.
+          from: { name: claim.claimedByName || inviter?.name || null, email: inviter?.email || null },
           // Which role the ACCEPTER must be — the inverse of who sent it. The screen uses this to
           // say "you need a parent account for this" before the attempt, rather than after.
           youWouldBe: link.initiated_by === 'parent' ? 'student' : 'parent',

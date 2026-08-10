@@ -253,7 +253,7 @@ export const MILESTONES = [
     id: 'fr_course_selection', title: 'Pick next year\'s science courses', kind: 'academics', weight: P.critical,
     grades: ['freshman'], year: 'freshman', monthDay: '02-10',
     detail: 'Course selection happens once a year and quietly decides what you are allowed to take as a junior and senior. Get on the biology → chemistry → physics/anatomy track now.',
-    action: { tab: 'prep', view: 'pathway', label: 'See your pathway' },
+    action: { tab: 'prep', view: 'pathways', label: 'See your pathway' },
     why: (c) => c.sciencesNoneYet
       ? 'You told us you have not taken a core science course yet — this is the form that fixes that.'
       : 'Course selection is the one academic decision that is genuinely hard to undo later.',

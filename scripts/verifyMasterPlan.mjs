@@ -108,7 +108,14 @@ assert('the lock screen wires profile rows to the Settings deep link',
   /onGoProfileField=\{\(m\) => goSettings\?\.\(m\.goField\)\}/.test(plansSrc));
 assert('the lock screen makes unfinished profile rows clickable',
   /clickable=\{m\.state !== 'done' && !!onGoProfileField\}/.test(plansSrc));
-assert('goSettings accepts a field to focus', /const goSettings = useCallback\(\(field=null\)/.test(appSrc));
+// The second parameter is the settings SUB-TAB (Settings has real sub-tabs now — see
+// SETTINGS_SUBNAV in App.jsx). It is optional: a deep link that names only a field still works,
+// because goSettings maps the field to the sub-tab that renders it. Without that mapping the
+// lock screen's rows would open Settings on the wrong tab and highlight nothing.
+assert('goSettings accepts a field to focus', /const goSettings = useCallback\(\(field=null,\s*view=null\)/.test(appSrc));
+assert('goSettings knows which settings sub-tab owns a focusable field',
+  /SETTINGS_VIEW_FOR_FIELD/.test(appSrc),
+  'a focused field on a sub-tab that is not rendered is a deep link into a blank screen');
 assert('goSettings ignores a click event passed as the field',
   /typeof field==='string'\?field:null/.test(appSrc),
   'onClick={goSettings} would otherwise pass a SyntheticEvent as the focus target');
