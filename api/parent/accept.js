@@ -1,7 +1,13 @@
 // /api/parent/accept — redeems an invitation token.
 //
-//   POST { token }            → { accepted: true, link } | { accepted: false, reason }
-//   POST { token, preview: 1 } → { invite: { from, role, relationship } }  (no state change)
+//   POST { token | code }            → { accepted: true, link } | { accepted: false, reason }
+//   POST { token | code, preview: 1 } → { invite: { from, role, relationship } }  (no state change)
+//
+// A code and a token are two names for one invitation (migration 0010), and both are accepted here
+// so that a student handed a code by their parent is not sent back to find an email. The parent
+// direction has its own passwordless path in api/parent/claim.js; this remains the route for a
+// STUDENT responding to a parent's request, which needs a real student account and therefore a
+// real session.
 //
 // The preview exists because the accept screen has to tell you what you are agreeing to BEFORE
 // you agree — a page that reads "you are now sharing your progress" the first time it loads has
@@ -14,7 +20,9 @@
 // hash the token, and translate the function's reason codes into something a person can act on.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireUser, roleOf } from '../_lib/session.js';
-import { LINK_SELECT, hashInviteToken, serializeLink } from '../_lib/parentLinks.js';
+import {
+  LINK_SELECT, hashInviteToken, isUnknownColumn, normalizeInviteCode, serializeLink,
+} from '../_lib/parentLinks.js';
 
 // Reason code → what the person should be told and do about it. Written out in full rather than
 // falling through to a generic message because every one of these is a different next step, and
@@ -49,13 +57,34 @@ export default async function handler(req, res) {
   catch { return res.status(400).json({ error: 'Invalid JSON body.' }); }
 
   const raw = String(body?.token || '').trim();
-  if (!/^[0-9a-f]{64}$/i.test(raw)) {
+  const code = normalizeInviteCode(body?.code);
+  if (!/^[0-9a-f]{64}$/i.test(raw) && !code) {
     return res.status(400).json({ error: 'That invitation link is not valid. Ask for a new one.' });
   }
-  const tokenHash = hashInviteToken(raw);
+
   const supabase = getSupabaseAdmin();
 
   try {
+    // A code resolves to the invitation's token hash, and everything downstream is unchanged —
+    // there is still exactly one way an invitation is redeemed, and it is accept_parent_link().
+    let tokenHash = raw ? hashInviteToken(raw) : null;
+    if (!tokenHash) {
+      const { data: byCode, error: codeErr } = await supabase
+        .from('parent_links')
+        .select('invite_token_hash')
+        .eq('status', 'pending')
+        .ilike('invite_code', code)
+        .maybeSingle();
+      // A database without migration 0010 has no invite_code column, so a code cannot resolve
+      // there. Say so rather than 500-ing, and the emailed link still works.
+      if (codeErr && isUnknownColumn(codeErr)) {
+        return res.status(503).json({ error: 'Invitation codes are not available yet. Use the link in your email instead.' });
+      }
+      if (codeErr) throw codeErr;
+      if (!byCode) return res.status(404).json(REASONS.not_found);
+      tokenHash = byCode.invite_token_hash;
+    }
+
     // ── Preview ──────────────────────────────────────────────────────────────
     if (body?.preview) {
       const { data: link } = await supabase

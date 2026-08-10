@@ -14,3 +14,25 @@ export function getSupabaseAdmin() {
   client = createClient(url, key, { auth: { persistSession: false } });
   return client;
 }
+
+/**
+ * The one seam a test can use to stand in for the database.
+ *
+ * ── Why this is here rather than in a test helper ───────────────────────────
+ * Every handler in this repo reaches the database through getSupabaseAdmin() and nothing else,
+ * which is what makes "swap the database" a one-line operation instead of a mocking framework. But
+ * they import it as an ES module binding, and an ES namespace object is frozen — a test cannot
+ * reassign it from the outside. Without a seam the alternative is loader hooks, and the flows that
+ * most need end-to-end testing (scripts/verifyParentClaimFlow.mjs drives the passwordless parent
+ * claim through real requests) would go untested instead.
+ *
+ * Refused outright in production. This can only ever point the app at a different database, which
+ * is a catastrophic thing to be able to do by accident and a harmless one in a throwaway process
+ * that has no credentials in the first place.
+ */
+export function __setTestClient(next) {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('__setTestClient is not available in production.');
+  }
+  client = next;
+}

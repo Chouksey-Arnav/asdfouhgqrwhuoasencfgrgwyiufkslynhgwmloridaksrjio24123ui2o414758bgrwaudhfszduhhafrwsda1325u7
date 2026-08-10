@@ -30,7 +30,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
-  UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil,
+  UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
+  Mail, KeyRound, X,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, G, pill, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
@@ -58,6 +59,7 @@ const NAV = [
   { id: 'digest', label: 'This week', icon: Brain },
   { id: 'activity', label: 'Activity', icon: CalendarDays },
   { id: 'connections', label: 'Connections', icon: Link2 },
+  { id: 'guide', label: 'How this works', icon: LifeBuoy },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
@@ -213,6 +215,145 @@ function ActivityStrip({ days, hue }) {
   );
 }
 
+/**
+ * The page that explains the page.
+ *
+ * ── Why this is a tab and not a footnote ────────────────────────────────────
+ * Every number on this dashboard is about somebody else's child, and a parent who is not sure what
+ * a number means will decide anyway — usually at dinner, usually in the least generous direction
+ * available. "412 XP" gets read as an achievement or an indictment depending on the mood of the
+ * person reading it; the honest answer is that it is a participation count. Stating that costs one
+ * paragraph and prevents an argument, which is the best trade in this entire product.
+ *
+ * The second half of the page is troubleshooting, and it is here because the failures a family
+ * actually hits — an invitation that never arrived, a code sent to an address nobody reads, a
+ * dashboard that says nothing yet because the student has not opened the app since — all look
+ * identical from this side: an empty screen. Each has a different fix and none of them is obvious.
+ */
+function Guide({ user, onGo }) {
+  const Block = ({ icon: Icon, hue, title, children }) => (
+    <div style={glass({ ...CC({ gap: 10 }) })}>
+      <div style={R({ gap: 10 })}>
+        <div style={{
+          width: 32, height: 32, borderRadius: 9, flexShrink: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          background: tint(hue, 0.13), border: `1px solid ${tint(hue, 0.28)}`,
+        }}>
+          <Icon size={15} color={hue} />
+        </div>
+        <div style={{ fontSize: 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
+      </div>
+      <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7 }}>{children}</div>
+    </div>
+  );
+
+  const Line = ({ term, children }) => (
+    <div style={{ marginTop: 10 }}>
+      <span style={{ color: C.t1, fontWeight: 700 }}>{term}</span>
+      <span style={{ color: C.t2 }}> — {children}</span>
+    </div>
+  );
+
+  return (
+    <div style={CC({ gap: 16 })}>
+      <SectionTitle sub="What each part of this dashboard is, where the line is drawn, and what to do when something looks wrong.">
+        How this works
+      </SectionTitle>
+
+      <Block icon={Eye} hue={C.blue} title="What you can see">
+        Effort and outcomes, updated within a few minutes of your student studying — there is no
+        button they press to share, and nothing they can quietly turn off short of ending the
+        connection entirely.
+        <Line term="Days studied">
+          Any work at all counts as a day. The eight-week grid on the Activity tab matters more than
+          the streak number: three regular days a week is a habit, and a fourteen-day streak after
+          a month off is not yet one.
+        </Line>
+        <Line term="XP and level">
+          Time put in, not ability, and it only ever goes up. Worth watching the rate of change
+          rather than the total.
+        </Line>
+        <Line term="Lessons passed">
+          They answered the check questions correctly. Opening a lesson does not count.
+        </Line>
+        <Line term="Quiz average">
+          Practice, not exams, and quizzes get harder as they progress — a dip usually means new
+          material rather than a problem.
+        </Line>
+        <Line term="Practice-test scores">
+          The one number that maps to the real thing. Test-to-test movement is noisy; the direction
+          over three or four is the signal.
+        </Line>
+      </Block>
+
+      <Block icon={EyeOff} hue={C.t3} title="What you will never see">
+        Their conversations with the AI coach, their lesson notes and highlights, their essay
+        drafts, and which questions they got wrong. Not a setting and not a promise we are asking
+        you to trust: the parent view is assembled from a fixed list of progress fields, so a field
+        added to the app next month is invisible here by default rather than shared until somebody
+        notices.
+        <div style={{ marginTop: 10 }}>
+          That boundary is why students agree to share the rest of it. A study app somebody is being
+          read over the shoulder in is one they stop being honest inside, and an app they are not
+          honest inside stops being able to help them — which would cost you the very thing this
+          dashboard is measuring.
+        </div>
+      </Block>
+
+      <Block icon={Brain} hue={C.violet} title="The weekly read">
+        The “This week” tab turns the numbers into a sentence, including when the honest version is
+        that not much happened. It will never tell you your child is lazy, falling behind, or losing
+        interest — an absence of rows is not evidence of a motive, and this page has no way of
+        knowing about the exam week, the flu, or the fight with a friend that explains it.
+        <div style={{ marginTop: 10 }}>
+          It ends with something to <em>say</em> rather than something to enforce, and that is
+          deliberate. The most useful thing this dashboard can produce is a better question at
+          dinner.
+        </div>
+      </Block>
+
+      <Block icon={ShieldCheck} hue={C.green} title="Consent, and how to end it">
+        Your student agreed to this and can undo it from their own Settings, in one tap, without
+        asking you — it takes effect on the very next screen either of you loads. You can do exactly
+        the same from{' '}
+        <button
+          type="button" onClick={() => onGo('connections')}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.blueL, fontWeight: 600, fontSize: 13, fontFamily: C.FB }}
+        >Connections</button>.
+        The symmetry is the point: this is a shared arrangement, not a monitoring tool, and it only
+        keeps working because both of you can walk away from it.
+      </Block>
+
+      <Block icon={KeyRound} hue={C.cyan} title="Signing in, next time">
+        This account signs in with a 6-digit code emailed to <strong style={{ color: C.t1 }}>{user?.email}</strong>{' '}
+        — there is no password to remember. Go to medschoolprep.cloud/parents/login, enter that
+        address, and we will send one. You can set a password later from the sign-in screen if you
+        would rather have one.
+      </Block>
+
+      <Block icon={LifeBuoy} hue={C.amber} title="If something looks wrong">
+        <Line term="The dashboard is empty">
+          Either your student has not studied since connecting — the page fills in on its own, no
+          action needed — or the connection ended. Connections tells you which.
+        </Line>
+        <Line term="An invitation never arrived">
+          Ask your student to check the address they used, then to resend it from
+          Settings ▸ Family access. They can also read you the 8-character code from that screen,
+          which works without any email at all.
+        </Line>
+        <Line term="The numbers look out of date">
+          They refresh when your student's device next syncs, which needs them to open the app. A
+          few hours behind is normal; a few days usually means they have not opened it.
+        </Line>
+        <Line term="You have two children">
+          Each gets their own page and their own colour, which follows them across every tab. Invite
+          the second from Connections.
+        </Line>
+      </Block>
+    </div>
+  );
+}
+
 // ── The app ─────────────────────────────────────────────────────────────────
 
 export default function ParentApp({ user, onSignedOut }) {
@@ -229,6 +370,9 @@ export default function ParentApp({ user, onSignedOut }) {
   const [profile, setProfile] = useState(null);
   const [profileComplete, setProfileComplete] = useState(null);
   const [profileAvailable, setProfileAvailable] = useState(true);
+  // Per-session, not persisted. A prompt that stays dismissed forever is one nobody ever acts on;
+  // a prompt that comes back every render is one everybody learns to ignore.
+  const [dismissedNudge, setDismissedNudge] = useState(false);
 
   // Same two-pass theme dance as AuthGate and App: applying a theme mutates the shared `C` token
   // object, which an already-committed render cannot observe, so the apply happens in an effect and
@@ -321,11 +465,19 @@ export default function ParentApp({ user, onSignedOut }) {
   );
   const greetingName = firstName(profile?.fullName || user?.name) || null;
 
-  // ── The setup gate ───────────────────────────────────────────────────────
-  // Before the declaration is finished this account cannot invite anyone or read anything (the
-  // server enforces both — see api/parent/links.js and api/parent/summary.js), so showing it a
-  // dashboard would be showing it a screen made entirely of 403s.
-  const needsSetup = profileComplete === false && profileAvailable;
+  // ── The declaration is a prompt now, not a gate ──────────────────────────
+  //
+  // It used to block the entire dashboard, on the reasoning that an incomplete account could not
+  // read anything anyway. That stopped being true when the server dropped the gate (see the long
+  // note in api/parent/summary.js): the declaration is required to SEND an invitation, which is
+  // where the impersonation risk actually lives, and it was never what kept a stranger out.
+  //
+  // Which means the wall was only ever standing in front of one person — a parent who had just
+  // accepted their own child's invitation, being asked to prove who they were to a student who
+  // had typed their address in themselves. They now land on the dashboard they were invited to,
+  // and are asked for the details in the two places where asking makes sense: as a dismissible
+  // note here, and as a required step if they ever go to invite somebody.
+  const incompleteProfile = profileComplete === false && profileAvailable;
 
   const shell = (children, { nav = true } = {}) => (
     // flex:1 with its own scroller: #root is a flex row with overflow:hidden (src/index.css), so a
@@ -391,37 +543,110 @@ export default function ParentApp({ user, onSignedOut }) {
     );
   }
 
-  if (needsSetup || view === 'setup') {
+  if (view === 'setup') {
     return shell(
       <div style={CC({ gap: 18 })}>
-        {needsSetup && (
-          <div style={glass({ ...CC({ gap: 8 }) })}>
-            <SectionTitle sub="It takes about a minute, and your student sees what you write here when your request reaches them.">
-              Set up your parent dashboard
-            </SectionTitle>
-          </div>
-        )}
+        <div style={glass({ ...CC({ gap: 8 }) })}>
+          <SectionTitle sub="Required before you can send an invitation of your own — your student sees what you write here when your request reaches them. Not required to read a dashboard somebody already invited you to.">
+            Your details
+          </SectionTitle>
+        </div>
         <ParentSetup
           user={user}
-          onDone={(saved) => { setProfile(saved); setProfileComplete(true); go('dashboard'); load(); }}
-          onSkip={needsSetup ? null : () => go('settings')}
+          onDone={(saved) => { setProfile(saved); setProfileComplete(true); go('connections'); load(); }}
+          onSkip={() => go(students.length ? 'dashboard' : 'connections')}
         />
       </div>,
-      { nav: !needsSetup },
     );
   }
 
   const noStudents = !students.length;
 
+  /**
+   * The empty dashboard, which is the screen a brand-new parent account is most likely to see —
+   * and the one the old version handled worst. It said "no students connected yet" and offered an
+   * invite form, which is exactly wrong for the common case: this parent did not come here to
+   * invite anybody, they came here because their child invited THEM and something did not stick.
+   *
+   * So it answers that question first, and offers the invite path second.
+   */
   const inviteCta = (
-    <Empty
-      icon={Users}
-      title="No students connected yet"
-      body="Invite your student with the email address they use to sign in. They'll see who you are and exactly what would be shared, and they have to accept before anything reaches you — either of you can end it at any time."
-    >
-      <ConnectionsPanel role="parent" onChanged={() => load()} />
-    </Empty>
+    <div style={CC({ gap: 16 })}>
+      <div style={glass({ ...CC({ gap: 14 }) })}>
+        <div style={{
+          width: 40, height: 40, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: tint(C.blue, 0.13), border: `1px solid ${tint(C.blue, 0.28)}`,
+        }}>
+          <Users size={19} color={C.blue} />
+        </div>
+        <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+          Nothing to show yet
+        </div>
+        <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
+          This account isn't connected to a student. Nothing about anybody is visible here until one
+          of you invites the other and the other accepts.
+        </div>
+
+        <div style={glass2({ ...CC({ gap: 10 }) })}>
+          <div style={R({ gap: 9 })}>
+            <Mail size={14} color={C.blueL} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>Your student already invited you?</span>
+          </div>
+          <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+            Open the link they sent, or ask them for the 8-character code from their
+            Settings ▸ Family access and enter it at{' '}
+            <a href="/parents" style={{ color: C.blueL, fontWeight: 600 }}>medschoolprep.cloud/parents</a>.
+            Their invitation has to be accepted from the address it was sent to — if that isn't{' '}
+            <strong style={{ color: C.t1 }}>{user?.email}</strong>, ask them to re-send it to this one.
+          </div>
+        </div>
+      </div>
+
+      <div style={glass({ ...CC({ gap: 12 }) })}>
+        <SectionTitle sub="They'll get a request naming you, and nothing reaches you until they accept it.">
+          Or invite your student
+        </SectionTitle>
+        {incompleteProfile ? (
+          <div style={CC({ gap: 10 })}>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+              Before you can send a request we need your name, your relationship to them, and a
+              number we can reach you on. That is not paperwork for its own sake: it is what the
+              request says when it lands in your student's inbox, and it is the only way they can
+              tell a request from you apart from one from a stranger.
+            </div>
+            <button type="button" onClick={() => go('setup')} style={btn(C.blueGrad, { alignSelf: 'flex-start' })}>
+              <UserCog size={14} /> Add your details
+            </button>
+          </div>
+        ) : (
+          <ConnectionsPanel role="parent" onChanged={() => load()} />
+        )}
+      </div>
+    </div>
   );
+
+  /** A note, not a wall — see the comment on `incompleteProfile`. Only shown where it is true. */
+  const profileNudge = incompleteProfile && students.length > 0 && !dismissedNudge ? (
+    <div style={glass2({ ...R({ gap: 10, alignItems: 'flex-start' }), borderColor: tint(C.amber, 0.3), background: tint(C.amber, 0.05) })}>
+      <UserCog size={15} color={C.amberL} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ minWidth: 0, flex: 1, fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+        We don't have your name or a contact number yet. Adding them takes a minute and is what
+        lets you invite another student later — your dashboard works either way.{' '}
+        <button
+          type="button" onClick={() => go('setup')}
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.blueL, fontWeight: 600, fontSize: 12.5, fontFamily: C.FB }}
+        >
+          Add them now
+        </button>
+      </div>
+      <button
+        type="button" onClick={() => setDismissedNudge(true)} aria-label="Dismiss"
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, display: 'flex', padding: 4 }}
+      >
+        <X size={14} />
+      </button>
+    </div>
+  ) : null;
 
   return shell(
     <>
@@ -429,6 +654,7 @@ export default function ParentApp({ user, onSignedOut }) {
       {view === 'dashboard' && (
         noStudents ? inviteCta : (
           <div style={CC({ gap: 18 })}>
+            {profileNudge}
             <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' })}>
               <SectionTitle sub={students.length === 1
                 ? 'Effort and results, updated as they study. Coach chats, notes and essays stay private to them.'
@@ -584,6 +810,9 @@ export default function ParentApp({ user, onSignedOut }) {
           </div>
         </div>
       )}
+
+      {/* ── How this works ───────────────────────────────────────────────── */}
+      {view === 'guide' && <Guide user={user} onGo={go} />}
 
       {/* ── Settings ─────────────────────────────────────────────────────── */}
       {view === 'settings' && (

@@ -16,9 +16,9 @@
 // one. That check happens in a human's head, and it is the only check that can actually catch
 // impersonation; everything this module does is in service of making it possible.
 //
-// It also makes creating a parent account cost something. Every field here is required before
-// the account can invite anyone or read anything.
-import { getSupabaseAdmin } from './supabaseAdmin.js';
+// It also makes creating a parent account cost something: every field here is required before the
+// account can invite anybody. It is NOT required to read a dashboard somebody already invited them
+// to — see the note above isProfileComplete for why that gate was removed and what it was costing.
 
 /** Postgres/PostgREST codes that mean "migration 0009 has not been applied here yet". */
 const MISSING_SCHEMA = new Set(['42P01', '42883', 'PGRST202', 'PGRST205']);
@@ -105,9 +105,11 @@ export function serializeParentProfile(row) {
  *
  * `schemaMissing` is a real, expected state rather than an error: migrations here are applied by
  * hand (see the header of any migration file), so a deployment can legitimately be running this
- * code against a database without 0009. Callers use it to decide whether the requirement applies
- * at all — see requireCompleteProfile below for why fail-open is the right call THERE and would
- * not be for a real authorization gate.
+ * code against a database without 0009. Callers treat it as "the requirement does not apply here"
+ * — a deployment without the table cannot have anybody's declaration in it, and refusing to send
+ * invitations until one appears would break the feature to enforce a check the schema cannot
+ * store. That is safe precisely because this is not the authorization boundary; the guards that
+ * are (requireParent, getActiveLink) never touch this table.
  */
 export async function getParentProfile(supabase, userId) {
   try {
@@ -127,30 +129,26 @@ export async function getParentProfile(supabase, userId) {
 export const isProfileComplete = (row) => !!row?.completed_at && !!row?.attested;
 
 /**
- * The gate every parent endpoint calls before doing work: sends the response and returns false
- * when the account has not finished its setup.
+ * ── Where this declaration is required, and where it deliberately is not ────
  *
- * ── Why this fails OPEN on a missing table ──────────────────────────────────
- * Because it is not the thing keeping a stranger out. Consent is: a student has to click a link
- * in their own inbox, and getActiveLink re-reads that consent on every single request. This gate
- * adds accountability and friction on top of it. On a deployment where 0009 has not been applied,
- * failing closed would break every existing parent's dashboard — locking real guardians out of
- * data their children already agreed to share — to enforce a check that was never the reason
- * their access was safe. Failing open leaves the pre-0009 behaviour exactly as it was.
+ * REQUIRED to SEND an invitation (api/parent/links.js). That is the moment it exists for: an
+ * invitation arriving at a student's inbox has to name a person and a claimed relationship, or the
+ * student is being asked to make a privacy decision about an email address. That recognition
+ * happens in a human's head and it is the only check in this system capable of catching an
+ * impersonator — this declaration is what gives it something to work with.
  *
- * A gate that WAS the authorization boundary would have to fail closed, and none of the ones that
- * are (requireParent, getActiveLink) touch this table.
+ * NOT REQUIRED to READ a dashboard (api/parent/summary.js). It used to be, and that gate could
+ * only ever fire on a family that had done everything right — see the long note in that file. A
+ * parent who was invited by their own child was being asked to prove who they were to a student
+ * who had just typed their address in themselves, and was locked out of the dashboard until they
+ * did. The endpoint reports completeness now instead of enforcing it, and the dashboard asks for
+ * the details where asking makes sense.
+ *
+ * What was never true, and is still not: that any of this is the authorization boundary. Consent
+ * is — a student clicks a link in their own inbox, and getActiveLink re-reads that consent on
+ * every single request. Nothing in this file grants access, so nothing in it could be forged into
+ * access.
  */
-export async function requireCompleteProfile(res, { supabase = getSupabaseAdmin(), userId }) {
-  const { row, schemaMissing } = await getParentProfile(supabase, userId);
-  if (schemaMissing) return true;
-  if (isProfileComplete(row)) return true;
-  res.status(403).json({
-    error: 'Finish setting up your parent account first.',
-    reason: 'profile_incomplete',
-  });
-  return false;
-}
 
 /**
  * Insert-or-update, with completed_at derived here rather than accepted from the client.

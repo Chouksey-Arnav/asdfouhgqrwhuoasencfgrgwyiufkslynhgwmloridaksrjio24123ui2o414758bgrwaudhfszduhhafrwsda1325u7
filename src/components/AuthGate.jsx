@@ -19,7 +19,7 @@ import OAuthCallbackView from './auth/OAuthCallbackView';
 import ParentApp from './parent/ParentApp';
 import InviteScreen from './parent/InviteScreen';
 import ParentsLanding from './parent/ParentsLanding';
-import { inviteTokenFromUrl } from '../lib/parentApi';
+import { inviteFromUrl } from '../lib/parentApi';
 
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
@@ -105,8 +105,8 @@ export default function AuthGate({ children }) {
   //
   // It resolves once, from the URL this page loaded with, and is then cleared explicitly: the
   // token must not survive into the app the visitor lands in afterwards.
-  const [inviteToken, setInviteToken] = useState(
-    () => (isParentInvitePath(window.location.pathname) ? inviteTokenFromUrl() : null),
+  const [invite, setInvite] = useState(
+    () => (isParentInvitePath(window.location.pathname) ? inviteFromUrl() : { token: null, code: null }),
   );
 
   const openLegal = useCallback((path) => {
@@ -260,14 +260,20 @@ export default function AuthGate({ children }) {
     );
   }
 
-  if (inviteToken) {
+  if (invite.token || invite.code) {
+    const clearInvite = () => setInvite({ token: null, code: null });
     return (
       <InviteScreen
-        token={inviteToken}
+        token={invite.token}
+        code={invite.code}
         user={status === 'signedIn' ? user : null}
-        onDone={() => { setInviteToken(null); restore(); }}
-        onSignIn={(email) => { setInviteToken(null); goTo('login', email); }}
-        onSignUp={(email, role) => { setInviteToken(null); goTo('signup', email, role); }}
+        // The claim flow signs the parent in itself — it creates the account, mints the session
+        // and accepts the invitation in one request — so it hands the session straight back here
+        // rather than sending anyone to a login form they have no password for.
+        onAuthed={(token, authedUser) => { clearInvite(); handleAuthed(token, authedUser); }}
+        onDone={() => { clearInvite(); restore(); }}
+        onSignIn={(email) => { clearInvite(); goTo('login', email); }}
+        onSignUp={(email, role) => { clearInvite(); goTo('signup', email, role); }}
         onSignOut={async () => {
           // Deliberately keeps the invite screen mounted rather than dropping the visitor at the
           // login page: they came here to answer an invitation, and the screen re-renders with

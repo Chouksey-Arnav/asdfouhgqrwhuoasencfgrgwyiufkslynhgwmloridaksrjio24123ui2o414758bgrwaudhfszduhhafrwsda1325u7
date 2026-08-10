@@ -7672,6 +7672,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
               Share your progress with a parent or guardian. They'd see your streak, XP, lessons passed and test scores — never your Medabrain chats, your lesson notes, or your essays. Nothing is shared until they accept, and you can cut it off here at any time.
             </p>
+            {/* Said here because the student is the one who gets asked "how do I do this?" — and
+                because the honest answer removes the objection. The old flow made inviting a
+                parent feel like signing them up for something; it is now a link and half a
+                minute. */}
+            <p style={{fontSize:12.5,color:C.t3,marginBottom:14,lineHeight:1.65}}>
+              It's quick for them: they open the link, we email them a 6-digit code, and that's it —
+              no password, and they never sign in as you. Once you've invited someone you can copy
+              the link or read them the code from here, so it works even if the email goes astray.
+            </p>
             <ConnectionsPanel role="student" />
           </div>
 

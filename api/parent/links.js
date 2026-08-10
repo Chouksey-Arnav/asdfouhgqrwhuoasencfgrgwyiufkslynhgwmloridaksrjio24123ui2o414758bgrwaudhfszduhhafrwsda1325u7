@@ -2,6 +2,7 @@
 //
 //   GET                              → { links: [...], role }
 //   POST   { email, relationship? }  → { link } — invite the other side
+//   PATCH  { linkId }                → { link } — resend the invitation email
 //   DELETE { linkId }                → { revoked: true } — end it, or cancel/decline an invite
 //
 // Served to BOTH roles, which is the point: a link is one row with two owners, and a student who
@@ -11,7 +12,8 @@
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireUser, roleOf, isUuid } from '../_lib/session.js';
 import {
-  EMAIL_RE, INVITE_TTL_DAYS, LINK_SELECT, mintInviteToken, sendInviteEmail, serializeLink,
+  EMAIL_RE, INVITE_TTL_DAYS, LINK_SELECT, LINK_SELECT_SHARE, isUnknownColumn, mintInviteCode,
+  mintInviteToken, queryLinks, sendInviteEmail, serializeLink,
 } from '../_lib/parentLinks.js';
 import { getParentProfile, isProfileComplete } from '../_lib/parentProfile.js';
 
@@ -20,12 +22,17 @@ import { getParentProfile, isProfileComplete } from '../_lib/parentProfile.js';
 // is above any real household and far below anything worth abusing.
 const MAX_PENDING_INVITES = 5;
 
+// The floor between two sends of the same invitation. Resending is the single most useful thing
+// somebody can do when the mail did not arrive, so the button has to be there — and an unthrottled
+// one is a mail-bomb aimed at whatever address was typed into it.
+const RESEND_COOLDOWN_MS = 60 * 1000;
+
 const MISSING_SCHEMA = new Set(['42P01', '42883', 'PGRST202', 'PGRST205']);
 const isMissingSchema = (err) => !!err && (MISSING_SCHEMA.has(err.code) || /does not exist|schema cache/i.test(err.message || ''));
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
@@ -39,24 +46,27 @@ export default async function handler(req, res) {
   try {
     // ── List ─────────────────────────────────────────────────────────────────
     if (req.method === 'GET') {
-      const { data, error } = await supabase
+      // queryLinks asks for the migration-0010 columns and silently retries without them on a
+      // database that has not had 0010 applied yet — the share kit is then simply absent, and the
+      // panel falls back to what it could always do. See its header.
+      const { data, error } = await queryLinks((select) => supabase
         .from('parent_links')
-        .select(LINK_SELECT)
+        .select(select)
         .eq(mine, user.id)
         .in('status', ['pending', 'active'])
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }));
       if (error) throw error;
 
       // An invitation addressed to THIS account that the other side started. It has no user id on
       // our column yet — it is addressed to an email — so the query above cannot see it, and
       // without this a student would never learn a request was waiting for them.
-      const { data: inbound } = await supabase
+      const { data: inbound } = await queryLinks((select) => supabase
         .from('parent_links')
-        .select(LINK_SELECT)
+        .select(select)
         .is(mine, null)
         .eq('status', 'pending')
         .ilike('invite_email', user.email)
-        .gt('invite_expires_at', new Date().toISOString());
+        .gt('invite_expires_at', new Date().toISOString()));
 
       const links = [...(data || []), ...(inbound || [])].map(row => serializeLink(row, role));
       return res.status(200).json({ role, links });
@@ -135,20 +145,43 @@ export default async function handler(req, res) {
       }
 
       const { token, hash } = mintInviteToken();
-      const { data: link, error } = await supabase
-        .from('parent_links')
-        .insert({
-          [mine]: user.id,
-          status: 'pending',
-          initiated_by: role,
-          relationship: claimedRelationship,
-          ...claimColumns,
-          invite_email: email,
-          invite_token_hash: hash,
-          invite_expires_at: new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
-        })
-        .select(LINK_SELECT)
-        .single();
+      const code = mintInviteCode();
+      const baseRow = {
+        [mine]: user.id,
+        status: 'pending',
+        initiated_by: role,
+        relationship: claimedRelationship,
+        ...claimColumns,
+        invite_email: email,
+        invite_token_hash: hash,
+        invite_expires_at: new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      // Same shape as the claim columns above, and for the same reason: naming a column PostgREST
+      // has never heard of fails the whole insert, which would turn "0010 has not been applied
+      // here yet" into "nobody can invite anyone". The invitation still works through its token on
+      // such a deployment — it just has no shareable code attached.
+      const insert = (row) => supabase.from('parent_links').insert(row).select(LINK_SELECT_SHARE).single();
+      const withCode = (c) => ({ ...baseRow, invite_code: c, last_sent_at: new Date().toISOString() });
+
+      let sentCode = code;
+      let { data: link, error } = await insert(withCode(sentCode));
+
+      // A collision on the code index rather than on the email one. At 30^8 across the handful of
+      // invitations live at any moment this is somewhere past astronomically unlikely — but the two
+      // failures share the 23505 code, and the fallback below would tell a student "you already
+      // have an invitation waiting for that address" about an address they had never used. One
+      // retry with a fresh code costs nothing and removes the whole question.
+      if (error?.code === '23505' && /invite_code/.test(error.message || error.details || '')) {
+        sentCode = mintInviteCode();
+        ({ data: link, error } = await insert(withCode(sentCode)));
+      }
+
+      let hasCode = !error;
+      if (error && isUnknownColumn(error)) {
+        ({ data: link, error } = await supabase.from('parent_links').insert(baseRow).select(LINK_SELECT).single());
+        hasCode = false;
+      }
 
       if (error) {
         // 23505 is the partial unique index on (inviter, lower(invite_email)) where status='pending'
@@ -166,10 +199,17 @@ export default async function handler(req, res) {
       // back: the invitation genuinely exists, the client is told the email did not go out, and
       // "resend" works because the row is there to resend from. Rolling back would be the worse
       // trade — it turns a transient SMTP hiccup into a lost invitation with no trace.
+      //
+      // With a code on the row this stops being much of a failure at all. The response carries the
+      // shareable link either way, so a student whose mail did not go out can text it instead and
+      // the invitation completes normally — which matters, because the relay has a monthly quota
+      // and the invitation is exactly the mail that dies first when it runs out.
+      let emailSent = true;
       try {
         await sendInviteEmail({
           to: email,
           token,
+          code: hasCode ? sentCode : null,
           inviterName: user.name,
           inviterRole: role,
           relationship: claimedRelationship,
@@ -178,14 +218,120 @@ export default async function handler(req, res) {
         });
       } catch (err) {
         console.error('parent invite email failed:', err);
-        return res.status(200).json({
-          link: serializeLink(link, role),
-          emailSent: false,
-          warning: 'The invitation was created but the email could not be sent. Try resending it in a moment.',
+        emailSent = false;
+      }
+
+      return res.status(200).json({
+        link: serializeLink(link, role),
+        emailSent,
+        warning: emailSent ? undefined : (hasCode
+          ? "We couldn't send the email just now — but the invitation is live. Share the link or code below instead, or try resending in a moment."
+          : 'The invitation was created but the email could not be sent. Try resending it in a moment.'),
+      });
+    }
+
+    // ── Resend ───────────────────────────────────────────────────────────────
+    //
+    // The recovery path for the most common way this feature fails, which is not a bug in any of
+    // this code: the mail lands in Promotions, or goes to the address with the typo in it, or the
+    // relay's monthly quota ran out overnight. Before this existed the only control on an
+    // unanswered invitation was the one that cancelled it.
+    //
+    // The token is NOT re-minted. Re-minting would invalidate the link already sitting in the
+    // recipient's inbox and the code already read out over the phone — so a resend that "fixed"
+    // things would break the two channels most likely to be working.
+    if (req.method === 'PATCH') {
+      let body;
+      try { body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {}); }
+      catch { return res.status(400).json({ error: 'Invalid JSON body.' }); }
+
+      const linkId = String(body?.linkId || '').trim();
+      if (!isUuid(linkId)) return res.status(400).json({ error: 'Missing link id.' });
+
+      const { data: link, error: readErr } = await queryLinks((select) => supabase
+        .from('parent_links')
+        .select(select)
+        .eq('id', linkId)
+        .maybeSingle());
+      if (readErr) throw readErr;
+      if (!link) return res.status(404).json({ error: 'That invitation no longer exists.' });
+
+      // Only the sender may resend. The recipient already has it, and anyone else has no business
+      // causing mail to be sent to an address they do not own.
+      if (link[mine] !== user.id || link.status !== 'pending') {
+        return res.status(403).json({ error: 'That invitation is not yours to resend.' });
+      }
+
+      const lastSent = link.last_sent_at ? new Date(link.last_sent_at).getTime() : 0;
+      const waitMs = lastSent + RESEND_COOLDOWN_MS - Date.now();
+      if (waitMs > 0) {
+        return res.status(429).json({
+          error: `Just sent — wait ${Math.ceil(waitMs / 1000)} seconds before sending it again.`,
+          retryAfterMs: waitMs,
         });
       }
 
-      return res.status(200).json({ link: serializeLink(link, role), emailSent: true });
+      // The raw token only ever existed in the response to the original POST and in the mail it
+      // sent; only its hash is stored (see mintInviteToken). So a resend re-sends the CODE, which
+      // is the channel that survives being stored, and the emailed link is built from it.
+      if (!link.invite_code) {
+        return res.status(503).json({
+          error: 'This invitation predates code-based sharing and cannot be resent. Cancel it and send a new one.',
+          reason: 'no_code',
+        });
+      }
+
+      // The claim the sender attested to when this invitation was created. Re-read in its own
+      // tolerant query (same reasoning as api/parent/accept.js) and re-stated in the resent mail:
+      // an invitation that named a person the first time and nobody the second time is a different
+      // invitation, and the naming is the only part of it a recipient can actually check.
+      let claim = {};
+      const { data: claimRow } = await supabase
+        .from('parent_links')
+        .select('claimed_student_name, claimed_by_name')
+        .eq('id', linkId)
+        .maybeSingle();
+      if (claimRow) {
+        claim = {
+          claimedName: claimRow.claimed_by_name || null,
+          claimedStudentName: claimRow.claimed_student_name || null,
+        };
+      }
+
+      try {
+        await sendInviteEmail({
+          to: link.invite_email,
+          token: null,
+          code: link.invite_code,
+          inviterName: user.name,
+          inviterRole: role,
+          relationship: link.relationship,
+          claimedName: claim.claimedName || null,
+          claimedStudentName: claim.claimedStudentName || null,
+        });
+      } catch (err) {
+        console.error('parent invite resend failed:', err);
+        return res.status(502).json({
+          error: "We couldn't send the email just now. Share the link or code directly instead.",
+          reason: 'send_failed',
+        });
+      }
+
+      const now = new Date().toISOString();
+      await supabase.from('parent_links')
+        .update({
+          last_sent_at: now,
+          // Resending renews the clock too. An invitation somebody is actively trying to deliver
+          // should not quietly expire underneath them on day seven.
+          invite_expires_at: new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString(),
+        })
+        .eq('id', linkId);
+      await supabase.from('parent_link_events').insert({ link_id: linkId, event: 'resent', actor: user.id });
+
+      return res.status(200).json({
+        link: serializeLink({ ...link, last_sent_at: now }, role),
+        emailSent: true,
+      });
     }
 
     // ── Revoke / cancel / decline ────────────────────────────────────────────
