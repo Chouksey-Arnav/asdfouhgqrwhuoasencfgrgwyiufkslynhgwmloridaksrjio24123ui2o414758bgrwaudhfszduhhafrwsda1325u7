@@ -1810,7 +1810,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   };
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  const [sName,setSN]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);const [sExamDate,setSExamDate]=useState('');
+  const [sName,setSN]=useState('');const [sAge,setSAge]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);const [sExamDate,setSExamDate]=useState('');
   // Settings > "Your Goals" — lets a student revisit/update what onboarding collected (goal,
   // obstacles, study method, things they want to accomplish) instead of it being locked in at
   // signup forever. Buffers are only seeded from `user` when the Edit button is clicked (tSettings()).
@@ -2223,13 +2223,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const name=(profile.name||'').trim();
     if(!name)return;
     const gradeStage = GRADE_STAGES[profile.gradeIdx]?.key || null;
+    let age = null;
+    if(profile.month && profile.day && profile.year) {
+      const birthDate = new Date(profile.year, profile.month - 1, profile.day);
+      const today = new Date();
+      age = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if(monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) age--;
+    }
     // Every one of these used to be computed for routing purposes only and
     // then discarded — Medabrain, the dashboard, and Portfolio never saw
     // them again. Persisting them onto the user record is what lets
     // buildCoachSystemPrompt() (src/lib/studentProfile.js) and the
     // onboarding recap card actually use what the student told us.
     saveUser({
-      name, specialty:null, gradeStage, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
+      name, specialty:null, gradeStage, age, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
       goal:profile.goal||null, obstacles:profile.obstacles||[], studyMethod:profile.studyMethod||null,
       accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
       onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
@@ -7109,7 +7117,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
           <div style={{flex:1,minWidth:200}}>
             <div style={{fontSize:11,fontWeight:700,color:accent,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:4}}>Settings</div>
-            <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{user.name}</h2>
+            <div style={R({gap:12,alignItems:'baseline',flexWrap:'wrap'})}>
+              <h2 style={{fontSize:24,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.03em',margin:0}}>{user.name}</h2>
+              {user.age && <span style={{fontSize:14,color:C.t3,fontFamily:C.FM}}>Age {user.age}</span>}
+            </div>
             <div style={R({gap:8,marginTop:8,flexWrap:'wrap'})}>
               <span style={pill(`${accent}20`,accent,{fontFamily:C.FM})}>Level {lvl} · {(user.xp||0).toLocaleString()} XP</span>
               {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:4}}><Flame size={11}/>{streak} day streak</span>}
@@ -7190,6 +7201,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SL>Display Name</SL>
           <div style={CC({gap:4,marginBottom:14})}><input style={inp()} placeholder={user.name} value={sName} onChange={e=>setSN(e.target.value)}/></div>
           <button style={btn(accentGrad(accent))} onClick={()=>{if(!sName.trim())return;const nextName=sName.trim();saveUser({...user,name:nextName});AuthAPI.updateMe({name:nextName}).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});setSN('');toast.success('Name updated');}}>Save Name</button>
+
+          <div style={{marginTop:18}}>
+            <SL>Age</SL>
+            <div style={CC({gap:4,marginBottom:14})}><input style={inp({width:'auto'})} type="number" min="5" max="120" placeholder={user.age ? String(user.age) : 'Your age'} value={sAge} onChange={e=>setSAge(e.target.value)}/></div>
+            <button style={btn(accentGrad(accent))} onClick={()=>{const age=Number(sAge);if(isNaN(age)||age<5||age>120)return;saveUser({...user,age});setSAge('');toast.success('Age updated');}}>Save Age</button>
+          </div>
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
