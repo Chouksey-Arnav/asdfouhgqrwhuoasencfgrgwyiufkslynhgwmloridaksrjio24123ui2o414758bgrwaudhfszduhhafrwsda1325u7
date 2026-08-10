@@ -81,6 +81,14 @@ export default function AgeBlockedStep({ account, onSignedOut }) {
         very happy to have you.
       </p>
 
+      <p style={{ margin: 0, maxWidth: 380, fontSize: 14.5, lineHeight: 1.7, color: C.t2 }}>
+        And we're not done building. We're already working on a version of
+        MedSchoolPrep made for middle schoolers — and, someday, maybe one for
+        elementary schoolers too, for kids who already know medicine is the
+        thing. If that's you, you're not too early. You're just early enough
+        to be worth waiting for.
+      </p>
+
       <div
         style={{
           maxWidth: 400, width: '100%', padding: '14px 16px', borderRadius: 12,

@@ -158,7 +158,17 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   // where COPPA is first decided. `blocked` is initialised from storage so a
   // failed screen survives a reload — a gate you get past by pressing refresh
   // is not a gate. See src/lib/ageGate.js for why the block lives there.
-  const [blocked, setBlocked] = useState(() => isAgeBlocked());
+  // `preview` is the dev-only "Replay Onboarding" tool (see App.jsx), which
+  // reruns this flow for an account that is already signed in and already
+  // real — it exists to look at screens again, not to re-decide whether the
+  // account is old enough to exist. It must never re-trigger the age gate:
+  // doing so would (a) show an already-13-or-older user a false block because
+  // a *previous, unrelated* failed age check left `msp_ageBlocked` set on
+  // this device and was never cleared (deletion can fail and leave the flag
+  // stuck — see AgeBlockedStep), and (b) worse, would run the real account
+  // deletion in AgeBlockedStep against a live, signed-in account just because
+  // someone scrolled a wheel while previewing.
+  const [blocked, setBlocked] = useState(() => !preview && isAgeBlocked());
 
   /** The three wheel indices, as a real date. MONTHS/DAYS/YEARS are the exact
    *  arrays the wheels render, so this stays correct if their ranges change. */
@@ -172,7 +182,11 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   // while they are still spinning them — otherwise every pass through a young
   // year on the way to an older one would trip the gate mid-scroll.
   function advanceFromStartingPoint() {
-    if (isUnderMinAge(birthdateFrom(answers))) {
+    // See the `blocked` init above: preview replays onboarding for an
+    // account that already exists, so there is no age decision left to make
+    // here — and no real account should ever be deleted just because someone
+    // was previewing screens.
+    if (!preview && isUnderMinAge(birthdateFrom(answers))) {
       recordAgeBlocked();
       setBlocked(true);
       return;
@@ -369,7 +383,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   // return to and nothing left to make progress through. Offering either would
   // be inviting the "guess a different birthday" retry that the gate exists to
   // prevent.
-  if (blocked) {
+  if (blocked && !preview) {
     return (
       <OnboardingShell stepKey="ageBlocked" steps={[]} showBack={false} showProgress={false}>
         <AgeBlockedStep account={account} />
