@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Mail, ArrowRight } from 'lucide-react';
+import { Mail, ArrowRight, GraduationCap, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { C, btn, inp, lbl, CC } from '../../lib/theme';
+import { C, btn, inp, lbl, CC, tint } from '../../lib/theme';
 import * as AuthAPI from '../../lib/authApi';
 import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider, ConsentNotice } from './ui';
 import GoogleButton from './GoogleButton';
@@ -10,9 +10,68 @@ import GoogleButton from './GoogleButton';
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const CODE_RE = /^\d{6}$/;
 
-export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAuthed }) {
+/**
+ * The two kinds of account, chosen once and never again.
+ *
+ * Role is written at account creation and by no endpoint afterwards (see api/auth/complete-signup.js
+ * and migration 0006's header) — a student who could flip themselves to 'parent' could then invite
+ * anyone and read their progress. That makes this control the single moment the decision is made,
+ * which is why it states the consequence rather than just naming the two options.
+ */
+const ROLES = [
+  {
+    id: 'student', icon: GraduationCap, hue: () => C.blue,
+    title: "I'm the student",
+    desc: 'Lessons, practice tests, essays, and your whole application in one place.',
+  },
+  {
+    id: 'parent', icon: Users, hue: () => C.violet,
+    title: "I'm a parent or guardian",
+    desc: "Follow your student's progress once they accept. You won't have lessons of your own.",
+  },
+];
+
+function RolePicker({ value, onChange }) {
+  return (
+    <div style={CC({ gap: 8 })}>
+      <label style={lbl({ marginBottom: 0 })}>What kind of account?</label>
+      {ROLES.map(({ id, icon: Icon, hue, title, desc }) => {
+        const c = hue();
+        const on = value === id;
+        return (
+          <button
+            key={id} type="button" onClick={() => onChange(id)}
+            aria-pressed={on}
+            style={{
+              display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', width: '100%',
+              padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontFamily: C.FB,
+              background: on ? tint(c, 0.10) : C.surf2,
+              border: `1px solid ${on ? tint(c, 0.45) : C.b1}`,
+              transition: 'all .15s',
+            }}
+          >
+            <div style={{
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0, display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              background: tint(c, 0.13), border: `1px solid ${tint(c, 0.28)}`,
+            }}>
+              <Icon size={15} color={c} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{title}</div>
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function SignupView({ initialEmail = '', initialRole = 'student', onBack, onGoLogin, onAuthed }) {
   const [step, setStep] = useState('email'); // email | code | password
   const [email, setEmail] = useState(initialEmail);
+  const [role, setRole] = useState(initialRole === 'parent' ? 'parent' : 'student');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -76,7 +135,7 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
 
     setBusy(true);
     try {
-      const { token, user } = await AuthAPI.completeSignup(email.trim(), verificationToken, password);
+      const { token, user } = await AuthAPI.completeSignup(email.trim(), verificationToken, password, role);
       toast.success('Account created.');
       onAuthed(token, user);
     } catch (err) {
@@ -97,8 +156,9 @@ export default function SignupView({ initialEmail = '', onBack, onGoLogin, onAut
                 <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create your account</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>We'll email you a 6-digit code to verify it's really you.</div>
               </div>
+              <RolePicker value={role} onChange={setRole} />
               <ConsentNotice />
-              <GoogleButton label="Sign up with Google" />
+              <GoogleButton label="Sign up with Google" role={role} />
               <OrDivider />
               <div>
                 <label style={lbl()}>Email</label>

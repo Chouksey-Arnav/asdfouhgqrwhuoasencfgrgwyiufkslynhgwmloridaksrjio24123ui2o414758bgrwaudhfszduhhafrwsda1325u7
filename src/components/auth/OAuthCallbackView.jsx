@@ -30,7 +30,8 @@ export default function OAuthCallbackView({ onAuthed, onBack }) {
       if (settled || !session) return;
       settled = true;
       try {
-        const { token, user } = await AuthAPI.googleAuth(session.access_token);
+        // Only meaningful if this sign-in creates the account; the server ignores it otherwise.
+        const { token, user } = await AuthAPI.googleAuth(session.access_token, AuthAPI.takePendingRole());
         onAuthed(token, user);
       } catch (err) {
         settled = false;

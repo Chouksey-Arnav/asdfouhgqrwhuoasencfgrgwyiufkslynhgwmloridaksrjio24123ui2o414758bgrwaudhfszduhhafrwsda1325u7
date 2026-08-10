@@ -3,8 +3,8 @@ import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { C, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
-import { getToken, setToken, clearToken, fetchMe } from '../lib/authApi';
-import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath } from '../lib/routes';
+import { getToken, setToken, clearToken, fetchMe, logout } from '../lib/authApi';
+import { AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath } from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
 import LegalPage from './legal/LegalPage';
@@ -13,6 +13,9 @@ import LoginView from './auth/LoginView';
 import SignupView from './auth/SignupView';
 import ForgotPasswordView from './auth/ForgotPasswordView';
 import OAuthCallbackView from './auth/OAuthCallbackView';
+import ParentApp from './parent/ParentApp';
+import InviteScreen from './parent/InviteScreen';
+import { inviteTokenFromUrl } from '../lib/parentApi';
 
 export default function AuthGate({ children }) {
   const [status, setStatus] = useState('checking'); // checking | signedOut | signedIn
@@ -22,6 +25,8 @@ export default function AuthGate({ children }) {
   // out of the login form to the landing page, not out of the site.
   const [view, setView] = useState(() => parseAuthPath(window.location.pathname) || 'landing');
   const [prefillEmail, setPrefillEmail] = useState('');
+  // Set only by the invitation screen, which knows which kind of account the invite requires.
+  const [prefillRole, setPrefillRole] = useState('student');
   // Where "landing" lives. Normally "/", but someone who followed a deep link while
   // signed out (e.g. /portfolio/essays) should keep that URL: it's what they'll be
   // dropped into the moment they sign in.
@@ -50,6 +55,19 @@ export default function AuthGate({ children }) {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  // ── An invitation link sits outside the split for the same reason ────────
+  //
+  // /parent-invite?token=… is opened by whoever the email reached: signed out, signed in as the
+  // wrong account, signed in with the wrong role, or with no account at all. Every one of those
+  // needs a different next step, and none of them is "the login screen" — so this is checked
+  // ahead of `status` too, and the screen itself decides what to offer.
+  //
+  // It resolves once, from the URL this page loaded with, and is then cleared explicitly: the
+  // token must not survive into the app the visitor lands in afterwards.
+  const [inviteToken, setInviteToken] = useState(
+    () => (isParentInvitePath(window.location.pathname) ? inviteTokenFromUrl() : null),
+  );
 
   const openLegal = useCallback((path) => {
     window.history.pushState({}, '', path);
@@ -167,8 +185,9 @@ export default function AuthGate({ children }) {
     setStatus('signedIn');
   }
 
-  function goTo(nextView, email = '') {
+  function goTo(nextView, email = '', role = 'student') {
     setPrefillEmail(email);
+    setPrefillRole(role);
     setView(nextView);
   }
 
@@ -187,7 +206,32 @@ export default function AuthGate({ children }) {
     );
   }
 
+  if (inviteToken) {
+    return (
+      <InviteScreen
+        token={inviteToken}
+        user={status === 'signedIn' ? user : null}
+        onDone={() => { setInviteToken(null); restore(); }}
+        onSignIn={(email) => { setInviteToken(null); goTo('login', email); }}
+        onSignUp={(email, role) => { setInviteToken(null); goTo('signup', email, role); }}
+        onSignOut={async () => {
+          // Deliberately keeps the invite screen mounted rather than dropping the visitor at the
+          // login page: they came here to answer an invitation, and the screen re-renders with
+          // the signed-out branch, which offers exactly the two next steps they need.
+          try { await logout(); } catch { clearToken(); }
+          setUser(null);
+          setStatus('signedOut');
+        }}
+      />
+    );
+  }
+
   if (status === 'signedIn') {
+    // A parent account renders an entirely different application — it owns no progress, no local
+    // database, and none of the student app's subsystems mean anything for it. See ParentApp.
+    if (user?.role === 'parent') {
+      return <ParentApp user={user} onSignedOut={() => { setUser(null); setStatus('signedOut'); setView('landing'); }} />;
+    }
     // `openLegal` goes down to App so the in-app footer can open the documents
     // without a full page load, keeping the student's place in the app.
     return children({ user, setUser, openLegal });
@@ -220,6 +264,7 @@ export default function AuthGate({ children }) {
       {view === 'signup' && (
         <SignupView
           initialEmail={prefillEmail}
+          initialRole={prefillRole}
           onBack={() => goTo('landing')}
           onGoLogin={(email) => goTo('login', email || prefillEmail)}
           onAuthed={handleAuthed}

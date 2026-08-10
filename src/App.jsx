@@ -149,6 +149,7 @@ import {
 import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
 import AboutMePanel from './components/AboutMePanel';
 import AppearanceSettings from './components/AppearanceSettings';
+import ConnectionsPanel from './components/parent/ConnectionsPanel';
 import { getBriefEntries, briefStats, buildPersonalBriefBlock } from './lib/personalBrief';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
@@ -7577,6 +7578,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
           </div>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
+        </div>
+
+        {/* ── Family access ────────────────────────────────────────────────
+            The student's side of the parent dashboard, and the reason the
+            feature is a consent mechanism rather than a monitoring one: whoever
+            can see this account is listed here, and one tap ends it — with no
+            appeal to the parent and no delay, because getActiveLink is re-read
+            on every single request rather than cached on the session (see
+            api/_lib/session.js).
+
+            It lives in the Account group, next to sign-out and the data-rights
+            controls, because "who else can see me" belongs with the other
+            questions about this account rather than buried in a preferences
+            list. */}
+        <div style={glass({padding:18})}>
+          <SL>Family Access</SL>
+          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+            Share your progress with a parent or guardian. They'd see your streak, XP, lessons passed and test scores — never your Medabrain chats, your lesson notes, or your essays. Nothing is shared until they accept, and you can cut it off here at any time.
+          </p>
+          <ConnectionsPanel role="student" />
         </div>
 
         {/* ── Your data & your rights ──────────────────────────────────────
