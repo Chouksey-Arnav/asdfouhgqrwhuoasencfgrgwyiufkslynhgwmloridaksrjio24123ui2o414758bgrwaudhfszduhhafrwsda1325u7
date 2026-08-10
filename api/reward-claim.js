@@ -9,7 +9,7 @@
 // that must be granted exactly once no matter how many devices independently notice the
 // condition is met — see that migration's header comment for the full reasoning.
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
-import { getUserFromRequest } from './_lib/session.js';
+import { requireStudent } from './_lib/session.js';
 
 const MAX_XP = 5000; // generous but bounded — a corrupted/malicious client shouldn't be able to
                       // grant an arbitrary amount through this path
@@ -21,8 +21,8 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireStudent(req, res);
+  if (!user) return;
 
   let body;
   try {

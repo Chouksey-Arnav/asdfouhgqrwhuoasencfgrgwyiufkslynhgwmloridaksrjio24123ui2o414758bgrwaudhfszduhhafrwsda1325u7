@@ -100,6 +100,40 @@ export function parseLegalPath(pathname) {
 }
 
 /**
+ * The parent application.
+ *
+ * A parent account renders an entirely different app (see ParentApp), so these paths deliberately
+ * do NOT go through TABS/SUBVIEWS: `parsePath` returns null for them, the student router never
+ * claims them, and the two navigation systems cannot fight over the address bar. Same arrangement
+ * as the legal documents above, for the same reason.
+ */
+export const PARENT_VIEWS = { dashboard: '/family', settings: '/family/settings' };
+const PARENT_PATHS = Object.values(PARENT_VIEWS);
+
+/**
+ * The invitation landing page. Public in the same sense the legal documents are: it must render
+ * for someone who is signed out, signed in as the wrong role, or has no account at all — a
+ * consent screen you have to already be the right kind of user to read cannot do its job.
+ */
+export const PARENT_INVITE_PATH = '/parent-invite';
+
+/** True when `pathname` addresses a screen inside the parent application. */
+export function isParentPath(pathname) {
+  return PARENT_PATHS.includes(normalizePath(pathname));
+}
+
+/** The parent view (`dashboard`/`settings`) a path names, or null. */
+export function parseParentPath(pathname) {
+  const p = normalizePath(pathname);
+  return Object.keys(PARENT_VIEWS).find((view) => PARENT_VIEWS[view] === p) || null;
+}
+
+/** True when this page load came from an invitation email. */
+export function isParentInvitePath(pathname) {
+  return normalizePath(pathname) === PARENT_INVITE_PATH;
+}
+
+/**
  * Full-screen surfaces that sit *on top of* a tab: the lesson player and the
  * quiz runner. They replace the entire app shell, so without a URL of their own
  * the back button would swap the tab underneath while leaving the overlay

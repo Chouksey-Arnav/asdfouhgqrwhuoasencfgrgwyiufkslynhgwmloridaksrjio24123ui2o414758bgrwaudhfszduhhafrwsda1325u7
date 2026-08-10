@@ -15,7 +15,7 @@
 // client treats as "no server copy", and src/lib/masterPlanStore.js keeps the plan working out
 // of the existing local + progress_sync path when this table has not been migrated in yet.
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
-import { getUserFromRequest } from './_lib/session.js';
+import { requireStudent } from './_lib/session.js';
 
 // A plan is a rolling ~2-3 week window of day detail plus the roadmap spine — a few hundred KB
 // at the outside. The cap is generous enough that no real plan hits it and tight enough that a
@@ -39,8 +39,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireStudent(req, res);
+  if (!user) return;
 
   const supabase = getSupabaseAdmin();
 

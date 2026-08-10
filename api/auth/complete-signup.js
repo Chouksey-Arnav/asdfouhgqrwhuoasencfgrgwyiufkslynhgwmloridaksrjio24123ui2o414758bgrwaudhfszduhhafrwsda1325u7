@@ -27,6 +27,11 @@ export default async function handler(req, res) {
   const email = String(body?.email || '').trim().toLowerCase();
   const verificationToken = String(body?.verificationToken || '').trim();
   const password = String(body?.password || '');
+  // The ONLY place role is ever written. It is set once, at account creation, and no endpoint
+  // updates it afterwards — a student who could flip themselves to 'parent' could then invite
+  // anyone and read their progress, which turns a self-service profile field into a data-access
+  // escalation. See the header of supabase/migrations/0006_parent_dashboard.sql.
+  const role = body?.role === 'parent' ? 'parent' : 'student';
 
   if (!EMAIL_RE.test(email)) return res.status(400).json({ error: 'Enter a valid email address.' });
   const passwordError = validatePassword(password);
@@ -49,13 +54,15 @@ export default async function handler(req, res) {
       if (user.password_hash) {
         return res.status(409).json({ error: 'An account already exists for this email. Log in instead.' });
       }
+      // Deliberately does not carry `role` — this branch is a legacy OTP-only account setting its
+      // first password, not a new signup, and the account already has a role and data under it.
       const { data: updated, error: updErr } = await supabase
         .from('app_users').update({ password_hash }).eq('id', user.id).select('*').single();
       if (updErr) throw updErr;
       user = updated;
     } else {
       const { data: created, error: createErr } = await supabase
-        .from('app_users').insert({ email, password_hash }).select('*').single();
+        .from('app_users').insert({ email, password_hash, role }).select('*').single();
       if (createErr) throw createErr;
       user = created;
     }

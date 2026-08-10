@@ -108,6 +108,8 @@ export const PRIVACY_SECTIONS = [
           'Study data you create: practice and quiz results, flashcard review history, lesson completion, study sessions, streaks, and achievements.',
           'Portfolio data you create: colleges you are tracking and their deadlines and checklists; essays and every saved version of them; test scores you record; scholarships; activities and awards, with descriptions, hours, and any evidence links; GPA entries; research, skills and certification records; clinical or volunteer hours; and recommender records.',
           'Information about other people that you choose to enter — most commonly the name, email, and relationship of a teacher, mentor, or supervisor you list as a recommender or verifier. Only enter these with that person\'s permission.',
+          'Account type: whether an account belongs to a student or to a parent or guardian. This is set when the account is created and cannot be changed afterwards.',
+          'Family connections, if you use them: the email address invited, who invited whom, the relationship label you chose, and the date each connection was created, accepted, or ended. See "Parent and guardian access" in section 7 for what a connected parent can and cannot see.',
           'Anything you type into the AI coach, including essays or drafts you ask it to review.',
           'Anything you send us by email.',
         ],
@@ -211,6 +213,31 @@ export const PRIVACY_SECTIONS = [
       'We share data only with the service providers that make the Service work, and only what each one needs. Every one of them is listed here — this is the complete list, not examples:',
       subprocessorTable,
       'Each provider is bound to use the data only to provide its service to us. We do not permit any of them to use it for their own advertising or model training.',
+      // ── Parent and guardian access ──────────────────────────────────────
+      //
+      // This section is not optional politeness. The list above is described as complete, and a
+      // parent dashboard introduces a category nothing else in this policy covers: a real person,
+      // not a service provider, reading a student's data. Leaving it undocumented would make the
+      // word "complete" false — which is a deceptive statement to consumers under FTC Act § 5
+      // quite separately from any privacy statute, and it is the exact failure api/auth/account.js
+      // warns about in its header.
+      //
+      // The limits described here are enforced in code, not by policy: the allowlist in
+      // api/_lib/parentSummary.js builds the parent's view out of named fields rather than
+      // filtering a snapshot, and scripts/verifyParentDashboard.mjs fails the build if anything
+      // private reaches it. If this paragraph and that code ever disagree, the code is what runs.
+      {
+        heading: 'Parent and guardian access',
+      },
+      'A student can connect a parent or guardian to their account, and a parent can ask a student to connect. Nothing is shared unless both sides agree: the person invited has to accept from the email address the invitation was sent to, and either side can end the connection at any time, from Settings, with immediate effect on the very next request.',
+      {
+        list: [
+          'A connected parent sees progress and outcomes only: study days and streak, XP and level, lessons and units passed, quiz averages, and practice-test scores.',
+          'A connected parent never sees coach conversations, lesson notes, highlights, essay drafts, or individual answers to test questions. These are excluded structurally — the parent view is assembled from a fixed list of fields, so anything we add to the app in future is invisible to parents unless someone deliberately adds it to that list.',
+          'Ending a connection stops access immediately. It is re-checked on every single request rather than when the parent signs in, so it never persists for the life of a login session.',
+          'Every invitation, acceptance and revocation is recorded, so the question "who had access to this account, and when" can always be answered. That record is included in your data export.',
+        ],
+      },
       {
         heading: 'Other limited disclosures',
       },

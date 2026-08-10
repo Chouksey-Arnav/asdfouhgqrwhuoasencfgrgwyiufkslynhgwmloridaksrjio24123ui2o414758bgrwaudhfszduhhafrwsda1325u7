@@ -50,8 +50,13 @@ export default async function handler(req, res) {
     if (userErr) throw userErr;
 
     if (!user) {
+      // Role is honoured only when this Google sign-in CREATES the account — it is a signup
+      // parameter, not a session parameter. An existing account's role is never touched here, so
+      // a student cannot re-run the OAuth flow with role='parent' to escalate into other people's
+      // dashboards. Same rule as api/auth/complete-signup.js; see migration 0006's header.
+      const role = body?.role === 'parent' ? 'parent' : 'student';
       const { data: created, error: createErr } = await supabase
-        .from('app_users').insert({ email, name }).select('*').single();
+        .from('app_users').insert({ email, name, role }).select('*').single();
       if (createErr) throw createErr;
       user = created;
     } else if (!user.name && name) {

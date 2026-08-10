@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { C } from '../../lib/theme';
 import { signInWithGoogle, GOOGLE_OAUTH_CONFIGURED } from '../../lib/supabaseClient';
+import { stashPendingRole } from '../../lib/authApi';
 import { FieldError } from './ui';
 
 function GoogleG({ size = 18 }) {
@@ -17,7 +18,7 @@ function GoogleG({ size = 18 }) {
 // "Continue with Google" button, dropped into LoginView and SignupView. Kicks off
 // supabase.auth.signInWithOAuth and lets the browser navigate to Google — the rest of
 // the flow is picked up by OAuthCallbackView on the way back in.
-export default function GoogleButton({ label = 'Continue with Google' }) {
+export default function GoogleButton({ label = 'Continue with Google', role = null }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -29,6 +30,9 @@ export default function GoogleButton({ label = 'Continue with Google' }) {
     }
     setBusy(true);
     try {
+      // The browser leaves the app entirely here, so the account-type choice cannot live in React
+      // state — it is parked in sessionStorage and picked back up by OAuthCallbackView.
+      if (role) stashPendingRole(role);
       await signInWithGoogle();
     } catch (err) {
       setError(err.message || 'Could not start Google sign-in.');

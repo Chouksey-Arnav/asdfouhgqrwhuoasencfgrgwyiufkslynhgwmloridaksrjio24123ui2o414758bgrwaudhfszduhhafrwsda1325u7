@@ -26,7 +26,7 @@
 // in a user's export because it was added to the app, not because someone
 // remembered to add it here too.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { getUserFromRequest } from '../_lib/session.js';
+import { requireUser } from '../_lib/session.js';
 import { serializeUser } from '../_lib/serializeUser.js';
 import { EXPORTABLE_RESOURCES } from '../_lib/resources.js';
 
@@ -36,8 +36,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireUser(req, res);
+  if (!user) return;
 
   const supabase = getSupabaseAdmin();
 
@@ -69,6 +69,16 @@ export default async function handler(req, res) {
       const { data: rows, error } = await supabase.from(table).select('*').eq('user_id', user.id);
       data[table] = error ? [] : (rows || []);
     }
+
+    // Parent↔student links are keyed by two columns rather than user_id, so no loop above
+    // reaches them. They belong in the export for a reason worth stating: "who has access to my
+    // progress, and since when" is precisely the kind of fact a subject access request exists to
+    // answer, and it is the one thing in this account someone else can see.
+    const { data: links, error: linkErr } = await supabase
+      .from('parent_links')
+      .select('id, status, initiated_by, relationship, invite_email, created_at, accepted_at, revoked_at, revoked_by')
+      .or(`parent_user_id.eq.${user.id},student_user_id.eq.${user.id}`);
+    data.parent_links = linkErr ? [] : (links || []);
 
     const stamp = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'application/json; charset=utf-8');

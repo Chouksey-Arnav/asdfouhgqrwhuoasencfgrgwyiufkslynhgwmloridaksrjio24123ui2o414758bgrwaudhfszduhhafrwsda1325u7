@@ -6,6 +6,11 @@
 // Password recovery (also used by legacy passwordless accounts to set their first password):
 //   - sendResetCode(email) -> verifyResetCode(email, code) -> resetPassword(email, verificationToken, password)
 const TOKEN_KEY = 'msp_session_token';
+// Where the account-type choice waits out the Google redirect. sessionStorage, not localStorage:
+// the choice is scoped to this one signup attempt, and a stale 'parent' left behind by an
+// abandoned flow must never silently apply to a signup someone starts a week later. Cleared the
+// moment it is read (see takePendingRole).
+const SIGNUP_ROLE_KEY = 'msp_signup_role';
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -15,6 +20,22 @@ export function setToken(token) {
 }
 export function clearToken() {
   localStorage.removeItem(TOKEN_KEY);
+}
+
+/** Remembers the account type across the Google OAuth redirect. */
+export function stashPendingRole(role) {
+  try { sessionStorage.setItem(SIGNUP_ROLE_KEY, role === 'parent' ? 'parent' : 'student'); } catch { /* private mode */ }
+}
+
+/** Reads and clears it. Returns 'student' when nothing was stashed — the safe default: a role is
+ *  written once at account creation and never again, so guessing 'parent' would be unrecoverable
+ *  while guessing 'student' is simply the ordinary signup. */
+export function takePendingRole() {
+  try {
+    const role = sessionStorage.getItem(SIGNUP_ROLE_KEY);
+    sessionStorage.removeItem(SIGNUP_ROLE_KEY);
+    return role === 'parent' ? 'parent' : 'student';
+  } catch { return 'student'; }
 }
 
 async function req(path, options = {}) {
@@ -41,8 +62,8 @@ const verifyOtp = (email, code, purpose) => req('/auth/verify-otp', { method: 'P
 
 export const sendSignupCode = (email) => sendOtp(email, 'signup');
 export const verifySignupCode = (email, code) => verifyOtp(email, code, 'signup');
-export const completeSignup = (email, verificationToken, password) =>
-  req('/auth/complete-signup', { method: 'POST', body: JSON.stringify({ email, verificationToken, password }) });
+export const completeSignup = (email, verificationToken, password, role = 'student') =>
+  req('/auth/complete-signup', { method: 'POST', body: JSON.stringify({ email, verificationToken, password, role }) });
 
 export const sendResetCode = (email) => sendOtp(email, 'password_reset');
 export const verifyResetCode = (email, code) => verifyOtp(email, code, 'password_reset');
@@ -53,7 +74,10 @@ export const login = (email, password) => req('/auth/login', { method: 'POST', b
 
 // Exchanges a Supabase Auth access token (minted by supabase.auth.signInWithOAuth in
 // the browser, see src/lib/supabaseClient.js) for this app's own session token.
-export const googleAuth = (accessToken) => req('/auth/google', { method: 'POST', body: JSON.stringify({ accessToken }) });
+// `role` is honoured only when this sign-in CREATES the account — see api/auth/google.js. An
+// existing account's role is never touched, so replaying this flow cannot escalate a student.
+export const googleAuth = (accessToken, role = 'student') =>
+  req('/auth/google', { method: 'POST', body: JSON.stringify({ accessToken, role }) });
 
 export const fetchMe = () => req('/auth/me', { method: 'GET' });
 export const updateMe = (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) });

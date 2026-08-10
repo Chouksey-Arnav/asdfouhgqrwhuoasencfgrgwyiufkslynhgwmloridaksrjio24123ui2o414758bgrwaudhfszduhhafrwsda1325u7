@@ -4,7 +4,7 @@
 // (e.g. on sign-in from a new browser); PUT upserts it (the client debounces this after local
 // writes — see src/lib/progressSync.js). Never includes the local-only studyEvents log.
 import { getSupabaseAdmin } from './_lib/supabaseAdmin.js';
-import { getUserFromRequest } from './_lib/session.js';
+import { requireStudent } from './_lib/session.js';
 
 // Generous but bounded — a pathological payload (e.g. a corrupted client loop) shouldn't be
 // able to blow up storage or the response size indefinitely.
@@ -16,8 +16,8 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const user = await getUserFromRequest(req);
-  if (!user) return res.status(401).json({ error: 'Not signed in.' });
+  const user = await requireStudent(req, res);
+  if (!user) return;
 
   const supabase = getSupabaseAdmin();
 
