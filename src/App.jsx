@@ -34,7 +34,7 @@ import { ALL_QUIZZES } from './data/quizzes/index';
 import { ELIB } from './data/elib';
 import { PATHS, FLASH_DECKS, SCHOOL_DATA, DIAG_QS, PATH_COACH_NOTES, US_STATES, COURSE_CAT_MAP, GRADE_STAGES, CLASS_YEAR_ROADMAP, DECK_CATEGORY_ORDER, getDeckCategory, UNIT_STAGES, isUnitTimelyFor } from './data/constants';
 import { LESSON_CONTENT } from './data/lessonContent';
-import { rankQuizzes, getMedabrainPickPrompt } from './lib/recommend';
+import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_PICKS_UNLOCK_AT } from './lib/recommend';
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import AnimatedLogo from './components/AnimatedLogo';
@@ -1264,6 +1264,24 @@ function showAchievementToast(achievement) {
     </motion.div>
   ), { duration:5000 });
 }
+// A per-student seed for Medabrain Picks' tie-break (see studentTiebreak() in lib/recommend.js) —
+// generated once and persisted, never regenerated, so the SAME student's ranking stays stable
+// across sessions while DIFFERENT students/devices never land on the exact same tie order just
+// because their profiles happen to look alike (e.g. both brand new, same pathway, no quiz history).
+function getMedabrainSeed() {
+  try {
+    const KEY = 'msp_medabrain_seed';
+    let seed = localStorage.getItem(KEY);
+    if (!seed) {
+      seed = (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      localStorage.setItem(KEY, seed);
+    }
+    return seed;
+  } catch {
+    return null; // localStorage unavailable (e.g. private mode) — ranking still works, just without the tiebreak
+  }
+}
+
 // ── MAIN APP ──────────────────────────────────────────────────────────────────
 export default function App({ account, onAccountChange, onOpenLegal }) {
   // The legal documents live above the app shell (AuthGate renders them ahead
@@ -2769,11 +2787,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // data (weak categories, enrolled courses, pathway). See lib/recommend.js.
   const catAverages = useMemo(()=>Object.fromEntries(cats3.map((c,i)=>[c,secAvgs[i]])),[secAvgs]);
   const courseCats  = useMemo(()=>new Set((user?.courses||[]).map(c=>COURSE_CAT_MAP[c]).filter(Boolean)),[user?.courses]);
+  const medabrainSeed = useMemo(()=>getMedabrainSeed(),[]);
+  // Medabrain Picks only unlocks once there's real performance data to personalize against —
+  // before that, every student's inputs look alike (no scores, often no courses/pathway set
+  // yet), so the panel shows a progress card instead of a ranked list that can't yet mean much.
+  const medabrainPicksUnlocked = qTaken >= MEDABRAIN_PICKS_UNLOCK_AT;
+  const medabrainPicksProg = medabrainPicksProgress(qScores);
   const rankedQuizzes = useMemo(()=>rankQuizzes({
     quizzes: ALL_QUIZZES, qScores, catAverages, courseCats,
     pathwayCats: curPath?.quizCats||[], pathwayLabel: curPath?.label||'',
-    gradeKey: user?.gradeStage||null, gpaBand: user?.gpaBand||null, count:6,
-  }),[qScores,catAverages,courseCats,curPath,user?.gradeStage,user?.gpaBand]);
+    gradeKey: user?.gradeStage||null, gpaBand: user?.gpaBand||null, studentKey: medabrainSeed, count:6,
+  }),[qScores,catAverages,courseCats,curPath,user?.gradeStage,user?.gpaBand,medabrainSeed]);
   const topPick = rankedQuizzes[0];
 
   // Optional one-line Medabrain (Groq) narration of the #1 pick — the ranking
@@ -3981,9 +4005,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* Medabrain ranked quiz recommendations — top 3 on the dashboard */}
         {/* Plan-named picks pulled to the front before slicing to 3, so a plan quiz ranked #5
             overall still makes it into this compact Home card instead of being cut off. */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel
+        {medabrainPicksUnlocked&&rankedQuizzes.length>0&&<QuizRecommendationsPanel
           ranked={[...rankedQuizzes.filter(p=>todayPlanTargets.quizIds.has(p.quiz.id)),...rankedQuizzes.filter(p=>!todayPlanTargets.quizIds.has(p.quiz.id))].slice(0,3)}
-          onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds} compact/>}
+          onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}
+          unlocked compact/>}
 
         {/* What's next — the generated timeline, not just the deadlines table.
             This used to be a countdown to the soonest row in the Deadlines panel, which meant
@@ -4532,7 +4557,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             itself factors in this student's real category performance,
             enrolled courses, pathway, grade level, and self-reported grades
             (see lib/recommend.js) — this is not a static "top picks" list. */}
-        {rankedQuizzes.length>0&&<QuizRecommendationsPanel ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}/>}
+        {(medabrainPicksUnlocked ? rankedQuizzes.length>0 : qTaken<ALL_QUIZZES.length)&&<QuizRecommendationsPanel
+          ranked={rankedQuizzes} onStart={(quiz)=>{setAQ(quiz);play('click');}} onAskMedabrain={askMedabrainAboutPick} planQuizIds={todayPlanTargets.quizIds}
+          unlocked={medabrainPicksUnlocked} unlockProgress={medabrainPicksProg}/>}
         {/* Stat tiles */}
         <div style={G(3,12,{},isMobile)}>
           <StatTile icon={Layers} value={ALL_QUIZZES.length} label={`quizzes · ${TOTAL_QUESTIONS} questions`} color={C.sky}/>
