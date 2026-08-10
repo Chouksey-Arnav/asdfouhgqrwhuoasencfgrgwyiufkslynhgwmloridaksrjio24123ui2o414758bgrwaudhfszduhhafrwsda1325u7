@@ -568,7 +568,7 @@ async function callOracleWithRetry(args) {
 // the app's real NAV/SubNav ids (src/App.jsx) so a bad value just means "no
 // link" instead of a broken navigation click.
 export const VALID_DESTINATIONS = new Set([
-  'prep:diagnostic', 'prep:pathway', 'prep:quizzes', 'prep:flashcards', 'prep:coach', 'prep:library',
+  'prep:diagnostic', 'prep:pathways', 'prep:quizzes', 'prep:flashcards', 'prep:coach', 'prep:library',
   'portfolio:overview', 'portfolio:milestones', 'portfolio:colleges', 'portfolio:essays',
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
   'portfolio:recommenders', 'portfolio:interview', 'portfolio:tracked', 'portfolio:calc',
@@ -579,7 +579,7 @@ export const VALID_DESTINATIONS = new Set([
 // record and re-read for months, so plans generated before the Deadlines and
 // Timeline tabs became one still carry the old ids — they get remapped rather
 // than silently losing their link.
-const RETIRED_VIEWS = { 'portfolio:deadlines': 'milestones', 'portfolio:timeline': 'milestones' };
+const RETIRED_VIEWS = { 'portfolio:deadlines': 'milestones', 'portfolio:timeline': 'milestones', 'prep:pathway': 'pathways' };
 
 function sanitizeDestination(tab, view) {
   if (!tab || !view) return { resourceTab: null, resourceView: null };
@@ -605,7 +605,7 @@ const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'co
 // so a link is present and working on 100% of tasks regardless of what the
 // model returned.
 const TYPE_DEFAULT_DEST = {
-  lesson: ['prep', 'pathway'], quiz: ['prep', 'quizzes'], flashcards: ['prep', 'flashcards'],
+  lesson: ['prep', 'pathways'], quiz: ['prep', 'quizzes'], flashcards: ['prep', 'flashcards'],
   reading: ['prep', 'library'], coach: ['prep', 'coach'],
   activity: ['portfolio', 'resume'], college: ['portfolio', 'colleges'], essay: ['portfolio', 'essays'],
   deadline: ['portfolio', 'milestones'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
@@ -614,7 +614,7 @@ const TYPE_DEFAULT_DEST = {
   sat_practice: ['sat', 'practice'], sat_review: ['sat', 'review'], sat_test: ['sat', 'tests'],
 };
 const VIEW_LABELS = {
-  'prep:diagnostic': 'Pathway Diagnostic', 'prep:pathway': 'Your Pathway', 'prep:quizzes': 'Quiz Library',
+  'prep:diagnostic': 'Pathway Diagnostic', 'prep:pathways': 'Your Pathway', 'prep:quizzes': 'Quiz Library',
   'prep:flashcards': 'Flashcards', 'prep:coach': 'AI Coach', 'prep:library': 'E-Library',
   'sat:overview': 'SAT Overview', 'sat:diagnostic': 'SAT Diagnostic', 'sat:practice': 'SAT Practice',
   'sat:tests': 'Full-Length Test', 'sat:review': 'SAT Review Log', 'sat:skills': 'SAT Skill Mastery',
@@ -697,7 +697,7 @@ export function resolveTaskResource(task, index, { seedKey = '', weakestCategory
       })();
     if (hit) { kind = 'quiz'; id = hit.id; label = hit.title; }
   } else if (type === 'lesson' && dest.resourceTab === 'prep') {
-    dest = { resourceTab: 'prep', resourceView: 'pathway' };
+    dest = { resourceTab: 'prep', resourceView: 'pathways' };
     const hit = bestMatch(exactHint, index.lessons, l => l.title, 1) || bestMatch(hint, index.lessons, l => `${l.title} ${l.unitTitle}`, 2)
       || index.lessons[seed % Math.max(1, index.lessons.length)];
     if (hit) { kind = 'lesson'; id = hit.id; label = hit.title; }
@@ -932,7 +932,7 @@ export function heuristicDays(plan, fromDate, numDays, catalog, user) {
       // promising SAT practice that opened a library of MCAT-style science
       // quizzes. Now it opens the SAT tab's adaptive practice.
       tasks.push({ pillar: 'sat', type: 'sat_practice', title: `${track} practice set`, detail: 'Smart Set — weighted to your weakest skills', estMinutes: 20, ...sanitizeDestination('sat', 'practice') });
-      tasks.push({ pillar: 'prep', type: 'lesson', title: 'Continue your pathway', detail: `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, estMinutes: 15, ...sanitizeDestination('prep', 'pathway') });
+      tasks.push({ pillar: 'prep', type: 'lesson', title: 'Continue your pathway', detail: `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, estMinutes: 15, ...sanitizeDestination('prep', 'pathways') });
       tasks.push({ pillar: 'prep', type: 'flashcards', title: 'Flashcard review', detail: 'Clear any cards due today', estMinutes: 10, ...sanitizeDestination('prep', 'flashcards') });
       if (i % 3 === 2) tasks.push({ pillar: 'portfolio', type: 'activity', title: 'Portfolio check-in', detail: 'Log any new activity, clinical, or research hours', estMinutes: 10, ...sanitizeDestination('portfolio', 'resume') });
     } else {

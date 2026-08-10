@@ -3,9 +3,9 @@ import AnimatedLogo from './AnimatedLogo';
 import {
   ArrowRight, Check, ShieldCheck, Home, Compass, Building2, LineChart, Search,
   Flame, Settings, BookOpen, Layers, MessageCircle, Route, GraduationCap,
-  Calendar, FileText, Menu, X, TrendingUp, Sparkles, Zap, ClipboardList,
+  Calendar, FileText, Menu, X, TrendingUp, Sparkles, Zap, ClipboardList, Users, EyeOff,
 } from 'lucide-react';
-import { LEGAL_VIEWS } from '../lib/routes';
+import { LEGAL_VIEWS, PARENT_HUB_PATH } from '../lib/routes';
 import { LEGAL, TRADEMARK_NOTICE } from '../legal/legalConfig';
 import { C, tint, accentGrad, onTint } from '../lib/theme';
 import ThemeToggle from './ThemeToggle';
@@ -760,8 +760,16 @@ const MARQUEE_ITEMS = ['10 career pathways', '90+ verified lessons', 'Spaced-rep
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
-export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeMode, onThemeChange }) {
+export default function LandingPage({ onGetStarted, onLogin, onOpenParents, onOpenLegal, themeMode, onThemeChange }) {
   const handleSignIn = onLogin || onGetStarted;
+  // "For parents" is a real page (/parents), not an anchor on this one — a parent needs a URL
+  // they can be sent, bookmark, and come back to. Client-side when AuthGate gave us a navigator,
+  // a plain href otherwise, same arrangement as the legal links below.
+  const goParents = (e) => {
+    if (!onOpenParents) return;
+    e.preventDefault();
+    onOpenParents();
+  };
   // The footer links have to work whether or not AuthGate handed us a client-side
   // navigator — a legal link that does nothing when clicked is worse than no link.
   const goLegal = (path) => (e) => {
@@ -798,7 +806,10 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeM
     return () => io.disconnect();
   }, []);
 
-  const navLinks = [['#pathways', 'Pathways'], ['#learn', 'Prep'], ['#portfolio', 'Portfolio'], ['#faq', 'FAQ']];
+  // 'For parents' points at a route rather than an anchor, and sits last so the product story
+  // still reads left-to-right — but it is IN the nav, because the single most common way this
+  // feature went unfound was a parent looking at this bar and seeing nothing addressed to them.
+  const navLinks = [['#pathways', 'Pathways'], ['#learn', 'Prep'], ['#portfolio', 'Portfolio'], ['#faq', 'FAQ'], [PARENT_HUB_PATH, 'For parents']];
 
   return (
     <div ref={rootRef} style={{ position: 'relative', minHeight: 'var(--msp-vh)', overflowX: 'hidden', color: C.t1, fontFamily: C.FB }}>
@@ -936,7 +947,9 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeM
               <span style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 16.5, letterSpacing: '-0.01em', color: C.t1 }}>MedSchoolPrep</span>
             </a>
             <div className="lp-nav-links">
-              {navLinks.map(([href, label]) => <a key={href} className="lp-nav-link" href={href}>{label}</a>)}
+              {navLinks.map(([href, label]) => (
+                <a key={href} className="lp-nav-link" href={href} onClick={href === PARENT_HUB_PATH ? goParents : undefined}>{label}</a>
+              ))}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
               {/* Before an account exists, not after. A visitor who picks Light
@@ -956,7 +969,12 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeM
         </nav>
         {menuOpen && (
           <div className="lp-mobile-menu">
-            {navLinks.map(([href, label]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
+            {navLinks.map(([href, label]) => (
+              <a
+                key={href} href={href}
+                onClick={(e) => { setMenuOpen(false); if (href === PARENT_HUB_PATH) goParents(e); }}
+              >{label}</a>
+            ))}
             <button onClick={() => { setMenuOpen(false); handleSignIn(); }}>Log in</button>
           </div>
         )}
@@ -1175,6 +1193,55 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeM
           </div>
         </section>
 
+        {/* ── FOR PARENTS ─────────────────────────────────────────────── */}
+        {/* The parent dashboard shipped with no presence on this page at all, which meant the only
+            people who ever found it were students who happened to scroll their own Settings to the
+            bottom. A parent reading this page is deciding two things at once — whether their child
+            should use this, and whether they get any visibility — and answering the second one
+            here is what makes the first one an easy yes. */}
+        <section id="parents" className="lp-sec" style={{ paddingTop: 'clamp(32px,4vw,56px)', paddingBottom: 'clamp(32px,4vw,56px)' }}>
+          <div className="lp-reveal" style={{ position: 'relative', overflow: 'hidden', borderRadius: 24, border: `1px solid ${tint(C.violet, 0.26)}`, background: `linear-gradient(135deg,${tint(C.violet, 0.1)},transparent 62%)`, padding: 'clamp(28px,4vw,52px)' }}>
+            <div aria-hidden style={{ position: 'absolute', left: '-8%', bottom: '-60%', width: '46%', height: '180%', borderRadius: '50%', background: `radial-gradient(circle,${tint(C.violet, 0.16)},transparent 70%)`, pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', display: 'flex', gap: 'clamp(24px,4vw,56px)', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              <div style={{ flex: '1 1 340px', minWidth: 0 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 13px', borderRadius: 999, background: tint(C.violet, 0.12), border: `1px solid ${tint(C.violet, 0.3)}`, fontSize: 12, fontWeight: 700, color: C.violetL }}>
+                  <Users size={13} /> For parents
+                </span>
+                <h2 style={{ margin: '16px 0 0', fontFamily: C.FD, fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.08, fontSize: 'clamp(26px,3.2vw,40px)', color: C.t1, textWrap: 'balance' }}>
+                  Parents get their own dashboard.
+                </h2>
+                <p style={{ margin: '16px 0 0', maxWidth: '46ch', fontSize: 'clamp(14.5px,1.2vw,16.5px)', lineHeight: 1.65, color: C.t2 }}>
+                  Your own account, your own login, and a clear view of whether your student is
+                  showing up and whether it is working — study days, lessons passed, quiz averages
+                  and practice-test scores, with a plain read on the week.
+                </p>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginTop: 24 }}>
+                  <a className="lp-btn-primary" href={PARENT_HUB_PATH} onClick={goParents} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 24px', borderRadius: 12, background: C.blueGrad, color: C.onAccent, fontSize: 15, fontWeight: 700, boxShadow: `0 14px 34px -14px ${tint(C.blue, 0.6)}`, border: 'none', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>
+                    See the parent dashboard <ArrowRight size={15} />
+                  </a>
+                </div>
+              </div>
+              <div style={{ flex: '1 1 300px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { ic: ShieldCheck, hue: C.green, t: 'Only with their say-so', b: 'Your student approves the request from their own inbox, and can end it in one tap. Knowing their name or email is never enough.' },
+                  { ic: EyeOff, hue: C.t3, t: 'Never their private work', b: 'Coach conversations, lesson notes and essay drafts are not shown to parents — not as a setting, but by construction.' },
+                  { ic: TrendingUp, hue: C.blue, t: 'The numbers that matter', b: 'Eight weeks of study days, quiz trend, and every practice-test score with the change since the last one.' },
+                ].map(({ ic: Ic, hue, t, b }) => (
+                  <div key={t} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: 16, borderRadius: 14, background: C.surf, border: `1px solid ${C.b1}` }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: tint(hue, 0.13), border: `1px solid ${tint(hue, 0.28)}` }}>
+                      <Ic size={15} color={hue} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: C.t1 }}>{t}</div>
+                      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 3 }}>{b}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── FINAL CTA ───────────────────────────────────────────────── */}
         <section className="lp-sec" style={{ paddingTop: 'clamp(40px,5vw,64px)', paddingBottom: 'clamp(64px,8vw,110px)' }}>
           <div className="lp-reveal" style={{ position: 'relative', overflow: 'hidden', borderRadius: 28, border: `1px solid ${tint(C.blue, 0.28)}`, background: `linear-gradient(135deg,${tint(C.blue, 0.14)},${tint(C.violet, 0.08)})`, padding: 'clamp(40px,6vw,72px)', textAlign: 'center' }}>
@@ -1217,6 +1284,7 @@ export default function LandingPage({ onGetStarted, onLogin, onOpenLegal, themeM
                 <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: C.t3, marginBottom: 14 }}>More</div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <a href="#faq" style={{ color: C.t2, fontSize: 13.5 }}>FAQ</a>
+                  <a href={PARENT_HUB_PATH} onClick={goParents} style={{ color: C.t2, fontSize: 13.5 }}>For parents</a>
                   <button onClick={handleSignIn} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>Log in</button>
                   <button onClick={onGetStarted} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t2, fontSize: 13.5, fontFamily: 'inherit', padding: 0, textAlign: 'left' }}>Get started</button>
                 </div>

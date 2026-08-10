@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones,
+  Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones, Users,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
 } from 'lucide-react';
@@ -46,7 +46,7 @@ import * as DB from './lib/db';
 import * as ProgressSync from './lib/progressSync';
 import * as PlanStore from './lib/masterPlanStore';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
-import { SUBVIEWS, bootRoute, routeFromState, formatPath, LEGAL_VIEWS } from './lib/routes';
+import { SUBVIEWS, bootRoute, routeFromState, resolveView, formatPath, LEGAL_VIEWS, AUTH_VIEWS, PARENT_HUB_PATH } from './lib/routes';
 import { LEGAL, TRADEMARK_NOTICE } from './legal/legalConfig';
 import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
@@ -150,6 +150,7 @@ import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS
 import AboutMePanel from './components/AboutMePanel';
 import AppearanceSettings from './components/AppearanceSettings';
 import ConnectionsPanel from './components/parent/ConnectionsPanel';
+import * as ParentAPI from './lib/parentApi';
 import { getBriefEntries, briefStats, buildPersonalBriefBlock } from './lib/personalBrief';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
@@ -370,7 +371,7 @@ const SAT_SUBNAV = [
 ];
 const PREP_SUBNAV = [
   {id:'diagnostic',ic:Compass,label:'Diagnostic',color:C.cyan},
-  {id:'pathway',ic:Route,label:'Pathway',color:C.blue},
+  {id:'pathways',ic:Route,label:'Pathways',color:C.blue},
   {id:'quizzes',ic:Layers,label:'Quiz Library',color:C.green},
   {id:'flashcards',ic:Layers3,label:'Flashcards',color:C.amber},
   {id:'coach',ic:MessageCircle,label:'AI Coach',color:C.violet},
@@ -432,6 +433,24 @@ const PROGRESS_SUBNAV = [
   {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
   {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
 ];
+// Settings was the last tab with no addressable parts: seven groups in one long scroll, so
+// every instruction anywhere in the product that ended "…in Settings" was a hunt, and the two
+// things people are actually sent here for — family access and accessibility — were the
+// furthest down. Each group is a sub-tab with its own URL now (see SUBVIEWS.settings in
+// src/lib/routes.js), which is what makes /settings/family a link an invitation email can
+// contain.
+//
+// Family sits third, above the fold on every screen size, because it is the only one of these
+// that another person is waiting on.
+const SETTINGS_SUBNAV = [
+  {id:'profile',ic:UserCog,label:'Profile & Goals',color:C.amber},
+  {id:'study',ic:Route,label:'Study Setup',color:C.blue},
+  {id:'family',ic:Users,label:'Family Access',color:C.violet},
+  {id:'appearance',ic:Accessibility,label:'Appearance',color:C.cyan},
+  {id:'medabrain',ic:Brain,label:'Medabrain',color:C.fuchsia},
+  {id:'data',ic:Volume2,label:'Preferences & Data',color:C.green},
+  {id:'account',ic:ShieldCheck,label:'Account',color:C.rose},
+];
 // Every destination's student-facing name, keyed the way featureUnlock.js keys them
 // ('portfolio', 'sat/review'). Built from the nav arrays themselves rather than
 // re-typed, so an unlock toast can never announce a tab under a name the nav doesn't
@@ -442,6 +461,7 @@ const UNLOCK_LABELS = Object.fromEntries([
   ...PREP_SUBNAV.map(n=>[`prep/${n.id}`,n.label]),
   ...PORTFOLIO_SUBNAV.map(n=>[`portfolio/${n.id}`,n.label]),
   ...PROGRESS_SUBNAV.map(n=>[`progress/${n.id}`,n.label]),
+  ...SETTINGS_SUBNAV.map(n=>[`settings/${n.id}`,n.label]),
   // The five parts of Activities & Résumé are gated one level deeper than a
   // sub-tab (see sectionKey in featureUnlock.js), and they get announced the
   // same way, so their names come from the same single source.
@@ -1416,11 +1436,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|tracked|milestones|colleges|essays|aid|resume|interview|calc
   const [progressView, setProgressView] = useState(boot.progressView); // overview|verified|performance|achievements
   const [satView, setSatView] = useState(boot.satView); // overview|diagnostic|practice|tests|review|skills|scores
+  const [settingsView, setSettingsView] = useState(boot.settingsView); // profile|study|family|appearance|medabrain|data|account
   // Deep-link params for the SAT tab (e.g. "drill this specific skill", "resume
   // this attempt"), set by the Overview's next-best-action card and by the
   // Review Log. Cleared by the receiving panel once consumed.
   const [satParams, setSatParams] = useState(null);
-  const goPrep = useCallback((view)=>{ setTab('prep'); if(view) setPrepView(view); }, []);
+  // Resolves retired sub-view ids on the way in (resolveView), which is what makes
+  // goPrep('pathway') keep working: that id is still sitting inside every master plan row
+  // generated before the rename, and a plan task whose destination silently no-ops is worse
+  // than one that never had a destination at all.
+  const goPrep = useCallback((view)=>{ setTab('prep'); const v=resolveView('prep',view); if(v) setPrepView(v); }, []);
   const goSat = useCallback((view, params=null)=>{ setTab('sat'); if(view) setSatView(view); setSatParams(params); }, []);
   // Which section of Activities & Résumé is open. It lives here rather than inside the panel
   // because the three tabs that were merged into it are still addressed by name from all over
@@ -1444,7 +1469,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // into view and highlights it, which is what makes the Plans lock screen's checklist rows
   // actual links instead of instructions to go hunting. Plain goSettings() is unchanged.
   const [settingsFocus,setSettingsFocus]=useState(null);
-  const goSettings = useCallback((field=null)=>{ setTab('settings'); setSettingsFocus(typeof field==='string'?field:null); }, []);
+  // Which sub-tab a focusable profile field lives on. Without this, a deep link from the Plans
+  // lock screen ("add your GPA") would open Settings on whatever sub-tab was last used and
+  // highlight a field that is not currently rendered — the exact failure sub-tabs introduce and
+  // the reason the mapping is data rather than a rule.
+  const SETTINGS_VIEW_FOR_FIELD = useMemo(()=>({
+    name:'profile', age:'profile', gpaBand:'profile', sciences:'profile', healthExperience:'profile',
+    goal:'profile', accomplish:'profile', obstacles:'profile', whyMedicine:'profile', dreamRole:'profile',
+    gradeStage:'study', specialty:'study', testTrack:'study', testTimeline:'study', studyHours:'study',
+    studyMethod:'study', targetScore:'study', addBack:'study', rollover:'study',
+  }),[]);
+  const goSettings = useCallback((field=null,view=null)=>{
+    setTab('settings');
+    const focus = typeof field==='string'?field:null;
+    setSettingsFocus(focus);
+    const wanted = view || (focus?SETTINGS_VIEW_FOR_FIELD[focus]:null);
+    if(wanted) setSettingsView(wanted);
+  }, [SETTINGS_VIEW_FOR_FIELD]);
+  /** Straight to Settings ▸ Family Access — the parent-dashboard entry point, from anywhere. */
+  const goFamily = useCallback(()=>{ setTab('settings'); setSettingsFocus(null); setSettingsView('family'); }, []);
+  // How many people can see this account, for the rail's label. Fetched once per session rather
+  // than polled: a connection changes when the student changes it (and ConnectionsPanel reloads
+  // itself), so a poll here would be a request a minute to re-learn a number that almost never
+  // moves. Failure is silent and leaves the label reading "Invite a parent", which is the right
+  // thing to say when we don't know.
+  const [familyLinkCount,setFamilyLinkCount]=useState(0);
+  useEffect(()=>{
+    let cancelled=false;
+    ParentAPI.listLinks()
+      .then(({links})=>{ if(!cancelled) setFamilyLinkCount((links||[]).filter(l=>l.status==='active').length); })
+      .catch(()=>{});
+    return ()=>{ cancelled=true; };
+  },[]);
   const [plansOpenDate,setPlansOpenDate]=useState(null);
   const goPlans = useCallback((dateStr)=>{ setTab('plans'); setPlansOpenDate(dateStr||null); }, []);
   // One generic (tab, view) jump, for surfaces that carry their own deep links as data rather
@@ -1457,13 +1513,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(tabId==='portfolio')return goPortfolio(view);
     if(tabId==='progress')return goProgress(view);
     if(tabId==='plans')return goPlans();
-    if(tabId==='settings')return goSettings();
+    if(tabId==='settings')return goSettings(null,view);
     setTab('home');
   }, [goPrep,goSat,goPortfolio,goProgress,goPlans,goSettings]);
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
-  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView, satView }); },[tab, prepView, portfolioView, progressView, satView]);
+  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView, satView, settingsView }); },[tab, prepView, portfolioView, progressView, satView, settingsView]);
 
   // Keep the browser tab title in sync with where the student actually is — previously the
   // <title> in index.html ("MedSchoolPrep — Your Path Into Medicine") never changed after load,
@@ -1479,9 +1535,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       tab==='portfolio'?PORTFOLIO_SUBNAV.find(n=>n.id===portfolioView)?.label:
       tab==='progress'?PROGRESS_SUBNAV.find(n=>n.id===progressView)?.label:
       tab==='sat'?SAT_SUBNAV.find(n=>n.id===satView)?.label:
+      tab==='settings'?SETTINGS_SUBNAV.find(n=>n.id===settingsView)?.label:
       null;
     document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
-  },[tab,prepView,portfolioView,progressView,satView]);
+  },[tab,prepView,portfolioView,progressView,satView,settingsView]);
 
   // ── Post-onboarding product tour — a short spotlight walkthrough hitting each ──
   // top-level pillar once, offered right after a new account is created (see
@@ -1539,8 +1596,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     : aQuiz      ? { kind:'quiz', quizId:aQuiz.id }
     : null
   ),[activeLesson,aQuiz]);
-  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, progressView, overlay:overlayRoute }),
-    [tab,satView,prepView,portfolioView,progressView,overlayRoute]);
+  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, progressView, settingsView, overlay:overlayRoute }),
+    [tab,satView,prepView,portfolioView,progressView,settingsView,overlayRoute]);
 
   // Flat [{lesson,unit}] for the active pathway, so a lesson URL can be resolved back
   // to the lesson it names. A ref (filled by an effect further down) rather than a
@@ -1567,6 +1624,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         if (section) setResumeSection(section);
       }
       else if (next.tab === 'progress') setProgressView(next.view);
+      else if (next.tab === 'settings') setSettingsView(next.view);
     }
 
     const ov = next.overlay;
@@ -1595,13 +1653,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // shows the destination on hover, and a copied link actually lands where it says.
   // Each points at the sub-view the student last had open in that tab, matching exactly
   // where clicking will take them.
-  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView}),
-    [satView,prepView,portfolioView,progressView]);
+  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView,settings:settingsView}),
+    [satView,prepView,portfolioView,progressView,settingsView]);
   const tabHref = useCallback((id)=>formatPath({tab:id,view:subViewOf[id]}),[subViewOf]);
   const satHref = useCallback((v)=>formatPath({tab:'sat',view:v}),[]);
   const prepHref = useCallback((v)=>formatPath({tab:'prep',view:v}),[]);
   const portfolioHref = useCallback((v)=>formatPath({tab:'portfolio',view:v}),[]);
   const progressHref = useCallback((v)=>formatPath({tab:'progress',view:v}),[]);
+  const settingsHref = useCallback((v)=>formatPath({tab:'settings',view:v}),[]);
   // Shared by every nav item: keep modified clicks with the browser, handle plain ones.
   const onNavLinkClick = useCallback((e,go)=>{
     if(!isPlainLeftClick(e))return;
@@ -2266,6 +2325,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(profile.targetScore){
       createItem('test_scores',{ test_type:profile.testTrack==='ACT'?'ACT':'SAT', test_date:localDateStr(), composite:profile.targetScore, section_scores:{}, is_target:true }).catch(()=>{});
     }
+    // The parent invitation the student asked for on the family step, sent now that there is an
+    // account for it to come from. Fire-and-forget on purpose: a failed send must not block or
+    // undo an otherwise-finished onboarding, and Settings ▸ Family Access is a working second
+    // chance that the toast points at. A student who skipped the step has nothing here.
+    const parentEmail=(profile.parentInviteEmail||'').trim();
+    if(parentEmail){
+      ParentAPI.invite(parentEmail, (profile.parentRelationship||'').trim()||null)
+        .then(()=>toast.success(`Request sent to ${parentEmail}. Nothing is shared until they accept.`))
+        .catch(()=>toast('We couldn\'t send that request — you can try again in Settings ▸ Family Access.'));
+    }
     if(profile.goal==='explore_pathway') goPrep('diagnostic');
     else if(profile.goal==='build_application') goPortfolio('overview');
     else goPrep('quizzes');
@@ -2642,6 +2711,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const prepSubnav     = useMemo(()=>visibleItems(PREP_SUBNAV,unlocks,'prep'),[unlocks]);
   const portfolioSubnav= useMemo(()=>visibleItems(PORTFOLIO_SUBNAV,unlocks,'portfolio'),[unlocks]);
   const progressSubnav = useMemo(()=>visibleItems(PROGRESS_SUBNAV,unlocks,'progress'),[unlocks]);
+  // Settings deliberately runs through the same filter as the others even though nothing in it
+  // is gated: the day someone does gate a settings group, the sub-nav will already respect it.
+  const settingsSubnav = useMemo(()=>visibleItems(SETTINGS_SUBNAV,unlocks,'settings'),[unlocks]);
 
   // Guarantee #2: nothing is ever unreachable. A locked surface still has a URL, and
   // arriving at one directly — a link a friend sent, a bookmark, an old history entry,
@@ -2716,7 +2788,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     ]:[]),
     ...progressSubnav.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
     ...satSubnav.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
-  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat]);
+    // Settings has sub-tabs now, so it gets the same treatment as every other pillar. Family
+    // Access earns its place here more than most: it is the one settings screen another person
+    // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
+    ...settingsSubnav.map(n=>({ id:`set-${n.id}`, label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
+  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat,goSettings]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
     if(!q) return COMMANDS;
@@ -3992,7 +4068,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
               </div>
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
-            {nextLesson&&<button onClick={()=>goPrep('pathway')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
+            {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
           </div>
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
@@ -4068,7 +4144,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <div style={G(3,14,{},isMobile)}>
             {[
               {Ic:Compass,lbl:'Diagnostic',sub:'Find your track',pillar:'prep',view:'diagnostic',col:C.violet},
-              {Ic:Route,lbl:'Pathway',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathway',col:accent},
+              {Ic:Route,lbl:'Pathways',sub:`${doneL}/${allL.length} lessons`,pillar:'prep',view:'pathways',col:accent},
               {Ic:Layers,lbl:'Quiz Library',sub:`${qTaken}/${ALL_QUIZZES.length} taken`,pillar:'prep',view:'quizzes',col:C.green},
               {Ic:MessageCircle,lbl:'AI Coach',sub:'Medabrain tutor',pillar:'prep',view:'coach',col:C.cyan},
               {Ic:Layers3,lbl:'Flashcards',sub:`${dueDeckCount>0?dueDecksSub(dueDeckCount):`${Object.keys(FLASH_DECKS).length+Object.keys(cDecks).length} decks`}`,pillar:'prep',view:'flashcards',col:dueDeckCount>0?C.violet:C.orange},
@@ -4172,7 +4248,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             );})}
           </div>
-          <button onClick={()=>goPrep('pathway')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
+          <button onClick={()=>goPrep('pathways')} style={{...btnG({marginTop:18,width:'100%',justifyContent:'center'}),display:'inline-flex',alignItems:'center',gap:8}}>View Full Pathway<ArrowRight size={14}/></button>
         </div>
       </div>
     );
@@ -4193,7 +4269,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
-            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
+            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
@@ -4231,7 +4307,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Sparkles} color={C.violetL}>You Might Also Fit</SectionTitle>
           <div style={G(2,10,{},isMobile)}>
             {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={accentText(p.accent)}/></div>
                 <div>
                   <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
@@ -4245,7 +4321,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Compass} color={C.cyanL}>All Pathways</SectionTitle>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathway');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
                 <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
@@ -4283,7 +4359,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
                 <PathwayCard key={key} pathKey={key} p={p} current={eSpec===key} m={isMobile}
-                  onSelect={(k)=>{saveUser({...user,specialty:k});goPrep('pathway');toast.success(`${p.label} pathway activated`);}}/>
+                  onSelect={(k)=>{saveUser({...user,specialty:k});goPrep('pathways');toast.success(`${p.label} pathway activated`);}}/>
               ))}
             </div>
           </div>
@@ -7130,11 +7206,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         </div>
 
+        {/* The sub-nav. Settings is seven unrelated jobs — who you are, how you study, who
+            can see you, how it looks, what the coach knows, what it plays, and what happens to
+            the account — and presenting them as one scroll meant the two people are most often
+            sent here for (family access, accessibility) were the furthest down it. Each is a
+            sub-tab with a URL now, so /settings/family is a link an invitation email can carry
+            and /settings/appearance is one a support reply can paste. */}
+        <SubNav items={settingsSubnav} active={settingsView} onChange={setSettingsView} accent={SETTINGS_SUBNAV.find(n=>n.id===settingsView)?.color||accent} m={isMobile} tourPrefix="settings-sub" hrefFor={settingsHref}/>
+
         {/* ── Appearance & Accessibility ──────────────────────────────────────── */}
         {/* Deliberately the first group. A student who needs larger text or less
             motion needs it before they can comfortably read anything else on
             this page, and burying it under four groups of profile fields is a
             small cruelty. */}
+        {settingsView==='appearance'&&<>
         <Group icon={Accessibility} title="Appearance & Accessibility">
           <AppearanceSettings settings={a11y} onChange={updateA11y} isMobile={isMobile} accent={accent}/>
         </Group>
@@ -7180,8 +7265,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           </div>
         </Group>
+        </>}
 
         {/* ── What Medabrain knows about you ─────────────────────────────────── */}
+        {settingsView==='medabrain'&&
         <Group icon={Brain} title="What Medabrain Knows About You">
           <div style={glass({padding:18})}>
             <SL>Your personal brief</SL>
@@ -7194,9 +7281,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <Volume2 size={14}/>{briefEntryCount>0?'Add or edit what it knows':'Tell Medabrain about yourself'}
             </button>
           </div>
-        </Group>
+        </Group>}
 
         {/* ── Profile & Goals ─────────────────────────────────────────────────── */}
+        {settingsView==='profile'&&
         <Group icon={UserCog} title="Profile & Goals">
         <div data-tour="settings-deep-profile" style={glass()}>
           <SL>Display Name</SL>
@@ -7299,9 +7387,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           )}
         </div>
-        </Group>
+        </Group>}
 
         {/* ── Study Setup ──────────────────────────────────────────────────────── */}
+        {settingsView==='study'&&
         <Group icon={Route} title="Study Setup">
         {/* Class year. Captured once during onboarding and, until now, editable nowhere — which
             meant a student who mis-tapped it, or whose profile was rebuilt from their account on
@@ -7489,9 +7578,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           </div>
         </div>
-        </Group>
+        </Group>}
 
         {/* ── Preferences & Data ───────────────────────────────────────────────── */}
+        {settingsView==='data'&&
         <Group icon={Volume2} title="Preferences & Data">
         <div data-tour="settings-deep-preferences" style={glass({padding:18})}>
           <div style={R({justifyContent:'space-between'})}>
@@ -7561,9 +7651,82 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <button style={{...btnG({fontSize:12,padding:'9px 18px',opacity:0.6}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPreviewOnboarding(true)} title="Dev-only — doesn't touch your saved profile"><RotateCcw size={14}/>Replay Onboarding</button>
           </div>
         </div>
-        </Group>
+        </Group>}
+
+        {/* ── Family Access ────────────────────────────────────────────────────
+            The student's side of the parent dashboard, and the reason the feature is a consent
+            mechanism rather than a monitoring one: whoever can see this account is listed here,
+            and one tap ends it — with no appeal to the parent and no delay, because
+            getActiveLink is re-read on every single request rather than cached on the session
+            (see api/_lib/session.js).
+
+            It was a card at the bottom of the Account group, under sign-out, the data-export
+            controls and the danger zone. Nothing about a shared-access control belongs below a
+            delete-my-account button: this is the screen a student is sent to by a parent who is
+            waiting on them, so it is a sub-tab with a URL (/settings/family) that the invitation
+            email links to directly. */}
+        {settingsView==='family'&&
+        <Group icon={Users} title="Family Access">
+          <div style={glass({padding:18})}>
+            <SL>Who can see your progress</SL>
+            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+              Share your progress with a parent or guardian. They'd see your streak, XP, lessons passed and test scores — never your Medabrain chats, your lesson notes, or your essays. Nothing is shared until they accept, and you can cut it off here at any time.
+            </p>
+            <ConnectionsPanel role="student" />
+          </div>
+
+          {/* Exactly what crosses the line and what does not, side by side and always visible —
+              not folded into a disclosure. A student deciding whether to invite a parent is
+              making a privacy decision, and the answer to "what would they actually see" has to
+              be on the screen where the decision is made rather than one tap away in a policy. */}
+          <div style={glass({padding:18})}>
+            <SL>What a parent would see</SL>
+            <div style={G(2,14,{},isMobile)}>
+              <div>
+                <div style={{fontSize:11,fontWeight:800,color:C.greenL,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>Shared</div>
+                {['Study streak and days studied','XP, level and lessons passed','Quiz averages and practice-test scores','Achievements you have earned'].map(t=>(
+                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:7}}>
+                    <Check size={13} color={C.greenL} style={{flexShrink:0,marginTop:3}}/>
+                    <span style={{fontSize:12.5,color:C.t2,lineHeight:1.5}}>{t}</span>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:800,color:C.t3,letterSpacing:'.08em',textTransform:'uppercase',marginBottom:8}}>Never shared</div>
+                {['Medabrain conversations','Lesson notes and highlights','Essay drafts and application writing','Individual quiz answers'].map(t=>(
+                  <div key={t} style={{...R({gap:8,alignItems:'flex-start'}),marginBottom:7}}>
+                    <X size={13} color={C.t3} style={{flexShrink:0,marginTop:3}}/>
+                    <span style={{fontSize:12.5,color:C.t2,lineHeight:1.5}}>{t}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* The other direction: a parent who does not have an account yet. Every other route
+              into the parent dashboard assumes the parent found it themselves; this one lets the
+              student hand it over, which is how most of these actually start. */}
+          <div style={glass({padding:18})}>
+            <SL>Your parent doesn't have an account yet?</SL>
+            <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
+              Send them this link. It explains the parent dashboard, what it shows and what it
+              never shows, and walks them through creating their own account — they never sign in
+              as you, and they never see this side of the app.
+            </p>
+            <div style={R({gap:10,flexWrap:'wrap'})}>
+              <a href={PARENT_HUB_PATH} target="_blank" rel="noopener noreferrer" style={{...btnG({fontSize:12,padding:'9px 18px'}),textDecoration:'none'}}>
+                <ExternalLink size={14}/>Open the parent page
+              </a>
+              <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={()=>{
+                const url=`${window.location.origin}${PARENT_HUB_PATH}`;
+                navigator.clipboard?.writeText(url).then(()=>toast.success('Link copied — send it to them.')).catch(()=>toast.error('Could not copy the link.'));
+              }}><Copy size={14}/>Copy the link</button>
+            </div>
+          </div>
+        </Group>}
 
         {/* ── Account ──────────────────────────────────────────────────────────── */}
+        {settingsView==='account'&&
         <Group icon={ShieldCheck} title="Account">
         <div data-tour="settings-deep-account" style={glass({padding:18})}>
           <SL>Account</SL>
@@ -7578,26 +7741,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             {syncStatus.state==='idle'&&<><Cloud size={13} color={C.t3}/><span style={{fontSize:12,color:C.t3}}>Not synced yet</span></>}
           </div>
           <button style={{...btnG({fontSize:12,padding:'9px 18px'})}} onClick={async()=>{try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();window.location.reload();}}>Sign Out</button>
-        </div>
-
-        {/* ── Family access ────────────────────────────────────────────────
-            The student's side of the parent dashboard, and the reason the
-            feature is a consent mechanism rather than a monitoring one: whoever
-            can see this account is listed here, and one tap ends it — with no
-            appeal to the parent and no delay, because getActiveLink is re-read
-            on every single request rather than cached on the session (see
-            api/_lib/session.js).
-
-            It lives in the Account group, next to sign-out and the data-rights
-            controls, because "who else can see me" belongs with the other
-            questions about this account rather than buried in a preferences
-            list. */}
-        <div style={glass({padding:18})}>
-          <SL>Family Access</SL>
-          <p style={{fontSize:13,color:C.t2,marginBottom:14,lineHeight:1.65}}>
-            Share your progress with a parent or guardian. They'd see your streak, XP, lessons passed and test scores — never your Medabrain chats, your lesson notes, or your essays. Nothing is shared until they accept, and you can cut it off here at any time.
-          </p>
-          <ConnectionsPanel role="student" />
         </div>
 
         {/* ── Your data & your rights ──────────────────────────────────────
@@ -7660,8 +7803,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
           </div>
         </div>
-        </Group>
+        </Group>}
 
+        {settingsView==='account'&&<>
         {/* About */}
         <div style={glass({padding:18})}>
           <div style={{fontSize:11,color:C.t3,lineHeight:1.9,fontFamily:C.FM}}>
@@ -7690,6 +7834,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             {TRADEMARK_NOTICE.map((line,i)=><React.Fragment key={i}>{line}{i<TRADEMARK_NOTICE.length-1?' ':''}</React.Fragment>)}
           </div>
         </div>
+        </>}
       </div>
     );
   }
@@ -8177,6 +8322,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 One item only: a list of six locked things here would rebuild the exact wall
                 of options this whole change exists to tear down. */}
             <NextUnlockCard items={unlocks.locked('')} variant="rail" accent={accent}/>
+            {/* ── Family access, in the rail ─────────────────────────────────
+                The parent dashboard's discoverability problem was structural: it lived at the
+                bottom of a settings page, so the only students who found it were the ones already
+                looking for it, and the parents it was built for never found it at all. One line
+                in the rail, pointing at /settings/family, is what turns "we have that feature"
+                into "people use that feature". It states the direction too — invite a parent —
+                because "Family" on its own reads as somewhere your family already is. */}
+            <a
+              href={settingsHref('family')} aria-current={tab==='settings'&&settingsView==='family'?'page':undefined}
+              onClick={e=>onNavLinkClick(e,()=>{goFamily();play('click');})}
+              style={{display:'flex',alignItems:'center',gap:9,padding:'10px 14px',borderTop:`1px solid ${C.b1}`,textDecoration:'none',color:C.t2,fontSize:12.5,fontFamily:C.FB}}
+            >
+              <Users size={14} color={C.violet}/>
+              <span style={{flex:1}}>{familyLinkCount>0?`Family access · ${familyLinkCount}`:'Invite a parent'}</span>
+              <ChevronRight size={13} color={C.t3}/>
+            </a>
             {/* Theme, one click from anywhere in the app. It used to live four
                 levels deep in Settings → Appearance, which in practice meant the
                 app picked the theme and the student lived with it. The full

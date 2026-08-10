@@ -87,6 +87,7 @@ export const STEP_CHAPTER = {
   obstacleEmpathy: 'plan',
   potential: 'plan',
   prefs: 'plan',
+  family: 'plan',
   commitment: 'plan',
   saveProgress: 'plan',
 };

@@ -11,14 +11,18 @@ User-agent: *
 Allow: /$
 Allow: /signup
 Allow: /login
+Allow: /parents
+Allow: /parents/signup
 Allow: /legal/terms
 Allow: /legal/privacy
 Disallow: /api/
+Disallow: /home
 Disallow: /sat
 Disallow: /prep
 Disallow: /portfolio
 Disallow: /plans
 Disallow: /progress
 Disallow: /settings
+Disallow: /family
 
 Sitemap: https://medschoolprep.cloud/sitemap.xml

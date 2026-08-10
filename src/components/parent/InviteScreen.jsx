@@ -14,7 +14,7 @@
 // a button.
 import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { Loader2, ShieldCheck, EyeOff, Eye, ArrowRight } from 'lucide-react';
+import { Loader2, ShieldCheck, EyeOff, Eye, ArrowRight, BadgeCheck } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, tint } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
 import { PARENT_VIEWS } from '../../lib/routes';
@@ -50,7 +50,9 @@ function Bullets({ items, icon: Icon, hue, title }) {
 
 function Frame({ children }) {
   return (
-    <div style={{ minHeight: 'var(--msp-vh)', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    // flex:1 so this actually fills the flex row #root creates (src/index.css) rather than
+    // collapsing to the card's own width and centring itself inside a 530px sliver.
+    <div style={{ flex: 1, minWidth: 0, height: 'var(--msp-vh)', overflowY: 'auto', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={glass({ width: '100%', maxWidth: 480 })}>{children}</div>
     </div>
   );
@@ -163,6 +165,38 @@ export default function InviteScreen({ token, user, onDone, onSignIn, onSignUp, 
             {invite.relationship ? ` · ${invite.relationship}` : ''}
           </div>
         </div>
+
+        {/*
+          What the requester actually claimed, in their own words, when they sent this.
+
+          This is the only check in the whole flow that can catch an impersonator, and it is not
+          performed by a server — it is performed here, by the one person who knows whether they
+          have a mother called Priya. Everything the parent had to fill in before they could send
+          anything (see ParentSetup.jsx and migration 0009) exists so that this box has something
+          in it. A student who reads a name they do not recognise, or their own name spelled as
+          somebody else's, closes the tab and nothing has happened.
+        */}
+        {inviterIsParent && (invite.claimedByName || invite.claimedStudentName) && (
+          <div style={glass2({ ...CC({ gap: 8 }), borderColor: tint(C.amber, 0.3), background: tint(C.amber, 0.05) })}>
+            <div style={R({ gap: 8 })}>
+              <BadgeCheck size={14} color={C.amberL} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.amberL, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                What they told us
+              </span>
+            </div>
+            <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6 }}>
+              {invite.claimedByName && (
+                <>They say they are <strong style={{ color: C.t1 }}>{invite.claimedByName}</strong>
+                  {invite.claimedRelationship ? `, your ${invite.claimedRelationship.toLowerCase()}` : ''}.{' '}</>
+              )}
+              {invite.claimedStudentName && (
+                <>They named the student as <strong style={{ color: C.t1 }}>{invite.claimedStudentName}</strong>.{' '}</>
+              )}
+              If that is not you, or you don't recognise this person, don't accept — close this
+              page and nothing is shared.
+            </div>
+          </div>
+        )}
 
         <div style={glass2({ ...CC({ gap: 16 }) })}>
           <Bullets title={inviterIsParent ? 'They would see' : "You'd see"} items={SHARED} icon={Eye} hue={C.blueL} />

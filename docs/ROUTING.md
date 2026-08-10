@@ -11,12 +11,31 @@ Now every screen has an address, and history moves through them.
 
 | Screen | URL |
 |---|---|
-| Home | `/` |
-| A tab with no sub-nav | `/plans`, `/settings` |
-| A tab with a sub-nav | `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements` |
-| Lesson player | `/prep/pathway/lesson/<unitId>/<lessonId>` |
+| Home | `/home` (a bare `/` is its alias) |
+| A tab with no sub-nav | `/plans` |
+| A tab with a sub-nav | `/sat/practice`, `/prep/pathways`, `/portfolio/milestones`, `/progress/achievements`, `/settings/family` |
+| Lesson player | `/prep/pathways/lesson/<unitId>/<lessonId>` |
 | Quiz runner | `/prep/quizzes/quiz/<quizId>` |
 | Signed-out screens | `/login`, `/signup`, `/forgot-password` |
+| Public parent page | `/parents` |
+| Parent auth | `/parents/signup`, `/parents/login` |
+| Parent app | `/family`, `/family/students`, `/family/digest`, `/family/activity`, `/family/connections`, `/family/settings`, `/family/setup` |
+| One student, to a parent | `/family/student/<studentId>` |
+| Invitation link | `/parent-invite?token=…` |
+| Legal | `/legal/terms`, `/legal/privacy` |
+
+Home used to be the one screen with no address of its own: everything else was
+`/sat/practice` or `/portfolio/essays`, and the dashboard was a bare `/`. It was
+therefore the only destination nobody could link to, and the only one
+indistinguishable from the marketing page in an address bar or a history list.
+`/home` is canonical now and `/` is the alias — a bare `/` still resolves (it is
+what every PWA cold start, typed domain and old bookmark arrives on) and is
+rewritten in place, costing no history entry.
+
+**Two address spaces, one bar.** `/family/*` belongs to `ParentApp`, `/parents*`
+and `/legal/*` to `AuthGate`, and everything else to the student router.
+`parsePath()` deliberately returns `null` for the first two so the systems can
+never fight over the URL; `npm run verify:routing` asserts that refusal.
 
 Every path is extension-free. That is load-bearing: anything containing a `.` is
 treated as a file request by the SPA fallback, the Vercel rewrite, and the
@@ -32,6 +51,7 @@ existing — they are already in shared links, bookmarks, the PWA start URL, sav
 master plans, persisted view state, and every history entry a returning student
 has. `SUBVIEWS[tab].aliases` maps a retired id onto its survivor, so
 `/portfolio/deadlines` and `/portfolio/timeline` both open `/portfolio/milestones`
+(and `/prep/pathway` opens `/prep/pathways`)
 and rewrite themselves in place. Aliases never come *out* of `formatPath()`,
 which is what keeps exactly one canonical URL per screen; `resolveView()` applies
 the same mapping to persisted state so a stale `portfolioView` doesn't silently

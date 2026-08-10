@@ -76,7 +76,7 @@ const EXPECTED_TABLES = [
   'activities', 'app_users', 'awards', 'clinical_hours', 'college_checklist_items', 'colleges',
   'deadlines', 'email_verifications', 'essay_versions', 'essays', 'gpa_entries', 'login_attempts',
   'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',
-  'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
+  'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
   'research_experience', 'reward_claims', 'scholarships', 'sessions', 'skills_certifications',
   'test_scores',
 ];
@@ -84,6 +84,7 @@ const EXPECTED_TABLES = [
 /** Every function the API calls by name via supabase.rpc(). */
 const EXPECTED_FUNCTIONS = [
   'accept_parent_link', 'bump_progress_counters', 'revoke_links_on_user_delete', 'save_master_plan',
+  'touch_parent_profile_updated_at',
 ];
 
 // ── Cluster management ──────────────────────────────────────────────────────
@@ -322,7 +323,7 @@ function checkFunctionExposure(conn, db) {
   const unpinned = query(conn, db,
     `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
-        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete')
+        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete', 'touch_parent_profile_updated_at')
         and coalesce(array_to_string(p.proconfig, ','), '') not like '%search_path%'
       order by 1`).split('\n').filter(Boolean);
   assert('every function pins its search_path', unpinned.length === 0,

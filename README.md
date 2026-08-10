@@ -14,13 +14,14 @@ This README acts as the complete, single source of truth for the entire applicat
 3. [Deployments & Environment Routing](#deployments--environment-routing)
 4. [Complete Environment Variables Reference](#complete-environment-variables-reference)
 5. [URLs, History Routing & SEO](#urls-history-routing--seo)
-6. [Offline Capabilities & Local Storage](#offline-capabilities--local-storage)
-7. [Testing, Audits & Quality Control Suites](#testing-audits--quality-control-suites)
-8. [Spelling Standards & Verification](#spelling-standards--verification)
-9. [Onboarding & Test Bypassing Mechanisms](#onboarding--test-bypassing-mechanisms)
-10. [Local Development Setup](#local-development-setup)
-11. [Branding & Legal Guidelines](#branding--legal-guidelines)
-12. [Comprehensive File Directory Mapping](#comprehensive-file-directory-mapping)
+6. [The Parent Dashboard](#the-parent-dashboard)
+7. [Offline Capabilities & Local Storage](#offline-capabilities--local-storage)
+8. [Testing, Audits & Quality Control Suites](#testing-audits--quality-control-suites)
+9. [Spelling Standards & Verification](#spelling-standards--verification)
+10. [Onboarding & Test Bypassing Mechanisms](#onboarding--test-bypassing-mechanisms)
+11. [Local Development Setup](#local-development-setup)
+12. [Branding & Legal Guidelines](#branding--legal-guidelines)
+13. [Comprehensive File Directory Mapping](#comprehensive-file-directory-mapping)
 
 ---
 
@@ -141,19 +142,74 @@ The application operates in a unified monorepo supporting two distinct hosting m
 ## 🗺 URLs, History Routing & SEO
 
 ### URL Schema
-- **Home:** `/`
-- **Root Tabs:** `/plans`, `/settings`
-- **Nested Subtabs:** `/sat/practice`, `/prep/flashcards`, `/portfolio/milestones`, `/progress/achievements`
+- **Home:** `/home` — a bare `/` is its alias and is rewritten in place, costing no history entry.
+- **Root Tabs:** `/plans`
+- **Nested Subtabs:** `/sat/practice`, `/prep/pathways`, `/portfolio/milestones`, `/progress/achievements`, `/settings/family`
 - **Interactive Modals:**
-  - Pathway Lesson: `/prep/pathway/lesson/<unitId>/<lessonId>`
+  - Pathway Lesson: `/prep/pathways/lesson/<unitId>/<lessonId>`
   - Practice Quiz: `/prep/quizzes/quiz/<quizId>`
 - **Auth Views:** `/login`, `/signup`, `/forgot-password`, `/auth/callback`
+- **Parent Views:** `/parents` (public), `/parents/signup`, `/parents/login`, and the parent app at `/family`, `/family/students`, `/family/student/<studentId>`, `/family/digest`, `/family/activity`, `/family/connections`, `/family/settings`, `/family/setup`
+- **Legal:** `/legal/terms`, `/legal/privacy`
+
+Every top-level tab and every sub-tab is addressable, including Settings — `/settings/family` is
+the link an invitation email points a student at. Retired ids alias forward forever
+(`/prep/pathway` → `/prep/pathways`, `/portfolio/deadlines` → `/portfolio/milestones`) and never
+round-trip back out of `formatPath()`, so there is exactly one canonical URL per screen.
+
+### Three address spaces, one bar
+`/family/*` belongs to `ParentApp`, `/parents*` and `/legal/*` to `AuthGate`, everything else to
+the student router in `useAppRouter`. `parsePath()` returns `null` for the first two, which is
+what stops two navigation systems fighting over the address bar; `npm run verify:routing`
+asserts that refusal rather than trusting it.
 
 ### History Sync Invariant
 Every render computes the canonical path for the current state. Push a history entry **only** when that path differs from `location.pathname`. This ensures flawless hardware back-button navigation with no double-entry states.
 
 ### Crawler Fallback Guard
 URLs ending in standard file extensions (e.g., `/sitemap.xml`, `/favicon.png`) are handled strictly as static files. If missing, the server returns a proper `404 Not Found` response instead of serving the SPA default layout to prevent search crawlers from indexing duplicate content.
+
+---
+
+## 👪 The Parent Dashboard
+
+A parent is a row in `app_users` with `role='parent'` and an entirely separate application
+(`src/components/parent/ParentApp.jsx`) — it owns no progress, holds no local database, and talks
+to four endpoints under `/api/parent/*`.
+
+### Consent is the authorization boundary
+Nothing about a student reaches a parent until that student clicks a link sent to **their own**
+mailbox. `getActiveLink()` re-reads that consent on **every request** rather than caching it on
+the 30-day session, so revoking takes effect on the next screen refresh. What a parent can see is
+built by an allowlist (`api/_lib/parentSummary.js`) — effort and outcomes, never coach
+transcripts, lesson notes, essay text, or individual answers.
+
+### The declaration is what makes a request checkable
+Knowing a student's name has never been enough to see anything about them. But an invitation that
+said only "a parent would like to follow your progress" over an unfamiliar email address gave the
+student nothing to judge. So a parent account must be **built** before it can ask for anything
+(`supabase/migrations/0009_parent_profiles.sql`, `api/_lib/parentProfile.js`): full name,
+relationship, a reachable phone number, the student's name, and an explicit attestation — stored
+verbatim, timestamped, and copied onto the invitation row so a later profile edit cannot rewrite
+what was agreed to. `/api/parent/links` (POST) and `/api/parent/summary` both refuse a parent
+account that has not finished it.
+
+None of that is identity verification and the code says so plainly. Its job is to put a name and
+a claimed relationship in front of the one party who can actually catch an impersonator — the
+student reading the request. The gate fails **open** on a database without migration 0009, because
+it is an accountability layer on top of consent rather than the thing keeping a stranger out;
+locking out guardians whose children already consented would be the worse failure.
+
+### Where parents find it
+`/parents` (public, crawlable, in the sitemap), a "For parents" entry in the landing nav and
+footer, a card on the sign-in screen, a link on the sign-up form, `/settings/family` inside the
+student app plus a permanent item in the sidebar rail, an optional step in onboarding, and ⌘K.
+
+### Audited by
+`npm run verify:parent` — 107 structural assertions: every API handler is classified and calls
+exactly one guard, the summary is an allowlist (proved against a snapshot stuffed with private
+markers), the digest never infers motive or hands out enforcement instructions, and the
+declaration gate is applied where it should be and fails open where it must.
 
 ---
 

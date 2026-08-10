@@ -35,8 +35,13 @@ export const SUBVIEWS = {
   },
   prep: {
     state: 'prepView',
-    default: 'pathway',
-    ids: ['diagnostic', 'pathway', 'quizzes', 'flashcards', 'coach', 'library'],
+    default: 'pathways',
+    ids: ['diagnostic', 'pathways', 'quizzes', 'flashcards', 'coach', 'library'],
+    // The tab has always shown a *set* of health-career pathways and let the student switch
+    // between them, so the singular id was describing one lesson list rather than the screen.
+    // '/prep/pathway' stays parseable forever — it is in shared links, bookmarks, persisted view
+    // state and every history entry a returning student has — and resolves forward to the plural.
+    aliases: { pathway: 'pathways' },
   },
   portfolio: {
     state: 'portfolioView',
@@ -63,6 +68,16 @@ export const SUBVIEWS = {
     default: 'overview',
     ids: ['overview', 'verified', 'performance', 'achievements'],
   },
+  // Settings was one seven-group scroll with no addressable parts, which made every instruction
+  // that ended "…in Settings" a hunt: the Plans lock screen, the parent invitation email, the
+  // support replies, and the app's own deep links could all name the tab and none of them could
+  // name the screen. Each group is now a sub-tab with a URL, so /settings/family is a link a
+  // parent can be sent and /settings/appearance is one a support reply can paste.
+  settings: {
+    state: 'settingsView',
+    default: 'profile',
+    ids: ['profile', 'study', 'family', 'appearance', 'medabrain', 'data', 'account'],
+  },
 };
 
 /**
@@ -71,8 +86,25 @@ export const SUBVIEWS = {
  * back out of the login form and you land on the landing page, not on whatever
  * site you visited before ours.
  */
-export const AUTH_VIEWS = { login: '/login', signup: '/signup', forgot: '/forgot-password', oauth: '/auth/callback' };
+export const AUTH_VIEWS = {
+  login: '/login',
+  signup: '/signup',
+  forgot: '/forgot-password',
+  oauth: '/auth/callback',
+  // The parent's own front door. Two screens rather than a checkbox on the existing ones,
+  // because "where do I sign in to see my child's progress" was the question the product
+  // could not answer: a parent who lands on /login has no way to know a parent account is
+  // even a thing, and a parent who lands on /signup has to read a role picker to find out.
+  // These are the URLs that go in the invitation email, on the landing page, in the footer,
+  // and in every "for parents" link anywhere in the app.
+  parentSignup: '/parents/signup',
+  parentLogin: '/parents/login',
+};
 const AUTH_PATHS = Object.values(AUTH_VIEWS);
+
+/** True for the two auth screens that are specifically the parent's. */
+export const isParentAuthPath = (pathname) =>
+  [AUTH_VIEWS.parentSignup, AUTH_VIEWS.parentLogin].includes(normalizePath(pathname));
 
 /**
  * The legal documents. These are the odd ones out in this file: every other
@@ -107,8 +139,42 @@ export function parseLegalPath(pathname) {
  * claims them, and the two navigation systems cannot fight over the address bar. Same arrangement
  * as the legal documents above, for the same reason.
  */
-export const PARENT_VIEWS = { dashboard: '/family', settings: '/family/settings' };
+export const PARENT_VIEWS = {
+  // The tab bar of the parent application, in nav order. `dashboard` is the root because a
+  // parent with one student — nearly all of them — should never have to choose a screen before
+  // seeing an answer to "how is she doing".
+  dashboard: '/family',
+  students: '/family/students',
+  digest: '/family/digest',
+  activity: '/family/activity',
+  connections: '/family/connections',
+  settings: '/family/settings',
+  // The intake a parent account must finish before it can ask for anything (see
+  // ParentSetup.jsx and api/parent/profile.js). Addressable so a half-finished one can be
+  // resumed from an email link rather than only from wherever the app happened to leave off.
+  setup: '/family/setup',
+};
 const PARENT_PATHS = Object.values(PARENT_VIEWS);
+
+/** A single student's own page inside the parent app: /family/student/<uuid>. */
+export const PARENT_STUDENT_PREFIX = '/family/student';
+export const parentStudentPath = (studentId) => `${PARENT_STUDENT_PREFIX}/${seg(studentId)}`;
+
+/** The student id a /family/student/<id> path names, or null. */
+export function parseParentStudentPath(pathname) {
+  const parts = normalizePath(pathname).split('/').filter(Boolean);
+  if (parts.length !== 3 || parts[0] !== 'family' || parts[1] !== 'student') return null;
+  return unseg(parts[2]) || null;
+}
+
+/**
+ * The public "for parents" page: what the dashboard is, what it shows, what it never shows,
+ * and the two buttons. Public in the same sense the legal documents are — a parent deciding
+ * whether to make an account must be able to read it *before* making one, and it is the page
+ * every "For parents" link in the marketing site and the app points at.
+ */
+export const PARENT_HUB_PATH = '/parents';
+export const isParentHubPath = (pathname) => normalizePath(pathname) === PARENT_HUB_PATH;
 
 /**
  * The invitation landing page. Public in the same sense the legal documents are: it must render
@@ -119,7 +185,7 @@ export const PARENT_INVITE_PATH = '/parent-invite';
 
 /** True when `pathname` addresses a screen inside the parent application. */
 export function isParentPath(pathname) {
-  return PARENT_PATHS.includes(normalizePath(pathname));
+  return PARENT_PATHS.includes(normalizePath(pathname)) || !!parseParentStudentPath(pathname);
 }
 
 /** The parent view (`dashboard`/`settings`) a path names, or null. */
@@ -143,6 +209,20 @@ const OVERLAY_SEGMENTS = { lesson: 'lesson', quiz: 'quiz' };
 
 /** The route the app falls back to when a URL means nothing to us. */
 export const HOME_ROUTE = { tab: 'home', view: null, overlay: null };
+
+/**
+ * Home has a name now.
+ *
+ * It used to be the one tab with no URL of its own: every other screen was `/sat/practice` or
+ * `/portfolio/essays`, and the dashboard was bare `/`. That made it the only destination in the
+ * app you could not link to, could not tell apart from the marketing page in an address bar or a
+ * browser-history list, and could not describe in a support reply without saying "just the slash".
+ *
+ * So `/home` is canonical and `/` is its alias: a bare `/` still resolves (it is what every PWA
+ * cold start, every typed domain and every old bookmark arrives on) and the router rewrites it in
+ * place — same entry, no extra history step — the moment the app decides which screen it is.
+ */
+const HOME_PATH = '/home';
 
 function seg(value) {
   return encodeURIComponent(String(value));
@@ -195,8 +275,7 @@ export function parseAuthPath(pathname) {
  */
 export function formatPath(route) {
   const tab = TABS.includes(route?.tab) ? route.tab : 'home';
-  const parts = [];
-  if (tab !== 'home') parts.push(tab);
+  const parts = [tab];
 
   const sub = SUBVIEWS[tab];
   if (sub) parts.push(resolveView(tab, route?.view) || sub.default);
@@ -208,7 +287,7 @@ export function formatPath(route) {
     parts.push(OVERLAY_SEGMENTS.quiz, seg(overlay.quizId));
   }
 
-  return `/${parts.join('/')}`.replace(/\/+$/, '') || '/';
+  return `/${parts.join('/')}`.replace(/\/+$/, '') || HOME_PATH;
 }
 
 /**
@@ -224,6 +303,7 @@ export function parsePath(pathname) {
   if (isAuthPath(path)) return null;
 
   const parts = path.split('/').filter(Boolean).map(unseg);
+  // A bare "/" is Home's alias, not a route of its own — see HOME_PATH above.
   if (!parts.length) return { ...HOME_ROUTE };
 
   const tab = parts[0];
@@ -276,6 +356,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
     prepView: SUBVIEWS.prep.ids.includes(persisted.prepView) ? persisted.prepView : SUBVIEWS.prep.default,
     portfolioView: resolveView('portfolio', persisted.portfolioView) || SUBVIEWS.portfolio.default,
     progressView: SUBVIEWS.progress.ids.includes(persisted.progressView) ? persisted.progressView : SUBVIEWS.progress.default,
+    settingsView: SUBVIEWS.settings.ids.includes(persisted.settingsView) ? persisted.settingsView : SUBVIEWS.settings.default,
     overlay: null,
   };
 
@@ -296,7 +377,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
  * used every render to decide whether the address bar is still telling the
  * truth.
  */
-export function routeFromState({ tab, satView, prepView, portfolioView, progressView, overlay = null }) {
-  const views = { sat: satView, prep: prepView, portfolio: portfolioView, progress: progressView };
+export function routeFromState({ tab, satView, prepView, portfolioView, progressView, settingsView, overlay = null }) {
+  const views = { sat: satView, prep: prepView, portfolio: portfolioView, progress: progressView, settings: settingsView };
   return { tab, view: SUBVIEWS[tab] ? views[tab] : null, overlay };
 }

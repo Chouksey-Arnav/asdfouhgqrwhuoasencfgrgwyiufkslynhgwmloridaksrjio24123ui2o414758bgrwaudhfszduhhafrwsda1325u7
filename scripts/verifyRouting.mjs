@@ -21,7 +21,11 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
 
 const routes = await import(pathToFileURL(path.join(ROOT, 'src/lib/routes.js')).href);
-const { TABS, SUBVIEWS, AUTH_VIEWS, LEGAL_VIEWS, formatPath, parsePath, bootRoute, normalizePath, resolveView } = routes;
+const {
+  TABS, SUBVIEWS, AUTH_VIEWS, LEGAL_VIEWS, PARENT_VIEWS, PARENT_HUB_PATH, PARENT_STUDENT_PREFIX,
+  formatPath, parsePath, bootRoute, normalizePath, resolveView,
+  isParentPath, parseParentPath, parseParentStudentPath, parentStudentPath, isParentHubPath,
+} = routes;
 
 let failures = 0;
 const fail = (msg) => { failures += 1; console.error(`  ✗ ${msg}`); };
@@ -46,7 +50,7 @@ if (!navIds) fail('could not find NAV in src/App.jsx');
 else if (navIds.join() !== TABS.join()) fail(`NAV ${JSON.stringify(navIds)} !== TABS ${JSON.stringify(TABS)}`);
 else ok(`NAV matches TABS (${TABS.length} tabs)`);
 
-for (const [tab, name] of [['sat', 'SAT_SUBNAV'], ['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['progress', 'PROGRESS_SUBNAV']]) {
+for (const [tab, name] of [['sat', 'SAT_SUBNAV'], ['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['progress', 'PROGRESS_SUBNAV'], ['settings', 'SETTINGS_SUBNAV']]) {
   const ids = idsIn(name);
   if (!ids) { fail(`could not find ${name} in src/App.jsx`); continue; }
   const known = SUBVIEWS[tab].ids;
@@ -65,7 +69,7 @@ for (const tab of TABS) {
   if (SUBVIEWS[tab]) for (const view of SUBVIEWS[tab].ids) allRoutes.push({ tab, view, overlay: null });
   else allRoutes.push({ tab, view: null, overlay: null });
 }
-allRoutes.push({ tab: 'prep', view: 'pathway', overlay: { kind: 'lesson', unitId: 'ex1', lessonId: 'ex1l1' } });
+allRoutes.push({ tab: 'prep', view: 'pathways', overlay: { kind: 'lesson', unitId: 'ex1', lessonId: 'ex1l1' } });
 allRoutes.push({ tab: 'prep', view: 'quizzes', overlay: { kind: 'quiz', quizId: 'ex1l1q' } });
 
 const seen = new Map();
@@ -82,18 +86,52 @@ if (!failures) ok(`${allRoutes.length} routes round-trip and are all distinct`);
 
 // ── 3. Paths that must NOT be treated as app routes ─────────────────────────
 section('Non-routes stay non-routes');
-for (const p of ['/sitemap.xml', '/robots.txt', '/favicon.png', '/api/groq', '/login', '/signup', '/forgot-password', '/portfolio/nonsense', '/nope', '/sat/practice/extra']) {
+for (const p of ['/sitemap.xml', '/robots.txt', '/favicon.png', '/api/groq', '/login', '/signup', '/forgot-password',
+  // The parent surfaces are owned by AuthGate and ParentApp, exactly like /legal/* — if the app
+  // router ever started claiming them, two navigation systems would fight over the address bar.
+  '/parents', '/parents/signup', '/parents/login', '/family', '/family/students', '/family/student/abc', '/parent-invite',
+  '/portfolio/nonsense', '/nope', '/sat/practice/extra']) {
   if (parsePath(p) !== null) fail(`${p} should not parse as an app route (got ${JSON.stringify(parsePath(p))})`);
 }
 // …and the aliases that must resolve, without pretending to be canonical.
-for (const [alias, expected] of [['/sat', '/sat/overview'], ['/prep', '/prep/pathway'], ['/portfolio/', '/portfolio/overview'], ['/home', '/'], ['/', '/']]) {
+// Home is canonical at /home now, and a bare "/" is its alias — the reverse of the old rule.
+// See HOME_PATH in src/lib/routes.js for why the dashboard needed a name of its own.
+for (const [alias, expected] of [
+  ['/sat', '/sat/overview'], ['/prep', '/prep/pathways'], ['/prep/pathway', '/prep/pathways'],
+  ['/portfolio/', '/portfolio/overview'], ['/settings', '/settings/profile'],
+  ['/home', '/home'], ['/', '/home'],
+]) {
   const parsed = parsePath(alias);
   if (!parsed) fail(`${alias} should resolve to ${expected}`);
   else if (formatPath(parsed) !== expected) fail(`${alias} resolved to ${formatPath(parsed)}, expected ${expected}`);
 }
 if (Object.values(AUTH_VIEWS).some((p) => parsePath(p))) fail('an auth path parsed as an app route');
+if (Object.values(PARENT_VIEWS).some((p) => parsePath(p))) fail('a parent path parsed as an app route — ParentApp owns /family/*, the student router must leave it alone');
 if (Object.values(LEGAL_VIEWS).some((p) => parsePath(p))) fail('a legal path parsed as an app route — AuthGate owns /legal/*, the app router must leave it alone');
 ok('files, API paths, auth screens and typos are all rejected; aliases normalize');
+
+// ── 3a. The parent application has its own, separate address space ──────────
+// Two navigation systems share one address bar (the student router in useAppRouter, and
+// ParentApp's own view⇄URL effect). They stay out of each other's way only because parsePath
+// refuses to claim /family/* — so that refusal is asserted here rather than assumed.
+section('Parent routes are the parent app\'s, and nobody else\'s');
+for (const [view, p] of Object.entries(PARENT_VIEWS)) {
+  if (!isParentPath(p)) fail(`${p} is in PARENT_VIEWS but isParentPath() says no`);
+  if (parseParentPath(p) !== view) fail(`${p} should parse back as '${view}', got '${parseParentPath(p)}'`);
+}
+const SAMPLE_STUDENT = '11111111-2222-3333-4444-555555555555';
+const studentPath = parentStudentPath(SAMPLE_STUDENT);
+if (!studentPath.startsWith(PARENT_STUDENT_PREFIX)) fail(`parentStudentPath() left the parent namespace: ${studentPath}`);
+if (parseParentStudentPath(studentPath) !== SAMPLE_STUDENT) fail(`${studentPath} did not round-trip back to its student id`);
+if (!isParentPath(studentPath)) fail(`${studentPath} is a parent screen but isParentPath() says no`);
+if (parsePath(studentPath)) fail(`${studentPath} was claimed by the student router`);
+if (parseParentStudentPath('/family/students')) fail('/family/students is the list, not one student');
+// The public page is deliberately NOT part of the signed-in parent app: it renders for a
+// signed-out visitor, a signed-in student, and a crawler (see AuthGate).
+if (!isParentHubPath(PARENT_HUB_PATH)) fail(`${PARENT_HUB_PATH} should be the public parent page`);
+if (isParentPath(PARENT_HUB_PATH)) fail(`${PARENT_HUB_PATH} is public and must not be treated as a signed-in parent screen`);
+if (parsePath(PARENT_HUB_PATH)) fail(`${PARENT_HUB_PATH} was claimed by the student router`);
+if (!failures) ok(`${Object.keys(PARENT_VIEWS).length} parent screens + per-student pages resolve, and none is an app route`);
 
 // ── 3b. Retired sub-view ids still resolve ──────────────────────────────────
 // Merging two tabs into one retires their ids, but those ids are already in
@@ -153,12 +191,24 @@ for (const loc of locs) {
   // page — which is the whole reason a gated route is disqualified here.
   const isAuth = Object.values(AUTH_VIEWS).includes(p);
   const isLegal = Object.values(LEGAL_VIEWS).includes(p);
-  if (p !== '/' && !isAuth && !isLegal) fail(`${p} is in the sitemap but is a signed-in app route — it would render the landing page to a crawler`);
+  // The public parent page qualifies for the same reason the legal documents do: AuthGate renders
+  // it ahead of its signed-in/signed-out branch, so a crawler with no session gets the actual
+  // page rather than the landing page.
+  const isParentHub = p === PARENT_HUB_PATH;
+  if (p !== '/' && !isAuth && !isLegal && !isParentHub) fail(`${p} is in the sitemap but is a signed-in app route — it would render the landing page to a crawler`);
 }
 if (!robots.includes(`Sitemap: ${new URL(locs[0]).origin}/sitemap.xml`)) fail('robots.txt does not point at the sitemap on the same origin');
-for (const tab of TABS.filter((t) => t !== 'home')) {
+// Every tab INCLUDING home: /home is a real, gated URL now rather than the bare origin, so it
+// needs the same Disallow as its siblings — a crawler that followed it would get the landing
+// page and index a duplicate of the one URL we actually want ranked.
+for (const tab of TABS) {
   if (!robots.includes(`Disallow: /${tab}`)) fail(`robots.txt does not Disallow /${tab} (a signed-in-only route)`);
 }
+// …and the parent application, which is gated in exactly the same way.
+if (!robots.includes('Disallow: /family')) fail('robots.txt does not Disallow /family (the parent app is signed-in only)');
+// …but the public parent page must stay crawlable: it is the only page on the site addressed to
+// someone searching on behalf of a student, and a Disallow here would hide it from them.
+if (!robots.includes('Allow: /parents')) fail('robots.txt does not Allow /parents (it is a public page)');
 if (!failures) ok(`${locs.length} sitemap URLs are public, absolute, and robots.txt disallows every app tab`);
 
 // ── 6. Nothing serves index.html in place of a file ─────────────────────────
@@ -171,7 +221,7 @@ else {
   for (const p of ['/sitemap.xml', '/robots.txt', '/assets/app.js', '/api/groq']) {
     if (re.test(p)) fail(`vercel.json would rewrite ${p} to index.html`);
   }
-  for (const p of ['/sat/practice', '/prep/pathway', '/login', '/']) {
+  for (const p of ['/sat/practice', '/prep/pathways', '/settings/family', '/parents', '/family', '/login', '/']) {
     if (!re.test(p)) fail(`vercel.json would NOT serve the app at ${p}`);
   }
 }

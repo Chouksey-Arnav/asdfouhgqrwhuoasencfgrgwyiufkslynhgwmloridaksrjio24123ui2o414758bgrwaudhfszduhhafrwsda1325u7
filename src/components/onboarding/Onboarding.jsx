@@ -51,6 +51,7 @@ import { GeneratingStep } from './steps/GeneratingStep';
 import { PlanReadyStep } from './steps/PlanReadyStep';
 import { PlanSummaryStep } from './steps/PlanSummaryStep';
 import { SaveProgressStep } from './steps/SaveProgressStep';
+import { FamilyStep } from './steps/FamilyStep';
 import { obstacleEmpathy } from './personalize';
 import { C } from './primitives';
 import { CHAPTERS, STEP_CHAPTER } from './chapters';
@@ -84,7 +85,11 @@ function buildSteps(answers) {
     'challenges',
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
-  steps.push('potential', 'prefs', 'commitment', 'saveProgress');
+  // 'family' sits after the plan preferences and before the pledge: late enough that the student
+  // has seen what the product is and can decide whether they want a parent watching it, and early
+  // enough that it is not the last thing between them and the app (a share prompt in the final
+  // slot reads as a toll gate). See steps/FamilyStep.jsx.
+  steps.push('potential', 'prefs', 'family', 'commitment', 'saveProgress');
   return steps;
 }
 const NO_CHROME = new Set(['splash', 'welcome', 'generating', 'planReady']);
@@ -108,6 +113,10 @@ const DEFAULT_ANSWERS = {
   obstacles: [], accomplish: [],
   // Preferences & output
   addBack: true, rollover: true, name: '', generatedPlan: null,
+  // The optional parent invitation. Held as an answer rather than sent from the screen: the
+  // account does not exist yet, and an invitation from an account that was never created is a
+  // dead link in somebody's inbox. completeOnboarding() sends it.
+  parentInviteEmail: '', parentRelationship: '',
 };
 
 // Losing a connection partway through used to throw away every answer given.
@@ -361,6 +370,8 @@ export default function Onboarding({ account, onComplete, preview = false }) {
         statLine="Students who follow a structured pre-med plan through high school apply with stronger scores, real clinical exposure, and a story that stands out — the three things admissions actually weighs." onNext={next} />; break;
     case 'prefs':
       content = <PlanPreferencesStep prefs={answers} onChange={patch => update(patch)} onNext={next} accent={accent} />; break;
+    case 'family':
+      content = <FamilyStep value={answers} onChange={patch => update(patch)} onNext={next} accent={accent} />; break;
     case 'commitment':
       content = <CommitmentStep answers={answers} onNext={next} />; break;
     case 'generating':
