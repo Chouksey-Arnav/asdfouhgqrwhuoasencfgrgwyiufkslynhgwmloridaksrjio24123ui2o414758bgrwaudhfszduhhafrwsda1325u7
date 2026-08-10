@@ -23,7 +23,11 @@
  *      depends on. If a migration silently stops creating something, the build fails here rather
  *      than at runtime for a user.
  *   4. FILENAMES ARE SEQUENTIAL. No gaps, no duplicate prefixes — the ordering is the contract.
- *   5. THE CONCURRENCY PRIMITIVES ACTUALLY SERIALIZE. save_master_plan and accept_parent_link
+ *   5. NOTHING IS EXPOSED THAT SHOULDN'T BE. Supabase publishes every public-schema function as
+ *      an HTTP endpoint, and Postgres grants EXECUTE to PUBLIC by default — so a SECURITY DEFINER
+ *      function is callable by the anon role the moment it is created, unless a migration says
+ *      otherwise. See checkFunctionExposure.
+ *   6. THE CONCURRENCY PRIMITIVES ACTUALLY SERIALIZE. save_master_plan and accept_parent_link
  *      both exist specifically to make a read-then-write atomic under a row lock. This runs real
  *      parallel clients at them and asserts no lost update and no double-accept, because a lock
  *      that is subtly wrong looks exactly like a lock that works until two users collide.
@@ -285,6 +289,46 @@ function checkManifest(conn, db) {
   assert('RLS is enabled on every table', unprotected.length === 0, `unprotected: ${unprotected.join(', ')}`);
 }
 
+// ── RPC exposure ────────────────────────────────────────────────────────────
+
+/**
+ * Every function in the public schema is an HTTP endpoint on Supabase (/rest/v1/rpc/<name>), and
+ * Postgres grants EXECUTE to PUBLIC by default. Together that means a new SECURITY DEFINER
+ * function is, on creation, callable by the anon role — whose key ships inside the browser bundle.
+ *
+ * accept_parent_link trusts its p_user_id and p_email arguments completely, because the handler
+ * that calls it has already authenticated the session; exposed to anon, it becomes "redeem this
+ * invite token against any account you like". That was true of this schema until 0008.
+ *
+ * These two checks are the reason it stays fixed. The first is the exposure itself. The second is
+ * search_path, which decides whether the unqualified table names inside a definer function resolve
+ * to the real tables or to something the caller planted.
+ */
+function checkFunctionExposure(conn, db) {
+  section('SECURITY DEFINER functions are not publicly executable');
+
+  // Roles are Supabase's, not Postgres'. On a bare cluster they do not exist, so the grant to
+  // examine is the PUBLIC one — which is the one that mattered anyway, since anon and authenticated
+  // inherit through it.
+  for (const fn of ['accept_parent_link', 'save_master_plan', 'bump_progress_counters']) {
+    const publicExec = query(conn, db,
+      `select has_function_privilege('public', p.oid, 'execute')
+         from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+        where n.nspname = 'public' and p.proname = '${fn}'`);
+    assert(`${fn} is not executable by PUBLIC`, publicExec === 'f',
+      publicExec === 't' ? 'anon holds this grant through PUBLIC — /rest/v1/rpc is open' : `got "${publicExec}"`);
+  }
+
+  const unpinned = query(conn, db,
+    `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public'
+        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete')
+        and coalesce(array_to_string(p.proconfig, ','), '') not like '%search_path%'
+      order by 1`).split('\n').filter(Boolean);
+  assert('every function pins its search_path', unpinned.length === 0,
+    unpinned.length ? `unpinned: ${unpinned.join(', ')} — a definer function with a caller-controlled search_path runs the caller's tables as its owner` : '');
+}
+
 // ── Concurrency ─────────────────────────────────────────────────────────────
 
 async function parallelQueries(conn, db, sqls) {
@@ -439,6 +483,7 @@ await withDatabase(async (conn) => {
     console.error('\nThe chain does not apply cleanly — skipping the checks that depend on it.');
   } else {
     checkManifest(conn, db);
+    checkFunctionExposure(conn, db);
     checkConstraints(conn, db);
     await checkConcurrency(conn, db);
     await checkDeletionSemantics(conn, db);
