@@ -20,6 +20,7 @@ import me from './api/auth/me.js';
 import logout from './api/auth/logout.js';
 import dataResource from './api/data/[resource].js';
 import progressSync from './api/progress-sync.js';
+import masterPlan from './api/master-plan.js';
 import groq from './api/groq.js';
 import sendEmail from './api/send-email.js';
 import rewardClaim from './api/reward-claim.js';
@@ -27,7 +28,10 @@ import rewardClaim from './api/reward-claim.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 
-app.use(express.json({ limit: '1mb' }));
+// Sized above the largest payload any handler accepts, not below it: progress-sync allows a
+// 2MB snapshot and master-plan a 1MB plan, so a 1mb parser limit here would have rejected
+// large-but-legal requests with a body-parser error before the handler's own cap ever ran.
+app.use(express.json({ limit: '3mb' }));
 
 app.all('/api/auth/send-otp', sendOtp);
 app.all('/api/auth/verify-otp', verifyOtp);
@@ -40,6 +44,7 @@ app.all('/api/auth/logout', logout);
 app.all('/api/send-email', sendEmail);
 app.all('/api/groq', groq);
 app.all('/api/progress-sync', progressSync);
+app.all('/api/master-plan', masterPlan);
 app.all('/api/reward-claim', rewardClaim);
 
 // The Vercel handler reads the resource name off req.query.resource (from

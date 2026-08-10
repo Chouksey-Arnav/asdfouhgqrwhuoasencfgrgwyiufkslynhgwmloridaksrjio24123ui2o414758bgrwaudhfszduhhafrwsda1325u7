@@ -254,7 +254,14 @@ function isMinuteLimited(ip) {
 // prompt it answers and the portfolio context that lets the critique cite their real experiences.
 // The chat-sized 2500-char cap would silently truncate the essay mid-paragraph and then critique
 // the fragment as if it were the whole thing — a wrong verdict delivered confidently.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 9000, sat: 9000, essay: 14000 };
+// 'masterplan' was raised from 9,000 once plan generation began reading the student's ENTIRE
+// Portfolio row by row (every college with its own deadline, every essay with its word count and
+// staleness, clinical sites, gaps, plus measured performance and plan-adherence history — see
+// buildProfileFactsText in src/lib/masterPlanGenerator.js). At 9,000 that digest was silently
+// truncated from the end, which for a day-chunk request cut off the list of days to generate:
+// the model would return a short plan and nobody would know why. The client enforces its own
+// prioritised budget under this ceiling, so this is a backstop, not the working limit.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 

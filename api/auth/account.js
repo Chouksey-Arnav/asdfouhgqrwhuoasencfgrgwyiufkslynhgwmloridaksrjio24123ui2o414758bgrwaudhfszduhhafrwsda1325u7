@@ -60,6 +60,16 @@ export default async function handler(req, res) {
       data[resource] = error ? [] : (rows || []);
     }
 
+    // The master plan lives in its own table rather than in RESOURCES (it is not client-writable
+    // through the generic CRUD endpoint — see api/master-plan.js), so it has to be added here
+    // explicitly. It is unambiguously the student's own data: their goals, their schedule, their
+    // record of what they completed. Leaving it out would make this export incomplete in exactly
+    // the way the comment at the top of this file warns about.
+    for (const table of ['master_plans', 'master_plan_revisions']) {
+      const { data: rows, error } = await supabase.from(table).select('*').eq('user_id', user.id);
+      data[table] = error ? [] : (rows || []);
+    }
+
     const stamp = new Date().toISOString().slice(0, 10);
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="medschoolprep-data-${stamp}.json"`);

@@ -141,49 +141,306 @@ export function buildResourceCatalog(specialtyKey, gradeStage = null) {
 // deadlines, and activities — not just onboarding answers and summary counts. Trimmed
 // to a handful of named items per category (not full essay bodies) to keep prompt size
 // reasonable; every "no X yet" case is stated explicitly so the model never invents one.
+// ── Portfolio read-through ────────────────────────────────────────────────
+// "Look through my entire Portfolio before designing the plan" is the whole point of this
+// section: every tracked row the student owns is summarized here, and the result is fed to
+// every generation call (roadmap, each day chunk, every regeneration). Three properties matter:
+//
+//   1. NOTHING IS SILENTLY OMITTED. Every category the app can track appears in the digest —
+//      including, explicitly, the empty ones ("No recommenders tracked yet"). A category that
+//      simply vanished when empty is indistinguishable to the model from a category it forgot
+//      to consider, and that's how a plan ends up never mentioning recommenders at all.
+//   2. IT REPORTS STATE, NOT JUST COUNTS. "3 essays" tells the model nothing actionable;
+//      "2 drafts untouched for 24 days, 1 has no college attached" tells it exactly what
+//      tomorrow's essay task should be.
+//   3. GAPS ARE NAMED, WITH THE PANEL THAT FIXES THEM. See buildPortfolioGapText below.
+// Character budget for the whole "who is this student" block. Sized against api/groq.js's
+// MAX_INPUT_CHARS_BY_PURPOSE.masterplan (20,000) with deliberate headroom for the rest of the
+// user message — the roadmap headline/overview and the day table the chunk call appends after
+// this text. Enforced by dropping whole sections (see the end of buildProfileFactsText), never
+// by slicing mid-sentence.
+const PROFILE_FACTS_BUDGET = 14000;
+
+const DEFAULT_PORTFOLIO = {
+  colleges: [], essays: [], deadlines: [], scholarships: [], activities: [], research: [],
+  skills: [], clinicalHours: [], recommenders: [], testScores: [], awards: [], gpaEntries: [],
+  collegeChecklist: [],
+};
+const daysSince = (ts) => {
+  if (!ts) return null;
+  const t = new Date(ts).getTime();
+  if (!Number.isFinite(t)) return null;
+  return Math.max(0, Math.round((Date.now() - t) / 86400000));
+};
+const wordCount = (s) => String(s || '').trim().split(/\s+/).filter(Boolean).length;
+const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+
 function buildPortfolioFactsText(portfolio) {
   if (!portfolio) return null;
+  const p = { ...DEFAULT_PORTFOLIO, ...portfolio };
   const {
-    colleges = [], essays = [], deadlines = [], scholarships = [], activities = [],
-    research = [], skills = [], clinicalHours = [], recommenders = [], testScores = [], awards = [], gpaEntries = [],
-  } = portfolio;
-  const lines = [];
-  lines.push(colleges.length
-    ? `Colleges on their list: ${colleges.slice(0, 8).map(c => `${c.name}${c.category ? ` (${c.category})` : ''}`).join(', ')}${colleges.length > 8 ? `, +${colleges.length - 8} more` : ''}.`
-    : 'No colleges on their list yet.');
-  const essaysNotStarted = essays.filter(e => e.status !== 'final').length;
-  lines.push(essays.length
-    ? `Essay drafts: ${essays.slice(0, 6).map(e => `"${e.title || 'Untitled'}"${e.status ? ` (${e.status})` : ''}`).join(', ')}${essays.length > 6 ? `, +${essays.length - 6} more` : ''}${essaysNotStarted ? ` — ${essaysNotStarted} not yet finished` : ''}.`
-    : 'No essay drafts started yet.');
+    colleges, essays, deadlines, scholarships, activities,
+    research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries, collegeChecklist,
+  } = p;
   const today = todayStr();
-  const upcoming = deadlines
-    .map(d => ({ ...d, days: daysBetween(today, d.due_date) }))
-    .filter(d => Number.isFinite(d.days) && d.days >= 0)
-    .sort((a, b) => a.days - b.days);
+  const lines = [];
+
+  // Colleges — names, category mix, and each school's own deadline pressure.
+  if (colleges.length) {
+    const byCategory = {};
+    for (const c of colleges) { const k = c.category || 'uncategorized'; byCategory[k] = (byCategory[k] || 0) + 1; }
+    const catMix = Object.entries(byCategory).map(([k, n]) => `${n} ${k}`).join(', ');
+    const named = colleges.slice(0, 10).map(c => {
+      const bits = [c.category, c.status].filter(Boolean).join('/');
+      const due = c.ea_ed_deadline || c.rd_deadline;
+      const d = due ? daysBetween(today, due) : null;
+      const when = Number.isFinite(d) && d >= 0 ? `, applies in ${d}d` : '';
+      return `${c.name}${bits ? ` (${bits}${when})` : when ? ` (${when.slice(2)})` : ''}`;
+    }).join('; ');
+    lines.push(`Colleges on their list (${colleges.length}: ${catMix}): ${named}${colleges.length > 10 ? `, +${colleges.length - 10} more` : ''}.`);
+    const uncategorized = colleges.filter(c => !c.category).length;
+    if (uncategorized) lines.push(`${uncategorized} of those ${uncategorized === 1 ? 'has' : 'have'} no reach/target/safety category set yet — a balanced list is the point of that field.`);
+    if (collegeChecklist.length) {
+      const doneItems = collegeChecklist.filter(i => i.done).length;
+      lines.push(`Per-college application checklist: ${doneItems}/${collegeChecklist.length} items ticked off.`);
+    }
+  } else {
+    lines.push('No colleges on their list yet (College List panel is empty).');
+  }
+
+  // Essays — status, length against limit, and staleness. This is what turns a generic
+  // "work on your essay" task into "your Michigan supplement is 140 words into a 300-word
+  // limit and hasn't been touched in three weeks".
+  if (essays.length) {
+    const finished = essays.filter(e => e.status === 'final').length;
+    const named = essays.slice(0, 8).map(e => {
+      const w = wordCount(e.content);
+      const limit = e.word_limit ? `/${e.word_limit}` : '';
+      const stale = daysSince(e.updated_at);
+      const staleBit = stale != null && stale >= 10 ? `, untouched ${stale}d` : '';
+      return `"${e.title || 'Untitled'}" (${e.status || 'draft'}, ${w}${limit} ${w === 1 && !limit ? 'word' : 'words'}${staleBit})`;
+    }).join('; ');
+    lines.push(`Essay drafts (${essays.length}, ${finished} marked final): ${named}${essays.length > 8 ? `, +${essays.length - 8} more` : ''}.`);
+    const empty = essays.filter(e => wordCount(e.content) < 25).length;
+    if (empty) lines.push(`${empty} essay ${empty === 1 ? 'entry has' : 'entries have'} almost nothing written yet — those are the ones to schedule real writing time for.`);
+  } else {
+    lines.push('No essay drafts started yet (Essay Workspace is empty).');
+  }
+
+  // Deadlines — both directions. Overdue matters as much as upcoming, and a plan that
+  // never mentions a missed deadline is worse than no plan.
+  const dated = deadlines.map(d => ({ ...d, days: daysBetween(today, d.due_date) })).filter(d => Number.isFinite(d.days));
+  const upcoming = dated.filter(d => d.days >= 0).sort((a, b) => a.days - b.days);
+  const overdue = dated.filter(d => d.days < 0).sort((a, b) => b.days - a.days);
   lines.push(upcoming.length
-    ? `Upcoming deadlines, soonest first: ${upcoming.slice(0, 5).map(d => `"${d.title}" in ${d.days}d`).join('; ')}.`
+    ? `Upcoming deadlines, soonest first: ${upcoming.slice(0, 6).map(d => `"${d.title}" in ${d.days}d`).join('; ')}${upcoming.length > 6 ? `, +${upcoming.length - 6} more` : ''}.`
     : 'No upcoming deadlines tracked.');
-  lines.push(activities.length
-    ? `Activities logged: ${activities.slice(0, 5).map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}`).join(', ')}${activities.length > 5 ? `, +${activities.length - 5} more` : ''}.`
-    : 'No activities logged yet.');
-  lines.push(research.length ? `Research: ${research.slice(0, 4).map(r => r.title).join(', ')}.` : 'No research experience logged yet.');
-  lines.push(clinicalHours.length ? `${clinicalHours.reduce((s, h) => s + (h.hours || 0), 0)} clinical/shadowing hour(s) logged.` : 'No clinical/shadowing hours logged yet.');
-  lines.push(recommenders.length ? `${recommenders.length} recommender(s) tracked.` : 'No recommenders tracked yet.');
-  lines.push(skills.length ? `Skills/certifications: ${skills.slice(0, 5).map(s => s.name).join(', ')}.` : null);
+  if (overdue.length) lines.push(`ALREADY PAST DUE and still on their tracker: ${overdue.slice(0, 4).map(d => `"${d.title}" (${Math.abs(d.days)}d ago)`).join('; ')} — address these explicitly rather than planning around them.`);
+
+  // Activities — hours, leadership, and verification, not just a count.
+  if (activities.length) {
+    const totalHours = activities.reduce((s, a) => s + ((a.hours_per_week || 0) * (a.weeks_per_year || 0)), 0);
+    const leadership = activities.filter(a => a.leadership_role).length;
+    const verified = activities.filter(a => a.verification_status === 'verified').length;
+    const named = activities.slice(0, 8).map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}${a.leadership_role ? ' [leadership]' : ''}`).join('; ');
+    lines.push(`Activities logged (${activities.length}, ~${Math.round(totalHours)} hrs/yr total, ${leadership} with a leadership role, ${verified} verified): ${named}${activities.length > 8 ? `, +${activities.length - 8} more` : ''}.`);
+    const thin = activities.filter(a => !a.description || wordCount(a.description) < 12).length;
+    if (thin) lines.push(`${thin} of those ${thin === 1 ? 'has' : 'have'} a thin or missing description — those need writing up before they're usable on an application.`);
+  } else {
+    lines.push('No activities logged yet (Activities & Résumé panel is empty).');
+  }
+
+  // Clinical / shadowing — the single most decisive Portfolio metric for a pre-health student.
+  if (clinicalHours.length) {
+    const total = clinicalHours.reduce((s, h) => s + (h.hours || 0), 0);
+    const sites = [...new Set(clinicalHours.map(h => h.site_name).filter(Boolean))];
+    const verified = clinicalHours.filter(h => h.verification_status === 'verified').reduce((s, h) => s + (h.hours || 0), 0);
+    const lastEntry = clinicalHours.map(h => h.entry_date).filter(Boolean).sort().at(-1);
+    const gap = lastEntry ? daysBetween(lastEntry, today) : null;
+    lines.push(`${total} clinical/shadowing hour(s) logged across ${plural(sites.length, 'site')}${sites.length ? ` (${sites.slice(0, 4).join(', ')})` : ''}; ${verified} verified${Number.isFinite(gap) ? `; most recent entry ${gap}d ago` : ''}.`);
+  } else {
+    lines.push('No clinical/shadowing hours logged yet (Clinical Hours Log is empty).');
+  }
+
+  lines.push(research.length
+    ? `Research experience (${research.length}): ${research.slice(0, 4).map(r => `${r.title}${r.institution ? ` at ${r.institution}` : ''}${r.status ? ` (${r.status})` : ''}`).join('; ')}.`
+    : 'No research experience logged yet.');
+
+  if (recommenders.length) {
+    const confirmed = recommenders.filter(r => r.status === 'confirmed' || r.status === 'submitted').length;
+    lines.push(`Recommenders (${recommenders.length}, ${confirmed} confirmed/submitted): ${recommenders.slice(0, 5).map(r => `${r.name}${r.relationship ? ` (${r.relationship})` : ''}${r.status ? ` — ${r.status}` : ''}`).join('; ')}.`);
+  } else {
+    lines.push('No recommenders tracked yet.');
+  }
+
+  lines.push(skills.length ? `Skills/certifications (${skills.length}): ${skills.slice(0, 6).map(s => s.name).join(', ')}.` : 'No skills/certifications logged yet.');
+  lines.push(awards.length ? `Awards/honors (${awards.length}): ${awards.slice(0, 5).map(a => `${a.title}${a.level ? ` (${a.level})` : ''}`).join('; ')}.` : 'No awards/honors logged yet.');
+
+  if (scholarships.length) {
+    const openOnes = scholarships.map(s => ({ ...s, days: s.deadline ? daysBetween(today, s.deadline) : null }))
+      .filter(s => s.days == null || s.days >= 0);
+    lines.push(`Scholarships tracked (${scholarships.length}): ${openOnes.slice(0, 4).map(s => `${s.name}${s.amount ? ` ($${s.amount})` : ''}${Number.isFinite(s.days) ? ` in ${s.days}d` : ''}`).join('; ') || 'all past their deadline'}.`);
+  } else {
+    lines.push('No scholarships tracked yet (Financial Aid panel is empty).');
+  }
+
+  // Test scores and GPA — trend, not just the latest value.
   if (testScores.length) {
-    const latest = [...testScores].sort((a, b) => new Date(b.test_date || 0) - new Date(a.test_date || 0))[0];
-    lines.push(`Most recent logged test score: ${latest.test_type} ${latest.composite}${latest.test_date ? ` on ${latest.test_date}` : ''}.`);
+    const sorted = [...testScores].sort((a, b) => new Date(a.test_date || 0) - new Date(b.test_date || 0));
+    const latest = sorted.at(-1);
+    const first = sorted[0];
+    const delta = sorted.length > 1 && Number.isFinite(Number(latest.composite)) && Number.isFinite(Number(first.composite))
+      ? Number(latest.composite) - Number(first.composite) : null;
+    lines.push(`Logged test scores (${testScores.length}): most recent ${latest.test_type} ${latest.composite}${latest.test_date ? ` on ${latest.test_date}` : ''}${delta != null ? `; ${delta >= 0 ? 'up' : 'down'} ${Math.abs(delta)} points since their first logged attempt` : ''}.`);
+  } else {
+    lines.push('No official/practice test scores logged in the Score Tracker yet.');
   }
   if (gpaEntries.length) {
-    const latestGpa = [...gpaEntries].sort((a, b) => String(b.term || '').localeCompare(String(a.term || '')))[0];
-    lines.push(`Most recent logged GPA: ${latestGpa.gpa}${latestGpa.term ? ` (${latestGpa.term})` : ''}.`);
+    const sorted = [...gpaEntries].sort((a, b) => String(a.term || '').localeCompare(String(b.term || '')));
+    const latest = sorted.at(-1);
+    const trend = sorted.length > 1 ? (Number(latest.gpa) - Number(sorted[0].gpa)) : null;
+    lines.push(`Logged GPA (${gpaEntries.length} term(s)): most recent ${latest.gpa}${latest.term ? ` (${latest.term})` : ''}${Number.isFinite(trend) && Math.abs(trend) >= 0.05 ? `, ${trend > 0 ? 'trending up' : 'trending down'} ${Math.abs(trend).toFixed(2)} since ${sorted[0].term || 'their first logged term'}` : ''}.`);
+  } else {
+    lines.push('No GPA terms logged yet.');
   }
-  if (awards.length) lines.push(`${awards.length} award(s)/honor(s) logged.`);
-  if (scholarships.length) lines.push(`${scholarships.length} scholarship(s) tracked in Financial Aid.`);
   return lines.filter(Boolean).join('\n');
 }
 
-function buildProfileFactsText(user, liveSignals = {}, portfolio = null) {
+// ── Gap analysis ──────────────────────────────────────────────────────────
+// Computed locally and deterministically rather than left for the model to notice. Each gap
+// names the exact in-app panel that closes it, which is what lets the day-chunk generator emit
+// a task that both means something and links somewhere real. Ordered most-urgent-first and
+// capped, so the prompt gets a priority list rather than an undifferentiated wishlist.
+function buildPortfolioGapText(portfolio, user) {
+  if (!portfolio) return null;
+  const p = { ...DEFAULT_PORTFOLIO, ...portfolio };
+  const gradeIdx = gradeIdxFromStage(user?.gradeStage);
+  const isUpperclass = gradeIdx >= 2; // junior or later
+  const clinicalTotal = p.clinicalHours.reduce((s, h) => s + (h.hours || 0), 0);
+  const gaps = [];
+  const add = (priority, gap, panel) => gaps.push({ priority, gap, panel });
+
+  if (!p.colleges.length) add(isUpperclass ? 1 : 3, 'No college list at all', 'Portfolio → College List');
+  else if (p.colleges.length < 4 && isUpperclass) add(2, `Only ${plural(p.colleges.length, 'school')} on the list — a workable list is closer to 6-10 across reach/target/safety`, 'Portfolio → College List');
+  if (!clinicalTotal) add(1, 'Zero clinical or shadowing hours logged — the single most visible gap for a pre-health applicant', 'Portfolio → Clinical Hours Log');
+  else if (clinicalTotal < 40 && isUpperclass) add(2, `Only ${clinicalTotal} clinical/shadowing hours — thin for a junior/senior`, 'Portfolio → Clinical Hours Log');
+  if (!p.activities.length) add(1, 'No activities logged, so there is nothing to build a résumé from', 'Portfolio → Activities & Résumé');
+  else if (!p.activities.some(a => a.leadership_role)) add(3, 'No leadership role in any logged activity', 'Portfolio → Activities & Résumé');
+  if (isUpperclass && !p.recommenders.length) add(2, 'No recommenders identified yet — teachers get asked early or they get overbooked', 'Portfolio → Recommenders');
+  if (isUpperclass && !p.essays.length) add(2, 'No essay drafts started', 'Portfolio → Essay Workspace');
+  if (!p.testScores.length) add(3, 'No test scores logged, so score progress cannot be tracked against their target', 'Portfolio → Test Scores');
+  if (!p.gpaEntries.length) add(4, 'No GPA terms logged, so academic trend is invisible to the plan', 'Portfolio → Activities & Résumé (Academics)');
+  if (!p.research.length && gradeIdx >= 1) add(4, 'No research experience logged', 'Portfolio → Research Log');
+  if (!p.skills.length) add(4, 'No skills/certifications logged (CPR, first aid, lab techniques all count)', 'Portfolio → Skills & Certifications');
+  if (!p.scholarships.length && isUpperclass) add(4, 'No scholarships tracked', 'Portfolio → Financial Aid');
+  if (!p.deadlines.length && isUpperclass) add(3, 'No application deadlines tracked', 'Portfolio → Milestones');
+
+  if (!gaps.length) return 'Their Portfolio has at least something in every major category — the plan should deepen and polish what is there rather than fill blanks.';
+  return gaps
+    .sort((a, b) => a.priority - b.priority)
+    .slice(0, 7)
+    .map((g, i) => `${i + 1}. ${g.gap} → fixed in ${g.panel}`)
+    .join('\n');
+}
+
+// ── Plan adherence ────────────────────────────────────────────────────────
+// What the student has actually DONE with the plan they already have, read back out of the
+// plan's own days + compacted progressLog. This is what makes each extension/regeneration
+// adapt to reality rather than re-issuing the same load the student has been quietly missing
+// for two weeks. Null for a student with no plan yet (nothing to learn from).
+export function buildAdherenceFacts(plan) {
+  if (!plan?.days?.length && !plan?.progressLog?.length) return null;
+  const today = todayStr();
+  const byDate = new Map();
+  for (const l of (plan.progressLog || [])) byDate.set(l.date, { total: l.tasksTotal || 0, done: l.tasksDone || 0 });
+  for (const d of (plan.days || [])) byDate.set(d.date, { total: d.tasks.length, done: d.tasks.filter(t => t.done).length });
+  const elapsed = [...byDate.entries()].filter(([date]) => date < today).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+  if (!elapsed.length) return null;
+  const recent = elapsed.slice(-21);
+  const totalTasks = recent.reduce((s, [, v]) => s + v.total, 0);
+  const doneTasks = recent.reduce((s, [, v]) => s + v.done, 0);
+  const completionPct = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const fullDays = recent.filter(([, v]) => v.total > 0 && v.done === v.total).length;
+  const zeroDays = recent.filter(([, v]) => v.total > 0 && v.done === 0).length;
+
+  // Which kinds of task actually get done vs skipped — only computable for days still held in
+  // full detail (progressLog keeps counts only), which is exactly the recent window that matters.
+  const byType = new Map();
+  const byWeekday = new Map();
+  for (const d of (plan.days || [])) {
+    if (d.date >= today) continue;
+    for (const t of d.tasks) {
+      const e = byType.get(t.type) || { total: 0, done: 0 };
+      e.total++; if (t.done) e.done++;
+      byType.set(t.type, e);
+    }
+    const wd = WEEKDAY_NAMES[weekdayIdx(d.date)];
+    const w = byWeekday.get(wd) || { total: 0, done: 0 };
+    w.total += d.tasks.length; w.done += d.tasks.filter(t => t.done).length;
+    byWeekday.set(wd, w);
+  }
+  const rate = ([, v]) => (v.total ? v.done / v.total : 0);
+  const typed = [...byType.entries()].filter(([, v]) => v.total >= 2);
+  const skipped = typed.filter(e => rate(e) < 0.4).sort((a, b) => rate(a) - rate(b)).slice(0, 3).map(([k]) => k);
+  const reliable = typed.filter(e => rate(e) >= 0.8).sort((a, b) => rate(b) - rate(a)).slice(0, 3).map(([k]) => k);
+  const weekdays = [...byWeekday.entries()].filter(([, v]) => v.total >= 2);
+  const bestDay = weekdays.sort((a, b) => rate(b) - rate(a))[0]?.[0] || null;
+  const worstDay = weekdays.sort((a, b) => rate(a) - rate(b))[0]?.[0] || null;
+
+  return {
+    daysObserved: recent.length, completionPct, fullDays, zeroDays,
+    skippedTypes: skipped, reliableTypes: reliable, bestDay, worstDay,
+    avgTasksPerDay: recent.length ? Math.round((totalTasks / recent.length) * 10) / 10 : 0,
+  };
+}
+
+function buildAdherenceText(plan) {
+  const a = buildAdherenceFacts(plan);
+  if (!a) return null;
+  const lines = [
+    `Over their last ${plural(a.daysObserved, 'planned day')} they completed ${a.completionPct}% of scheduled tasks (${a.fullDays} fully-finished ${a.fullDays === 1 ? 'day' : 'days'}, ${a.zeroDays} ${a.zeroDays === 1 ? 'day' : 'days'} with nothing done), averaging ${a.avgTasksPerDay} tasks/day scheduled.`,
+  ];
+  if (a.skippedTypes.length) lines.push(`Task types they consistently SKIP: ${a.skippedTypes.join(', ')} — either make these smaller and more concrete, schedule them on a better day, or use fewer of them.`);
+  if (a.reliableTypes.length) lines.push(`Task types they reliably finish: ${a.reliableTypes.join(', ')} — anchor days around these.`);
+  if (a.bestDay && a.worstDay && a.bestDay !== a.worstDay) lines.push(`Their strongest weekday is ${a.bestDay}; their weakest is ${a.worstDay} — weight the load accordingly instead of spreading it evenly.`);
+  if (a.completionPct < 50) lines.push('IMPORTANT: they are finishing less than half of what is scheduled. Cut the daily task count and shorten estimates rather than repeating a load that is demonstrably not happening.');
+  else if (a.completionPct > 92 && a.avgTasksPerDay < 5) lines.push('They are finishing essentially everything scheduled — it is safe to add depth or one more task per day.');
+  return lines.join('\n');
+}
+
+// The live cross-app signals block — everything the rest of the app already knows about how
+// this student is actually performing right now, which the plan previously saw only three or
+// four fields of. Each entry is omitted (not faked) when its source has no data.
+function buildPerformanceFactsText(liveSignals = {}) {
+  const s = liveSignals;
+  const lines = [];
+  if (s.categoryAverages && Object.keys(s.categoryAverages).length) {
+    const rows = Object.entries(s.categoryAverages)
+      .filter(([, v]) => Number.isFinite(v))
+      .sort((a, b) => a[1] - b[1])
+      .map(([k, v]) => `${k} ${Math.round(v)}%`);
+    if (rows.length) lines.push(`Quiz averages by category, weakest first: ${rows.join(', ')}.`);
+  }
+  if (Number.isFinite(s.quizzesTaken)) lines.push(`Quizzes completed so far: ${s.quizzesTaken}.`);
+  if (Number.isFinite(s.pathwayMastery)) lines.push(`Pathway lesson completion: ${s.pathwayMastery}%.`);
+  if (s.satProjection) {
+    lines.push(`Current SAT projection: ${s.satProjection.low}-${s.satProjection.high} (midpoint ${s.satProjection.mid}, ${s.satProjection.confidence} confidence).`);
+  } else {
+    lines.push('No SAT projection yet — they have not done enough SAT work in the app to estimate a score.');
+  }
+  if (s.satWeakSkills?.length) lines.push(`Weakest SAT skills right now: ${s.satWeakSkills.slice(0, 6).map(k => (typeof k === 'string' ? k : k?.label || k?.skill)).filter(Boolean).join(', ')}.`);
+  if (s.satOpenReviews > 0) lines.push(`${s.satOpenReviews} SAT question(s) sitting unreviewed in their Review Log — reviewing a miss is worth more than a new question.`);
+  if (Number.isFinite(s.dueCards) && s.dueCards > 0) lines.push(`${s.dueCards} flashcard(s) due for review right now.`);
+  if (s.applicationStrength) {
+    const sub = s.applicationStrength.subscores || {};
+    lines.push(`Application strength score: ${s.applicationStrength.score}/100 (${s.applicationStrength.label}) — academic ${sub.academic}, clinical ${sub.clinical}, application ${sub.application}, activities ${sub.activities}. The lowest subscore is where this plan should spend its extra weight.`);
+  }
+  if (s.recentActivitySummary) lines.push(`Recent activity across the whole app: ${s.recentActivitySummary}`);
+  lines.push(`Current study streak: ${s.streak || 0} day(s).`);
+  return lines.join('\n');
+}
+
+export function buildProfileFactsText(user, liveSignals = {}, portfolio = null, plan = null) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(user || {});
   const gradeLabel = GRADE_STAGES[gradeIdxFromStage(user?.gradeStage)]?.label || 'high school';
   const goalLabel = labelOf(GOAL_OPTIONS, user?.goal) || 'exploring medicine';
@@ -209,22 +466,53 @@ function buildProfileFactsText(user, liveSignals = {}, portfolio = null) {
     obstacles.length ? `Their stated obstacles: ${obstacles.join(', ')}` : null,
     (studyMethodLabel && user?.studyMethod !== 'none') ? `Also currently using: ${studyMethodLabel}` : null,
     liveSignals.weakestCategory ? `Weakest quiz category right now: ${liveSignals.weakestCategory} (${liveSignals.weakestScore}%)` : null,
-    liveSignals.dueCards > 0 ? `${liveSignals.dueCards} flashcard(s) due for review right now` : null,
     liveSignals.nextDeadlineTitle ? `Next upcoming deadline: "${liveSignals.nextDeadlineTitle}" in ${liveSignals.nextDeadlineDays} day(s)` : null,
-    liveSignals.collegeCount > 0 ? `Tracking ${liveSignals.collegeCount} college(s)${liveSignals.essayCount > 0 ? `, ${liveSignals.essayCount} essay draft(s) started` : ', no essay drafts yet'}` : null,
-    liveSignals.clinicalHours > 0 ? `${liveSignals.clinicalHours} clinical/shadowing hour(s) logged so far` : null,
-    liveSignals.recommendersCount > 0 ? `Tracking ${liveSignals.recommendersCount} recommender(s)` : null,
-    `Current study streak: ${liveSignals.streak || 0} day(s)`,
-    liveSignals.recentActivitySummary ? `Recent activity across the whole app: ${liveSignals.recentActivitySummary}` : null,
     // Things the student said directly (typed or dictated by mic — see PlanVoiceNotes in
     // PlansTab.jsx) — the highest-signal input there is, since it's exactly what they asked for
     // in their own words, not an inference. Weight it accordingly: treat these as real
     // constraints/requests to actually build into the plan, not just background color.
     (user?.planNotes || []).length ? `The student told Medabrain directly (treat these as real, current requests to build into the plan):\n${user.planNotes.map(n => `  • ${n}`).join('\n')}` : null,
   ].filter(Boolean);
+
+  // Optional deep-context blocks, each tagged with a drop priority (higher = dropped first).
+  // The server caps a masterplan user message at MAX_INPUT_CHARS_BY_PURPOSE.masterplan and
+  // truncates from the END, which for the day-chunk call would silently amputate the list of
+  // days to fill in — the single most structurally important part of the message. So the budget
+  // is enforced here instead, by dropping whole low-priority sections rather than letting a
+  // blind slice cut a section (or an instruction) in half.
+  const blocks = [];
+  const perf = buildPerformanceFactsText(liveSignals);
+  if (perf) blocks.push({ drop: 2, text: `\nHOW THEY ARE ACTUALLY PERFORMING RIGHT NOW (measured in-app, not self-reported):\n${perf}` });
   const portfolioText = buildPortfolioFactsText(portfolio);
-  if (portfolioText) lines.push(`\nTheir actual Portfolio right now (reference these by name in Portfolio-pillar tasks instead of generic busywork — e.g. an essay task should name the real college/essay, a deadline-prep task should name the real deadline):\n${portfolioText}`);
-  return lines.join('\n');
+  if (portfolioText) {
+    blocks.push({ drop: 1, text: `\nTHEIR ENTIRE PORTFOLIO, READ ROW BY ROW (reference these by name in Portfolio-pillar tasks instead of generic busywork — an essay task should name the real essay and its word count, a deadline task should name the real deadline, a clinical task should name the real site):\n${portfolioText}` });
+    const gapText = buildPortfolioGapText(portfolio, user);
+    if (gapText) blocks.push({ drop: 1, text: `\nTHE BIGGEST GAPS IN THAT PORTFOLIO, most urgent first — the plan is judged on whether it closes these:\n${gapText}` });
+  } else {
+    blocks.push({ drop: 1, text: '\nTHEIR PORTFOLIO: could not be read this time. Keep Portfolio tasks generic and safe — do NOT name specific colleges, essays, or deadlines you cannot see.' });
+  }
+  const adherenceText = buildAdherenceText(plan);
+  if (adherenceText) blocks.push({ drop: 2, text: `\nHOW THEY HAVE ACTUALLY BEEN FOLLOWING THE PLAN SO FAR (adapt to this — do not repeat a load they are demonstrably not completing):\n${adherenceText}` });
+  if (liveSignals.personalBrief) {
+    blocks.push({ drop: 2, text: `\nWHAT THEY HAVE TOLD MEDABRAIN ABOUT THEMSELVES IN THEIR OWN WORDS (the most authoritative context here — outrank the tick-boxes above where they conflict):\n${String(liveSignals.personalBrief).slice(0, 2600)}` });
+  }
+  if (liveSignals.timelineSummary) {
+    blocks.push({ drop: 3, text: `\nTHEIR ADMISSIONS TIMELINE (already computed for their exact class year — reason over this list, never invent dates of your own):\n${String(liveSignals.timelineSummary).slice(0, 2200)}` });
+  }
+
+  const head = lines.join('\n');
+  let budget = PROFILE_FACTS_BUDGET - head.length;
+  const kept = new Set();
+  // Two passes over the drop-priority ladder: everything at priority 1 gets first claim on the
+  // budget, then 2, then 3 — so a huge Portfolio can cost the timeline block its place, but
+  // never the other way around.
+  for (const level of [1, 2, 3]) {
+    for (const b of blocks) {
+      if (b.drop !== level || kept.has(b)) continue;
+      if (b.text.length <= budget) { kept.add(b); budget -= b.text.length; }
+    }
+  }
+  return [head, ...blocks.filter(b => kept.has(b)).map(b => b.text)].join('\n');
 }
 
 const AGE_APPROPRIATE_RULES = `- They are years away from medical school. NEVER mention the MCAT, medical-school applications, residency, clinical rotations, MMI, or CASPer. Frame everything as high-school and undergraduate-admissions prep with an eye toward a future health career.
@@ -279,7 +567,7 @@ async function callOracleWithRetry(args) {
 // A model can hallucinate a tab/view that doesn't exist — validated against
 // the app's real NAV/SubNav ids (src/App.jsx) so a bad value just means "no
 // link" instead of a broken navigation click.
-const VALID_DESTINATIONS = new Set([
+export const VALID_DESTINATIONS = new Set([
   'prep:diagnostic', 'prep:pathway', 'prep:quizzes', 'prep:flashcards', 'prep:coach', 'prep:library',
   'portfolio:overview', 'portfolio:milestones', 'portfolio:colleges', 'portfolio:essays',
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
@@ -517,6 +805,14 @@ This is the single most important, highest-effort generation in the app — take
 ${AGE_APPROPRIATE_RULES}
 - The plan spans exactly ${horizonWeeks} weeks, split into 3-6 phases with a clear theme and objectives each — like a real syllabus, not a vague vibe.
 
+══ USE THE WHOLE FILE, OR THIS IS JUST A TEMPLATE ══
+The profile below is not background reading. It contains their measured performance, their entire Portfolio row by row, a ranked list of the gaps in it, their admissions timeline, and — if they already have a plan — how much of it they have actually been completing. A roadmap that would read the same for any student on this pathway has failed, no matter how well written it is. Specifically:
+- ANCHOR ON THE RANKED GAPS. The gap list is ordered by urgency and each entry names the panel that closes it. Your phases must visibly close the top gaps in roughly that order; a milestone that ignores gap #1 is the wrong milestone.
+- NAME THEIR REAL THINGS. Their colleges, their essays, their clinical sites, their deadlines, their weakest quiz category and SAT skills — by name, in the overview, the objectives, and the success metrics. Never invent one that is not in the profile.
+- RESPECT THE ADHERENCE DATA. If they are completing 40% of what is scheduled, a heavier plan is a worse plan. Pace to what they demonstrably do, then build up.
+- SEQUENCE AGAINST REAL DATES. Their timeline and their tracked deadlines dictate what must happen early; do not put essay work after the deadline it serves.
+- THE OBSTACLES ARE DESIGN CONSTRAINTS, not a sympathy note. If they said they are busy, the plan's shape must show it.
+
 Here is the real MedSchoolPrep resource catalog to ground the plan in:
 ${catalogText}
 
@@ -535,7 +831,7 @@ Respond with ONLY a valid JSON object (no markdown, no code fences, no prose bef
 Provide 3-6 "phases" entries (do not include weekStart/weekEnd — they are computed separately) covering the full ${horizonWeeks}-week horizon in order. Provide EXACTLY one "weeklyThemes" entry per week, for week 1 through week ${horizonWeeks}, in order. Provide 5-8 "milestones" spread across the horizon in week order. Provide 2-4 "riskMitigation" entries.`;
 }
 
-function repairRoadmap(parsed, fallback, horizonWeeks) {
+export function repairRoadmap(parsed, fallback, horizonWeeks) {
   const p = parsed && typeof parsed === 'object' ? parsed : {};
   const phaseCount = clampPhaseCount(horizonWeeks);
   const rawPhases = Array.isArray(p.phases) && p.phases.length ? p.phases.slice(0, 6) : fallback.phases;
@@ -599,13 +895,13 @@ function looksUsableRoadmap(p) {
   return !!str(p.overview) || (Array.isArray(p.phases) && p.phases.length > 0) || (Array.isArray(p.weeklyThemes) && p.weeklyThemes.length > 0);
 }
 
-export async function generateRoadmap(user, liveSignals, catalog, portfolio) {
+export async function generateRoadmap(user, liveSignals, catalog, portfolio, plan = null) {
   const horizonWeeks = computeHorizonWeeks(user);
   const fallback = heuristicRoadmap(user, horizonWeeks, catalog);
   try {
     const system = buildRoadmapSystemPrompt(horizonWeeks, catalog.text);
-    const userMsg = `Here is the student's full profile:\n${buildProfileFactsText(user, liveSignals, portfolio)}\n\nBuild their ${horizonWeeks}-week roadmap now as JSON only.`;
-    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 6000, reasoningEffort: 'high' });
+    const userMsg = `Here is the student's full profile:\n${buildProfileFactsText(user, liveSignals, portfolio, plan)}\n\nBuild their ${horizonWeeks}-week roadmap now as JSON only.`;
+    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 7000, reasoningEffort: 'high' });
     const roadmap = looksUsableRoadmap(parsed) ? repairRoadmap(parsed, fallback, horizonWeeks) : fallback;
     return { ...roadmap, horizonWeeks };
   } catch {
@@ -620,7 +916,7 @@ function weekNumberForDate(plan, date) { return plan?.startDate ? Math.floor(day
 function weeklyThemeForWeek(plan, week) { return plan?.weeklyThemes?.find(w => w.week === week) || null; }
 function phaseForWeek(plan, week) { return plan?.phases?.find(p => week >= p.weekStart && week <= p.weekEnd) || plan?.phases?.[plan.phases.length - 1] || null; }
 
-function heuristicDays(plan, fromDate, numDays, catalog, user) {
+export function heuristicDays(plan, fromDate, numDays, catalog, user) {
   const track = user?.testTrack || 'SAT';
   const days = [];
   for (let i = 0; i < numDays; i++) {
@@ -659,6 +955,14 @@ ${AGE_APPROPRIATE_RULES}
 - Weekends should be lighter — a shorter catch-up, reflection, or reading day, not a full load.
 - Vary task count 3-5 per day depending on how busy that day naturally should be.${prefsNote}
 
+══ WHAT MAKES THESE DAYS WORTH FOLLOWING ══
+- EVERY PORTFOLIO TASK NAMES A REAL ROW. The profile lists their actual colleges, essays (with word counts and how long since each was touched), clinical sites, activities, recommenders and deadlines. "Work on your essays" is a failure; "Get the Michigan supplement from 140 to 300 words — it hasn't been touched in 3 weeks" is the standard.
+- CLOSE THE RANKED GAPS. The profile ends with a priority-ordered gap list, each naming the exact panel that fixes it. Across this window, schedule concrete tasks against the top gaps — one clear step at a time, not all at once.
+- OVERDUE BEATS UPCOMING. Anything already past due gets handled in the first day or two, explicitly.
+- MATCH THE MEASURED WEAKNESS. Quiz and SAT tasks target their weakest measured category/skills, and unreviewed Review Log questions come before brand-new practice.
+- FIT THE REAL DAY. Total estMinutes across a day must be close to their stated pace; the adherence data (if present) says which weekdays and which task types actually get done — schedule the hard things where they historically follow through.
+- NO TWO DAYS THE SAME. Repeating an identical task list across the window is the single most common failure here. Vary the resource, the angle, and the pillar mix day to day.
+
 Here is the real MedSchoolPrep resource catalog to ground tasks in:
 ${catalogText}
 
@@ -667,7 +971,7 @@ Respond with ONLY valid JSON (no markdown, no code fences, no prose) matching ex
 Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order. For every quiz/lesson/flashcards/reading task, ALWAYS fill "resourceName" with a real name from the catalog — this becomes a clickable link that opens that exact resource for the student.`;
 }
 
-function repairDays(parsed, fallbackDays, plan, catalog) {
+export function repairDays(parsed, fallbackDays, plan, catalog) {
   const byIndex = new Map();
   if (Array.isArray(parsed?.days)) for (const d of parsed.days) { const idx = num(d?.dayIndex); if (idx) byIndex.set(idx, d); }
   return fallbackDays.map((fb, i) => {
@@ -792,8 +1096,14 @@ export async function generateDayChunk(plan, user, liveSignals, catalog, fromDat
   try {
     const dayTable = fallback.map(d => `Day ${d.dayIndex}: ${d.date} (${d.weekday}) — Week ${d.weekNumber}, phase "${phaseForWeek(plan, d.weekNumber)?.title || ''}", week theme: "${weeklyThemeForWeek(plan, d.weekNumber)?.theme || d.theme}"`).join('\n');
     const system = buildDayChunkSystemPrompt(numDays, catalog.text, prefsNote);
-    const userMsg = `Roadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals, portfolio)}\n\nDays to fill in:\n${dayTable}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
-    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 5500, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
+    // The day table leads. Everything else in this message is context the model reasons WITH;
+    // the table is the thing it must cover exactly once each, so it goes where no cap can reach it.
+    const userMsg = `Days to fill in — generate EXACTLY one entry per dayIndex below, in order:\n${dayTable}\n\nRoadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals, portfolio, plan)}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
+    // Output budget scales with the window: adaptPlanToNotes can ask for up to a full 14-day
+    // rewrite in one call, and a fixed 5,500-token ceiling truncated the tail of those into an
+    // unparseable response (which then silently fell back to the heuristic days).
+    const maxTokens = Math.min(8000, 1500 + numDays * 700);
+    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
     return applyPrefs(linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback));
   } catch {
     return applyPrefs(linkAll(fallback));
@@ -824,7 +1134,7 @@ const PROFILE_SNAPSHOT_FIELDS = [
   'gpaBand', 'sciences', 'healthExperience', 'whyMedicine', 'dreamRole', 'certainty',
   'specialty', 'gradeStage',
 ];
-function buildProfileSnapshot(user) {
+export function buildProfileSnapshot(user) {
   const snap = {};
   for (const f of PROFILE_SNAPSHOT_FIELDS) snap[f] = user?.[f] ?? null;
   return snap;
@@ -843,7 +1153,7 @@ export function planIsStale(plan, user) {
 
 export async function createMasterPlan(user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, null);
   const startDate = todayStr();
   const planShell = { ...roadmap, startDate, days: [] };
   const firstChunk = await generateDayChunk(planShell, user, liveSignals, catalog, startDate, CHUNK_DAYS, portfolio);
@@ -880,7 +1190,7 @@ export async function extendMasterPlan(plan, user, liveSignals, portfolio) {
 // against the new roadmap.
 export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan);
   const startDate = plan?.startDate || todayStr();
   const days = (plan?.days || []).map(d => {
     const weekNumber = weekNumberForDate({ startDate }, d.date);
@@ -899,7 +1209,7 @@ export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
 // only the first still-open day onward gets a fresh, note-aware generation.
 export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
   const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan);
   const today = todayStr();
   const startDate = plan?.startDate || today;
   const sorted = [...(plan?.days || [])].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));

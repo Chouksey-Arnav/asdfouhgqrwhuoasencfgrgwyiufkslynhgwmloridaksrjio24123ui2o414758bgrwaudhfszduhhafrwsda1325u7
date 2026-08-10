@@ -44,6 +44,7 @@ import InterviewPrepPanel from './components/InterviewPrepPanel';
 
 import * as DB from './lib/db';
 import * as ProgressSync from './lib/progressSync';
+import * as PlanStore from './lib/masterPlanStore';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
 import { SUBVIEWS, bootRoute, routeFromState, formatPath, LEGAL_VIEWS } from './lib/routes';
 import { LEGAL, TRADEMARK_NOTICE } from './legal/legalConfig';
@@ -128,7 +129,7 @@ import AppTour from './components/AppTour';
 import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
 import NextUnlockCard from './components/NextUnlockCard';
 import UnlockCelebration from './components/UnlockCelebration';
-import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS } from './components/onboarding/Onboarding';
+import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS, GPA_OPTIONS, TEST_TIMELINE_OPTIONS, SCIENCE_OPTIONS, EXPERIENCE_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 // snapshotItemCount is deliberately NOT re-exported here — it lives in weeklyGoals.js (see the
 // note at the top of portfolioData.js) and nothing in this file uses it. Importing it anyway was
@@ -148,7 +149,7 @@ import {
 import { loadA11y, saveA11y, applyA11y, motionReduced, DEFAULTS as A11Y_DEFAULTS, FONT_SCALE_STEPS, announce } from './lib/a11y';
 import AboutMePanel from './components/AboutMePanel';
 import AppearanceSettings from './components/AppearanceSettings';
-import { getBriefEntries, briefStats } from './lib/personalBrief';
+import { getBriefEntries, briefStats, buildPersonalBriefBlock } from './lib/personalBrief';
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend, CategoryScale, LinearScale, BarElement, ArcElement);
 
@@ -1419,7 +1420,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setPortfolioView(section ? 'resume' : view);
   }, []);
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
-  const goSettings = useCallback(()=>{ setTab('settings'); }, []);
+  // Settings deep link. `field` names one editable profile field (see PLAN_READINESS_TARGETS in
+  // src/lib/studentProfile.js) — passing it opens whichever editor owns that field, scrolls it
+  // into view and highlights it, which is what makes the Plans lock screen's checklist rows
+  // actual links instead of instructions to go hunting. Plain goSettings() is unchanged.
+  const [settingsFocus,setSettingsFocus]=useState(null);
+  const goSettings = useCallback((field=null)=>{ setTab('settings'); setSettingsFocus(typeof field==='string'?field:null); }, []);
   const [plansOpenDate,setPlansOpenDate]=useState(null);
   const goPlans = useCallback((dateStr)=>{ setTab('plans'); setPlansOpenDate(dateStr||null); }, []);
   // One generic (tab, view) jump, for surfaces that carry their own deep links as data rather
@@ -1801,6 +1807,41 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [sStudyHours,setSStudyHours]=useState(null);
   const [sTargetScore,setSTargetScore]=useState('');
 
+  // ── Settings deep-link focus ────────────────────────────────────────────────
+  // goSettings('gpaBand') has to do three things before the student sees anything: open the
+  // editor that owns the field (the Goals card is collapsed by default, so its inputs are not
+  // in the DOM at all), scroll that field into view, and mark it so it is visually obvious
+  // which of the ~20 controls on the page they were sent to. The scroll waits a frame for the
+  // editor to mount; the highlight clears itself so it never becomes permanent chrome.
+  const GOALS_EDITOR_FIELDS=useMemo(()=>new Set(['goal','obstacles','studyMethod','accomplish','studyHours','onboardingTargetScore']),[]);
+  // Scrolling happens once per deep link. Without this guard the effect would re-fire on the
+  // next saveUser — i.e. the moment the student answers the question they were sent here for —
+  // and yank the page back to the field they had just finished with.
+  const scrolledForRef=useRef(null);
+  useEffect(()=>{
+    if(tab!=='settings'||!settingsFocus){ if(!settingsFocus)scrolledForRef.current=null; return; }
+    if(GOALS_EDITOR_FIELDS.has(settingsFocus)&&!sGoalsEditing){
+      setSGoal(user?.goal||null);setSObstacles(user?.obstacles||[]);setSStudyMethod(user?.studyMethod||null);
+      setSAccomplish(user?.accomplish||[]);setSStudyHours(user?.studyHours||null);setSTargetScore(user?.onboardingTargetScore||'');
+      setSGoalsEditing(true);
+      return; // re-runs once the editor is open and the anchor exists
+    }
+    if(scrolledForRef.current===settingsFocus)return;
+    scrolledForRef.current=settingsFocus;
+    const scroll=setTimeout(()=>{
+      document.getElementById(`settings-field-${settingsFocus}`)?.scrollIntoView({behavior:'smooth',block:'center'});
+    },120);
+    // The highlight is a wayfinding cue, not permanent chrome — it retires itself.
+    const clear=setTimeout(()=>setSettingsFocus(null),8000);
+    return ()=>{clearTimeout(scroll);clearTimeout(clear);};
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[tab,settingsFocus,sGoalsEditing]);
+  // Leaving Settings drops the highlight — coming back later shouldn't re-pulse a field the
+  // student already dealt with.
+  useEffect(()=>{ if(tab!=='settings'&&settingsFocus)setSettingsFocus(null); },[tab,settingsFocus]);
+  // Applied to whichever card/field goSettings was pointed at.
+  const focusStyle=useCallback((field)=>(settingsFocus===field?{border:`1px solid ${C.amber}`,boxShadow:`0 0 0 3px ${C.amber}25`,scrollMarginTop:90}:{scrollMarginTop:90}),[settingsFocus]);
+
   // ── Pomodoro ────────────────────────────────────────────────────────────────
   const [pomT,setPT]=useState(25*60);const [pomR,setPR]=useState(false);const [pomM,setPomM]=useState('focus');const [pomSessions,setPomSessions]=useState(0);
 
@@ -2081,7 +2122,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const closeChest = useCallback(()=>{ setChest(null); },[]);
 
   // ── Optimistic save helpers ──────────────────────────────────────────────────
-  const saveUser = useCallback((u)=>{ setUser_(u); DB.saveUser(u).catch(console.error); },[]);
+  // Every write to the user record also mirrors the master plan into its own database row
+  // (src/lib/masterPlanStore.js). This is the one choke point every plan mutation in the app
+  // already funnels through — generation, task toggles, drag-to-reschedule, the rolling
+  // auto-extension, the rollover pass — so the mirror can't be forgotten at a call site. The
+  // push is debounced, skips unchanged plans, and can never throw into this path.
+  const saveUser = useCallback((u)=>{
+    setUser_(u);
+    DB.saveUser(u).catch(console.error);
+    if(u?.masterPlan)PlanStore.schedulePlanPush(u.masterPlan);
+  },[]);
   // rewardClaimQueue.claimReward() writes xp straight to Dexie itself (so a durable claim intent
   // and its optimistic local grant land together, even if this component isn't mounted to hear
   // about it — e.g. a queued claim resolving on app start). Call this right after to pull that
@@ -2386,6 +2436,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [recentActivitySummary,setRecentActivitySummary]=useState(null);
   const refreshRecentActivity=useCallback(()=>{summarizeRecentActivity(7).then(r=>setRecentActivitySummary(r?.text||null)).catch(()=>{});},[]);
   useEffect(()=>{ if(dbReady) refreshRecentActivity(); },[dbReady,refreshRecentActivity]);
+
+  // ── Master plan: adopt the server's copy when it's genuinely newer ──────────
+  // Runs once the local profile has settled. The plan has its own table (see
+  // api/master-plan.js) precisely so a plan built on one device shows up whole on the next,
+  // even when the shared progress snapshot is large or a push was interrupted mid-way.
+  // pullPlan() compares the plan's OWN updatedAt against this device's and returns null unless
+  // the server's is strictly newer, so this can never clobber local work — including work done
+  // offline, which always carries the later stamp once it syncs.
+  const planPulledRef = useRef(false);
+  useEffect(()=>{
+    if(!dbReady||!user||planPulledRef.current)return;
+    planPulledRef.current=true;
+    let cancelled=false;
+    (async()=>{
+      const remote=await PlanStore.pullPlan(user.masterPlan||null);
+      if(cancelled||!remote)return;
+      const current=await DB.getUser();
+      // Re-check against the record as it stands NOW: the fetch is async, and the student may
+      // have generated or edited a plan while it was in flight.
+      if(!PlanStore.isRemoteNewer(remote,current?.masterPlan||null))return;
+      saveUser({...(current||user),masterPlan:remote});
+      toast('Picked up the newer version of your plan from your account.',{icon:'☁️'});
+    })();
+    return()=>{cancelled=true;};
+  },[dbReady,user,saveUser]);
   useEffect(()=>{
     let cancelled=false;
     (async()=>{
@@ -2741,6 +2816,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     try{ await ProgressSync.flushNow(); }catch(err){ console.error('Pre-signout sync flush failed:',err); }
     DB.setSyncEnabled(false);
     ProgressSync.resetSyncStatus();
+    PlanStore.resetPlanStore(); // drop the previous account's plan-push state with everything else
     await DB.clearAllData();
     clearViewState();
     setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setPortSnapshot(null);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
@@ -7112,7 +7188,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             )
           ):(
             <div style={CC({gap:18})}>
-              <div>
+              <div id="settings-field-goal" style={focusStyle('goal')}>
                 <SL>Top goal</SL>
                 <div style={CC({gap:6})}>
                   {GOAL_OPTIONS.map(o=>(
@@ -7123,7 +7199,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   ))}
                 </div>
               </div>
-              <div>
+              <div id="settings-field-obstacles" style={focusStyle('obstacles')}>
                 <SL>What's in your way (select all that apply)</SL>
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:6}}>
                   {OBSTACLE_OPTIONS.map(o=>{const checked=sObstacles.includes(o.value);return(
@@ -7134,7 +7210,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   );})}
                 </div>
               </div>
-              <div>
+              <div id="settings-field-accomplish" style={focusStyle('accomplish')}>
                 <SL>What you want to accomplish (select all that apply)</SL>
                 <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'repeat(2,1fr)',gap:6}}>
                   {ACCOMPLISH_OPTIONS.map(o=>{const checked=sAccomplish.includes(o.value);return(
@@ -7145,7 +7221,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   );})}
                 </div>
               </div>
-              <div>
+              <div id="settings-field-studyMethod" style={focusStyle('studyMethod')}>
                 <SL>Current study method</SL>
                 <div style={CC({gap:6})}>
                   {STUDY_METHOD_OPTIONS.map(o=>(
@@ -7156,7 +7232,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   ))}
                 </div>
               </div>
-              <div>
+              <div id="settings-field-studyHours" style={focusStyle('studyHours')}>
                 <SL>Weekly study time</SL>
                 <div style={CC({gap:6})}>
                   {STUDY_HOURS_OPTIONS.map(o=>(
@@ -7167,7 +7243,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   ))}
                 </div>
               </div>
-              <div>
+              <div id="settings-field-onboardingTargetScore" style={focusStyle('onboardingTargetScore')}>
                 <SL>Target {user?.testTrack||'SAT'} score</SL>
                 <input type="number" style={inp({width:'auto'})} placeholder={user?.testTrack==='ACT'?'e.g. 32':'e.g. 1400'} value={sTargetScore} onChange={e=>setSTargetScore(e.target.value)}/>
               </div>
@@ -7203,6 +7279,87 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        {/* Grades & Test Timing. Both fields are plan-readiness gates (PLAN_READINESS_FIELDS in
+            src/lib/studentProfile.js) and both were, until now, collected during onboarding and
+            editable nowhere — so a legacy account missing either one was shown "A few things
+            first" on the Plans tab with a button to Settings that led to no way of answering it.
+            That is a dead end, not a gate. Saving here also feeds the Medabrain system prompt,
+            the admissions calculator's comparable GPA, and the plan's pacing. */}
+        <div style={{...glass({padding:18}),...focusStyle('gpaBand'),...(settingsFocus==='testTimeline'?focusStyle('testTimeline'):{})}} id="settings-field-gpaBand">
+          <SL>Grades & Test Timing</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Two facts Medabrain's Oracle needs before it will build your full plan — roughly where your grades sit, and when you're planning to take the test. Rough is fine; it paces the plan, it isn't a transcript.</p>
+          <div style={{marginBottom:18}}>
+            <SL>Your grades right now</SL>
+            <div style={R({gap:7,flexWrap:'wrap'})}>
+              {GPA_OPTIONS.map(o=>{
+                const on=(user?.gpaBand||null)===o.value;
+                return(
+                  <button key={o.value} onClick={()=>{saveUser({...user,gpaBand:o.value});toast.success('Grades updated');}} style={{
+                    ...glass2({padding:'9px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12.5,fontWeight:on?700:500,color:on?accentText(accent):C.t2,textAlign:'left',
+                  }}>{o.label}</button>
+                );
+              })}
+            </div>
+          </div>
+          <div id="settings-field-testTimeline" style={{scrollMarginTop:90}}>
+            <SL>When you're taking the {user?.testTrack||'SAT'}</SL>
+            <div style={R({gap:7,flexWrap:'wrap'})}>
+              {TEST_TIMELINE_OPTIONS.map(o=>{
+                const on=(user?.testTimeline||null)===o.value;
+                return(
+                  <button key={o.value} onClick={()=>{saveUser({...user,testTimeline:o.value});toast.success('Test timing updated');}} style={{
+                    ...glass2({padding:'9px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12.5,fontWeight:on?700:500,color:on?accentText(accent):C.t2,textAlign:'left',
+                  }}>{o.label}</button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Science coursework and hands-on health experience. Not readiness gates, but both are
+            read directly by the plan generator and the coach prompt, and both were onboarding-only
+            — so the app's picture of a student froze on the day they signed up. */}
+        <div style={glass({padding:18})}>
+          <SL>Science Courses & Health Experience</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Keep these current as you take more classes and get more hours in — your plan and Medabrain's advice both change when they do.</p>
+          <div style={{marginBottom:18}}>
+            <SL>Science courses taken or in progress</SL>
+            <div style={R({gap:7,flexWrap:'wrap'})}>
+              {SCIENCE_OPTIONS.map(o=>{
+                const on=(user?.sciences||[]).includes(o.value);
+                return(
+                  <button key={o.value} onClick={()=>{
+                    const cur=user?.sciences||[];
+                    saveUser({...user,sciences:on?cur.filter(v=>v!==o.value):[...cur,o.value]});
+                  }} style={{
+                    ...glass2({padding:'8px 13px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:5,
+                  }}>{on&&<Check size={11}/>}{o.label}</button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <SL>Hands-on health experience</SL>
+            <div style={R({gap:7,flexWrap:'wrap'})}>
+              {EXPERIENCE_OPTIONS.map(o=>{
+                const on=(user?.healthExperience||[]).includes(o.value);
+                return(
+                  <button key={o.value} onClick={()=>{
+                    const cur=user?.healthExperience||[];
+                    saveUser({...user,healthExperience:on?cur.filter(v=>v!==o.value):[...cur,o.value]});
+                  }} style={{
+                    ...glass2({padding:'8px 13px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
+                    fontSize:12,fontWeight:on?700:500,color:on?accentText(accent):C.t2,display:'inline-flex',alignItems:'center',gap:5,
+                  }}>{on&&<Check size={11}/>}{o.label}</button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -7421,6 +7578,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <p style={{fontSize:13,color:C.t2,marginBottom:16,lineHeight:1.65}}>These actions are permanent and cannot be undone.</p>
           <div style={R({gap:10,flexWrap:'wrap'})}>
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={()=>{if(window.confirm('Reset all quiz scores and lesson progress?')){DB.resetPathway();DB.resetQuizScores();DB.resetCatPerf();setPathway_({});setQScores_({});setQHistory([]);setCatPerf_({});toast.success('Progress reset successfully.');}}} >Reset Progress</button>
+            {/* Deleting the plan clears the server copy AND its version history, not just this
+                device's — otherwise the next sign-in would helpfully restore the plan the
+                student just asked to be rid of. */}
+            {user?.masterPlan&&(
+              <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{
+                if(!window.confirm('Delete your full study plan, including every saved earlier version? Your quiz scores, Portfolio and progress are untouched — you can build a new plan any time.'))return;
+                await PlanStore.deleteStoredPlan();
+                // Explicit null, not a deleted key: mergeUserRecord in db.js merges as
+                // {...remote, ...local}, so an absent local key lets the remote snapshot's old
+                // plan win on the next pull and the deletion silently undoes itself.
+                saveUser({...user,masterPlan:null});
+                toast.success('Your plan was deleted. Build a new one whenever you\'re ready.');
+              }}>Delete My Plan</button>
+            )}
             <button style={btnSm(C.roseDim,{color:C.rose,border:`1px solid ${C.rose}30`,fontSize:12})} onClick={async()=>{if(window.confirm('Sign out and permanently delete all local device data? This cannot be undone.')){try{await ProgressSync.flushNow();}catch(err){console.error('Pre-signout sync flush failed:',err);}await AuthAPI.logout();await signOut();window.location.reload();}}}>Sign Out & Clear Local Data</button>
           </div>
         </div>
@@ -7758,12 +7929,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     }
     const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
     const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
+    // Everything measurable the app knows, handed to the planner in one object. The first six
+    // lines are the original set; everything after is what the deep planner reads to pace and
+    // target the plan (see buildPerformanceFactsText in masterPlanGenerator.js) — the same
+    // signals the chat coach already got, so the Plans tab and Medabrain reason over one
+    // picture of the student rather than two different ones.
     const liveSignals={
       weakestCategory:weakIdx?cats3[weakIdx.i]:null, weakestScore:weakIdx?weakIdx.v:null,
       dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
       recentActivitySummary,
+      categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
+      satProjection, satWeakSkills, satOpenReviews,
+      timelineSummary, personalBrief:buildPersonalBriefBlock(user),
+      applicationStrength:computeApplicationStrength({
+        mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal,
+        recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays,
+      }),
     };
     return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>;
   }
