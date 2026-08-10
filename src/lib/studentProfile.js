@@ -149,27 +149,44 @@ export function computeOnboardingCompleteness(user) {
 // diagnostic, tried one quiz, and logged one Portfolio item has given the Oracle real
 // signal on their level, habits, and what they're already building — enough to be
 // confident without asking for more than a first-day's worth of engagement.
-const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'onboardingTargetScore', 'gpaBand', 'testTimeline'];
+export const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'onboardingTargetScore', 'gpaBand', 'testTimeline'];
 const PLAN_READINESS_LABELS = {
   goal: 'Your top goal', obstacles: "What's in your way", studyHours: 'Weekly study time',
   onboardingTargetScore: 'Your target score', gpaBand: 'Your grades', testTimeline: 'Your test timing',
 };
+// Where each unanswered profile question is actually answered, so the lock screen's checklist
+// can be a set of working links rather than a list of things to go hunt for. `goField` is the
+// Settings deep-link target (see settingsFocus in App.jsx — it opens the right editor, scrolls
+// the exact field into view, and highlights it); `hint` is the human-readable breadcrumb shown
+// under the row so a student knows where the tap is about to take them.
+export const PLAN_READINESS_TARGETS = {
+  goal: { goTab: 'settings', goField: 'goal', hint: 'Settings → Your Goals' },
+  obstacles: { goTab: 'settings', goField: 'obstacles', hint: 'Settings → Your Goals' },
+  studyHours: { goTab: 'settings', goField: 'studyHours', hint: 'Settings → Your Goals' },
+  onboardingTargetScore: { goTab: 'settings', goField: 'onboardingTargetScore', hint: 'Settings → Your Goals' },
+  gpaBand: { goTab: 'settings', goField: 'gpaBand', hint: 'Settings → Grades & Test Timing' },
+  testTimeline: { goTab: 'settings', goField: 'testTimeline', hint: 'Settings → Grades & Test Timing' },
+};
+const profileItem = (f) => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile', ...PLAN_READINESS_TARGETS[f] });
 // signals: { quizzesTaken, portfolioItemCount } — live counts the caller gathers from
 // wherever they actually live (quiz scores and Portfolio resources aren't on the user
 // record itself). Passing `null` for a count (vs. 0) means "still loading" and that
 // gate is provisionally treated as satisfied so the lock screen doesn't flash true
 // while its own data is still in flight.
-const ACTIVITY_GATES = [
-  { field: 'diagnosticTaken', label: 'Take the Pathway Diagnostic', goTab: 'prep', goView: 'diagnostic', ok: (user) => !!user.diagnosticResult },
-  { field: 'quizAttempted', label: 'Try one practice quiz', goTab: 'prep', goView: 'quizzes', ok: (_user, s) => s.quizzesTaken == null || s.quizzesTaken >= 1 },
-  { field: 'portfolioTracked', label: 'Add one item to your Portfolio', goTab: 'portfolio', goView: null, ok: (_user, s) => s.portfolioItemCount == null || s.portfolioItemCount >= 1 },
+export const ACTIVITY_GATES = [
+  { field: 'diagnosticTaken', label: 'Take the Pathway Diagnostic', hint: 'Prep → Diagnostic', goTab: 'prep', goView: 'diagnostic', ok: (user) => !!user.diagnosticResult },
+  { field: 'quizAttempted', label: 'Try one practice quiz', hint: 'Prep → Quiz Library', goTab: 'prep', goView: 'quizzes', ok: (_user, s) => s.quizzesTaken == null || s.quizzesTaken >= 1 },
+  // goView was `null` here, which navigated to Portfolio's default view and left the student to
+  // find something addable themselves. Activities & Résumé is the one panel where a first
+  // Portfolio item can always be logged in a few taps, whatever the student has to show yet.
+  { field: 'portfolioTracked', label: 'Add one item to your Portfolio', hint: 'Portfolio → Activities & Résumé', goTab: 'portfolio', goView: 'resume', ok: (_user, s) => s.portfolioItemCount == null || s.portfolioItemCount >= 1 },
 ];
 export function computePlanReadiness(user, signals = {}) {
   const totalChecks = PLAN_READINESS_FIELDS.length + ACTIVITY_GATES.length;
   if (!user) {
     const missing = [
-      ...PLAN_READINESS_FIELDS.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile' })),
-      ...ACTIVITY_GATES.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
+      ...PLAN_READINESS_FIELDS.map(profileItem),
+      ...ACTIVITY_GATES.map(g => ({ field: g.field, label: g.label, kind: 'activity', hint: g.hint, goTab: g.goTab, goView: g.goView })),
     ];
     const checklist = missing.map(m => ({ ...m, state: 'pending' }));
     return { ready: false, pct: 0, missing, checklist };
@@ -177,8 +194,8 @@ export function computePlanReadiness(user, signals = {}) {
   const missingFields = PLAN_READINESS_FIELDS.filter(f => !isFilled(user[f]));
   const missingActivity = ACTIVITY_GATES.filter(g => !g.ok(user, signals));
   const missing = [
-    ...missingFields.map(f => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile' })),
-    ...missingActivity.map(g => ({ field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView })),
+    ...missingFields.map(profileItem),
+    ...missingActivity.map(g => ({ field: g.field, label: g.label, kind: 'activity', hint: g.hint, goTab: g.goTab, goView: g.goView })),
   ];
   const pct = Math.round(((totalChecks - missing.length) / totalChecks) * 100);
   // Full ordered checklist (not just what's missing) so the UI can show satisfied items as
@@ -194,14 +211,14 @@ export function computePlanReadiness(user, signals = {}) {
   // (nothing changed, the data just arrived), so nothing fake-animates on first paint.
   const checklist = [
     ...PLAN_READINESS_FIELDS.map(f => ({
-      field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile',
+      ...profileItem(f),
       state: isFilled(user[f]) ? 'done' : 'pending',
     })),
     ...ACTIVITY_GATES.map(g => {
       const loading = (g.field === 'quizAttempted' && signals.quizzesTaken == null) ||
         (g.field === 'portfolioTracked' && signals.portfolioItemCount == null);
       return {
-        field: g.field, label: g.label, kind: 'activity', goTab: g.goTab, goView: g.goView,
+        field: g.field, label: g.label, kind: 'activity', hint: g.hint, goTab: g.goTab, goView: g.goView,
         state: loading ? 'loading' : (g.ok(user, signals) ? 'done' : 'pending'),
       };
     }),

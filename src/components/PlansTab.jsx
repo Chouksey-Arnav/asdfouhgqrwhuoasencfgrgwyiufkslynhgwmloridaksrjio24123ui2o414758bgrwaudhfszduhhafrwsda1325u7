@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Sparkles, Target, Flag, TrendingUp, ChevronDown, CheckCircle2, Circle, RefreshCw,
   CalendarClock, Map as MapIcon, Clock, ArrowRight, ShieldAlert, ShieldCheck, BookOpen, Layers, Layers3,
-  MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope,
+  MessageCircle, Award, GraduationCap, ScrollText, CalendarDays, Stethoscope, History,
   FlaskConical, UserCheck, Moon, Mic, Compass, X, Lock, Undo2, GripVertical, Sunrise, CalendarPlus,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, R, CC, G, pill, accentFill, onTint } from '../lib/theme';
@@ -13,6 +13,7 @@ import { celebrateXP, celebrateBonusXP, celebrateJackpot, celebrateAchievement }
 import * as speech from '../lib/speech';
 import { listItems } from '../lib/dataApi';
 import { computePlanReadiness } from '../lib/studentProfile';
+import * as PlanStore from '../lib/masterPlanStore';
 import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, addDaysStr, resolveAllTaskLinks,
@@ -22,21 +23,66 @@ import {
 // Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
 // generation ground itself in the student's ACTUAL colleges/essays/deadlines/activities
 // instead of just onboarding answers and summary counts.
-const PORTFOLIO_RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activities', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders', 'test_scores', 'awards', 'gpa_entries'];
+// Every per-user table the Portfolio owns, mapped to the key buildPortfolioFactsText reads.
+// This is the "look through my entire Portfolio before designing the plan" contract: the plan
+// generator's digest covers each of these, so anything missing from this list is a category the
+// Oracle is structurally blind to.
+const PORTFOLIO_RESOURCE_MAP = {
+  colleges: 'colleges',
+  college_checklist_items: 'collegeChecklist',
+  essays: 'essays',
+  deadlines: 'deadlines',
+  scholarships: 'scholarships',
+  activities: 'activities',
+  research_experience: 'research',
+  skills_certifications: 'skills',
+  clinical_hours: 'clinicalHours',
+  recommenders: 'recommenders',
+  test_scores: 'testScores',
+  awards: 'awards',
+  gpa_entries: 'gpaEntries',
+};
+const PORTFOLIO_RESOURCES = Object.keys(PORTFOLIO_RESOURCE_MAP);
+
+async function fetchPortfolio() {
+  const entries = await Promise.all(
+    PORTFOLIO_RESOURCES.map(async r => [PORTFOLIO_RESOURCE_MAP[r], await listItems(r).catch(() => [])])
+  );
+  return Object.fromEntries(entries);
+}
+
+// Returns the fetched Portfolio for rendering AND an `ensure()` that resolves to it — awaiting
+// the in-flight fetch if one is running, starting a fresh one if the first attempt failed, and
+// re-fetching right before a build so the plan is designed against the Portfolio as it is at
+// click time, not as it was when the tab mounted. Before this, hitting "Build My Full Plan" fast
+// enough (or after a failed fetch) generated the whole plan with `portfolio === null` — the
+// student's colleges, essays, deadlines and hours all invisible to the model — with nothing in
+// the UI to indicate it had happened.
 function usePortfolioData() {
   const [portfolioData, setPortfolioData] = useState(null);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const [colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries] =
-          await Promise.all(PORTFOLIO_RESOURCES.map(r => listItems(r).catch(() => [])));
-        if (!cancelled) setPortfolioData({ colleges, essays, deadlines, scholarships, activities, research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries });
-      } catch { /* prompt builder treats a missing portfolio as "nothing tracked yet" */ }
-    })();
-    return () => { cancelled = true; };
+  const inFlightRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  const load = useCallback(() => {
+    if (inFlightRef.current) return inFlightRef.current;
+    const p = fetchPortfolio()
+      .then(data => { if (mountedRef.current) setPortfolioData(data); return data; })
+      .catch(() => null)
+      .finally(() => { inFlightRef.current = null; });
+    inFlightRef.current = p;
+    return p;
   }, []);
-  return portfolioData;
+
+  useEffect(() => {
+    mountedRef.current = true;
+    load();
+    return () => { mountedRef.current = false; };
+  }, [load]);
+
+  // Always re-reads: a student who just logged a clinical hour in another tab and came back to
+  // build their plan should have that hour in it.
+  const ensure = useCallback(async () => (await load()) || portfolioData || null, [load, portfolioData]);
+  return { portfolioData, ensurePortfolio: ensure };
 }
 
 const PILLAR_META = {
@@ -52,7 +98,7 @@ const TYPE_ICON = {
   reflection: Sparkles, rest: Moon,
 };
 const LOADING_STAGES = [
-  { at: 0, label: 'Reading your full profile…' },
+  { at: 0, label: 'Reading your full profile and your entire Portfolio…' },
   { at: 5000, label: 'Mapping every MedSchoolPrep resource to your pathway…' },
   { at: 12000, label: "Medabrain's Oracle is building your roadmap…" },
   { at: 26000, label: 'Writing your day-by-day schedule…' },
@@ -74,7 +120,7 @@ function relTime(ts) {
 
 export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, goPrep, goPortfolio, goProgress, goSettings, openResource, liveSignals, initialExpandedDate, quizzesTaken = null, reducedMotion = false }) {
   const plan = user?.masterPlan || null;
-  const portfolioData = usePortfolioData();
+  const { portfolioData, ensurePortfolio } = usePortfolioData();
   // portfolioData is null while its own fetch is in flight — pass null (not 0) through so
   // computePlanReadiness treats that one gate as provisionally satisfied rather than flashing
   // "locked" for a student who actually has Portfolio items, only to unlock a beat later.
@@ -152,7 +198,11 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     if (!plan || extending) return;
     if (!needsExtension(plan)) return;
     setExtending(true);
-    extendMasterPlan(plan, user, liveSignals || {})
+    // Reads the Portfolio first, same as a manual build: an extension generated without it
+    // would quietly drop back to generic tasks for the days it adds, so the plan would get
+    // less personal the longer a student stayed on it.
+    ensurePortfolio()
+      .then(portfolio => extendMasterPlan(plan, user, liveSignals || {}, portfolio))
       .then(updated => saveUser({ ...user, masterPlan: updated }))
       .catch(() => {})
       .finally(() => setExtending(false));
@@ -170,8 +220,16 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       if (stage) setStageLabel(stage.label);
     }, 700);
     try {
-      const built = await createMasterPlan(user, liveSignals || {}, portfolioData);
+      // Read the ENTIRE Portfolio first, every time — the plan is only as personal as the
+      // record it was designed against, and a build that raced the initial fetch used to
+      // silently produce a portfolio-blind plan.
+      const portfolio = await ensurePortfolio();
+      const built = await createMasterPlan(user, liveSignals || {}, portfolio);
       saveUser({ ...user, masterPlan: built });
+      // Straight to the server rather than waiting out the debounce: this is 20-40 seconds of
+      // the student's time and three Oracle calls, and a tab closed in the next few seconds
+      // should not be able to lose it.
+      PlanStore.flushPlanNow(built, 'first build').catch(() => {});
       toast.success('Your full plan is ready.');
     } catch {
       toast.error("Couldn't build your plan — please try again.");
@@ -186,9 +244,11 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     setGenerating(true);
     setStageLabel("Medabrain's Oracle is rebuilding your roadmap…");
     try {
-      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolioData);
+      const portfolio = await ensurePortfolio();
+      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolio);
       saveUser({ ...user, masterPlan: updated });
-      toast.success('Roadmap refreshed.');
+      PlanStore.flushPlanNow(updated, 'roadmap rebuild').catch(() => {});
+      toast.success('Roadmap refreshed. Your previous version is saved — you can restore it from the header.');
     } catch {
       toast.error("Couldn't refresh your roadmap — please try again.");
     } finally {
@@ -203,8 +263,10 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     setGenerating(true);
     setStageLabel("Medabrain's Oracle is updating your roadmap for your new profile…");
     try {
-      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolioData);
+      const portfolio = await ensurePortfolio();
+      const updated = await regenerateRoadmap(plan, user, liveSignals || {}, portfolio);
       saveUser({ ...user, masterPlan: updated });
+      PlanStore.flushPlanNow(updated, 'profile change').catch(() => {});
       toast.success('Your plan now reflects your updated profile.');
     } catch {
       toast.error("Couldn't refresh your roadmap — please try again.");
@@ -267,11 +329,24 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       return (
         <LockedState
           readiness={readiness} accent={accent} isMobile={isMobile} goSettings={goSettings}
-          onGoActivity={(m) => { if (m.goTab === 'prep') goPrep?.(m.goView); else if (m.goTab === 'portfolio') goPortfolio?.(m.goView); }}
+          onGoActivity={(m) => { if (m.goTab === 'prep') goPrep?.(m.goView); else if (m.goTab === 'portfolio') goPortfolio?.(m.goView); else if (m.goTab === 'progress') goProgress?.(m.goView); }}
+          onGoProfileField={(m) => goSettings?.(m.goField)}
         />
       );
     }
     return <EmptyState onBuild={handleBuild} accent={accent} isMobile={isMobile} />;
+  }
+
+  // Restoring an archived version (see api/master-plan.js). Every roadmap rebuild used to be
+  // irreversible — the plan it replaced was simply gone — which made the most useful button on
+  // this screen also the scariest one.
+  async function handleRestoreRevision(revision) {
+    const restored = await PlanStore.fetchPlanRevision(revision);
+    if (!restored) { toast.error("Couldn't load that version — please try again."); return false; }
+    saveUser({ ...user, masterPlan: restored });
+    PlanStore.flushPlanNow(restored, `restored revision ${revision}`).catch(() => {});
+    toast.success('Restored. Your day-by-day plan is back to that version.');
+    return true;
   }
 
   const weekNumber = getCurrentWeekNumber(plan);
@@ -282,9 +357,9 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
   return (
     <div style={CC({ gap: 22 })}>
       {stale && <StaleProfileBanner accent={accent} onRefresh={handleRefreshFromProfile} />}
-      <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} />
+      <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} onRestore={handleRestoreRevision} />
 
-      <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} portfolioData={portfolioData} accent={accent} />
+      <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} ensurePortfolio={ensurePortfolio} accent={accent} />
 
       <div style={{ display: 'flex', gap: 6 }}>
         {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
@@ -325,7 +400,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 // pending→done transition (see the `justCompleted` diffing in LockedState below), never on a
 // loading→done resolution (nothing changed, the data just arrived) or on first paint.
 function ChecklistRow({ item, accent, onClick, clickable, justCompleted }) {
-  const { state, label } = item;
+  const { state, label, hint } = item;
   const Wrapper = clickable ? motion.button : motion.div;
   return (
     <Wrapper
@@ -354,14 +429,16 @@ function ChecklistRow({ item, accent, onClick, clickable, justCompleted }) {
       </AnimatePresence>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{label}</div>
-        {state === 'done' && <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Already have this from your onboarding</div>}
+        {state === 'done'
+          ? <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Already have this from your onboarding</div>
+          : (clickable && hint) ? <div style={{ fontSize: 10, color: C.t3, marginTop: 1 }}>Tap to open · {hint}</div> : null}
       </div>
       {clickable && state !== 'done' && <ArrowRight size={13} color={C.amberL} style={{ flexShrink: 0 }} />}
     </Wrapper>
   );
 }
 
-function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) {
+function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, onGoProfileField }) {
   const missingProfile = readiness.missing.filter(m => m.kind === 'profile');
   const missingActivity = readiness.missing.filter(m => m.kind === 'activity');
   const profileItems = readiness.checklist.filter(c => c.kind === 'profile');
@@ -394,13 +471,19 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) 
           <h2 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>A few things first</h2>
         </div>
         <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 460, margin: 0 }}>
-          Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Onboarding already answered some of this for you; fill in the rest and your plan unlocks:
+          Medabrain's Oracle builds the best possible plan when it actually knows where you stand — not too much, just enough to be confident. Onboarding already answered some of this for you. <b style={{ color: C.t1 }}>Tap any unfinished item below</b> and it'll take you straight to the exact place you answer it.
         </p>
         {profileItems.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, width: '100%', maxWidth: 340 }}>
             <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, textAlign: 'left' }}>Your profile</div>
+            {/* Every unfinished row is a working link into the exact Settings field that answers
+                it (see settingsFocus in App.jsx — it opens the right editor, scrolls the field
+                into view and highlights it). These were previously inert text, so a student
+                looking at "Your grades" had to guess which of Settings' many cards held it. */}
             {profileItems.map(m => (
-              <ChecklistRow key={m.field} item={m} accent={accent} clickable={false} justCompleted={justCompleted.has(m.field)} />
+              <ChecklistRow key={m.field} item={m} accent={accent}
+                clickable={m.state !== 'done' && !!onGoProfileField}
+                onClick={() => onGoProfileField?.(m)} justCompleted={justCompleted.has(m.field)} />
             ))}
           </div>
         )}
@@ -414,7 +497,7 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity }) 
           </div>
         )}
         {missingProfile.length > 0 && (
-          <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.()}>
+          <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={() => goSettings?.(missingProfile[0]?.goField || null)}>
             Update My Profile
           </button>
         )}
@@ -486,9 +569,72 @@ function StaleProfileBanner({ accent, onRefresh }) {
 }
 
 // ── Header ─────────────────────────────────────────────────────────────────
-function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate }) {
+// Version history — the safety net under "Rebuild Roadmap". Loaded lazily on open (the list is
+// metadata only, never ten full plan bodies) and empty-stated honestly when the account has no
+// archived versions or the server can't be reached, rather than pretending a failure is "none".
+function PlanHistoryMenu({ accent, onRestore }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState(null);
+  const [restoring, setRestoring] = useState(null);
+
+  async function toggle() {
+    const next = !open;
+    setOpen(next);
+    if (!next || history) return;
+    setLoading(true);
+    setHistory(await PlanStore.fetchPlanHistory());
+    setLoading(false);
+  }
+
+  async function restore(rev) {
+    if (restoring) return;
+    if (!window.confirm('Restore this earlier version of your plan? Your current plan is archived first, so you can switch back.')) return;
+    setRestoring(rev);
+    const ok = await onRestore(rev);
+    setRestoring(null);
+    if (ok) { setOpen(false); setHistory(null); }
+  }
+
   return (
-    <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${accent}30`, background: `linear-gradient(135deg,${accent}12,transparent 60%)`, position: 'relative' }}>
+    <div style={{ position: 'relative' }}>
+      <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={toggle} aria-expanded={open}>
+        <History size={11} />Versions
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            style={{ ...glass({ padding: 12, position: 'absolute', right: 0, top: 'calc(100% + 8px)', width: 290, zIndex: 40 }), border: `1px solid ${accent}35` }}>
+            <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>Earlier versions of this plan</div>
+            {loading && <div style={{ fontSize: 11.5, color: C.t3 }}>Loading…</div>}
+            {!loading && history?.length === 0 && (
+              <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5 }}>No earlier versions saved yet. Every time you rebuild your roadmap, the version it replaces is kept here.</div>
+            )}
+            {!loading && history?.map(h => (
+              <div key={h.revision} style={{ ...glass2({ padding: '9px 11px' }), marginBottom: 6 }}>
+                <div style={{ fontSize: 11.5, fontWeight: 700, color: C.t1, lineHeight: 1.35 }}>{h.headline}</div>
+                <div style={{ fontSize: 10, color: C.t3, marginTop: 2 }}>
+                  {new Date(h.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                  {h.reason ? ` · replaced on ${h.reason}` : ''}
+                </div>
+                <button onClick={() => restore(h.revision)} disabled={!!restoring}
+                  style={{ ...btnSm(`${accent}18`, { color: accent, fontSize: 10.5 }), marginTop: 7, opacity: restoring ? 0.6 : 1 }}>
+                  {restoring === h.revision ? 'Restoring…' : 'Restore this version'}
+                </button>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore }) {
+  return (
+    // overflow stays visible so the Versions dropdown below can escape the card; the gradient
+    // background still clips to the border radius on its own.
+    <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'visible' }), border: `1px solid ${accent}30`, background: `linear-gradient(135deg,${accent}12,transparent 60%)`, position: 'relative' }}>
       <div style={{ padding: '22px 24px' }}>
         <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
           <div>
@@ -497,6 +643,7 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate }) {
           </div>
           <div style={R({ gap: 8 })}>
             {weekNumber && <span style={pill(`${accent}18`, accent, { fontSize: 11 })}>Week {weekNumber} of {plan.horizonWeeks}</span>}
+            {onRestore && <PlanHistoryMenu accent={accent} onRestore={onRestore} />}
             <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={onRegenerate}><RefreshCw size={11} />Rebuild Roadmap</button>
           </div>
         </div>
@@ -520,7 +667,7 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate }) {
 // generation — extend, regenerate, the next rolling day chunk — sees it too, not just this one
 // rebuild) and immediately used to refresh the roadmap right now, so it's visibly "in" the plan
 // rather than a note that silently waits for the next scheduled rebuild.
-function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, accent }) {
+function PlanVoiceNotes({ user, saveUser, plan, liveSignals, ensurePortfolio, accent }) {
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -554,8 +701,10 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, portfolioData, acce
     try {
       // adaptPlanToNotes (not just regenerateRoadmap) — rewrites today-forward, still-open days
       // too, so this note visibly changes actual tasks, not just the roadmap's narrative overview.
-      const updated = await adaptPlanToNotes(plan, updatedUser, liveSignals || {}, portfolioData);
+      const portfolio = await ensurePortfolio();
+      const updated = await adaptPlanToNotes(plan, updatedUser, liveSignals || {}, portfolio);
       saveUser({ ...updatedUser, masterPlan: updated });
+      PlanStore.flushPlanNow(updated, 'note added').catch(() => {});
       toast.success('Got it — today and the days ahead now reflect that.');
     } catch {
       saveUser(updatedUser); // note is kept even if the live refresh call fails — it'll be included next time the plan regenerates
