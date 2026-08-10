@@ -1,7 +1,7 @@
 // /api/parent/summary — the read-only progress view, for parents only.
 //
-//   GET                      → { students: [{ studentId, link, summary }] }
-//   GET ?studentId=<uuid>    → { student: { studentId, link, summary } }
+//   GET                      → { students: [{ studentId, link, summary }], profileComplete }
+//   GET ?studentId=<uuid>    → { student: { studentId, link, summary }, profileComplete }
 //
 // Two guards stand between a bearer token and a student's data, and both run on every request:
 //
@@ -18,7 +18,7 @@
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { requireParent, getActiveLink, getActiveLinksForParent, isUuid } from '../_lib/session.js';
 import { getParentSummary } from '../_lib/parentSummary.js';
-import { requireCompleteProfile } from '../_lib/parentProfile.js';
+import { getParentProfile, isProfileComplete } from '../_lib/parentProfile.js';
 
 const MISSING_SCHEMA = new Set(['42P01', '42883', 'PGRST202', 'PGRST205']);
 const isMissingSchema = (err) => !!err && (MISSING_SCHEMA.has(err.code) || /does not exist|schema cache/i.test(err.message || ''));
@@ -41,11 +41,32 @@ export default async function handler(req, res) {
 
   const supabase = getSupabaseAdmin();
 
-  // A third check, and the only one that is not about authorization: the account must have
-  // finished its declaration (see api/_lib/parentProfile.js). It is deliberately not load-bearing
-  // for privacy — the two guards above already are — so it fails open on a database without
-  // migration 0009 rather than locking out guardians whose children already consented.
-  if (!(await requireCompleteProfile(res, { supabase, userId: parent.id }))) return;
+  // ── Why the declaration does NOT gate this endpoint any more ─────────────
+  //
+  // It used to, and removing it took nothing away. Work through the two ways an active link can
+  // exist, because there are only two:
+  //
+  //   - The PARENT initiated it. Then api/parent/links.js already required a complete declaration
+  //     before it would send anything, and would not have sent it otherwise. The check here was
+  //     re-asking a question that had already been answered before the invitation left.
+  //
+  //   - The STUDENT initiated it. Then the declaration was never the point. Its entire job is to
+  //     let a student tell their mother apart from a stranger when an unexpected request arrives
+  //     (see api/_lib/parentProfile.js) — and a student who typed the address themselves is not
+  //     being asked to recognise anyone. Here the check was blocking the one case it was never
+  //     designed for, and it was blocking it at the worst possible moment: a parent who had just
+  //     accepted their own child's invitation, landing on a dashboard that answered every request
+  //     with a 403 until they filled in six fields and signed an attestation.
+  //
+  // So the gate could only ever fire on a family that had done everything right. It is gone, and
+  // the two checks that actually keep a stranger out — requireParent above, and getActiveLink
+  // per request below — are untouched and are the only ones that ever mattered.
+  //
+  // The completeness is still REPORTED, because the dashboard has a good reason to ask for those
+  // details and a good place to ask for them. It is a prompt now, not a wall.
+  const { row: profileRow, schemaMissing } = await getParentProfile(supabase, parent.id).catch(() => ({ row: null, schemaMissing: true }));
+  const profileComplete = schemaMissing || isProfileComplete(profileRow);
+
   const rawId = Array.isArray(req.query?.studentId) ? req.query.studentId[0] : req.query?.studentId;
   const studentId = rawId ? String(rawId) : null;
 
@@ -70,12 +91,12 @@ export default async function handler(req, res) {
       if (!student) return res.status(403).json({ error: 'You are not connected to that student.' });
 
       const summary = await getParentSummary(supabase, student);
-      return res.status(200).json({ student: { studentId: student.id, link: linkShape(link), summary } });
+      return res.status(200).json({ profileComplete, student: { studentId: student.id, link: linkShape(link), summary } });
     }
 
     // ── Every connected student ──────────────────────────────────────────────
     const links = await getActiveLinksForParent(supabase, parent.id);
-    if (!links.length) return res.status(200).json({ students: [] });
+    if (!links.length) return res.status(200).json({ profileComplete, students: [] });
 
     // Sequential rather than Promise.all, matching api/auth/account.js's reasoning: a household
     // has a handful of children at most, and a burst of parallel queries per poll is a far better
@@ -91,9 +112,9 @@ export default async function handler(req, res) {
       });
     }
 
-    return res.status(200).json({ students });
+    return res.status(200).json({ profileComplete, students });
   } catch (err) {
-    if (isMissingSchema(err)) return res.status(200).json({ students: [] });
+    if (isMissingSchema(err)) return res.status(200).json({ profileComplete, students: [] });
     console.error('parent summary error:', err);
     return res.status(500).json({ error: 'Could not load progress.' });
   }

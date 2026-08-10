@@ -24,7 +24,16 @@ const fmtDate = (value) => {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 };
 
-function Stat({ icon: Icon, hue, label, value, sub }) {
+/**
+ * One number, with the thing it is actually evidence of written underneath it.
+ *
+ * `means` is not decoration and it is not a tooltip. A parent reading "412 XP" has no idea whether
+ * that is a lot, and the honest answer — that it is a participation count and not an achievement —
+ * is the kind of thing a product usually leaves the reader to get wrong in whichever direction
+ * suits their mood. Written out, in the smallest type on the card, permanently visible: a number
+ * whose meaning you have to guess at is a number that will be used in an argument.
+ */
+function Stat({ icon: Icon, hue, label, value, sub, means }) {
   return (
     <div style={glass2({ display: 'flex', gap: 12, alignItems: 'flex-start' })}>
       <div style={{
@@ -38,6 +47,7 @@ function Stat({ icon: Icon, hue, label, value, sub }) {
         <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{value}</div>
         <div style={{ fontSize: 11.5, color: C.t2, marginTop: 2 }}>{label}</div>
         {sub && <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{sub}</div>}
+        {means && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 6, lineHeight: 1.5 }}>{means}</div>}
       </div>
     </div>
   );
@@ -172,24 +182,28 @@ export default function ProgressSummary({ summary }) {
           value={`${effort?.activeDaysLast7 ?? 0} of 7`}
           label="Days studied this week"
           sub={`${effort?.activeDaysLast28 ?? 0} of the last 28`}
+          means="A day counts if they did any work at all. Three or four regular days beats one long one."
         />
         <Stat
           icon={Sparkles} hue={C.violet}
           value={(effort?.xp ?? 0).toLocaleString()}
           label="XP earned"
           sub={`Level ${effort?.level ?? 1}`}
+          means="Time put in, not ability. It only ever goes up, so it is worth watching the rate rather than the total."
         />
         <Stat
           icon={BookOpenCheck} hue={C.blue}
           value={coursework?.lessonsVerified ?? 0}
           label="Lessons passed"
           sub={`${coursework?.unitsVerified ?? 0} units verified`}
+          means="Passed means they answered the check questions correctly — not just that they opened it."
         />
         <Stat
           icon={Target} hue={C.cyan}
           value={coursework?.quizzes?.averageScore != null ? `${coursework.quizzes.averageScore}%` : '—'}
           label="Average quiz score"
           sub={coursework?.quizzes?.taken ? `${coursework.quizzes.taken} quizzes taken` : 'No quizzes yet'}
+          means="Practice, not exams. Quizzes get harder as they progress, so a dip often means new material."
         />
       </div>
 

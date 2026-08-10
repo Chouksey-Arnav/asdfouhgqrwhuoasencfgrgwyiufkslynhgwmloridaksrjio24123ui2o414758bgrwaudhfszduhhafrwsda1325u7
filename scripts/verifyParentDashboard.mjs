@@ -79,6 +79,7 @@ const PUBLIC_HANDLERS = {
   'api/auth/google.js':          'exchanges a Google token for a session',
   'api/auth/reset-password.js':  'recovery path for someone who cannot sign in by definition',
   'api/auth/logout.js':          'drops a token; must work even for one already invalid',
+  'api/parent/claim.js':         'redeems an invitation for someone who has no account yet — a session is what it MINTS',
   'api/send-email.js':           'contact form, reachable from the signed-out landing page',
   'api/groq.js':                 'AI proxy, rate-limited on its own terms',
 };
@@ -478,16 +479,27 @@ function checkProfileGate() {
     /schemaMissing/.test(links) && /\.\.\.claimColumns/.test(links),
     'naming an unknown column fails the whole insert, which would break inviting entirely');
 
+  // ── …and reading a dashboard deliberately does NOT require it ────────────
+  //
+  // This assertion is the inverse of the one above, and it is here because the removal was a
+  // decision rather than a regression. The declaration is what lets a student recognise an
+  // unexpected request; it was never what kept a stranger out, and every active link has either
+  // already passed the check above (parent-initiated) or was created by a student who typed the
+  // address themselves (student-initiated). Re-checking at read time could therefore only ever
+  // fire on a family that had done everything right — and it did, on the single most important
+  // screen in the feature. Putting it back means putting that wall back.
   const summary = read('api/parent/summary.js');
-  assert('the summary endpoint is gated on the declaration too',
-    /requireCompleteProfile/.test(summary));
-  assert('…and still behind requireParent and getActiveLink first',
-    summary.indexOf('requireParent') < summary.indexOf('requireCompleteProfile'),
-    'the declaration is an accountability check, not the thing keeping a stranger out');
+  assert('reading a dashboard is NOT gated on the declaration',
+    !/requireCompleteProfile/.test(summary),
+    'the gate could only fire on a parent whose own child had just invited them');
+  assert('…and the two guards that DO keep a stranger out are both still there',
+    /requireParent/.test(summary) && /getActiveLink/.test(summary));
+  assert('the declaration is still reported to the client, so it can be asked for',
+    /profileComplete/.test(summary));
 
   const lib = read('api/_lib/parentProfile.js');
-  assert('the declaration gate fails OPEN on a database without migration 0009',
-    /if \(schemaMissing\) return true;/.test(lib),
+  assert('a database without migration 0009 reports "nothing to complete" rather than failing',
+    /schemaMissing \|\| isProfileComplete/.test(read('api/parent/profile.js')),
     'failing closed would lock out guardians whose children have already consented, to enforce a '
     + 'check that was never the reason their access was safe');
   assert('completed_at is derived server-side, never accepted from the client',
@@ -551,6 +563,149 @@ function checkProfileValidation() {
     ATTESTATION_TEXT);
 }
 
+// ── 7c. The passwordless claim ──────────────────────────────────────────────
+//
+// api/parent/claim.js is the only public endpoint in this repo that CREATES an account and MINTS a
+// session in one request, which makes it the highest-consequence file here. Its safety rests on
+// four properties, each of which is one edit away from silently disappearing.
+
+async function checkClaimFlow() {
+  section('The passwordless parent claim');
+
+  const claim = read('api/parent/claim.js');
+
+  // 1. THE DESTINATION IS THE INVITATION'S, NOT THE CALLER'S.
+  //
+  // This is the whole reason a shareable code is safe to share. Holding a code lets you ASK for a
+  // one-time code; only whoever can read the invited mailbox can receive it. An edit that took the
+  // address from the request body instead would turn every code into a bearer credential — and it
+  // would still pass every functional test, because the happy path sends the same address either
+  // way.
+  assert('the one-time code is sent to the address on the invitation row',
+    /issueOtp\(supabase, \{ email: inviteEmail/.test(claim)
+    && /const inviteEmail = String\(link\.invite_email/.test(claim),
+    'taking the destination from the request would make a leaked code a working credential');
+  assert('no email is ever read out of the request body',
+    !/body\?\.email|body\.email/.test(claim),
+    'there is exactly one address this flow may mail, and the invitation names it');
+
+  // 2. THE CODE IS CHECKED BEFORE ANYTHING IS CREATED.
+  // Compared on the CALL sites, not on the first mention of each name — the file's header
+  // discusses both, and a comment ordering itself correctly would be a check that never fails.
+  assert('the OTP is verified before an account is created',
+    claim.indexOf('await checkOtp(') < claim.indexOf(".rpc('find_or_create_parent_for_claim'"),
+    'creating first would let anyone holding a code conjure accounts at other people addresses');
+  assert('a failed OTP returns before the account step',
+    /if \(!otpResult\.ok\)[\s\S]{0,200}?return res\.status/.test(claim));
+
+  // 3. ROLE IS STILL WRITE-ONCE.
+  assert('the claim never updates a role',
+    !/\.update\(\s*\{[^}]*[\s{,]role\s*:/s.test(claim),
+    'an address with a student account must be refused, never upgraded');
+  assert('an address that already has a student account is refused with an explanation',
+    /role_conflict/.test(claim) && /already has a student account/i.test(claim));
+
+  // 4. THERE IS STILL EXACTLY ONE WAY A LINK IS MADE.
+  assert('the claim redeems through accept_parent_link like every other path',
+    /rpc\('accept_parent_link'/.test(claim),
+    'a second implementation of "make the link" is a second place for an authorization bug');
+  assert('only student-initiated invitations are claimable this way',
+    /link\.initiated_by !== 'student'/.test(claim),
+    'a student account owns the person entire body of work and must not be conjured by a code');
+
+  // The invitation is still resolved as pending-only, in the query rather than afterwards, so a
+  // consumed invitation is indistinguishable from a made-up one and no caller can forget to check.
+  assert("the invitation lookup filters on status='pending' in the query",
+    /\.eq\('status', 'pending'\)/.test(claim));
+
+  // The address is masked on the way out. The preview is reachable by anyone holding a code, and a
+  // whole email address on it would make guessing codes worth something.
+  assert('the preview never returns a whole email address',
+    /emailHint: maskEmail\(/.test(claim) && !/invite_email,\s*$/m.test(claim));
+
+  // ── The code itself ──────────────────────────────────────────────────────
+  const links = await import('../api/_lib/parentLinks.js');
+
+  const codes = new Set();
+  for (let i = 0; i < 2000; i += 1) codes.add(links.mintInviteCode());
+  assert('minted codes are 8 characters and unique across 2000 draws',
+    codes.size === 2000 && [...codes].every((c) => c.length === 8), `distinct: ${codes.size}`);
+  assert('the alphabet excludes every glyph a person misreads (I L O U 0 1)',
+    [...codes].every((c) => !/[ILOU01]/.test(c)),
+    'this code gets read aloud across a kitchen and typed by somebody who did not choose to be');
+
+  const sample = [...codes][0];
+  assert('a code round-trips through the format people are shown',
+    links.normalizeInviteCode(links.formatInviteCode(sample)) === sample);
+  assert('case and spacing do not matter',
+    links.normalizeInviteCode(` ${links.formatInviteCode(sample).toLowerCase()} `) === sample);
+  assert('junk is rejected rather than guessed at',
+    links.normalizeInviteCode('hello') === '' && links.normalizeInviteCode('') === '',
+    'guessing an O into something turns a typo the person could fix into a code that does not exist');
+
+  // ── The share kit is scoped to the sender ────────────────────────────────
+  const pending = {
+    id: 'l1', status: 'pending', initiated_by: 'student', invite_email: 'p@example.test',
+    invite_code: sample, created_at: 1,
+  };
+  assert('the sender of a pending invitation gets the code back',
+    links.serializeLink(pending, 'student').share?.code === sample,
+    'without it there is no way to recover from an email that never arrived');
+  assert('the RECIPIENT is never handed the code',
+    links.serializeLink(pending, 'parent').share === null,
+    'they already hold the invitation; handing it back only invites them to forward it');
+  assert('an accepted link stops exposing a code',
+    links.serializeLink({ ...pending, status: 'active' }, 'student').share === null);
+
+  // ── Sign-in by code ──────────────────────────────────────────────────────
+  const login = read('api/auth/login.js');
+  assert("emailed-code sign-in only accepts a token issued for 'signin'",
+    /purpose: 'signin'/.test(login),
+    "a signup or password-reset token must not be spendable as a session");
+  assert('the code path consumes the token atomically',
+    /consumeVerificationToken/.test(login),
+    'a replayable token is a session anybody can mint twice');
+
+  const sendOtp = read('api/auth/send-otp.js');
+  assert("a 'signin' code for an unknown address reports success without sending",
+    /purpose === 'password_reset' \|\| purpose === 'signin'\) && !existing/.test(sendOtp),
+    'otherwise this endpoint tells strangers which addresses have accounts');
+
+  // ── One implementation of "is this code correct" ─────────────────────────
+  const otp = read('api/_lib/otp.js');
+  assert('the attempt counter is an optimistic-concurrency guard, not a read-then-write',
+    /\.eq\('attempts', current\.attempts\)/.test(otp),
+    'without it, parallel requests share one attempt and the five-guess cap stops existing');
+  assert('codes are compared in constant time', /timingSafeEqual/.test(otp));
+  assert('a wrong guess does not consume the code',
+    otp.indexOf("if (!matches) return fail") < otp.indexOf("update({ consumed: true }).eq('id', afterIncrement.id)"),
+    'burning the code on a typo would make the retry the person is about to make impossible');
+  assert('requesting a new code invalidates the old one',
+    /update\(\{ consumed: true \}\)[\s\S]{0,120}?\.eq\('consumed', false\)/.test(otp),
+    'otherwise "resend" adds five guesses to the budget rather than replacing them');
+  for (const file of ['api/auth/send-otp.js', 'api/auth/verify-otp.js', 'api/parent/claim.js']) {
+    assert(`${file} uses the shared code machinery rather than its own`,
+      /_lib\/otp\.js/.test(read(file)),
+      'three copies of "is this code correct" is two too many');
+  }
+
+  // ── The migration keeps 0008's lockdown ──────────────────────────────────
+  const migration = read('supabase/migrations/0010_parent_access.sql');
+  assert('the new RPC is not callable by the anon key',
+    /find_or_create_parent_for_claim\(text\)/.test(migration)
+    && /revoke all on function %s from public/.test(migration)
+    && /'anon', 'authenticated'/.test(migration),
+    'migration 0008 exists because a public RPC is a public API');
+  assert('…and service_role keeps it, so /api/* still works',
+    /grant execute on function %s to service_role/.test(migration));
+  assert('the new RPC pins its search_path', /set search_path = public/.test(migration));
+  assert('the account it creates is a parent, inserted rather than updated',
+    /insert into app_users \(email, role\) values \(norm, 'parent'\)/.test(migration)
+    && !/update app_users[\s\S]{0,200}?set[\s\S]{0,80}?role/.test(migration));
+  assert('a concurrent claim for the same address resolves rather than erroring',
+    /when unique_violation then/.test(migration));
+}
+
 // ── 8. The routes exist in both deployment targets ──────────────────────────
 
 function checkRouting(files) {
@@ -584,6 +739,7 @@ checkDerivation();
 await checkDigest();
 checkProfileGate();
 checkProfileValidation();
+await checkClaimFlow();
 checkRouting(files);
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

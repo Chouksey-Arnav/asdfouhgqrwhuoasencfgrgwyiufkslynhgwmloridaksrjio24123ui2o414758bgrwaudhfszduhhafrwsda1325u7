@@ -72,6 +72,21 @@ export const resetPassword = (email, verificationToken, password) =>
 
 export const login = (email, password) => req('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 
+// ── Sign in with an emailed code, no password ────────────────────────────────
+//
+// The way back in for a parent account created by the claim flow, which deliberately has no
+// password (see api/parent/claim.js). Same three-step chain as signup and password reset — code
+// out, code back, spend the proof — except the thing it buys is a session rather than a password.
+//
+// sendSigninCode always reports success, even for an address with no account, so it cannot be used
+// to find out which emails are registered. That means a wrong address here looks exactly like a
+// right one until the code never arrives, which is the correct trade: the alternative tells
+// strangers who has an account.
+export const sendSigninCode = (email) => sendOtp(email, 'signin');
+export const verifySigninCode = (email, code) => verifyOtp(email, code, 'signin');
+export const loginWithCode = (email, verificationToken) =>
+  req('/auth/login', { method: 'POST', body: JSON.stringify({ email, verificationToken }) });
+
 // Exchanges a Supabase Auth access token (minted by supabase.auth.signInWithOAuth in
 // the browser, see src/lib/supabaseClient.js) for this app's own session token.
 // `role` is honoured only when this sign-in CREATES the account — see api/auth/google.js. An

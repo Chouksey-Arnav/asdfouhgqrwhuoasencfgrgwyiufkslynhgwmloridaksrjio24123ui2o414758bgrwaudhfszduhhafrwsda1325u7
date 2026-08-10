@@ -83,8 +83,8 @@ const EXPECTED_TABLES = [
 
 /** Every function the API calls by name via supabase.rpc(). */
 const EXPECTED_FUNCTIONS = [
-  'accept_parent_link', 'bump_progress_counters', 'revoke_links_on_user_delete', 'save_master_plan',
-  'touch_parent_profile_updated_at',
+  'accept_parent_link', 'bump_progress_counters', 'find_or_create_parent_for_claim',
+  'revoke_links_on_user_delete', 'save_master_plan', 'touch_parent_profile_updated_at',
 ];
 
 // ── Cluster management ──────────────────────────────────────────────────────
@@ -311,7 +311,7 @@ function checkFunctionExposure(conn, db) {
   // Roles are Supabase's, not Postgres'. On a bare cluster they do not exist, so the grant to
   // examine is the PUBLIC one — which is the one that mattered anyway, since anon and authenticated
   // inherit through it.
-  for (const fn of ['accept_parent_link', 'save_master_plan', 'bump_progress_counters']) {
+  for (const fn of ['accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'find_or_create_parent_for_claim']) {
     const publicExec = query(conn, db,
       `select has_function_privilege('public', p.oid, 'execute')
          from pg_proc p join pg_namespace n on n.oid = p.pronamespace
@@ -323,7 +323,7 @@ function checkFunctionExposure(conn, db) {
   const unpinned = query(conn, db,
     `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
-        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete', 'touch_parent_profile_updated_at')
+        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete', 'touch_parent_profile_updated_at', 'find_or_create_parent_for_claim')
         and coalesce(array_to_string(p.proconfig, ','), '') not like '%search_path%'
       order by 1`).split('\n').filter(Boolean);
   assert('every function pins its search_path', unpinned.length === 0,
@@ -468,6 +468,109 @@ function checkConstraints(conn, db) {
   assert('invite tokens are unique', !dupToken.ok, 'two links share an invite token hash');
 }
 
+// ── The passwordless parent claim (migration 0010) ──────────────────────────
+//
+// find_or_create_parent_for_claim is the function that turns "this person proved they can read the
+// invited mailbox" into an account. It is reachable, indirectly, by anyone holding an invitation
+// code, so its refusals matter as much as its successes — and all of them are decided in SQL,
+// where no amount of reading the JavaScript will tell you whether they work.
+async function checkParentClaim(conn, db) {
+  section('The parent claim function');
+
+  const call = (email) => query(conn, db,
+    `select find_or_create_parent_for_claim('${email}')::text`);
+
+  // ── Creates ──────────────────────────────────────────────────────────────
+  const created = JSON.parse(call('claim-new@example.test'));
+  assert('an unknown address becomes a parent account', created.ok === true && created.created === true,
+    JSON.stringify(created));
+
+  const row = query(conn, db,
+    `select role || '|' || (password_hash is null)::text from app_users where email='claim-new@example.test'`);
+  assert("…with role='parent' and no password", row === 'parent|true', `got ${row}`);
+
+  // ── Finds ────────────────────────────────────────────────────────────────
+  const again = JSON.parse(call('claim-new@example.test'));
+  assert('a returning parent is found, not duplicated', again.ok === true && again.created === false
+    && again.userId === created.userId, JSON.stringify(again));
+
+  const count = query(conn, db, `select count(*) from app_users where email='claim-new@example.test'`);
+  assert('…and there is still exactly one row for that address', count === '1', `got ${count}`);
+
+  // Case is not identity. An invitation addressed to Priya@Example.test and a claim arriving as
+  // priya@example.test are the same mailbox, and creating a second account for the second spelling
+  // would strand somebody on an empty dashboard with no way to tell why.
+  const mixedCase = JSON.parse(call('Claim-New@Example.TEST'));
+  assert('the address is matched case-insensitively',
+    mixedCase.ok === true && mixedCase.userId === created.userId, JSON.stringify(mixedCase));
+
+  // ── Refuses, rather than upgrading ───────────────────────────────────────
+  //
+  // The escalation this prevents: a student, at their own address, becoming their own guardian.
+  // Role is written once at account creation and by nothing afterwards, and a function that
+  // "helpfully" flipped this row would be the one exception that undoes the rule everywhere.
+  psql(conn, db, ['-c',
+    `insert into app_users (email, name, role) values ('claim-student@example.test','S','student')`]);
+  const conflict = JSON.parse(call('claim-student@example.test'));
+  assert('an address that already has a student account is refused',
+    conflict.ok === false && conflict.reason === 'role_conflict', JSON.stringify(conflict));
+
+  const stillStudent = query(conn, db,
+    `select role from app_users where email='claim-student@example.test'`);
+  assert('…and that account is left exactly as it was', stillStudent === 'student', `got ${stillStudent}`);
+
+  const blank = JSON.parse(call('   '));
+  assert('a blank address is refused', blank.ok === false && blank.reason === 'invalid_email',
+    JSON.stringify(blank));
+
+  // ── Races ────────────────────────────────────────────────────────────────
+  //
+  // Two taps on the same button, or a retry on a flaky phone connection. Both callers find no
+  // account, both insert, and one loses on the unique index — which must resolve to the winner's
+  // row rather than surfacing as an error on the last screen of a flow the person already
+  // completed. This is the check that a plain read-then-write in Node would fail.
+  const racers = await parallelQueries(conn, db, Array.from({ length: 4 }, () =>
+    `select find_or_create_parent_for_claim('claim-race@example.test')::text`));
+  const parsed = racers.filter(r => r.ok).map(r => JSON.parse(r.out));
+  assert('four concurrent claims all succeed', racers.every(r => r.ok) && parsed.every(p => p.ok === true),
+    racers.filter(r => !r.ok).map(r => r.out).join(' | '));
+  assert('…and all four resolve to the same account',
+    new Set(parsed.map(p => p.userId)).size === 1,
+    JSON.stringify(parsed.map(p => p.userId)));
+  assert('…and exactly one of them created it',
+    parsed.filter(p => p.created === true).length === 1,
+    JSON.stringify(parsed.map(p => p.created)));
+
+  // ── The code index ───────────────────────────────────────────────────────
+  section('Invitation codes');
+
+  const s1 = query(conn, db, `insert into app_users (email,name,role) values ('code-s1@example.test','S1','student') returning id`);
+  const s2 = query(conn, db, `insert into app_users (email,name,role) values ('code-s2@example.test','S2','student') returning id`);
+  // Token hashes are namespaced to this section: they are globally unique by their own index, and
+  // borrowing a value another check already inserted would fail here for a reason that has nothing
+  // to do with codes.
+  const mkLink = (student, email, hash, code, status = 'pending') => tryExec(conn, db, ['-c',
+    `insert into parent_links (student_user_id, status, initiated_by, invite_email, invite_token_hash, invite_code)
+     values ('${student}'::uuid, '${status}', 'student', '${email}', repeat('c0de${hash}',16), '${code}')`]);
+
+  assert('a pending invitation can carry a code', mkLink(s1, 'code-p1@example.test', '1', 'ABCD2345').ok);
+
+  const dupCode = mkLink(s2, 'code-p2@example.test', '2', 'ABCD2345');
+  assert('two live invitations cannot share a code', !dupCode.ok,
+    'a code that names two invitations names neither');
+
+  const dupCaseCode = mkLink(s2, 'code-p3@example.test', '3', 'abcd2345');
+  assert('…case-insensitively', !dupCaseCode.ok,
+    'codes are matched with ilike, so a lowercase duplicate would be a real collision');
+
+  // Answered invitations release their code back into the space. Without the partial predicate the
+  // codes would be permanently consumed, and a family that reconnected later would collide with
+  // their own history.
+  psql(conn, db, ['-c', `update parent_links set status='revoked' where invite_code='ABCD2345'`]);
+  const reused = mkLink(s2, 'code-p4@example.test', '4', 'ABCD2345');
+  assert('an answered invitation releases its code', reused.ok, reused.out.split('\n').slice(0, 2).join(' '));
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 const files = migrationFiles();
@@ -488,6 +591,7 @@ await withDatabase(async (conn) => {
     checkConstraints(conn, db);
     await checkConcurrency(conn, db);
     await checkDeletionSemantics(conn, db);
+    await checkParentClaim(conn, db);
     // Idempotency runs last: it re-applies over a database that now has test rows in it, which is
     // a strictly harder case than a pristine one and closer to the production situation a retry
     // actually happens in.

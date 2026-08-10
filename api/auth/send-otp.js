@@ -1,7 +1,7 @@
 // /api/auth/send-otp — generates a 6-digit code, stores its hash in Supabase,
-// and emails it via Nodemailer. Rate-limited per email and per IP using the
-// database as the source of truth (an in-memory counter doesn't survive
-// across ephemeral serverless instances).
+// and emails it via Nodemailer. The minting, the rate limit and the code check all live in
+// api/_lib/otp.js so that this handler, api/auth/verify-otp.js and api/parent/claim.js cannot
+// drift into three subtly different answers to "is this code correct".
 //
 // `purpose` scopes what the code is for and is carried through to verify-otp:
 //   - 'signup'         proves inbox ownership before api/auth/complete-signup lets
@@ -9,19 +9,23 @@
 //   - 'password_reset' proves inbox ownership before api/auth/reset-password. Always
 //                       reports success even for unknown emails, to avoid leaking
 //                       which addresses have accounts.
-import crypto from 'crypto';
+//   - 'signin'         proves inbox ownership before api/auth/login mints a session with no
+//                       password at all. This is what a parent account uses to get back in:
+//                       the claim flow (api/parent/claim.js) creates it WITHOUT a password on
+//                       purpose, and without this it would be a one-shot account, usable on the
+//                       day their child invited them and never again.
+//
+//                       It is not a new trust assumption. api/auth/reset-password already turns
+//                       control of an inbox into control of the account, and has since the day
+//                       passwords were added — this only stops requiring the person to invent a
+//                       password on the way through. Like 'password_reset', it reports success
+//                       for unknown addresses so the endpoint cannot be used to test which
+//                       emails have accounts.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { sendOtpEmail } from '../_lib/mailer.js';
+import { issueOtp, overRequestLimit, ipOf } from '../_lib/otp.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const OTP_TTL_MS = 10 * 60 * 1000;
-const MAX_PER_WINDOW = 5;
-const WINDOW_MS = 15 * 60 * 1000;
-const PURPOSES = ['signup', 'password_reset'];
-
-function hashCode(code) {
-  return crypto.createHash('sha256').update(code).digest('hex');
-}
+const PURPOSES = ['signup', 'password_reset', 'signin'];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -43,7 +47,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Enter a valid email address.' });
   }
 
-  const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown').split(',')[0].trim();
+  const ip = ipOf(req);
 
   try {
     const supabase = getSupabaseAdmin();
@@ -57,35 +61,16 @@ export default async function handler(req, res) {
     if (purpose === 'signup' && existing?.password_hash) {
       return res.status(409).json({ error: 'An account already exists for this email. Log in instead.' });
     }
-    if (purpose === 'password_reset' && !existing) {
-      // Don't reveal whether the address has an account — report success without sending.
+    // Don't reveal whether the address has an account — report success without sending.
+    if ((purpose === 'password_reset' || purpose === 'signin') && !existing) {
       return res.status(200).json({ success: true });
     }
 
-    const windowStart = new Date(Date.now() - WINDOW_MS).toISOString();
-    const [{ count: emailCount }, { count: ipCount }] = await Promise.all([
-      supabase.from('otp_codes').select('id', { count: 'exact', head: true }).eq('email', email).gte('created_at', windowStart),
-      supabase.from('otp_codes').select('id', { count: 'exact', head: true }).eq('ip', ip).gte('created_at', windowStart),
-    ]);
-    if ((emailCount ?? 0) >= MAX_PER_WINDOW || (ipCount ?? 0) >= MAX_PER_WINDOW) {
+    if (await overRequestLimit(supabase, { email, ip })) {
       return res.status(429).json({ error: 'Too many code requests. Try again in a few minutes.' });
     }
 
-    // Invalidate any still-active codes for this email+purpose so a fresh request
-    // can't be combined with an older one to multiply the guess budget.
-    await supabase.from('otp_codes').update({ consumed: true }).eq('email', email).eq('purpose', purpose).eq('consumed', false);
-
-    const code = String(crypto.randomInt(0, 1000000)).padStart(6, '0');
-    const { error: dbError } = await supabase.from('otp_codes').insert({
-      email,
-      ip,
-      purpose,
-      code_hash: hashCode(code),
-      expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
-    });
-    if (dbError) throw dbError;
-
-    await sendOtpEmail(email, code, purpose);
+    await issueOtp(supabase, { email, ip, purpose });
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error('send-otp error:', err);

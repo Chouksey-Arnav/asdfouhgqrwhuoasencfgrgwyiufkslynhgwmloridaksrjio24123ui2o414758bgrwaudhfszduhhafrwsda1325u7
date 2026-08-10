@@ -148,6 +148,11 @@ export const PARENT_VIEWS = {
   digest: '/family/digest',
   activity: '/family/activity',
   connections: '/family/connections',
+  // What this dashboard is, what each number means, where the privacy line is drawn, and what to
+  // do when something is not working. Addressable because it is the page a support reply wants to
+  // link to, and because a parent who has to hunt for the explanation reads the numbers without
+  // one.
+  guide: '/family/guide',
   settings: '/family/settings',
   // The intake a parent account must finish before it can ask for anything (see
   // ParentSetup.jsx and api/parent/profile.js). Addressable so a half-finished one can be

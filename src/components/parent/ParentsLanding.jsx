@@ -17,11 +17,13 @@
 // It states the limits as prominently as the features on purpose. "You will not see their essays
 // or their coach conversations" is not fine print here; it is the product, and it is also the
 // sentence that gets a sceptical sixteen-year-old to accept the request.
-import React from 'react';
+import React, { useState } from 'react';
 import {
   ShieldCheck, Eye, EyeOff, ArrowRight, Users, LineChart, Brain, CalendarDays, Mail, Lock, LogIn,
+  KeyRound,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, CC, R, tint, onTint } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, inp, CC, R, tint, onTint } from '../../lib/theme';
+import { normalizeInviteCode } from '../../lib/parentApi';
 import { AUTH_VIEWS, LEGAL_VIEWS } from '../../lib/routes';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 import AnimatedLogo from '../AnimatedLogo';
@@ -40,11 +42,68 @@ const NEVER = [
   'Individual quiz answers or what they got wrong',
 ];
 
-const STEPS = [
+// Two genuinely different routes in, and which one a family is on is decided by who moved first.
+// Splitting them out matters: the invited-parent route is the common one and takes half a minute,
+// and describing only the other one — the account, the declaration, the attestation — is how a
+// parent who had already been invited concluded that this was going to be an ordeal.
+const STEPS_INVITED = [
+  { n: '1', title: 'Open the link or enter your code', body: 'Whatever your student sent you — the email, a text, or eight characters read out over the phone. All three open the same invitation.' },
+  { n: '2', title: 'Read what would be shared', body: 'Their effort and results, never their notes, essays or coach conversations. Stated in full before you agree to anything.' },
+  { n: '3', title: 'Type the 6-digit code we email you', body: 'That is the whole sign-up. No password to invent, and it proves the invitation reached the person it was addressed to.' },
+];
+
+const STEPS_INVITING = [
   { n: '1', title: 'Create a parent account', body: 'Your own account with your own email — never your student’s login. It takes a minute and asks who you are, how you are related, and a number we can reach you on.' },
   { n: '2', title: 'Send a request to your student', body: 'Addressed to the email they use to sign in. It names you and states exactly what would be shared and what would not.' },
   { n: '3', title: 'They accept — or they don’t', body: 'Nothing about them reaches you until they say yes from their own inbox. Either of you can end it afterwards, in one tap, and it takes effect immediately.' },
 ];
+
+/**
+ * The third way in, for a parent holding a code and no link.
+ *
+ * It exists because the two channels this product controls — the email and the in-app link — are
+ * both things that can fail to reach somebody, and a code read out loud is the one that cannot.
+ * Full page navigation rather than in-app routing on purpose: the invitation screen resolves the
+ * invitation from the URL at mount, so arriving there by a real navigation is the simplest correct
+ * thing and works identically from a bookmark, a retype, or a share sheet.
+ */
+function CodeEntry() {
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
+
+  const submit = (e) => {
+    e.preventDefault();
+    const code = normalizeInviteCode(value);
+    if (!code) { setError('That should be 8 characters — letters and numbers, no spaces needed.'); return; }
+    window.location.href = `/parent-invite?code=${encodeURIComponent(code)}`;
+  };
+
+  return (
+    <form onSubmit={submit} style={CC({ gap: 10 })}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
+        <input
+          value={value}
+          onChange={(e) => { setValue(e.target.value); setError(''); }}
+          placeholder="ABCD-EFGH"
+          aria-label="Invitation code"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={20}
+          style={inp({
+            flex: '1 1 180px', minWidth: 0, textTransform: 'uppercase',
+            letterSpacing: '.12em', fontWeight: 700,
+            fontFamily: 'ui-monospace,SFMono-Regular,Menlo,monospace',
+          })}
+        />
+        <button type="submit" style={btn(C.blueGrad)}>
+          <KeyRound size={14} /> Continue
+        </button>
+      </div>
+      {error && <div style={{ fontSize: 12, color: C.roseL }}>{error}</div>}
+    </form>
+  );
+}
 
 /** Cards that reflow by available width rather than by a breakpoint guess. */
 const autoGrid = (min = 240, gap = 14) => ({
@@ -184,11 +243,39 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
 
       {/* ── How it works ───────────────────────────────────────────────────── */}
       <Section style={{ paddingBottom: 36 }}>
-        <h2 style={{ fontSize: 22, fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: '0 0 16px' }}>
-          How you get connected
+        <h2 style={{ fontSize: 22, fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: '0 0 6px' }}>
+          If your student already invited you
         </h2>
+        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: '0 0 16px' }}>
+          About thirty seconds, and there is no password anywhere in it.
+        </p>
         <div style={CC({ gap: 12 })}>
-          {STEPS.map(({ n, title, body }) => (
+          {STEPS_INVITED.map(({ n, title, body }) => (
+            <div key={n} style={glass({ padding: 18, ...R({ gap: 14, alignItems: 'flex-start' }) })}>
+              <div style={{
+                width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: 'flex',
+                alignItems: 'center', justifyContent: 'center', fontFamily: C.FD, fontWeight: 800, fontSize: 14,
+                background: tint(C.green, 0.14), border: `1px solid ${tint(C.green, 0.32)}`, color: onTint(C.green),
+              }}>{n}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: C.t1 }}>{title}</div>
+                <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6, marginTop: 4 }}>{body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      <Section style={{ paddingBottom: 36 }}>
+        <h2 style={{ fontSize: 22, fontFamily: C.FD, fontWeight: 800, color: C.t1, margin: '0 0 6px' }}>
+          If you're the one starting
+        </h2>
+        <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: '0 0 16px' }}>
+          Longer, on purpose. A request arriving at a student's inbox has to say who is asking, and
+          that means we have to ask you first.
+        </p>
+        <div style={CC({ gap: 12 })}>
+          {STEPS_INVITING.map(({ n, title, body }) => (
             <div key={n} style={glass({ padding: 18, ...R({ gap: 14, alignItems: 'flex-start' }) })}>
               <div style={{
                 width: 30, height: 30, borderRadius: 9, flexShrink: 0, display: 'flex',
@@ -223,17 +310,27 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
             </h2>
           </div>
           <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.65, margin: 0 }}>
-            Open the link in that email — it takes you straight to the request, and it will walk
-            you through creating the account it needs. If you cannot find the email, ask them to
-            resend it from Settings ▸ Family Access, or create your account here and send the
-            request from your side instead.
+            Open the link they sent and it takes you straight to the request. If you cannot find it,
+            they can also give you an <strong style={{ color: C.t1 }}>8-character code</strong> from
+            Settings ▸ Family access — type it here and you land on exactly the same screen.
           </p>
+
+          <CodeEntry />
+
+          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>
+            The code on its own does not open anything. Connecting still needs a 6-digit code
+            emailed to the address your student invited, so a code you were sent by mistake, or one
+            somebody guessed, gets them nowhere.
+          </div>
+
+          <div style={{ height: 1, background: C.b1, margin: '4px 0' }} />
+
           <div style={R({ gap: 10, flexWrap: 'wrap' })}>
-            <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btn(C.blueGrad), textDecoration: 'none' }}>
-              Create a parent account <ArrowRight size={14} />
-            </a>
-            <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btnG(), textDecoration: 'none' }}>
+            <a href={AUTH_VIEWS.parentLogin} onClick={nav(onLogin)} style={{ ...btn(C.blueGrad), textDecoration: 'none' }}>
               <Eye size={13} /> Sign in to your dashboard
+            </a>
+            <a href={AUTH_VIEWS.parentSignup} onClick={nav(onSignUp)} style={{ ...btnG(), textDecoration: 'none' }}>
+              Create a parent account <ArrowRight size={14} />
             </a>
           </div>
         </div>
