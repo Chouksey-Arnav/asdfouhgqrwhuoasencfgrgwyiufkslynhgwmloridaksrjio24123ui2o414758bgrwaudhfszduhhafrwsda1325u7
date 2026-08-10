@@ -7,9 +7,56 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Target } from 'lucide-react';
-import { C, glass, glass2, btn, pill, accentFill } from '../lib/theme';
+import { Brain, ChevronRight, Sparkles, Flame, Trophy, Medal, ScrollText, Loader2, Target, Lock } from 'lucide-react';
+import { C, glass, glass2, btn, pill, accentFill, tint } from '../lib/theme';
 import { rankLabel } from '../lib/recommend';
+
+/**
+ * Locked state — shown before the student has enough completed quizzes for a
+ * ranking to mean anything (see MEDABRAIN_PICKS_UNLOCK_AT in lib/recommend.js).
+ * Framed the same way as the rest of the app's progressive-unlock cards
+ * (NextUnlockCard.jsx): a thing to look forward to, with a visible progress
+ * bar, not a bare "locked" wall.
+ */
+function LockedPicksCard({ progress }) {
+  const [have, need] = progress || [0, 3];
+  const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 0;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <Brain size={15} color={C.violetL} />
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Medabrain Picks</span>
+      </div>
+      <div style={{
+        position: 'relative', overflow: 'hidden', borderRadius: 18, padding: 22,
+        background: `linear-gradient(135deg,${tint(C.violet, 0.12)},${tint(C.violet, 0.03)})`,
+        border: `1px solid ${tint(C.violet, 0.32)}`,
+      }}>
+        <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: `radial-gradient(circle,${tint(C.violet, 0.18)},transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, position: 'relative' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Lock size={15} color={C.violetL} />
+          </div>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Medabrain is still learning your profile</div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
+              Ranked picks are built from your real performance — weak categories, your pathway,
+              your courses. A few completed quizzes give it enough signal to actually mean something,
+              instead of guessing. Finish {Math.max(need - have, 0)} more to unlock it.
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,${C.violet},${C.violetL})`, borderRadius: 3, transition: 'width .4s' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+              <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>{have} of {need} quizzes completed</span>
+              <span style={{ fontSize: 10.5, color: C.violetL, fontFamily: C.FM, fontWeight: 700 }}>{pct}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Built per call, never as a module-level literal: a literal snapshots the
 // palette at import time (which is Balanced Dark) and then never follows a
@@ -46,10 +93,16 @@ function RankBadge({ rank }) {
  * @param {Set|Array} [planQuizIds] quiz ids today's Plan specifically asked for — these are
  *   pulled to the front of the list (ahead of the normal ranking) and get a "Do for today"
  *   highlight, so the two quizzes the plan named are never buried in a ranked-by-weakness list.
+ * @param {boolean} [unlocked=true] whether the student has completed enough quizzes for the
+ *   ranking to be personalized — see MEDABRAIN_PICKS_UNLOCK_AT in lib/recommend.js. When false,
+ *   renders a progress card instead of `ranked` (which the caller may still pass, ignored).
+ * @param {[number,number]} [unlockProgress] [have, need] shown on the locked progress card.
  */
-export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabrain, compact = false, planQuizIds }) {
+export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabrain, compact = false, planQuizIds, unlocked = true, unlockProgress }) {
   const [brainNote, setBrainNote] = useState(null); // { rank, text }
   const [brainLoading, setBrainLoading] = useState(false);
+
+  if (!unlocked) return <LockedPicksCard progress={unlockProgress} />;
 
   const planIdSet = planQuizIds instanceof Set ? planQuizIds : new Set(planQuizIds || []);
   const isPlanPick = (p) => planIdSet.has(p.quiz.id);

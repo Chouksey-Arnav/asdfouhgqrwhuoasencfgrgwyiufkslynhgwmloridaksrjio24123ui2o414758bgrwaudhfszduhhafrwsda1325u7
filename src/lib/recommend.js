@@ -11,6 +11,36 @@
 const DIFF_WEIGHT = { Easy: 1, Medium: 0.86, Hard: 0.55, Expert: 0.35 };
 const REASON_PRIORITY = ['course', 'weak', 'pathway', 'streak', 'new'];
 
+// Below this many completed quizzes, category averages are too thin (0-2 data
+// points) to trust as a personalization signal — see MEDABRAIN_PICKS_UNLOCK_AT.
+export const MEDABRAIN_PICKS_UNLOCK_AT = 3;
+
+/** [have, need] toward unlocking Medabrain Picks — for the panel's progress card. */
+export function medabrainPicksProgress(qScores) {
+  return [Math.min(Object.keys(qScores || {}).length, MEDABRAIN_PICKS_UNLOCK_AT), MEDABRAIN_PICKS_UNLOCK_AT];
+}
+
+// Tiny deterministic string hash (FNV-1a) — used only to break score ties
+// per-student instead of falling back to Array.sort's stable original-index
+// order, which is what made two students with the same (often empty) profile
+// signals see byte-identical rankings. Deterministic per (studentKey, quizId)
+// pair so the SAME student sees a stable order across renders/sessions, but
+// DIFFERENT students never collapse to the same tie order.
+function hash32(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function studentTiebreak(studentKey, quizId) {
+  if (!studentKey) return 0;
+  // Small spread (0-3.99) — enough to break ties without ever overriding a
+  // real signal (weak-category gaps and course/pathway bonuses are 10-70+).
+  return (hash32(`${studentKey}::${quizId}`) % 400) / 100;
+}
+
 // Grade-stage framing — freshmen/sophomores have runway to explore broadly;
 // juniors/seniors are closer to standardized tests and applications, so a
 // known gap in a course category is worth more urgency than a brand-new one.
@@ -71,9 +101,14 @@ function primaryReason(reasons) {
  *   (mostly_b/below_b) raises the weight of quizzes that match a course currently being taken,
  *   since that's the material most likely to move an actual grade.
  * @param {number} opts.count         how many ranked picks to return (default 6)
+ * @param {string} [opts.studentKey]  a stable per-student identifier (any string that's unique
+ *   and constant for this student, e.g. a persisted local seed) used only to break score ties
+ *   deterministically per-student — see studentTiebreak() above. Without it, two students with
+ *   identical inputs (e.g. no quiz history yet, same pathway) get identical output, which reads
+ *   as "the app ignores my profile" even though the scoring itself is working correctly.
  * @returns {Array<{rank, quiz, reason, tags}>}
  */
-export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', gradeKey = null, gpaBand = null, count = 6 }) {
+export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = new Set(), pathwayCats = [], pathwayLabel = '', gradeKey = null, gpaBand = null, studentKey = null, count = 6 }) {
   const untaken = quizzes.filter(q => qScores[q.id] === undefined);
   if (!untaken.length) return [];
 
@@ -98,9 +133,14 @@ export function rankQuizzes({ quizzes, qScores, catAverages = {}, courseCats = n
     // Course-relevant material gets an extra boost when self-reported grades
     // are struggling — this is the practice most likely to move an actual GPA.
     if (courseCats?.has(quiz.cat)) score += strugglingGpa ? 27 : 20;
-    if (pathwayCats?.includes(quiz.cat)) score += 14;
+    // Pathway match — the strongest single signal for "which direction is this student actually
+    // headed", so it's weighted well above a generic category bonus. Doubled once the student has
+    // shown enough real activity (totalTaken >= MEDABRAIN_PICKS_UNLOCK_AT) for the pick to read as
+    // "Medabrain read your whole profile" rather than a shallow specialty-name match.
+    if (pathwayCats?.includes(quiz.cat)) score += totalTaken >= MEDABRAIN_PICKS_UNLOCK_AT ? 26 : 16;
     if (totalTaken < 5 && quiz.diff === 'Easy') score += 12;
     score *= DIFF_WEIGHT[quiz.diff] ?? 0.7;
+    score += studentTiebreak(studentKey, quiz.id);
 
     return { quiz, score, reasons };
   });
