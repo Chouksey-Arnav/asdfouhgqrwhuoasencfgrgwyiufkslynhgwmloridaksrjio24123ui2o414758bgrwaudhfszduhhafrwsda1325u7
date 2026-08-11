@@ -486,19 +486,50 @@ section('The limits that make a 6-digit code enough');
     JSON.stringify(good.body));
 }
 
-section('Asking for codes is rate limited');
+section('Asking for codes does not relay mail indefinitely');
 {
+  // ── Two mechanisms, and the burst is stopped by the first of them ─────────
+  //
+  // This section used to fire seven sends and assert a 429 on the last. That was asserting the
+  // MECHANISM rather than the property, and the mechanism changed: a request landing inside
+  // RESEND_FLOOR_MS of a live code no longer mints one, so a burst never accumulates the rows the
+  // 15-minute ceiling counts and never reaches it.
+  //
+  // What matters is unchanged and is now stronger — a burst costs exactly one email instead of
+  // five — so that is what is checked here, followed by the ceiling itself against the traffic it
+  // was actually built for: codes requested far enough apart to be real requests.
   seedInvitation({ email: 'flood@example.test', code: 'RSTV3456' });
+  const before = inbox.length;
   const results = [];
   // One client address throughout: this is the case the per-IP limit exists for.
   for (let i = 0; i < 7; i += 1) {
     results.push(await post(claim, { code: 'RSTV3456', step: 'send' }, '198.51.100.7'));
   }
-  assert('the first few succeed', results.slice(0, 5).every((r) => r.statusCode === 200),
-    results.map((r) => r.statusCode).join(','));
-  assert('and then it stops, rather than relaying mail indefinitely',
-    results.at(-1).statusCode === 429 && results.at(-1).body?.reason === 'rate_limited',
+  assert('every request is answered rather than erroring',
+    results.every((r) => r.statusCode === 200), results.map((r) => r.statusCode).join(','));
+  assert('but the burst costs exactly one email, not seven',
+    inbox.length - before === 1, `${inbox.length - before} messages sent`);
+  assert('…and the extra requests say so, so the client stops promising a second mail',
+    results.slice(1).every((r) => r.body?.reused === true),
     JSON.stringify(results.at(-1).body));
+  assert('the one code that was sent still works',
+    (await post(claim, { code: 'RSTV3456', step: 'verify', otp: lastCodeFor('flood@example.test') })).statusCode === 200);
+
+  // The ceiling, against requests spaced past the floor. Written straight into the store with
+  // backdated timestamps because the alternative is a test that sleeps for five minutes.
+  seedInvitation({ email: 'steady@example.test', code: 'RSTV7788' });
+  for (let i = 0; i < 5; i += 1) {
+    db.otp_codes.push({
+      id: `seeded-${i}`, email: 'steady@example.test', ip: '198.51.100.9', purpose: 'signin',
+      code_hash: 'x'.repeat(64), attempts: 0, consumed: true,
+      created_at: new Date(Date.now() - (i + 2) * 60_000).toISOString(),
+      expires_at: new Date(Date.now() - (i + 1) * 60_000).toISOString(),
+    });
+  }
+  const capped = await post(claim, { code: 'RSTV7788', step: 'send' }, '198.51.100.9');
+  assert('five codes in fifteen minutes is where it stops',
+    capped.statusCode === 429 && capped.body?.reason === 'rate_limited',
+    JSON.stringify(capped.body));
 }
 
 section('The emailed link still works');

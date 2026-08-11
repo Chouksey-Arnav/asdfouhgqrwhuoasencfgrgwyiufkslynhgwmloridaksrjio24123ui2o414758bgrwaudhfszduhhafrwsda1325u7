@@ -725,6 +725,75 @@ function checkRouting(files) {
     !/supabase/i.test(client) && /\/api\/parent/.test(client));
 }
 
+/**
+ * The ways a parent gets in, and stays in.
+ *
+ * ── Why every one of these is a regression test ─────────────────────────────
+ * All of them shipped broken at once, and none of them announced itself. The schema drift that
+ * killed sign-in presented as "that code is wrong"; a bookmarked dashboard presented as the
+ * marketing page; a lapsed session presented as numbers that had stopped moving; a parent signing
+ * in at /parents/login with a student account presented as the student app. Not one produced an
+ * error anybody could report, which is precisely why they are pinned here.
+ */
+function checkParentAuthPaths() {
+  section('A parent can get in, and get back in');
+
+  const otp = read('api/_lib/otp.js');
+  assert('a live code is reused rather than re-sent within the floor',
+    /RESEND_FLOOR_MS/.test(otp) && /resendWaitMs/.test(otp),
+    'without it every reload of a sign-in screen burns another metered email for a code already in the inbox');
+  assert('…but never a code that has run out of guesses',
+    /attempts \?\? 0\) >= MAX_ATTEMPTS\) return 0/.test(otp),
+    'reusing a burnt code turns one mistyped digit into a lockout with no way out');
+  assert('…and never an expired one',
+    /new Date\(data\.expires_at\) < new Date\(\)\) return 0/.test(otp),
+    'suppressing the send that would replace a dead code leaves the person with nothing usable');
+  assert('the two rate-limit ceilings are separate',
+    /MAX_PER_EMAIL_WINDOW/.test(otp) && /MAX_PER_IP_WINDOW/.test(otp),
+    'one shared ceiling locks out the fourth person behind a household NAT or a school connection');
+
+  // ── The drift that broke sign-in in production ───────────────────────────
+  const verify = read('api/auth/verify-otp.js');
+  assert('a database that cannot store the proof says so, rather than blaming the code',
+    /isPurposeUnsupported/.test(verify) && /schema_missing/.test(verify),
+    "migration 0010 unapplied made verify-otp answer a CORRECT code with 'could not verify' — "
+    + 'indistinguishable from a typo, and it cost an email on every retry');
+  assert('the failure names the migration to apply',
+    /0010_parent_access\.sql/.test(verify),
+    'an error nobody can act on is an error that stays in production');
+  assert('failures carry a reason code, not just prose',
+    /reason: result\.reason/.test(verify),
+    'the client used to branch on the wording of the message, which silently stopped matching');
+
+  const loginView = read('src/components/auth/LoginView.jsx');
+  assert('the client branches on that reason rather than on the sentence',
+    /err\.reason === 'incorrect'/.test(loginView),
+    'matching on message text is how the only piece of help on that screen quietly disappeared');
+  assert('a student account signing in at /parents/login is told, not silently redirected',
+    /roleMismatch/.test(loginView) && /parentMode && user\?\.role !== 'parent'/.test(loginView),
+    'otherwise somebody who followed a "parent sign-in" link lands in the student app with no explanation');
+
+  // ── The parent app's own URLs, while signed out ──────────────────────────
+  const gate = read('src/components/AuthGate.jsx');
+  assert('a /family URL while signed out opens the parent sign-in',
+    /isParentPath/.test(gate) && /parentReturnRef/.test(gate),
+    'a bookmarked dashboard used to render the student marketing page under a /family address');
+  assert('…and lands back on the page that was asked for',
+    /initialPath=\{parentReturnRef\.current\}/.test(gate),
+    'sending a parent who bookmarked one child to the dashboard root loses the thing they clicked');
+  assert('signing out of the dashboard leaves through the parent door',
+    /setView\('parentLogin'\)/.test(gate),
+    "falling back to 'landing' kept the /family path and painted the marketing page over it");
+
+  const app = read('src/components/parent/ParentApp.jsx');
+  assert('an expired session ends the session rather than freezing the numbers',
+    /err\.status === 401/.test(app) && /handleExpiredSession/.test(app),
+    'a 30-day token lapsing under an open tab used to look like a student who had stopped studying');
+  assert('a failed poll is visible on every tab, not just the one with the button',
+    /StaleBanner/.test(app),
+    '"she has not studied since Tuesday" must never be indistinguishable from a dropped connection');
+}
+
 // ── Main ────────────────────────────────────────────────────────────────────
 
 const files = handlerFiles().sort();
@@ -740,6 +809,7 @@ await checkDigest();
 checkProfileGate();
 checkProfileValidation();
 await checkClaimFlow();
+checkParentAuthPaths();
 checkRouting(files);
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

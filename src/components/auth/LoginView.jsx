@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, ArrowRight, Users, KeyRound, Loader2 } from 'lucide-react';
+import { Mail, ArrowRight, Users, KeyRound, Loader2, GraduationCap, Inbox } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { C, btn, btnG, inp, lbl, CC, R, tint } from '../../lib/theme';
 import { PARENT_HUB_PATH } from '../../lib/routes';
@@ -35,6 +35,30 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
   const [method, setMethod] = useState(parentMode ? 'code' : 'password');
   const [codeSent, setCodeSent] = useState(false);
   const [code, setCode] = useState('');
+  // Set when a send was suppressed because a code from the last minute is still live (the server's
+  // RESEND_FLOOR_MS). The person is not waiting for a second email and should not be told to.
+  const [reusedCode, setReusedCode] = useState(false);
+  // A signed-in account that turned out to be the other kind. See `finish` below.
+  const [roleMismatch, setRoleMismatch] = useState(null);
+
+  /**
+   * Hands the session up — unless this is /parents/login and the account is a student's.
+   *
+   * ── Why that case needs a screen rather than a redirect ─────────────────────
+   * Nothing before this point can tell the two apart. Every pre-auth endpoint deliberately refuses
+   * to say whether an address has an account, let alone what kind, because an endpoint that
+   * answered would be a way to enumerate the site's users. So the first honest moment is here,
+   * after the person has proven they can read that mailbox.
+   *
+   * Left alone, AuthGate would look at `role`, decide this is a student, and drop somebody who
+   * followed a "parent sign-in" link into the student app — no lessons, no dashboard, no
+   * explanation, and no clue that a parent account is a separate thing they do not have. That is
+   * the exact confusion /parents/login was built to end, so it is worth one screen.
+   */
+  function finish(token, user) {
+    if (parentMode && user?.role !== 'parent') { setRoleMismatch({ token, user }); return; }
+    onAuthed(token, user);
+  }
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -47,7 +71,7 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
     setBusy(true);
     try {
       const { token, user } = await AuthAPI.login(trimmed, password);
-      onAuthed(token, user);
+      finish(token, user);
     } catch (err) {
       setError(err.message);
       if (err.data?.noPassword) { setNoPassword(true); setMethod('code'); }
@@ -64,9 +88,10 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
 
     setBusy(true);
     try {
-      await AuthAPI.sendSigninCode(trimmed);
+      const { sent } = await AuthAPI.sendSigninCode(trimmed);
       setCodeSent(true);
-      toast.success('Code sent — check your inbox.');
+      setReusedCode(sent === false);
+      toast.success(sent === false ? 'Use the code we already sent you.' : 'Code sent — check your inbox.');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -84,14 +109,17 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
       const trimmed = email.trim();
       const { verificationToken } = await AuthAPI.verifySigninCode(trimmed, code);
       const { token, user } = await AuthAPI.loginWithCode(trimmed, verificationToken);
-      onAuthed(token, user);
+      finish(token, user);
     } catch (err) {
       // The one place the deliberate "we don't say whether this address has an account" policy
       // surfaces as confusion: the send succeeded, no mail arrived, and the code they eventually
       // guess at is wrong. Naming the likely cause costs nothing an attacker did not already know
       // by this point — they have already failed to produce a code.
-      setError(err.message === 'Incorrect code. Please try again.'
-        ? "That code isn't right. If no email arrived, there may be no account for this address yet."
+      //
+      // Keyed on the server's reason code, not on the wording of its message: this branch was
+      // written against a sentence that had already been reworded, so the help never appeared.
+      setError(err.reason === 'incorrect'
+        ? "That code isn't right. If no email arrived, there may be no account for this address yet — check the spelling, or create one below."
         : err.message);
     } finally {
       setBusy(false);
@@ -117,6 +145,52 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
     </div>
   );
 
+  // ── Signed in, but as the other kind of account ─────────────────────────
+  //
+  // Both ways out are real and neither is hidden. Continuing is offered first because it is the
+  // account they actually have and it is a working app; making a parent account is offered second
+  // because it needs a different address, which is a thing to explain rather than a button to
+  // press by reflex. Role is written once at creation and by nothing afterwards (see
+  // api/auth/complete-signup.js), so "upgrade this one" is not on the menu — it does not exist.
+  if (roleMismatch) {
+    return (
+      <div style={CC({ gap: 16 })}>
+        <div style={{
+          width: 38, height: 38, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: tint(C.amber, 0.13), border: `1px solid ${tint(C.amber, 0.3)}`,
+        }}>
+          <GraduationCap size={18} color={C.amberL} />
+        </div>
+        <div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>
+            That's a student account
+          </div>
+          <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65 }}>
+            <strong style={{ color: C.t1 }}>{roleMismatch.user?.email}</strong> signs in as a student, so it
+            has lessons and practice tests rather than a family dashboard. An account is one or the
+            other for good — it is what stops anyone making themselves someone else's guardian — so a
+            parent dashboard needs its own account at a different address of yours.
+          </div>
+        </div>
+        <button type="button" onClick={() => onAuthed(roleMismatch.token, roleMismatch.user)} style={btn(C.blueGrad, { width: '100%' })}>
+          Continue to the student app <ArrowRight size={14} />
+        </button>
+        <button
+          type="button"
+          onClick={() => { setRoleMismatch(null); onGoSignup(''); }}
+          style={btnG({ width: '100%', justifyContent: 'center' })}
+        >
+          <Users size={13} /> Create a parent account instead
+        </button>
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, textAlign: 'center' }}>
+          If your student already invited you, open their link or enter their 8-character code at{' '}
+          <a href={PARENT_HUB_PATH} style={{ color: C.blueL, fontWeight: 600 }}>medschoolprep.cloud/parents</a> —
+          that makes the parent account for you, at whichever address they invited.
+        </div>
+      </div>
+    );
+  }
+
   // ── The emailed-code branch ─────────────────────────────────────────────
   if (method === 'code') {
     return (
@@ -135,6 +209,17 @@ export default function LoginView({ initialEmail = '', parentMode = false, onBac
 
             {!codeSent && emailField}
             {codeSent && <OtpBoxes value={code} onChange={setCode} />}
+
+            {/* Said rather than left to be inferred: the server reused a code it had already
+                emailed instead of burning a second send, so the mail to look for is the one that
+                is already there. Without this the person waits for an email that is not coming and
+                then taps Resend, which is the exact loop the reuse exists to prevent. */}
+            {codeSent && reusedCode && (
+              <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
+                <Inbox size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
+                <span>You asked a moment ago, so we didn't send a second one — the code already in your inbox still works.</span>
+              </div>
+            )}
 
             <FieldError>{error}</FieldError>
 

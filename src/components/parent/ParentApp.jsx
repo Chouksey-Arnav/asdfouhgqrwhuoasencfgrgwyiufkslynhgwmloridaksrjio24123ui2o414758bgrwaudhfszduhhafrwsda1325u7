@@ -31,9 +31,9 @@ import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
   UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
-  Mail, KeyRound, X,
+  Mail, KeyRound, X, WifiOff,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, CC, R, G, pill, tint, storeMode, onTint } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, CC, R, autoGrid, pill, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
 import * as AuthAPI from '../../lib/authApi';
 import * as ParentAPI from '../../lib/parentApi';
@@ -95,6 +95,17 @@ function viewFromPath(pathname) {
   return { view: parseParentPath(pathname) || 'dashboard', studentId: null };
 }
 
+/** "just now" / "4 min ago" / "2 hr ago" — for the freshness line beside Refresh. */
+function agoLabel(at) {
+  if (!at) return null;
+  const secs = Math.max(0, Math.round((Date.now() - at) / 1000));
+  if (secs < 45) return 'just now';
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  return hrs < 24 ? `${hrs} hr ago` : `${Math.round(hrs / 24)} d ago`;
+}
+
 // ── Small shared pieces ─────────────────────────────────────────────────────
 
 function SectionTitle({ children, sub }) {
@@ -102,6 +113,123 @@ function SectionTitle({ children, sub }) {
     <div>
       <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{children}</div>
       {sub && <div style={{ fontSize: 12.5, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>{sub}</div>}
+    </div>
+  );
+}
+
+/**
+ * The shape of the answer, while the answer is loading.
+ *
+ * A centred spinner tells a parent that something is happening; it does not tell them what is
+ * about to appear, and on a slow phone connection it reads as a page that might be broken. These
+ * blocks occupy the same footprint the student cards will, so the layout does not jump when the
+ * data lands and the wait feels like the page arriving rather than the page stalling.
+ *
+ * The shimmer is a plain CSS animation defined in src/index.css (msp-shimmer) rather than a
+ * library: it is four lines and it must not cost a parent a download to watch a placeholder.
+ */
+function SkeletonCard() {
+  const bar = (w, h = 12, extra = {}) => (
+    <div className="msp-shimmer" style={{ width: w, height: h, borderRadius: 6, background: C.b1, ...extra }} />
+  );
+  return (
+    <div style={glass({ padding: 20, ...CC({ gap: 14 }) })} aria-hidden="true">
+      <div style={R({ gap: 12 })}>
+        {bar(40, 40, { borderRadius: 12, flexShrink: 0 })}
+        <div style={{ flex: 1, ...CC({ gap: 7 }) }}>
+          {bar('45%', 15)}
+          {bar('28%', 10)}
+        </div>
+      </div>
+      {bar('85%', 11)}
+      <div style={autoGrid(150, 10)}>
+        {[0, 1, 2, 3].map((i) => <div key={i} style={glass2({ padding: 11, ...CC({ gap: 6 }) })}>{bar('60%', 15)}{bar('80%', 9)}</div>)}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * When these numbers last came from the server, and whether that is still working.
+ *
+ * ── Why a dashboard about somebody else needs this and most dashboards do not ─
+ * Every figure here is a claim about a real person's week, read by someone who will act on it —
+ * and the honest failure mode of a background poll is silence. Before this, a poll that started
+ * failing left yesterday's numbers on screen indefinitely with nothing to distinguish them from
+ * live ones, so "she hasn't studied since Tuesday" could be a fact about a student or a fact about
+ * a network. Those two must never look the same on this page.
+ */
+function Freshness({ at, refreshing, onRefresh }) {
+  const label = agoLabel(at);
+  return (
+    <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+      {label && <span style={{ fontSize: 12, color: C.t3 }}>Updated {label}</span>}
+      <button
+        type="button" onClick={onRefresh} disabled={refreshing}
+        style={btnG({ fontSize: 12, padding: '6px 12px', opacity: refreshing ? 0.6 : 1 })}
+      >
+        {refreshing ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />} Refresh
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The alarm half of the same idea, carried on every tab rather than only the one with the Refresh
+ * button on it. `role="status"` so a screen reader is told too — the visual cue is a colour and a
+ * small icon, which is precisely the kind of signal that reaches nobody who is not looking at it.
+ */
+function StaleBanner({ at, onRetry, refreshing }) {
+  const label = agoLabel(at);
+  return (
+    <div role="status" style={glass2({
+      ...R({ gap: 10, flexWrap: 'wrap' }),
+      borderColor: tint(C.amber, 0.32), background: tint(C.amber, 0.06), marginBottom: 16,
+    })}>
+      <WifiOff size={15} color={C.amberL} style={{ flexShrink: 0 }} />
+      <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, flex: 1, minWidth: 180 }}>
+        These numbers stopped updating{label ? ` — they are from ${label}` : ''}. Usually the
+        connection; nothing has happened to the account.
+      </span>
+      <button type="button" onClick={onRetry} disabled={refreshing} style={btnG({ fontSize: 12, padding: '6px 12px', opacity: refreshing ? 0.6 : 1 })}>
+        {refreshing ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />} Try again
+      </button>
+    </div>
+  );
+}
+
+/**
+ * The household in four numbers, above the per-student cards.
+ *
+ * Only rendered for two or more students, and that restriction is the whole design. With one
+ * child a rollup is the same four figures as the card underneath it, which teaches a parent that
+ * the top of this page is decoration they can skip. With two it answers the question a card
+ * sequence genuinely cannot — "is anyone studying this week?" — without making somebody scroll and
+ * hold two sets of numbers in their head to find out.
+ */
+function FamilyRollup({ students }) {
+  const summaries = students.map((s) => s.summary || {});
+  const activeThisWeek = summaries.filter((s) => (s.effort?.activeDaysLast7 ?? 0) > 0).length;
+  const totalDays = summaries.reduce((n, s) => n + (s.effort?.activeDaysLast7 ?? 0), 0);
+  const lessons = summaries.reduce((n, s) => n + (s.coursework?.lessonsVerified ?? 0), 0);
+  const scored = summaries.map((s) => s.coursework?.quizzes?.averageScore).filter((v) => v != null);
+  const avg = scored.length ? Math.round(scored.reduce((a, b) => a + b, 0) / scored.length) : null;
+
+  const cells = [
+    { label: 'Studying this week', value: `${activeThisWeek}/${students.length}`, hue: C.green },
+    { label: 'Study days, combined', value: totalDays, hue: C.blue },
+    { label: 'Lessons passed', value: lessons, hue: C.violet },
+    { label: 'Quiz average', value: avg != null ? `${avg}%` : '—', hue: C.cyan },
+  ];
+
+  return (
+    <div style={autoGrid(150, 10)}>
+      {cells.map((c) => (
+        <div key={c.label} style={glass2({ padding: 13, borderColor: tint(c.hue, 0.22), background: tint(c.hue, 0.05) })}>
+          <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.05 }}>{c.value}</div>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>{c.label}</div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -176,7 +304,7 @@ function StudentCard({ entry, onOpen, href }) {
 
       <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.6, marginTop: 14 }}>{digest.headline}</div>
 
-      <div style={{ ...G(4, 10, { marginTop: 14 }, true) }}>
+      <div style={autoGrid(140, 10, { marginTop: 14 })}>
         {facts.map((f) => (
           <div key={f.label} style={glass2({ padding: 11 })}>
             <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.1 }}>{f.value}</div>
@@ -356,10 +484,27 @@ function Guide({ user, onGo }) {
 
 // ── The app ─────────────────────────────────────────────────────────────────
 
-export default function ParentApp({ user, onSignedOut }) {
-  const [{ view, studentId }, setRoute] = useState(() => viewFromPath(window.location.pathname));
+export default function ParentApp({ user, initialPath = null, onSignedOut }) {
+  // `initialPath` is the /family URL the visitor asked for before the sign-in screen intercepted
+  // them (see AuthGate). It only wins when the address bar has already moved on — arriving at
+  // /family/student/<id> directly must still open that page, and it is the address bar that says
+  // so in that case.
+  const [{ view, studentId }, setRoute] = useState(() => {
+    const here = window.location.pathname;
+    return viewFromPath(parseParentPath(here) || parseParentStudentPath(here) ? here : (initialPath || here));
+  });
   const [students, setStudents] = useState(null);   // null = not loaded yet
   const [refreshing, setRefreshing] = useState(false);
+  const [loadedAt, setLoadedAt] = useState(null);
+  // Set when a poll fails while there is already data on screen. The numbers stay — see `load` —
+  // but a parent reading figures that stopped updating twenty minutes ago deserves to know that is
+  // what they are reading.
+  const [stale, setStale] = useState(false);
+  // Ticks once a minute so the "updated 4 min ago" line ages without a data fetch behind it.
+  const [, setClock] = useState(0);
+  // Whether the tab strip has anything scrolled off its right edge — see the fade in `shell`.
+  const [navOverflows, setNavOverflows] = useState(false);
+  const navObserverRef = useRef(null);
   const [themeMode, setThemeMode] = useState(() => loadA11y().themeMode);
   const [themeEpoch, setThemeEpoch] = useState(0);
   const appliedRef = useRef(null);
@@ -382,41 +527,69 @@ export default function ParentApp({ user, onSignedOut }) {
     if (appliedRef.current !== resolved) { appliedRef.current = resolved; setThemeEpoch((e) => e + 1); }
   }, [themeMode]);
 
+  /**
+   * A session that is no longer a session.
+   *
+   * Tokens last 30 days and a parent leaves this tab open for weeks, so "signed out underneath
+   * you" is a normal Tuesday here rather than an edge case. Left alone it presented as a dashboard
+   * that had simply stopped updating: every poll 401'd, the last good numbers stayed on screen
+   * forever, and the only signal was a toast the parent had long since scrolled past. Dropping the
+   * dead token and going back through the front door is the only honest answer.
+   */
+  const handleExpiredSession = useCallback(() => {
+    AuthAPI.clearToken();
+    toast('Your session expired — please sign in again.', { icon: '🔑' });
+    onSignedOut?.();
+  }, [onSignedOut]);
+
   const loadProfile = useCallback(async () => {
     try {
       const { profile, complete, available } = await ParentAPI.fetchProfile();
       setProfile(profile);
       setProfileComplete(!!complete);
       setProfileAvailable(available !== false);
-    } catch {
+    } catch (err) {
+      if (err.status === 401) { handleExpiredSession(); return; }
       // Unreachable profile endpoint must not become an unreachable dashboard: the summary
       // endpoint enforces the same rule server-side, so the worst case here is that a parent sees
       // their students' cards and an explanatory 403 rather than a blank screen.
       setProfileComplete(true);
     }
-  }, []);
+  }, [handleExpiredSession]);
 
   const load = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setRefreshing(true);
     try {
       const { students } = await ParentAPI.fetchSummaries();
       setStudents(students || []);
+      setLoadedAt(Date.now());
+      setStale(false);
     } catch (err) {
+      if (err.status === 401) { handleExpiredSession(); return; }
       // The one error worth acting on rather than showing: the account has not finished its
       // setup, which has a screen of its own.
       if (err.reason === 'profile_incomplete') { setProfileComplete(false); setStudents([]); return; }
       // A failed poll leaves the last good data on screen rather than blanking it. A parent looking
       // at yesterday's numbers is in a far better position than a parent looking at an error, and
-      // the next tick usually fixes it without them ever knowing.
+      // the next tick usually fixes it without them ever knowing — but it now says so on screen
+      // rather than only in a toast that a background poll never shows anyone.
+      setStale(true);
       if (!silent) toast.error(err.message);
       setStudents((prev) => prev || []);
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [handleExpiredSession]);
 
   useEffect(() => { loadProfile(); }, [loadProfile]);
   useEffect(() => { load({ silent: true }); }, [load]);
+
+  // Re-renders the freshness line on its own clock. Deliberately not tied to the poll: the whole
+  // value of "updated 12 min ago" is that it keeps counting when the polling has stopped working.
+  useEffect(() => {
+    const id = setInterval(() => setClock((c) => c + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -446,6 +619,29 @@ export default function ParentApp({ user, onSignedOut }) {
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
   }, []);
+
+  /**
+   * Measures the tab strip whenever it mounts or changes size.
+   *
+   * A callback ref rather than a ref + effect because `shell` builds the nav during render and
+   * omits it entirely on the loading screen: an effect keyed on anything would have to guess when
+   * the element exists, and this simply runs when React attaches it. ResizeObserver covers the two
+   * ways the answer changes without a re-render — the window resizing, and a font finally loading
+   * and making seven tabs wider than they were.
+   */
+  const navRef = useCallback((el) => {
+    navObserverRef.current?.disconnect();
+    navObserverRef.current = null;
+    if (!el) return;
+    const check = () => setNavOverflows(el.scrollWidth > el.clientWidth + 4);
+    check();
+    if (typeof ResizeObserver === 'undefined') return;
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    navObserverRef.current = ro;
+  }, []);
+
+  useEffect(() => () => navObserverRef.current?.disconnect(), []);
 
   const go = useCallback((next, id = null) => setRoute({ view: next, studentId: id }), []);
   const onNavClick = useCallback((e, next, id = null) => {
@@ -506,38 +702,73 @@ export default function ParentApp({ user, onSignedOut }) {
         </div>
 
         {nav && (
-          // Horizontally scrollable rather than wrapped: six tabs do not fit on a phone, and a
+          // Horizontally scrollable rather than wrapped: seven tabs do not fit on a phone, and a
           // nav that reflows to two rows moves the tab you were aiming at as the page loads.
-          <nav aria-label="Parent sections" style={{ maxWidth: 980, margin: '0 auto', padding: '0 20px', display: 'flex', gap: 4, overflowX: 'auto' }}>
-            {NAV.map(({ id, label, icon: Icon }) => {
-              const on = view === id || (id === 'students' && view === 'student');
-              return (
-                <a
-                  key={id} href={PARENT_VIEWS[id]} onClick={(e) => onNavClick(e, id)}
-                  aria-current={on ? 'page' : undefined}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '9px 12px',
-                    borderBottom: `2px solid ${on ? C.blue : 'transparent'}`, whiteSpace: 'nowrap',
-                    color: on ? C.t1 : C.t3, fontSize: 13, fontWeight: on ? 700 : 500,
-                    fontFamily: C.FB, textDecoration: 'none',
-                  }}
-                >
-                  <Icon size={14} /> {label}
-                </a>
-              );
-            })}
-          </nav>
+          //
+          // The fade on the right edge is not decoration. A scroll container whose overflow starts
+          // exactly at the viewport edge looks like a nav that ends there, and the tabs past it —
+          // Connections, How this works, Settings — were the ones parents reported as missing.
+          // `msp-noscrollbar` hides the bar itself (src/index.css), because a permanent scrollbar
+          // under a seven-item nav is uglier than the problem it solves on the platforms that
+          // still draw one.
+          <div style={{ position: 'relative', maxWidth: 980, margin: '0 auto' }}>
+            <nav
+              ref={navRef}
+              aria-label="Parent sections"
+              className="msp-noscrollbar"
+              style={{ padding: '0 20px', display: 'flex', gap: 2, overflowX: 'auto', scrollbarWidth: 'none' }}
+            >
+              {NAV.map(({ id, label, icon: Icon }) => {
+                const on = view === id || (id === 'students' && view === 'student');
+                return (
+                  <a
+                    key={id} href={PARENT_VIEWS[id]} onClick={(e) => onNavClick(e, id)}
+                    aria-current={on ? 'page' : undefined}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 12px',
+                      borderBottom: `2px solid ${on ? C.blue : 'transparent'}`, whiteSpace: 'nowrap',
+                      color: on ? C.t1 : C.t3, fontSize: 13, fontWeight: on ? 700 : 500,
+                      fontFamily: C.FB, textDecoration: 'none', borderRadius: '8px 8px 0 0',
+                      background: on ? tint(C.blue, 0.07) : 'transparent',
+                      transition: 'color .15s, background .15s',
+                    }}
+                  >
+                    <Icon size={14} /> {label}
+                  </a>
+                );
+              })}
+            </nav>
+            {/* Only when there is genuinely something past the edge. Painted unconditionally it is
+                a visible lighter block sitting over the last tab on any screen wide enough to fit
+                all seven — C.surf is a translucent white, so "fade to the header colour" fades to
+                something lighter than the header rather than into it. */}
+            {navOverflows && (
+              <div aria-hidden="true" style={{
+                position: 'absolute', right: 0, top: 0, bottom: 0, width: 32, pointerEvents: 'none',
+                background: `linear-gradient(90deg,${tint(C.bg, 0)},${C.bg})`,
+              }} />
+            )}
+          </div>
         )}
       </header>
 
-      <main style={{ maxWidth: 980, margin: '0 auto', padding: '20px 20px 60px' }}>{children}</main>
+      <main style={{ maxWidth: 980, margin: '0 auto', padding: '20px 20px 60px' }}>
+        {/* Above whatever tab is open, because a failed poll is a fact about every number on the
+            page and not only about the one screen that happens to carry a Refresh button. */}
+        {nav && stale && students?.length > 0 && (
+          <StaleBanner at={loadedAt} refreshing={refreshing} onRetry={() => load()} />
+        )}
+        {children}
+      </main>
     </div>
   );
 
   if (loading) {
     return shell(
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-        <Loader2 className="spin" size={20} color={C.blueL} />
+      <div style={CC({ gap: 18 })} role="status" aria-label="Loading your family dashboard">
+        <div className="msp-shimmer" style={{ width: 220, height: 20, borderRadius: 7, background: C.b1 }} />
+        <SkeletonCard />
+        <SkeletonCard />
       </div>,
       { nav: false },
     );
@@ -655,16 +886,15 @@ export default function ParentApp({ user, onSignedOut }) {
         noStudents ? inviteCta : (
           <div style={CC({ gap: 18 })}>
             {profileNudge}
-            <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' })}>
+            <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
               <SectionTitle sub={students.length === 1
                 ? 'Effort and results, updated as they study. Coach chats, notes and essays stay private to them.'
                 : `${students.length} students. Each keeps their own colour across every tab.`}>
                 {greetingName ? `Good to see you, ${greetingName}` : 'Your family'}
               </SectionTitle>
-              <button type="button" onClick={() => load()} disabled={refreshing} style={btnG({ fontSize: 12, padding: '6px 12px' })}>
-                {refreshing ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />} Refresh
-              </button>
+              <Freshness at={loadedAt} refreshing={refreshing} onRefresh={() => load()} />
             </div>
+            {students.length > 1 && <FamilyRollup students={students} />}
             {students.map((s) => (
               <StudentCard
                 key={s.studentId} entry={s}

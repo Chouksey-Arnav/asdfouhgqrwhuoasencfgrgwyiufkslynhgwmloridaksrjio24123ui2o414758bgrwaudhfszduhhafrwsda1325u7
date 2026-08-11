@@ -183,8 +183,13 @@ export default async function handler(req, res) {
       // The destination is read off the invitation row. It is never taken from the request, which
       // is the one line in this file that makes a shared link safe to share: holding the link
       // lets you ASK for a code, and only the invited mailbox can receive it.
+      let sent = true;
       try {
-        await issueOtp(supabase, { email: inviteEmail, ip, purpose: 'signin' });
+        // `sent: false` means a code from the last minute is still live and was left alone rather
+        // than replaced (see RESEND_FLOOR_MS). That is the common case on this screen — a parent
+        // taps Continue, goes back to re-read what is shared, and taps it again — and reusing the
+        // live code both saves an email and avoids invalidating the one already in their inbox.
+        ({ sent } = await issueOtp(supabase, { email: inviteEmail, ip, purpose: 'signin' }));
       } catch (err) {
         console.error('parent claim otp send failed:', err);
         return res.status(502).json({
@@ -193,7 +198,7 @@ export default async function handler(req, res) {
         });
       }
 
-      return res.status(200).json({ sent: true, invite });
+      return res.status(200).json({ sent: true, reused: !sent, invite });
     }
 
     // ── Verify, sign in, connect ─────────────────────────────────────────

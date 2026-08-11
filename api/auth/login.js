@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       supabase.from('login_attempts').select('id', { count: 'exact', head: true }).eq('ip', ip).eq('success', false).gte('created_at', windowStart),
     ]);
     if ((emailFails ?? 0) >= MAX_PER_EMAIL || (ipFails ?? 0) >= MAX_PER_IP) {
-      return res.status(429).json({ error: 'Too many failed attempts. Please wait a few minutes and try again, or reset your password.' });
+      return res.status(429).json({ error: 'Too many failed attempts. Please wait a few minutes and try again, or reset your password.', reason: 'rate_limited' });
     }
 
     const record = (success) => supabase.from('login_attempts').insert({ email, ip, success }).then(() => {}, () => {});
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
 
     if (!user) {
       await record(false);
-      return res.status(401).json({ error: 'No account found with that email. Try signing up instead.' });
+      return res.status(401).json({ error: 'No account found with that email. Try signing up instead.', reason: 'no_account' });
     }
 
     // The code path first, because an account with no password legitimately has no other way in.
@@ -82,7 +82,7 @@ export default async function handler(req, res) {
       const ok = await consumeVerificationToken(supabase, { token: verificationToken, email, purpose: 'signin' });
       if (!ok) {
         await record(false);
-        return res.status(401).json({ error: 'That sign-in code has expired. Ask for a new one.' });
+        return res.status(401).json({ error: 'That sign-in code has expired. Ask for a new one.', reason: 'verification_expired' });
       }
     } else {
       if (!user.password_hash) {
@@ -90,13 +90,14 @@ export default async function handler(req, res) {
         return res.status(401).json({
           error: "This account doesn't have a password. Use “Email me a sign-in code” instead.",
           noPassword: true,
+          reason: 'no_password',
         });
       }
 
       const ok = await verifyPassword(password, user.password_hash);
       if (!ok) {
         await record(false);
-        return res.status(401).json({ error: 'Incorrect email or password.' });
+        return res.status(401).json({ error: 'Incorrect email or password.', reason: 'bad_password' });
       }
     }
 

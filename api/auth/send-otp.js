@@ -67,11 +67,15 @@ export default async function handler(req, res) {
     }
 
     if (await overRequestLimit(supabase, { email, ip })) {
-      return res.status(429).json({ error: 'Too many code requests. Try again in a few minutes.' });
+      return res.status(429).json({ error: 'Too many code requests. Try again in a few minutes.', reason: 'rate_limited' });
     }
 
-    await issueOtp(supabase, { email, ip, purpose });
-    return res.status(200).json({ success: true });
+    // `sent: false` means a code issued less than a minute ago is still live and was reused rather
+    // than replaced — see RESEND_FLOOR_MS. Still a success from here: a valid code IS in that
+    // inbox. Reported so the client can say "already sent — check your inbox" instead of implying
+    // a second mail is on its way that never arrives.
+    const { sent, waitMs } = await issueOtp(supabase, { email, ip, purpose });
+    return res.status(200).json({ success: true, sent, retryAfterMs: waitMs });
   } catch (err) {
     console.error('send-otp error:', err);
     return res.status(500).json({ error: 'Could not send verification code. Please try again.' });

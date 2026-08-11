@@ -52,6 +52,12 @@ async function req(path, options = {}) {
   if (!res.ok) {
     const err = new Error(data.error || 'Request failed.');
     err.data = data;
+    // Lifted to the top level to match src/lib/parentApi.js, so a caller branching on WHY a
+    // request failed never has to match on the wording of the message. It used to — LoginView
+    // compared the error text against a sentence the server had long since reworded, so the one
+    // piece of help on that screen had quietly stopped appearing.
+    err.reason = data.reason;
+    err.status = res.status;
     throw err;
   }
   return data;
