@@ -295,6 +295,13 @@ export function buildCoachSystemPrompt({
   // from. The engine already gated every date on this student's class year, so the coach's
   // job is to reason over the list, not to invent it.
   timelineSummary = null,
+  // The pathway pace goal the student set for themselves (describePace() in lib/paceGoal.js)
+  // and how they've been rating lesson difficulty (summarizeLessonFeedback() in
+  // lib/lessonFeedback.js). The head coach needs both for the same reason the Prep specialist
+  // does: "am I on track" and "is this too hard for me" are coaching questions, and answering
+  // them from vibes when the app holds the actual answer is the failure to avoid.
+  paceText = null,
+  feedbackSummary = null,
 } = {}) {
   const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
@@ -401,7 +408,17 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
 
   const tail = `\n\nBe concise and direct. When they're behind, say what's actually behind and give one concrete next step — not reassurance. When they ask you to look at something they made (an essay, an answer, a plan, a list), the honest assessment comes first and the encouragement, if any, is earned. Keep replies short: 2-4 sentences for a simple question, and only use longer, structured answers (bullets, multiple steps) when the question genuinely needs them — don't pad. Format responses with markdown — use **bold** for key terms, bullet lists for steps, and code blocks or $...$ for formulas when helpful.${PERSONA_GUARDRAIL}`;
 
-  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + planNote + portfolioBrainNote + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + tail;
+  // ── The two things the student told us themselves: their pace target, and how hard they
+  // have been finding the material. Both sit right after the plan, because all three answer
+  // the same family of question ("am I doing enough / is this the right level for me").
+  const paceNote = paceText
+    ? `\n\n${paceText} This target is theirs, not ours — support it, never lecture about it, and if it has become unrealistic say so kindly and offer to help them reset it.`
+    : '';
+  const levelNote = feedbackSummary
+    ? `\n\n── How they rate their own lessons ──\n${feedbackSummary} Pitch your explanations accordingly. This is what they reported, not a measure of their ability — never hand it back to them as a judgement.`
+    : '';
+
+  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + planNote + paceNote + levelNote + portfolioBrainNote + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + tail;
 }
 
 // ── Meta Brain — Portfolio Intelligence system prompt ─────────────────────────
@@ -619,6 +636,17 @@ export function buildPrepSystemPrompt({
   objectives = [],
   unitTitles = [],
   lessonNote = '',
+  // Passages the student highlighted in THIS lesson's article, in order. The act of
+  // highlighting is a deliberate signal — "this is the part that matters / the part I don't
+  // get" — and a tutor sitting next to them would be able to see the marker on the page.
+  lessonHighlights = [],   // [{ sectionIdx, text }]
+  // Cross-lesson memory: what they've written down and marked up everywhere else, plus how
+  // they've rated lesson difficulty. This is what makes Medabrain feel like it remembers them
+  // rather than meeting them fresh on every screen.
+  notesDigest = null,      // pre-rendered summary of notes across lessons
+  highlightsDigest = null, // pre-rendered summary of highlights across lessons
+  feedbackSummary = null,  // summarizeLessonFeedback(...).promptText
+  paceText = null,         // describePace(...) from lib/paceGoal.js
   // ── Pathway-level progress (only used when no `lesson` is open) — lets
   // "what should I study next" answers reference this student's actual
   // completion state instead of just the pathway's static unit list.
@@ -636,6 +664,25 @@ export function buildPrepSystemPrompt({
 ${user?.name || 'This student'} is on the ${pathwayLabel} pathway${gradeLabel ? `, a ${gradeLabel}` : ''}, preparing for undergraduate admissions with an eye toward a future health career — not currently applying to medical/graduate school, so never bring up the MCAT or clinical rotations as something to act on now. Keep answers at an AP-level/high-school scope, not med-school depth.
 
 You are a real tutor with real subject knowledge — biology, chemistry, physics, psychology, statistics, research methods, the history and ethics of medicine, and everything a strong high-school teacher would know. USE IT. If a student asks something the open lesson doesn't cover, teach it anyway: bring in an analogy, a worked example, background the lesson assumed, or the connection to something they already studied. The lesson content below is what they're working through right now, not a fence around what you're allowed to say. If they ask something well outside Prep — a portfolio question, a study-plan question, or something entirely unrelated — answer it as best you can and then steer back to what they were studying.`;
+
+  // ── Everything Medabrain should already know about this student ─────────────
+  // Threaded into BOTH scopes below (in-lesson and pathway-level), because "do you remember
+  // what I wrote down?" and "how hard is this stuff for me?" are the same questions regardless
+  // of which screen they're asked from.
+  const memoryParts = [];
+  if (paceText) {
+    memoryParts.push(`── Their pace goal ──\n${paceText}\nThis is a target THEY set. Reference it when it is relevant to what they asked; never invent, revise, or scold them about it, and never treat falling behind as a character flaw.`);
+  }
+  if (feedbackSummary) {
+    memoryParts.push(`── How they've rated their lessons ──\n${feedbackSummary}\nUse this to pitch your answers at the right level: if they consistently ask for more depth, skip the warm-up and go straight to mechanism; if they consistently find it hard, build up from the ground and check understanding as you go. Do not read this back to them as a verdict on how smart they are — it is a record of what they told us, not a measurement of them.`);
+  }
+  if (highlightsDigest) memoryParts.push(`── Passages they highlighted ──\n${highlightsDigest}`);
+  if (notesDigest) memoryParts.push(`── Notes they've written on other lessons ──\n${notesDigest}`);
+  const memoryBlock = memoryParts.length ? `\n\n${memoryParts.join('\n\n')}` : '';
+
+  const highlightBlock = lessonHighlights.length
+    ? `\n\n── What they highlighted in THIS article (their own selection) ──\n${lessonHighlights.slice(0, 12).map((h) => `- "${String(h.text || '').trim().slice(0, 220)}"`).join('\n')}\n\nThey marked these on purpose. Treat them as the parts they most want to hold on to or are least sure about, and lean on them when explaining or quizzing.`
+    : '';
 
   let scopeBlock;
   if (lesson) {
@@ -657,7 +704,7 @@ You are a real tutor with real subject knowledge — biology, chemistry, physics
     ? `\n\nRules: start from the lesson content above — explain it a different way, quiz them on it, clarify the part they're stuck on. When the lesson doesn't cover what they asked, TEACH IT ANYWAY from your own knowledge and say you're going beyond this lesson; do not tell them to go ask somewhere else. What you must not do is misattribute: never claim the lesson says something it doesn't, and never invent a takeaway or a note of theirs. When they explain something back to you or answer a question you asked, judge it honestly: if the understanding is wrong or half-right, say exactly which part is wrong before anything else — a student who is told "close enough!" learns the wrong thing and finds out on a test. Keep replies short and conversational — 2-4 sentences unless they explicitly ask to be quizzed or want a structured breakdown. Format with markdown: **bold** key terms, bullet lists only when genuinely helpful.${PERSONA_GUARDRAIL}`
     : `\n\nRules: help them figure out what to study next, using the real unit/progress data above — never invent a unit, lesson, or completion count that isn't listed. When asked "what should I do next" or "what's my progress," reference specific unfinished units, the weakest category, or due flashcards by name instead of generic advice. Anything they ask that isn't about their progress — a science question, a concept they half-remember, how something works — just answer it properly; you're a tutor. Keep replies short and concrete — 2-4 sentences, unless they explicitly ask for a full breakdown of their progress (then a short bullet list per unit is appropriate). Format with markdown sparingly.${PERSONA_GUARDRAIL}`;
 
-  return base + buildPersonalBriefBlock(user) + scopeBlock + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + rules;
+  return base + buildPersonalBriefBlock(user) + scopeBlock + highlightBlock + memoryBlock + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + rules;
 }
 
 // ── Medabrain — SAT system prompt ─────────────────────────────────────────────

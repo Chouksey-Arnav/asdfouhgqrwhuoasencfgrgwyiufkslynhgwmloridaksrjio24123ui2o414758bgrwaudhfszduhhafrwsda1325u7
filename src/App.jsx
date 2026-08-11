@@ -23,6 +23,7 @@ import {
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
   Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones, Users,
+  Shuffle, Flag,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
 } from 'lucide-react';
@@ -92,6 +93,12 @@ import {
   VERIFY_PASS_PCT,
 } from './lib/quizPersonalization';
 import LessonNotesPanel from './components/LessonNotesPanel';
+import PaceGoalCard from './components/PaceGoalCard';
+import LessonDifficultyCheck from './components/LessonDifficultyCheck';
+import { computePaceStatus, describePace, paceHeadline, paceTone, formatPaceDate } from './lib/paceGoal';
+import { seededShuffle, newShuffleSeed } from './lib/shuffle';
+import { summarizeLessonFeedback, FEEDBACK_LABELS } from './lib/lessonFeedback';
+import { logLessonFeedback } from './lib/lessonFeedbackApi';
 import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
 import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID } from './lib/opportunityMatch';
 import { OPPORTUNITIES } from './data/opportunities';
@@ -141,6 +148,7 @@ import { buildInsights } from './lib/insights';
 // computePlanReadiness is the Plans generator's own bar, read by the unlock ladder so that
 // tab opens only once it can actually build something — see the `planReady` signal below.
 import { buildCoachSystemPrompt, buildOnboardingRecap, computeOnboardingCompleteness, computePlanReadiness } from './lib/studentProfile';
+import { buildNotesDigest, buildHighlightsDigest } from './lib/lessonMemory';
 import {
   C, catMeta, tint, glass, glass2, btn, btnSm, btnG, inp, lbl, R, CC, G, pill,
   onTint, accentText, accentFill, accentGrad, accentSweep, shade, isLight,
@@ -181,6 +189,7 @@ const deckCatMeta = (cat) => {
 
 // ── Quiz scrambling ───────────────────────────────────────────────────────────
 function shuffleArr(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
 const TOTAL_QUESTIONS = ALL_QUIZZES.reduce((n,q)=>n+q.qs.length,0);
 function scrambleQuiz(quiz){
   const qs = quiz.qs;
@@ -748,7 +757,14 @@ function LessonVideoInline({ytId,title,onWatched,watched=false}){
 // pathway lesson never bounces the student out of the app. The Quiz step
 // hands off to the app's existing aQuiz/QuizEngine fullscreen gate (reusing
 // openVerifyQuiz/finishQuiz as-is) rather than duplicating quiz logic here.
-function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false,highlights=[],onAddHighlight,onRemoveHighlight,quizBlurb=''}){
+function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,articleRead,onArticleRead,videoWatched,onVideoWatched,initialScrollPct=0,onScrollProgress,onClose,onStartQuiz,onNextLesson,hasNextLesson,accent=C.blue,m=false,highlights=[],onAddHighlight,onRemoveHighlight,quizBlurb='',
+  // ── Added with the "did you actually finish this?" flow ──
+  confirms={article:false,video:false},   // the student's own tick per step
+  onConfirmStep,                          // (step) => void
+  onContinueLater,                        // save my spot and let me go
+  feedbackSlot=null,                      // <LessonDifficultyCheck/>, owned by App
+  reviewMode=false,
+}){
   const content = LESSON_CONTENT[lesson.id];
   const videoId = content?.video?.ytId || extractYouTubeId(lesson.url);
   const hasArticle = !!content?.article;
@@ -759,9 +775,24 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
   const articleScrollRef = useRef(null);
   const restoredScrollRef = useRef(false);
 
-  function goNext(){
+  // ── "Are you sure you're done?" ────────────────────────────────────────────
+  // Continue used to be a pure navigation button: scrolling to the bottom of the article (or
+  // letting the video run out) unlocked it, and pressing it silently counted the step as
+  // finished. Neither of those is evidence the student actually did the thing — a scroll to the
+  // bottom takes one flick, and a video plays to the end whether or not anyone is watching. So
+  // leaving the article or the video now asks once, plainly, and takes the student at their
+  // word. `confirms` persists per lesson (DB.lessonProgress), so this is asked once per step,
+  // not every time they page back and forth.
+  const [pendingConfirm,setPendingConfirm]=useState(null); // 'article' | 'video' | null
+  const needsConfirm=(s)=>!reviewMode&&!isVerified&&((s==='article'&&hasArticle&&!confirms.article)||(s==='video'&&hasVideo&&!confirms.video));
+
+  function advance(){
     const idx=stepOrder.indexOf(step);
     if(idx<stepOrder.length-1)onStep(stepOrder[idx+1]);
+  }
+  function goNext(){
+    if(needsConfirm(step)){ setPendingConfirm(step); return; }
+    advance();
   }
   function goBack(){
     const idx=stepOrder.indexOf(step);
@@ -882,6 +913,12 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
                     </div>
                   </div>
                 )}
+                {/* Medabrain's difficulty check lives at the true bottom of the passage —
+                    INSIDE the scroll region, after the key takeaways. Anywhere else and it is
+                    asking about something the student can't see; here, "too easy" and the
+                    deeper passage Medabrain writes in response land in the same column of
+                    text, which is what makes the expansion read as part of the lesson. */}
+                {feedbackSlot}
                 <div style={{height:1}}/>
                 {!articleRead&&<div style={{fontSize:11,color:C.t3,textAlign:'center',padding:'8px 0'}}>Read to the end — or listen to the whole thing — to continue</div>}
               </div>
@@ -930,6 +967,10 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
                 {hasNextLesson&&<motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'12px 24px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:8}} onClick={onNextLesson}>Next Lesson<ArrowRight size={14}/></motion.button>}
                 <button style={{...btnG({padding:'12px 20px',fontSize:13}),display:'inline-flex',alignItems:'center',gap:6}} onClick={onClose}>Back to Pathway</button>
               </div>
+              {/* Also offered here, not only under the article: a lesson with no in-app article
+                  would otherwise never get asked, and a student who only decides how a lesson
+                  went once they've finished the quiz still deserves to be asked. */}
+              {feedbackSlot&&<div style={{width:'100%',maxWidth:640,textAlign:'left',marginTop:8}}>{feedbackSlot}</div>}
             </div>
           )}
 
@@ -949,6 +990,57 @@ function LessonPlayer({lesson,unit,pathwayLabel,pathwayEntry,step,onStep,article
           </div>
         </div>
       )}
+
+      {/* ── Step confirmation ──────────────────────────────────────────────────
+          Asked once per step per lesson, on the way OUT of the article or the video. Three
+          answers, because "did you finish?" genuinely has three: yes, not yet, and "yes but I
+          have to go" — which is the ordinary case (dinner, a ride, a class starting) and the
+          one that previously had no button at all. Every one of them keeps the student's spot;
+          the difference is only where they land next. */}
+      <AnimatePresence>
+        {pendingConfirm&&(
+          <>
+            <motion.div key="cbd" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+              onClick={()=>setPendingConfirm(null)}
+              style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',zIndex:400}}/>
+            <motion.div key="cdlg" role="dialog" aria-modal="true" aria-label="Confirm you finished this step"
+              initial={{opacity:0,scale:.94,y:12}} animate={{opacity:1,scale:1,y:0}} exit={{opacity:0,scale:.96,y:8}}
+              transition={{type:'spring',damping:26,stiffness:340}}
+              style={{position:'fixed',zIndex:401,left:'50%',top:'50%',transform:'translate(-50%,-50%)',
+                width:'min(460px,92vw)',background:C.s0,border:`1px solid ${C.b2}`,borderRadius:18,
+                padding:m?20:26,boxShadow:'0 20px 60px rgba(0,0,0,0.55)'}}>
+              <div style={{width:44,height:44,borderRadius:13,background:`${accent}18`,border:`1px solid ${accent}35`,display:'grid',placeItems:'center',marginBottom:14}}>
+                {pendingConfirm==='article'?<ScrollText size={20} color={accent}/>:<Play size={19} color={accent}/>}
+              </div>
+              <h3 style={{fontSize:m?16.5:18.5,fontWeight:800,color:C.t1,fontFamily:C.FD,margin:'0 0 8px',letterSpacing:'-.02em'}}>
+                {pendingConfirm==='article'?'Did you finish reading it?':'Did you finish the video?'}
+              </h3>
+              <p style={{fontSize:12.5,color:C.t2,lineHeight:1.65,margin:'0 0 18px'}}>
+                {pendingConfirm==='article'
+                  ? `We can see you reached the bottom of "${lesson.title}", but scrolling isn't the same as reading it. Only tick this off if you actually got through it — nothing bad happens if you didn't.`
+                  : `We can see the video played through, but that isn't the same as you watching it. Only tick this off if you actually did — you can go back and finish it instead.`}
+              </p>
+              <div style={{display:'flex',flexDirection:'column',gap:9}}>
+                <motion.button whileTap={{scale:.98}} autoFocus
+                  onClick={()=>{ onConfirmStep?.(pendingConfirm); setPendingConfirm(null); advance(); }}
+                  style={{...btn(accent===C.blue?C.blueGrad:accentGrad(accent),{padding:'13px 18px',fontSize:13.5,minHeight:48}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8}}>
+                  <Check size={15}/>Yes — I'm done with this, mark it off
+                </motion.button>
+                <button onClick={()=>setPendingConfirm(null)}
+                  style={{...btnG({padding:'12px 18px',fontSize:13,minHeight:46}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7}}>
+                  <ChevronLeft size={14}/>Not yet — take me back
+                </button>
+                {onContinueLater&&(
+                  <button onClick={()=>{ onConfirmStep?.(pendingConfirm); setPendingConfirm(null); onContinueLater(); }}
+                    style={{...btnG({padding:'12px 18px',fontSize:12.5,minHeight:46,border:'none',color:C.t3}),display:'inline-flex',alignItems:'center',justifyContent:'center',gap:7}}>
+                    <Coffee size={14}/>Done, but I have to go — save my spot
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
@@ -1394,6 +1486,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [articleRead, setArticleRead] = useState(false);
   const [videoWatched, setVideoWatched] = useState(false);
   const [articleScrollPct, setArticleScrollPct] = useState(0); // exact scroll position within the article step, for resuming mid-passage
+  // Explicit "yes, I actually did this" confirmations, per step, per lesson. Reaching the
+  // bottom of a scroll container is evidence someone scrolled, not evidence someone read — and
+  // the app was treating the two as the same thing. Ticks recorded here are the student's own
+  // word for it, which is the only thing worth marking a lesson off against.
+  const [lessonConfirms, setLessonConfirms] = useState({ article:false, video:false });
   // ── Prep Meta Brain (purpose:'prep') — lifted up here rather than owned locally by
   // PrepMetaBrain.jsx because the component is mounted from two different places (inside the
   // full-screen LessonPlayer overlay, and inside the Prep tab itself — LessonPlayer replaces
@@ -1415,6 +1512,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [lessonNote, setLessonNote] = useState('');
   const [lessonHighlights, setLessonHighlightsState] = useState([]);
   const [reviewMode, setReviewMode] = useState(false); // true while browsing an already-verified lesson via the "Review" button, so it opens on Overview instead of snapping to Complete
+  // ── Lesson difficulty feedback ("too easy / too hard / just right") ──────────
+  // `lessonFeedbackRow` is the answer for whichever lesson is open (so re-opening a lesson
+  // shows what Medabrain already wrote rather than asking again); `allLessonFeedback` is the
+  // full history, which is what summarizeLessonFeedback turns into Medabrain's read on where
+  // this student actually sits.
+  const [lessonFeedbackRow, setLessonFeedbackRow] = useState(null);
+  const [allLessonFeedback, setAllLessonFeedback] = useState([]);
+  // Every highlight across every lesson — Medabrain reads these at the pathway level, since the
+  // passages a student chose to mark are among the most direct evidence of what they care about
+  // and what they found hard.
+  const [allLessonHighlights, setAllLessonHighlights] = useState([]);
+  const [allLessonNotes, setAllLessonNotes] = useState({});
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
 
@@ -1772,6 +1881,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ── Flashcards ──────────────────────────────────────────────────────────────
   const [activeDeck,setAD]=useState(null);const [cIdx,setCIdx]=useState(0);const [flip,setFlip]=useState(false);const [notes,setNotes]=useState('');const [gLoad,setGL]=useState(false);const [gStage,setGStage]=useState(0);const [gShake,setGShake]=useState(false);const [dSrch,setDS2]=useState('');const [studyMode,setStudyMode]=useState('all'); // 'all' | 'due'
+  // Re-rolled every time a Smart Mix session is started (and by the in-session Reshuffle
+  // button), and held constant for the rest of that session — see src/lib/shuffle.js.
+  const [smartMixSeed,setSmartMixSeed]=useState(newShuffleSeed);
   const [deckFilter,setDeckFilter]=useState('all'); // 'all' | 'due' | 'custom' | 'builtin'
   const [deckCategory,setDeckCategory]=useState('all'); // 'all' | one of DECK_CATEGORY_ORDER
   const [deckSubcat,setDeckSubcat]=useState('all'); // 'all' | a subcategory within deckCategory
@@ -1779,6 +1891,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [newDeckOpen,setNewDeckOpen]=useState(false);
   const [newDeckName,setNewDeckName]=useState('');
   const [sessionStats,setSessionStats]=useState({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+  // Rolls a brand-new Smart Mix order and drops straight into it. Every Smart Mix entry point
+  // goes through here so the "every card, freshly shuffled, every time" promise can't be half
+  // implemented at one of them.
+  const rerollSmartMix=useCallback(()=>{
+    setSmartMixSeed(newShuffleSeed());
+    setCIdx(0);setFlip(false);
+  },[]);
+  const startSmartMix=useCallback(()=>{
+    rerollSmartMix();
+    setAD({name:'Smart Mix',builtin:true,smartMix:true});
+    setStudyMode('all');
+    setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
+  },[rerollSmartMix]);
   // A deck queued up by a Plan task deep link (openPlanResource), waiting on the "Start Studying"
   // screen below rather than dropping straight into the review loop — see tFlash()'s
   // planDeckPending branch. Every OTHER deck entry point in the app (deck list, Smart Mix banner,
@@ -2116,11 +2241,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const key=user.specialty||'exploring';
     DB.getPathwayGoal(key).then(g=>setPathwayGoalState(g||null)).catch(()=>setPathwayGoalState(null));
   },[user?.specialty]);
-  async function setPathwayPaceGoal(weeks){
+  // Setting OR changing a goal. `keepStart` is passed through from PaceGoalCard: editing the
+  // target extends the existing clock, "Restart from today" resets it (see DB.setPathwayGoal).
+  async function setPathwayPaceGoal(weeks,{keepStart=false}={}){
     const key=user?.specialty||'exploring';
-    await DB.setPathwayGoal(key,weeks);
+    const had=!!pathwayGoal?.targetWeeks;
+    await DB.setPathwayGoal(key,weeks,{keepStart});
     setPathwayGoalState(await DB.getPathwayGoal(key));
-    toast.success(`Pace goal set — ${weeks} week${weeks===1?'':'s'} to finish ${PATHS[key]?.label||'this pathway'}.`,{icon:<Target size={16}/>});
+    // Setting a goal is an act of intent, so it un-dismisses the prompt too — otherwise
+    // removing a goal later would drop the student back to a permanently hidden card.
+    localStorage.removeItem(`pathwayGoalDismissed:${key}`);
+    setGoalPromptDismissed(false);
+    logEvent('pace_goal_set',`${key}:${weeks}`);
+    const label=PATHS[key]?.label||'this pathway';
+    toast.success(
+      had&&keepStart?`Pace goal updated — ${weeks} week${weeks===1?'':'s'} to finish ${label}.`
+      :had?`Pace goal restarted — ${weeks} week${weeks===1?'':'s'} from today to finish ${label}.`
+      :`Pace goal set — ${weeks} week${weeks===1?'':'s'} to finish ${label}.`,
+      {icon:<Target size={16}/>});
+  }
+  async function clearPathwayPaceGoal(){
+    const key=user?.specialty||'exploring';
+    await DB.clearPathwayGoal(key);
+    setPathwayGoalState(null);
+    toast('Pace goal removed — set a new one whenever you want.',{icon:<Target size={16}/>});
   }
   const [goalPromptDismissed,setGoalPromptDismissed]=useState(false);
   useEffect(()=>{
@@ -2466,6 +2610,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const curPathAllL  = (curPath?.units||[]).flatMap(u=>u.lessons||[]);
   const curPathDoneL = curPathAllL.filter(l=>isLessonComplete(l,pathway[l.id])).length;
   const curPathMastery = curPathAllL.length>0?Math.round((curPathDoneL/curPathAllL.length)*100):0;
+  // When each of this pathway's finished lessons was actually finished — the raw material for
+  // "how many did you do in the last 7 days" and the demonstrated-pace projection in
+  // lib/paceGoal.js. Sorted only so a max() over it is cheap to read.
+  const curPathCompletedAts = useMemo(()=>curPathAllL
+    .map(l=>pathway[l.id]?.completedAt)
+    .filter(Boolean)
+    .sort((a,b)=>a-b),
+  [curPathAllL,pathway]);
+  // ONE computation of "are they on pace", shared by the Pathway editor card, the Home
+  // dashboard card and both Medabrain system prompts. Two surfaces disagreeing about whether
+  // a student is behind is worse than neither of them saying anything.
+  const paceStatus = useMemo(()=>computePaceStatus({
+    goal:pathwayGoal, totalLessons:curPathAllL.length, doneLessons:curPathDoneL, completedAts:curPathCompletedAts,
+  }),[pathwayGoal,curPathAllL.length,curPathDoneL,curPathCompletedAts]);
+  const paceText = useMemo(()=>describePace(paceStatus,curPath?.label||'this pathway'),[paceStatus,curPath?.label]);
   // The student's class-year label, resolved once — several surfaces need it, and the
   // Pathway view's per-unit "right time for you" badge reads it on every unit row.
   const gradeLabel = useMemo(()=>GRADE_STAGES.find(g=>g.key===user?.gradeStage)?.label||null,[user?.gradeStage]);
@@ -3285,6 +3444,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         streak,
         planSummary:summarizePlanForCoach(user?.masterPlan),
         recentActivitySummary,
+        paceText,
+        feedbackSummary:feedbackSummary.promptText,
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
@@ -3509,24 +3670,90 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const idx=flat.findIndex(x=>x.lesson.id===lesson.id);
     return (idx===-1||idx===flat.length-1)?null:flat[idx+1];
   }
-  function openLesson(lesson,unit){
+  // The step a saved progress row should reopen on. This is the fix for the specific complaint
+  // that a student who read the article on Monday and came back on Wednesday for the video was
+  // dropped at the top of the article they had already finished: what they confirmed done is
+  // remembered per lesson (DB.lessonProgress), so they land on the first thing they haven't.
+  function resumeStepFor(prog,{hasArticle,hasVideo}){
+    if(!prog)return 'overview';
+    // A saved step is honoured as long as it still exists for this lesson (content can change).
+    const order=['overview',hasArticle&&'article',hasVideo&&'video','quiz'].filter(Boolean);
+    if(prog.step&&order.includes(prog.step)&&prog.step!=='overview')return prog.step;
+    if(hasArticle&&!prog.articleRead)return 'article';
+    if(hasVideo&&!prog.videoWatched)return 'video';
+    if(prog.articleRead||prog.videoWatched)return 'quiz';
+    return 'overview';
+  }
+
+  async function openLesson(lesson,unit){
     const already=pathway[lesson.id];
     const isResuming=!!already?.studying&&!already?.verified;
     DB.startLessonStudy(lesson.id).catch(console.error);
-    logEvent('lesson_video_watched',lesson.id);
+    logEvent('lesson_video_watched',lesson.id); // legacy id — recentActivity.js reads it as "lessons studied"
     if(!already?.verified)setPathway_(pw=>({...pw,[lesson.id]:{...(pw[lesson.id]||{}),studying:true,studyStartedAt:Date.now()}}));
     setActiveLesson({lesson,unit});
+    // Optimistic defaults so the player renders instantly; the saved row below refines them.
     setArticleRead(!!already?.verified);
     setVideoWatched(!!already?.verified);
     setArticleScrollPct(0);
     setLessonStep(already?.verified?'complete':'overview');
+    setReviewMode(false);
+    setLessonConfirms({article:!!already?.verified,video:!!already?.verified});
+
     if(!already?.verified){
       const hour=new Date().getHours(),day=new Date().getDay();
       const scenario=isResuming?'session_resume':(day===0||day===6)?'weekend_session':hour<10?'morning_session':hour>=20?'evening_session':'lesson_started';
       toast(pickNudge(scenario,{lesson:lesson.title}),{icon:<BookOpen size={16}/>,duration:2600});
     }
+
+    try{
+      const prog=await DB.getLessonProgress(lesson.id);
+      await DB.saveLessonProgress(lesson.id,{lastOpenedAt:Date.now()});
+      if(!prog||already?.verified)return;
+      const content=LESSON_CONTENT[lesson.id];
+      const hasArticle=!!content?.article;
+      const hasVideo=!!(content?.video?.ytId||extractYouTubeId(lesson.url));
+      setArticleRead(!!prog.articleRead);
+      setVideoWatched(!!prog.videoWatched);
+      setArticleScrollPct(prog.articleScrollPct||0);
+      setLessonConfirms({article:!!prog.articleConfirmedAt,video:!!prog.videoConfirmedAt});
+      const step=resumeStepFor(prog,{hasArticle,hasVideo});
+      setLessonStep(step);
+      // Say WHY they landed somewhere other than the start, so being dropped into the middle of
+      // a lesson reads as the app remembering rather than the app losing their place.
+      if(step!=='overview'){
+        const where=step==='article'?'back in the article':step==='video'?'straight at the video':'at the verification quiz';
+        toast(`Picking up where you left off — ${where}.`,{icon:<RefreshCw size={15}/>,duration:3000});
+      }
+    }catch(e){ console.error('lesson progress restore failed:',e); }
   }
-  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); setNotesOpen(false); setLessonNote(''); setLessonHighlightsState([]); setReviewMode(false); }
+  function closeLesson(){ setActiveLesson(null); setLessonStep('overview'); setArticleRead(false); setVideoWatched(false); setArticleScrollPct(0); setNotesOpen(false); setLessonNote(''); setLessonHighlightsState([]); setReviewMode(false); setLessonFeedbackRow(null); setLessonConfirms({article:false,video:false}); }
+
+  // The student's own confirmation that they finished a step, recorded with a timestamp so it
+  // survives to the next visit and syncs across devices.
+  function confirmLessonStep(step){
+    if(!activeLesson)return;
+    setLessonConfirms(c=>({...c,[step]:true}));
+    if(step==='article')setArticleRead(true);
+    if(step==='video')setVideoWatched(true);
+    if(!reviewMode){
+      DB.saveLessonProgress(activeLesson.lesson.id,
+        step==='article'?{articleConfirmedAt:Date.now(),articleRead:true}:{videoConfirmedAt:Date.now(),videoWatched:true}
+      ).catch(console.error);
+    }
+  }
+
+  // "Something came up — hold my place." Progress is already written on every step change, so
+  // this is really about saying so out loud: a student who closes a lesson mid-way should leave
+  // knowing the app kept their spot rather than hoping it did.
+  function continueLessonLater(){
+    const title=activeLesson?.lesson?.title;
+    closeLesson();
+    toast.success(
+      title?`Saved your spot in "${title}". Go do what you need to — it'll be exactly here when you're back.`
+           :"Saved your spot. It'll be exactly here when you're back.",
+      {icon:<Coffee size={16}/>,duration:4500});
+  }
 
   // Re-opens a lesson the student is navigating *back into* with the forward button (or
   // landing on from a shared /prep/…/lesson/… link). Same screen as openLesson, minus
@@ -3542,6 +3769,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setArticleScrollPct(0);
     setLessonStep(already?.verified?'complete':'overview');
     setReviewMode(!!already?.verified);
+    setLessonConfirms({article:!!already?.verified,video:!!already?.verified});
   }
 
   // Re-opens an already-verified lesson so the student can actually browse its article/video
@@ -3556,15 +3784,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     setVideoWatched(true);
     setArticleScrollPct(0);
     setLessonStep('overview');
+    setLessonConfirms({article:true,video:true});
   }
 
   // Loads this lesson's saved note + highlights fresh every time a different lesson opens, so
   // Meta Brain and the highlighter always reflect the lesson actually on screen.
   useEffect(()=>{
-    if(!activeLesson){ setLessonNote(''); setLessonHighlightsState([]); return; }
+    if(!activeLesson){ setLessonNote(''); setLessonHighlightsState([]); setLessonFeedbackRow(null); return; }
     let cancelled=false;
     DB.getLessonNote(activeLesson.lesson.id).then(text=>{ if(!cancelled)setLessonNote(text); }).catch(console.error);
     DB.getLessonHighlights(activeLesson.lesson.id).then(rows=>{ if(!cancelled)setLessonHighlightsState(rows); }).catch(console.error);
+    DB.getLatestLessonFeedback(activeLesson.lesson.id).then(row=>{ if(!cancelled)setLessonFeedbackRow(row); }).catch(console.error);
     return ()=>{ cancelled=true; };
   },[activeLesson?.lesson?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -3579,11 +3809,75 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const text=body.slice(start,end);
     const id=await DB.addLessonHighlight(activeLesson.lesson.id,{sectionIdx,start,end,text,color});
     setLessonHighlightsState(hs=>[...hs,{id,lessonId:activeLesson.lesson.id,sectionIdx,start,end,text,color,createdAt:Date.now()}]);
+    DB.getAllLessonHighlights().then(setAllLessonHighlights).catch(console.error);
   }
+
+  // The cross-lesson stores Medabrain reads from: every difficulty answer, every highlight, and
+  // every note. Loaded once the DB is up and refreshed whenever a lesson closes, which is the
+  // moment any of the three can have changed.
+  useEffect(()=>{
+    if(!dbReady)return;
+    DB.getAllLessonFeedback().then(setAllLessonFeedback).catch(console.error);
+    DB.getAllLessonHighlights().then(setAllLessonHighlights).catch(console.error);
+    DB.getAllLessonNotes().then(setAllLessonNotes).catch(console.error);
+  },[dbReady,activeLesson?.lesson?.id]);
   function removeLessonHighlight(id){
     DB.deleteLessonHighlight(id).catch(console.error);
     setLessonHighlightsState(hs=>hs.filter(h=>h.id!==id));
+    DB.getAllLessonHighlights().then(setAllLessonHighlights).catch(console.error);
   }
+
+  // ── Lesson difficulty feedback ──────────────────────────────────────────────
+  // Three writes per answer, in a deliberate order:
+  //   1. Dexie, immediately — the answer is durable before anything can fail.
+  //   2. progress_sync, via DB's pushDirty — so it follows the student across devices.
+  //   3. the lesson_feedback table, via /api/lesson-feedback — the queryable log.
+  // (3) is fire-and-forget: it is analytics, and a student must never see an error for having
+  // told us how a lesson went. See src/lib/lessonFeedbackApi.js.
+  const feedbackMetaFor=useCallback((lesson,unit)=>({
+    lessonId:lesson.id, lessonTitle:lesson.title,
+    unitId:unit?.id||null, unitTitle:unit?.title||'',
+    pathwayKey:eSpec, category:unit?.quizCat||null,
+  }),[eSpec]);
+
+  const submitLessonFeedback=useCallback(async({rating,clientTs})=>{
+    if(!activeLesson)return null;
+    const {lesson,unit}=activeLesson;
+    const meta=feedbackMetaFor(lesson,unit);
+    const id=await DB.addLessonFeedback({...meta,rating,status:'pending',aiText:'',resources:[]});
+    const row={id,...meta,rating,status:'pending',aiText:'',resources:[],createdAt:clientTs};
+    setLessonFeedbackRow(row);
+    setAllLessonFeedback(f=>[row,...f.filter(x=>x.id!==id)]);
+    logEvent('lesson_feedback',`${lesson.id}:${rating}`);
+    logLessonFeedback({...meta,rating,clientTs});
+    return row;
+  },[activeLesson,feedbackMetaFor]);
+
+  const updateLessonFeedbackRow=useCallback(async(id,patch)=>{
+    if(id==null)return;
+    const {clientTs,...dbPatch}=patch;
+    await DB.updateLessonFeedback(id,dbPatch);
+    setLessonFeedbackRow(r=>r&&r.id===id?{...r,...dbPatch}:r);
+    setAllLessonFeedback(f=>f.map(r=>r.id===id?{...r,...dbPatch}:r));
+    // Re-post so the server row carries the generated text too. The clientTs makes this an
+    // update of the row written a moment ago rather than a duplicate.
+    const row=await DB.getLessonFeedback(activeLesson?.lesson?.id||'').then(rows=>rows.find(r=>r.id===id)).catch(()=>null);
+    if(row&&clientTs)logLessonFeedback({...row,clientTs,aiText:dbPatch.aiText||row.aiText,resources:dbPatch.resources||row.resources});
+  },[activeLesson?.lesson?.id]);
+
+  // What Medabrain knows about this student's level, from every answer they've given.
+  const feedbackSummary=useMemo(()=>summarizeLessonFeedback(allLessonFeedback),[allLessonFeedback]);
+
+  // Lesson ids are opaque ("phy1l1"), so every digest resolves them to real titles across ALL
+  // pathways — a student's notes don't stop mattering because they switched tracks.
+  const lessonTitleById=useMemo(()=>{
+    const map={};
+    for(const p of Object.values(PATHS))for(const u of (p.units||[]))for(const l of (u.lessons||[]))map[l.id]=l.title;
+    return map;
+  },[]);
+  const titleFor=useCallback((id)=>lessonTitleById[id]||id,[lessonTitleById]);
+  const notesDigest=useMemo(()=>buildNotesDigest(allLessonNotes,titleFor),[allLessonNotes,titleFor]);
+  const highlightsDigest=useMemo(()=>buildHighlightsDigest(allLessonHighlights,titleFor),[allLessonHighlights,titleFor]);
 
   // Resume a lesson that was mid-read/mid-video when the page reloaded — same pattern as the
   // flashcard-session resume below, restoring not just which lesson but the exact step, whether
@@ -3624,13 +3918,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[dbReady,curPath]);
 
   // ...and keep that lesson's exact position saved as it progresses.
+  //
+  // TWO stores, doing two different jobs, which is why both writes are here:
+  //   · viewState (localStorage, one slot) answers "the tab was reloaded — what was on screen?"
+  //   · DB.lessonProgress (IndexedDB, one row per lesson, synced) answers "they came back three
+  //     days later and opened this lesson again — where were they in it?" The single-slot
+  //     viewState cannot answer that: opening any other lesson overwrites it.
+  // Review mode is excluded from the durable write on purpose — re-reading a verified lesson is
+  // browsing, and letting it stamp articleRead/videoWatched would rewrite a real study record.
   useEffect(()=>{
     if(activeLesson){
       saveViewState({activeLesson:{lessonId:activeLesson.lesson.id,unitId:activeLesson.unit.id,step:lessonStep,articleRead,videoWatched,articleScrollPct}});
+      if(!reviewMode){
+        DB.saveLessonProgress(activeLesson.lesson.id,{step:lessonStep,articleRead,videoWatched,articleScrollPct}).catch(console.error);
+      }
     }else{
       saveViewState({activeLesson:null});
     }
-  },[activeLesson,lessonStep,articleRead,videoWatched,articleScrollPct]);
+  },[activeLesson,lessonStep,articleRead,videoWatched,articleScrollPct,reviewMode]);
   // Once the active lesson's quiz is passed (verified flips true in `pathway`), jump the
   // player to the Complete step — this is what lets the Quiz step hand off to the app-level
   // aQuiz/QuizEngine fullscreen gate and have control cleanly return to LessonPlayer afterward
@@ -3932,19 +4237,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [dSrchLive,setDSrchLive] = useState('');
   useEffect(()=>{ const t=setTimeout(()=>setDS2(dSrchLive),120); return()=>clearTimeout(t); },[dSrchLive]);
 
-  // Active deck cards (sorted for study). Smart Mix is a virtual "deck" that pools every due
-  // card across every real deck into one cross-category session instead of picking a single
-  // deck first — each card is tagged with where it actually lives so rateCard() can write its
-  // FSRS update back to the right place.
+  // Active deck cards (sorted for study). Smart Mix is a virtual "deck" that pools EVERY card
+  // in the library — all 866 built-in cards plus anything custom — into one cross-category
+  // session, freshly shuffled on every entry (see startSmartMix/seededShuffle). Each card is
+  // tagged with where it actually lives so rateCard() can write its FSRS update back to the
+  // right place.
+  //
+  // It deliberately does NOT filter to due cards or sort by FSRS state the way a single deck
+  // does. Smart Mix's job is full-library interleaving — every card, in a genuinely different
+  // order each session — and both a due-filter and a stability sort work against that: the
+  // due-filter shrinks the pool to a handful once a student is caught up, and the sort makes
+  // consecutive sessions replay the same ordering. Per-deck study still honours both (below),
+  // so the scheduled path is intact for anyone who wants it.
   const deckCards = useMemo(()=>{
     if(!activeDeck)return[];
     if(activeDeck.smartMix){
-      const pool=allDecksList.flatMap(d=>getDueCards(d.cards).map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
-      return sortForStudy(pool);
+      const pool=allDecksList.flatMap(d=>d.cards.map(c=>({...c,_srcDeck:d.name,_srcBuiltin:d.builtin})));
+      return seededShuffle(pool,smartMixSeed);
     }
     const cards=cardsForDeck(activeDeck.name,activeDeck.builtin);
     return studyMode==='due'?sortForStudy(getDueCards(cards)):cards;
-  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck]);
+  },[activeDeck,cDecks,studyMode,allDecksList,cardsForDeck,smartMixSeed]);
 
   const currentCard = deckCards[cIdx];
 
@@ -3984,8 +4297,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   function startPlanDeck(){
     if(!planDeckPending)return;
     const pd=planDeckPending;
+    if(pd.smartMix){ setPlanDeckPending(null); startSmartMix(); play('click'); return; }
     setAD(pd);
-    setStudyMode(pd.smartMix?'all':(getDueCards(cardsForDeck(pd.name,pd.builtin)).length>0?'due':'all'));
+    setStudyMode(getDueCards(cardsForDeck(pd.name,pd.builtin)).length>0?'due':'all');
     setCIdx(0);setFlip(false);
     setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});
     setPlanDeckPending(null);
@@ -4050,6 +4364,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
                 {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
                 {satProjection&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>SAT {satProjection.low}–{satProjection.high}</span>}
+                {/* Pace status sits beside the streak because it answers the same question the
+                    streak does — "am I actually keeping up?" — but against a target the student
+                    chose rather than a generic daily habit. */}
+                {paceStatus&&(()=>{
+                  const t=paceTone(paceStatus.state);
+                  const dim=t==='good'?C.greenDim:t==='warn'?C.amberDim:C.roseDim;
+                  const lt =t==='good'?C.greenL  :t==='warn'?C.amberL  :C.roseL;
+                  return <span title={`${paceStatus.targetWeeks}-week pace goal · target ${formatPaceDate(paceStatus.deadline)}`} style={{...pill(dim,lt),display:'inline-flex',alignItems:'center',gap:5}}><Target size={11}/>{paceStatus.label}</span>;
+                })()}
               </div>
             </div>
           </div>
@@ -4095,6 +4418,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             {unlocks.isOpen('prep','quizzes')&&<button onClick={()=>goPrep('quizzes')} style={btnG({marginTop:14,fontSize:12,padding:'8px 18px'})}>See All Recommendations</button>}
           </div>}
         </div>}
+
+        {/* Pace goal — the student's own "finish this pathway in N weeks" commitment, reported
+            on the dashboard rather than only on the tab where it was set. A goal you have to go
+            looking for is a goal that stops steering anything after week one. Read-only here:
+            the button hands off to the Pathway tab, which is where changing it (and seeing what
+            the new number costs per week) belongs. */}
+        {curPathAllL.length>0&&unlocks.isOpen('prep','pathways')&&(
+          <PaceGoalCard
+            goal={pathwayGoal} pathwayLabel={curPath?.label||'your pathway'}
+            totalLessons={curPathAllL.length} doneLessons={curPathDoneL}
+            completedAts={curPathCompletedAts}
+            accent={accent} variant="compact" isMobile={isMobile}
+            onEditRequest={()=>goPrep('pathways')}
+          />
+        )}
 
         {/* Medabrain ranked quiz recommendations — top 3 on the dashboard */}
         {/* Plan-named picks pulled to the front before slicing to 3, so a plan quiz ranked #5
@@ -4466,42 +4804,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             );
           }
-          const hasRealGoal=!!(pathwayGoal&&pathwayGoal.targetWeeks);
-          if(!hasRealGoal){
-            if(goalPromptDismissed)return null;
-            return(
-              <div style={{...glass2({padding:'14px 18px',background:'rgba(255,255,255,0.03)'})}}>
-                <div style={R({gap:10,marginBottom:10})}>
-                  <Target size={15} color={accent}/>
-                  <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Set a pace goal for {curPath?.label}?</div>
-                </div>
-                <p style={{fontSize:11.5,color:C.t3,lineHeight:1.6,margin:'0 0 12px'}}>Pick a target so you can see whether you're on track to finish — {totalLessons} lessons total.</p>
-                <div style={R({gap:8,flexWrap:'wrap'})}>
-                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(2)}>2 weeks</button>
-                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(4)}>4 weeks</button>
-                  <button style={btnSm(`${accent}22`,{color:accent,border:`1px solid ${accent}40`})} onClick={()=>setPathwayPaceGoal(8)}>8 weeks</button>
-                  <button style={btnSm('transparent',{color:C.t3})} onClick={dismissPathwayPaceGoal}>No goal</button>
-                </div>
-              </div>
-            );
-          }
-          const elapsedWeeks=Math.max(0,(Date.now()-pathwayGoal.startedAt)/(7*24*60*60*1000));
-          const expectedByNow=Math.min(totalLessons,Math.round((elapsedWeeks/pathwayGoal.targetWeeks)*totalLessons));
-          const diff=curPathDoneL-expectedByNow;
-          const status=diff>0?{label:'Ahead of pace',color:C.green,colorL:C.greenL,dim:C.greenDim}
-                      :diff===0?{label:'On pace',color:C.green,colorL:C.greenL,dim:C.greenDim}
-                      :{label:`${Math.abs(diff)} lesson${Math.abs(diff)===1?'':'s'} behind — catch up this week`,color:C.amber,colorL:C.amberL,dim:C.amberDim};
+          // The pace goal is the student's own commitment, so the Pathway tab is where it can
+          // actually be authored: any target they type, changeable at any time, restartable,
+          // removable. PaceGoalCard owns all of that (and the identical status math the Home
+          // card and Medabrain read), so this is just the wiring.
           return(
-            <div style={{...glass2({padding:'14px 18px',background:'rgba(255,255,255,0.03)'})}}>
-              <div style={R({gap:10})}>
-                <CalendarDays size={15} color={status.color}/>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>{pathwayGoal.targetWeeks}-week pace goal</div>
-                  <div style={{fontSize:11,color:C.t3,marginTop:2}}>{curPathDoneL}/{totalLessons} lessons verified · week {Math.min(pathwayGoal.targetWeeks,Math.ceil(elapsedWeeks)||1)} of {pathwayGoal.targetWeeks}</div>
-                </div>
-                <span style={pill(status.dim,status.colorL,{fontSize:10.5,fontWeight:700})}>{status.label}</span>
-              </div>
-            </div>
+            <PaceGoalCard
+              goal={pathwayGoal} pathwayLabel={curPath?.label||'this pathway'}
+              totalLessons={totalLessons} doneLessons={curPathDoneL}
+              completedAts={curPathCompletedAts}
+              accent={accent} variant="full" isMobile={isMobile}
+              dismissed={goalPromptDismissed}
+              onSetGoal={setPathwayPaceGoal} onClearGoal={clearPathwayPaceGoal}
+              onDismiss={dismissPathwayPaceGoal}
+            />
           );
         })()}
         {units.map((unit,ui)=>{
@@ -5113,7 +5429,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(planDeckPending&&!activeDeck){
       const pd=planDeckPending;
       const dueCount=pd.smartMix?dueCards:getDueCards(cardsForDeck(pd.name,pd.builtin)).length;
-      const totalCount=pd.smartMix?dueCards:cardsForDeck(pd.name,pd.builtin).length;
+      const totalCount=pd.smartMix?allCards.length:cardsForDeck(pd.name,pd.builtin).length;
       return(
         <div style={CC({gap:16})}>
           <button style={{...btnG({alignSelf:'flex-start'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setPlanDeckPending(null)}><ChevronLeft size={14}/>All Decks</button>
@@ -5124,7 +5440,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={{fontSize:10,fontWeight:800,letterSpacing:'.1em',textTransform:'uppercase',color:C.amberL,marginBottom:8}}>Today's Plan Task</div>
             <div style={{fontSize:20,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.02em',marginBottom:10}}>{pd.smartMix?'Smart Mix':pd.name}</div>
             <div style={{fontSize:13.5,color:C.t2,lineHeight:1.6,maxWidth:420,margin:'0 auto 20px'}}>
-              {pd.smartMix?`Review every due card across every deck — ${dueCount} card${dueCount===1?'':'s'} in this session.`:`${dueCount>0?`${dueCount} card${dueCount===1?'':'s'} due for review`:`${totalCount} card${totalCount===1?'':'s'} in this deck`} — spaced-repetition scheduling picks up right where you left off.`}
+              {pd.smartMix?`Every card in your library — all ${totalCount} of them, from all ${allDecksList.length} decks — shuffled into one fresh random order${dueCount>0?`, including the ${dueCount} due for review`:''}.`:`${dueCount>0?`${dueCount} card${dueCount===1?'':'s'} due for review`:`${totalCount} card${totalCount===1?'':'s'} in this deck`} — spaced-repetition scheduling picks up right where you left off.`}
             </div>
             <button style={{...btn(C.sunsetGrad,{fontSize:14,padding:'13px 30px'}),display:'inline-flex',alignItems:'center',gap:8,boxShadow:`0 6px 22px ${C.amber}40`}} onClick={startPlanDeck}>
               <Play size={16}/>Start Studying
@@ -5143,7 +5459,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} style={{...glass({padding:40,textAlign:'center'})}}>
             <motion.div initial={{scale:.6,rotate:-10}} animate={{scale:1,rotate:0}} transition={{type:'spring',stiffness:260,damping:14}} style={{marginBottom:16,display:'flex',justifyContent:'center'}}><PartyPopper size={44} color={C.green}/></motion.div>
             <div style={{fontSize:18,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:8}}>{activeDeck.smartMix?'Smart Mix complete!':studyMode==='due'?'All due cards reviewed!':'Deck complete!'}</div>
-            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?"You've cleared every due card across every deck — nice.":studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
+            <div style={{fontSize:14,color:C.t2,marginBottom:sessionTotal>0?20:24}}>{activeDeck.smartMix?`You went through all ${deckCards.length} cards in your library. Start it again and they'll come back in a completely different order.`:studyMode==='due'?'Check back later for more cards to review.':'You have reviewed all cards in this deck.'}</div>
             {sessionTotal>0&&(<>
               <div style={{...G(4,10,{},isMobile),marginBottom:14,maxWidth:460,marginLeft:'auto',marginRight:'auto'}}>
                 <div style={glass2({textAlign:'center',padding:12})}><div style={{fontSize:18,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{sessionTotal}</div><div style={{fontSize:9,color:C.t3,textTransform:'uppercase',letterSpacing:'.06em',marginTop:2}}>Reviewed</div></div>
@@ -5158,6 +5474,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </>)}
             <div style={R({justifyContent:'center',gap:10})}>
               {!activeDeck.smartMix&&studyMode==='due'&&<button style={btn()} onClick={()=>setStudyMode('all')}>Browse All Cards</button>}
+              {activeDeck.smartMix&&<button style={btn(C.sunsetGrad)} onClick={startSmartMix}>Shuffle Again</button>}
               {activeDeck.smartMix
                 ?<button style={btnG()} onClick={()=>{setAD(null);setCIdx(0);setFlip(false);}}>Back to Decks</button>
                 :<button style={btnG()} onClick={()=>{setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>Study Again</button>}
@@ -5184,10 +5501,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </AnimatePresence>
               </div>
               <div style={{fontSize:11,color:C.t3,fontFamily:C.FM,marginTop:2}}>
-                {cIdx+1} / {deckCards.length}{activeDeck.smartMix&&currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:!activeDeck.smartMix?` · ${dueCount} due`:''}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
+                {cIdx+1} / {deckCards.length}{activeDeck.smartMix?` · shuffled${currentCard?._srcDeck?` · from ${currentCard._srcDeck}`:''}`:` · ${dueCount} due`}{sessionTotal>0?` · ${sessionTotal} reviewed · +${sessionStats.xp} XP`:''}
               </div>
             </div>
             <div style={R({gap:6})}>
+              {/* Re-deals the whole library from card 1 without leaving the session — the escape
+                  hatch for "I've seen this run, give me a different one". */}
+              {activeDeck.smartMix&&<button title="Deal all cards again in a brand-new order" style={{...btnSm(C.s4,{color:C.t2,fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}} onClick={()=>{rerollSmartMix();play('click');}}><Shuffle size={11}/>Reshuffle</button>}
               {!activeDeck.smartMix&&<button style={btnSm(studyMode==='due'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='due'?'#fff':C.t2,border:`1px solid ${studyMode==='due'?'transparent':C.b1}`,boxShadow:studyMode==='due'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('due');setCIdx(0);setFlip(false);}}>Due ({dueCount})</button>}
               {!activeDeck.smartMix&&<button style={btnSm(studyMode==='all'?C.sunsetGrad:C.s4,{fontSize:11,color:studyMode==='all'?'#fff':C.t2,border:`1px solid ${studyMode==='all'?'transparent':C.b1}`,boxShadow:studyMode==='all'?`0 3px 10px ${C.amber}30`:'none'})} onClick={()=>{setStudyMode('all');setCIdx(0);setFlip(false);}}>All</button>}
               {!activeDeck.builtin&&<button style={btnSm(C.s4,{color:C.t2,fontSize:11})} onClick={()=>setManageDeck(activeDeck.name)}>Manage</button>}
@@ -5273,17 +5593,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <StatTile icon={Brain} value={avgRetention!==null?`${avgRetention}%`:'—'} label="Avg. Retention" color={C.violet}/>
         </div>
 
-        {/* Smart Mix — one cross-category session pulling due cards from every deck at once,
-            instead of having to pick a single deck first and switch decks once it runs dry. */}
-        {dueDeckCount>0&&(
+        {/* Smart Mix — one cross-category session over the ENTIRE library, reshuffled on every
+            entry. It used to pool only the cards FSRS said were due, which meant a caught-up
+            student got a two-card "mix" (or no banner at all), and two sessions in a row dealt
+            the same cards in the same stability-sorted order. Interleaving the whole library in
+            a genuinely fresh order is the thing this surface is actually for; the per-deck Due
+            filter is still there for anyone who wants the scheduled subset. */}
+        {allCards.length>0&&(
           <motion.div whileHover={{y:-2}} style={{...glass({padding:18}),display:'flex',alignItems:'center',gap:16,flexWrap:'wrap',background:`linear-gradient(135deg,${C.amber}14,transparent)`,border:`1px solid ${C.amber}30`,cursor:'pointer'}}
-            onClick={()=>{setAD({name:'Smart Mix',builtin:true,smartMix:true});setCIdx(0);setFlip(false);setSessionStats({reviewed:0,again:0,hard:0,good:0,easy:0,startedAt:Date.now(),streak:0,bestStreak:0,xp:0});}}>
-            <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Sparkles size={20} color={C.amberL}/></div>
+            onClick={startSmartMix}>
+            <div style={{width:44,height:44,borderRadius:13,flexShrink:0,background:C.amberDim,border:`1px solid ${C.amber}35`,display:'flex',alignItems:'center',justifyContent:'center'}}><Shuffle size={20} color={C.amberL}/></div>
             <div style={{flex:1,minWidth:200}}>
               <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>Smart Mix</div>
-              <div style={{fontSize:12,color:C.t2,marginTop:2}}>Review {dueDeckCount} due deck{dueDeckCount===1?'':'s'} in one session — no need to pick a deck first.</div>
+              <div style={{fontSize:12,color:C.t2,marginTop:2}}>All {allCards.length} cards from all {builtinCount+customCount} decks, shuffled into a brand-new order every single time you start it{dueCards>0?` — the ${dueCards} due for review are in there too`:''}.</div>
             </div>
-            <span style={{...btn(accentGrad(C.amber),{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Start<ChevronRight size={13}/></span>
+            <span style={{...btn(accentGrad(C.amber),{fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}}>Shuffle & Start<ChevronRight size={13}/></span>
           </motion.div>
         )}
 
@@ -7931,6 +8255,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           accent={curPath?.accent||C.blue} m={isMobile}
           highlights={lessonHighlights} onAddHighlight={addLessonHighlight} onRemoveHighlight={removeLessonHighlight}
           quizBlurb={describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:eSpec,attempt:getAttemptCount(lesson.id)}))}
+          confirms={lessonConfirms} onConfirmStep={confirmLessonStep} onContinueLater={continueLessonLater}
+          reviewMode={reviewMode}
+          feedbackSlot={
+            <LessonDifficultyCheck
+              lesson={lesson} unit={unit} content={lessonContent}
+              pathwayKey={eSpec} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
+              user={user} lessonNote={lessonNote}
+              feedbackSummary={feedbackSummary.promptText}
+              existing={lessonFeedbackRow}
+              onSubmit={submitLessonFeedback} onUpdate={updateLessonFeedbackRow}
+              accent={curPath?.accent||C.blue} isMobile={isMobile}
+            />
+          }
         />
         {/* Fills the right-side gutter of the immersive lesson view with a click-away Prep Meta
             Brain (purpose:'prep'), grounded in this exact lesson's content — see PrepMetaBrain.jsx. */}
@@ -7944,6 +8281,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           keyTakeaways={lessonContent?.article?.keyTakeaways||[]}
           objectives={lesson.objectives||[]}
           lessonNote={lessonNote}
+          lessonHighlights={lessonHighlights}
+          notesDigest={notesDigest} highlightsDigest={highlightsDigest}
+          feedbackSummary={feedbackSummary.promptText} paceText={paceText}
           recentActivitySummary={recentActivitySummary}
         />
         {/* Left-side notes panel — per-lesson free-text notes, autosaved and fully readable by
@@ -7993,6 +8333,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           weakestCategory={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?cats3[w.i]:null;})()}
           weakestScore={(()=>{const w=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];return w?w.v:null;})()}
           dueCards={dueCards} streak={streak}
+          notesDigest={notesDigest} highlightsDigest={highlightsDigest}
+          feedbackSummary={feedbackSummary.promptText} paceText={paceText}
           recentActivitySummary={recentActivitySummary}
         />
       </div>
