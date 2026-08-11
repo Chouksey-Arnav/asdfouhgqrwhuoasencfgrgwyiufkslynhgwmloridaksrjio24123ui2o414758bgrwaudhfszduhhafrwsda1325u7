@@ -110,6 +110,19 @@ The application operates in a unified monorepo supporting two distinct hosting m
 
 ---
 
+## ✉️ Diagnosing "the email never arrived"
+
+`npm run check:mailer -- you@example.com` sends one real OTP-style email through whatever
+`BREVO_SMTP_*`/`SMTP_*` env vars are set in the current shell and prints Brevo's actual accept
+response (from-address, message ID). A `250 OK` here only proves Brevo accepted the message for
+relay, not that it reached the inbox — DMARC/sender-alignment failures and spam-foldering happen
+silently after that point. If the script succeeds but the mail still doesn't show up, check the
+Brevo dashboard (Transactional → Logs) for that message's real delivery status, and confirm
+`BREVO_SMTP_FROM_N` is a sender verified in Brevo, ideally on the `medschoolprep.cloud` domain
+with SPF/DKIM set up there.
+
+---
+
 ## 🔐 Complete Environment Variables Reference
 
 | Variable Name | Type | Purpose |
@@ -120,8 +133,8 @@ The application operates in a unified monorepo supporting two distinct hosting m
 | `VITE_SUPABASE_ANON_KEY` | String | Public anon key, used solely for OAuth callbacks on client side. |
 | `BREVO_SMTP_HOST` / `BREVO_SMTP_PORT` | String/Num | SMTP relay host (default: `smtp-relay.brevo.com`) and TLS port (default: `587`), shared by all rotating Brevo accounts. |
 | `BREVO_SMTP_USER_1` / `BREVO_SMTP_PASS_1` (`_2`, `_3`, `_4`, ...) | String | SMTP login/password for each Brevo account in the rotation. OTP emails round-robin across every numbered account found (account 1, then 2, then 3, ...), multiplying the combined monthly send quota. |
-| `BREVO_SMTP_FROM_1` (`_2`, `_3`, `_4`, ...) | String | Optional verified "from" sender address for each numbered account. Falls back to that account's `BREVO_SMTP_USER_N`. |
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | String/Num | Legacy single-account SMTP config. Used only if no `BREVO_SMTP_USER_1` is set. |
+| `BREVO_SMTP_FROM_1` (`_2`, `_3`, `_4`, ...) | String | **Required** for each numbered account — the sender address verified in Brevo (Senders, Domains & Dedicated IPs → Senders) for that account. Must not be left unset: an unverified/misaligned "from" is accepted by Brevo's relay (so the app sees success) but can then be silently dropped or spam-foldered by the recipient, which looks identical to "the app never sent it." |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` | String/Num | Legacy single-account SMTP config. Used only if no `BREVO_SMTP_USER_1` is set. `SMTP_FROM` is required for the same reason as `BREVO_SMTP_FROM_N` above. |
 | `GROQ_API_KEY` | String | **Required.** Primary Groq API key for conversational AI. |
 | `GROQ_API_KEY_2` / `_3` | String | Optional failover/pooling keys from alternative Groq accounts. |
 | `GROQ_API_KEY_INTERVIEW` | String | Dedicated key for the spoken interview simulator. |

@@ -40,6 +40,7 @@
     "verify:parent": "node scripts/verifyParentDashboard.mjs",
     "verify:parent-claim": "node scripts/verifyParentClaimFlow.mjs",
     "check:parent-schema": "node scripts/checkParentSchema.mjs",
+    "check:mailer": "node scripts/checkMailerConfig.mjs",
     "verify:family-messages": "node scripts/verifyFamilyMessages.mjs"
   },
   "dependencies": {
