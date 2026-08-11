@@ -7,7 +7,7 @@
 //
 // The check itself lives in api/_lib/otp.js, shared with send-otp and the parent claim flow.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
-import { checkOtp } from '../_lib/otp.js';
+import { checkOtp, isPurposeUnsupported } from '../_lib/otp.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PURPOSES = ['signup', 'password_reset', 'signin'];
@@ -37,8 +37,11 @@ export default async function handler(req, res) {
   try {
     const supabase = getSupabaseAdmin();
 
+    // `reason` is passed through so the client can tell an expired code from a wrong one from a
+    // burnt one without matching on the prose of the message — which it used to do, and which
+    // silently stopped working the moment any of these sentences was reworded.
     const result = await checkOtp(supabase, { email, code, purpose });
-    if (!result.ok) return res.status(result.status).json({ error: result.error });
+    if (!result.ok) return res.status(result.status).json({ error: result.error, reason: result.reason });
 
     const { data: verification, error: verErr } = await supabase
       .from('email_verifications')
@@ -49,6 +52,22 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ verified: true, verificationToken: verification.id });
   } catch (err) {
+    // The person typed the right code and the database refused to record it, because a migration
+    // that widens `purpose` has not been applied here. Saying "that code is wrong" would be a lie
+    // that costs them another email on every retry — see isPurposeUnsupported.
+    if (isPurposeUnsupported(err)) {
+      console.error(
+        `verify-otp: email_verifications rejects purpose '${purpose}'. `
+        + 'Apply supabase/migrations/0010_parent_access.sql to this database — '
+        + 'passwordless sign-in cannot complete until it is.',
+        err,
+      );
+      return res.status(503).json({
+        error: 'Sign-in by emailed code is not finished setting up on this deployment yet. '
+          + 'Your code was correct — please contact support rather than requesting another.',
+        reason: 'schema_missing',
+      });
+    }
     console.error('verify-otp error:', err);
     return res.status(500).json({ error: 'Could not verify code. Please try again.' });
   }

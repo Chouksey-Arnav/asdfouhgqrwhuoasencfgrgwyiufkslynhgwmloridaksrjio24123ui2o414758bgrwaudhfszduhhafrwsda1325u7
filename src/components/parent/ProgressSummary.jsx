@@ -14,7 +14,7 @@ import React from 'react';
 import {
   Flame, TrendingUp, TrendingDown, Minus, Award, BookOpenCheck, Target, CalendarDays, Sparkles, Brain,
 } from 'lucide-react';
-import { C, glass, glass2, G, CC, R, pill, tint } from '../../lib/theme';
+import { C, glass, glass2, autoGrid, CC, R, pill, tint } from '../../lib/theme';
 import { buildParentDigest } from '../../lib/parentDigest';
 
 const fmtDate = (value) => {
@@ -176,7 +176,15 @@ export default function ProgressSummary({ summary }) {
         )}
       </div>
 
-      <div style={G(2, 12, {}, true)}>
+      {/* auto-fit rather than G(2,…,mobile): the mobile flag collapsed this to a single
+          full-width column on every screen size, so four cards became a four-row tower with the
+          right half of the page empty. See autoGrid in lib/theme.js. */}
+      {/* 320 rather than something smaller so these land two-up on a laptop instead of three with
+          an orphan on the next row. These are not compact tiles — each carries a value, a label, a
+          sub-line and two lines explaining what the number is evidence of (see `means` on Stat) —
+          and at a third of the page that explanation wraps to four cramped lines. Two-up gives it
+          room and still collapses to a single column on a phone. */}
+      <div style={autoGrid(320, 12)}>
         <Stat
           icon={CalendarDays} hue={C.green}
           value={`${effort?.activeDaysLast7 ?? 0} of 7`}

@@ -38,7 +38,8 @@
     "verify:master-plan": "node scripts/verifyMasterPlan.mjs",
     "verify:migrations": "node scripts/verifyMigrations.mjs",
     "verify:parent": "node scripts/verifyParentDashboard.mjs",
-    "verify:parent-claim": "node scripts/verifyParentClaimFlow.mjs"
+    "verify:parent-claim": "node scripts/verifyParentClaimFlow.mjs",
+    "check:parent-schema": "node scripts/checkParentSchema.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",

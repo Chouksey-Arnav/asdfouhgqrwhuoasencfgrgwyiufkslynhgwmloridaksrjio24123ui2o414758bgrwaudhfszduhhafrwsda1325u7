@@ -113,6 +113,23 @@ body::before {
   .msp-aurora, .msp-pulse-glow { animation: none !important; }
 }
 
+/* Loading placeholders (see SkeletonCard in src/components/parent/ParentApp.jsx). A pulse rather
+   than a travelling highlight: the highlight version needs a gradient sized to each block, which
+   means every skeleton has to know its own width, and it reads as glare on the light palettes.
+   Opacity animates on the compositor, so a page full of these costs nothing to paint. */
+@keyframes mspShimmer { 0%,100% { opacity: .55; } 50% { opacity: 1; } }
+.msp-shimmer { animation: mspShimmer 1.4s ease-in-out infinite; }
+
+/* A scroll container that scrolls without drawing a bar — used by the parent app's tab strip,
+   where a permanent horizontal scrollbar under seven tabs is worse than the overflow it reveals.
+   The edge fade drawn beside it is what tells the reader there is more; see ParentApp's nav. */
+.msp-noscrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.msp-noscrollbar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .msp-shimmer { animation: none !important; }
+}
+
 /* Medabrain launcher (PortfolioMedabrain / PrepMedabrain pull-tab + mobile FAB) — a diagonal
    light sweep that glides across the button on hover, on top of the ambient .msp-pulse-glow ring
    already applied to its own glow layer. isolation:isolate keeps the ::after sweep clipped to

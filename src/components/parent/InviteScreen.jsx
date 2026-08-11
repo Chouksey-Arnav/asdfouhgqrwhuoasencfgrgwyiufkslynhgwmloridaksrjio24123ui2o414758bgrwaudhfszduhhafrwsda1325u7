@@ -118,6 +118,8 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [otp, setOtp] = useState('');
+  // True when the last send reused a code already in the inbox rather than mailing a new one.
+  const [reused, setReused] = useState(false);
 
   const ref = { code: code || null, token: token || null };
 
@@ -161,9 +163,15 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
     setBusy(true);
     setError('');
     try {
-      await ParentAPI.sendClaimCode(ref);
+      // `reused` means a code from the last minute is still live and was left alone rather than
+      // replaced — the common case here is a parent who taps Continue, goes back to re-read what
+      // would be shared, and taps it again. Saying "Code sent" a second time would send them
+      // looking for a second email that is not coming, and the code they already have is the one
+      // that works. See RESEND_FLOOR_MS in api/_lib/otp.js.
+      const { reused } = await ParentAPI.sendClaimCode(ref);
       setStage('code');
-      toast.success('Code sent.');
+      setReused(!!reused);
+      toast.success(reused ? 'Use the code we already emailed you.' : 'Code sent.');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -274,8 +282,13 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
                   Check your email
                 </div>
                 <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
-                  We sent a 6-digit code to <strong style={{ color: C.t1 }}>{invite.emailHint}</strong> — the
-                  address {inviterName} invited. Enter it and you're in.
+                  {reused ? (
+                    <>The code we already sent to <strong style={{ color: C.t1 }}>{invite.emailHint}</strong> is
+                      still good — we didn't send a second one. Enter it and you're in.</>
+                  ) : (
+                    <>We sent a 6-digit code to <strong style={{ color: C.t1 }}>{invite.emailHint}</strong> — the
+                      address {inviterName} invited. Enter it and you're in.</>
+                  )}
                 </div>
               </div>
 
@@ -289,8 +302,11 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
 
               <div style={{ textAlign: 'center' }}>
                 <ResendTimer onResend={async () => {
-                  try { await ParentAPI.sendClaimCode(ref); toast.success('New code sent.'); }
-                  catch (err) { toast.error(err.message); }
+                  try {
+                    const { reused: again } = await ParentAPI.sendClaimCode(ref);
+                    setReused(!!again);
+                    toast.success(again ? 'The code already in your inbox still works.' : 'New code sent.');
+                  } catch (err) { toast.error(err.message); }
                 }} />
               </div>
 

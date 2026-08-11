@@ -6,7 +6,7 @@ import { loadA11y, applyA11y } from '../lib/a11y';
 import { getToken, setToken, clearToken, fetchMe, logout } from '../lib/authApi';
 import {
   AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath,
-  isParentHubPath, PARENT_HUB_PATH,
+  isParentHubPath, isParentPath, PARENT_HUB_PATH,
 } from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
@@ -36,10 +36,27 @@ export default function AuthGate({ children }) {
   // dropped into the moment they sign in.
   const landingPathRef = useRef(
     isAuthPath(window.location.pathname) || isParentHubPath(window.location.pathname)
+      || isParentPath(window.location.pathname)
       ? '/'
       : normalizePath(window.location.pathname),
   );
   const firstSyncRef = useRef(true);
+
+  // ── A parent's own deep link, held across the sign-in ─────────────────────
+  //
+  // /family/* is the parent application, and it was the one family of URLs this component had no
+  // answer for while signed out. A parent who bookmarked their dashboard — or their child's page,
+  // which is the whole reason those pages have URLs — came back after their session lapsed and got
+  // the student MARKETING page, rendered underneath their own /family address. Signing out of the
+  // dashboard did the same thing, for the same reason: `view` fell back to 'landing' and the sync
+  // below kept whatever path was in the bar. Nothing was broken in a way anybody could report; it
+  // simply looked like the dashboard had ceased to exist.
+  //
+  // So a parent path while signed out means the parent sign-in screen, and the path is kept here
+  // so they land back on the exact page they asked for rather than on the dashboard root.
+  const parentReturnRef = useRef(
+    isParentPath(window.location.pathname) ? normalizePath(window.location.pathname) : null,
+  );
 
   // ── The legal documents sit outside the signed-in/signed-out split ────────
   //
@@ -136,6 +153,14 @@ export default function AuthGate({ children }) {
   }, []);
 
   useEffect(() => { restore(); }, [restore]);
+
+  // Runs the moment the session probe comes back empty, and only while `view` is still the default
+  // — so it redirects the parent who arrived at /family, and never overrides a screen they have
+  // since navigated to themselves.
+  useEffect(() => {
+    if (status !== 'signedOut' || !parentReturnRef.current) return;
+    setView((current) => (current === 'landing' ? 'parentLogin' : current));
+  }, [status]);
 
   // ── One theme, from the landing page all the way into the app ────────────
   //
@@ -290,7 +315,25 @@ export default function AuthGate({ children }) {
     // A parent account renders an entirely different application — it owns no progress, no local
     // database, and none of the student app's subsystems mean anything for it. See ParentApp.
     if (user?.role === 'parent') {
-      return <ParentApp user={user} onSignedOut={() => { setUser(null); setStatus('signedOut'); setView('landing'); }} />;
+      return (
+        <ParentApp
+          user={user}
+          // The page they were actually asking for before the session check bounced them to
+          // sign-in. Consumed by ParentApp on mount and then forgotten, so a later sign-out and
+          // sign-in as somebody else does not reopen a stranger's child's page.
+          initialPath={parentReturnRef.current}
+          onSignedOut={() => {
+            parentReturnRef.current = null;
+            setUser(null);
+            setStatus('signedOut');
+            // Explicitly, rather than letting `view` fall back to 'landing': the address bar still
+            // says /family, and the landing branch keeps the current path — which is how signing
+            // out of the dashboard used to leave the student marketing page sitting at a parent
+            // URL. They came in through the parent door and they leave through it.
+            setView('parentLogin');
+          }}
+        />
+      );
     }
     // `openLegal` goes down to App so the in-app footer can open the documents
     // without a full page load, keeping the student's place in the app.

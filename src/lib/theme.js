@@ -702,4 +702,22 @@ export const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.t3, lett
 export const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x });
 export const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
 export const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });
+/**
+ * A grid that reflows by the space it actually has, rather than by a guess about the device.
+ *
+ * ── Why this exists next to G() ─────────────────────────────────────────────
+ * G(cols, gap, x, mobile) takes a boolean: `mobile` collapses to two columns, or to ONE when the
+ * desktop count is two. That boolean is fixed at render and knows nothing about the viewport, so
+ * `G(2, 12, {}, true)` is a permanent single column — which is what the parent dashboard's stat
+ * cards were on a 1200px screen, a tower of four full-width rows with three quarters of the page
+ * empty beside them.
+ *
+ * This asks CSS instead: as many columns as fit at `min` wide, down to one on a phone, with no
+ * breakpoint to keep in step with anything. `min(100%,…)` is the part that matters — without it a
+ * track wider than the container overflows instead of collapsing, which is the classic auto-fit
+ * bug on narrow screens.
+ */
+export const autoGrid = (min=220, gap=12, x={}) => ({
+  display:'grid', gap, gridTemplateColumns:`repeat(auto-fit,minmax(min(100%,${min}px),1fr))`, ...x,
+});
 export const pill   = (bg,color,x={}) => ({ display:'inline-flex', alignItems:'center', padding:'3px 11px', borderRadius:20, fontSize:11, fontWeight:600, letterSpacing:'.04em', background:bg, color, ...x });
