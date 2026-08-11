@@ -312,6 +312,21 @@ function seedInvitation({ email, code, student = 'Aanya Rao', initiatedBy = 'stu
 
 // ── Main ────────────────────────────────────────────────────────────────────
 
+// Neutralize any real Brevo account config baked into the environment THIS BUILD is running in
+// — BREVO_SMTP_USER_N / PASS_N / FROM_N, for every N — before the mailer is ever imported.
+// api/_lib/mailer.js's loadAccounts() checks those numbered vars first, ahead of the legacy
+// single-account SMTP_* vars set below, so a deploy environment configured with real rotating
+// Brevo accounts (exactly what production Coolify/Vercel deploys carry, per README) would
+// otherwise make this "fully local, no real network" test pick up REAL production credentials
+// instead of the fake in-process sink it just started. That is not just a leak: loadAccounts()
+// throws if any configured account is missing its verified FROM address, which turns a Brevo
+// dashboard gap having nothing to do with this code into a hard failure of the entire
+// `npm run build` — exactly what took every deploy down. A verification script must behave
+// identically no matter what secrets happen to be sitting in the environment around it.
+for (const key of Object.keys(process.env)) {
+  if (/^BREVO_SMTP_/.test(key)) delete process.env[key];
+}
+
 const smtp = await startSmtp();
 process.env.SMTP_HOST = '127.0.0.1';
 process.env.SMTP_PORT = String(smtp.port);
