@@ -107,6 +107,13 @@ if (await hasColumn('parent_links', 'last_sent_at')) ok('parent_links.last_sent_
   }
 }
 
+console.log('\nMigration 0011 — family messages');
+// Absent, this is the one part of the feature that degrades to something people will report as a
+// bug rather than as a gap: the Messages tab loads, is empty, and every send answers 503. Listed
+// last because everything above it is what gets a family connected at all.
+if (await hasColumn('parent_messages', 'author_role')) ok('parent_messages');
+else bad('parent_messages is missing — the Messages tab loads empty and nothing can be sent', '0011_family_messages.sql');
+
 if (!failures.length) {
   console.log('\nThis deployment can run the parent dashboard.\n');
   process.exit(0);

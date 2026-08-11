@@ -108,6 +108,53 @@ export async function getActiveLink(supabase, { parentUserId, studentUserId }) {
   return data || null;
 }
 
+/**
+ * The active link with this id, IF the caller is one of its two parties.
+ *
+ * The symmetric twin of getActiveLink, for the endpoints a student and a parent both use against
+ * a relationship they are each half of (api/parent/messages.js). Both the id match and the party
+ * check are in the query rather than fetched-then-compared, for the reason the header of that
+ * function gives and one more: a party check written in JavaScript against a row you already hold
+ * is one early `return` away from being skipped, and the failure is silent.
+ *
+ * Returns the row — including both user ids, which callers write onto their own rows rather than
+ * trusting a request body for — or null.
+ */
+export async function getActiveLinkForUser(supabase, { linkId, userId }) {
+  if (!isUuid(linkId) || !isUuid(userId)) return null;
+  const { data, error } = await supabase
+    .from('parent_links')
+    .select('id, parent_user_id, student_user_id, status, relationship')
+    .eq('id', linkId)
+    .eq('status', 'active')
+    .or(`parent_user_id.eq.${userId},student_user_id.eq.${userId}`)
+    .maybeSingle();
+  if (error) return null;
+  return data || null;
+}
+
+/**
+ * Every active link this account is a party to, whichever side it sits on.
+ *
+ * Ids only, no embedded counterparty: the one caller (api/parent/messages.js) needs this to know
+ * which threads it may read, and the names it renders come from the summary it already holds.
+ * Asking PostgREST for a join it does not need would make this the second place in the codebase
+ * that has to spell a foreign-key constraint name correctly.
+ */
+export async function getActiveLinksForUser(supabase, { userId, role }) {
+  if (!isUuid(userId)) return [];
+  const mine = role === 'parent' ? 'parent_user_id' : 'student_user_id';
+  const other = role === 'parent' ? 'student_user_id' : 'parent_user_id';
+  const { data, error } = await supabase
+    .from('parent_links')
+    .select('id, parent_user_id, student_user_id, relationship')
+    .eq(mine, userId)
+    .eq('status', 'active')
+    .not(other, 'is', null);
+  if (error) return [];
+  return data || [];
+}
+
 /** Every student a parent currently has live consent for. Same per-request re-read as above. */
 export async function getActiveLinksForParent(supabase, parentUserId) {
   if (!isUuid(parentUserId)) return [];

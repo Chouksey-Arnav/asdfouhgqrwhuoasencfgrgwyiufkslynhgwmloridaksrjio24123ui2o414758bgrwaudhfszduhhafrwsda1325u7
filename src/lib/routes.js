@@ -147,6 +147,10 @@ export const PARENT_VIEWS = {
   students: '/family/students',
   digest: '/family/digest',
   activity: '/family/activity',
+  // Where a parent says something rather than only reads. Its own screen rather than a box on the
+  // dashboard because it is the one part of this app that is a conversation with a person, and a
+  // conversation wedged under a row of statistics gets read as another statistic.
+  messages: '/family/messages',
   connections: '/family/connections',
   // What this dashboard is, what each number means, where the privacy line is drawn, and what to
   // do when something is not working. Addressable because it is the page a support reply wants to

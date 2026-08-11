@@ -179,6 +179,45 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
     }
   }
 
+  /** Signed in and connected — the one exit both redemption paths share. */
+  function finish(res) {
+    // Signed in either way. If the accept itself did not go through — the student cancelled the
+    // invitation while this was happening, another tab already used it — the account and session
+    // are real and the dashboard explains itself, which beats stranding somebody who did
+    // everything right on an error page with nothing to click.
+    onAuthed?.(res.token, res.user);
+    if (res.accepted) toast.success("You're connected.");
+    else toast('Signed in — but that invitation had already been used. Ask for a new one.', { icon: 'ℹ️' });
+    window.location.href = PARENT_VIEWS.dashboard;
+  }
+
+  /** Failures that mean the invitation itself is dead, rather than the last thing typed. */
+  const isDead = (reason) => ['not_found', 'expired', 'wrong_direction', 'role_conflict'].includes(reason);
+
+  // ── Claim: finish straight off the emailed link ──────────────────────────
+  //
+  // The whole flow, in one press, for the parent who opened the link we mailed them. No second
+  // email, no six digits, no second visit to the inbox — the link already proved the invitation
+  // reached this mailbox, which is the only thing the code was re-proving. See the header of
+  // api/parent/claim.js for why that is a fair trade and why the shared code does not get it.
+  async function confirmFromLink() {
+    setBusy(true);
+    setError('');
+    try {
+      finish(await ParentAPI.confirmClaimFromLink({ token }));
+    } catch (err) {
+      // The server decides which proofs it will accept, and this is what it says when the
+      // invitation turned out to have been opened with a shared code rather than the emailed
+      // link. Falling back rather than failing: the code path still works, and the person should
+      // never see a dead end on a screen that has a working next step.
+      if (err.reason === 'code_needs_otp') { await requestCode(); return; }
+      setError(err.message);
+      if (isDead(err.reason)) setMode('error');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   // ── Claim: spend it ──────────────────────────────────────────────────────
   async function submitCode(e) {
     e?.preventDefault?.();
@@ -186,20 +225,12 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
     setBusy(true);
     setError('');
     try {
-      const res = await ParentAPI.verifyClaim({ ...ref, otp });
-      // Signed in either way. If the accept itself did not go through — the student cancelled the
-      // invitation while this was happening, another tab already used it — the account and session
-      // are real and the dashboard explains itself, which beats stranding somebody who did
-      // everything right on an error page with nothing to click.
-      onAuthed?.(res.token, res.user);
-      if (res.accepted) toast.success("You're connected.");
-      else toast('Signed in — but that invitation had already been used. Ask for a new one.', { icon: 'ℹ️' });
-      window.location.href = PARENT_VIEWS.dashboard;
+      finish(await ParentAPI.verifyClaim({ ...ref, otp }));
     } catch (err) {
       setError(err.message);
       // A wrong or stale code is a normal thing to type; it must not throw the person out of the
       // flow they are three taps into. Only a dead invitation sends them to the error screen.
-      if (['not_found', 'expired', 'wrong_direction', 'role_conflict'].includes(err.reason)) setMode('error');
+      if (isDead(err.reason)) setMode('error');
     } finally {
       setBusy(false);
     }
@@ -343,10 +374,23 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
             <Bullets title="You'd never see" items={NOT_SHARED} icon={EyeOff} hue={C.t3} />
           </div>
 
-          <button type="button" onClick={requestCode} disabled={busy} style={btn(C.blueGrad, { width: '100%', opacity: busy ? 0.7 : 1 })}>
-            {busy ? <Loader2 className="spin" size={14} /> : <Mail size={15} />}
-            {busy ? 'Sending…' : 'Continue — email me a code'}
-          </button>
+          {/*
+            One press or two, decided by which door they came through and answered by the server
+            (see `canConfirmFromLink`). A parent who opened the emailed link has already proved the
+            invitation reached their mailbox, so there is nothing left to check and the button says
+            so. A parent who typed a shared code has proved nothing yet, so the code step stands.
+          */}
+          {invite.canConfirmFromLink ? (
+            <button type="button" onClick={confirmFromLink} disabled={busy} style={btn(C.blueGrad, { width: '100%', opacity: busy ? 0.7 : 1 })}>
+              {busy ? <Loader2 className="spin" size={14} /> : <ShieldCheck size={15} />}
+              {busy ? 'Connecting…' : 'Confirm and connect'}
+            </button>
+          ) : (
+            <button type="button" onClick={requestCode} disabled={busy} style={btn(C.blueGrad, { width: '100%', opacity: busy ? 0.7 : 1 })}>
+              {busy ? <Loader2 className="spin" size={14} /> : <Mail size={15} />}
+              {busy ? 'Sending…' : 'Continue — email me a code'}
+            </button>
+          )}
           <FieldError>{error}</FieldError>
 
           {/*
@@ -357,7 +401,9 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
           */}
           <div style={CC({ gap: 8 })}>
             {[
-              [KeyRound, 'No password to invent. The code is your sign-in, and you can ask for a new one whenever you come back.'],
+              invite.canConfirmFromLink
+                ? [KeyRound, 'Nothing else to type. This link was sent to your address, so opening it is the check — and you can get back in later with a code we email you at the time.']
+                : [KeyRound, 'No password to invent. The code is your sign-in, and you can ask for a new one whenever you come back.'],
               [Lock, "Your own account — you never sign in as your student, and you never see their password."],
               [ShieldCheck, 'Either of you can end this at any time, and it takes effect immediately.'],
             ].map(([Icon, text]) => (

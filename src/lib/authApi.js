@@ -104,6 +104,23 @@ export const fetchMe = () => req('/auth/me', { method: 'GET' });
 export const updateMe = (patch) => req('/auth/me', { method: 'PATCH', body: JSON.stringify(patch) });
 export const logout = () => req('/auth/logout', { method: 'POST' }).finally(clearToken);
 
+/**
+ * Ends one specific session on the server and leaves local storage alone.
+ *
+ * For the handover case only: a parent signing in at /parents/* on a browser already signed in as
+ * their student (see AuthGate's handleAuthedOverSession). The arriving token has to replace the
+ * outgoing one in storage, so `logout()` is exactly wrong here — its `.finally(clearToken)` would
+ * resolve a moment later and delete the session the parent had just been given, leaving them
+ * signed in until the next reload and signed out afterwards, with nothing on screen to explain it.
+ *
+ * Deliberately does not go through `req()`: that attaches whatever token storage currently holds,
+ * which by the time this settles is the new one — i.e. it would end the wrong session.
+ */
+export const revokeSession = (token) => fetch('/api/auth/logout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+});
+
 // ── Data rights (see src/legal/privacy.js § 12) ──────────────────────────────
 // The Privacy Policy tells users they can export and delete their data from the
 // app. These are what make that true rather than aspirational.

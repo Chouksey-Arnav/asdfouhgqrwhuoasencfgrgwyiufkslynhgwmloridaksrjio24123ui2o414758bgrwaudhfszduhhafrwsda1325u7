@@ -195,10 +195,24 @@ const esc = (s) => String(s || '').replace(/[&<>"]/g, (c) => (
  * because a consent that feels irreversible does not get given honestly.
  */
 export async function sendInviteEmail({ to, token, code, inviterName, inviterRole, relationship, claimedName, claimedStudentName }) {
-  // The code-bearing URL when there is one, because that is the link that lands on a screen the
-  // recipient can finish without inventing a password. The token URL is the fallback for a
-  // deployment still on the pre-0010 schema, and both resolve to the same invitation.
-  const url = code ? claimUrl(code) : inviteUrl(token);
+  // ── The token URL wins whenever there is a token ─────────────────────────
+  //
+  // This used to be the other way round — the code URL was preferred and the token URL was the
+  // pre-0010 fallback — on the reasoning that both name the same invitation, so the shorter,
+  // re-shareable handle was the better thing to put in a link. That was true right up until the
+  // two handles stopped being equivalent.
+  //
+  // They now differ in exactly one way that matters: a token was delivered to THIS address and
+  // nowhere else, so opening it finishes the invitation in one press, while a code is a thing
+  // designed to be forwarded and still costs a second email to redeem (see api/parent/claim.js).
+  // Putting the code in the email meant the one message we had already successfully delivered
+  // arrived carrying the handle that says "we cannot tell this reached you" — and every parent
+  // who clicked the button we sent them paid for a second email to prove the first one had
+  // arrived.
+  //
+  // The code is still in the mail, below, as the fallback for a dead button and the thing they
+  // can read out to somebody. Both resolve to the same invitation.
+  const url = token ? inviteUrl(token) : claimUrl(code);
   // The attested name from the parent's profile wins over the account's display name: the
   // display name is a handle they can change at will, and the attested one is what they signed.
   const who = esc(claimedName || inviterName || (inviterRole === 'parent' ? 'A parent' : 'A student'));
@@ -232,12 +246,19 @@ export async function sendInviteEmail({ to, token, code, inviterName, inviterRol
   // Saying which of those two this is, up front, is the difference between "this will take a
   // minute" and "here we go again".
   const recipientIsParent = inviterRole === 'student';
-  const howLong = recipientIsParent
-    ? 'It takes about thirty seconds — we email you a 6-digit code and that is your sign-in. No password to invent, and you never sign in as them.'
-    : 'You will be asked to sign in to your own MedSchoolPrep account to respond.';
+  // What the button above actually costs them, which changes with whether this mail carries a
+  // token. A first send does (`token` is non-null), and opening that link is the whole check —
+  // it was delivered here, to this address, which is the fact a code would otherwise be sent to
+  // re-establish. See the header of api/parent/claim.js. A resend carries only the code, because
+  // the raw token was never stored, and that path does still ask for six digits.
+  const howLong = !recipientIsParent
+    ? 'You will be asked to sign in to your own MedSchoolPrep account to respond.'
+    : (token
+      ? 'It takes about thirty seconds. Open the link above, read what would be shared, and press confirm — that is all of it. No password to invent, no code to wait for, and you never sign in as them.'
+      : 'It takes about a minute — we email you a 6-digit code to confirm it is you, and that is your sign-in. No password to invent, and you never sign in as them.');
 
   const codeBlock = (code && recipientIsParent) ? `
-        <p style="color:#555;font-size:13px;margin:0 0 8px">Or open <strong>medschoolprep.cloud/parents</strong> and enter this code:</p>
+        <p style="color:#555;font-size:13px;margin:0 0 8px">If the button does not work, open <strong>medschoolprep.cloud/parents</strong> and enter this code${token ? ' (we will email you a 6-digit code to confirm it is you)' : ''}:</p>
         <div style="font-size:26px;font-weight:700;letter-spacing:5px;text-align:center;padding:14px;background:#f4f4f5;border-radius:8px;margin:0 0 20px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace">${esc(formatInviteCode(code))}</div>
   ` : '';
 
@@ -272,7 +293,9 @@ export async function sendInviteEmail({ to, token, code, inviterName, inviterRol
       '',
       `Review this request: ${url}`,
       howLong,
-      code && recipientIsParent ? `Or go to medschoolprep.cloud/parents and enter code ${formatInviteCode(code)}.` : null,
+      code && recipientIsParent
+        ? `If that link does not work, go to medschoolprep.cloud/parents and enter code ${formatInviteCode(code)}${token ? ' — we will email you a 6-digit code to confirm it is you' : ''}.`
+        : null,
       '',
       `This invitation expires in ${INVITE_TTL_DAYS} days. Nothing is shared unless you accept, and either of you can end the connection at any time.`,
     ].filter((line) => line !== null).join('\n'),

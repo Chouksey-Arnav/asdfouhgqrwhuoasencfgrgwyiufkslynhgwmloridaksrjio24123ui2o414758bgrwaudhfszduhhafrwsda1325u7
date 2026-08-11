@@ -96,7 +96,7 @@ const STUDENT_ONLY = [
 const PARENT_ONLY = ['api/parent/summary.js', 'api/parent/profile.js'];
 
 /** Handlers legitimately used by both roles — profile, export, deletion, the link itself. */
-const EITHER_ROLE = ['api/auth/me.js', 'api/auth/account.js', 'api/parent/links.js', 'api/parent/accept.js'];
+const EITHER_ROLE = ['api/auth/me.js', 'api/auth/account.js', 'api/parent/links.js', 'api/parent/accept.js', 'api/parent/messages.js'];
 
 const GUARDS = ['requireStudent', 'requireParent', 'requireUser'];
 
@@ -785,6 +785,35 @@ function checkParentAuthPaths() {
     /setView\('parentLogin'\)/.test(gate),
     "falling back to 'landing' kept the /family path and painted the marketing page over it");
 
+  // ── The parent's front door, over somebody else's session ────────────────
+  //
+  // The most-reported failure in this whole feature, and the least visible in the code: AuthGate
+  // renders the student app for ANY signed-in session, and the two parent auth screens fell
+  // straight through to it. The commonest way /parents is ever read — a student showing it to
+  // their mother on the family laptop — therefore ended with the mother pressing "Create a parent
+  // account" and landing on her child's dashboard. Nothing errored; it just could not be done.
+  assert('the parent auth screens render over a student session instead of falling into the app',
+    /parentDoorOverSession/.test(gate) && /status === 'signedIn' && !parentDoorOverSession/.test(gate),
+    'a signed-in student pressing "Create a parent account" used to land on their own dashboard');
+  assert('…and AuthGate keeps owning the URL while that door is open',
+    /const ownsUrl = status !== 'signedIn' \|\| parentDoorOverSession/.test(gate),
+    'without this the address bar stays on /parents and the back button has nowhere to go');
+  assert('…and the outgoing session is ended rather than orphaned',
+    /handleAuthedOverSession/.test(gate),
+    'the browser holds one token; the replaced one should not stay live on the server');
+  assert('…with the person told whose session they are replacing',
+    /overSessionNotice/.test(gate),
+    'silently signing a student out of the family laptop is not something to discover afterwards');
+
+  // ── What a parent is actually holding when they reach /parents ───────────
+  const parentApi = read('src/lib/parentApi.js');
+  assert('the invitation box takes a whole link, not only eight characters',
+    /export function parseInviteInput/.test(parentApi),
+    'a parent pasting the line their child forwarded was told "that should be 8 characters"');
+  assert('…and names each way it can be wrong',
+    /no_invite_in_url/.test(parentApi) && /too_short/.test(parentApi) && /ambiguous/.test(parentApi),
+    'one generic error for five different mistakes is one error nobody can act on');
+
   const app = read('src/components/parent/ParentApp.jsx');
   assert('an expired session ends the session rather than freezing the numbers',
     /err\.status === 401/.test(app) && /handleExpiredSession/.test(app),
@@ -792,6 +821,58 @@ function checkParentAuthPaths() {
   assert('a failed poll is visible on every tab, not just the one with the button',
     /StaleBanner/.test(app),
     '"she has not studied since Tuesday" must never be indistinguishable from a dropped connection');
+}
+
+/**
+ * Everything a parent might paste into the box on /parents.
+ *
+ * Exercised for real rather than grepped for, because the failure this replaces was not a missing
+ * feature — it was a working validator that was correct about the wrong thing. Each case below is
+ * a form somebody genuinely arrives holding: the button out of the email, the link forwarded with
+ * its sentence attached, the code read out over the phone, and the several near-misses that used
+ * to produce one indiscriminate "that should be 8 characters".
+ */
+async function checkInviteInput() {
+  section('Whatever the parent pasted');
+
+  const { parseInviteInput } = await import('../src/lib/parentApi.js');
+  const TOKEN = 'a'.repeat(64);
+
+  const resolves = (label, input, expected) => {
+    const got = parseInviteInput(input);
+    assert(label, got.ok && got.token === (expected.token ?? null) && got.code === (expected.code ?? null),
+      JSON.stringify(got));
+  };
+  const refuses = (label, input, reason) => {
+    const got = parseInviteInput(input);
+    assert(label, !got.ok && got.reason === reason, JSON.stringify(got));
+    if (!got.ok) {
+      assert(`  …and says something actionable`, got.error.length > 25 && /\.$/.test(got.error.trim()),
+        got.error);
+    }
+  };
+
+  resolves('the emailed link', `https://medschoolprep.cloud/parent-invite?token=${TOKEN}`, { token: TOKEN });
+  resolves('the link a student texted', 'https://medschoolprep.cloud/parent-invite?code=ABCD-EFGH', { code: 'ABCDEFGH' });
+  resolves('a forwarded line with the sentence still attached',
+    `Review this request: https://medschoolprep.cloud/parent-invite?token=${TOKEN}.`, { token: TOKEN });
+  resolves('the bare code, grouped as it is displayed', 'ABCD-EFGH', { code: 'ABCDEFGH' });
+  resolves('the bare code, lowercase and spaced', ' abcd efgh ', { code: 'ABCDEFGH' });
+  resolves('a bare token with no URL round it', TOKEN, { token: TOKEN });
+
+  refuses('nothing at all', '   ', 'empty');
+  refuses('our own home page', 'https://medschoolprep.cloud/', 'no_invite_in_url');
+  refuses('a link with the token cut in half', 'https://medschoolprep.cloud/parent-invite?token=abc123', 'bad_token');
+  refuses('half a code', 'ABCD-EF', 'too_short');
+  refuses('a code with something extra on the end', 'ABCD-EFGH99', 'too_long');
+  refuses('a zero typed where an O was read', 'ABCD-EFG0', 'ambiguous');
+
+  // The one that matters most for the round trip: whatever comes out has to be something the
+  // server will recognise, in the shape /parent-invite reads back off the URL.
+  const { token } = parseInviteInput(`https://medschoolprep.cloud/parent-invite?token=${TOKEN}`);
+  assert('a resolved token is in the shape api/parent/claim.js accepts', /^[0-9a-f]{64}$/i.test(token));
+  const { code } = parseInviteInput('abcd efgh');
+  assert('a resolved code is in the canonical uppercase form the server stores', code === 'ABCDEFGH');
 }
 
 // ── Main ────────────────────────────────────────────────────────────────────
@@ -810,6 +891,7 @@ checkProfileGate();
 checkProfileValidation();
 await checkClaimFlow();
 checkParentAuthPaths();
+await checkInviteInput();
 checkRouting(files);
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

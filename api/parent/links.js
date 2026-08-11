@@ -80,6 +80,18 @@ export default async function handler(req, res) {
 
       const email = String(body?.email || '').trim().toLowerCase();
       const relationship = body?.relationship ? String(body.relationship).slice(0, 40) : null;
+      // ── "I'll send it to them myself" ────────────────────────────────────
+      //
+      // A student sitting next to their mother, or texting her, does not need us to mail anything:
+      // the invitation exists the moment the row does, and the code on it works whether or not a
+      // message ever left this building. Sending anyway costs one against a metered monthly quota
+      // (api/_lib/mailer.js) for a message nobody will open — and the invitation is the first mail
+      // that dies when that quota runs out, so every wasted send is a family that cannot connect
+      // later in the month.
+      //
+      // Opt-in rather than default: an address typed into a form is usually typed because the
+      // person expects a mail to arrive at it.
+      const notify = body?.notify !== false;
 
       if (!EMAIL_RE.test(email) || email.length > 254) {
         return res.status(400).json({ error: 'Enter a valid email address.' });
@@ -204,27 +216,35 @@ export default async function handler(req, res) {
       // shareable link either way, so a student whose mail did not go out can text it instead and
       // the invitation completes normally — which matters, because the relay has a monthly quota
       // and the invitation is exactly the mail that dies first when it runs out.
-      let emailSent = true;
-      try {
-        await sendInviteEmail({
-          to: email,
-          token,
-          code: hasCode ? sentCode : null,
-          inviterName: user.name,
-          inviterRole: role,
-          relationship: claimedRelationship,
-          claimedName: claimColumns.claimed_by_name || null,
-          claimedStudentName: claimColumns.claimed_student_name || null,
-        });
-      } catch (err) {
-        console.error('parent invite email failed:', err);
-        emailSent = false;
+      // A share-only invitation with no code to share is not an invitation anybody can reach: the
+      // raw token is in this response and nowhere else, and the caller has no way to deliver it.
+      // So on a pre-0010 deployment the mail goes out regardless of what was asked for, which is
+      // the honest degradation — better an unwanted email than a dead invitation.
+      let emailSent = false;
+      if (notify || !hasCode) {
+        emailSent = true;
+        try {
+          await sendInviteEmail({
+            to: email,
+            token,
+            code: hasCode ? sentCode : null,
+            inviterName: user.name,
+            inviterRole: role,
+            relationship: claimedRelationship,
+            claimedName: claimColumns.claimed_by_name || null,
+            claimedStudentName: claimColumns.claimed_student_name || null,
+          });
+        } catch (err) {
+          console.error('parent invite email failed:', err);
+          emailSent = false;
+        }
       }
 
       return res.status(200).json({
         link: serializeLink(link, role),
         emailSent,
-        warning: emailSent ? undefined : (hasCode
+        // Only when a send was attempted and failed. Declining to send is not a warning.
+        warning: (emailSent || !(notify || !hasCode)) ? undefined : (hasCode
           ? "We couldn't send the email just now — but the invitation is live. Share the link or code below instead, or try resending in a moment."
           : 'The invitation was created but the email could not be sent. Try resending it in a moment.'),
       });

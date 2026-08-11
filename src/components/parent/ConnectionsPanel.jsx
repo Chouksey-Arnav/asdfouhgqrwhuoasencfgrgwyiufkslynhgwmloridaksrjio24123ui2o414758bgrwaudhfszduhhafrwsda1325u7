@@ -24,9 +24,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   Loader2, Mail, UserPlus, X, ShieldCheck, Clock, Check, Copy, Send, Share2, RefreshCw,
+  MessageSquare, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { C, glass2, btn, btnG, inp, lbl, CC, R, pill, tint } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
+import FamilyThread from './FamilyThread';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -172,6 +174,67 @@ function ShareKit({ share, copy, onResend, resending }) {
   );
 }
 
+/**
+ * The message thread for one active connection, folded away until it is wanted.
+ *
+ * Collapsed by default and NOT because the messages are unimportant — because this panel's first
+ * job is still "who can see me, and how do I stop them", and a settings control you have to
+ * scroll past a conversation to reach is a settings control people stop finding. The count of
+ * unread messages sits on the summary line, so the fold never hides the fact that there is
+ * something to read.
+ */
+function ThreadFold({ link, role, initiallyOpen }) {
+  const [open, setOpen] = useState(!!initiallyOpen);
+  const [unread, setUnread] = useState(null);
+  const name = link.counterparty.name || link.counterparty.email;
+  const Chevron = open ? ChevronDown : ChevronRight;
+
+  // Unread has to be known before the thread is opened, or the fold hides the only signal that
+  // would make anybody open it. One request per active connection, on mount, and the thread
+  // reuses the same endpoint when it expands.
+  useEffect(() => {
+    if (open) return undefined;
+    let live = true;
+    ParentAPI.fetchMessages(link.id)
+      .then((res) => { if (live) setUnread(res.unread || 0); })
+      .catch(() => { /* the fold simply shows no count */ });
+    return () => { live = false; };
+  }, [link.id, open]);
+
+  return (
+    <div style={CC({ gap: 10 })}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{
+          ...R({ gap: 8 }), width: '100%', padding: '9px 12px', borderRadius: 9, cursor: 'pointer',
+          background: unread ? tint(C.amber, 0.07) : 'transparent',
+          border: `1px solid ${unread ? tint(C.amber, 0.28) : C.b1}`,
+          color: C.t2, fontSize: 12.5, fontWeight: 600, fontFamily: C.FB, textAlign: 'left',
+        }}
+      >
+        <Chevron size={13} color={C.t3} />
+        <MessageSquare size={13} color={unread ? C.amberL : C.t3} />
+        <span>{role === 'parent' ? `Messages with ${name}` : `Messages from ${name}`}</span>
+        {!!unread && (
+          <span style={pill(tint(C.amber, 0.16), C.amberL, { fontSize: 10.5, marginLeft: 'auto' })}>
+            {unread} new
+          </span>
+        )}
+      </button>
+      {open && (
+        <FamilyThread
+          linkId={link.id}
+          role={role}
+          counterparty={name}
+          onUnreadChange={setUnread}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ConnectionsPanel({ role = 'student', onChanged }) {
   const copy = COPY[role] || COPY.student;
   const [links, setLinks] = useState([]);
@@ -199,7 +262,7 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleInvite(e) {
+  async function handleInvite(e, { notify = true } = {}) {
     e.preventDefault();
     setError('');
     const trimmed = email.trim().toLowerCase();
@@ -207,11 +270,12 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
 
     setBusy(true);
     try {
-      const { emailSent, warning } = await ParentAPI.invite(trimmed, relationship.trim() || null);
+      const { emailSent, warning } = await ParentAPI.invite(trimmed, relationship.trim() || null, { notify });
       setEmail(''); setRelationship(''); setShowForm(false);
       // A failed send is no longer a failed invitation: the card below carries a link and a code
       // that work regardless, so this is a note rather than an apology.
-      if (emailSent === false) toast(warning || 'Invitation created — share the link below.', { icon: '📋', duration: 6000 });
+      if (!notify) toast.success('Invitation ready — copy the link below and send it to them.');
+      else if (emailSent === false) toast(warning || 'Invitation created — share the link below.', { icon: '📋', duration: 6000 });
       else toast.success(copy.sent);
       await load();
       onChanged?.();
@@ -309,6 +373,8 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
                 onResend={() => handleResend(link)}
               />
             )}
+            {/* Only on a live connection. There is nobody on the other end of a pending one. */}
+            {link.status === 'active' && <ThreadFold link={link} role={role} />}
           </div>
         );
       })}
@@ -339,15 +405,28 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
             />
           </div>
           {error && <div style={{ fontSize: 12, color: C.roseL }}>{error}</div>}
-          <div style={R({ gap: 8 })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button type="submit" disabled={busy} style={btn(C.blueGrad, { opacity: busy ? 0.7 : 1 })}>
               {busy ? <Loader2 className="spin" size={13} /> : <Send size={13} />} Send invitation
+            </button>
+            {/*
+              The second button is not a lesser version of the first — for a student standing next
+              to the person they are inviting, it is the better one. It creates the identical
+              invitation and skips the email, which is both faster for them and the single cheapest
+              thing anyone can do for the send quota this feature runs on (see api/parent/links.js).
+            */}
+            <button
+              type="button" disabled={busy}
+              onClick={(e) => handleInvite(e, { notify: false })}
+              style={btnG({ opacity: busy ? 0.7 : 1 })}
+            >
+              <Copy size={13} /> Just give me the link
             </button>
             <button type="button" onClick={() => { setShowForm(false); setError(''); }} style={btnG()}>Cancel</button>
           </div>
           <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
             {role === 'student'
-              ? "They'll get an email explaining exactly what would be shared, plus a link and a code you can send them yourself. It takes them about thirty seconds and there's no password. Nothing is shared until they accept, and either of you can end it at any time."
+              ? "Send it and they get an email with a button that connects them in one press — no password, no code to wait for. Or take the link and text it to them yourself; it works the same way, and they'll get a 6-digit code at the address above to prove it's them. Nothing is shared until they accept, and either of you can end it at any time."
               : "They'll get an email explaining exactly what would be shared. Nothing is shared until they accept, and either of you can end it at any time."}
           </div>
         </form>

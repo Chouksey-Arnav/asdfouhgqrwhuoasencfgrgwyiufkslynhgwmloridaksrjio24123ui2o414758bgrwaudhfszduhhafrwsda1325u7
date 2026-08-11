@@ -76,6 +76,7 @@ const EXPECTED_TABLES = [
   'activities', 'app_users', 'awards', 'clinical_hours', 'college_checklist_items', 'colleges',
   'deadlines', 'email_verifications', 'essay_versions', 'essays', 'gpa_entries', 'login_attempts',
   'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',
+  'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
   'research_experience', 'reward_claims', 'scholarships', 'sessions', 'skills_certifications',
   'test_scores',
@@ -468,6 +469,49 @@ function checkConstraints(conn, db) {
   assert('invite tokens are unique', !dupToken.ok, 'two links share an invite token hash');
 }
 
+// ── Family messages (migration 0011) ────────────────────────────────────────
+//
+// Everything asserted here is enforced in the handler as well, which is exactly why it is worth
+// asserting in the database: a rule that lives only in JavaScript lasts until the next caller, and
+// this table is the first one in the schema that one account writes for another to read.
+function checkMessages(conn, db) {
+  section('Family messages');
+
+  const p = query(conn, db, `insert into app_users (email,name,role) values ('msg-p@example.test','P','parent') returning id`);
+  const s = query(conn, db, `insert into app_users (email,name,role) values ('msg-s@example.test','S','student') returning id`);
+  const link = query(conn, db,
+    `insert into parent_links (parent_user_id, student_user_id, status, initiated_by, invite_email, invite_token_hash)
+     values ('${p}'::uuid,'${s}'::uuid,'active','student','msg-p@example.test',
+             md5('family-messages') || md5('family-messages')) returning id`);
+
+  const write = (cols, vals) => tryExec(conn, db, ['-c',
+    `insert into parent_messages (link_id, parent_user_id, student_user_id, ${cols})
+     values ('${link}'::uuid,'${p}'::uuid,'${s}'::uuid, ${vals})`]);
+
+  assert('an ordinary note is accepted',
+    write("author_role, kind, body", `'parent','note','Proud of you.'`).ok);
+  assert('an empty body is rejected by the schema',
+    !write("author_role, kind, body", `'parent','note',''`).ok,
+    'the length floor is in the handler only, so the next caller can write a blank message');
+  assert('an over-long body is rejected by the schema',
+    !write("author_role, kind, body", `'parent','note', repeat('x',601)`).ok,
+    'the 600-character cap is a product decision and belongs where it cannot be bypassed');
+  assert('an invented kind is rejected',
+    !write("author_role, kind, body", `'parent','exec','rm -rf'`).ok);
+  assert('an invented author role is rejected',
+    !write("author_role, kind, body", `'admin','note','hello'`).ok);
+  assert('an invented status is rejected',
+    !write("author_role, kind, body, status", `'parent','quiz_request','sit one','ignored'`).ok);
+  assert('"declined" is storable — refusing has to be a real outcome',
+    write("author_role, kind, body, status", `'student','question','no','declined'`).ok);
+
+  // The conversation is part of the consent record, not something that outlives it.
+  psql(conn, db, ['-c', `delete from parent_links where id='${link}'::uuid`]);
+  const left = query(conn, db, `select count(*) from parent_messages where link_id='${link}'::uuid`);
+  assert('deleting a link takes its messages with it', left === '0',
+    `${left} message(s) survived the link they belonged to`);
+}
+
 // ── The passwordless parent claim (migration 0010) ──────────────────────────
 //
 // find_or_create_parent_for_claim is the function that turns "this person proved they can read the
@@ -592,6 +636,7 @@ await withDatabase(async (conn) => {
     await checkConcurrency(conn, db);
     await checkDeletionSemantics(conn, db);
     await checkParentClaim(conn, db);
+    checkMessages(conn, db);
     // Idempotency runs last: it re-applies over a database that now has test rows in it, which is
     // a strictly harder case than a pristine one and closer to the production situation a retry
     // actually happens in.

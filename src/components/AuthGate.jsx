@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
-import { C, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
+import { C, tint, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
-import { getToken, setToken, clearToken, fetchMe, logout } from '../lib/authApi';
+import { getToken, setToken, clearToken, fetchMe, logout, revokeSession } from '../lib/authApi';
 import {
   AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath,
   isParentHubPath, isParentPath, PARENT_HUB_PATH,
@@ -214,12 +214,43 @@ export default function AuthGate({ children }) {
     setThemeMode(mode);
   }, []);
 
+  // ── The parent's front door is not a signed-out surface ───────────────────
+  //
+  // This is the bug that made the whole feature look broken. /parents renders for anybody (see
+  // above), but the two buttons on it — "Create a parent account" and "I already have one" — set
+  // `view` and then fell straight through to the `status === 'signedIn'` branch below, which
+  // renders the STUDENT app. So the overwhelmingly common way this page is read in real life —
+  // a student, signed in on the family laptop, showing it to their mother — ended with the
+  // mother tapping "Create a parent account" and landing on her child's dashboard. Same for
+  // typing /parents/login by hand, and same for the link in the invitation email.
+  //
+  // A parent auth screen belongs to a DIFFERENT PERSON than whoever the browser happens to be
+  // signed in as, so it renders regardless of the session, exactly like the invitation screen
+  // and the legal documents. The one exception is a parent who is already signed in as a parent:
+  // for them there is nothing to sign into, and they are sent on to their dashboard.
+  const parentAuthView = view === 'parentSignup' || view === 'parentLogin';
+  const signedInRole = status === 'signedIn' ? (user?.role === 'parent' ? 'parent' : 'student') : null;
+  // True when the parent door is open over somebody else's session. While it is, this component
+  // — not App.jsx — still owns the address bar, or the URL would stay stuck on whatever page the
+  // button was pressed from and a back press would land nowhere.
+  const parentDoorOverSession = parentAuthView && signedInRole === 'student';
+  const ownsUrl = status !== 'signedIn' || parentDoorOverSession;
+
   // ── view → URL ────────────────────────────────────────────────────────────
   // Same invariant the app-side router uses (src/lib/useAppRouter.js): push only when
   // the address bar disagrees with the state, so a back press can never bounce forward.
   // Once signed in, App.jsx owns the URL and this stops touching it.
   useEffect(() => {
-    if (status === 'signedIn') return;
+    // Spent on the first run of this effect whatever that run decides to do, because what it
+    // guards is "is this the initial mount" and not "is this the first URL we wrote". Consumed
+    // below the early returns, it survived them: a visitor who lands on /parents (where the hub
+    // branch returns immediately) and then presses a button would have their FIRST real
+    // navigation treated as the mount and replaced into history rather than pushed — so the back
+    // button skipped straight past the page they came from.
+    const first = firstSyncRef.current;
+    firstSyncRef.current = false;
+
+    if (!ownsUrl) return;
     // While a legal document is open the URL is /legal/…, which is not this
     // component's `view` — syncing would immediately rewrite it back to the
     // landing page and slam the document shut.
@@ -228,26 +259,43 @@ export default function AuthGate({ children }) {
     const want = view === 'landing'
       ? (isAuthPath(current) ? landingPathRef.current : current)
       : AUTH_VIEWS[view];
-    const first = firstSyncRef.current;
-    firstSyncRef.current = false;
     applySeoMeta(want);
     if (current === want) return;
     if (first) window.history.replaceState(window.history.state, '', want);
     else window.history.pushState({}, '', want);
-  }, [view, status, legalSlug, parentHub]);
+  }, [view, status, legalSlug, parentHub, ownsUrl]);
 
   // ── URL → view ────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (status === 'signedIn') return undefined;
+    if (!ownsUrl) return undefined;
     function onPop() { setView(parseAuthPath(window.location.pathname) || 'landing'); }
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
-  }, [status]);
+  }, [ownsUrl]);
 
   function handleAuthed(token, authedUser) {
     setToken(token);
     setUser(authedUser);
     setStatus('signedIn');
+  }
+
+  /**
+   * A parent signing in over a session that belongs to somebody else — the family laptop case.
+   *
+   * The browser holds exactly one session token, so the arriving one replaces the outgoing one
+   * whatever we do here. What we can control is the row on the server: the outgoing session is
+   * ended explicitly rather than left orphaned, so a student who hands their laptop to a parent
+   * is signed out of THIS browser and nowhere else (a session is per-token — their phone is
+   * untouched). Fire and forget: it must never delay or fail the sign-in the parent is mid-way
+   * through, and a token nobody holds any more is harmless if the call does not land.
+   */
+  function handleAuthedOverSession(token, authedUser) {
+    const outgoing = getToken();
+    handleAuthed(token, authedUser);
+    // After the swap, and with the outgoing token named explicitly — `logout()` would both send
+    // whichever token storage holds by then (the new one) and clear it on the way out. See
+    // revokeSession.
+    if (outgoing && outgoing !== token) revokeSession(outgoing).catch(() => {});
   }
 
   function goTo(nextView, email = '', role = 'student') {
@@ -311,7 +359,9 @@ export default function AuthGate({ children }) {
     );
   }
 
-  if (status === 'signedIn') {
+  // `parentDoorOverSession` deliberately falls THROUGH this branch to the auth shell at the
+  // bottom of the file: the person at the keyboard is not the person the session belongs to.
+  if (status === 'signedIn' && !parentDoorOverSession) {
     // A parent account renders an entirely different application — it owns no progress, no local
     // database, and none of the student app's subsystems mean anything for it. See ParentApp.
     if (user?.role === 'parent') {
@@ -354,32 +404,67 @@ export default function AuthGate({ children }) {
     );
   }
 
+  // Said before the form rather than discovered after it. Somebody is about to create or sign
+  // into a second account on a browser that is already signed into a first one, and the honest
+  // version of what happens next — this browser stops being the student's — is short enough to
+  // put above the fields. It also gives the student an obvious way back if they pressed the
+  // button by accident, which is otherwise a dead end: every other route out of here assumes the
+  // person reading is signed out.
+  const overSessionNotice = parentDoorOverSession ? (
+    <div style={{
+      marginBottom: 18, padding: '12px 14px', borderRadius: 10,
+      background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.3)}`,
+    }}>
+      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+        This browser is signed in as <strong style={{ color: C.t1 }}>{user?.email}</strong>, a student
+        account. Continuing here signs that account out of this browser — nowhere else — and signs
+        the parent in instead.
+      </div>
+      <button
+        type="button"
+        onClick={() => { setView('landing'); window.history.replaceState({}, '', '/'); }}
+        style={{
+          marginTop: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+          color: C.blueL, fontSize: 12.5, fontWeight: 600, fontFamily: C.FB,
+        }}
+      >
+        Not you? Go back to the student app
+      </button>
+    </div>
+  ) : null;
+
   return (
     <AuthShell key={`${view}-${themeEpoch}`} themeMode={themeMode} onThemeChange={changeTheme}>
       {(view === 'login' || view === 'parentLogin') && (
-        <LoginView
-          initialEmail={prefillEmail}
-          parentMode={view === 'parentLogin'}
-          onBack={() => (view === 'parentLogin' ? openParentHub() : goTo('landing'))}
-          onGoSignup={(email) => goTo(view === 'parentLogin' ? 'parentSignup' : 'signup', email)}
-          onGoForgot={(email) => goTo('forgot', email)}
-          onGoParents={openParentHub}
-          onAuthed={(token, u) => { handleAuthed(token, u); toast.success('Welcome back.'); }}
-        />
+        <>
+          {overSessionNotice}
+          <LoginView
+            initialEmail={prefillEmail}
+            parentMode={view === 'parentLogin'}
+            onBack={() => (view === 'parentLogin' ? openParentHub() : goTo('landing'))}
+            onGoSignup={(email) => goTo(view === 'parentLogin' ? 'parentSignup' : 'signup', email)}
+            onGoForgot={(email) => goTo('forgot', email)}
+            onGoParents={openParentHub}
+            onAuthed={(token, u) => { handleAuthedOverSession(token, u); toast.success('Welcome back.'); }}
+          />
+        </>
       )}
       {(view === 'signup' || view === 'parentSignup') && (
-        <SignupView
-          initialEmail={prefillEmail}
-          // /parents/signup is the parent's own front door, so the account type is decided by the
-          // URL rather than by finding a radio button — see `lockedRole` in SignupView. A parent
-          // who followed a "for parents" link should never be able to create a student account by
-          // accident and then discover, three screens later, that it cannot see anything.
-          initialRole={view === 'parentSignup' ? 'parent' : prefillRole}
-          lockedRole={view === 'parentSignup' ? 'parent' : null}
-          onBack={() => (view === 'parentSignup' ? openParentHub() : goTo('landing'))}
-          onGoLogin={(email) => goTo(view === 'parentSignup' ? 'parentLogin' : 'login', email || prefillEmail)}
-          onAuthed={handleAuthed}
-        />
+        <>
+          {overSessionNotice}
+          <SignupView
+            initialEmail={prefillEmail}
+            // /parents/signup is the parent's own front door, so the account type is decided by the
+            // URL rather than by finding a radio button — see `lockedRole` in SignupView. A parent
+            // who followed a "for parents" link should never be able to create a student account by
+            // accident and then discover, three screens later, that it cannot see anything.
+            initialRole={view === 'parentSignup' ? 'parent' : prefillRole}
+            lockedRole={view === 'parentSignup' ? 'parent' : null}
+            onBack={() => (view === 'parentSignup' ? openParentHub() : goTo('landing'))}
+            onGoLogin={(email) => goTo(view === 'parentSignup' ? 'parentLogin' : 'login', email || prefillEmail)}
+            onAuthed={handleAuthedOverSession}
+          />
+        </>
       )}
       {view === 'forgot' && (
         <ForgotPasswordView
