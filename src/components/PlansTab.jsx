@@ -18,6 +18,7 @@ import {
   createMasterPlan, extendMasterPlan, regenerateRoadmap, adaptPlanToNotes, pruneRollingWindow, toggleTaskDone,
   needsExtension, getUpcomingDays, getCurrentWeekNumber, getCurrentPhase, todayStr, addDaysStr, resolveAllTaskLinks,
   applyDailyRollover, AUTO_VERIFIABLE_KINDS, AUTO_VERIFIABLE_TYPES, moveTaskToDay, reorderTasksInDay, planIsStale,
+  retargetStaleTasks, refreshDayWindow, WINDOW_DAYS,
 } from '../lib/masterPlanGenerator';
 
 // Same Portfolio resource list + self-fetch pattern PortfolioMedabrain.jsx uses — lets plan
@@ -44,7 +45,10 @@ const PORTFOLIO_RESOURCE_MAP = {
 };
 const PORTFOLIO_RESOURCES = Object.keys(PORTFOLIO_RESOURCE_MAP);
 
-async function fetchPortfolio() {
+// Exported because the plan no longer refreshes only while this tab is mounted — App.jsx runs the
+// same daily window refresh app-wide (see planLiveSignals there), and a second, drifting copy of
+// this list is exactly how one of the two callers ends up generating a Portfolio-blind plan.
+export async function fetchPortfolio() {
   const entries = await Promise.all(
     PORTFOLIO_RESOURCES.map(async r => [PORTFOLIO_RESOURCE_MAP[r], await listItems(r).catch(() => [])])
   );
@@ -85,10 +89,18 @@ function usePortfolioData() {
   return { portfolioData, ensurePortfolio: ensure };
 }
 
+// The Plans tab's own gradient. Every other surface in the app leans on the shared aurora/ocean
+// gradients; this one is deliberately pink-forward end to end, because Plans is the tab with its
+// own identity in the nav (plansAccent) and the one a student opens every single day.
+const PLAN_GRAD = `linear-gradient(135deg, ${C.pink} 0%, ${C.fuchsia} 55%, ${C.violet} 100%)`;
+
 const PILLAR_META = {
   prep: { color: C.violet, label: 'Prep' },
   portfolio: { color: C.green, label: 'Portfolio' },
   progress: { color: C.cyan, label: 'Progress' },
+  // 'sat' is a valid pillar the generator emits (see VALID_PILLARS) but had no entry here, so
+  // every SAT task in the plan rendered in Prep's violet with a "Prep" chip on it.
+  sat: { color: C.sky, label: 'SAT' },
   rest: { color: C.amber, label: 'Rest & Reflect' },
 };
 const TYPE_ICON = {
@@ -96,13 +108,21 @@ const TYPE_ICON = {
   activity: Award, college: GraduationCap, essay: ScrollText, deadline: CalendarDays,
   clinical: Stethoscope, research: FlaskConical, recommender: UserCheck, interview: Mic,
   reflection: Sparkles, rest: Moon,
+  // Same omission as the 'sat' pillar above: the three SAT task types fell through to the generic
+  // book icon, so an SAT practice set looked identical to an E-Library reading.
+  sat_practice: Target, sat_review: History, sat_test: ScrollText,
 };
+// Generation is deliberately unhurried now (see callOracle in masterPlanGenerator.js — real
+// retries with backoff, high reasoning effort, a two-day window written properly rather than a
+// fortnight written thinly), so the stage labels run further out and describe what is actually
+// happening at each point instead of implying it should have finished already.
 const LOADING_STAGES = [
   { at: 0, label: 'Reading your full profile and your entire Portfolio…' },
-  { at: 5000, label: 'Mapping every MedSchoolPrep resource to your pathway…' },
-  { at: 12000, label: "Medabrain's Oracle is building your roadmap…" },
-  { at: 26000, label: 'Writing your day-by-day schedule…' },
-  { at: 45000, label: 'Almost there — this is worth the wait…' },
+  { at: 6000, label: 'Checking which lessons are actually open to you right now…' },
+  { at: 14000, label: "Medabrain's Oracle is building your roadmap…" },
+  { at: 30000, label: 'Thinking through today and tomorrow, task by task…' },
+  { at: 52000, label: 'Choosing the exact quizzes, lessons and drafts to point you at…' },
+  { at: 75000, label: "Still going — it's taking the time to get this right." },
 ];
 
 function fmtDateLabel(dateStr) {
@@ -189,6 +209,20 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     if (upgraded !== plan) saveUser({ ...user, masterPlan: upgraded });
   }, [plan?.days?.length, plan?.linkVersion]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Keep the plan honest between generations. Finishing a lesson, or unlocking the unit that was
+  // blocking one, changes what the already-written tasks should point at — and that happens far
+  // more often than a full regeneration does. This is local, free and idempotent (it returns the
+  // same object when nothing is stale), so it can run on every relevant render without looping.
+  useEffect(() => {
+    if (!plan) return;
+    const adjusted = retargetStaleTasks(plan, user, liveSignals || {});
+    if (adjusted === plan) return;
+    saveUser({ ...user, masterPlan: adjusted });
+    const n = adjusted.lastRetarget?.changes?.length || 0;
+    if (n > 0) toast(`Plan adjusted — ${n === 1 ? 'a lesson' : `${n} lessons`} you'd finished or can't open yet ${n === 1 ? 'was' : 'were'} swapped for one you can start now.`, { icon: '🎯', duration: 4500 });
+    // Keyed on the unlock map so this re-runs exactly when the pathway's shape changes.
+  }, [plan?.days?.length, JSON.stringify(liveSignals?.pathwayState?.byLesson || null)]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Auto-extend the rolling window in the background — this is what keeps the plan
   // "continuing to plan" instead of going stale once the generated window runs out. Re-checks
   // on mount (covers "came back after N days away") and again each time daysGeneratedThrough
@@ -203,10 +237,17 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
     // less personal the longer a student stayed on it.
     ensurePortfolio()
       .then(portfolio => extendMasterPlan(plan, user, liveSignals || {}, portfolio))
-      .then(updated => saveUser({ ...user, masterPlan: updated }))
+      .then(updated => {
+        saveUser({ ...user, masterPlan: updated });
+        PlanStore.flushPlanNow(updated, 'daily refresh').catch(() => {});
+      })
       .catch(() => {})
       .finally(() => setExtending(false));
-  }, [plan?.daysGeneratedThrough]); // eslint-disable-line react-hooks/exhaustive-deps
+    // `windowBuiltFor` is the day the current two days were written on, so this fires once when
+    // the date rolls over — which is the whole "it keeps updating" behavior, not a background
+    // nicety. Watching daysGeneratedThrough alone never re-fired for a window that still had
+    // runway, which is how a plan written on Tuesday was still on screen on Thursday.
+  }, [plan?.daysGeneratedThrough, plan?.windowBuiltFor, todayStr()]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleBuild() {
     setGenerating(true);
@@ -226,11 +267,15 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       const portfolio = await ensurePortfolio();
       const built = await createMasterPlan(user, liveSignals || {}, portfolio);
       saveUser({ ...user, masterPlan: built });
-      // Straight to the server rather than waiting out the debounce: this is 20-40 seconds of
-      // the student's time and three Oracle calls, and a tab closed in the next few seconds
+      // Straight to the server rather than waiting out the debounce: this is up to a minute of
+      // the student's time and several Oracle calls, and a tab closed in the next few seconds
       // should not be able to lose it.
       PlanStore.flushPlanNow(built, 'first build').catch(() => {});
-      toast.success('Your full plan is ready.');
+      // Never claim a plan is "ready" when part of it is the deterministic fallback. The student
+      // can see the difference — that is exactly the complaint this release started from — and
+      // being told it is ready when it plainly is not is worse than the fallback itself.
+      if (built.generation?.degraded) toast('Your plan is up, but Medabrain couldn\'t reach its planning model for part of it — hit Replan for the full version.', { icon: '⚠️', duration: 7000 });
+      else toast.success('Your full plan is ready.');
     } catch {
       toast.error("Couldn't build your plan — please try again.");
     } finally {
@@ -272,6 +317,26 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       toast.error("Couldn't refresh your roadmap — please try again.");
     } finally {
       setGenerating(false);
+    }
+  }
+
+  // Rewrites just the two-day window against everything true right now — the cheap, frequent
+  // counterpart to rebuilding the whole roadmap. This is the button for "today changed": it keeps
+  // the roadmap spine and anything already finished today, and re-thinks the rest.
+  async function handleReplanWindow() {
+    if (extending) return;
+    setExtending(true);
+    try {
+      const portfolio = await ensurePortfolio();
+      const updated = await refreshDayWindow(plan, user, liveSignals || {}, portfolio);
+      saveUser({ ...user, masterPlan: updated });
+      PlanStore.flushPlanNow(updated, 'replanned today & tomorrow').catch(() => {});
+      if (updated.generation?.degraded) toast('Replanned, but Medabrain couldn\'t reach its planning model for part of it — try again in a moment for the full version.', { icon: '⚠️', duration: 6000 });
+      else toast.success('Today and tomorrow, rethought from scratch.');
+    } catch {
+      toast.error("Couldn't replan right now — please try again.");
+    } finally {
+      setExtending(false);
     }
   }
 
@@ -351,18 +416,21 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
 
   const weekNumber = getCurrentWeekNumber(plan);
   const phase = getCurrentPhase(plan);
-  const upcoming = getUpcomingDays(plan, 14);
+  // The window is today + tomorrow (WINDOW_DAYS). Asking for a couple more covers the brief moment
+  // between a date rolling over and the refresh landing, so the view is never empty.
+  const upcoming = getUpcomingDays(plan, WINDOW_DAYS + 2);
   const stale = planIsStale(plan, user);
 
   return (
     <div style={CC({ gap: 22 })}>
       {stale && <StaleProfileBanner accent={accent} onRefresh={handleRefreshFromProfile} />}
-      <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} onRestore={handleRestoreRevision} />
+      {plan.generation?.degraded && <DegradedBanner accent={accent} onRetry={handleReplanWindow} busy={extending} generation={plan.generation} />}
+      <PlanHeader plan={plan} weekNumber={weekNumber} phase={phase} accent={accent} onRegenerate={handleRegenerate} onRestore={handleRestoreRevision} onReplan={handleReplanWindow} replanning={extending} />
 
       <PlanVoiceNotes user={user} saveUser={saveUser} plan={plan} liveSignals={liveSignals} ensurePortfolio={ensurePortfolio} accent={accent} />
 
       <div style={{ display: 'flex', gap: 6 }}>
-        {[{ id: 'week', label: 'This Week', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
+        {[{ id: 'week', label: 'Today & Tomorrow', icon: CalendarClock }, { id: 'roadmap', label: 'Full Roadmap', icon: MapIcon }].map(v => {
           const active = view === v.id;
           return (
             <button key={v.id} onClick={() => setView(v.id)} style={{
@@ -379,7 +447,7 @@ export default function PlansTab({ user, saveUser, accent = C.violet, isMobile, 
       {view === 'week' ? (
         <WeekView
           plan={plan} upcoming={upcoming} accent={accent} isMobile={isMobile} expandedDay={expandedDay} setExpandedDay={setExpandedDay}
-          onToggleTask={handleToggleTask} jumpTo={jumpTo} extending={extending}
+          onToggleTask={handleToggleTask} jumpTo={jumpTo} extending={extending} onReplan={handleReplanWindow}
           onMoveTask={handleMoveTask} onReorderTasks={handleReorderTasks} onSnoozeTask={handleSnoozeTask}
           reducedMotion={reducedMotion}
         />
@@ -509,23 +577,23 @@ function LockedState({ readiness, accent, isMobile, goSettings, onGoActivity, on
 // ── Empty state ────────────────────────────────────────────────────────────
 function EmptyState({ onBuild, accent, isMobile }) {
   return (
-    <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.violet}30` }}>
-      <div style={{ position: 'absolute', inset: 0, background: C.auroraGrad, opacity: 0.06, pointerEvents: 'none' }} />
+    <div data-tour="plans-deep-hero" style={{ ...glass({ padding: 0, overflow: 'hidden', position: 'relative' }), border: `1px solid ${C.pink}35` }}>
+      <div style={{ position: 'absolute', inset: 0, background: PLAN_GRAD, opacity: 0.07, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', padding: isMobile ? '28px 20px' : '46px 40px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: C.auroraGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 30px ${C.violet}45` }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: PLAN_GRAD, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 10px 30px ${C.pink}50` }}>
           <CalendarClock size={28} color="#fff" />
         </div>
         <div>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.violetL, marginBottom: 8 }}>Medabrain Oracle · Plans</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.pinkL, marginBottom: 8 }}>Medabrain Oracle · Plans</div>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0 }}>Build your full plan</h2>
         </div>
         <p style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 480, margin: 0 }}>
-          A complete, day-by-day roadmap built from your whole profile — grounded in every real resource MedSchoolPrep has: your pathway units, the quiz library, flashcards, the E-Library, and every Portfolio tool. Phases and milestones for the months ahead, plus real daily tasks that roll forward as you go — and update as your progress does.
+          Phases and milestones for the months ahead — and then, in real detail, <b style={{ color: C.pinkL }}>today and tomorrow</b>: the exact quizzes, lessons, drafts and hours to work on, why each one is on your plan, and when in the day it belongs. Grounded in your whole profile, your entire Portfolio, and only the lessons you can actually open right now. It rewrites itself every day around what you've actually done.
         </p>
-        <button style={btn(C.auroraGrad, { padding: '13px 28px', fontSize: 14 })} onClick={onBuild}>
+        <button style={btn(PLAN_GRAD, { padding: '13px 28px', fontSize: 14 })} onClick={onBuild}>
           <Sparkles size={15} />Build My Full Plan
         </button>
-        <div style={{ fontSize: 11, color: C.t3 }}>Takes about 20-40 seconds — Medabrain's deepest planning model reads your entire profile to build this.</div>
+        <div style={{ fontSize: 11, color: C.t3 }}>Give it a minute — Medabrain's deepest model reads your whole profile and genuinely thinks this through. It's slow on purpose.</div>
       </div>
     </div>
   );
@@ -534,12 +602,13 @@ function EmptyState({ onBuild, accent, isMobile }) {
 // ── Generating state ──────────────────────────────────────────────────────
 function GeneratingCard({ label, accent }) {
   return (
-    <div style={{ ...glass({ padding: 40, textAlign: 'center' }), border: `1px solid ${C.violet}30` }}>
+    <div style={{ ...glass({ padding: 40, textAlign: 'center' }), border: `1px solid ${C.pink}35` }}>
       <motion.div
         animate={{ rotate: 360 }} transition={{ duration: 2.2, repeat: Infinity, ease: 'linear' }}
-        style={{ width: 52, height: 52, borderRadius: '50%', border: `3px solid ${C.violet}25`, borderTopColor: C.violet, margin: '0 auto 20px' }}
+        style={{ width: 52, height: 52, borderRadius: '50%', border: `3px solid ${C.pink}25`, borderTopColor: C.pink, margin: '0 auto 20px' }}
       />
       <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>Building your full plan</div>
+      <div style={{ fontSize: 11, color: C.t4, marginBottom: 12 }}>This is meant to take a while — it's thinking, not loading.</div>
       <AnimatePresence mode="wait">
         <motion.div key={label} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} style={{ fontSize: 12.5, color: C.t3 }}>
           {label}
@@ -564,6 +633,27 @@ function StaleProfileBanner({ accent, onRefresh }) {
         Your profile's changed since this roadmap was built — refresh it so your plan reflects where you are now.
       </div>
       <button style={btnSm(accentFill(accent), { color: C.onAccent })} onClick={onRefresh}>Refresh My Plan</button>
+    </div>
+  );
+}
+
+// ── "This isn't the real thing" banner ────────────────────────────────────
+// Every generation path resolves to a usable plan even when the model is unreachable, which is the
+// right behavior and was also the bug: the deterministic fallback rendered identically to a real
+// plan, so a student whose calls were being rate-limited got the same three placeholder tasks
+// every day with nothing anywhere saying why. `plan.generation.degraded` records that a fallback
+// was used, and this says so plainly and offers the retry that usually fixes it.
+function DegradedBanner({ accent, onRetry, busy, generation }) {
+  return (
+    <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', border: `1px solid ${C.rose}40`, background: `${C.rose}0e` }}>
+      <ShieldAlert size={15} color={C.roseL} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 220, fontSize: 12.5, color: C.t1, lineHeight: 1.5 }}>
+        Some of this plan is Medabrain's basic fallback — its planning model couldn't be reached while this was built, so parts of it are generic rather than written for you.
+        {generation?.errors?.length ? <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 3 }}>{generation.errors[0]}</span> : null}
+      </div>
+      <button onClick={onRetry} disabled={busy} style={{ ...btnSm(accentFill(accent), { color: C.onAccent }), opacity: busy ? 0.6 : 1 }}>
+        {busy ? 'Retrying…' : 'Rebuild it properly'}
+      </button>
     </div>
   );
 }
@@ -630,7 +720,7 @@ function PlanHistoryMenu({ accent, onRestore }) {
   );
 }
 
-function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore }) {
+function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore, onReplan, replanning }) {
   return (
     // overflow stays visible so the Versions dropdown below can escape the card; the gradient
     // background still clips to the border radius on its own.
@@ -638,11 +728,16 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore }
       <div style={{ padding: '22px 24px' }}>
         <div style={R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' })}>
           <div>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.violetL, marginBottom: 6 }}>Your Full Plan · Medabrain Oracle</div>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.pinkL, marginBottom: 6 }}>Your Full Plan · Medabrain Oracle</div>
             <h1 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', margin: 0, lineHeight: 1.25 }}>{plan.headline}</h1>
           </div>
           <div style={R({ gap: 8 })}>
             {weekNumber && <span style={pill(`${accent}18`, accent, { fontSize: 11 })}>Week {weekNumber} of {plan.horizonWeeks}</span>}
+            {onReplan && (
+              <button disabled={replanning} style={{ ...btnSm(`${C.pink}18`, { color: C.pinkL, border: `1px solid ${C.pink}40` }), opacity: replanning ? 0.6 : 1 }} onClick={onReplan}>
+                <Sparkles size={11} />{replanning ? 'Replanning…' : 'Replan Today'}
+              </button>
+            )}
             {onRestore && <PlanHistoryMenu accent={accent} onRestore={onRestore} />}
             <button style={btnSm('rgba(255,255,255,0.06)', { color: C.t2 })} onClick={onRegenerate}><RefreshCw size={11} />Rebuild Roadmap</button>
           </div>
@@ -654,7 +749,10 @@ function PlanHeader({ plan, weekNumber, phase, accent, onRegenerate, onRestore }
             <div style={{ fontSize: 12, color: C.t1 }}><b>{phase.title}</b> — {phase.theme}</div>
           </div>
         )}
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 12 }}>Updated {relTime(plan.updatedAt)} · Planned through {fmtDateLabel(plan.daysGeneratedThrough)}</div>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 12 }}>
+          Updated {relTime(plan.updatedAt)} · Today &amp; tomorrow planned in detail, rewritten daily
+          {plan.generation?.tookMs > 4000 ? ` · last generation took ${Math.round(plan.generation.tookMs / 1000)}s` : ''}
+        </div>
       </div>
     </div>
   );
@@ -768,8 +866,9 @@ function PlanVoiceNotes({ user, saveUser, plan, liveSignals, ensurePortfolio, ac
 // of which days are currently expanded). Both funnel into the same
 // onMoveTask/onReorderTasks props, which is the only thing that actually
 // mutates the plan.
-function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending, onMoveTask, onReorderTasks, onSnoozeTask, reducedMotion = false }) {
+function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDay, onToggleTask, jumpTo, extending, onReplan, onMoveTask, onReorderTasks, onSnoozeTask, reducedMotion = false }) {
   const today = todayStr();
+  const tomorrow = addDaysStr(today, 1);
   const todayEntry = upcoming.find(d => d.date === today) || null;
   const restOfWeek = upcoming.filter(d => d.date !== today);
 
@@ -827,29 +926,47 @@ function WeekView({ plan, upcoming, accent, isMobile, expandedDay, setExpandedDa
         <PillarCard icon={TrendingUp} title="Progress" text={plan.pillarStrategy?.progress} color={C.cyan} />
       </div>
 
-      {upcoming.length === 0 && (
+      {upcoming.length === 0 && !extending && (
         <div style={glass({ padding: 22, textAlign: 'center' })}>
           <div style={{ fontSize: 13, color: C.t2 }}>Your plan is between windows — it'll pick back up shortly.</div>
         </div>
       )}
 
+      {extending && (
+        <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 10, border: `1px solid ${C.pink}35`, background: `${C.pink}0d` }}>
+          <RefreshCw size={14} color={C.pinkL} className="spin" style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, color: C.t1 }}>Medabrain is rethinking today and tomorrow against everything you've done since — this takes a moment on purpose.</span>
+        </div>
+      )}
+
       {todayEntry && <TodayHero day={todayEntry} accent={accent} onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx} reducedMotion={reducedMotion} />}
 
+      {/* Tomorrow is the other half of the window, so it is shown open by default rather than as a
+          collapsed row in a long list of days. Two days is the whole plan — there is nothing to
+          scroll past, and hiding half of it behind a chevron would be hiding half the plan. */}
       {restOfWeek.length > 0 && (
-        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Coming up — drag a task onto a day to reschedule it</div>
+        <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, margin: '4px 0 -4px' }}>Next — drag a task between days to reschedule it</div>
       )}
       {restOfWeek.map(day => (
         <DayCard
           key={day.date} day={day} isToday={false} accent={accent}
-          expanded={expandedDay === day.date}
-          onToggleExpand={() => setExpandedDay(expandedDay === day.date ? null : day.date)}
+          expanded={expandedDay === null ? day.date === tomorrow : expandedDay === day.date}
+          onToggleExpand={() => setExpandedDay(expandedDay === day.date ? '' : day.date)}
           onToggleTask={onToggleTask} jumpTo={jumpTo} dragCtx={dragCtx}
           reducedMotion={reducedMotion}
         />
       ))}
 
-      <div style={{ fontSize: 11, color: C.t3, textAlign: 'center', padding: '4px 0' }}>
-        {extending ? <span style={R({ gap: 6, justifyContent: 'center' })}><RefreshCw size={11} className="spin" />Extending your plan for the days ahead…</span> : `Planned day-by-day through ${fmtDateLabel(plan.daysGeneratedThrough)} — it keeps rolling forward automatically.`}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, flexWrap: 'wrap', padding: '4px 0' }}>
+        <span style={{ fontSize: 11, color: C.t3, textAlign: 'center' }}>
+          Your plan is just today and tomorrow, on purpose — and it rewrites itself every day around what you've actually done.
+        </span>
+        {onReplan && (
+          <button onClick={onReplan} disabled={extending}
+            style={{ ...btnSm(`${C.pink}18`, { color: C.pinkL, border: `1px solid ${C.pink}40`, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5, opacity: extending ? 0.55 : 1 }}>
+            <RefreshCw size={11} />{extending ? 'Replanning…' : 'Replan these two days'}
+          </button>
+        )}
       </div>
 
       <MoveDayPicker moveFor={moveFor} upcoming={upcoming} accent={accent} onPick={pickMoveDate} onClose={() => setMoveFor(null)} />
@@ -950,6 +1067,7 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
   const total = day.tasks.length;
   const done = day.tasks.filter(t => t.done).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
+  const totalMinutes = day.tasks.reduce((s, t) => s + (t.estMinutes || 0), 0);
   const isDropTarget = dragCtx?.drag && dragCtx.hoverDate === day.date && dragCtx.drag.fromDate !== day.date;
   // Medabrain's ONE pick for today, same rule TodayPlanNudge uses on Home: the first remaining
   // task that actually points somewhere real, falling back to the first remaining task of any
@@ -974,11 +1092,22 @@ function TodayHero({ day, accent, onToggleTask, jumpTo, dragCtx, reducedMotion }
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>
-          <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 5 }}>{fmtDateLabel(day.date)}</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>{day.theme}</div>
+          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>
+            {totalMinutes > 0 && <span style={pill(`${C.pink}16`, C.pinkL, { fontSize: 9.5, fontWeight: 700 })}>{totalMinutes}m planned</span>}
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 5, letterSpacing: '-.02em' }}>{day.headline || fmtDateLabel(day.date)}</div>
+          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 1 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
         </div>
       </div>
+      {/* Medabrain's read on the day as a whole — what matters most, and what to drop if the day
+          gets away from them. A per-task "why" answers "why this"; this answers "why this shape". */}
+      {day.coachNote && (
+        <div style={{ margin: '4px 18px 0', padding: '10px 13px', borderRadius: 11, background: `linear-gradient(135deg, ${C.pink}12, transparent 70%)`, border: `1px solid ${C.pink}28`, display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+          <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ fontSize: 12, color: C.t1, lineHeight: 1.6, margin: 0 }}>{day.coachNote}</p>
+        </div>
+      )}
       <div style={{ padding: '10px 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {day.tasks.map(t => {
           const isSpotlight = !!spotlightTask && t.id === spotlightTask.id;
@@ -1012,6 +1141,8 @@ function PillarCard({ icon: Icon, title, text, color }) {
 function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask, jumpTo, dragCtx, reducedMotion = false }) {
   const doneCount = day.tasks.filter(t => t.done).length;
   const total = day.tasks.length;
+  const totalMinutes = day.tasks.reduce((s, t) => s + (t.estMinutes || 0), 0);
+  const isTomorrow = day.date === addDaysStr(todayStr(), 1);
   // Registered as a drop target even while collapsed — dropping a dragged task
   // onto a collapsed day's header still works, it just doesn't require
   // expanding the day first.
@@ -1027,13 +1158,15 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
         <div style={R({ justifyContent: 'space-between', gap: 10 })}>
           <div style={R({ gap: 10 })}>
             {isToday && <span style={pill(`${accent}22`, accent, { fontSize: 9.5, fontWeight: 800 })}>TODAY</span>}
+            {isTomorrow && <span style={pill(`${C.pink}1e`, C.pinkL, { fontSize: 9.5, fontWeight: 800 })}>TOMORROW</span>}
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{fmtDateLabel(day.date)}</div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 1 }}>{day.theme}</div>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{day.headline || fmtDateLabel(day.date)}</div>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 1 }}>{day.headline ? `${fmtDateLabel(day.date)} · ${day.theme}` : day.theme}</div>
             </div>
           </div>
           <div style={R({ gap: 10 })}>
             {isDropTarget && <span style={{ fontSize: 10.5, color: accent, fontWeight: 700 }}>Drop here</span>}
+            {totalMinutes > 0 && <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{totalMinutes}m</span>}
             <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{doneCount}/{total}</span>
             <motion.div animate={{ rotate: expanded ? 180 : 0 }} style={{ display: 'flex', color: C.t3 }}><ChevronDown size={16} /></motion.div>
           </div>
@@ -1043,6 +1176,12 @@ function DayCard({ day, isToday, accent, expanded, onToggleExpand, onToggleTask,
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
             <div style={{ padding: '0 18px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {day.coachNote && (
+                <div style={{ padding: '10px 13px', borderRadius: 11, background: `linear-gradient(135deg, ${C.pink}10, transparent 70%)`, border: `1px solid ${C.pink}25`, display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 2 }}>
+                  <Sparkles size={13} color={C.pinkL} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <p style={{ fontSize: 11.5, color: C.t1, lineHeight: 1.6, margin: 0 }}>{day.coachNote}</p>
+                </div>
+              )}
               {day.tasks.map(t => (
                 dragCtx
                   ? <DraggableTaskRow key={t.id} task={t} date={day.date} onToggle={() => onToggleTask(day.date, t.id)} onJump={() => jumpTo(t)} dragCtx={dragCtx} reducedMotion={reducedMotion} />
@@ -1114,7 +1253,27 @@ function TaskRow({ task, onToggle, onJump, onSnooze, onMoveClick, dragHandle, is
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, textDecoration: task.done ? 'line-through' : 'none' }}>{task.title}</div>
         {task.detail && <div style={{ fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{task.detail}</div>}
+        {/* The "why" is what separates a plan from a checklist — one sentence naming the real
+            reason this task is on THIS student's day. Only rendered when generation produced one;
+            plans made before this field existed simply show the detail line as they always did. */}
+        {task.why && !task.done && (
+          <div style={{ fontSize: 11, color: C.pinkL, marginTop: 5, lineHeight: 1.5, paddingLeft: 8, borderLeft: `2px solid ${C.pink}45` }}>{task.why}</div>
+        )}
+        {task.successCriteria && !task.done && (
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>
+            <span style={{ fontWeight: 700, color: C.t2 }}>Done well: </span>{task.successCriteria}
+          </div>
+        )}
         <div style={R({ gap: 8, marginTop: 6, flexWrap: 'wrap' })}>
+          {task.timeOfDay && task.timeOfDay !== 'anytime' && (
+            <span style={pill(`${C.pink}14`, C.pinkL, { fontSize: 9, fontWeight: 700, textTransform: 'capitalize' })}>{task.timeOfDay}</span>
+          )}
+          {task.retargetedFrom && (
+            <span title={`Originally "${task.retargetedFrom}" — swapped because that lesson isn't available to you right now.`}
+              style={{ ...pill(`${C.cyan}18`, C.cyanL || C.cyan, { fontSize: 9 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+              <RefreshCw size={9} />Auto-adjusted
+            </span>
+          )}
           <span style={pill(`${meta.color}15`, meta.color, { fontSize: 9 })}>{meta.label}</span>
           {isSpotlight && (
             <span style={{ ...pill(`${ringColor}20`, ringColor, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 3, textTransform: 'uppercase', letterSpacing: '.03em' }}>

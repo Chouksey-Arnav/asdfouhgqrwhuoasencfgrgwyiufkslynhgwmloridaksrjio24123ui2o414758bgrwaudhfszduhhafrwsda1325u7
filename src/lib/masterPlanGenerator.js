@@ -95,19 +95,65 @@ function clampPhaseCount(horizonWeeks) { return Math.min(6, Math.max(3, Math.rou
 // front of a senior — rather than treating all units as interchangeable.
 // `gradeStage` is optional: when omitted (or when a pathway's units carry no
 // grade metadata) the catalog simply omits the timing annotations.
-export function buildResourceCatalog(specialtyKey, gradeStage = null) {
+// ── Which lessons the student can actually start right now ─────────────────
+// The pathway unlocks sequentially: a unit only opens once every lesson in the unit before it is
+// complete (see lessonState in src/App.jsx). A plan that says "start Clinical Ethics tomorrow"
+// when Clinical Ethics is three units behind a wall is worse than useless — the student taps the
+// task, lands on a padlock, and learns that the plan does not know what it is talking about.
+//
+// So the unlock state travels into generation as data, in two places that both matter: the prompt
+// (so the model never proposes a locked lesson in the first place) and the resolver (so a proposal
+// that slips through is re-pointed at something the student can genuinely open). `pathwayState` is
+// `{ byLesson: { [lessonId]: 'verified'|'done'|'studying'|'available'|'locked' } }`, computed in
+// App.jsx from the same helpers the Pathway tab itself renders from — one source of truth for
+// "is this open", not two that can disagree.
+const DONE_LESSON_STATES = new Set(['done', 'verified']);
+export function classifyPathwayLessons(specialtyKey, pathwayState = null) {
+  const path = PATHS[specialtyKey] || PATHS.exploring;
+  const byLesson = pathwayState?.byLesson || null;
+  const all = [];
+  path.units.forEach((u, unitIndex) => {
+    u.lessons.forEach(l => {
+      // With no unlock data at all, everything is treated as open — the pre-existing behavior,
+      // and the right default: withholding tasks because we cannot see the state would make the
+      // plan emptier for exactly the students whose data failed to load.
+      const state = byLesson ? (byLesson[l.id] || 'locked') : 'available';
+      all.push({ id: l.id, title: l.title, unitTitle: u.title, unitIndex, state });
+    });
+  });
+  const done = all.filter(l => DONE_LESSON_STATES.has(l.state));
+  const open = all.filter(l => l.state === 'available' || l.state === 'studying');
+  const locked = all.filter(l => l.state === 'locked');
+  return { all, done, open, locked, hasState: !!byLesson };
+}
+
+export function buildResourceCatalog(specialtyKey, gradeStage = null, pathwayState = null) {
   const path = PATHS[specialtyKey] || PATHS.exploring;
   const unitTitles = path.units.map(u => u.title);
+  const lessonInfo = classifyPathwayLessons(specialtyKey, pathwayState);
+  const stateOf = new Map(lessonInfo.all.map(l => [l.id, l.state]));
+  const LESSON_TAG = { locked: ' [LOCKED — cannot be started yet]', verified: ' [already done]', done: ' [already done]', studying: ' [in progress]' };
   const unitLines = path.units
     .map(u => {
       const stage = u.stage ? `${UNIT_STAGES[u.stage]?.label || u.stage} stage` : null;
       const timing = isUnitTimelyFor(u, gradeStage)
         ? 'BEST TIMED FOR THIS STUDENT NOW'
         : (u.gradeFocus?.length ? `usually best in: ${u.gradeFocus.join('/')}` : null);
-      const tags = [stage, timing].filter(Boolean).join('; ');
-      return `  • ${u.title} (quiz category: ${u.quizCat}${tags ? `; ${tags}` : ''}) — lessons: ${u.lessons.map(l => l.title).join(', ')}`;
+      const unitOpen = u.lessons.some(l => ['available', 'studying'].includes(stateOf.get(l.id)));
+      const unitDone = u.lessons.every(l => DONE_LESSON_STATES.has(stateOf.get(l.id)));
+      const access = !lessonInfo.hasState ? null : unitDone ? 'UNIT COMPLETE' : unitOpen ? 'OPEN NOW' : 'LOCKED — do not schedule anything from this unit';
+      const tags = [stage, timing, access].filter(Boolean).join('; ');
+      const lessons = u.lessons.map(l => `${l.title}${LESSON_TAG[stateOf.get(l.id)] || ''}`).join(', ');
+      return `  • ${u.title} (quiz category: ${u.quizCat}${tags ? `; ${tags}` : ''}) — lessons: ${lessons}`;
     })
     .join('\n');
+  // Named explicitly and up front, because "avoid the locked ones" is a rule the model has to
+  // apply across a long list, while "pick from these five" is a rule it cannot get wrong.
+  const openLine = !lessonInfo.hasState
+    ? null
+    : lessonInfo.open.length
+      ? `LESSONS THIS STUDENT CAN ACTUALLY START RIGHT NOW (pick pathway lesson tasks ONLY from this list — everything else in the pathway is either finished or still locked behind it): ${lessonInfo.open.slice(0, 12).map(l => `"${l.title}" (${l.unitTitle})`).join('; ')}`
+      : 'THE STUDENT HAS COMPLETED EVERY UNLOCKED PATHWAY LESSON — do not schedule new pathway lessons; use review, quizzes, SAT work and Portfolio tasks instead.';
   const quizCatCounts = {};
   for (const q of ALL_QUIZZES) quizCatCounts[q.cat] = (quizCatCounts[q.cat] || 0) + 1;
   const quizCats = Object.keys(quizCatCounts);
@@ -124,6 +170,7 @@ export function buildResourceCatalog(specialtyKey, gradeStage = null) {
   const text = [
     `PATHWAY — ${path.label} (this student's current track):`,
     unitLines,
+    openLine,
     '',
     `QUIZ LIBRARY: ${ALL_QUIZZES.length} practice quizzes across ${quizLine}. Sample real quiz titles you may reference by exact name:`,
     quizSampleLines,
@@ -131,8 +178,8 @@ export function buildResourceCatalog(specialtyKey, gradeStage = null) {
     `E-LIBRARY: ~${ELIB.length} curated articles/videos/courses across ${elibCats.join(', ')} (sample titles: ${articleSample})`,
     `AI COACH: Medabrain chat tutor (inside Prep) for questions, explanations, and being quizzed out loud`,
     `PORTFOLIO TOOLS: College List, Essay Workspace, Deadlines Tracker, Financial Aid Tracker, Activities & Resume Builder, Research Experience Log, Skills & Certifications, Clinical Hours Log, Recommenders Tracker, Interview Prep practice, Test Score Tracker, Admissions Calculator`,
-  ].join('\n');
-  return { text, pathwayLabel: path.label, unitTitles, quizCats };
+  ].filter(Boolean).join('\n');
+  return { text, pathwayLabel: path.label, unitTitles, quizCats, openLessons: lessonInfo.open, lessonInfo };
 }
 
 // Turns the same raw Portfolio resource lists buildPortfolioSystemPrompt reasons over
@@ -540,9 +587,43 @@ function parseLooseJSON(text) {
 const str = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 
-async function callOracle({ system, user, maxTokens, reasoningEffort = 'high' }) {
+// ── Talking to the Oracle, and refusing to fail silently ───────────────────
+// Every generation call in this file resolves to a complete, usable plan no matter what happens
+// on the wire — which is the right contract, and was also how this feature broke without anyone
+// being able to see it. A 429, a truncated completion or a timeout produced `null`, `null` became
+// the deterministic heuristic days, and the student got a plan that arrived in under a second and
+// said "SAT practice set / Continue your pathway / Flashcard review" every single time. It looked
+// like a plan. It was an error message wearing a plan's clothes.
+//
+// Two things fix that here. First, real retries: a rate limit or a transient upstream failure is
+// waited out with backoff (honouring the server's own retryAfterMs) rather than instantly retried
+// into the same wall. Generation is allowed to take its time — it happens rarely, the student is
+// looking at a progress screen, and a plan worth following is worth thirty more seconds. Second,
+// every attempt is recorded on a trace that travels back with the result, so a plan that DID fall
+// back is marked as such on the stored plan (`plan.generation.degraded`) and the UI can say so and
+// offer a retry, instead of quietly presenting the fallback as Medabrain's best thinking.
+const ORACLE_ATTEMPTS = 4;
+const ORACLE_BACKOFF_MS = [1500, 4000, 9000];
+// Just above the server's own abort (52s by default — see TIMEOUT_MS_BY_PURPOSE in api/groq.js),
+// so the server's 504 wins the race and we get a real status to act on instead of an opaque client
+// abort. If that server-side ceiling is ever raised via GROQ_MASTERPLAN_TIMEOUT_MS, raise this too
+// or the client will start giving up on requests the server was still going to answer.
+const ORACLE_TIMEOUT_MS = 58000;
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+export function createGenerationTrace() {
+  return { calls: 0, aiCalls: 0, fallbacks: 0, attempts: 0, errors: [], startedAt: Date.now() };
+}
+function noteError(trace, stage, detail) {
+  if (!trace) return;
+  if (trace.errors.length < 12) trace.errors.push(`${stage}: ${detail}`);
+}
+
+// One HTTP attempt. Returns { parsed } on success, or { retryable, status, detail, waitMs } so the
+// caller can decide whether waiting would plausibly help.
+async function callOracleOnce({ system, user, maxTokens, reasoningEffort }) {
   const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  const timer = controller ? setTimeout(() => controller.abort(), 50000) : null;
+  const timer = controller ? setTimeout(() => controller.abort(), ORACLE_TIMEOUT_MS) : null;
   try {
     const r = await fetch('/api/groq', {
       method: 'POST',
@@ -550,17 +631,48 @@ async function callOracle({ system, user, maxTokens, reasoningEffort = 'high' })
       body: JSON.stringify({ system, message: user, maxTokens, purpose: 'masterplan', tier: 'oracle', jsonMode: true, reasoningEffort }),
       signal: controller ? controller.signal : undefined,
     });
-    if (!r.ok) return null;
+    if (!r.ok) {
+      let waitMs = null;
+      let detail = `HTTP ${r.status}`;
+      try {
+        const body = await r.json();
+        if (Number.isFinite(Number(body?.retryAfterMs))) waitMs = Number(body.retryAfterMs);
+        if (body?.error) detail = `HTTP ${r.status} — ${String(body.error).slice(0, 120)}`;
+      } catch { /* a non-JSON error body is still just an error */ }
+      // 429 and 5xx are worth waiting out; a 4xx is a bad request that will fail identically.
+      return { retryable: r.status === 429 || r.status >= 500, status: r.status, detail, waitMs };
+    }
     const d = await r.json();
-    return parseLooseJSON(d && d.content);
-  } catch {
-    return null;
+    const parsed = parseLooseJSON(d && d.content);
+    // A 200 whose body will not parse is nearly always a completion truncated by the output
+    // ceiling. Retrying is worth one shot — the same prompt often lands shorter — but it is a
+    // distinct failure from a network one, so it is recorded as such.
+    if (!parsed) return { retryable: true, status: 200, detail: 'response was not parseable JSON (likely truncated)', waitMs: 0 };
+    return { parsed };
+  } catch (err) {
+    const aborted = err?.name === 'AbortError';
+    return { retryable: true, status: 0, detail: aborted ? 'client timeout' : `network error (${err?.message || 'unknown'})`, waitMs: aborted ? 0 : 1000 };
   } finally {
     if (timer) clearTimeout(timer);
   }
 }
-async function callOracleWithRetry(args) {
-  return (await callOracle(args)) || (await callOracle(args));
+
+async function callOracle(args, trace = null, stage = 'generation') {
+  if (trace) trace.calls += 1;
+  for (let attempt = 0; attempt < ORACLE_ATTEMPTS; attempt++) {
+    if (trace) trace.attempts += 1;
+    const result = await callOracleOnce(args);
+    if (result.parsed) {
+      if (trace) trace.aiCalls += 1;
+      return result.parsed;
+    }
+    noteError(trace, stage, `attempt ${attempt + 1} ${result.detail}`);
+    if (!result.retryable || attempt === ORACLE_ATTEMPTS - 1) break;
+    const backoff = ORACLE_BACKOFF_MS[Math.min(attempt, ORACLE_BACKOFF_MS.length - 1)];
+    await sleep(Math.max(backoff, result.waitMs || 0));
+  }
+  if (trace) trace.fallbacks += 1;
+  return null;
 }
 
 // ── Deep-link destination whitelist ────────────────────────────────────────
@@ -658,14 +770,28 @@ function seedFrom(str) {
   return Math.abs(h);
 }
 
-function buildResourceIndex(specialtyKey) {
-  const path = PATHS[specialtyKey] || PATHS.exploring;
+// `lessons` is the pool a lesson task is allowed to land on — everything the student can open
+// today. `allLessons` keeps the full list so an exact name the model wrote can still be recognised
+// (and then judged against the open pool) rather than falling through to a blind rotation.
+function buildResourceIndex(specialtyKey, pathwayState = null) {
+  const info = classifyPathwayLessons(specialtyKey, pathwayState);
+  const openPool = info.open.length ? info.open : info.all;
   return {
-    lessons: path.units.flatMap(u => u.lessons.map(l => ({ id: l.id, title: l.title, unitTitle: u.title }))),
+    lessons: openPool.map(l => ({ id: l.id, title: l.title, unitTitle: l.unitTitle })),
+    allLessons: info.all,
+    lessonStates: new Map(info.all.map(l => [l.id, l.state])),
     quizzes: ALL_QUIZZES.map(q => ({ id: q.id, title: q.title, cat: q.cat, diff: q.diff })),
     decks: Object.keys(FLASH_DECKS),
     articles: ELIB.map(e => ({ title: e.title, cat: e.cat })),
   };
+}
+
+// True when a lesson id is one the student cannot start (locked) or has already finished — the two
+// ways a lesson task goes stale. Used both at resolve time and by retargetStaleTasks below.
+function lessonIsSchedulable(index, lessonId) {
+  const state = index?.lessonStates?.get?.(lessonId);
+  if (!state) return true; // no unlock data for this index — treat as open (see classifyPathwayLessons)
+  return state === 'available' || state === 'studying';
 }
 
 // Resolves ONE task to { resourceTab, resourceView, resourceKind, resourceId,
@@ -698,7 +824,16 @@ export function resolveTaskResource(task, index, { seedKey = '', weakestCategory
     if (hit) { kind = 'quiz'; id = hit.id; label = hit.title; }
   } else if (type === 'lesson' && dest.resourceTab === 'prep') {
     dest = { resourceTab: 'prep', resourceView: 'pathways' };
-    const hit = bestMatch(exactHint, index.lessons, l => l.title, 1) || bestMatch(hint, index.lessons, l => `${l.title} ${l.unitTitle}`, 2)
+    // `index.lessons` is already narrowed to what the student can open (buildResourceIndex), so a
+    // match against it is safe by construction. The extra guard catches the one remaining path:
+    // an exact name that matches a real-but-locked or already-finished lesson, which is scored
+    // against the FULL list on purpose — recognising the name is what lets us reject it knowingly
+    // and substitute the nearest open lesson, instead of silently linking to a padlock.
+    const named = bestMatch(exactHint, index.allLessons || index.lessons, l => l.title, 1);
+    const usableNamed = named && lessonIsSchedulable(index, named.id) ? named : null;
+    const hit = usableNamed
+      || bestMatch(exactHint, index.lessons, l => l.title, 1)
+      || bestMatch(hint, index.lessons, l => `${l.title} ${l.unitTitle}`, 2)
       || index.lessons[seed % Math.max(1, index.lessons.length)];
     if (hit) { kind = 'lesson'; id = hit.id; label = hit.title; }
   } else if (type === 'flashcards' && dest.resourceTab === 'prep') {
@@ -724,7 +859,7 @@ export function resolveTaskResource(task, index, { seedKey = '', weakestCategory
 // a task without a working link.
 export function resolveAllTaskLinks(plan, user, liveSignals = {}) {
   if (!plan?.days?.length) return plan;
-  const index = buildResourceIndex(user?.specialty || 'exploring');
+  const index = buildResourceIndex(user?.specialty || 'exploring', liveSignals.pathwayState);
   let changed = false;
   const days = plan.days.map(d => ({
     ...d,
@@ -735,6 +870,70 @@ export function resolveAllTaskLinks(plan, user, liveSignals = {}) {
     }),
   }));
   return changed ? { ...plan, days, linkVersion: 2 } : plan;
+}
+
+// ── Keeping an already-written plan true as the student moves ──────────────
+// A plan is written at a moment and then read for days. In between, the student finishes the very
+// lesson tomorrow's task points at, or clears the unit that was blocking the next one. Neither
+// event regenerates anything — regeneration is expensive and happens on its own schedule — so
+// without this pass, tomorrow's plan keeps pointing at a lesson that is already ticked off, or at
+// one still sitting behind a padlock.
+//
+// This runs cheaply and locally on every load: for each still-open task from today forward whose
+// target lesson has gone stale (finished, or locked), the task is re-pointed at the best lesson
+// the student can actually start now. The task's own wording is left alone unless it named the old
+// lesson outright, in which case the detail line is rewritten to match where the link now goes —
+// a task whose text and destination disagree is its own kind of broken.
+//
+// Returns the same plan object when nothing needed adjusting, so it is safe to call from a render
+// effect without causing a save loop.
+export function retargetStaleTasks(plan, user, liveSignals = {}) {
+  if (!plan?.days?.length) return plan;
+  const pathwayState = liveSignals.pathwayState;
+  if (!pathwayState?.byLesson) return plan; // no unlock data this render — leave the plan untouched
+  const index = buildResourceIndex(user?.specialty || 'exploring', pathwayState);
+  const openLessons = index.lessons;
+  if (!openLessons.length) return plan;
+  const today = todayStr();
+  const retargeted = [];
+  let changed = false;
+
+  const days = plan.days.map(d => {
+    if (d.date < today) return d;
+    let dayChanged = false;
+    const tasks = d.tasks.map(t => {
+      if (t.done || t.resourceKind !== 'lesson' || !t.resourceId) return t;
+      // Three ways a lesson target goes stale, and all three land here: it is finished, it is
+      // locked, or it is not in this pathway at all — the last being what happens when a student
+      // switches tracks and every lesson task in the stored plan starts pointing at nothing.
+      const known = index.lessonStates.has(t.resourceId);
+      if (known && lessonIsSchedulable(index, t.resourceId)) return t;
+      const stale = index.allLessons.find(l => l.id === t.resourceId);
+      // Prefer a lesson from the same unit the plan was aiming at — that preserves the intent of
+      // the task ("keep going in Biology Foundations") rather than jumping the student somewhere
+      // unrelated just because it happened to be open.
+      const sameUnit = stale ? openLessons.find(l => l.unitTitle === stale.unitTitle) : null;
+      const pick = sameUnit || openLessons[seedFrom(t.id) % openLessons.length];
+      if (!pick || pick.id === t.resourceId) return t;
+      dayChanged = true; changed = true;
+      retargeted.push({ from: stale?.title || t.resourceId, to: pick.title, reason: !stale ? 'no longer in this pathway' : DONE_LESSON_STATES.has(stale.state) ? 'completed' : 'locked' });
+      // Rewrite the detail line when it described the lesson we just moved away from — either
+      // because it named it outright, or because the old lesson is gone from this pathway
+      // entirely and so whatever the line says cannot still be about where the link now goes.
+      const describesOldLesson = !stale || (stale.title && `${t.title} ${t.detail || ''}`.toLowerCase().includes(stale.title.toLowerCase()));
+      return {
+        ...t,
+        resourceId: pick.id,
+        resourceLabel: pick.title,
+        detail: describesOldLesson ? `${pick.title} — ${pick.unitTitle}` : (t.detail || `${pick.title} — ${pick.unitTitle}`),
+        retargetedFrom: stale?.title || t.resourceId,
+      };
+    });
+    return dayChanged ? { ...d, tasks } : d;
+  });
+
+  if (!changed) return plan;
+  return { ...plan, days, updatedAt: Date.now(), lastRetarget: { at: Date.now(), changes: retargeted.slice(0, 6) } };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -895,16 +1094,21 @@ function looksUsableRoadmap(p) {
   return !!str(p.overview) || (Array.isArray(p.phases) && p.phases.length > 0) || (Array.isArray(p.weeklyThemes) && p.weeklyThemes.length > 0);
 }
 
-export async function generateRoadmap(user, liveSignals, catalog, portfolio, plan = null) {
+export async function generateRoadmap(user, liveSignals, catalog, portfolio, plan = null, trace = null) {
   const horizonWeeks = computeHorizonWeeks(user);
   const fallback = heuristicRoadmap(user, horizonWeeks, catalog);
   try {
     const system = buildRoadmapSystemPrompt(horizonWeeks, catalog.text);
     const userMsg = `Here is the student's full profile:\n${buildProfileFactsText(user, liveSignals, portfolio, plan)}\n\nBuild their ${horizonWeeks}-week roadmap now as JSON only.`;
-    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens: 7000, reasoningEffort: 'high' });
-    const roadmap = looksUsableRoadmap(parsed) ? repairRoadmap(parsed, fallback, horizonWeeks) : fallback;
-    return { ...roadmap, horizonWeeks };
-  } catch {
+    const parsed = await callOracle({ system, user: userMsg, maxTokens: 10000, reasoningEffort: 'high' }, trace, 'roadmap');
+    if (!looksUsableRoadmap(parsed)) {
+      if (parsed) { noteError(trace, 'roadmap', 'response parsed but was missing every usable field'); if (trace) trace.fallbacks += 1; }
+      return { ...fallback, horizonWeeks };
+    }
+    return { ...repairRoadmap(parsed, fallback, horizonWeeks), horizonWeeks };
+  } catch (err) {
+    noteError(trace, 'roadmap', `unexpected error (${err?.message || 'unknown'})`);
+    if (trace) trace.fallbacks += 1;
     return { ...fallback, horizonWeeks };
   }
 }
@@ -916,8 +1120,16 @@ function weekNumberForDate(plan, date) { return plan?.startDate ? Math.floor(day
 function weeklyThemeForWeek(plan, week) { return plan?.weeklyThemes?.find(w => w.week === week) || null; }
 function phaseForWeek(plan, week) { return plan?.phases?.find(p => week >= p.weekStart && week <= p.weekEnd) || plan?.phases?.[plan.phases.length - 1] || null; }
 
-export function heuristicDays(plan, fromDate, numDays, catalog, user) {
+// The deterministic floor under every day-generation call. It exists so the tab can always render
+// something, and it is deliberately plain — but "plain" is the point of a fallback, not an
+// acceptable everyday output. When these tasks are what the student sees, generation failed; the
+// plan is stamped `generation.degraded` so the UI says so and offers a retry, rather than passing
+// this off as Medabrain's considered plan for their day.
+export function heuristicDays(plan, fromDate, numDays, catalog, user, liveSignals = {}) {
   const track = user?.testTrack || 'SAT';
+  // Never point the fallback at a locked or already-finished lesson either — the same rule the
+  // generated path follows. With no unlock data, openLessons is the whole pathway, as before.
+  const openLessons = catalog?.openLessons?.length ? catalog.openLessons : null;
   const days = [];
   for (let i = 0; i < numDays; i++) {
     const date = addDaysStr(fromDate, i);
@@ -926,20 +1138,23 @@ export function heuristicDays(plan, fromDate, numDays, catalog, user) {
     const weekNumber = weekNumberForDate(plan, date);
     const theme = weeklyThemeForWeek(plan, weekNumber)?.theme || 'Steady progress this week';
     const phase = phaseForWeek(plan, weekNumber);
+    const lesson = openLessons ? openLessons[i % openLessons.length] : null;
     const tasks = [];
     if (!isWeekend) {
       // Previously: pillar 'prep', type 'quiz', linked to prep/quizzes — a task
       // promising SAT practice that opened a library of MCAT-style science
       // quizzes. Now it opens the SAT tab's adaptive practice.
-      tasks.push({ pillar: 'sat', type: 'sat_practice', title: `${track} practice set`, detail: 'Smart Set — weighted to your weakest skills', estMinutes: 20, ...sanitizeDestination('sat', 'practice') });
-      tasks.push({ pillar: 'prep', type: 'lesson', title: 'Continue your pathway', detail: `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, estMinutes: 15, ...sanitizeDestination('prep', 'pathways') });
-      tasks.push({ pillar: 'prep', type: 'flashcards', title: 'Flashcard review', detail: 'Clear any cards due today', estMinutes: 10, ...sanitizeDestination('prep', 'flashcards') });
-      if (i % 3 === 2) tasks.push({ pillar: 'portfolio', type: 'activity', title: 'Portfolio check-in', detail: 'Log any new activity, clinical, or research hours', estMinutes: 10, ...sanitizeDestination('portfolio', 'resume') });
+      tasks.push({ pillar: 'sat', type: 'sat_practice', title: `${track} practice set`, detail: 'Smart Set — weighted to your weakest skills', estMinutes: 20, timeOfDay: 'afternoon', ...sanitizeDestination('sat', 'practice') });
+      tasks.push({ pillar: 'prep', type: 'lesson', title: lesson ? `Lesson: ${lesson.title}` : 'Continue your pathway', detail: lesson ? `${lesson.title} — ${lesson.unitTitle}` : `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, resourceName: lesson?.title || null, estMinutes: 15, timeOfDay: 'afternoon', ...sanitizeDestination('prep', 'pathways') });
+      tasks.push({ pillar: 'prep', type: 'flashcards', title: 'Flashcard review', detail: 'Clear any cards due today', estMinutes: 10, timeOfDay: 'evening', ...sanitizeDestination('prep', 'flashcards') });
+      if (i % 3 === 2) tasks.push({ pillar: 'portfolio', type: 'activity', title: 'Portfolio check-in', detail: 'Log any new activity, clinical, or research hours', estMinutes: 10, timeOfDay: 'evening', ...sanitizeDestination('portfolio', 'resume') });
     } else {
-      tasks.push({ pillar: 'rest', type: 'reflection', title: 'Light review + reflect', detail: `Skim one E-Library article related to ${catalog.pathwayLabel}`, estMinutes: 15, ...sanitizeDestination('prep', 'library') });
+      tasks.push({ pillar: 'rest', type: 'reflection', title: 'Light review + reflect', detail: `Skim one E-Library article related to ${catalog.pathwayLabel}`, estMinutes: 15, timeOfDay: 'anytime', ...sanitizeDestination('prep', 'library') });
     }
     days.push({
       date, dayIndex: i + 1, weekday: WEEKDAY_NAMES[wd], weekNumber, phaseId: phase?.id || null, theme,
+      headline: isWeekend ? 'A lighter day' : theme,
+      coachNote: null,
       tasks: tasks.map((t, ti) => ({ id: `${date}-t${ti}`, done: false, doneAt: null, ...t })),
       reflectionPrompt: isWeekend ? 'What felt easiest this week? What needs more attention next week?' : null,
     });
@@ -947,29 +1162,46 @@ export function heuristicDays(plan, fromDate, numDays, catalog, user) {
   return days;
 }
 
+// ── The day prompt ─────────────────────────────────────────────────────────
+// This window is deliberately short — two days, normally — and the prompt is written to spend
+// everything that buys on depth. Planning fourteen days at once meant roughly a paragraph of
+// thought per day and a plan whose back half was invented for a future that had not happened yet.
+// Two days is the horizon a student actually acts on, and at two days there is room to say WHY
+// each task is there, WHEN in the day it belongs, and what finishing it well looks like.
+const BANNED_TASK_TITLES = ['SAT practice set', 'Continue your pathway', 'Flashcard review', 'Portfolio check-in', 'Study session'];
+
 function buildDayChunkSystemPrompt(numDays, catalogText, prefsNote = '') {
-  return `You are Medabrain's Oracle, continuing to build a student's day-by-day study plan inside MedSchoolPrep. Their full roadmap already exists — your job right now is to fill in SPECIFIC, concrete daily tasks for a ${numDays}-day window, fully consistent with the roadmap phase/week themes given below. This should read like an actual day planner a great advisor handed them — not vague ("study science") but specific ("Quiz Library → Physical Sciences → 12 questions on acid-base chemistry, tied to your Chemistry for Medicine unit").
+  const windowWord = numDays <= 2 ? `${numDays === 1 ? 'single day' : 'two days'}` : `${numDays}-day window`;
+  return `You are Medabrain's Oracle, writing a student's actual plan for the next ${windowWord} inside MedSchoolPrep. Their long-horizon roadmap already exists — your job right now is the part they will actually DO: specific, concrete, ordered tasks for ${numDays === 1 ? 'this day' : 'these days'}, consistent with the roadmap phase and week theme given below.
+
+This is a short window on purpose. You are not sketching a fortnight — you are writing ${numDays === 1 ? "one day" : 'two days'} properly, with the care of an advisor who knows this student and has half an hour to think about their week. Depth per day is the whole point. Think hard before you answer.
 
 ${AGE_APPROPRIATE_RULES}
-- Balance across the ${numDays} days: mix Prep (pathway lessons/quizzes/flashcards/library/coach) and Portfolio (colleges/essays/deadlines/activities/clinical hours/research/recommenders/interview prep) — do not make every day only test prep.
-- Weekends should be lighter — a shorter catch-up, reflection, or reading day, not a full load.
-- Vary task count 3-5 per day depending on how busy that day naturally should be.${prefsNote}
+- Each day gets 3-5 tasks, mixing Prep (pathway lessons/quizzes/flashcards/library/coach), SAT work, and Portfolio (colleges/essays/deadlines/activities/clinical hours/research/recommenders/interview prep). Not every task is test prep.
+- Weekend days are lighter — a shorter catch-up, reflection, or reading day, not a full load.
+- Order the tasks within each day the way you would actually do them, and say when each belongs (morning/afternoon/evening/anytime).${prefsNote}
 
-══ WHAT MAKES THESE DAYS WORTH FOLLOWING ══
+══ THE BAR THIS HAS TO CLEAR ══
+A plan that could have been written without reading this student's file has failed, however tidy it looks. Concretely:
+- NEVER emit a generic task. These exact titles are forbidden, and so is anything as empty as them: ${BANNED_TASK_TITLES.map(t => `"${t}"`).join(', ')}. Name the thing. "Smart Set: 12 questions on Boundaries — your weakest skill at 41%" is a task; "SAT practice set" is a placeholder.
 - EVERY PORTFOLIO TASK NAMES A REAL ROW. The profile lists their actual colleges, essays (with word counts and how long since each was touched), clinical sites, activities, recommenders and deadlines. "Work on your essays" is a failure; "Get the Michigan supplement from 140 to 300 words — it hasn't been touched in 3 weeks" is the standard.
-- CLOSE THE RANKED GAPS. The profile ends with a priority-ordered gap list, each naming the exact panel that fixes it. Across this window, schedule concrete tasks against the top gaps — one clear step at a time, not all at once.
-- OVERDUE BEATS UPCOMING. Anything already past due gets handled in the first day or two, explicitly.
-- MATCH THE MEASURED WEAKNESS. Quiz and SAT tasks target their weakest measured category/skills, and unreviewed Review Log questions come before brand-new practice.
-- FIT THE REAL DAY. Total estMinutes across a day must be close to their stated pace; the adherence data (if present) says which weekdays and which task types actually get done — schedule the hard things where they historically follow through.
-- NO TWO DAYS THE SAME. Repeating an identical task list across the window is the single most common failure here. Vary the resource, the angle, and the pillar mix day to day.
+- ONLY SCHEDULE PATHWAY LESSONS THE STUDENT CAN ACTUALLY OPEN. The catalog marks every lesson as open, already done, or LOCKED. A locked lesson is behind unfinished work and tapping it hits a padlock — never schedule one, and never schedule a lesson already marked done.
+- CLOSE THE RANKED GAPS. The profile ends with a priority-ordered gap list, each naming the exact panel that fixes it. Put a concrete step against the top gap in this window.
+- OVERDUE BEATS UPCOMING. Anything already past due is handled on the first day, explicitly.
+- MATCH THE MEASURED WEAKNESS. Quiz and SAT tasks target their weakest measured category/skills by name, and unreviewed Review Log questions come before brand-new practice.
+- FIT THE REAL DAY. Total estMinutes across a day must be close to their stated pace. The adherence data (if present) says which weekdays and which task types actually get done — put the demanding work where they historically follow through, not where it looks tidy.
+- THE TWO DAYS ARE DIFFERENT DAYS. Same shape twice is the most common failure here. Vary the resource, the angle, and the pillar mix.
+- EVERY TASK EARNS ITS "why". One sentence, addressed to the student, naming the real reason THIS task is on THEIR plan today — their score gap, their deadline, their untouched draft. "It's good practice" is not a reason.
 
 Here is the real MedSchoolPrep resource catalog to ground tasks in:
 ${catalogText}
 
 Respond with ONLY valid JSON (no markdown, no code fences, no prose) matching exactly this schema:
-{ "days": [ { "dayIndex": number, "theme": "short line tying the day to its week theme", "tasks": [ { "pillar": "prep|portfolio|progress|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource", "estMinutes": number, "resourceTab": "prep|portfolio|progress or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathway, colleges, essays) or null", "resourceName": "the EXACT title of the one specific quiz, lesson, flashcard deck, or E-Library resource this task uses, copied verbatim from the catalog above — or null for tasks that don't target a single named resource" } ], "reflectionPrompt": "string or null — only on the last day of the window or a natural weekly-reflection day" } ] }
-Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order. For every quiz/lesson/flashcards/reading task, ALWAYS fill "resourceName" with a real name from the catalog — this becomes a clickable link that opens that exact resource for the student.`;
+{ "days": [ { "dayIndex": number, "headline": "a real title for this specific day, max 8 words", "theme": "short line tying the day to its week theme", "coachNote": "2-3 sentences to the student about the shape of this day — what matters most, what to protect, what to let go if time runs short", "tasks": [ { "pillar": "prep|portfolio|progress|sat|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest|sat_practice|sat_review|sat_test", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource and the actual target", "why": "one sentence to the student on why this task is on their plan today, citing something real from their profile", "successCriteria": "one short sentence describing what finishing this well looks like", "timeOfDay": "morning|afternoon|evening|anytime", "estMinutes": number, "resourceTab": "prep|portfolio|progress|sat or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathways, colleges, essays, practice, review) or null", "resourceName": "the EXACT title of the one specific quiz, lesson, flashcard deck, or E-Library resource this task uses, copied verbatim from the catalog above — or null for tasks that don't target a single named resource" } ], "reflectionPrompt": "string or null — a short end-of-day question, on the last day of the window or a natural reflection day" } ] }
+Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order, with the tasks already in the order they should be done. For every quiz/lesson/flashcards/reading task, ALWAYS fill "resourceName" with a real name from the catalog — this becomes a clickable link that opens that exact resource for the student.`;
 }
+
+const VALID_TIMES_OF_DAY = new Set(['morning', 'afternoon', 'evening', 'anytime']);
 
 export function repairDays(parsed, fallbackDays, plan, catalog) {
   const byIndex = new Map();
@@ -987,6 +1219,12 @@ export function repairDays(parsed, fallbackDays, plan, catalog) {
         pillar, type,
         title: str(t?.title) || fb.tasks[ti]?.title || 'Study session',
         detail: str(t?.detail) || fb.tasks[ti]?.detail || '',
+        // The three fields that turn a checklist into a plan: why this, when in the day, and what
+        // "done properly" means. All optional — an older stored plan simply has none of them, and
+        // the UI renders without them rather than showing an empty label.
+        why: str(t?.why) || null,
+        successCriteria: str(t?.successCriteria) || null,
+        timeOfDay: VALID_TIMES_OF_DAY.has(t?.timeOfDay) ? t.timeOfDay : (fb.tasks[ti]?.timeOfDay || null),
         estMinutes: num(t?.estMinutes) || fb.tasks[ti]?.estMinutes || 20,
         resourceName: str(t?.resourceName) || null,
         ...dest,
@@ -995,10 +1233,24 @@ export function repairDays(parsed, fallbackDays, plan, catalog) {
     return {
       ...fb,
       theme: str(d.theme) || fb.theme,
+      headline: str(d.headline) || fb.headline || null,
+      coachNote: str(d.coachNote) || null,
       tasks: tasks.length ? tasks : fb.tasks,
       reflectionPrompt: str(d.reflectionPrompt) || fb.reflectionPrompt,
     };
   });
+}
+
+// Did the model actually write something for this student, or did it hand back the same shape the
+// fallback would have produced? Used to decide whether a generation counts as real — a "success"
+// that returns three placeholder titles is a failure that parsed.
+function daysLookGeneric(days) {
+  if (!days?.length) return true;
+  const titles = days.flatMap(d => d.tasks.map(t => String(t.title || '').trim().toLowerCase()));
+  if (!titles.length) return true;
+  const banned = new Set(BANNED_TASK_TITLES.map(t => t.toLowerCase()));
+  const bannedCount = titles.filter(t => banned.has(t)).length;
+  return bannedCount / titles.length >= 0.5;
 }
 
 // ── Onboarding "addBack"/"rollover" prefs — real deterministic behavior ────
@@ -1074,12 +1326,12 @@ export function applyAddBackPrefs(days, priorDays, prefs) {
 
 // Generates the next `numDays` of daily tasks starting the day after
 // plan.daysGeneratedThrough (or `fromDate` for the very first chunk).
-export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = 7, portfolio) {
-  const fallback = heuristicDays(plan, fromDate, numDays, catalog, user);
+export async function generateDayChunk(plan, user, liveSignals, catalog, fromDate, numDays = WINDOW_DAYS, portfolio, trace = null) {
+  const fallback = heuristicDays(plan, fromDate, numDays, catalog, user, liveSignals);
   // Final belt-and-braces pass: EVERY task — AI-written or fallback — leaves
   // here resolved to a concrete launchable resource (see resolveTaskResource),
   // so the "open this exact quiz/lesson/deck/article" link always works.
-  const index = buildResourceIndex(user?.specialty || 'exploring');
+  const index = buildResourceIndex(user?.specialty || 'exploring', liveSignals?.pathwayState);
   const linkAll = (days) => days.map(d => ({
     ...d,
     tasks: d.tasks.map(t => ({ ...t, ...resolveTaskResource(t, index, { seedKey: d.date, weakestCategory: liveSignals?.weakestCategory }) })),
@@ -1098,24 +1350,62 @@ export async function generateDayChunk(plan, user, liveSignals, catalog, fromDat
     const system = buildDayChunkSystemPrompt(numDays, catalog.text, prefsNote);
     // The day table leads. Everything else in this message is context the model reasons WITH;
     // the table is the thing it must cover exactly once each, so it goes where no cap can reach it.
-    const userMsg = `Days to fill in — generate EXACTLY one entry per dayIndex below, in order:\n${dayTable}\n\nRoadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals, portfolio, plan)}\n\nGenerate the tasks for these ${numDays} days now as JSON only.`;
-    // Output budget scales with the window: adaptPlanToNotes can ask for up to a full 14-day
-    // rewrite in one call, and a fixed 5,500-token ceiling truncated the tail of those into an
-    // unparseable response (which then silently fell back to the heuristic days).
-    const maxTokens = Math.min(8000, 1500 + numDays * 700);
-    const parsed = await callOracleWithRetry({ system, user: userMsg, maxTokens, reasoningEffort: fromDate === plan?.startDate ? 'high' : 'medium' });
-    return applyPrefs(linkAll(parsed ? repairDays(parsed, fallback, plan, catalog) : fallback));
-  } catch {
+    const userMsg = `Days to fill in — generate EXACTLY one entry per dayIndex below, in order:\n${dayTable}\n\nRoadmap headline: "${plan.headline}"\nOverview: ${plan.overview}\n\nStudent profile:\n${buildProfileFactsText(user, liveSignals, portfolio, plan)}\n\nGenerate the tasks for ${numDays === 1 ? 'this day' : `these ${numDays} days`} now as JSON only.`;
+    // Budget generously per day and always leave room for the reasoning pass, which is billed
+    // against the same ceiling on this model family. A two-day window at 6,000 tokens has room to
+    // think properly and still write every field; the old formula gave a long window a budget the
+    // thinking alone could exhaust, and the truncated JSON became a silent fallback.
+    const maxTokens = Math.min(16000, 3500 + numDays * 1300);
+    // Always 'high'. Every call this function makes is now a short, deep window rather than a
+    // long, shallow one, and reasoning effort is exactly what buys the difference between a plan
+    // that names the student's weakest skill and one that says "practice set".
+    const parsed = await callOracle({ system, user: userMsg, maxTokens, reasoningEffort: 'high' }, trace, `days ${fromDate}`);
+    if (!parsed) return applyPrefs(linkAll(fallback));
+    const repaired = repairDays(parsed, fallback, plan, catalog);
+    // A parseable response that still reads like the fallback is not a success. Count it as one
+    // so the plan is honestly marked degraded rather than presenting placeholders as a plan.
+    if (daysLookGeneric(repaired)) {
+      noteError(trace, `days ${fromDate}`, 'model returned placeholder-level tasks');
+      if (trace) { trace.aiCalls = Math.max(0, trace.aiCalls - 1); trace.fallbacks += 1; }
+    }
+    return applyPrefs(linkAll(repaired));
+  } catch (err) {
+    noteError(trace, `days ${fromDate}`, `unexpected error (${err?.message || 'unknown'})`);
+    if (trace) trace.fallbacks += 1;
     return applyPrefs(linkAll(fallback));
   }
+}
+
+// Everything the UI needs to tell the student the truth about how this plan was made.
+function summarizeTrace(trace) {
+  if (!trace) return null;
+  return {
+    generatedAt: Date.now(),
+    tookMs: Date.now() - trace.startedAt,
+    aiCalls: trace.aiCalls,
+    fallbacks: trace.fallbacks,
+    attempts: trace.attempts,
+    degraded: trace.fallbacks > 0,
+    errors: trace.errors.slice(0, 6),
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Orchestration — public entry points used by the Plans tab
 // ═══════════════════════════════════════════════════════════════════════════
-const CHUNK_DAYS = 7;
-const ROLLING_WINDOW_DAYS = 14; // how many days of full detail to keep generated ahead of today
-const EXTEND_THRESHOLD_DAYS = 3; // trigger the next chunk once this many days of window remain
+// ── Why the window is two days ─────────────────────────────────────────────
+// This used to generate fourteen days up front and roll a week forward at a time. That is a lot of
+// plan, and almost none of it survived contact with the week: by Thursday the student had done
+// things the Tuesday generation could not have known about, so days 5-14 were a confident schedule
+// for a situation that no longer existed — and the cost of writing them was paid out of the
+// thinking available for the days that mattered.
+//
+// Two days is the horizon a student actually acts on: today, and enough of tomorrow to prepare for
+// it. Generating only that means every generation is cheap enough to run OFTEN — the window is
+// rebuilt whenever it no longer covers today and tomorrow, which in practice is once a day — and
+// each one gets the full depth of a high-reasoning call spent on days that are real. "Constantly
+// updating" and "actually thought through" are the same change.
+export const WINDOW_DAYS = 2; // today + tomorrow
 
 // ── Profile staleness — "keeps updating based on the student's updated
 // profile" ────────────────────────────────────────────────────────────────
@@ -1151,53 +1441,101 @@ export function planIsStale(plan, user) {
   return !snapshotsEqual(plan.profileSnapshot, buildProfileSnapshot(user));
 }
 
+function catalogFor(user, liveSignals) {
+  return buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null, liveSignals?.pathwayState);
+}
+
 export async function createMasterPlan(user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, null);
+  const trace = createGenerationTrace();
+  const catalog = catalogFor(user, liveSignals);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, null, trace);
   const startDate = todayStr();
   const planShell = { ...roadmap, startDate, days: [] };
-  const firstChunk = await generateDayChunk(planShell, user, liveSignals, catalog, startDate, CHUNK_DAYS, portfolio);
-  const secondChunk = await generateDayChunk({ ...planShell, days: firstChunk }, user, liveSignals, catalog, addDaysStr(startDate, CHUNK_DAYS), CHUNK_DAYS, portfolio);
-  const days = [...firstChunk, ...secondChunk];
+  // One call, two days, full reasoning effort — rather than two shallower calls covering a
+  // fortnight. See WINDOW_DAYS above.
+  const days = await generateDayChunk(planShell, user, liveSignals, catalog, startDate, WINDOW_DAYS, portfolio, trace);
   const now = Date.now();
   return {
-    version: 1, linkVersion: 2, ...roadmap, startDate,
-    days, daysGeneratedFrom: startDate, daysGeneratedThrough: addDaysStr(startDate, ROLLING_WINDOW_DAYS - 1),
+    version: 2, linkVersion: 2, ...roadmap, startDate,
+    days, daysGeneratedFrom: startDate, daysGeneratedThrough: addDaysStr(startDate, WINDOW_DAYS - 1),
+    windowBuiltFor: startDate,
     progressLog: [], createdAt: now, updatedAt: now, lastExtendedAt: now,
+    generation: summarizeTrace(trace),
     profileSnapshot: buildProfileSnapshot(user),
   };
 }
 
-// Rolls the window forward by one chunk — called when the plan is close to
-// running out of generated days. This is the mechanism that keeps the plan
-// "continuing to plan" indefinitely instead of going stale.
-export async function extendMasterPlan(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const from = addDaysStr(plan.daysGeneratedThrough, 1);
-  const nextChunk = await generateDayChunk(plan, user, liveSignals, catalog, from, CHUNK_DAYS, portfolio);
-  const merged = pruneRollingWindow({
-    ...plan,
-    days: [...plan.days, ...nextChunk],
-    daysGeneratedThrough: addDaysStr(from, CHUNK_DAYS - 1),
-    updatedAt: Date.now(), lastExtendedAt: Date.now(),
-  });
-  return merged;
+// ── The refresh that keeps the plan current ────────────────────────────────
+// Rewrites the two-day window from scratch against everything true right now: today's real
+// progress, the lessons that unlocked overnight, the deadline that moved a day closer. Days that
+// have already elapsed are archived, not rewritten, and a task the student already finished today
+// is carried over as done rather than reissued — finishing something and watching it reappear
+// unfinished is the fastest way to stop trusting a plan.
+// Two independent callers can ask for the same refresh at the same moment: the app-wide daily
+// effect in App.jsx and PlansTab's own, when the student happens to have the Plans tab open as the
+// date turns over. Both would be correct and both would spend a full Oracle generation, then race
+// to save. Collapsing them here — keyed on the day being planned — means whichever asks first does
+// the work and the other simply awaits the same result.
+let inFlightRefresh = null; // { key, promise }
+export async function refreshDayWindow(plan, user, liveSignals, portfolio) {
+  const key = `${todayStr()}|${user?.id || user?.email || 'local'}`;
+  if (inFlightRefresh?.key === key) return inFlightRefresh.promise;
+  const promise = refreshDayWindowUncoalesced(plan, user, liveSignals, portfolio)
+    .finally(() => { if (inFlightRefresh?.key === key) inFlightRefresh = null; });
+  inFlightRefresh = { key, promise };
+  return promise;
 }
+
+async function refreshDayWindowUncoalesced(plan, user, liveSignals, portfolio) {
+  const trace = createGenerationTrace();
+  const catalog = catalogFor(user, liveSignals);
+  const today = todayStr();
+  const fresh = await generateDayChunk(plan, user, liveSignals, catalog, today, WINDOW_DAYS, portfolio, trace);
+
+  // Preserve completion: match by resource where there is one (the student did that exact quiz),
+  // otherwise by title. Only for today — tomorrow has not happened yet.
+  const doneToday = (plan?.days || []).find(d => d.date === today)?.tasks.filter(t => t.done) || [];
+  const doneKeys = new Set(doneToday.map(t => (t.resourceKind && t.resourceId ? `${t.resourceKind}:${t.resourceId}` : `title:${t.title}`)));
+  const days = fresh.map(d => (d.date !== today ? d : {
+    ...d,
+    tasks: d.tasks.map(t => {
+      const key = t.resourceKind && t.resourceId ? `${t.resourceKind}:${t.resourceId}` : `title:${t.title}`;
+      return doneKeys.has(key) ? { ...t, done: true, doneAt: Date.now(), xpAwarded: true } : t;
+    }),
+  }));
+
+  const keptPast = (plan?.days || []).filter(d => d.date < today);
+  return pruneRollingWindow({
+    ...plan,
+    days: [...keptPast, ...days],
+    daysGeneratedFrom: today,
+    daysGeneratedThrough: addDaysStr(today, WINDOW_DAYS - 1),
+    windowBuiltFor: today,
+    updatedAt: Date.now(), lastExtendedAt: Date.now(),
+    generation: summarizeTrace(trace),
+  });
+}
+
+// Kept under its original name because it is the same promise from the student's side — "the plan
+// keeps going without me asking" — and because App/PlansTab and the verification suite address it
+// by this name. With a two-day window, extending it and refreshing it are the same operation.
+export const extendMasterPlan = refreshDayWindow;
 
 // Regenerates the roadmap from scratch (profile/goals changed enough to want
 // a fresh spine) but keeps the already-generated near-term days untouched so
 // in-progress work isn't lost, and re-derives their week/phase linkage
 // against the new roadmap.
 export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan);
+  const trace = createGenerationTrace();
+  const catalog = catalogFor(user, liveSignals);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan, trace);
   const startDate = plan?.startDate || todayStr();
   const days = (plan?.days || []).map(d => {
     const weekNumber = weekNumberForDate({ startDate }, d.date);
     const phase = phaseForWeek(roadmap, weekNumber);
     return { ...d, weekNumber, phaseId: phase?.id || null };
   });
-  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now(), profileSnapshot: buildProfileSnapshot(user) };
+  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now(), generation: summarizeTrace(trace), profileSnapshot: buildProfileSnapshot(user) };
 }
 
 // The real "Add to plan" mechanism — regenerates the roadmap spine (as
@@ -1208,8 +1546,9 @@ export async function regenerateRoadmap(plan, user, liveSignals, portfolio) {
 // later) whose tasks are already fully done, is left completely untouched —
 // only the first still-open day onward gets a fresh, note-aware generation.
 export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
-  const catalog = buildResourceCatalog(user?.specialty || 'exploring', user?.gradeStage || null);
-  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan);
+  const trace = createGenerationTrace();
+  const catalog = catalogFor(user, liveSignals);
+  const roadmap = await generateRoadmap(user, liveSignals, catalog, portfolio, plan, trace);
   const today = todayStr();
   const startDate = plan?.startDate || today;
   const sorted = [...(plan?.days || [])].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
@@ -1219,23 +1558,51 @@ export async function adaptPlanToNotes(plan, user, liveSignals, portfolio) {
   const through = plan?.daysGeneratedThrough || regenFrom;
   let freshDays = [];
   if (regenFrom && through) {
-    const numDays = daysBetween(regenFrom, through) + 1;
-    if (numDays > 0) {
-      const shell = { ...plan, ...roadmap, startDate };
-      freshDays = await generateDayChunk(shell, user, liveSignals, catalog, regenFrom, numDays, portfolio);
-    }
+    // Never rewrite more than the window: the note the student just added is about the next day or
+    // two, and asking for a longer rewrite is exactly the shallow-many-days trade WINDOW_DAYS
+    // exists to refuse.
+    const numDays = Math.min(WINDOW_DAYS, Math.max(1, daysBetween(regenFrom, through) + 1));
+    const shell = { ...plan, ...roadmap, startDate };
+    freshDays = await generateDayChunk(shell, user, liveSignals, catalog, regenFrom, numDays, portfolio, trace);
   }
-  const days = [...keep, ...freshDays].map(d => {
-    const weekNumber = weekNumberForDate({ startDate }, d.date);
-    const phase = phaseForWeek(roadmap, weekNumber);
-    return { ...d, weekNumber, phaseId: phase?.id || null };
-  });
-  return { ...plan, ...roadmap, startDate, days, updatedAt: Date.now(), profileSnapshot: buildProfileSnapshot(user) };
+  // A regenerated day replaces the stored one for the same date rather than sitting alongside it.
+  const freshDates = new Set(freshDays.map(d => d.date));
+  const days = [...keep.filter(d => !freshDates.has(d.date)), ...freshDays]
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+    .map(d => {
+      const weekNumber = weekNumberForDate({ startDate }, d.date);
+      const phase = phaseForWeek(roadmap, weekNumber);
+      return { ...d, weekNumber, phaseId: phase?.id || null };
+    });
+  const lastDate = days.length ? days[days.length - 1].date : plan?.daysGeneratedThrough;
+  return {
+    ...plan, ...roadmap, startDate, days,
+    daysGeneratedThrough: lastDate || plan?.daysGeneratedThrough,
+    windowBuiltFor: today,
+    updatedAt: Date.now(), generation: summarizeTrace(trace), profileSnapshot: buildProfileSnapshot(user),
+  };
 }
 
+// True when the stored window no longer is what it claims to be: today and tomorrow, planned
+// today. Three distinct ways that happens, and all three matter —
+//   1. the window has run out (the student came back after a few days away),
+//   2. it does not reach tomorrow (so "what's next" is blank), or
+//   3. it reaches tomorrow but was written on an earlier day, so it predates everything that has
+//      happened since. This is the common case, and the one the old three-days-of-runway check
+//      missed entirely: a fortnight-long window always had runway, so it never refreshed, so a
+//      Thursday student was still reading Tuesday's idea of Thursday.
 export function needsExtension(plan) {
   if (!plan?.daysGeneratedThrough) return false;
-  return daysBetween(todayStr(), plan.daysGeneratedThrough) <= EXTEND_THRESHOLD_DAYS;
+  const today = todayStr();
+  if (daysBetween(today, plan.daysGeneratedThrough) < WINDOW_DAYS - 1) return true;
+  // A plan stored before windowBuiltFor existed gets one refresh, then behaves normally.
+  return plan.windowBuiltFor !== today;
+}
+
+// Is the plan showing the student a day that has already ended? Cheap, synchronous, and used by
+// the UI to decide whether to show today's tasks or a "refreshing" state.
+export function windowCoversToday(plan) {
+  return !!plan?.days?.some(d => d.date === todayStr());
 }
 
 // Archives days more than a few days in the past into a compact progressLog

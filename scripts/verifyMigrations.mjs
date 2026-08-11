@@ -342,6 +342,15 @@ async function parallelQueries(conn, db, sqls) {
   ));
 }
 
+// Starts a query without waiting for it, so a test can hold one transaction open and observe what
+// a second session does while it is still uncommitted. Returns the pending promise.
+function backgroundQuery(conn, db, sql) {
+  return execFileAsync('psql', [...conn.args, '-d', db, '-v', 'ON_ERROR_STOP=1', '-tAqc', sql], { env: conn.env })
+    .then(({ stdout }) => ({ ok: true, out: stdout.trim() }))
+    .catch(err => ({ ok: false, out: String(err.stderr || err.message).trim() }));
+}
+const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 async function checkConcurrency(conn, db) {
   section('Concurrency primitives serialize');
 
@@ -349,23 +358,79 @@ async function checkConcurrency(conn, db) {
     `insert into app_users (email, name) values ('mig-concurrency@example.test','Concurrency')
      returning id`);
 
-  // save_master_plan: N devices saving different plans at the same moment. The function holds a
-  // row lock across archive + upsert, so every call must succeed and the revision counter must
-  // advance exactly once per call — a read-then-write outside a lock would skip or reuse numbers.
+  // save_master_plan: N devices saving different plans at the same moment. The function serializes
+  // callers for one user across archive + upsert, so every call must succeed, the revision counter
+  // must advance exactly once per call, and every superseded plan must reach the history table.
+  //
+  // ── Why this runs several trials ───────────────────────────────────────────
+  // The bug this guards against (fixed in 0013) lived in the window BEFORE the plan row exists:
+  // `select ... for update` locks the rows a query returns, and on a fresh user it returns none, so
+  // it locked nothing and concurrent callers all wrote revision 1. That is a race, so a single
+  // trial detected it only when the threads happened to overlap — measured at roughly three times
+  // in five. A one-shot assertion for a race is a coin flip that reports itself as a test, and this
+  // one duly spent its time failing CI intermittently instead of failing honestly. Each trial gets
+  // a fresh user, because the window only exists for a plan's first saves.
+  // ── The deterministic version of the same defect ───────────────────────────
+  // Racing eight processes and hoping they overlap is how this bug survived: the shape below is
+  // the same conflict with the interleaving pinned down, so it fails every time on a database
+  // missing 0013 instead of two times in five.
+  //
+  // Session A saves inside a transaction it holds open. While it is still uncommitted, session B
+  // saves the same user. B must end up with revision 2 and must archive A's plan.
+  //   with the advisory lock:  B waits for A to commit, reads A's row, and increments from it.
+  //   without it:              B's `for update` sees no COMMITTED row, so it takes the not-found
+  //                            path, computes revision 1, blocks on the primary key instead, and
+  //                            on A's commit overwrites A's row via ON CONFLICT — writing revision
+  //                            1 and never running the archive branch at all.
+  const lockUser = query(conn, db,
+    `insert into app_users (email, name) values ('mig-lock@example.test','Lock') returning id`);
+  const holdOpen = backgroundQuery(conn, db,
+    `begin;
+     select save_master_plan('${lockUser}'::uuid, '{"headline":"held","horizonWeeks":12,"updatedAt":1000}'::jsonb, 1000, 'held', true);
+     select pg_sleep(3);
+     commit;`);
+  await wait(1000); // A has saved and is sitting in its transaction
+  const second = await backgroundQuery(conn, db,
+    `select save_master_plan('${lockUser}'::uuid, '{"headline":"second","horizonWeeks":12,"updatedAt":1001}'::jsonb, 1001, 'second', true)`);
+  await holdOpen;
+  assert('a save that overlaps an open one still succeeds', second.ok, second.out.split('\n')[0]);
+  const lockRevision = Number(query(conn, db, `select revision from master_plans where user_id='${lockUser}'::uuid`));
+  assert('an overlapping save increments from the committed row, not from an empty read',
+    lockRevision === 2,
+    `expected revision 2, got ${lockRevision} — save_master_plan is not serializing before its read (see migration 0013)`);
+  const lockArchived = Number(query(conn, db,
+    `select count(*) from master_plan_revisions where user_id='${lockUser}'::uuid`));
+  assert('…and it archives the plan it replaced', lockArchived === 1,
+    `expected 1 archived revision, got ${lockArchived} — the version the student could have restored was never written`);
+
   const N = 8;
-  const saves = Array.from({ length: N }, (_, i) =>
-    `select save_master_plan('${userId}'::uuid, '{"headline":"plan ${i}","horizonWeeks":12,"updatedAt":${1000 + i}}'::jsonb, ${1000 + i}, 'concurrency', true)`);
-  const saveResults = await parallelQueries(conn, db, saves);
-  const saveFailures = saveResults.filter(r => !r.ok);
-  assert(`${N} concurrent save_master_plan calls all succeed`, saveFailures.length === 0,
-    saveFailures.map(r => r.out.split('\n')[0]).join(' | '));
+  const TRIALS = 3;
+  for (let trial = 0; trial < TRIALS; trial++) {
+    const raceUser = query(conn, db,
+      `insert into app_users (email, name) values ('mig-race-${trial}@example.test','Race ${trial}')
+       returning id`);
+    const saves = Array.from({ length: N }, (_, i) =>
+      `select save_master_plan('${raceUser}'::uuid, '{"headline":"plan ${i}","horizonWeeks":12,"updatedAt":${1000 + i}}'::jsonb, ${1000 + i}, 'concurrency', true)`);
+    const saveResults = await parallelQueries(conn, db, saves);
+    const saveFailures = saveResults.filter(r => !r.ok);
+    assert(`${N} concurrent save_master_plan calls all succeed (trial ${trial + 1})`, saveFailures.length === 0,
+      saveFailures.map(r => r.out.split('\n')[0]).join(' | '));
 
-  const revision = Number(query(conn, db, `select revision from master_plans where user_id='${userId}'::uuid`));
-  assert('revision advanced exactly once per concurrent save (no lost update)', revision === N,
-    `expected ${N}, got ${revision}`);
+    const revision = Number(query(conn, db, `select revision from master_plans where user_id='${raceUser}'::uuid`));
+    assert(`revision advanced exactly once per concurrent save, no lost update (trial ${trial + 1})`, revision === N,
+      `expected ${N}, got ${revision}`);
 
-  const rows = Number(query(conn, db, `select count(*) from master_plans where user_id='${userId}'::uuid`));
-  assert('exactly one master_plans row survives', rows === 1, `got ${rows}`);
+    // The counter is not the point on its own — this is. Each save replaces a different plan, so
+    // each must archive the one it replaced. A skipped increment means a version the student could
+    // have restored was silently never written, which is the actual harm behind a lost update.
+    const archived = Number(query(conn, db,
+      `select count(*) from master_plan_revisions where user_id='${raceUser}'::uuid`));
+    assert(`every superseded plan was archived (trial ${trial + 1})`, archived === N - 1,
+      `expected ${N - 1} archived revisions, got ${archived}`);
+
+    const rows = Number(query(conn, db, `select count(*) from master_plans where user_id='${raceUser}'::uuid`));
+    assert(`exactly one master_plans row survives (trial ${trial + 1})`, rows === 1, `got ${rows}`);
+  }
 
   // accept_parent_link: the same invite token redeemed by several requests at once. Exactly one
   // must win; the rest must be told the token is already consumed. This is the race that would
