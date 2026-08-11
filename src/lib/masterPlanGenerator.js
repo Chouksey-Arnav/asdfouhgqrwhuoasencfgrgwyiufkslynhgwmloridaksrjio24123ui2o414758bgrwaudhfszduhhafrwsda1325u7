@@ -604,7 +604,11 @@ const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 // offer a retry, instead of quietly presenting the fallback as Medabrain's best thinking.
 const ORACLE_ATTEMPTS = 4;
 const ORACLE_BACKOFF_MS = [1500, 4000, 9000];
-const ORACLE_TIMEOUT_MS = 58000; // just above the server's own 52s abort, so its 504 wins the race
+// Just above the server's own abort (52s by default — see TIMEOUT_MS_BY_PURPOSE in api/groq.js),
+// so the server's 504 wins the race and we get a real status to act on instead of an opaque client
+// abort. If that server-side ceiling is ever raised via GROQ_MASTERPLAN_TIMEOUT_MS, raise this too
+// or the client will start giving up on requests the server was still going to answer.
+const ORACLE_TIMEOUT_MS = 58000;
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export function createGenerationTrace() {

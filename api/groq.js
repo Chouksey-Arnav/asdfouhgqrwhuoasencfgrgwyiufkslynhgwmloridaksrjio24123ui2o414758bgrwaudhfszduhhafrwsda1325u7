@@ -513,16 +513,27 @@ export default async function handler(req, res) {
 
   // Heavier purposes get more time before we give up — a multi-thousand-token structured
   // generation on the 120B model legitimately takes longer than a chat reply.
-  // A deep, high-reasoning plan generation legitimately runs close to a minute. vercel.json gives
-  // this function maxDuration 60, so the ceiling here is set just under it: aborting ourselves at
-  // 52s returns a real 504 the client can act on, where letting the platform kill the invocation
-  // returns nothing the client can distinguish from a network drop.
-  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 52000, sat: 45000, essay: 45000 };
+  // A deep, high-reasoning plan generation legitimately runs close to a minute, so it needs a much
+  // longer leash than a chat turn — but it must abort ITSELF before whatever is in front of it
+  // does. A self-inflicted 504 is a result the client can act on and retry; a request killed by a
+  // platform or a reverse proxy just goes quiet, and the client cannot tell that from a dropped
+  // connection.
+  //
+  // 52s is the ceiling because it clears the tightest limit any target imposes: a serverless
+  // function cap (vercel.json still declares maxDuration 60 for this file) and the ~60s default
+  // read timeout common to reverse proxies in front of a self-hosted deploy. Container deploys
+  // have no platform cap of their own — there `server.js` runs this handler in a plain Node
+  // process — so the limit there is purely our own choice, and GROQ_MASTERPLAN_TIMEOUT_MS can
+  // raise it without a code change if the proxy in front allows more.
+  const envTimeout = Number(process.env.GROQ_MASTERPLAN_TIMEOUT_MS);
+  const masterplanTimeoutMs = Number.isFinite(envTimeout) && envTimeout >= 5000 && envTimeout <= 300000
+    ? Math.round(envTimeout) : 52000;
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: masterplanTimeoutMs, sat: 45000, essay: 45000 };
   const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
   const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
   // Whole-invocation budget, so the in-handler retry below can be skipped when there is no longer
-  // room for it rather than started and then killed mid-flight by the platform.
-  const FUNCTION_BUDGET_MS = 57000;
+  // room for it rather than started and then killed mid-flight.
+  const FUNCTION_BUDGET_MS = primaryTimeoutMs + 5000;
   const handlerStartedAt = Date.now();
 
   async function callGroqOnce(useModel, apiKey, timeoutMs) {
