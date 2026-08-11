@@ -527,3 +527,17 @@ body::before {
   user-select: none;
   pointer-events: none;
 }
+
+/* ── /parents — the public parent page (src/components/parent/ParentsLanding.jsx) ──
+   These three grids need real breakpoints rather than the `auto-fit` trick the rest of the app
+   uses, because their columns are deliberately unequal: the hero is copy beside a form, not two
+   interchangeable cards, and letting it reflow purely on available width puts the invitation box
+   above the sentence explaining what it is. Defined here, once, so the page can use the whole
+   width of a desktop window without a resize listener in React. */
+.msp-parents-wrap { width: 100%; max-width: 1440px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 56px); }
+.msp-parents-hero { display: grid; gap: clamp(28px, 4vw, 56px); grid-template-columns: minmax(0, 1fr); align-items: start; }
+@media (min-width: 1024px) {
+  .msp-parents-hero { grid-template-columns: minmax(0, 1.05fr) minmax(380px, 0.95fr); align-items: center; }
+}
+.msp-parents-split { display: grid; gap: clamp(16px, 2vw, 24px); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 940px) { .msp-parents-split { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -1,8 +1,9 @@
 // /api/parent/claim — the whole of "a parent gets into the dashboard", in one endpoint.
 //
-//   POST { code | token }                    → { invite }        what this invitation says
-//   POST { code | token, step: 'send' }      → { sent, emailHint } a code, to the invited address
+//   POST { code | token }                      → { invite }         what this invitation says
+//   POST { code | token, step: 'send' }        → { sent, emailHint } a code, to the invited address
 //   POST { code | token, step: 'verify', otp } → { token, user, accepted }  signed in and connected
+//   POST { token, step: 'link' }               → { token, user, accepted }  same, straight off the link
 //
 // ── Why this exists ─────────────────────────────────────────────────────────
 // The flow it replaces was correct and unusable. A student tapped "Invite a parent" and their
@@ -36,6 +37,38 @@
 //    read-only window onto data somebody else consented to share, and it can be conjured safely
 //    by a one-time code. A student account owns the person's entire body of work, so an invitation
 //    running the other way (parent → student) is refused here and sent to the ordinary sign-in.
+//
+// ── Two ways to prove the mailbox, and why the token is one of them again ───
+// The `link` step lets a parent who opened the emailed link finish without a second code. That is
+// a deliberate revision of point 2 above, and the reasoning is worth stating because the original
+// note argues the other way.
+//
+// The two handles are NOT equivalent, and treating them as one thing is what made the flow cost
+// two emails:
+//
+//   - The 8-character CODE is designed to be shared. It is read out over the phone, texted,
+//     screenshotted and left in a chat thread; it is stored in the clear so a student can re-read
+//     it. Holding one is no evidence at all about who you are, so redeeming one still requires a
+//     one-time code sent to the invited address. Unchanged.
+//
+//   - The TOKEN is 32 bytes of entropy that exist in exactly one place — the message delivered to
+//     invite_email — and only as a hash on our side. Holding it is the same proof of mailbox
+//     control that every password-reset link on the internet runs on, including this codebase's
+//     own (api/auth/reset-password.js). Requiring a six-digit code to be sent to the SAME mailbox
+//     that just demonstrably received the link does not raise the bar; it sends a second email to
+//     an address we already reached, to re-prove the thing the first email proved.
+//
+// So the token path spends one email instead of two, which matters here for an unglamorous
+// reason: the relay is metered (api/_lib/mailer.js) and the invitation is the first mail that
+// dies when the quota runs out. Halving the cost of connecting a family is the single largest
+// saving available in this flow.
+//
+// What still holds the line: the token is single-use (accepting flips the row out of 'pending',
+// so a forwarded link redeems nothing afterwards), it expires with the invitation, the screen
+// shows what would be shared and waits for a deliberate press before redeeming, the connection
+// appears immediately on the student's side, and either party can end it in one tap. A student
+// who forwards their own invitation email to somebody else has shared their own invitation — the
+// same thing that happens if they forward the code.
 import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
 import { checkOtp, issueOtp, overRequestLimit, ipOf } from '../_lib/otp.js';
 import { serializeUser } from '../_lib/serializeUser.js';
@@ -133,7 +166,18 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Enter the 8-character code from your invitation.', reason: 'malformed' });
   }
 
-  const step = ['send', 'verify'].includes(body?.step) ? body.step : 'preview';
+  const step = ['send', 'verify', 'link'].includes(body?.step) ? body.step : 'preview';
+
+  // The link step is the token's privilege and only the token's — see the header. A caller
+  // holding a shared 8-character code asking to skip the code step is exactly the case the code
+  // step exists for, and it is refused here rather than anywhere further in.
+  if (step === 'link' && !token) {
+    return res.status(400).json({
+      error: 'That invitation was opened with a shared code rather than the emailed link, so we need to email you a 6-digit code to confirm it is you.',
+      reason: 'code_needs_otp',
+    });
+  }
+
   const supabase = getSupabaseAdmin();
 
   try {
@@ -166,6 +210,11 @@ export default async function handler(req, res) {
       // to be able to read it off a screen they guessed their way onto.
       emailHint: maskEmail(inviteEmail),
       expiresAt: link.invite_expires_at,
+      // Which of the two doors this visitor came through, so the screen can offer the one-press
+      // finish to somebody holding the emailed link and the email-me-a-code path to somebody
+      // holding a shared code — rather than the client guessing from the shape of its own props
+      // and the two disagreeing about what the server will accept.
+      canConfirmFromLink: !!token,
     };
 
     if (step === 'preview') return res.status(200).json({ invite });
@@ -202,9 +251,15 @@ export default async function handler(req, res) {
     }
 
     // ── Verify, sign in, connect ─────────────────────────────────────────
-    const otpResult = await checkOtp(supabase, { email: inviteEmail, code: String(body?.otp || '').trim(), purpose: 'signin' });
-    if (!otpResult.ok) {
-      return res.status(otpResult.status).json({ error: otpResult.error, reason: otpResult.reason });
+    //
+    // Two ways to arrive here, and they prove the same fact by different means: six digits typed
+    // back from the invited mailbox, or the emailed token itself. See the header for why the
+    // token counts and the shared code does not.
+    if (step !== 'link') {
+      const otpResult = await checkOtp(supabase, { email: inviteEmail, code: String(body?.otp || '').trim(), purpose: 'signin' });
+      if (!otpResult.ok) {
+        return res.status(otpResult.status).json({ error: otpResult.error, reason: otpResult.reason });
+      }
     }
 
     // From here the person has proven control of the invited mailbox, which is everything this

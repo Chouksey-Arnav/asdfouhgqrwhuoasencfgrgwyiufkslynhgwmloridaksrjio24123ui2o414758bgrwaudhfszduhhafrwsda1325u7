@@ -199,7 +199,7 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
 
   useEffect(() => { load(); }, [load]);
 
-  async function handleInvite(e) {
+  async function handleInvite(e, { notify = true } = {}) {
     e.preventDefault();
     setError('');
     const trimmed = email.trim().toLowerCase();
@@ -207,11 +207,12 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
 
     setBusy(true);
     try {
-      const { emailSent, warning } = await ParentAPI.invite(trimmed, relationship.trim() || null);
+      const { emailSent, warning } = await ParentAPI.invite(trimmed, relationship.trim() || null, { notify });
       setEmail(''); setRelationship(''); setShowForm(false);
       // A failed send is no longer a failed invitation: the card below carries a link and a code
       // that work regardless, so this is a note rather than an apology.
-      if (emailSent === false) toast(warning || 'Invitation created — share the link below.', { icon: '📋', duration: 6000 });
+      if (!notify) toast.success('Invitation ready — copy the link below and send it to them.');
+      else if (emailSent === false) toast(warning || 'Invitation created — share the link below.', { icon: '📋', duration: 6000 });
       else toast.success(copy.sent);
       await load();
       onChanged?.();
@@ -339,15 +340,28 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
             />
           </div>
           {error && <div style={{ fontSize: 12, color: C.roseL }}>{error}</div>}
-          <div style={R({ gap: 8 })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button type="submit" disabled={busy} style={btn(C.blueGrad, { opacity: busy ? 0.7 : 1 })}>
               {busy ? <Loader2 className="spin" size={13} /> : <Send size={13} />} Send invitation
+            </button>
+            {/*
+              The second button is not a lesser version of the first — for a student standing next
+              to the person they are inviting, it is the better one. It creates the identical
+              invitation and skips the email, which is both faster for them and the single cheapest
+              thing anyone can do for the send quota this feature runs on (see api/parent/links.js).
+            */}
+            <button
+              type="button" disabled={busy}
+              onClick={(e) => handleInvite(e, { notify: false })}
+              style={btnG({ opacity: busy ? 0.7 : 1 })}
+            >
+              <Copy size={13} /> Just give me the link
             </button>
             <button type="button" onClick={() => { setShowForm(false); setError(''); }} style={btnG()}>Cancel</button>
           </div>
           <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
             {role === 'student'
-              ? "They'll get an email explaining exactly what would be shared, plus a link and a code you can send them yourself. It takes them about thirty seconds and there's no password. Nothing is shared until they accept, and either of you can end it at any time."
+              ? "Send it and they get an email with a button that connects them in one press — no password, no code to wait for. Or take the link and text it to them yourself; it works the same way, and they'll get a 6-digit code at the address above to prove it's them. Nothing is shared until they accept, and either of you can end it at any time."
               : "They'll get an email explaining exactly what would be shared. Nothing is shared until they accept, and either of you can end it at any time."}
           </div>
         </form>
