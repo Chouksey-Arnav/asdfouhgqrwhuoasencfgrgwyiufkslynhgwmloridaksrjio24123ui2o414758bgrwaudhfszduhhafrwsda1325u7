@@ -24,9 +24,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   Loader2, Mail, UserPlus, X, ShieldCheck, Clock, Check, Copy, Send, Share2, RefreshCw,
+  MessageSquare, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { C, glass2, btn, btnG, inp, lbl, CC, R, pill, tint } from '../../lib/theme';
 import * as ParentAPI from '../../lib/parentApi';
+import FamilyThread from './FamilyThread';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -172,6 +174,67 @@ function ShareKit({ share, copy, onResend, resending }) {
   );
 }
 
+/**
+ * The message thread for one active connection, folded away until it is wanted.
+ *
+ * Collapsed by default and NOT because the messages are unimportant — because this panel's first
+ * job is still "who can see me, and how do I stop them", and a settings control you have to
+ * scroll past a conversation to reach is a settings control people stop finding. The count of
+ * unread messages sits on the summary line, so the fold never hides the fact that there is
+ * something to read.
+ */
+function ThreadFold({ link, role, initiallyOpen }) {
+  const [open, setOpen] = useState(!!initiallyOpen);
+  const [unread, setUnread] = useState(null);
+  const name = link.counterparty.name || link.counterparty.email;
+  const Chevron = open ? ChevronDown : ChevronRight;
+
+  // Unread has to be known before the thread is opened, or the fold hides the only signal that
+  // would make anybody open it. One request per active connection, on mount, and the thread
+  // reuses the same endpoint when it expands.
+  useEffect(() => {
+    if (open) return undefined;
+    let live = true;
+    ParentAPI.fetchMessages(link.id)
+      .then((res) => { if (live) setUnread(res.unread || 0); })
+      .catch(() => { /* the fold simply shows no count */ });
+    return () => { live = false; };
+  }, [link.id, open]);
+
+  return (
+    <div style={CC({ gap: 10 })}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        style={{
+          ...R({ gap: 8 }), width: '100%', padding: '9px 12px', borderRadius: 9, cursor: 'pointer',
+          background: unread ? tint(C.amber, 0.07) : 'transparent',
+          border: `1px solid ${unread ? tint(C.amber, 0.28) : C.b1}`,
+          color: C.t2, fontSize: 12.5, fontWeight: 600, fontFamily: C.FB, textAlign: 'left',
+        }}
+      >
+        <Chevron size={13} color={C.t3} />
+        <MessageSquare size={13} color={unread ? C.amberL : C.t3} />
+        <span>{role === 'parent' ? `Messages with ${name}` : `Messages from ${name}`}</span>
+        {!!unread && (
+          <span style={pill(tint(C.amber, 0.16), C.amberL, { fontSize: 10.5, marginLeft: 'auto' })}>
+            {unread} new
+          </span>
+        )}
+      </button>
+      {open && (
+        <FamilyThread
+          linkId={link.id}
+          role={role}
+          counterparty={name}
+          onUnreadChange={setUnread}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function ConnectionsPanel({ role = 'student', onChanged }) {
   const copy = COPY[role] || COPY.student;
   const [links, setLinks] = useState([]);
@@ -310,6 +373,8 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
                 onResend={() => handleResend(link)}
               />
             )}
+            {/* Only on a live connection. There is nobody on the other end of a pending one. */}
+            {link.status === 'active' && <ThreadFold link={link} role={role} />}
           </div>
         );
       })}

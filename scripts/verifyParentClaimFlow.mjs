@@ -546,6 +546,72 @@ section('The emailed link still works');
     && link.status === 'active', JSON.stringify(done.body));
 }
 
+// ── The one-press finish, and what it costs ─────────────────────────────────
+//
+// Every assertion here is about the same decision: the emailed token is proof that the invitation
+// reached the invited mailbox, and the shared 8-character code is not. Getting that backwards in
+// either direction is a real failure — one way it charges every family a second email to re-prove
+// a delivered message, the other way it lets a code read out across a kitchen sign somebody in.
+section('Opening the emailed link is the check');
+{
+  const before = inbox.length;
+  const { link, token } = seedInvitation({ email: 'mum.link@example.test', code: 'WXYZ2345' });
+
+  const preview = await post(claim, { token });
+  assert('the preview tells the client this invitation can be finished from the link',
+    preview.body?.invite?.canConfirmFromLink === true, JSON.stringify(preview.body));
+
+  const done = await post(claim, { token, step: 'link' });
+  assert('one press signs them in', done.statusCode === 200 && !!done.body?.token,
+    JSON.stringify(done.body));
+  assert('…and connects them', done.body?.accepted === true && link.status === 'active');
+  assert('…as a parent account', done.body?.user?.role === 'parent');
+  assert('…without sending a single email', inbox.length === before,
+    `${inbox.length - before} message(s) were sent for a claim that needed none`);
+
+  const again = await post(claim, { token, step: 'link' });
+  assert('the link is spent — a forwarded copy redeems nothing', again.statusCode === 404,
+    JSON.stringify(again.body));
+}
+
+section('A shared code still has to prove itself');
+{
+  const code = 'JKMN3456';
+  const { link } = seedInvitation({ email: 'mum.code@example.test', code });
+
+  const preview = await post(claim, { code });
+  assert('a code-opened invitation says it cannot be finished from the link',
+    preview.body?.invite?.canConfirmFromLink === false);
+
+  const skip = await post(claim, { code, step: 'link' });
+  assert('and asking to skip the code anyway is refused',
+    skip.statusCode === 400 && skip.body?.reason === 'code_needs_otp', JSON.stringify(skip.body));
+  assert('…leaving the invitation untouched', link.status === 'pending');
+
+  await post(claim, { code, step: 'send' });
+  const otp = lastCodeFor('mum.code@example.test');
+  const done = await post(claim, { code, step: 'verify', otp });
+  assert('the code path still completes', done.statusCode === 200 && link.status === 'active');
+}
+
+section('The invitation email carries the handle that finishes in one press');
+{
+  // The bug this pins: sendInviteEmail preferred the code URL whenever a code existed, so the
+  // one message we HAD delivered to the invited address arrived carrying the handle that proves
+  // nothing — and the one-press path could never fire for anybody.
+  const { sendInviteEmail } = await import('../api/_lib/parentLinks.js');
+  const token = crypto.randomBytes(32).toString('hex');
+  await sendInviteEmail({
+    to: 'firstsend@example.test', token, code: 'PQRS4567',
+    inviterName: 'Aanya', inviterRole: 'student', relationship: 'Mother',
+  });
+  const mail = inbox.filter((m) => m.to === 'firstsend@example.test').at(-1);
+  const body = (mail?.body || '').replace(/=\r\n/g, '').replace(/=3D/g, '=');
+  assert('the button in a first send points at the token', body.includes(`parent-invite?token=${token}`),
+    'the emailed link must be the one that can be redeemed in one press');
+  assert('…and the code is still in the mail as the fallback', /PQRS-4567/.test(body));
+}
+
 smtp.server.close();
 
 console.log(`\n${passed} passed, ${failures.length} failed`);

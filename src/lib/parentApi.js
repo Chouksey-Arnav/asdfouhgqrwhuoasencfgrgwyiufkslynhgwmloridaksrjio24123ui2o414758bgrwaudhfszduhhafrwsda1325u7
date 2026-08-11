@@ -3,7 +3,10 @@
 // Kept separate from authApi.js on purpose: this is the only module in the app that both roles
 // import, and having it in one file makes "what can a parent's session actually ask for" a
 // question you answer by reading forty lines rather than by grepping.
-import { getToken } from './authApi';
+// Explicit extension so this module is loadable by plain Node as well as by Vite — scripts/
+// verifyParentDashboard.mjs imports parseInviteInput from here and exercises it for real, and
+// Node's ESM resolver does not guess extensions the way the bundler does.
+import { getToken } from './authApi.js';
 
 async function req(path, options = {}) {
   const token = getToken();
@@ -73,6 +76,50 @@ export const saveProfile = (profile) =>
 export const fetchSummaries = () => req('/summary', { method: 'GET' });
 export const fetchSummary = (studentId) =>
   req(`/summary?studentId=${encodeURIComponent(studentId)}`, { method: 'GET' });
+
+// ── Family messages ─────────────────────────────────────────────────────────
+//
+// The one part of this feature that runs both ways, so every call here is served to both roles
+// and the server decides what each of them may do with it. See api/parent/messages.js.
+
+/** Every message on every active connection, or on one of them. */
+export const fetchMessages = (linkId) =>
+  req(`/messages${linkId ? `?linkId=${encodeURIComponent(linkId)}` : ''}`, { method: 'GET' });
+
+/**
+ * Say something on a connection.
+ *
+ * @param {string} linkId
+ * @param {{kind?: 'note'|'question'|'quiz_request', body: string, topic?: string}} message
+ */
+export const sendMessage = (linkId, { kind = 'note', body, topic = null }) =>
+  req('/messages', { method: 'POST', body: JSON.stringify({ linkId, kind, body, topic }) });
+
+/** Answer one of the other side's messages: mark it done or declined, and/or reply in a line. */
+export const answerMessage = (messageId, { status = null, reply = null } = {}) =>
+  req('/messages', { method: 'PATCH', body: JSON.stringify({ messageId, status, reply }) });
+
+/** Everything the other side has said on this connection is now read. */
+export const markThreadRead = (linkId) =>
+  req('/messages', { method: 'PATCH', body: JSON.stringify({ linkId, read: true }) });
+
+/**
+ * The quiz topics a parent may ask for.
+ *
+ * A copy of the allowlist in api/parent/messages.js, which is the authoritative one — anything
+ * not on the server's list is silently replaced with its first entry rather than stored. Copied
+ * rather than imported because /api is a serverless bundle the browser never loads, and the two
+ * are kept honest by scripts/verifyFamilyMessages.mjs.
+ */
+export const QUIZ_TOPICS = [
+  'Anything — you pick',
+  'SAT Math',
+  'SAT Reading & Writing',
+  'Biology & Biochemistry',
+  'Chemistry & Physics',
+  'Psychology & Sociology',
+  'Their current pathway lessons',
+];
 
 // ── The passwordless parent claim ───────────────────────────────────────────
 //

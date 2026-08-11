@@ -31,7 +31,7 @@ import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
   UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
-  Mail, KeyRound, X, WifiOff,
+  Mail, KeyRound, X, WifiOff, MessageSquare,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, autoGrid, pill, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
@@ -47,6 +47,7 @@ import ThemeToggle from '../ThemeToggle';
 import ProgressSummary from './ProgressSummary';
 import ConnectionsPanel from './ConnectionsPanel';
 import ParentSetup from './ParentSetup';
+import FamilyThread from './FamilyThread';
 
 // Long enough that a parent leaving the tab open all day is not a meaningful load, short enough
 // that "did they do their revision?" is answered by looking rather than by reloading. The server
@@ -58,6 +59,7 @@ const NAV = [
   { id: 'students', label: 'Students', icon: Users },
   { id: 'digest', label: 'This week', icon: Brain },
   { id: 'activity', label: 'Activity', icon: CalendarDays },
+  { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'connections', label: 'Connections', icon: Link2 },
   { id: 'guide', label: 'How this works', icon: LifeBuoy },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -440,6 +442,25 @@ function Guide({ user, onGo }) {
         </div>
       </Block>
 
+      <Block icon={MessageSquare} hue={C.cyan} title="Saying something back">
+        The Messages tab is the one part of this dashboard that is not read-only. You can send a
+        short note, ask a question, or ask them to sit a quiz on a topic — and they can answer in a
+        line, mark it done, or say not this week.
+        <Line term="Where it lands">
+          In their app, next to their study plan. Not their inbox and not a notification: they see
+          it the next time they open MedSchoolPrep, and there is no way to make it interrupt them.
+        </Line>
+        <Line term="What a request can and cannot do">
+          A quiz request is a suggestion. It does not add anything to their plan, does not affect
+          any score, and “not this week” is a real answer we store and show you as one — a request
+          that cannot be refused is an instruction, and this is not that kind of product.
+        </Line>
+        <Line term="If nothing comes back">
+          Nothing here chases them, on purpose. Silence usually means they have not opened the app,
+          which the Activity tab will tell you.
+        </Line>
+      </Block>
+
       <Block icon={ShieldCheck} hue={C.green} title="Consent, and how to end it">
         Your student agreed to this and can undo it from their own Settings, in one tap, without
         asking you — it takes effect on the very next screen either of you loads. You can do exactly
@@ -519,6 +540,13 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
   // a prompt that comes back every render is one everybody learns to ignore.
   const [dismissedNudge, setDismissedNudge] = useState(false);
 
+  // How many replies are waiting on the Messages tab. Nothing about this app notifies anybody —
+  // no email, no push (see supabase/migrations/0011_family_messages.sql) — so a number on the tab
+  // is the ONLY way a parent learns their child answered. Failure is silent and leaves it at
+  // zero, which is the right default: a badge that appears because a request failed is worse than
+  // no badge.
+  const [unread, setUnread] = useState(0);
+
   // Same two-pass theme dance as AuthGate and App: applying a theme mutates the shared `C` token
   // object, which an already-committed render cannot observe, so the apply happens in an effect and
   // bumps an epoch that keys the tree. See the header of lib/theme.js.
@@ -581,8 +609,19 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
     }
   }, [handleExpiredSession]);
 
+  // Deliberately not folded into `load`: the summary poll is the load-bearing one, and a messages
+  // endpoint that is slow, missing (a deployment still short of migration 0011) or erroring must
+  // not be able to make the dashboard itself look stale.
+  const loadUnread = useCallback(async () => {
+    try {
+      const { unread } = await ParentAPI.fetchMessages();
+      setUnread(unread || 0);
+    } catch { /* leave the badge where it was */ }
+  }, []);
+
   useEffect(() => { loadProfile(); }, [loadProfile]);
   useEffect(() => { load({ silent: true }); }, [load]);
+  useEffect(() => { loadUnread(); }, [loadUnread]);
 
   // Re-renders the freshness line on its own clock. Deliberately not tied to the poll: the whole
   // value of "updated 12 min ago" is that it keeps counting when the polling has stopped working.
@@ -595,12 +634,14 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
     const id = setInterval(() => {
       // Polling a hidden tab is spending someone's battery to compute a screen nobody is looking
       // at. The visibility handler below catches them up the moment they come back.
-      if (document.visibilityState === 'visible') load({ silent: true });
+      if (document.visibilityState === 'visible') { load({ silent: true }); loadUnread(); }
     }, POLL_MS);
-    const onVisible = () => { if (document.visibilityState === 'visible') load({ silent: true }); };
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') { load({ silent: true }); loadUnread(); }
+    };
     document.addEventListener('visibilitychange', onVisible);
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible); };
-  }, [load]);
+  }, [load, loadUnread]);
 
   // ── view ⇄ URL ───────────────────────────────────────────────────────────
   // Same invariant as every other router in this app (src/lib/useAppRouter.js): push only when the
@@ -734,6 +775,18 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                     }}
                   >
                     <Icon size={14} /> {label}
+                    {id === 'messages' && unread > 0 && (
+                      <span
+                        aria-label={`${unread} unread`}
+                        style={{
+                          minWidth: 17, height: 17, padding: '0 5px', borderRadius: 9,
+                          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                          background: C.amber, color: onTint(C.amber), fontSize: 10.5, fontWeight: 800,
+                        }}
+                      >
+                        {unread > 9 ? '9+' : unread}
+                      </span>
+                    )}
                   </a>
                 );
               })}
@@ -978,6 +1031,40 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
                   <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.65, marginTop: 10, paddingTop: 10, borderTop: `1px solid ${C.b1}` }}>
                     {digest.suggestion}
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {/* ── Messages ─────────────────────────────────────────────────────── */}
+      {view === 'messages' && (
+        noStudents ? inviteCta : (
+          <div style={CC({ gap: 18 })}>
+            <SectionTitle sub="A note, a question, or a request to sit a quiz. It shows up in their app rather than their inbox — and they can mark it done, answer in a line, or say not this week. Nothing you send here changes their plan on its own.">
+              Messages
+            </SectionTitle>
+            {students.map((s) => {
+              const hue = hueFor(s.studentId);
+              const name = s.summary?.student?.name || 'Your student';
+              return (
+                <div key={s.studentId} style={glass({ ...CC({ gap: 14 }), borderColor: tint(hue, 0.26) })}>
+                  <div style={R({ gap: 9 })}>
+                    <MessageSquare size={15} color={hue} />
+                    <span style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{name}</span>
+                  </div>
+                  <FamilyThread
+                    linkId={s.link?.linkId}
+                    role="parent"
+                    counterparty={name}
+                    compact
+                    // Opening this tab marks the thread read, so the badge on the tab strip has
+                    // to hear about it — otherwise it sits at "3 new" over a screen the parent is
+                    // currently reading. Recomputed rather than decremented: with two children
+                    // this component is mounted twice and each only knows its own count.
+                    onUnreadChange={loadUnread}
+                  />
                 </div>
               );
             })}

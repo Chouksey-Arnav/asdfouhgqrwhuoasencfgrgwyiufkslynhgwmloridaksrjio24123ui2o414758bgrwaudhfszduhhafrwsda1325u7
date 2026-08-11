@@ -1494,10 +1494,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // moves. Failure is silent and leaves the label reading "Invite a parent", which is the right
   // thing to say when we don't know.
   const [familyLinkCount,setFamilyLinkCount]=useState(0);
+  // Messages waiting from a parent. Nothing about family messages emails or notifies anybody, on
+  // purpose (see supabase/migrations/0011_family_messages.sql) — so this number on this one rail
+  // item is the ONLY way a student learns their mother asked them something. Fetched on the same
+  // once-per-session terms as the link count and for the same reason; the panel itself reloads
+  // when it is opened, and marking a thread read is what clears it.
+  const [familyUnread,setFamilyUnread]=useState(0);
   useEffect(()=>{
     let cancelled=false;
     ParentAPI.listLinks()
       .then(({links})=>{ if(!cancelled) setFamilyLinkCount((links||[]).filter(l=>l.status==='active').length); })
+      .catch(()=>{});
+    ParentAPI.fetchMessages()
+      .then(({unread})=>{ if(!cancelled) setFamilyUnread(unread||0); })
       .catch(()=>{});
     return ()=>{ cancelled=true; };
   },[]);
@@ -7677,9 +7686,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 parent feel like signing them up for something; it is now a link and half a
                 minute. */}
             <p style={{fontSize:12.5,color:C.t3,marginBottom:14,lineHeight:1.65}}>
-              It's quick for them: they open the link, we email them a 6-digit code, and that's it —
-              no password, and they never sign in as you. Once you've invited someone you can copy
-              the link or read them the code from here, so it works even if the email goes astray.
+              It's quick for them: they open the link in the email, read what would be shared, and
+              press confirm — no password, no code to wait for, and they never sign in as you. If
+              you'd rather text them the link yourself, use "Just give me the link" below; that
+              route asks them for a 6-digit code at the address you invited, because a link you
+              sent through WhatsApp isn't proof of who opened it.
+            </p>
+            {/* Said on the student's screen because they are the one who decides to invite, and
+                because "they can message me" is a fact about the deal they are agreeing to. */}
+            <p style={{fontSize:12.5,color:C.t3,marginBottom:14,lineHeight:1.65}}>
+              Once you're connected they can also send you a short note, a question, or a request
+              to sit a quiz on a topic. It appears here, never as an email or a notification, and
+              you can answer in a line, mark it done, or say not this week. None of it changes
+              your plan.
             </p>
             <ConnectionsPanel role="student" />
           </div>
@@ -8345,6 +8364,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             >
               <Users size={14} color={C.violet}/>
               <span style={{flex:1}}>{familyLinkCount>0?`Family access · ${familyLinkCount}`:'Invite a parent'}</span>
+              {/* The badge is the whole notification system for family messages. It is deliberately
+                  the only one — an email or a push for "your mother sent you a note" spends the
+                  send quota the invitation itself runs on, and turns a line beside a study plan
+                  into a thing that interrupts you. */}
+              {familyUnread>0&&(
+                <span aria-label={`${familyUnread} unread message${familyUnread===1?'':'s'}`} style={{
+                  minWidth:17,height:17,padding:'0 5px',borderRadius:9,display:'inline-flex',
+                  alignItems:'center',justifyContent:'center',background:C.amber,color:onTint(C.amber),
+                  fontSize:10.5,fontWeight:800,
+                }}>{familyUnread>9?'9+':familyUnread}</span>
+              )}
               <ChevronRight size={13} color={C.t3}/>
             </a>
             {/* Theme, one click from anywhere in the app. It used to live four

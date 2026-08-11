@@ -237,8 +237,16 @@ export default function ParentsLanding({ onSignUp, onLogin, onHome, onOpenLegal,
         + `radial-gradient(ellipse 70% 50% at 92% 0%, ${tint(C.blue, 0.1)} 0%, transparent 58%),`
         + `${C.bg}`,
     }}>
+      {/*
+        `tint(C.bg, .85)` rather than the C.surf the app shell uses, matching the marketing
+        landing page (see LandingPage's nav). C.surf is rgba(255,255,255,.035) — a wash that only
+        becomes a surface once backdrop-filter frosts what is behind it, which is fine over a
+        static page and not fine over a sticky bar with cards scrolling underneath it: on any
+        browser that skips the filter, and on the ones that composite it late, the header's own
+        text collides with the text passing behind it.
+      */}
       <header style={{
-        position: 'sticky', top: 0, zIndex: 10, background: C.surf, borderBottom: `1px solid ${C.b1}`,
+        position: 'sticky', top: 0, zIndex: 10, background: tint(C.bg, 0.85), borderBottom: `1px solid ${C.b1}`,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       }}>
         <div className="msp-parents-wrap" style={{ padding: '12px clamp(20px, 4vw, 56px)', ...R({ gap: 12 }) }}>
