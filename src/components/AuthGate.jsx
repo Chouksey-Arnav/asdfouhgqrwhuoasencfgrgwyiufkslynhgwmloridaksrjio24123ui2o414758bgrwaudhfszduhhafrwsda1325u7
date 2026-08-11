@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 import { C, tint, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
-import { getToken, setToken, clearToken, fetchMe, logout } from '../lib/authApi';
+import { getToken, setToken, clearToken, fetchMe, logout, revokeSession } from '../lib/authApi';
 import {
   AUTH_VIEWS, parseAuthPath, isAuthPath, normalizePath, parseLegalPath, isParentInvitePath,
   isParentHubPath, isParentPath, PARENT_HUB_PATH,
@@ -241,6 +241,15 @@ export default function AuthGate({ children }) {
   // the address bar disagrees with the state, so a back press can never bounce forward.
   // Once signed in, App.jsx owns the URL and this stops touching it.
   useEffect(() => {
+    // Spent on the first run of this effect whatever that run decides to do, because what it
+    // guards is "is this the initial mount" and not "is this the first URL we wrote". Consumed
+    // below the early returns, it survived them: a visitor who lands on /parents (where the hub
+    // branch returns immediately) and then presses a button would have their FIRST real
+    // navigation treated as the mount and replaced into history rather than pushed — so the back
+    // button skipped straight past the page they came from.
+    const first = firstSyncRef.current;
+    firstSyncRef.current = false;
+
     if (!ownsUrl) return;
     // While a legal document is open the URL is /legal/…, which is not this
     // component's `view` — syncing would immediately rewrite it back to the
@@ -250,8 +259,6 @@ export default function AuthGate({ children }) {
     const want = view === 'landing'
       ? (isAuthPath(current) ? landingPathRef.current : current)
       : AUTH_VIEWS[view];
-    const first = firstSyncRef.current;
-    firstSyncRef.current = false;
     applySeoMeta(want);
     if (current === want) return;
     if (first) window.history.replaceState(window.history.state, '', want);
@@ -283,8 +290,12 @@ export default function AuthGate({ children }) {
    * through, and a token nobody holds any more is harmless if the call does not land.
    */
   function handleAuthedOverSession(token, authedUser) {
-    if (getToken() && getToken() !== token) logout().catch(() => {});
+    const outgoing = getToken();
     handleAuthed(token, authedUser);
+    // After the swap, and with the outgoing token named explicitly — `logout()` would both send
+    // whichever token storage holds by then (the new one) and clear it on the way out. See
+    // revokeSession.
+    if (outgoing && outgoing !== token) revokeSession(outgoing).catch(() => {});
   }
 
   function goTo(nextView, email = '', role = 'student') {
