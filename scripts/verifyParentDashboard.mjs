@@ -90,6 +90,7 @@ const STUDENT_ONLY = [
   'api/master-plan.js',
   'api/reward-claim.js',
   'api/data/[resource].js',
+  'api/lesson-feedback.js',
 ];
 
 /** Handlers that must be parent-only: they return another person's data. */

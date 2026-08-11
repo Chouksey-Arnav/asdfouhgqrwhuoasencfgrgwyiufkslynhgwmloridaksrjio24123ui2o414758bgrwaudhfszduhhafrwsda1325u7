@@ -44,6 +44,10 @@ export default function PrepMedabrain({
   lesson = null, unit = null, articleSections = [], keyTakeaways = [], objectives = [], unitTitles = [], lessonNote = '',
   units = [], totalDone = null, totalLessons = null, weakestCategory = null, weakestScore = null, dueCards = 0, streak = 0,
   recentActivitySummary = null,
+  // Memory: what they highlighted here, what they've written and marked up everywhere else,
+  // how they've rated lesson difficulty, and the pace goal they set themselves. All of it is
+  // already stored — this is what makes Medabrain actually use it.
+  lessonHighlights = [], notesDigest = null, highlightsDigest = null, feedbackSummary = null, paceText = null,
 }) {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -74,6 +78,7 @@ export default function PrepMedabrain({
         lesson, unit, articleSections, keyTakeaways, objectives, unitTitles, lessonNote,
         units, totalDone, totalLessons, weakestCategory, weakestScore, dueCards, streak,
         recentActivitySummary,
+        lessonHighlights, notesDigest, highlightsDigest, feedbackSummary, paceText,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',

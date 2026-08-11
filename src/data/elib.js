@@ -57,18 +57,18 @@
 // on every path regardless of validity — those were left unchanged. All 88
 // YouTube ytIds resolved to real, existing videos via oEmbed.
 
-import { ELIB_EXTRA } from './elibExtra';
-import { ELIB_EXPANSION_A } from './elibExpansionA';
-import { ELIB_EXPANSION_B } from './elibExpansionB';
-import { ELIB_EXPANSION_C } from './elibExpansionC';
-import { ELIB_EXPANSION_D } from './elibExpansionD';
-import { ELIB_EXPANSION_E } from './elibExpansionE';
-import { ELIB_EXPANSION_F } from './elibExpansionF';
-import { ELIB_EXPANSION_G } from './elibExpansionG';
-import { ELIB_EXPANSION_H } from './elibExpansionH';
-import { ELIB_EXPANSION_I } from './elibExpansionI';
-import { ELIB_EXPANSION_J } from './elibExpansionJ';
-import { ELIB_EXPANSION_K } from './elibExpansionK';
+import { ELIB_EXTRA } from './elibExtra.js';
+import { ELIB_EXPANSION_A } from './elibExpansionA.js';
+import { ELIB_EXPANSION_B } from './elibExpansionB.js';
+import { ELIB_EXPANSION_C } from './elibExpansionC.js';
+import { ELIB_EXPANSION_D } from './elibExpansionD.js';
+import { ELIB_EXPANSION_E } from './elibExpansionE.js';
+import { ELIB_EXPANSION_F } from './elibExpansionF.js';
+import { ELIB_EXPANSION_G } from './elibExpansionG.js';
+import { ELIB_EXPANSION_H } from './elibExpansionH.js';
+import { ELIB_EXPANSION_I } from './elibExpansionI.js';
+import { ELIB_EXPANSION_J } from './elibExpansionJ.js';
+import { ELIB_EXPANSION_K } from './elibExpansionK.js';
 
 const ELIB_CORE = [
   {

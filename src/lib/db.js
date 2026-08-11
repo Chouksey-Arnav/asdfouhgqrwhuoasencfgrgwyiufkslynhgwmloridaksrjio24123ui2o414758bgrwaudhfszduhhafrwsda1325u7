@@ -207,6 +207,33 @@ db.version(15).stores({
   rewardClaimQueue: '++id, claimKey, attemptId, status, queuedAt',
 });
 
+// v16: lesson difficulty feedback + durable per-lesson player progress.
+//
+// `lessonFeedback` — one row per "too easy / too hard / just right" answer a student gives at
+// the bottom of a lesson, together with whatever Medabrain generated in response (the deeper
+// continuation, or the re-teach + the resource list). Two reasons it is a table and not a flag
+// on the lesson row:
+//   1. The generated text has to persist. A student who asked for the harder version of a
+//      passage should find it still there tomorrow, not have to re-spend a Groq call to read
+//      the thing they already asked for.
+//   2. The HISTORY is the point. One answer says little; the pattern across thirty lessons is
+//      the most direct read we have on where a student actually is, and it is what
+//      summarizeLessonFeedback() feeds into Medabrain's picture of them. Overwriting would
+//      throw away the only signal worth keeping.
+// Keyed by `++id` with a `lessonId` index: a lesson can be answered more than once (they come
+// back later, or change their mind), and the newest row wins for display.
+//
+// `lessonProgress` — where the student actually is inside a lesson, keyed by lessonId and
+// therefore surviving both a reload and a close-and-come-back-a-week-later. This used to live
+// only in the single-slot viewState blob (localStorage), which could remember exactly one
+// lesson and forgot which step you were on the moment you opened a different one. That produced
+// the specific bug this fixes: read the article on Monday, come back Wednesday for the video,
+// and the player dropped you at the top of the article you had already finished.
+db.version(16).stores({
+  lessonFeedback: '++id, lessonId, rating, createdAt',
+  lessonProgress: 'lessonId, updatedAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -518,8 +545,23 @@ export async function verifyUnit(pathwayKey, unitId, quizId, score) {
 export async function getPathwayGoal(pathwayKey) {
   return db.pathwayGoals.get(pathwayKey);
 }
-export async function setPathwayGoal(pathwayKey, targetWeeks) {
-  await db.pathwayGoals.put({ pathwayKey, startedAt: Date.now(), targetWeeks });
+/**
+ * Set (or change) a pathway's pace goal.
+ *
+ * `keepStart` matters more than it looks: a student adjusting "8 weeks" to "10 weeks" three
+ * weeks in is EXTENDING the same commitment, so the clock must not restart — resetting
+ * startedAt would silently wipe the three weeks of pace history the status is computed from
+ * and flip anyone who was behind to "on pace" for free. Restarting the clock is a separate,
+ * explicit action in the UI ("Restart from today"), which passes keepStart: false.
+ */
+export async function setPathwayGoal(pathwayKey, targetWeeks, { keepStart = false } = {}) {
+  const existing = await db.pathwayGoals.get(pathwayKey);
+  await db.pathwayGoals.put({
+    pathwayKey,
+    startedAt: keepStart && existing?.startedAt ? existing.startedAt : Date.now(),
+    targetWeeks,
+    updatedAt: Date.now(),
+  });
   pushDirty();
 }
 export async function clearPathwayGoal(pathwayKey) {
@@ -575,6 +617,66 @@ export async function addLessonHighlight(lessonId, { sectionIdx, start, end, tex
 }
 export async function deleteLessonHighlight(id) {
   await db.lessonHighlights.delete(id);
+  pushDirty();
+}
+
+/** Every highlight the student has ever made, grouped by lesson — for Medabrain's context. */
+export async function getAllLessonHighlights() {
+  return db.lessonHighlights.toArray();
+}
+
+// ── Lesson difficulty feedback ────────────────────────────────────────────────
+// See the v16 schema note above and src/lib/lessonFeedback.js for what each rating means.
+
+/** Newest-first feedback for one lesson (a lesson can be answered more than once). */
+export async function getLessonFeedback(lessonId) {
+  const rows = await db.lessonFeedback.where('lessonId').equals(lessonId).toArray();
+  return rows.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+}
+/** The answer currently on screen for a lesson: the most recent one. */
+export async function getLatestLessonFeedback(lessonId) {
+  return (await getLessonFeedback(lessonId))[0] || null;
+}
+export async function getAllLessonFeedback() {
+  return db.lessonFeedback.orderBy('createdAt').reverse().toArray();
+}
+export async function addLessonFeedback({
+  lessonId, lessonTitle = '', unitId = null, unitTitle = '', pathwayKey = null, category = null,
+  rating, aiText = '', resources = [], status = 'complete',
+}) {
+  const id = await db.lessonFeedback.add({
+    lessonId, lessonTitle, unitId, unitTitle, pathwayKey, category,
+    rating, aiText, resources, status,
+    createdAt: Date.now(), updatedAt: Date.now(),
+  });
+  pushDirty();
+  return id;
+}
+/** Used to attach the AI response once it comes back, without losing the answer itself. */
+export async function updateLessonFeedback(id, patch) {
+  await db.lessonFeedback.update(id, { ...patch, updatedAt: Date.now() });
+  pushDirty();
+}
+
+// ── Per-lesson player progress ────────────────────────────────────────────────
+// Where inside a lesson the student actually is. Written on every meaningful move within the
+// player, read when a lesson is opened. See the v16 schema note for why this is keyed by
+// lessonId rather than living in the single-slot viewState blob.
+export async function getLessonProgress(lessonId) {
+  return db.lessonProgress.get(lessonId);
+}
+export async function getAllLessonProgress() {
+  return db.lessonProgress.toArray();
+}
+export async function saveLessonProgress(lessonId, patch = {}) {
+  const existing = await db.lessonProgress.get(lessonId);
+  const row = { ...(existing || { lessonId }), ...patch, lessonId, updatedAt: Date.now() };
+  await db.lessonProgress.put(row);
+  pushDirty();
+  return row;
+}
+export async function clearLessonProgress(lessonId) {
+  await db.lessonProgress.delete(lessonId);
   pushDirty();
 }
 
@@ -646,7 +748,7 @@ export async function buildSyncSnapshot() {
     studyDays, cardReviews, streakFreezes, checkins, cosmetics, unitMastery,
     pathwayGoals, coachThreads, coachMessages,
     satAttempts, satResponses, satSkillStats, satReviewLog,
-    lessonNotes, lessonHighlights,
+    lessonNotes, lessonHighlights, lessonFeedback, lessonProgress,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -657,6 +759,7 @@ export async function buildSyncSnapshot() {
     db.satAttempts.toArray(), db.satResponses.toArray(), db.satSkillStats.toArray(),
     db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
+    db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
   ]);
 
   // SAT attempts travel keyed by `startedAt` rather than by Dexie's autoincrement
@@ -703,7 +806,7 @@ export async function buildSyncSnapshot() {
     checkins: checkins.map(({ date, day }) => ({ date, day })),
     cosmetics: cosmetics.map(({ key, unlockedAt }) => ({ key, unlockedAt })),
     unitMastery: unitMastery.map(({ pathwayKey, unitId, quizId, score, verifiedAt }) => ({ pathwayKey, unitId, quizId, score, verifiedAt })),
-    pathwayGoals: pathwayGoals.map(({ pathwayKey, startedAt, targetWeeks }) => ({ pathwayKey, startedAt, targetWeeks })),
+    pathwayGoals: pathwayGoals.map(({ pathwayKey, startedAt, targetWeeks, updatedAt }) => ({ pathwayKey, startedAt, targetWeeks, updatedAt: updatedAt || null })),
     coachThreads: coachThreads.map(t => ({
       key: t.createdAt, title: t.title, createdAt: t.createdAt, updatedAt: t.updatedAt,
       messages: messagesByThread[t.id] || [],
@@ -727,6 +830,14 @@ export async function buildSyncSnapshot() {
     lessonNotes: lessonNotes.map(({ lessonId, text, updatedAt }) => ({ lessonId, text, updatedAt })),
     lessonHighlights: lessonHighlights.map(({ lessonId, sectionIdx, start, end, text, color, createdAt }) =>
       ({ lessonId, sectionIdx, start, end, text, color, createdAt })),
+    // Feedback rows travel WITH their generated text: the deeper passage a student asked for is
+    // part of their lesson now, and finding it missing on a second device would read as the app
+    // having lost it. Keyed on lessonId+createdAt (id is per-device autoincrement).
+    lessonFeedback: lessonFeedback.map(({ id, ...rest }) => rest),
+    lessonProgress: lessonProgress.map(({ lessonId, step, articleRead, videoWatched, articleScrollPct, articleConfirmedAt, videoConfirmedAt, lastOpenedAt, updatedAt }) =>
+      ({ lessonId, step: step || null, articleRead: !!articleRead, videoWatched: !!videoWatched,
+         articleScrollPct: articleScrollPct || 0, articleConfirmedAt: articleConfirmedAt || null,
+         videoConfirmedAt: videoConfirmedAt || null, lastOpenedAt: lastOpenedAt || null, updatedAt: updatedAt || 0 })),
   };
 }
 
@@ -778,7 +889,7 @@ export async function applyRemoteSnapshot(remote) {
     localStreakFreezes, localCheckins, localCosmetics, localUnitMastery,
     localPathwayGoals, localCoachThreads, localCoachMessages,
     localSatAttempts, localSatSkillStats, localSatReviewLog,
-    localLessonNotes, localLessonHighlights,
+    localLessonNotes, localLessonHighlights, localLessonFeedback, localLessonProgress,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -788,6 +899,7 @@ export async function applyRemoteSnapshot(remote) {
     db.coachMessages.toArray(),
     db.satAttempts.toArray(), db.satSkillStats.toArray(), db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
+    db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
   ]);
 
   // ── profile / XP ──
@@ -932,10 +1044,19 @@ export async function applyRemoteSnapshot(remote) {
   if (unitMap.size) await db.unitMastery.bulkPut([...unitMap.values()]);
 
   // ── pathway pacing goals ──
+  // A goal is now editable at any time (see setPathwayGoal), so "whoever started first wins" is
+  // no longer the right rule on its own — a target changed on a phone must not be reverted by a
+  // laptop still holding the original. The most recent EDIT wins; goals written before
+  // `updatedAt` existed fall back to the old earliest-start rule so nothing regresses.
   const goalMap = new Map(localPathwayGoals.map(r => [r.pathwayKey, r]));
   for (const r of (remote.pathwayGoals || [])) {
     const l = goalMap.get(r.pathwayKey);
-    if (!l || r.startedAt < l.startedAt) goalMap.set(r.pathwayKey, r);
+    if (!l) { goalMap.set(r.pathwayKey, r); continue; }
+    if (r.updatedAt || l.updatedAt) {
+      if ((r.updatedAt || 0) > (l.updatedAt || 0)) goalMap.set(r.pathwayKey, r);
+    } else if (r.startedAt < l.startedAt) {
+      goalMap.set(r.pathwayKey, r);
+    }
   }
   await db.pathwayGoals.clear();
   if (goalMap.size) await db.pathwayGoals.bulkPut([...goalMap.values()]);
@@ -1038,6 +1159,48 @@ export async function applyRemoteSnapshot(remote) {
   }
   await db.lessonHighlights.clear();
   if (hlMap.size) await db.lessonHighlights.bulkAdd([...hlMap.values()].map(({ id, ...rest }) => rest));
+
+  // ── lesson difficulty feedback (union — every answer is history worth keeping) ──
+  // Deliberately additive rather than last-write-wins: two answers on the same lesson from two
+  // devices are two real moments, and the pattern across all of them is what Medabrain reads.
+  // Deduped on lesson+timestamp+rating, which is exactly one physical tap.
+  const fbSig = (f) => `${f.lessonId}␟${f.createdAt}␟${f.rating}`;
+  const fbMap = new Map(localLessonFeedback.map(r => [fbSig(r), r]));
+  for (const r of (remote.lessonFeedback || [])) {
+    const sig = fbSig(r);
+    const local = fbMap.get(sig);
+    // Same tap seen on both devices: keep whichever copy actually carries the generated text,
+    // since the device that was offline when the answer was given has the row but not the reply.
+    if (!local) fbMap.set(sig, r);
+    else if (!local.aiText && r.aiText) fbMap.set(sig, { ...local, aiText: r.aiText, resources: r.resources || local.resources, status: r.status || local.status });
+  }
+  await db.lessonFeedback.clear();
+  if (fbMap.size) await db.lessonFeedback.bulkAdd([...fbMap.values()].map(({ id, ...rest }) => rest));
+
+  // ── per-lesson player progress (furthest-along copy wins, per lesson) ──
+  // Not simply "newest updatedAt": a device that merely OPENED a lesson would then overwrite
+  // another device's record of having finished the article and the video. Progress through a
+  // lesson only ever moves forward, so the merge takes the union of what each device has
+  // actually completed, and only lets the newer row decide the current step.
+  const progMap = new Map(localLessonProgress.map(r => [r.lessonId, r]));
+  for (const r of (remote.lessonProgress || [])) {
+    const l = progMap.get(r.lessonId);
+    if (!l) { progMap.set(r.lessonId, r); continue; }
+    const newer = (r.updatedAt || 0) > (l.updatedAt || 0) ? r : l;
+    progMap.set(r.lessonId, {
+      ...l,
+      articleRead: !!(l.articleRead || r.articleRead),
+      videoWatched: !!(l.videoWatched || r.videoWatched),
+      articleScrollPct: Math.max(l.articleScrollPct || 0, r.articleScrollPct || 0),
+      articleConfirmedAt: l.articleConfirmedAt || r.articleConfirmedAt || null,
+      videoConfirmedAt: l.videoConfirmedAt || r.videoConfirmedAt || null,
+      lastOpenedAt: Math.max(l.lastOpenedAt || 0, r.lastOpenedAt || 0) || null,
+      step: newer.step || l.step || r.step || null,
+      updatedAt: Math.max(l.updatedAt || 0, r.updatedAt || 0),
+    });
+  }
+  await db.lessonProgress.clear();
+  if (progMap.size) await db.lessonProgress.bulkPut([...progMap.values()]);
 }
 
 // ── SAT ───────────────────────────────────────────────────────────────────────
