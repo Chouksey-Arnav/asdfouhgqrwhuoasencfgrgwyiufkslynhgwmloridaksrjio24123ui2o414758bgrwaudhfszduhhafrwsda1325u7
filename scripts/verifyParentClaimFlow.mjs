@@ -313,6 +313,24 @@ function seedInvitation({ email, code, student = 'Aanya Rao', initiatedBy = 'stu
 // ── Main ────────────────────────────────────────────────────────────────────
 
 const smtp = await startSmtp();
+
+// mailer.js's loadAccounts() prefers numbered BREVO_SMTP_USER_N accounts over the legacy
+// SMTP_* vars set below. In deployments that inject the app's real environment into the build
+// (Coolify does this so Vite can inline VITE_* at build time), BREVO_SMTP_USER_1/2/... can
+// already be sitting in process.env here, which would make this "isolated" test silently reach
+// for live Brevo credentials instead of the local mock server started above — anywhere from
+// pointless network calls to, previously, this script being the only thing standing between a
+// misconfigured numbered account and a build that ships it. Clearing them first makes the test's
+// own SMTP_* vars the only config the mailer can see, regardless of what the surrounding
+// environment happens to contain.
+for (let n = 1; process.env[`BREVO_SMTP_USER_${n}`] || process.env[`BREVO_SMTP_PASS_${n}`]; n++) {
+  delete process.env[`BREVO_SMTP_USER_${n}`];
+  delete process.env[`BREVO_SMTP_PASS_${n}`];
+  delete process.env[`BREVO_SMTP_FROM_${n}`];
+}
+delete process.env.BREVO_SMTP_HOST;
+delete process.env.BREVO_SMTP_PORT;
+
 process.env.SMTP_HOST = '127.0.0.1';
 process.env.SMTP_PORT = String(smtp.port);
 process.env.SMTP_USER = 'test';
