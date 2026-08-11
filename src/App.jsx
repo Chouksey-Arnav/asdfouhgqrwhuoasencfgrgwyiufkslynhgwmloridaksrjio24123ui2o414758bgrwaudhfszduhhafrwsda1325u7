@@ -105,7 +105,7 @@ import { OPPORTUNITIES } from './data/opportunities';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
-import PlansTab from './components/PlansTab';
+import PlansTab, { fetchPortfolio as fetchPlanPortfolio } from './components/PlansTab';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
 import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
@@ -121,6 +121,7 @@ import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
   toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
+  needsExtension as needsPlanExtension, refreshDayWindow as refreshPlanWindow,
 } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
@@ -2588,7 +2589,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const portfolioAccent = C.green;
   const progressAccent = C.cyan;
   const settingsAccent = C.amber;
-  const plansAccent = C.fuchsia;
+  const plansAccent = C.pink;
   const satAccent = C.sky;
   // Same identity, applied to the nav itself — so the active tab actually highlights in its own
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
@@ -3411,6 +3412,72 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const timelineSummary=useMemo(()=>{
     try{ return summarizeTimelineForPrompt(appTimeline); }catch{ return null; }
   },[appTimeline]);
+
+  // ── Everything measurable the app knows, in one object, for the planner ────
+  // Hoisted out of the Plans tab's own render because the plan no longer only updates while that
+  // tab is open. It now rewrites its two-day window whenever the day rolls over (see the effect
+  // below), and Home, the Quiz tab and the Portfolio all read that same window — so a plan that
+  // only refreshed on a visit to Plans would show yesterday's day everywhere else in the app.
+  //
+  // `pathwayState` is the newest and most load-bearing entry: which pathway lessons this student
+  // can actually open right now. The pathway unlocks sequentially, so without it the Oracle
+  // happily schedules a lesson three units deep and the student taps through to a padlock. It is
+  // computed from lessonState — the exact function the Pathway tab renders its own locks from — so
+  // the plan and the pathway can never disagree about what is open.
+  const planLiveSignals=useMemo(()=>{
+    const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
+    const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
+    const planUnits=curPath?.units||[];
+    const pathwayState={
+      byLesson:Object.fromEntries(planUnits.flatMap((u,ui)=>u.lessons.map(l=>[l.id,lessonState(l,ui,planUnits)]))),
+      pathwayLabel:curPath?.label||null,
+    };
+    return {
+      weakestCategory:weakIdx?cats3[weakIdx.i]:null, weakestScore:weakIdx?weakIdx.v:null,
+      pathwayState,
+      dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
+      portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
+      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
+      recentActivitySummary,
+      categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
+      satProjection, satWeakSkills, satOpenReviews,
+      timelineSummary, personalBrief:buildPersonalBriefBlock(user),
+      applicationStrength:computeApplicationStrength({
+        mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal,
+        recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays,
+      }),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[secAvgs,cats3,upcomingDeadlines,curPath,pathway,dueCards,portActivities.length,clinicalHoursTotal,recommendersCount,appCounts,streak,recentActivitySummary,catAverages,qTaken,mastery,avgSc,satProjection,satWeakSkills,satOpenReviews,timelineSummary,user]);
+
+  // ── The plan rewrites itself when the day turns over ──────────────────────
+  // The detailed window is today + tomorrow, written today (see WINDOW_DAYS in
+  // masterPlanGenerator.js). Keeping that true is what "it constantly updates" actually means, and
+  // it has to happen app-wide rather than on the Plans tab alone, because Home's "today's plan"
+  // card reads the same window. Guarded three ways so this never becomes a generation loop: an
+  // in-flight ref, the plan's own windowBuiltFor stamp, and needsExtension itself. PlansTab runs
+  // its own copy of this while mounted; whichever fires first wins and the other sees a current
+  // window and does nothing.
+  const windowRefreshRef=useRef(null);
+  useEffect(()=>{
+    const plan=user?.masterPlan;
+    if(!dbReady||!plan||!user?.specialty)return;
+    if(!needsPlanExtension(plan))return;
+    const stamp=`${planTodayStr()}|${plan.windowBuiltFor||''}`;
+    if(windowRefreshRef.current===stamp)return; // already tried for this day — don't retry in a loop
+    windowRefreshRef.current=stamp;
+    let cancelled=false;
+    (async()=>{
+      try{
+        const portfolio=await fetchPlanPortfolio();
+        const updated=await refreshPlanWindow(plan,user,planLiveSignals,portfolio);
+        if(cancelled)return;
+        const current=await DB.getUser();
+        saveUser({...(current||user),masterPlan:updated});
+      }catch{ /* the existing window stays on screen — better than an error the student can't act on */ }
+    })();
+    return()=>{cancelled=true;};
+  },[dbReady,user?.masterPlan?.windowBuiltFor,user?.masterPlan?.daysGeneratedThrough,user?.specialty]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function requestAIResponse(history,threadId,chatCountForAchievements=aiChatCount){
     setCLoad(true);
@@ -8507,28 +8574,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
       );
     }
-    const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
-    const nextDeadline=(upcomingDeadlines||[]).map(d=>({...d,days:Math.ceil((new Date(d.due_date)-new Date())/86400000)})).filter(d=>d.days>=0).sort((a,b)=>a.days-b.days)[0];
-    // Everything measurable the app knows, handed to the planner in one object. The first six
-    // lines are the original set; everything after is what the deep planner reads to pace and
-    // target the plan (see buildPerformanceFactsText in masterPlanGenerator.js) — the same
-    // signals the chat coach already got, so the Plans tab and Medabrain reason over one
-    // picture of the student rather than two different ones.
-    const liveSignals={
-      weakestCategory:weakIdx?cats3[weakIdx.i]:null, weakestScore:weakIdx?weakIdx.v:null,
-      dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
-      portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
-      recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
-      recentActivitySummary,
-      categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
-      satProjection, satWeakSkills, satOpenReviews,
-      timelineSummary, personalBrief:buildPersonalBriefBlock(user),
-      applicationStrength:computeApplicationStrength({
-        mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal,
-        recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays,
-      }),
-    };
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={liveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>;
+    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={planLiveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>;
   }
   // ── SAT: the test-prep pillar (src/components/sat/) ──
   function tSatWrap(){

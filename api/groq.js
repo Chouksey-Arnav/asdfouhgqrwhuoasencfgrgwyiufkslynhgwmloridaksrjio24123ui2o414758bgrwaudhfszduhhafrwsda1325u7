@@ -9,8 +9,8 @@
 // Plus a short in-memory response cache (see responseCache below) so repeated prompt shapes
 // (e.g. the daily quiz-recommendation narration) don't re-hit Groq at all.
 
-const dailyMap = new Map(); // ip -> { count, resetAt }
-const minuteMap = new Map(); // ip -> { count, resetAt }
+const dailyMap = new Map(); // bucket -> { count, resetAt }
+const minuteMap = new Map(); // bucket -> { count, resetAt }
 // Lowered from 1200/day and 20/min — the free-tier Groq key is shared across every user of the
 // app, so these caps were far looser than actual usage warranted. Combined with the response
 // cache below and the client-side caching in src/lib/aiCache.js, this keeps real Groq calls to
@@ -19,6 +19,23 @@ const DAILY_LIMIT = 300;
 const MINUTE_LIMIT = 8;
 const DAILY_MS = 24 * 60 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;
+
+// ── Why the limits are per-purpose, and why plan generation gets its own ────
+// A chat turn is ONE request. Building the Plans tab's plan is not: the generator makes several
+// sequential Oracle calls for a single click (the roadmap spine, then the focused day window),
+// each with its own retry. Under one flat 8-requests-per-minute-per-IP bucket, a single "generate
+// my plan" click would burn the student's whole minute budget and then start 429-ing itself
+// halfway through — and because every generation call resolves to a deterministic fallback rather
+// than throwing, the student got a plan that looked finished, arrived suspiciously fast, and said
+// the same three generic things every time ("SAT practice set", "Continue your pathway",
+// "Flashcard review"). That is exactly the failure this split exists to make impossible.
+//
+// Buckets are keyed per (ip, purpose) so the budgets are genuinely independent: a plan build can
+// never exhaust the coach's allowance, and normal chat use can never starve a plan build.
+const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20 };
+const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200 };
+function minuteLimitFor(purpose) { return MINUTE_LIMIT_BY_PURPOSE[purpose] || MINUTE_LIMIT; }
+function dailyLimitFor(purpose) { return DAILY_LIMIT_BY_PURPOSE[purpose] || DAILY_LIMIT; }
 
 // ── Response cache ────────────────────────────────────────────────────────────
 // Many calls into this endpoint are near-identical across users/sessions (e.g. the quiz-
@@ -197,43 +214,51 @@ function keyOrderForThisRequest(purpose, { primary, fallback }) {
   return [...orderedPrimary, ...fallback];
 }
 
-function isDailyLimited(ip) {
+// One bucket per (ip, purpose) — see MINUTE_LIMIT_BY_PURPOSE above for why they are separate.
+const bucketKey = (ip, purpose) => `${ip}|${purpose}`;
+
+function isDailyLimited(ip, purpose) {
+  const key = bucketKey(ip, purpose);
   const now = Date.now();
-  const entry = dailyMap.get(ip);
+  const entry = dailyMap.get(key);
   if (!entry || now > entry.resetAt) {
-    dailyMap.set(ip, { count: 0, resetAt: now + DAILY_MS });
+    dailyMap.set(key, { count: 0, resetAt: now + DAILY_MS });
     return false;
   }
-  return entry.count >= DAILY_LIMIT;
+  return entry.count >= dailyLimitFor(purpose);
 }
 
-function getRequestsUsedToday(ip) {
-  const entry = dailyMap.get(ip);
+function getRequestsUsedToday(ip, purpose) {
+  const entry = dailyMap.get(bucketKey(ip, purpose));
   if (!entry) return 0;
   if (Date.now() > entry.resetAt) return 0;
   return entry.count;
 }
 
-function addRequestToday(ip) {
+function addRequestToday(ip, purpose) {
+  const key = bucketKey(ip, purpose);
   const now = Date.now();
-  const entry = dailyMap.get(ip);
+  const entry = dailyMap.get(key);
   if (!entry || now > entry.resetAt) {
-    dailyMap.set(ip, { count: 1, resetAt: now + DAILY_MS });
+    dailyMap.set(key, { count: 1, resetAt: now + DAILY_MS });
   } else {
     entry.count += 1;
   }
 }
 
-function isMinuteLimited(ip) {
+// Returns 0 when the request is allowed, otherwise the milliseconds until this bucket resets —
+// so the 429 can tell the caller exactly how long to back off instead of leaving it to guess.
+function minuteLimitRetryMs(ip, purpose) {
+  const key = bucketKey(ip, purpose);
   const now = Date.now();
-  const entry = minuteMap.get(ip);
+  const entry = minuteMap.get(key);
   if (!entry || now > entry.resetAt) {
-    minuteMap.set(ip, { count: 1, resetAt: now + MINUTE_MS });
-    return false;
+    minuteMap.set(key, { count: 1, resetAt: now + MINUTE_MS });
+    return 0;
   }
-  if (entry.count >= MINUTE_LIMIT) return true;
+  if (entry.count >= minuteLimitFor(purpose)) return Math.max(250, entry.resetAt - now);
   entry.count += 1;
-  return false;
+  return 0;
 }
 
 // Most callers (chat-style coach/interview/portfolio turns) are fine with a 2500-char input cap.
@@ -293,12 +318,9 @@ export default async function handler(req, res) {
   const ip = (req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown')
     .split(',')[0].trim();
 
-  // ── Per-minute rate limiting ───────────────────────────────────────────────
-  if (isMinuteLimited(ip)) {
-    return res.status(429).json({
-      error: 'Too many requests. Please wait a moment before sending more messages.',
-    });
-  }
+  // Rate limiting is per (ip, purpose) and so cannot run until the body has been parsed and the
+  // purpose resolved — see the checks below, after the cache lookup. Serving a cache hit before
+  // spending any of the budget is deliberate: a cached answer costs Groq nothing.
 
   // ── API key check ──────────────────────────────────────────────────────────
   if (!ALL_KEYS.length) {
@@ -399,8 +421,13 @@ export default async function handler(req, res) {
   // same key, so a cached response would hand the student the exact questions
   // they just finished. Correctness-critical verification calls opt out too —
   // a verifier that can be served a stale verdict is not a verifier.
+  // Plan generation opts out unconditionally, not just when the caller remembers to ask. Its
+  // prompts are deterministic functions of the student's profile, so "regenerate my plan" hashes
+  // to the same key as the build it is trying to replace — a cache hit there hands the student
+  // back the identical plan and makes the button look broken.
+  const NEVER_CACHED_PURPOSES = new Set(['masterplan', 'plan']);
   const lastUserMsg = [...groqMessages].reverse().find(m => m.role === 'user')?.content || '';
-  const cacheable = !noCache;
+  const cacheable = !noCache && !NEVER_CACHED_PURPOSES.has(purpose);
   const cacheKey = hashKey(`${purpose}|${tier}|${systemPrompt}|${lastUserMsg}`);
   const cached = cacheable ? getCachedResponse(cacheKey) : null;
   if (cached) {
@@ -410,19 +437,32 @@ export default async function handler(req, res) {
       tier,
       purpose,
       tierLabel: TIER_LABELS[tier] || tier,
-      requestsUsedToday: getRequestsUsedToday(ip),
-      requestsRemaining: Math.max(0, DAILY_LIMIT - getRequestsUsedToday(ip)),
-      dailyLimit: DAILY_LIMIT,
+      requestsUsedToday: getRequestsUsedToday(ip, purpose),
+      requestsRemaining: Math.max(0, dailyLimitFor(purpose) - getRequestsUsedToday(ip, purpose)),
+      dailyLimit: dailyLimitFor(purpose),
       cached: true,
     });
   }
 
-  // ── Check daily request limit ──────────────────────────────────────────────
-  if (isDailyLimited(ip)) {
+  // ── Per-minute rate limiting ───────────────────────────────────────────────
+  // `retryAfterMs` travels in the body as well as the standard Retry-After header, because the
+  // one caller that genuinely needs to wait and retry (plan generation) is a fetch() in the
+  // browser reading JSON, not an HTTP client that honours headers on its own.
+  const retryAfterMs = minuteLimitRetryMs(ip, purpose);
+  if (retryAfterMs) {
+    res.setHeader('Retry-After', String(Math.ceil(retryAfterMs / 1000)));
     return res.status(429).json({
-      error: `Daily coaching limit reached (${DAILY_LIMIT} requests). Try again tomorrow.`,
+      error: 'Too many requests. Please wait a moment before sending more messages.',
+      retryAfterMs,
+    });
+  }
+
+  // ── Check daily request limit ──────────────────────────────────────────────
+  if (isDailyLimited(ip, purpose)) {
+    return res.status(429).json({
+      error: `Daily coaching limit reached (${dailyLimitFor(purpose)} requests). Try again tomorrow.`,
       requestsRemaining: 0,
-      dailyLimit: DAILY_LIMIT,
+      dailyLimit: dailyLimitFor(purpose),
     });
   }
 
@@ -439,7 +479,14 @@ export default async function handler(req, res) {
   // 'essay': a full critique is a verdict, a per-criterion rubric, several quoted lines with what
   // is wrong with each, and a revision plan. Truncating it drops the fixes and keeps the verdict,
   // which is the one shape of this response that would be actively harmful.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 8000, sat: 8000, essay: 4000 };
+  // 'masterplan' was raised from 8,000 to 16,000 for a reason that is easy to miss: on the gpt-oss
+  // family, reasoning tokens are billed against max_tokens alongside the visible answer. Oracle is
+  // called here with reasoning_effort 'high' precisely so it thinks hard before writing the plan —
+  // which meant a real chunk of an 8,000-token budget went to the thinking, and the JSON that
+  // followed got truncated mid-object. A truncated response does not parse, and an unparseable
+  // response silently becomes the deterministic fallback plan. Oracle's ceiling is 32,768, so the
+  // headroom costs nothing on the calls that do not need it.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 16000, sat: 8000, essay: 4000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -466,9 +513,17 @@ export default async function handler(req, res) {
 
   // Heavier purposes get more time before we give up — a multi-thousand-token structured
   // generation on the 120B model legitimately takes longer than a chat reply.
-  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 45000, sat: 45000, essay: 45000 };
+  // A deep, high-reasoning plan generation legitimately runs close to a minute. vercel.json gives
+  // this function maxDuration 60, so the ceiling here is set just under it: aborting ourselves at
+  // 52s returns a real 504 the client can act on, where letting the platform kill the invocation
+  // returns nothing the client can distinguish from a network drop.
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: 52000, sat: 45000, essay: 45000 };
   const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
   const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
+  // Whole-invocation budget, so the in-handler retry below can be skipped when there is no longer
+  // room for it rather than started and then killed mid-flight by the platform.
+  const FUNCTION_BUDGET_MS = 57000;
+  const handlerStartedAt = Date.now();
 
   async function callGroqOnce(useModel, apiKey, timeoutMs) {
     const controller = new AbortController();
@@ -535,8 +590,9 @@ export default async function handler(req, res) {
 
     // One more pass through the key rotation on a transient failure (5xx, network hiccup) so a
     // single blip doesn't dead-end the chat.
-    if (!response.ok && response.status >= 500) {
-      ({ response, data } = await callGroqWithFailover(model, retryTimeoutMs));
+    const timeLeft = () => FUNCTION_BUDGET_MS - (Date.now() - handlerStartedAt);
+    if (!response.ok && response.status >= 500 && timeLeft() > retryTimeoutMs) {
+      ({ response, data } = await callGroqWithFailover(model, Math.min(retryTimeoutMs, timeLeft())));
     }
 
     if (!response.ok) {
@@ -544,7 +600,12 @@ export default async function handler(req, res) {
       console.error('Groq API error:', errMsg);
 
       if (response.status === 429 || errMsg.toLowerCase().includes('rate limit')) {
-        return res.status(429).json({ error: 'Medabrain is busy right now. Please wait a moment and try again.' });
+        // Groq tells us how long its own bucket needs; pass that straight through so a retrying
+        // caller waits the right amount instead of hammering a key that is already capped.
+        const headerWait = Number(response.headers?.get?.('retry-after'));
+        const upstreamWaitMs = Number.isFinite(headerWait) && headerWait > 0 ? Math.min(30000, headerWait * 1000) : 5000;
+        res.setHeader('Retry-After', String(Math.ceil(upstreamWaitMs / 1000)));
+        return res.status(429).json({ error: 'Medabrain is busy right now. Please wait a moment and try again.', retryAfterMs: upstreamWaitMs });
       }
 
       return res.status(502).json({ error: errMsg });
@@ -555,10 +616,10 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: 'Medabrain had trouble forming a response. Please try again.' });
     }
 
-    addRequestToday(ip);
+    addRequestToday(ip, purpose);
     if (cacheable) setCachedResponse(cacheKey, content, data?.model || model);
-    const requestsUsedToday = getRequestsUsedToday(ip);
-    const requestsRemaining = Math.max(0, DAILY_LIMIT - requestsUsedToday);
+    const requestsUsedToday = getRequestsUsedToday(ip, purpose);
+    const requestsRemaining = Math.max(0, dailyLimitFor(purpose) - requestsUsedToday);
 
     return res.status(200).json({
       content,
@@ -568,7 +629,7 @@ export default async function handler(req, res) {
       tierLabel: TIER_LABELS[tier] || tier,
       requestsUsedToday,
       requestsRemaining,
-      dailyLimit: DAILY_LIMIT,
+      dailyLimit: dailyLimitFor(purpose),
     });
 
   } catch (err) {

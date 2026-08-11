@@ -439,10 +439,144 @@ assert('an unchanged profile is not stale', MP.planIsStale(stamped, snapUser) ==
 assert('a changed goal makes the plan stale', MP.planIsStale(stamped, { ...snapUser, goal: 'explore' }) === true);
 assert('a changed pathway makes the plan stale', MP.planIsStale(stamped, { ...snapUser, specialty: 'nursing' }) === true);
 
-assert('a plan running out of days asks to be extended',
-  MP.needsExtension(planOf([], { daysGeneratedThrough: addDaysStr(TODAY, 2) })) === true);
-assert('a plan with runway does not', MP.needsExtension(planOf([], { daysGeneratedThrough: addDaysStr(TODAY, 12) })) === false);
+// The window is today + tomorrow, rebuilt daily (see WINDOW_DAYS in masterPlanGenerator.js). All
+// three staleness conditions matter, and the third is the one the old "days of runway" check could
+// not express: a window that still reaches tomorrow but was WRITTEN on an earlier day is stale, no
+// matter how much runway it has, because everything the student did since is missing from it.
+eq('the detailed window is two days', MP.WINDOW_DAYS, 2);
+assert('a plan whose window has run out asks to be rebuilt',
+  MP.needsExtension(planOf([], { daysGeneratedThrough: TODAY, windowBuiltFor: TODAY })) === true);
+assert('a window planned today, covering tomorrow, is current',
+  MP.needsExtension(planOf([], { daysGeneratedThrough: TOMORROW, windowBuiltFor: TODAY })) === false);
+assert('a window written on an earlier day is stale even with runway left',
+  MP.needsExtension(planOf([], { daysGeneratedThrough: addDaysStr(TODAY, 12), windowBuiltFor: YESTERDAY })) === true,
+  'a plan written yesterday is not a plan for today');
+assert('a plan stored before windowBuiltFor existed refreshes once',
+  MP.needsExtension(planOf([], { daysGeneratedThrough: addDaysStr(TODAY, 12) })) === true);
 assert('a plan with no window never asks', MP.needsExtension({}) === false);
+assert('the tab knows whether the window still covers today',
+  MP.windowCoversToday(planOf([day(TODAY, [task()])])) === true
+  && MP.windowCoversToday(planOf([day(YESTERDAY, [task()])])) === false);
+
+// ── Locked lessons never reach the plan ─────────────────────────────────────
+section('The plan only ever points at lessons the student can open');
+
+// The pathway unlocks sequentially, so most of it is behind a padlock at any given moment. A task
+// pointing there is a dead end the student pays for with their trust, so the unlock state has to
+// survive all the way from App.jsx into the resolved link.
+const lockedIndexBase = {
+  quizzes: index.quizzes, decks: index.decks, articles: index.articles,
+  allLessons: [
+    { id: 'open1', title: 'Cells and Systems', unitTitle: 'Biology Foundations', state: 'available' },
+    { id: 'doneL', title: 'Intro to Medicine', unitTitle: 'Biology Foundations', state: 'verified' },
+    { id: 'lockL', title: 'Clinical Ethics', unitTitle: 'Advanced Practice', state: 'locked' },
+  ],
+  lessons: [{ id: 'open1', title: 'Cells and Systems', unitTitle: 'Biology Foundations' }],
+  lessonStates: new Map([['open1', 'available'], ['doneL', 'verified'], ['lockL', 'locked']]),
+};
+const namedLocked = MP.resolveTaskResource({ type: 'lesson', resourceName: 'Clinical Ethics', title: 'Study ethics' }, lockedIndexBase, { seedKey: 'k' });
+eq('a lesson task naming a LOCKED lesson is re-pointed at an open one', namedLocked.resourceId, 'open1');
+const namedDone = MP.resolveTaskResource({ type: 'lesson', resourceName: 'Intro to Medicine', title: 'Study' }, lockedIndexBase, { seedKey: 'k' });
+eq('a lesson task naming an already-finished lesson is re-pointed too', namedDone.resourceId, 'open1');
+const namedOpen = MP.resolveTaskResource({ type: 'lesson', resourceName: 'Cells and Systems', title: 'Study' }, lockedIndexBase, { seedKey: 'k' });
+eq('an open lesson named exactly is still honoured', namedOpen.resourceId, 'open1');
+
+// The catalog the model reads must say so too — telling it not to pick locked lessons is cheaper
+// and more reliable than catching every bad pick afterwards.
+const lockedState = { byLesson: {} };
+const openCatalog = MP.buildResourceCatalog('exploring', 'junior', null);
+assert('a catalog with no unlock data stays as it was', !/LOCKED/.test(openCatalog.text));
+const explInfo = MP.classifyPathwayLessons('exploring', null);
+assert('with no unlock data every lesson is treated as open', explInfo.open.length === explInfo.all.length);
+for (const l of explInfo.all) lockedState.byLesson[l.id] = l.id === explInfo.all[0].id ? 'available' : 'locked';
+const gatedCatalog = MP.buildResourceCatalog('exploring', 'junior', lockedState);
+assert('the catalog marks locked units as locked', /LOCKED/.test(gatedCatalog.text));
+assert('the catalog names the lessons the student can start now',
+  /CAN ACTUALLY START RIGHT NOW/.test(gatedCatalog.text));
+eq('the catalog exposes exactly the open lessons', gatedCatalog.openLessons.length, 1);
+
+// A plan already written keeps itself true as the student's progress changes.
+const stalePlan = planOf([day(TODAY, [task({ id: 's1', type: 'lesson', resourceKind: 'lesson', resourceId: 'lockL', title: 'Lesson: Clinical Ethics', detail: 'Clinical Ethics — Advanced Practice' })])]);
+const noSignal = MP.retargetStaleTasks(stalePlan, { specialty: 'exploring' }, {});
+assert('with no unlock data the plan is left completely alone', noSignal === stalePlan);
+const realState = { byLesson: Object.fromEntries(MP.classifyPathwayLessons('exploring', null).all.map((l, i) => [l.id, i === 0 ? 'available' : 'locked'])) };
+const firstOpen = MP.classifyPathwayLessons('exploring', realState).open[0];
+const retargeted = MP.retargetStaleTasks(stalePlan, { specialty: 'exploring' }, { pathwayState: realState });
+assert('a task pointing at a locked lesson is re-pointed', retargeted !== stalePlan);
+eq('and it lands on a lesson the student can open', retargeted.days[0].tasks[0].resourceId, firstOpen.id);
+assert('the swap is recorded so the UI can say it happened', !!retargeted.days[0].tasks[0].retargetedFrom);
+assert('the task text is rewritten to match where it now goes',
+  retargeted.days[0].tasks[0].detail.includes(firstOpen.title));
+assert('re-running the adjustment changes nothing further',
+  MP.retargetStaleTasks(retargeted, { specialty: 'exploring' }, { pathwayState: realState }) === retargeted,
+  'a non-idempotent adjustment in a render effect is an infinite save loop');
+assert('a task the student already finished is never re-pointed', (() => {
+  const donePlan = planOf([day(TODAY, [task({ id: 'd1', type: 'lesson', resourceKind: 'lesson', resourceId: 'lockL', done: true })])]);
+  return MP.retargetStaleTasks(donePlan, { specialty: 'exploring' }, { pathwayState: realState }) === donePlan;
+})());
+assert('elapsed days are never rewritten', (() => {
+  const pastPlan = planOf([day(YESTERDAY, [task({ id: 'p1', type: 'lesson', resourceKind: 'lesson', resourceId: 'lockL' })])]);
+  return MP.retargetStaleTasks(pastPlan, { specialty: 'exploring' }, { pathwayState: realState }) === pastPlan;
+})());
+
+// App.jsx has to actually compute and hand over that unlock state, or every guard above is dead
+// code protecting a signal nobody sends.
+assert('App computes the pathway unlock state from the same helper the Pathway tab renders from',
+  /pathwayState=\{[\s\S]{0,240}lessonState\(l,ui,planUnits\)/.test(appSrc),
+  'liveSignals.pathwayState must be derived from lessonState');
+assert('App passes the unlock state to the planner', /^\s*pathwayState,$/m.test(appSrc));
+assert('PlansTab re-points stale tasks as progress changes', /retargetStaleTasks\(plan, user, liveSignals/.test(plansSrc));
+
+// ── Generation is honest about failing ──────────────────────────────────────
+section('A fallback plan is never passed off as a real one');
+
+// This is the whole bug the two-day rewrite came from: every generation path resolves to a usable
+// plan, so a rate-limited or timed-out build produced the deterministic heuristic days and looked
+// exactly like success. The trace is what makes that visible.
+const trace = MP.createGenerationTrace();
+assert('a fresh trace starts clean', trace.fallbacks === 0 && trace.aiCalls === 0);
+const genSrcNow = read('src/lib/masterPlanGenerator.js');
+assert('generation retries rather than falling back on the first failure',
+  /ORACLE_ATTEMPTS/.test(genSrcNow) && /ORACLE_BACKOFF_MS/.test(genSrcNow));
+assert('a rate limit is waited out, not instantly retried into the same wall',
+  /result\.waitMs/.test(genSrcNow));
+assert('every generation stamps how it went onto the plan', /generation: summarizeTrace\(trace\)/.test(genSrcNow));
+assert('the UI tells the student when part of their plan is the fallback',
+  /generation\?\.degraded/.test(plansSrc) && /function DegradedBanner/.test(plansSrc));
+assert('placeholder-level output counts as a failure, not a success',
+  /daysLookGeneric/.test(genSrcNow),
+  'a parseable response full of "SAT practice set" is the bug, not a plan');
+
+// The server has to give a plan build room to make several calls in a row, or it rate-limits its
+// own most important feature and every call after the first falls back.
+assert('rate limits are scoped per purpose, not one bucket for the whole app',
+  /MINUTE_LIMIT_BY_PURPOSE/.test(groqSrc) && /bucketKey\(ip, purpose\)/.test(groqSrc));
+assert('plan generation gets a minute budget larger than a chat turn\'s', (() => {
+  const m = groqSrc.match(/MINUTE_LIMIT_BY_PURPOSE = \{[^}]*masterplan:\s*(\d+)/);
+  const base = groqSrc.match(/const MINUTE_LIMIT = (\d+)/);
+  return !!m && !!base && Number(m[1]) > Number(base[1]) * 2;
+})(), 'one plan build is several sequential Oracle calls');
+assert('a 429 tells the caller how long to wait', /retryAfterMs/.test(groqSrc));
+assert('plan generation is never served from the response cache',
+  /NEVER_CACHED_PURPOSES/.test(groqSrc),
+  'a cached plan makes "regenerate" hand back the identical plan');
+// The daily refresh is now driven from two places (App-wide, and PlansTab while it is open), so
+// the generator has to tolerate both asking at once — and it must never hand a student back an
+// unfinished copy of something they already completed today.
+assert('a concurrent refresh reuses the in-flight one rather than generating twice',
+  /inFlightRefresh/.test(genSrcNow));
+assert('a refresh keeps work already completed today', /doneKeys/.test(genSrcNow),
+  'finishing a task and watching it reappear unfinished is how a student stops trusting the plan');
+assert('the app refreshes the window app-wide, not only on the Plans tab',
+  /needsPlanExtension\(plan\)/.test(appSrc) && /refreshPlanWindow\(plan/.test(appSrc),
+  "Home's today card reads the same window the Plans tab does");
+assert('both refresh callers read the same Portfolio list',
+  /fetchPortfolio as fetchPlanPortfolio/.test(appSrc) && /export async function fetchPortfolio/.test(plansSrc));
+
+assert('the output ceiling leaves room for the reasoning pass', (() => {
+  const m = groqSrc.match(/MAX_OUTPUT_TOKENS_BY_PURPOSE = \{[^}]*masterplan:\s*(\d+)/);
+  return !!m && Number(m[1]) >= 12000;
+})(), 'reasoning tokens are billed against max_tokens, and a truncated response silently falls back');
 
 // The rolling extension must read the Portfolio too, or the plan gets less personal over time.
 assert('the auto-extension reads the Portfolio before generating',
