@@ -1,5 +1,5 @@
 // Password hashing for the custom email/password auth model. Uses Node's built-in
-// scrypt (no native/npm dependency needed — safe for Vercel serverless) rather than
+// scrypt (no native/npm dependency needed — safe for serverless or self-hosted VPS environments) rather than
 // bcrypt. Stored format: scrypt$N$r$p$<saltHex>$<hashHex>.
 import crypto from 'crypto';
 

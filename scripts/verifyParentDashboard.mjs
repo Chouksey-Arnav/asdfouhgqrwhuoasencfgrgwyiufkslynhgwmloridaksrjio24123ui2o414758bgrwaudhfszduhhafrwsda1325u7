@@ -137,6 +137,25 @@ function checkEveryHandlerClassified(files) {
   }
 }
 
+// ── 8. The routes exist in both deployment targets ──────────────────────────
+
+function checkRouting(files) {
+  section('Parent endpoints are reachable in both deployments');
+
+  const server = read('server.js');
+  for (const file of files.filter((f) => f.startsWith('api/parent/'))) {
+    const route = `/${file.replace(/^api\//, 'api/').replace(/\.js$/, '')}`;
+    assert(`${route} is wired into server.js (self-hosted)`, server.includes(`'${route}'`),
+      'The self-hosted Express server routes these, since we migrated off Vercel');
+  }
+
+  // The client must not be able to reach Supabase around the API — the whole authorization story
+  // for this schema is that /api/* holds the service role and RLS denies everyone else.
+  const client = read('src/lib/parentApi.js');
+  assert('the parent client only ever talks to /api/parent/*',
+    !/supabase/i.test(client) && /\/api\/parent/.test(client));
+}
+
 // ── 2. The right guard on the right endpoint ────────────────────────────────
 
 function checkGuardChoice() {
@@ -712,22 +731,6 @@ async function checkClaimFlow() {
 
 // ── 8. The routes exist in both deployment targets ──────────────────────────
 
-function checkRouting(files) {
-  section('Parent endpoints are reachable in both deployments');
-
-  const server = read('server.js');
-  for (const file of files.filter((f) => f.startsWith('api/parent/'))) {
-    const route = `/${file.replace(/^api\//, 'api/').replace(/\.js$/, '')}`;
-    assert(`${route} is wired into server.js (self-hosted)`, server.includes(`'${route}'`),
-      'Vercel routes these by filename; the Express server does not');
-  }
-
-  // The client must not be able to reach Supabase around the API — the whole authorization story
-  // for this schema is that /api/* holds the service role and RLS denies everyone else.
-  const client = read('src/lib/parentApi.js');
-  assert('the parent client only ever talks to /api/parent/*',
-    !/supabase/i.test(client) && /\/api\/parent/.test(client));
-}
 
 /**
  * The ways a parent gets in, and stays in.

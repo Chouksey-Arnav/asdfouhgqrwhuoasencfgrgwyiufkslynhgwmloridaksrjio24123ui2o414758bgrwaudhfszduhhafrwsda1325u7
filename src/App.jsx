@@ -246,7 +246,7 @@ function scrambleQuiz(quiz){
 const fmtT   = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 const scCol  = p => p>=80?C.green:p>=60?C.blue:C.amber;
 const tierC  = t => ({Likely:C.green,Target:C.blue,Reach:C.amber,Stretch:C.rose}[t]||C.t2);
-const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Vercel environment variables.';
+const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Coolify / VPS environment variables.';
 
 // NOTE: a `scoreToSection` helper used to live here, mapping a science-quiz
 // percentage onto a 400-1600 "predicted SAT score". It was removed — see the
@@ -3978,7 +3978,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if (!r.ok) {
       const m = d?.error || '';
       if (r.status === 429) throw new Error(m || 'Rate limit reached. Please wait a moment.');
-      if (r.status === 500 && m.includes('not configured')) throw new Error('Add GROQ_API_KEY to Vercel environment variables.');
+      if (r.status === 500 && m.includes('not configured')) throw new Error('Add GROQ_API_KEY to Coolify / VPS environment variables.');
       if (r.status === 504) throw new Error(m || 'Medabrain took too long to respond. Please try again.');
       throw new Error(m || `Error ${r.status}`);
     }

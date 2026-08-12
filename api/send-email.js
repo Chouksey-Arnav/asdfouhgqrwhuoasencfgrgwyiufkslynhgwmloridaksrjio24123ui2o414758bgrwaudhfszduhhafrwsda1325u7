@@ -1,4 +1,4 @@
-// /api/send-email.js — Vercel serverless function
+// /api/send-email.js — Server function (formerly Vercel serverless, now self-hosted on Coolify / VPS)
 // Sends email via the shared Brevo SMTP transporter (see api/_lib/mailer.js).
 import { sendMail } from './_lib/mailer.js';
 

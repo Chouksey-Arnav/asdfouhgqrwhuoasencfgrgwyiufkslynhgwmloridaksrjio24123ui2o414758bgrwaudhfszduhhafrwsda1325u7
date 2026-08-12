@@ -96,11 +96,11 @@ export const SUBPROCESSORS = [
     link: 'https://supabase.com/privacy',
   },
   {
-    name: 'Vercel',
-    role: 'Application hosting and serverless functions',
-    data: 'Standard server logs, including IP address, user agent, and requested URL. Every request to the service passes through Vercel.',
+    name: 'Coolify / Ubuntu VPS Hosting',
+    role: 'Application hosting and server infrastructure',
+    data: 'Standard server logs, including IP address, user agent, and requested URL. Every request to the service passes through our self-hosted VPS.',
     location: 'United States',
-    link: 'https://vercel.com/legal/privacy-policy',
+    link: 'https://coolify.io/privacy-policy/',
   },
   {
     name: 'Groq',

@@ -35,13 +35,13 @@ VITE_DESMOS_API_KEY=<your key>
 
 Free from <https://www.desmos.com/api>. It is a **build-time** variable — Vite
 inlines `import.meta.env.VITE_*` into the bundle — so it has to be set where the
-build runs (Vercel project settings, or the Coolify build environment), not only
+build runs (the Coolify build environment), not only
 in the runtime environment.
 
 If it is unset, `desmos.js` falls back to `dcb31709b452b1cf9dc26972add0fda6`,
 the demo key Desmos publishes throughout its own documentation. That works for
 development. Ship a real key: the demo key is rate-limited and unsupported, and
-`USING_DEMO_KEY` is exported so the UI can say so.
+`USING_DEMO_KEY` is exported so the UI can say so. (Vercel was previously used during the beta testing stage, but we have fully migrated to Coolify/VPS).
 
 Desmos's terms require loading `calculator.js` from their CDN, so there is no
 bundled/offline build. The SAT tab is otherwise fully offline-capable; the

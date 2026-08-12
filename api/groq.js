@@ -1,4 +1,4 @@
-// /api/groq.js — Vercel serverless function
+// /api/groq.js — Server function (formerly Vercel serverless, now self-hosted on Coolify / VPS)
 // Proxies requests to Groq's OpenAI-compatible API server-side (key never exposed to browser).
 // Powers Medabrain, routing each request to one of three named model tiers (Scout/Guide/Sage — see
 // MODELS below) and, when additional Groq accounts are configured (up to 3 total), spreading/
@@ -519,12 +519,11 @@ export default async function handler(req, res) {
   // platform or a reverse proxy just goes quiet, and the client cannot tell that from a dropped
   // connection.
   //
-  // 52s is the ceiling because it clears the tightest limit any target imposes: a serverless
-  // function cap (vercel.json still declares maxDuration 60 for this file) and the ~60s default
+      // 52s is the ceiling because it clears the tightest limit any target imposes: the ~60s default
   // read timeout common to reverse proxies in front of a self-hosted deploy. Container deploys
   // have no platform cap of their own — there `server.js` runs this handler in a plain Node
   // process — so the limit there is purely our own choice, and GROQ_MASTERPLAN_TIMEOUT_MS can
-  // raise it without a code change if the proxy in front allows more.
+      // raise it without a code change if the proxy in front allows more. (Vercel was used during the beta testing stage).
   const envTimeout = Number(process.env.GROQ_MASTERPLAN_TIMEOUT_MS);
   const masterplanTimeoutMs = Number.isFinite(envTimeout) && envTimeout >= 5000 && envTimeout <= 300000
     ? Math.round(envTimeout) : 52000;

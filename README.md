@@ -106,26 +106,25 @@ MedSchoolPrep utilizes a custom grid layout architecture ('G' and 'RG' component
 
 ## 🌐 Deployments & Environment Routing
 
-The application operates in a unified monorepo supporting two distinct hosting models:
+The application is deployed on a self-hosted Ubuntu Linux VPS server managed via Coolify under the official domain `medschoolprep.cloud`. (Vercel was previously used during the beta testing stage, but we are completely off the Vercel stage now; Vercel CI and monitoring are deprecated and useless).
 
 ```
                   ┌─────────────────────────────────────┐
                   │          MedSchoolPrep Monorepo        │
                   └──────────────────┬──────────────────┘
                                      │
-              ┌──────────────────────┴──────────────────────┐
-              ▼                                             ▼
-┌───────────────────────────┐                 ┌───────────────────────────┐
-│ Vercel (Test Environment) │                 │  Coolify/VPS (Production)  │
-├───────────────────────────┤                 ├───────────────────────────┤
-│ Serverless Function       │                 │ Node/Express Server       │
-│ File-system API Routing   │                 │ `server.js`               │
-│ (`api/**/*.js`)           │                 │ SPA Falling-back + Static │
-└───────────────────────────┘                 └───────────────────────────┘
+                                     ▼
+                      ┌───────────────────────────┐
+                      │  Coolify/VPS (Ubuntu)     │
+                      ├───────────────────────────┤
+                      │ Node/Express Server       │
+                      │ `server.js`               │
+                      │ SPA Falling-back + Static │
+                      └───────────────────────────┘
 ```
 
 > ⚠️ **Developer Constraint:**
-> If you create a new endpoint under `api/`, Vercel exposes it automatically as a serverless route. However, under Coolify/VPS, you **must manually import and mount it in `server.js`**. Otherwise, requests will return `404 Not Found` in production.
+> If you create a new endpoint under `api/`, you **must manually import and mount it in `server.js`**. Otherwise, requests will return `404 Not Found` in production.
 
 ---
 
@@ -374,8 +373,8 @@ This index provides a complete, itemized mapping of **every file in the entire r
 ### Root Configuration and Infrastructure Files
 - `package.json` — Defines project metadata, dependencies (React, Framer Motion, Dexie, ts-fsrs, Nodemailer, Express, compromise, Fuse.js, etc.), and script mappings for building, auditing, and executing the app.
 - `vite.config.js` — Vite bundler configuration. Customizes build outputs, handles fast module reloading, and defines the Service Worker navigation fallback exclusions list.
-- `vercel.json` — Configures rewrite routes, headers, and SPA routing fallback for the Vercel serverless environment.
-- `server.js` — Core Express production backend. Exposes static files, handles fallbacks, and manually imports/mounts Vercel serverless functions in the Coolify/VPS production environment.
+- `vercel.json` — Configures rewrite routes, headers, and SPA routing fallback (retained as a legacy/retired artifact to ensure routing verification compatibility).
+- `server.js` — Core Express production backend. Exposes static files, handles fallbacks, and manually imports/mounts serverless functions in the Coolify/VPS production environment.
 - `Dockerfile` — Configures the containerized build steps and runtime execution for production deployments on VPS.
 - `index.html` — The core SPA entry document. Integrates the asynchronous Google AdSense script inside the `<head>` and mounts the `#root` React component.
 - `possible lawsuits.md` — Documents a complete regulatory compliance, legal, privacy, and trademark risk audit of the repository.
@@ -387,7 +386,7 @@ This index provides a complete, itemized mapping of **every file in the entire r
 ---
 
 ### Backend API Layer (`api/...`)
-These backend endpoints serve both Vercel Serverless and local Express routes.
+These backend endpoints serve both local Express routes and VPS deployments.
 
 #### Auxiliary Library Modules (`api/_lib/...`)
 - `api/_lib/mailer.js` — Configures the Nodemailer SMTP mail transporter using Brevo settings for OTP emails.

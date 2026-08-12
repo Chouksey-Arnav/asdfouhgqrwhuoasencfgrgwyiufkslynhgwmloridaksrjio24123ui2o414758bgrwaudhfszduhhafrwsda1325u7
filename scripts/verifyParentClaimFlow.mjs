@@ -263,7 +263,7 @@ const fakeSupabase = {
   },
 };
 
-// ── A response object shaped like the one Vercel passes in ──────────────────
+// ── A response object shaped like the one standard server frameworks pass in ──────────────────
 function makeRes() {
   const res = {
     statusCode: 200, body: null, headers: {},

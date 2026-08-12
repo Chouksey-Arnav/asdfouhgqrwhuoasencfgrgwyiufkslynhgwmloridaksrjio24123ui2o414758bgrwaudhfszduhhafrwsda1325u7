@@ -203,7 +203,7 @@ As an online learning and college preparation platform targeting minors (aged 13
 * **Legal Analysis:**
   Endpoints that send transactional emails (via SMTP / Brevo) or query paid LLMs (via Groq) lack robust rate-limiting controls. Malicious actors could script requests to these endpoints, causing massive financial bills on transactional email accounts or LLM providers, or rendering the system unavailable (Denial of Service), which would hurt active students trying to prepare for imminent exams.
 * **Actionable Mitigations:**
-  - **Implement Server-Side Rate Limiting:** Apply rate limiters (such as `express-rate-limit` or Vercel edge middleware) on `/api/send-email` and `/api/groq` to restrict users/IPs to a reasonable number of requests per hour.
+  - **Implement Server-Side Rate Limiting:** Apply rate limiters (such as `express-rate-limit` or self-hosted edge middleware) on `/api/send-email` and `/api/groq` to restrict users/IPs to a reasonable number of requests per hour.
   - **Configure Spend Caps:** Enable usage alerts and strict daily spend caps on Brevo, Groq, and Supabase dashboards to contain financial liability.
 
 ---

@@ -1,4 +1,5 @@
 {
+  "comment": "DEPRECATED: Vercel deployment was only for the beta testing stage. We are now deploying on Coolify with self-hosted VPS Ubuntu. This file is retained as a retired artifact solely to prevent routing verification scripts from failing.",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",

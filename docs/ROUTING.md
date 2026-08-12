@@ -38,7 +38,7 @@ and `/legal/*` to `AuthGate`, and everything else to the student router.
 never fight over the URL; `npm run verify:routing` asserts that refusal.
 
 Every path is extension-free. That is load-bearing: anything containing a `.` is
-treated as a file request by the SPA fallback, the Vercel rewrite, and the
+treated as a file request by the SPA fallback, the Vercel rewrite (deprecated), and the
 service worker (see "The sitemap" below).
 
 Aliases resolve but aren't canonical — `/sat` and `/portfolio/` normalize to
@@ -109,10 +109,10 @@ places it could happen. All three are now closed, and
    with a file extension. This is the one that bites humans and not crawlers —
    crawlers never run a service worker — so the file can look broken in your
    browser while being served perfectly.
-2. **The SPA fallback in `server.js`** (production runs Express, not Vercel).
+2. **The SPA fallback in `server.js`** (production runs Express on our self-hosted VPS / Coolify, not Vercel).
    It used to answer *everything* with `index.html`, so a missing file 200'd
    with the landing page rather than 404ing. File requests now 404.
-3. **`vercel.json`'s rewrite**, same fix by the same rule.
+3. **`vercel.json`'s rewrite**, same fix by the same rule (retained purely for backward-compatibility in verification routing scripts).
 
 Serving the file correctly is all this repo can do. Registering it with Google
 is a one-time manual step in Search Console (Sitemaps → submit `sitemap.xml`)

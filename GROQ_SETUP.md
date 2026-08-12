@@ -2,7 +2,7 @@
 
 Medabrain is the AI "head brain" of the app, powered server-side by
 [Groq](https://console.groq.com) (free tier). API keys are never exposed to the browser —
-all requests go through `/api/groq.js`.
+all requests go through `/api/groq.js`. (Vercel was previously used during the beta testing stage, but we are completely off the Vercel stage now; Vercel CI and monitoring are deprecated and useless).
 
 Note: flashcard generation does **not** use Groq (or any hosted model) — it runs
 entirely offline in the browser. See "Flashcard generation" below.
@@ -39,8 +39,7 @@ optional.
 
 ### What to name the environment variables
 
-Create these in Vercel → **Settings → Environment Variables** (or Coolify's Environment tab),
-across **Production, Preview, Development**, then redeploy:
+Create these in Coolify's Environment Variables tab (Vercel is deprecated), then redeploy:
 
 ```
 # Shared Medabrain head pool (required — at least GROQ_API_KEY) + failover
@@ -73,20 +72,17 @@ hit — see "Multiple accounts, maximized usage" below.
 
 ## 2. Add it to your deployment
 
-1. Open your project in the Vercel dashboard (or Coolify's Environment Variables tab for the
-   self-hosted deployment — see the root `README.md` for how the two deployments differ)
-2. Go to **Settings → Environment Variables**
-3. Add:
+1. Open your project in Coolify's Environment Variables tab for the self-hosted Ubuntu Linux VPS deployment.
+2. Add:
    - **Name**: `GROQ_API_KEY`
    - **Value**: your key from step 1
-   - **Environments**: Production, Preview, Development
-4. If a second person made an account (e.g. a friend), also add:
+3. If a second person made an account (e.g. a friend), also add:
    - **Name**: `GROQ_API_KEY_2`
    - **Value**: that account's key
-5. If a third account exists, also add:
+4. If a third account exists, also add:
    - **Name**: `GROQ_API_KEY_3`
    - **Value**: that account's key
-6. Redeploy for the variables to take effect
+5. Redeploy for the variables to take effect in Coolify.
 
 For local development, add the same value(s) to a `.env.local` file at the project root:
 
@@ -164,7 +160,7 @@ check off, and keep extending.
 - **Keeps planning itself.** `needsExtension()`/`extendMasterPlan()` roll the day-by-day window
   forward automatically as the student works through it (triggered client-side when the Plans tab is
   open and the window is running low) — this is the mechanism behind "it keeps extending itself,"
-  not a background server job (there isn't one in this serverless architecture).
+  not a background server job (there isn't one in this self-hosted VPS / Coolify architecture).
 - **One brain, not two features.** `summarizePlanForCoach()` folds today's tasks and this week's
   theme into `buildCoachSystemPrompt()` (`src/lib/studentProfile.js`), so Scout, Guide, and Sage —
   whichever tier answers a given chat message — all know the same plan the Plans tab shows, without

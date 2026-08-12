@@ -36,14 +36,12 @@ The client-side application is engineered as a modern, high-performance Single P
 
 ## ⚙️ 2. Backend Environment & Route Architecture
 
-MedSchoolPrep features a flexible monorepo hosting model designed to run in both test (serverless) and production (self-hosted virtual private server) environments.
+MedSchoolPrep is deployed on a self-hosted Ubuntu Linux VPS environment managed via Coolify, with the official domain `medschoolprep.cloud`. (Vercel was previously used during the beta testing stage, but we are completely off the Vercel stage now; Vercel CI and monitoring are deprecated and useless).
 
-*   **Vercel Serverless Hosting (Test/Stage):**
-    *   Exposes endpoints under `api/` automatically as file-system-routed serverless functions based on `vercel.json` rewrite maps.
-*   **Node.js & Express (Production/VPS):**
-    *   **Runtime:** Node.js (>= v22.0.0)
+*   **Node.js & Express (Production/VPS via Coolify):**
+    *   **Runtime:** Node.js (>= v22.0.0) on Ubuntu Linux
     *   **Server Framework:** Express (v4.22.2)
-    *   **Production Dispatcher (`server.js`):** Acts as the primary backend API dispatcher for self-hosted VPS environments (e.g., Coolify). It manually imports, wraps, and mounts the same API handlers used by Vercel's serverless pipeline to ensure identical runtime performance.
+    *   **Production Dispatcher (`server.js`):** Acts as the primary backend API dispatcher for self-hosted VPS environments (Coolify). It manually imports, wraps, and mounts all API handlers under `api/` to ensure flawless routing and identical runtime performance.
     *   **Single Page Application (SPA) Fallback:** Integrates robust static routing that serves compiled assets from `dist/` and redirects extensionless application paths to `index.html` while correctly returning a `404 Not Found` for missing files (preventing crawler index corruption).
 
 ---

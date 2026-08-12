@@ -1,11 +1,10 @@
 // Node/Express entrypoint for self-hosted deployment (Coolify/VPS).
 //
-// Vercel auto-wires the handler(req, res) modules under /api/** into
-// serverless functions based on file-system routing — that convention only
-// works on Vercel's own build system. This server recreates that routing by
+// Historically Vercel auto-wired the handler(req, res) modules under /api/** into
+// serverless functions based on file-system routing. This server recreates that routing by
 // hand so the exact same handler modules run under plain Node, since their
 // (req, res) shape (res.status().json(), req.body, req.headers) is already
-// Express-compatible.
+// Express-compatible. We are now deploying on Coolify (Ubuntu VPS).
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -63,7 +62,7 @@ app.all('/api/parent/claim', parentClaim);
 app.all('/api/parent/messages', parentMessages);
 app.all('/api/parent/quests', parentQuests);
 
-// The Vercel handler reads the resource name off req.query.resource (from
+// The API handler reads the resource name off req.query.resource (from
 // its [resource].js filename); Express puts route params on req.params, so
 // bridge the two before delegating.
 app.all('/api/data/:resource', (req, res) => {

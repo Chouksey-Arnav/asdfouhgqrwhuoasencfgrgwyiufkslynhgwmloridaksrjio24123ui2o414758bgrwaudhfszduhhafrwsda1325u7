@@ -614,8 +614,8 @@ assert('the endpoint caps the payload', /MAX_BYTES/.test(apiSrc) && /413/.test(a
 assert('the endpoint rejects a plan with no days', /Plan is missing its days/.test(apiSrc));
 assert('an un-migrated deployment degrades instead of erroring', /isMissingSchema/.test(apiSrc));
 
-// The self-hosted Express server recreates Vercel's file-system routing by hand, so a new
-// endpoint that works on Vercel can 404 everywhere else unless it is registered there too.
+// The self-hosted Express server routes all api endpoints, so a new
+// endpoint can 404 everywhere else unless it is registered there too.
 const serverSrc = read('server.js');
 assert('the self-hosted server registers /api/master-plan', /app\.all\('\/api\/master-plan'/.test(serverSrc));
 assert('the body parser is larger than the endpoint\'s own payload cap', (() => {
