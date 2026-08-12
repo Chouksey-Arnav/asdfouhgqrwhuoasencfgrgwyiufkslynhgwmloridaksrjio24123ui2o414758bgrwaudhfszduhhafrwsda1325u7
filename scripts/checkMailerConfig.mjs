@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Sends one real OTP-style email through the configured Brevo/SMTP account(s) and prints exactly
+ * Sends one real OTP-style email through the configured Brevo/SMTP account and prints exactly
  * what the relay said back.
  *
  * ── Why this exists ──────────────────────────────────────────────────────────
@@ -15,7 +15,7 @@
  * send against the account's monthly quota, so it only runs when asked for.
  *
  * Usage:
- *   BREVO_SMTP_USER_1=... BREVO_SMTP_PASS_1=... BREVO_SMTP_FROM_1=... \
+ *   BREVO_SMTP_USER=... BREVO_SMTP_PASS=... BREVO_SMTP_FROM=... \
  *     node scripts/checkMailerConfig.mjs you@example.com
  */
 import { sendOtpEmail } from '../api/_lib/mailer.js';
@@ -36,7 +36,7 @@ try {
   console.log('inbox. Also check:');
   console.log('  - The Brevo dashboard (Transactional → Logs) for this send\'s actual delivery status');
   console.log('    (delivered / soft bounce / hard bounce / blocked).');
-  console.log('  - That BREVO_SMTP_FROM_N is a sender verified in Brevo, ideally on the');
+  console.log('  - That BREVO_SMTP_FROM is a sender verified in Brevo, ideally on the');
   console.log('    medschoolprep.cloud domain with SPF/DKIM configured there, so it survives DMARC');
   console.log('    checks at large receivers like Gmail instead of being silently dropped or');
   console.log('    spam-foldered.');

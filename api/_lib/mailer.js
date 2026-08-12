@@ -2,22 +2,18 @@
 // SMTP relay (smtp-relay.brevo.com). Any standard SMTP provider works too —
 // only the SMTP_* / BREVO_SMTP_* env vars need to change.
 //
-// Supports rotating across multiple Brevo accounts to multiply the combined
-// monthly send quota (each free Brevo account currently caps at 300
-// emails/month). Configure account N via:
-//   BREVO_SMTP_USER_N, BREVO_SMTP_PASS_N, BREVO_SMTP_FROM_N
-// for N = 1, 2, 3, ... (any number of accounts, scanned until one is missing).
-// Host/port are shared across accounts via BREVO_SMTP_HOST / BREVO_SMTP_PORT
-// (defaulting to Brevo's relay), since only the login differs per account.
+// Single Brevo account only (300 emails/day on the free plan). Configure via:
+//   BREVO_SMTP_USER, BREVO_SMTP_PASS, BREVO_SMTP_FROM
+// Host/port default to Brevo's relay via BREVO_SMTP_HOST / BREVO_SMTP_PORT.
 //
-// If no BREVO_SMTP_USER_1 is set, falls back to the legacy single-account
-// SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASS / SMTP_FROM vars.
+// If BREVO_SMTP_USER is not set, falls back to the legacy SMTP_HOST / SMTP_PORT /
+// SMTP_USER / SMTP_PASS / SMTP_FROM vars.
 import nodemailer from 'nodemailer';
 
-let accounts = null;
-let nextIndex = 0;
+let account = null;
+let transporter = null;
 
-// ── Why BREVO_SMTP_FROM_N is required, not optional ──────────────────────────
+// ── Why BREVO_SMTP_FROM is required, not optional ──────────────────────────
 // It used to fall back to the account's SMTP *login* when unset. Brevo SMTP logins are commonly a
 // per-account address that has nothing to do with medschoolprep.cloud (a personal inbox, a
 // generic relay identity picked when the account was created). Sending `MedSchoolPrep
@@ -30,41 +26,32 @@ let nextIndex = 0;
 // missing FROM is now a loud config error instead of a silent delivery failure.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function loadAccounts() {
-  if (accounts) return accounts;
+function loadAccount() {
+  if (account) return account;
 
   const host = process.env.BREVO_SMTP_HOST || process.env.SMTP_HOST || 'smtp-relay.brevo.com';
   const port = Number(process.env.BREVO_SMTP_PORT || process.env.SMTP_PORT || 587);
 
-  const numbered = [];
-  for (let n = 1; ; n++) {
-    const user = process.env[`BREVO_SMTP_USER_${n}`];
-    const pass = process.env[`BREVO_SMTP_PASS_${n}`];
-    if (!user || !pass) break;
-    const from = process.env[`BREVO_SMTP_FROM_${n}`];
-    if (!from || !EMAIL_RE.test(from)) {
+  const { BREVO_SMTP_USER, BREVO_SMTP_PASS, BREVO_SMTP_FROM } = process.env;
+  if (BREVO_SMTP_USER && BREVO_SMTP_PASS) {
+    if (!BREVO_SMTP_FROM || !EMAIL_RE.test(BREVO_SMTP_FROM)) {
       throw new Error(
-        `BREVO_SMTP_FROM_${n} is missing or not a valid email address. It must be a sender ` +
-        `verified in Brevo for account ${n} (Senders, Domains & Dedicated IPs → Senders) so ` +
-        'outgoing mail passes SPF/DKIM/DMARC alignment instead of being silently dropped or ' +
-        'spam-foldered by the recipient after Brevo accepts it.'
+        'BREVO_SMTP_FROM is missing or not a valid email address. It must be a sender verified ' +
+        'in Brevo (Senders, Domains & Dedicated IPs → Senders) so outgoing mail passes ' +
+        'SPF/DKIM/DMARC alignment instead of being silently dropped or spam-foldered by the ' +
+        'recipient after Brevo accepts it.'
       );
     }
-    numbered.push({ user, pass, from, transporter: null });
+    account = { host, port, user: BREVO_SMTP_USER, pass: BREVO_SMTP_PASS, from: BREVO_SMTP_FROM };
+    return account;
   }
 
-  if (numbered.length > 0) {
-    accounts = { host, port, list: numbered };
-    return accounts;
-  }
-
-  // Legacy single-account fallback.
+  // Legacy fallback.
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
   if (!SMTP_HOST || !SMTP_PORT || !SMTP_USER || !SMTP_PASS) {
     throw new Error(
-      'SMTP not configured. Set BREVO_SMTP_USER_1/BREVO_SMTP_PASS_1/BREVO_SMTP_FROM_1 (rotating ' +
-      'accounts) or SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM (single account, Brevo SMTP ' +
-      'credentials).'
+      'SMTP not configured. Set BREVO_SMTP_USER/BREVO_SMTP_PASS/BREVO_SMTP_FROM or ' +
+      'SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS/SMTP_FROM (Brevo SMTP credentials).'
     );
   }
   if (!SMTP_FROM || !EMAIL_RE.test(SMTP_FROM)) {
@@ -74,61 +61,41 @@ function loadAccounts() {
       'spam-foldered by the recipient after Brevo accepts it.'
     );
   }
-  accounts = {
-    host: SMTP_HOST,
-    port: Number(SMTP_PORT),
-    list: [{ user: SMTP_USER, pass: SMTP_PASS, from: SMTP_FROM, transporter: null }],
-  };
-  return accounts;
+  account = { host: SMTP_HOST, port: Number(SMTP_PORT), user: SMTP_USER, pass: SMTP_PASS, from: SMTP_FROM };
+  return account;
 }
 
-function getTransporterFor(account, host, port) {
-  if (!account.transporter) {
-    account.transporter = nodemailer.createTransport({
+function getTransporter() {
+  if (!transporter) {
+    const { host, port, user, pass } = loadAccount();
+    transporter = nodemailer.createTransport({
       host,
       port,
       secure: port === 465,
-      auth: { user: account.user, pass: account.pass },
+      auth: { user, pass },
     });
   }
-  return account.transporter;
+  return transporter;
 }
 
-// Exposed for backward compatibility with any existing callers/tests.
-export function getTransporter() {
-  const { host, port, list } = loadAccounts();
-  return getTransporterFor(list[0], host, port);
-}
+export { getTransporter };
 
 export async function sendMail({ to, subject, html, text }) {
-  const { host, port, list } = loadAccounts();
-
-  // Round-robin starting point: 1st send uses account 1, 2nd uses account 2,
-  // etc., wrapping back to account 1 after the last one.
-  const startIndex = nextIndex % list.length;
-  nextIndex = (nextIndex + 1) % list.length;
-
-  let lastError;
-  for (let attempt = 0; attempt < list.length; attempt++) {
-    const account = list[(startIndex + attempt) % list.length];
-    const transport = getTransporterFor(account, host, port);
-    try {
-      const info = await transport.sendMail({ from: `MedSchoolPrep <${account.from}>`, to, subject, html, text });
-      // The SMTP handshake succeeding is not the same fact as the mailbox receiving the message —
-      // Brevo can accept-then-drop asynchronously (quota, sender hold, recipient-side bounce),
-      // none of which comes back through this call. Logging the relay's own accept response (not
-      // just "no error was thrown") at least lets a deployment's logs distinguish "we handed Brevo
-      // a message under account N" from a request that never got this far, which the previous
-      // silent-on-success code could not do.
-      console.log('mailer: sent', { from: account.from, accepted: info?.accepted, response: info?.response, messageId: info?.messageId });
-      return;
-    } catch (err) {
-      lastError = err;
-      console.error('mailer: send attempt failed', { from: account.from, error: err?.message });
-      // Try the next account in rotation (e.g. this one's monthly quota is exhausted).
-    }
+  const { from } = loadAccount();
+  const transport = getTransporter();
+  try {
+    const info = await transport.sendMail({ from: `MedSchoolPrep <${from}>`, to, subject, html, text });
+    // The SMTP handshake succeeding is not the same fact as the mailbox receiving the message —
+    // Brevo can accept-then-drop asynchronously (quota, sender hold, recipient-side bounce),
+    // none of which comes back through this call. Logging the relay's own accept response (not
+    // just "no error was thrown") at least lets a deployment's logs distinguish "we handed Brevo
+    // a message" from a request that never got this far, which the previous silent-on-success
+    // code could not do.
+    console.log('mailer: sent', { from, accepted: info?.accepted, response: info?.response, messageId: info?.messageId });
+  } catch (err) {
+    console.error('mailer: send failed', { from, error: err?.message });
+    throw err;
   }
-  throw lastError;
 }
 
 const OTP_COPY = {

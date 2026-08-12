@@ -138,9 +138,8 @@ MedSchoolPrep features a completely self-hosted, offline-capable learning loop t
 
 *   **Transporter:** Nodemailer (v9.0.3)
 *   **Mailing Relay Host:** Brevo SMTP (formerly Sendinblue)
-*   **Round-Robin Quota Multiplier:**
-    *   To bypass free-tier monthly volume limitations, the mailer reads a rotated, multi-account cluster configuration.
-    *   Emails are dispatched sequentially across verified Brevo sending accounts (`BREVO_SMTP_USER_1`, `BREVO_SMTP_USER_2`, etc.) to multiply combined delivery capacity.
+*   **Single Account Config:**
+    *   The mailer sends all OTP/transactional email through one verified Brevo account (`BREVO_SMTP_USER` / `BREVO_SMTP_PASS` / `BREVO_SMTP_FROM`), capped at that account's daily send quota (300/day on the free plan).
 
 ---
 
