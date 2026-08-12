@@ -18,10 +18,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, X, CalendarCheck, Users, Trophy } from 'lucide-react';
-import { C, glass, pill, R, tint, btn, btnG, onTint } from '../../lib/theme';
+import { Gift, X, CalendarCheck, Users, Trophy, Route, ChevronRight } from 'lucide-react';
+import { C, glass, glass2, pill, R, tint, btn, btnG, onTint } from '../../lib/theme';
 import Portal from '../ui/Portal';
-import { getQuest, questColor, QUEST_TIERS, QUEST_METRICS } from '../../lib/quests';
+import { getQuest, questColor, QUEST_TIERS, QUEST_METRICS, chainFor, nextInChain, questXP } from '../../lib/quests';
 import { questIcon } from './questIcons';
 
 export default function QuestCompleteOverlay({
@@ -29,6 +29,7 @@ export default function QuestCompleteOverlay({
   ev,               // evaluate() output at the moment it completed
   onClaim,
   onClose,
+  onTakeNext,       // (questId) → Promise — the next rung of this quest's chain
   busy = false,
   reducedMotion = false,
   m = false,
@@ -50,6 +51,13 @@ export default function QuestCompleteOverlay({
   const tier = QUEST_TIERS[quest.tier] || QUEST_TIERS.standard;
   const metric = QUEST_METRICS[ev.spec.metric] || {};
   const days = Math.max(1, Math.round((Date.now() - ev.startedAt) / (24 * 60 * 60 * 1000)));
+  // The road this was a rung of, and what comes after it. This is the single
+  // highest-intent second the quest system ever gets — a student who has just
+  // finished three weeks of work is, for about ten seconds, more willing to
+  // commit to the next three than they will be at any other point. Offering the
+  // next rung here is the difference between a quest system and a quest screen.
+  const chain = chainFor(quest.questId);
+  const next = nextInChain(quest.questId);
 
   return (
     <Portal>
@@ -92,6 +100,7 @@ export default function QuestCompleteOverlay({
 
             <div style={{ fontSize: 10.5, fontWeight: 800, color, letterSpacing: '.14em', textTransform: 'uppercase' }}>
               {tier.label} quest complete
+              {chain && ` · ${chain.label} ${chain.step}/${chain.of}`}
             </div>
             <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: '8px 0 0' }}>
               {quest.title}
@@ -130,6 +139,31 @@ export default function QuestCompleteOverlay({
             <div style={{ fontSize: 10.5, color: C.t3, marginTop: 11 }}>
               Not now? It stays claimable — nothing expires once it is finished.
             </div>
+
+            {/* The next rung. Secondary to the claim button on purpose: taking
+                the reward is the action this screen exists for, and a student
+                who wants to stop here should never have to decline anything. */}
+            {next && onTakeNext && (
+              <div style={{
+                ...glass2({ padding: 13 }), marginTop: 18, textAlign: 'left',
+                border: `1px solid ${tint(chain?.color || color, 0.26)}`,
+                background: tint(chain?.color || color, 0.06),
+              }}>
+                <div style={{ ...R({ gap: 6 }), fontSize: 9.5, fontWeight: 800, color: chain?.color || color, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 6 }}>
+                  <Route size={10} />Next on {chain?.label || 'this road'}
+                </div>
+                <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+                  <div style={{ flex: 1, minWidth: 150 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{next.title}</div>
+                    <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{next.blurb}</div>
+                  </div>
+                  <button
+                    onClick={() => onTakeNext(next.id)} disabled={busy}
+                    style={{ ...btnG({ fontSize: 11.5, padding: '7px 13px' }), flexShrink: 0, opacity: busy ? 0.6 : 1 }}
+                  >Take it on · +{questXP(next)}<ChevronRight size={12} /></button>
+                </div>
+              </div>
+            )}
           </div>
         </motion.div>
       </motion.div>

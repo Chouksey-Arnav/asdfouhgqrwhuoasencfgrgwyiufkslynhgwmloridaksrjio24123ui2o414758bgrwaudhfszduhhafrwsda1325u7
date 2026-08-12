@@ -48,10 +48,13 @@ import { localDateStr } from './dateUtils.js';
 export const STREAK_ACTIONS = {
   lesson_verified:   { credits: 4, label: 'Verify a pathway lesson',       short: 'Lesson verified',   per: 'lesson' },
   lesson_studied:    { credits: 1, label: 'Read + watch a lesson',         short: 'Lesson studied',    per: 'lesson' },
+  unit_verified:     { credits: 4, label: 'Master a pathway unit',         short: 'Unit mastered',     per: 'unit' },
   quiz_completed:    { credits: 2, label: 'Complete a quiz',               short: 'Quiz completed',    per: 'quiz' },
   sat_practice_set:  { credits: 2, label: 'Answer 10 SAT questions',       short: 'SAT practice',      per: '10 questions' },
   sat_full_test:     { credits: 6, label: 'Finish a full-length SAT test', short: 'Full SAT test',     per: 'test' },
   flashcards_batch:  { credits: 1, label: 'Review 10 flashcards',          short: 'Flashcards',        per: '10 cards' },
+  deck_created:      { credits: 1, label: 'Build a flashcard deck',        short: 'Deck built',        per: 'deck' },
+  notes_batch:       { credits: 1, label: 'Highlight 3 passages',          short: 'Notes written',     per: '3 highlights' },
   plan_task:         { credits: 1, label: 'Complete a plan task',          short: 'Plan task',         per: 'task' },
   interview_session: { credits: 2, label: 'Practice a mock interview',     short: 'Mock interview',    per: 'session' },
   portfolio_entry:   { credits: 1, label: 'Log portfolio work',            short: 'Portfolio entry',   per: 'entry' },
@@ -141,15 +144,31 @@ export function targetProgress(streak, target) {
 // more because the thing a 100-day streak most needs is protection from one bad
 // week — and because a student who loses a 100-day streak to a family emergency
 // does not come back.
+// The ladder is deliberately dense at the bottom and sparse at the top. A
+// student in their first fortnight needs a rung every few days, because nothing
+// they have done yet has proved that this app pays out; a student on day 200
+// does not need one at 210, because by then the streak IS the reward and an
+// extra payout every ten days would only cheapen the ones that matter.
+//
+// The first four rungs are inside the first fortnight on purpose: that window is
+// where essentially all streak abandonment happens, and it is the only part of
+// the ladder where the reward schedule is doing any real work.
 export const STREAK_REWARDS = [
-  { days: 3,   xp: 40,   freezes: 0, title: 'Traction',        blurb: 'Three days is where a habit stops being an accident.' },
-  { days: 7,   xp: 120,  freezes: 1, title: 'Week One',        blurb: 'A full week. Plus your first streak freeze.' },
-  { days: 14,  xp: 200,  freezes: 1, title: 'Fortnight',       blurb: 'Two weeks straight — most people never get here.' },
-  { days: 30,  xp: 400,  freezes: 1, title: 'Iron Month',      blurb: 'A month of daily proof that you follow through.' },
-  { days: 50,  xp: 650,  freezes: 1, title: 'Fifty',           blurb: 'Fifty days. This is no longer motivation — it is routine.' },
-  { days: 100, xp: 1200, freezes: 2, title: 'Century',         blurb: 'Triple digits. Genuinely elite consistency.' },
-  { days: 180, xp: 2000, freezes: 2, title: 'Half a Year',     blurb: 'Six months. This is the streak that changes an application.' },
-  { days: 365, xp: 5000, freezes: 2, title: 'The Full Year',   blurb: 'Three hundred and sixty-five days. Almost nobody does this.' },
+  { days: 3,   xp: 40,   freezes: 0, title: 'Traction',       blurb: 'Three days is where a habit stops being an accident.' },
+  { days: 5,   xp: 70,   freezes: 1, title: 'Five Alive',     blurb: 'Five days, and your first streak freeze — one missed day is now survivable.' },
+  { days: 7,   xp: 120,  freezes: 1, title: 'Week One',       blurb: 'A full week. Most people who install a study app never see this screen.' },
+  { days: 10,  xp: 160,  freezes: 0, title: 'Double Digits',  blurb: 'Ten in a row. The part where it starts feeling automatic.' },
+  { days: 14,  xp: 220,  freezes: 1, title: 'Fortnight',      blurb: 'Two weeks straight. You are past the window where streaks die.' },
+  { days: 21,  xp: 300,  freezes: 1, title: 'Three Weeks',    blurb: 'Twenty-one days — the number people quote when they talk about habits.' },
+  { days: 30,  xp: 450,  freezes: 1, title: 'Iron Month',     blurb: 'A month of daily proof that you follow through.' },
+  { days: 50,  xp: 700,  freezes: 1, title: 'Fifty',          blurb: 'Fifty days. This is no longer motivation — it is routine.' },
+  { days: 75,  xp: 950,  freezes: 1, title: 'Seventy-Five',   blurb: 'Most of a school term without missing. That is a real thing to have done.' },
+  { days: 100, xp: 1400, freezes: 2, title: 'Century',        blurb: 'Triple digits. Genuinely elite consistency.' },
+  { days: 150, xp: 1900, freezes: 2, title: 'Hundred & Fifty',blurb: 'Five months. At this point the streak is part of how you describe yourself.' },
+  { days: 180, xp: 2400, freezes: 2, title: 'Half a Year',    blurb: 'Six months. This is the streak that changes an application.' },
+  { days: 270, xp: 3400, freezes: 2, title: 'Three Quarters',  blurb: 'Nine months — a whole academic year of showing up.' },
+  { days: 365, xp: 5000, freezes: 3, title: 'The Full Year',  blurb: 'Three hundred and sixty-five days. Almost nobody does this.' },
+  { days: 500, xp: 7500, freezes: 3, title: 'Five Hundred',   blurb: 'Five hundred days. There is no rung above this one, and there does not need to be.' },
 ];
 
 export const rewardKey = (days) => `milestone:${days}`;
@@ -169,6 +188,372 @@ export function reachedMilestones(streak) {
 /** Rungs reached but not yet claimed, oldest first. */
 export function unclaimedMilestones(streak, claimedKeys) {
   return reachedMilestones(streak).filter(r => !claimedKeys.has(rewardKey(r.days)));
+}
+
+// ── Leagues ──────────────────────────────────────────────────────────────────
+//
+// The rung ladder above pays out at fourteen specific numbers. Between those
+// numbers a streak is just an integer that goes up, which is fine for an adult
+// and not enough for the audience this product is actually for. A LEAGUE is the
+// identity attached to the number: it changes name, colour and shape at seven
+// thresholds, it is drawn everywhere the streak is drawn, and — critically — it
+// carries two things that are not cosmetic:
+//
+//   freezeCap   how many streak freezes you may hold at once
+//   xpBonus     a permanent multiplier on every XP award while you hold it
+//
+// The XP bonus is the point. A student on day 40 earns 12% more from everything
+// they do than a student on day 2, which does two jobs at once: it makes a long
+// streak materially valuable rather than only sentimental, and it makes breaking
+// one cost something concrete instead of only feeling bad. That is loss aversion
+// used honestly — nothing is taken away as a punishment, a benefit simply stops
+// applying, and it comes straight back when the streak does.
+//
+// The bonus tops out at 25%. It is deliberately not larger: past that point a
+// student who breaks a long streak has lost so much earning power that the
+// rational move is to stop caring about XP altogether, which is the exact
+// opposite of what this is for.
+export const STREAK_LEAGUES = [
+  { id: 'spark',     min: 0,   label: 'Spark',      icon: 'Sparkle',    color: '#94a3b8', freezeCap: 1, xpBonus: 0,
+    blurb: 'Every streak starts here. One earned day and you are out of it.' },
+  { id: 'ember',     min: 3,   label: 'Ember',      icon: 'Flame',      color: '#fbbf24', freezeCap: 2, xpBonus: 0.02,
+    blurb: 'Three days. Small, and the hardest three you will do.' },
+  { id: 'kindle',    min: 7,   label: 'Kindle',     icon: 'Flame',      color: '#f59e0b', freezeCap: 2, xpBonus: 0.05,
+    blurb: 'A week. Everything you earn is now worth 5% more.' },
+  { id: 'blaze',     min: 14,  label: 'Blaze',      icon: 'Flame',      color: '#f97316', freezeCap: 3, xpBonus: 0.08,
+    blurb: 'A fortnight. Past the window where nearly every streak dies.' },
+  { id: 'wildfire',  min: 30,  label: 'Wildfire',   icon: 'Zap',        color: '#ef4444', freezeCap: 3, xpBonus: 0.12,
+    blurb: 'A month unbroken. Three freezes held, and 12% on everything.' },
+  { id: 'firestorm', min: 60,  label: 'Firestorm',  icon: 'Wind',       color: '#ec4899', freezeCap: 4, xpBonus: 0.16,
+    blurb: 'Two months. At this point the app is a habit, not a decision.' },
+  { id: 'inferno',   min: 100, label: 'Inferno',    icon: 'Crown',      color: '#a855f7', freezeCap: 5, xpBonus: 0.20,
+    blurb: 'Triple digits. A fifth of everything you earn is the streak paying you.' },
+  { id: 'eternal',   min: 365, label: 'Eternal',    icon: 'Infinity',   color: '#22d3ee', freezeCap: 6, xpBonus: 0.25,
+    blurb: 'A full year. The top of the ladder, and it will not be taken off you lightly.' },
+];
+
+/** The league a streak length sits in. Never null — `spark` covers zero. */
+export function leagueFor(streak) {
+  const n = Math.max(0, Number(streak) || 0);
+  let out = STREAK_LEAGUES[0];
+  for (const l of STREAK_LEAGUES) if (n >= l.min) out = l;
+  return out;
+}
+
+/** The league above the current one, or null at the top. */
+export function nextLeague(streak) {
+  const n = Math.max(0, Number(streak) || 0);
+  return STREAK_LEAGUES.find(l => l.min > n) || null;
+}
+
+/** Progress toward the next league, for the bar under the league badge. */
+export function leagueProgress(streak) {
+  const n = Math.max(0, Number(streak) || 0);
+  const current = leagueFor(n);
+  const next = nextLeague(n);
+  if (!next) return { current, next: null, pct: 100, remaining: 0, promoted: true };
+  const span = Math.max(1, next.min - current.min);
+  return {
+    current,
+    next,
+    remaining: next.min - n,
+    pct: Math.max(0, Math.min(100, Math.round(((n - current.min) / span) * 100))),
+    promoted: false,
+  };
+}
+
+/** How many freezes this streak length allows a student to hold at once. */
+export const freezeCapFor = (streak) => leagueFor(streak).freezeCap;
+
+/**
+ * The multiplier every XP award is scaled by, from the streak alone.
+ *
+ * Applied at the award site (see awardXP in src/lib/rewards.js and its callers),
+ * NOT folded into any base number — so every surface can still show what the
+ * base was worth and what the streak added, which is the only way a bonus is
+ * motivating rather than confusing.
+ */
+export const streakXPMultiplier = (streak) => 1 + leagueFor(streak).xpBonus;
+
+/** "+12%" or null when the league pays nothing. For chips and tooltips. */
+export function streakBonusLabel(streak) {
+  const bonus = leagueFor(streak).xpBonus;
+  return bonus > 0 ? `+${Math.round(bonus * 100)}% XP` : null;
+}
+
+// ── The freeze economy ───────────────────────────────────────────────────────
+//
+// A streak freeze covers exactly one missed day. They were previously earnable
+// only from two achievements and a couple of milestone rungs, capped at two, and
+// spent automatically — which meant the safety net most students needed on the
+// specific Saturday they needed it usually was not there.
+//
+// Three changes, all of them in the direction of "the student can plan":
+//
+//   1. The cap is the LEAGUE's cap, so protecting a long streak is easier than
+//      protecting a new one. That is the right way round: the thing worth
+//      protecting is the thing that took four months to build.
+//   2. Freezes can be BOUGHT with XP. Not with money — this is deliberately not
+//      a monetisation surface, and a paid streak freeze is the single most
+//      cynical mechanic in this category of app. Spending XP is a real cost
+//      against a real budget and keeps the decision meaningful.
+//   3. The price climbs with how many you already hold, so stockpiling is
+//      possible but expensive, and a student cannot simply buy immunity.
+export const FREEZE_BASE_COST = 250;
+export const FREEZE_COST_STEP = 200;
+
+/** What the next freeze costs, given how many are already held. */
+export function freezeCost(held = 0) {
+  return FREEZE_BASE_COST + Math.max(0, held) * FREEZE_COST_STEP;
+}
+
+/**
+ * Can this student buy another freeze right now, and if not, why not?
+ *
+ * Returns a reason string rather than a bare false so the button can explain
+ * itself — a disabled control with no explanation is the most common small
+ * cruelty in an interface like this.
+ */
+export function canBuyFreeze({ streak = 0, held = 0, xp = 0 } = {}) {
+  const cap = freezeCapFor(streak);
+  const cost = freezeCost(held);
+  if (held >= cap) {
+    const next = nextLeague(streak);
+    return {
+      ok: false, cost, cap,
+      reason: next
+        ? `You can hold ${cap} at ${leagueFor(streak).label}. Reach ${next.label} at ${next.min} days to hold ${next.freezeCap}.`
+        : `You can hold ${cap}, which is the maximum.`,
+    };
+  }
+  if (xp < cost) {
+    return { ok: false, cost, cap, reason: `${(cost - xp).toLocaleString()} more XP needed.` };
+  }
+  return { ok: true, cost, cap, reason: `Costs ${cost.toLocaleString()} XP.` };
+}
+
+// ── Streak repair ────────────────────────────────────────────────────────────
+//
+// What happens after a streak actually breaks is the most important unhandled
+// moment in this whole system, and the old answer was nothing: the number went
+// to zero and the student who had a 60-day streak on Friday opened the app on
+// Monday to a 0 and, very reasonably, stopped opening it.
+//
+// A repair buys back a broken run — once, at a real price, and only for a short
+// window afterwards. The design constraints are the ones that keep it from
+// being a cheat code:
+//
+//   · Only within REPAIR_WINDOW_DAYS of the break. A streak you abandoned three
+//     weeks ago is not a streak you are in the middle of.
+//   · Priced against what was lost, so a 4-day streak is cheap to restore and a
+//     200-day streak is a serious XP decision.
+//   · Once per REPAIR_COOLDOWN_DAYS. It is a safety net, not a strategy.
+//   · A repaired day is recorded as REPAIRED, never as earned: it bridges the
+//     streak exactly like a freeze does, and — exactly like a freeze — it can
+//     never complete a Perfect Week or count toward a study-day quest.
+export const REPAIR_WINDOW_DAYS = 3;
+export const REPAIR_COOLDOWN_DAYS = 30;
+export const REPAIR_BASE_COST = 200;
+export const REPAIR_PER_DAY = 25;
+export const REPAIR_MAX_COST = 2500;
+export const repairKey = (date) => `repair:${date}`;
+
+/** What restoring a run of `lostStreak` days costs in XP. */
+export function repairCost(lostStreak = 0) {
+  return Math.min(REPAIR_MAX_COST, REPAIR_BASE_COST + Math.max(0, lostStreak) * REPAIR_PER_DAY);
+}
+
+/**
+ * Is there a broken streak worth offering to repair, and what would it cost?
+ *
+ * Pure: give it the cleared-day set, the bridged set, and when the last repair
+ * was, and it works out the rest. Returns null when there is nothing to offer,
+ * which is the common case and must be cheap.
+ *
+ * @param {Set<string>} metDates
+ * @param {object} opts
+ * @param {Set<string>} opts.bridged     dates already covered by a freeze or a repair
+ * @param {number|null} opts.lastRepairAt epoch ms of the last repair, or null
+ * @param {number} opts.xp               the student's spendable XP
+ * @param {Date}   opts.today
+ */
+export function repairOffer(metDates, { bridged = new Set(), lastRepairAt = null, xp = 0, today = new Date() } = {}) {
+  const cleared = (key) => metDates.has(key) || bridged.has(key);
+  const cursor = new Date(today);
+  cursor.setHours(0, 0, 0, 0);
+
+  // Today and yesterday are both still "open" — a streak is not broken until the
+  // missed day is fully over, which is the same grace computeStreak() gives.
+  if (cleared(localDateStr(cursor))) return null;
+  const yesterday = new Date(cursor); yesterday.setDate(cursor.getDate() - 1);
+  if (cleared(localDateStr(yesterday))) return null;
+
+  // Walk back to the most recent cleared day. The gap between it and today is
+  // what a repair would have to bridge.
+  let gap = 0;
+  const probe = new Date(yesterday);
+  while (gap < REPAIR_WINDOW_DAYS + 1) {
+    if (cleared(localDateStr(probe))) break;
+    gap += 1;
+    probe.setDate(probe.getDate() - 1);
+  }
+  // Nothing cleared within the window at all — this is not a repair, it is a
+  // fresh start, and offering to sell one would be dishonest.
+  if (!cleared(localDateStr(probe))) return null;
+  const missedDays = gap;
+  if (missedDays < 1 || missedDays > REPAIR_WINDOW_DAYS) return null;
+
+  // What the run was worth, counted back from the last cleared day.
+  const lost = computeStreak(metDates, { bridged, today: probe });
+  if (lost < 2) return null; // a one-day streak is not worth buying back
+
+  const cooldownOk = !lastRepairAt
+    || (today.getTime() - lastRepairAt) >= REPAIR_COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+  const cost = repairCost(lost);
+  const dates = [];
+  const fill = new Date(probe);
+  for (let i = 0; i < missedDays; i += 1) {
+    fill.setDate(fill.getDate() + 1);
+    dates.push(localDateStr(fill));
+  }
+
+  return {
+    lost,
+    missedDays,
+    dates,
+    cost,
+    affordable: xp >= cost,
+    cooldownOk,
+    available: cooldownOk && xp >= cost,
+    nextAvailableAt: cooldownOk || !lastRepairAt
+      ? null
+      : lastRepairAt + REPAIR_COOLDOWN_DAYS * 24 * 60 * 60 * 1000,
+    // The sentence the card leads with. Names the number that was lost, because
+    // that number is the entire reason anybody would pay this.
+    headline: `Your ${lost}-day streak broke ${missedDays === 1 ? 'yesterday' : `${missedDays} days ago`}.`,
+  };
+}
+
+// ── Perfect month ────────────────────────────────────────────────────────────
+//
+// The Perfect Week resets every Monday, which keeps a long streak from going
+// flat week to week. The Perfect Month is the same idea one octave down: every
+// elapsed day of a calendar month cleared. It is genuinely hard — a single
+// missed Sunday in week one ends it — so it pays accordingly, and it is checked
+// only against days that have actually happened, so a student on the 8th is
+// still in the running rather than looking at a bar that says 26%.
+export const PERFECT_MONTH_REWARD = { xp: 1200, freezes: 2, title: 'Perfect Month' };
+export const perfectMonthKey = (monthKey) => `month:${monthKey}`;
+
+/** `2026-08` for the month containing `date`. */
+export function monthKeyOf(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
+/**
+ * How the current calendar month is going.
+ *
+ * `bridged` days count for the STREAK but not here, same rule as the Perfect
+ * Week: a month you froze your way through is not a perfect month.
+ */
+export function monthProgress(metDates, { date = new Date(), bridged = new Set() } = {}) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const todayKey = localDateStr(date);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const days = [];
+  let met = 0;
+  let missed = 0;
+  for (let i = 1; i <= daysInMonth; i += 1) {
+    const d = new Date(year, month, i);
+    const key = localDateStr(d);
+    const future = key > todayKey;
+    const isMet = metDates.has(key);
+    if (isMet) met += 1;
+    else if (!future) missed += 1;
+    days.push({ key, date: d, met: isMet, frozen: !isMet && bridged.has(key), future, isToday: key === todayKey });
+  }
+  const elapsed = days.filter(d => !d.future).length;
+  return {
+    monthKey: monthKeyOf(date),
+    label: date.toLocaleDateString(undefined, { month: 'long' }),
+    days, met, elapsed, missed, daysInMonth,
+    remaining: daysInMonth - met,
+    stillPossible: missed === 0,
+    complete: met === daysInMonth,
+    // Measured against elapsed days, not against the whole month — a bar that
+    // reads 26% on the 8th of a perfect month is telling the student they are
+    // failing at something they are currently winning.
+    pct: elapsed ? Math.round((met / elapsed) * 100) : 0,
+  };
+}
+
+// ── XP boosts ────────────────────────────────────────────────────────────────
+//
+// A time-limited multiplier on top of everything else — granted by the check-in
+// calendar's milestone days and by the occasional Clean Sweep. Boosts stack
+// MULTIPLICATIVELY with the league bonus and are deliberately short: the whole
+// value of a boost is that it makes a specific afternoon the right afternoon to
+// study, and a boost that lasts a week does not do that.
+export const BOOST_KINDS = {
+  double: { id: 'double', label: 'Double XP', multiplier: 2,   hours: 6,  color: '#f59e0b', icon: 'Zap',
+    blurb: 'Everything you earn is worth double for the next six hours.' },
+  surge:  { id: 'surge',  label: 'XP Surge',  multiplier: 1.5, hours: 24, color: '#8b5cf6', icon: 'TrendingUp',
+    blurb: 'Half again on everything you earn for a full day.' },
+  triple: { id: 'triple', label: 'Triple XP', multiplier: 3,   hours: 3,  color: '#ef4444', icon: 'Flame',
+    blurb: 'Three times XP for three hours. Use it on something big.' },
+};
+
+export const getBoostKind = (id) => BOOST_KINDS[id] || null;
+
+/** The combined multiplier from a list of live boost rows. */
+export function boostMultiplier(boosts = [], now = Date.now()) {
+  return (boosts || [])
+    .filter(b => b && (b.expiresAt || 0) > now)
+    .reduce((m, b) => m * (BOOST_KINDS[b.kind]?.multiplier || 1), 1);
+}
+
+/** The live boosts, soonest to expire first, with time left attached. */
+export function activeBoosts(boosts = [], now = Date.now()) {
+  return (boosts || [])
+    .filter(b => b && (b.expiresAt || 0) > now)
+    .map(b => ({
+      ...b,
+      def: BOOST_KINDS[b.kind] || BOOST_KINDS.surge,
+      msLeft: b.expiresAt - now,
+      minutesLeft: Math.max(1, Math.round((b.expiresAt - now) / 60000)),
+    }))
+    .sort((a, b) => a.msLeft - b.msLeft);
+}
+
+/** "2h 14m left" — the only format a countdown chip needs. */
+export function boostCountdown(msLeft) {
+  const mins = Math.max(0, Math.round(msLeft / 60000));
+  if (mins < 60) return `${mins}m left`;
+  const h = Math.floor(mins / 60);
+  return `${h}h ${mins % 60}m left`;
+}
+
+/**
+ * The total multiplier in force right now: league × boosts.
+ *
+ * The one function every XP award site should call. Returns the parts as well as
+ * the product, because every surface that shows a bonus has to be able to say
+ * where it came from — "+240 XP" with no explanation is a number a student
+ * assumes is a bug.
+ */
+export function xpMultiplier({ streak = 0, boosts = [], now = Date.now() } = {}) {
+  const league = streakXPMultiplier(streak);
+  const boost = boostMultiplier(boosts, now);
+  const total = league * boost;
+  return {
+    total,
+    league,
+    boost,
+    leagueLabel: streakBonusLabel(streak),
+    boostLabel: boost > 1 ? `×${Number(boost.toFixed(2))} boost` : null,
+    any: total > 1,
+  };
 }
 
 // ── Perfect week ─────────────────────────────────────────────────────────────

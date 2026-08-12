@@ -1,42 +1,63 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Daily check-in — rewards the act of opening the app, before any studying
-// happens. A 7-day escalating cycle, separate from (but coordinated with) the
-// study streak. Skippable without penalty: closing the prompt without
-// claiming does not forfeit the day, avoiding a FOMO-driven dark pattern.
+// The check-in calendar's database half.
+//
+// The table itself, the tiles, and every line of copy live in
+// src/data/checkinCalendar.js with no Dexie import, so the build-time checks can
+// load them under plain Node. This file is everything that has to touch storage:
+// what day the student is on, whether today has been claimed, and the one read
+// that assembles the whole thing for the UI.
+//
+// Everything from the data module is re-exported, so no caller has to know about
+// the split — `import { CHECKIN_DAYS, loadCheckinState } from './dailyCheckin'`
+// works exactly as it reads.
+//
+// See the data module's header for why the cycle is 28 days, why the rewards sit
+// on specific days rather than being smeared across all of them, and why missing
+// a day costs that day's XP and nothing else.
 // ─────────────────────────────────────────────────────────────────────────────
 import * as DB from './db';
 import { localDateStr, localDateStrOffset } from './dateUtils';
+import {
+  CYCLE_LENGTH, GRACE_DAYS, REWARD_KINDS, CHECKIN_DAYS, MILESTONE_DAYS,
+  getCheckinReward, isMilestoneDay, nextMilestone, rewardSummary, buildCycle,
+} from '../data/checkinCalendar.js';
 
-// Day 7 is a mystery chest rather than a flat number — resolved by the caller
-// via RewardChest's own variable pool, this table just marks it as `chest`.
-export const CHECKIN_TABLE = [
-  { day: 1, xp: 10 },
-  { day: 2, xp: 12 },
-  { day: 3, xp: 15 },
-  { day: 4, xp: 18 },
-  { day: 5, xp: 22 },
-  { day: 6, xp: 28 },
-  { day: 7, xp: 40, chest: true },
-];
+export {
+  CYCLE_LENGTH, GRACE_DAYS, REWARD_KINDS, CHECKIN_DAYS, MILESTONE_DAYS,
+  getCheckinReward, isMilestoneDay, nextMilestone, rewardSummary, buildCycle,
+};
 
 function todayStr() {
   return localDateStr();
 }
 
-/** Has today's check-in already been claimed (or skipped)? */
+/** Has today's check-in already been claimed? */
 export async function getTodayCheckinStatus() {
   return DB.getCheckin(todayStr());
 }
 
-/** Which cycle day (1-7) is next, based on yesterday's entry. */
+/**
+ * Which cycle day (1-28) is next.
+ *
+ * Walks back up to GRACE_DAYS looking for the last claimed day. Finding one
+ * continues the cycle from there; finding nothing restarts at day 1. Day 28
+ * wraps to day 1, which is a completed cycle rather than a reset — the caller
+ * can tell the difference by `cycled`.
+ */
 export async function getNextCheckinDay() {
-  const yesterday = localDateStrOffset(-1);
-  const y = await DB.getCheckin(yesterday);
-  if (y && y.day < 7) return y.day + 1;
-  if (y && y.day >= 7) return 1;
-  // No entry yesterday — cycle continues only if a streak freeze covered the
-  // gap (checked by the caller before this runs); otherwise restart at day 1.
-  return 1;
+  for (let back = 1; back <= GRACE_DAYS + 1; back += 1) {
+    const row = await DB.getCheckin(localDateStrOffset(-back));
+    if (!row) continue;
+    const day = Number(row.day) || 0;
+    if (day >= CYCLE_LENGTH) return { day: 1, cycled: true, resumed: false };
+    return { day: day + 1, cycled: false, resumed: back > 1 };
+  }
+  return { day: 1, cycled: false, resumed: false };
+}
+
+/** How many full 28-day cycles this account has finished. */
+export async function getCyclesCompleted() {
+  return DB.countCheckinsOnDay(CYCLE_LENGTH);
 }
 
 /** Records today's check-in. Returns false if today was already claimed
@@ -46,6 +67,52 @@ export async function claimCheckin(day) {
   return DB.recordCheckin(todayStr(), day);
 }
 
-export function getCheckinReward(day) {
-  return CHECKIN_TABLE.find(c => c.day === day) || CHECKIN_TABLE[0];
+/**
+ * Everything the check-in surfaces need, in one read.
+ *
+ * Callers get the calendar, today's row, whether it is still claimable, and the
+ * next milestone — so no surface has to assemble that itself and no two surfaces
+ * can assemble it differently.
+ */
+export async function loadCheckinState() {
+  const [today, next, cyclesDone, everChecked] = await Promise.all([
+    getTodayCheckinStatus(),
+    getNextCheckinDay(),
+    getCyclesCompleted(),
+    DB.hasAnyCheckin(),
+  ]);
+  const day = today ? Number(today.day) : next.day;
+  return {
+    day,
+    reward: getCheckinReward(day),
+    claimedToday: !!today,
+    claimable: !today,
+    cycled: next.cycled,
+    resumed: next.resumed,
+    everChecked,
+    cyclesDone,
+    cycle: buildCycle({ currentDay: day, claimedToday: !!today, cyclesDone }),
+  };
+}
+
+/**
+ * The headline the check-in card leads with.
+ *
+ * Four cases, in the order they matter: today's reward is big and unclaimed,
+ * today is unclaimed, a milestone is close, and everything else.
+ */
+export function checkinHeadline(state) {
+  if (!state) return '';
+  const { day, reward, claimedToday, cycle } = state;
+  if (!claimedToday && isMilestoneDay(day)) {
+    return `Day ${day} — ${rewardSummary(reward)} waiting.`;
+  }
+  if (!claimedToday) return `Day ${day} of ${CYCLE_LENGTH} — claim ${rewardSummary(reward)}.`;
+  const next = cycle?.next;
+  if (next) {
+    return next.inDays === 1
+      ? `Tomorrow is day ${next.day}: ${rewardSummary(next)}.`
+      : `${next.inDays} days to day ${next.day}: ${rewardSummary(next)}.`;
+  }
+  return `Day ${day} claimed. The cycle restarts after day ${CYCLE_LENGTH}.`;
 }
