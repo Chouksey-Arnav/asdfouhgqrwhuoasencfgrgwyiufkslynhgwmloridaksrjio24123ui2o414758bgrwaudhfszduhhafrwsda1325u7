@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { LEGAL_VIEWS, PARENT_HUB_PATH } from '../lib/routes';
 import { LEGAL, TRADEMARK_NOTICE } from '../legal/legalConfig';
+import { FAQS } from '../lib/seoRoutes';
 import { C, tint, accentGrad, onTint } from '../lib/theme';
 import ThemeToggle from './ThemeToggle';
 
@@ -746,15 +747,14 @@ const portfolioTools = () => [
   { color: C.cyan,   lite: C.cyanL,   icon: LineChart,     title: 'Admissions Calculator', desc: 'Where you stand, live' },
 ];
 
-const FAQS = [
-  { q: 'What is MedSchoolPrep?', a: 'A free platform for high schoolers exploring a career in medicine. It combines a pathway diagnostic, verified lessons, spaced-repetition flashcards, an AI study coach, and a full college-application portfolio — everything from "which path fits me" to "what\'s due this week."' },
-  { q: 'How does the pathway diagnostic work?', a: "A short, scored quiz ranks how well you fit all 10 health-career pathways — Physician, Nursing, PA, Pharmacy, Dentistry, and more — instead of assuming you've already decided. You get a top match plus a full breakdown, and you can always explore any of the other nine." },
-  { q: 'Is it really free?', a: 'Yes — no paywall, no premium tier, nothing locked behind a subscription. Every pathway, lesson, flashcard deck, portfolio tool, and AI coach response is free to use, for good. Ads are what pay for it, and because our users are students, they are never personalised: we do not build advertising profiles and nothing you put into the app is used to target them.' },
-  { q: 'What do you do with my data?', a: "We don't sell it and we don't share it for advertising. Your essays, scores, activities, and coach conversations are used to run the features you're using and nothing else — they are never used to train AI models. You can export or delete everything at any time. The Privacy Policy spells all of this out, including every third party that touches your data." },
-  { q: 'What does "verified" mean for a lesson?', a: "Every lesson ends with a real quiz. You need to score 70% or higher for it to count as verified — watching the article or video alone doesn't mark a lesson complete. It's the same bar used for pathway certificates." },
-  { q: 'Do I need to already know I want to be a doctor?', a: 'No — that\'s exactly what the "Exploring" pathway and the diagnostic are for. Plenty of students start here undecided and get matched to nursing, PA, pharmacy, or something they hadn\'t considered.' },
-  { q: 'Does it only cover becoming a physician?', a: 'No. Alongside Physician, there are full lesson tracks, quizzes, and application guidance for Nursing, Physician Assistant, Pharmacy, Dentistry, Biomedical & Clinical Research, Physical & Occupational Therapy, Public Health, and Health Administration.' },
-];
+// FAQS moved to src/lib/seoRoutes.js (imported above).
+//
+// Not for tidiness: these same questions are emitted as FAQPage JSON-LD on this
+// URL by scripts/prerenderSeo.mjs, and Google's structured-data policy requires
+// FAQ markup to match content the visitor can actually see. Two copies of the
+// list is exactly the shape that requirement fails in — one gets edited, the
+// other keeps being served as markup for questions that are no longer on the
+// page. So there is one list, and both renderers read it.
 
 const MARQUEE_ITEMS = ['10 career pathways', '90+ verified lessons', 'Spaced-repetition flashcards', 'Medabrain AI coach', 'College list scored to your stats', 'MMI & CASPer interview prep', 'Free — nothing paywalled'];
 

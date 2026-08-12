@@ -1,39 +1,37 @@
-// Keeps the per-page SEO tags honest now that the app has real URLs.
+// Keeps the per-page SEO tags honest once the app has taken over the address bar.
 //
-// index.html ships one hard-coded canonical (https://medschoolprep.cloud/) because
-// that used to be the only URL in existence. It isn't any more: the address bar now
-// says /portfolio/essays or /login, and leaving a blanket canonical in place would
-// claim every one of those is the landing page.
+// ── What this file is now responsible for, and what it isn't ────────────────
 //
-// The rule is simple and matches robots.txt (both are generated from, or mirror,
-// the same route facts):
+// It used to be the *only* thing standing between this site and a canonical tag
+// that claimed every URL was the landing page — index.html shipped one
+// hard-coded `<link rel="canonical" href="…/">`, and this ran on mount to fix
+// it up. That only ever worked for crawlers that execute JavaScript, which is a
+// minority of them, and it is why an audit found six of seven sitemap URLs
+// declaring themselves duplicates.
 //
-//   • A public, crawlable path (/, /login, /signup) → canonical to itself.
+// That job now belongs to scripts/prerenderSeo.mjs, which bakes the right
+// canonical, title and description into the HTML each URL is *served*. What is
+// left for this module is the half a static file cannot do: the app is a SPA, so
+// after the first navigation the address bar changes without a request, and the
+// head has to follow it. Specifically:
+//
+//   • A public path (/, /login, /parents, /legal/*) → canonical to itself, its
+//     own <title> and description, index/follow.
 //   • Anything behind sign-in → noindex, and canonical back to the landing page.
 //     A crawler that reaches one of these sees the landing page (no session), so
 //     the alternative is a pile of duplicate URLs competing with the real one.
 //
-// Only matters for crawlers that execute JS (Google does) — but it costs one DOM
-// write per navigation and removes the one thing that would actively hurt ranking.
+// The route facts live in ./seoRoutes.js, shared with the sitemap generator, the
+// prerenderer and the build guard, so the served HTML and the client-side
+// correction can no longer say different things about the same URL.
 
 import { normalizePath } from './routes';
+import { ORIGIN, INDEXABLE_PATHS, routeFor, absoluteUrl } from './seoRoutes';
 
-const ORIGIN = 'https://medschoolprep.cloud';
-
-/** Paths a search engine is welcome to index. Mirrors ROUTES in scripts/generateSitemap.mjs. */
-// The legal documents belong here for a reason beyond SEO: "is this service's
-// privacy policy publicly available" is a question regulators, app stores, ad
-// networks, and school districts all ask, and the answer has to be a URL
-// anyone can open — no session, no crawler exception. Noindexing them would
-// undercut the whole point of publishing them.
-//
-// /parents is here for the same class of reason: it is a real public page (AuthGate renders it
-// ahead of its signed-in/signed-out branch), and it is the only page on this site written for
-// someone searching on behalf of a student rather than as one. Noindexing it would leave that
-// search with nothing to find, which is the problem the page was built to solve.
-const INDEXABLE = new Set([
-  '/', '/login', '/signup', '/parents', '/parents/signup', '/legal/terms', '/legal/privacy',
-]);
+/** Fallbacks for the signed-in surfaces, which are noindexed and have no entry. */
+const APP_TITLE = 'MedSchoolPrep — Your Path Into Medicine';
+const APP_DESCRIPTION =
+  'Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, SAT/ACT practice, and a full college application portfolio.';
 
 function upsert(selector, create) {
   let el = document.head.querySelector(selector);
@@ -44,29 +42,49 @@ function upsert(selector, create) {
   return el;
 }
 
+function setMeta(attr, name, content) {
+  const el = upsert(`meta[${attr}="${name}"]`, () => {
+    const meta = document.createElement('meta');
+    meta.setAttribute(attr, name);
+    return meta;
+  });
+  el.setAttribute('content', content);
+}
+
 /**
- * Point the canonical + robots meta at the truth for `pathname`.
+ * Point the canonical, robots directive, title and social tags at the truth for
+ * `pathname`.
  * @param {string} pathname
  */
 export function applySeoMeta(pathname) {
   if (typeof document === 'undefined') return;
   const path = normalizePath(pathname);
-  const indexable = INDEXABLE.has(path);
+  const indexable = INDEXABLE_PATHS.has(path);
+  const route = indexable ? routeFor(path) : null;
+
+  // A noindexed app route canonicalises to the landing page, which is what a
+  // crawler would have been shown at that URL anyway.
+  const url = route ? absoluteUrl(route.path) : `${ORIGIN}/`;
+  const title = route ? route.title : APP_TITLE;
+  const description = route ? route.description : APP_DESCRIPTION;
 
   const canonical = upsert('link[rel="canonical"]', () => {
     const link = document.createElement('link');
     link.setAttribute('rel', 'canonical');
     return link;
   });
-  canonical.setAttribute('href', `${ORIGIN}${indexable && path !== '/' ? path : '/'}`);
+  canonical.setAttribute('href', url);
 
-  const robots = upsert('meta[name="robots"]', () => {
-    const meta = document.createElement('meta');
-    meta.setAttribute('name', 'robots');
-    return meta;
-  });
-  robots.setAttribute('content', indexable ? 'index, follow' : 'noindex, follow');
+  setMeta('name', 'robots', indexable ? 'index, follow' : 'noindex, follow');
+  setMeta('name', 'description', description);
+  setMeta('property', 'og:url', url);
+  setMeta('property', 'og:title', title);
+  setMeta('property', 'og:description', description);
+  setMeta('name', 'twitter:title', title);
+  setMeta('name', 'twitter:description', description);
 
-  const ogUrl = document.head.querySelector('meta[property="og:url"]');
-  if (ogUrl) ogUrl.setAttribute('content', `${ORIGIN}${indexable && path !== '/' ? path : '/'}`);
+  // The title is the one tag here a human notices: it is the browser tab, the
+  // bookmark name and the entry in the back-button's history list. Leaving it on
+  // "Your Path Into Medicine" for every screen made all of them indistinguishable.
+  if (document.title !== title) document.title = title;
 }

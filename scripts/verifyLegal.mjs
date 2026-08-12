@@ -65,8 +65,16 @@ const birthdateStep = read('src/components/onboarding/steps/BirthdateStep.jsx');
 const onboarding = read('src/components/onboarding/Onboarding.jsx');
 const signup = read('src/components/auth/SignupView.jsx');
 const authUi = read('src/components/auth/ui.jsx');
-const seo = read('src/lib/seo.js');
-const sitemap = read('scripts/generateSitemap.mjs');
+// The route table these two checks used to grep — the indexable set in
+// src/lib/seo.js and the ROUTES array in scripts/generateSitemap.mjs — is now
+// one shared table (src/lib/seoRoutes.js) feeding both, plus the prerenderer.
+// So the checks below read the table for intent and the *generated artefacts*
+// for the result, which is strictly stronger than grepping a generator: it
+// catches a sitemap that was never regenerated as well as a route that was
+// deleted.
+const seoRoutes = read('src/lib/seoRoutes.js');
+const sitemapXml = read('public/sitemap.xml');
+const robotsTxt = read('public/robots.txt');
 const authApi = read('src/lib/authApi.js');
 
 // ── 1. The documents are reachable ──────────────────────────────────────────
@@ -82,14 +90,26 @@ check(
   'AuthGate no longer intercepts /legal/*, so the documents are unreachable — a policy behind a login is not notice.',
 );
 check(
-  seo.includes('/legal/terms') && seo.includes('/legal/privacy'),
+  seoRoutes.includes("path: '/legal/terms'") && seoRoutes.includes("path: '/legal/privacy'"),
   'The legal documents are indexable',
-  "src/lib/seo.js no longer marks them indexable, so they would be served noindex — ad networks, app stores and regulators check for a publicly crawlable policy.",
+  'src/lib/seoRoutes.js no longer lists them as public routes, so they would be served noindex — ad networks, app stores and regulators check for a publicly crawlable policy.',
 );
 check(
-  sitemap.includes('/legal/privacy') && sitemap.includes('/legal/terms'),
+  sitemapXml.includes('/legal/privacy') && sitemapXml.includes('/legal/terms') &&
+    robotsTxt.includes('Allow: /legal/terms') && robotsTxt.includes('Allow: /legal/privacy'),
   'The legal documents are in the sitemap and robots.txt',
-  'scripts/generateSitemap.mjs no longer lists them, so robots.txt will not Allow them.',
+  'public/sitemap.xml or public/robots.txt no longer lists them — run `npm run sitemap`.',
+);
+check(
+  // The documents are served as static HTML with their full text in the body
+  // (scripts/prerenderSeo.mjs renders them from src/legal/*.js). This is the
+  // difference between a policy a bot can read and a policy a bot is told about:
+  // ad networks and app-store reviewers routinely fetch the URL without running
+  // JavaScript, and until this existed they got an empty <div id="root">.
+  read('scripts/prerenderSeo.mjs').includes('TERMS_DOC') &&
+    read('scripts/prerenderSeo.mjs').includes('PRIVACY_DOC'),
+  'The legal documents are readable without JavaScript',
+  'scripts/prerenderSeo.mjs no longer renders the document bodies into the served HTML, so a crawler that does not execute JavaScript sees an empty page where the policy should be.',
 );
 
 // ── 2. Consent is actually collected ────────────────────────────────────────

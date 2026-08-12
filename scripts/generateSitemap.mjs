@@ -1,34 +1,36 @@
 #!/usr/bin/env node
 /**
- * Generates public/sitemap.xml AND public/robots.txt from one route table, at build
- * time (`npm run build` runs `npm run sitemap` first).
+ * Generates public/sitemap.xml AND public/robots.txt from the shared route table
+ * in src/lib/seoRoutes.js, at build time (`npm run build` runs `npm run sitemap`
+ * first).
  *
- * Why a generator instead of two hand-written files: they have to agree with each
- * other and with the app's real routes, and hand-edited copies drift. Here the
- * Sitemap: line in robots.txt is emitted from the same ORIGIN constant the <loc>s
- * are, and `lastmod` — the one sitemap field worth getting right, since Google uses
- * it to decide whether a re-crawl is worth its time — comes from the newest git
- * commit touching the files that actually render each route.
+ * Why a generator instead of two hand-written files: they have to agree with
+ * each other, with the app's real routes, with the canonical URL each page
+ * serves, and with the noindex logic in src/lib/seo.js — and hand-edited copies
+ * drift. They used to drift in exactly the way that matters: the sitemap listed
+ * seven URLs and all seven served `<link rel="canonical" href="…/">`, so six of
+ * them were, as far as any crawler could tell, duplicates of the seventh.
  *
- * ── Which URLs belong in here ─────────────────────────────────────────────────
+ * So the route facts moved to src/lib/seoRoutes.js, which is now the single
+ * source for all four consumers:
  *
- * The app now has real client-side routes (/sat/practice, /portfolio/essays, …) —
- * see src/lib/routes.js. They are still NOT sitemap material, and adding them
- * would make the sitemap worse, not better:
+ *   • this file            → sitemap.xml + robots.txt
+ *   • scripts/prerenderSeo → the static HTML each URL is served, canonical
+ *                            included
+ *   • src/lib/seo.js       → the client-side canonical/robots for JS crawlers
+ *   • scripts/verifySeo    → the build guard that fails if the above disagree
  *
- *   Everything behind those URLs is gated on sign-in. A crawler fetching
- *   /portfolio/essays gets index.html (vercel.json rewrites all app paths to it),
- *   the app finds no session, and it renders the landing page. Listing them would
- *   hand Google a dozen URLs that all resolve to the same page — textbook
- *   duplicate content, and it burns crawl budget that should go to the real one.
+ * `lastmod` — the one sitemap field worth getting right, since Google uses it to
+ * decide whether a re-crawl is worth its time — is computed here, from the
+ * newest git commit touching the files that actually render each route.
  *
- * So the sitemap lists exactly the URLs a signed-out visitor can actually reach a
- * distinct page at: the landing page and the two account screens. The app routes
- * are handled the honest way instead — Disallow-ed in the robots.txt emitted
- * below, and marked noindex client-side (see applySeoMeta in src/lib/seo.js).
+ * ── Which URLs belong in the table ────────────────────────────────────────────
  *
- * When a genuinely public, crawlable page lands (a blog, public scholarship pages),
- * add it to ROUTES and it flows into both files on the next build.
+ * See the header of src/lib/seoRoutes.js. Short version: only URLs where a
+ * signed-out visitor reaches a distinct page. The app's client-side routes
+ * (/sat/practice, /portfolio/essays, …) all render the landing page to a visitor
+ * with no session, so listing them would hand Google a dozen URLs resolving to
+ * the same page. They are Disallow-ed below and noindexed client-side instead.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -36,96 +38,9 @@ import { writeFileSync, existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
+import { PUBLIC_ROUTES, DISALLOW, ORIGIN, absoluteUrl } from '../src/lib/seoRoutes.js';
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-
-/** Production origin. No trailing slash. */
-const ORIGIN = process.env.SITE_ORIGIN || 'https://medschoolprep.cloud';
-
-/**
- * @typedef {Object} Route
- * @property {string} loc        Path, rooted (must start with '/').
- * @property {string} changefreq Crawl hint: how often the content really moves.
- * @property {string} priority   Relative to this site only — not a global rank.
- * @property {string[]} sources  Files whose last commit date becomes <lastmod>.
- */
-/** @type {Route[]} */
-const ROUTES = [
-  {
-    loc: '/',
-    changefreq: 'weekly',
-    priority: '1.0',
-    sources: [
-      'index.html',
-      'src/components/LandingPage.jsx',
-      'src/components/AuthGate.jsx',
-    ],
-  },
-  // The two account screens are addressable in their own right (src/lib/routes.js
-  // AUTH_VIEWS) and render real, distinct UI to a signed-out visitor, so they are
-  // legitimately crawlable — just far less important than the landing page.
-  {
-    loc: '/signup',
-    changefreq: 'monthly',
-    priority: '0.5',
-    sources: ['src/components/auth/SignupView.jsx', 'src/components/auth/AuthShell.jsx'],
-  },
-  {
-    loc: '/login',
-    changefreq: 'monthly',
-    priority: '0.3',
-    sources: ['src/components/auth/LoginView.jsx', 'src/components/auth/AuthShell.jsx'],
-  },
-  // The legal documents are public by design (src/lib/routes.js LEGAL_VIEWS —
-  // AuthGate renders them ahead of its signed-in/signed-out branch). They are
-  // listed here because "where is your privacy policy" needs an answer that is
-  // a plain, crawlable URL: ad networks, app stores, school districts and
-  // regulators all check, and several of them check with a bot. `lastmod`
-  // tracks the content modules rather than the renderer, so editing a clause
-  // moves the date and re-rendering the page does not.
-  // The parent page. Public in the same sense the legal documents are (AuthGate renders it ahead
-  // of the signed-in/signed-out branch), and the one page on this site whose whole job is to be
-  // found by someone who is not the student — a parent searching "medschoolprep parent dashboard"
-  // has, until now, had nothing to land on. Priority above the account screens for that reason.
-  {
-    loc: '/parents',
-    changefreq: 'monthly',
-    priority: '0.7',
-    sources: ['src/components/parent/ParentsLanding.jsx', 'src/components/parent/ParentApp.jsx'],
-  },
-  {
-    loc: '/parents/signup',
-    changefreq: 'monthly',
-    priority: '0.4',
-    sources: ['src/components/auth/SignupView.jsx', 'src/components/parent/ParentSetup.jsx'],
-  },
-  {
-    loc: '/legal/terms',
-    changefreq: 'yearly',
-    priority: '0.3',
-    sources: ['src/legal/terms.js', 'src/legal/legalConfig.js'],
-  },
-  {
-    loc: '/legal/privacy',
-    changefreq: 'yearly',
-    priority: '0.4',
-    sources: ['src/legal/privacy.js', 'src/legal/legalConfig.js'],
-  },
-];
-
-/**
- * Path prefixes that exist, work, and must not be indexed: every one of them is
- * behind sign-in, and a crawler that follows one just gets the landing page again.
- * Kept as prefixes (not the full route list) so new sub-tabs are covered the day
- * they ship without anyone remembering to come back here.
- */
-// /home is here now that the dashboard has a URL of its own (see HOME_PATH in src/lib/routes.js)
-// — it is as gated as any other tab, and a crawler that followed it would get the landing page.
-// /family is the parent application, gated the same way.
-//
-// /parents is deliberately NOT disallowed: it is a real public page, listed in ROUTES above, and
-// the Allow lines are emitted from those routes. The prefix rules below never touch it because
-// none of them is a prefix of it.
-const DISALLOW = ['/api/', '/home', '/sat', '/prep', '/portfolio', '/plans', '/progress', '/settings', '/family'];
 
 /** Newest commit date across `files`, as YYYY-MM-DD. Null if git can't say. */
 function gitLastModified(files) {
@@ -164,12 +79,12 @@ function xmlEscape(s) {
 
 function buildSitemap(routes) {
   const entries = routes.map((route) => {
-    if (!route.loc.startsWith('/')) {
-      throw new Error(`Route loc must start with '/': ${route.loc}`);
+    if (!route.path.startsWith('/')) {
+      throw new Error(`Route path must start with '/': ${route.path}`);
     }
     const lastmod = gitLastModified(route.sources);
     const lines = [
-      `    <loc>${xmlEscape(ORIGIN + route.loc)}</loc>`,
+      `    <loc>${xmlEscape(absoluteUrl(route.path))}</loc>`,
       lastmod ? `    <lastmod>${lastmod}</lastmod>` : null,
       `    <changefreq>${route.changefreq}</changefreq>`,
       `    <priority>${route.priority}</priority>`,
@@ -193,16 +108,21 @@ function buildRobots(routes) {
   return [
     '# MedSchoolPrep — ' + ORIGIN,
     '#',
-    '# Generated by scripts/generateSitemap.mjs — edit that, not this file.',
+    '# Generated by scripts/generateSitemap.mjs from src/lib/seoRoutes.js —',
+    '# edit the route table there, not this file.',
     '#',
-    '# The crawlable surface is the landing page plus the two account screens (see',
-    '# sitemap.xml). Everything else is a signed-in app route: it renders the landing',
-    '# page to a crawler because there is no session, so indexing it would just create',
-    '# duplicates of the URL we actually want ranked.',
+    '# The crawlable surface is the landing page, the two account screens, the',
+    '# parent pages and the two legal documents. Each of those is served its own',
+    '# prerendered HTML with its own canonical (scripts/prerenderSeo.mjs).',
+    '#',
+    '# Everything Disallow-ed below is either an API path or a signed-in app',
+    '# route: it renders the landing page to a crawler because there is no',
+    '# session, so indexing it would just create duplicates of the URL we',
+    '# actually want ranked.',
     '',
     'User-agent: *',
     'Allow: /$',
-    ...routes.filter((r) => r.loc !== '/').map((r) => `Allow: ${r.loc}`),
+    ...routes.filter((r) => r.path !== '/').map((r) => `Allow: ${r.path}`),
     ...DISALLOW.map((prefix) => `Disallow: ${prefix}`),
     '',
     `Sitemap: ${ORIGIN}/sitemap.xml`,
@@ -212,20 +132,20 @@ function buildRobots(routes) {
 
 const sitemapPath = path.join(ROOT, 'public', 'sitemap.xml');
 const robotsPath = path.join(ROOT, 'public', 'robots.txt');
-const xml = buildSitemap(ROUTES);
+const xml = buildSitemap(PUBLIC_ROUTES);
 writeFileSync(sitemapPath, xml, 'utf8');
-writeFileSync(robotsPath, buildRobots(ROUTES), 'utf8');
+writeFileSync(robotsPath, buildRobots(PUBLIC_ROUTES), 'utf8');
 
 // A sitemap that got written but is malformed is worse than none — search engines
 // drop the whole file. Cheap sanity check rather than a real XML parser: every
 // route made it in, and the document is closed.
-for (const route of ROUTES) {
-  if (!xml.includes(`<loc>${ORIGIN}${route.loc === '/' ? '/' : route.loc}</loc>`)) {
-    throw new Error(`sitemap: route ${route.loc} did not make it into the output`);
+for (const route of PUBLIC_ROUTES) {
+  if (!xml.includes(`<loc>${absoluteUrl(route.path)}</loc>`)) {
+    throw new Error(`sitemap: route ${route.path} did not make it into the output`);
   }
 }
 if (!xml.trimEnd().endsWith('</urlset>')) throw new Error('sitemap: output is truncated');
 
 console.log(
-  `sitemap: wrote ${path.relative(ROOT, sitemapPath)} + ${path.relative(ROOT, robotsPath)} — ${ROUTES.length} URL${ROUTES.length === 1 ? '' : 's'} at ${ORIGIN}`,
+  `sitemap: wrote ${path.relative(ROOT, sitemapPath)} + ${path.relative(ROOT, robotsPath)} — ${PUBLIC_ROUTES.length} URL${PUBLIC_ROUTES.length === 1 ? '' : 's'} at ${ORIGIN}`,
 );

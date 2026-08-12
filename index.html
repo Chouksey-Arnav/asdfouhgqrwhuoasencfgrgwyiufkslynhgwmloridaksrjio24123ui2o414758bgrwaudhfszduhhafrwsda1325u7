@@ -3,7 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-    <meta name="description" content="A personalized path into medicine for high schoolers — a pathway diagnostic, SAT/ACT prep, spaced-repetition flashcards, an AI study coach, and a full application portfolio in one place." />
+    <!--
+      Kept under 155 characters on purpose: past that, search engines truncate
+      the snippet mid-sentence. The old one was 249. This tag and the six others
+      below are the *fallback* values — scripts/prerenderSeo.mjs overwrites each
+      of them per URL at build time, and scripts/verifySeo.mjs fails the build if
+      any page's replacement is missing or over length. Keep this file's copy in
+      step with the '/' entry in src/lib/seoRoutes.js.
+    -->
+    <meta name="description" content="Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, SAT/ACT practice, and a full college application portfolio." />
+    <meta name="robots" content="index, follow" />
     <!-- Matches BALANCED.bg (the default palette) so the mobile browser chrome
          and the iOS status bar don't frame the app in a different colour. -->
     <meta name="theme-color" content="#181d27" />
@@ -16,9 +25,16 @@
     <title>MedSchoolPrep — Your Path Into Medicine</title>
 
     <!--
-      Canonical is pinned to the production origin on purpose: the same build
-      also serves the preview domain, and without this both would be indexable
-      as duplicates of the one URL in /sitemap.xml.
+      The canonical is absolute, and pinned to the production origin, because the
+      same build also serves a preview domain — without this both would be
+      indexable as duplicates of the one URL in /sitemap.xml.
+
+      This value is the landing page's, and it is also the *fallback*: it used to
+      be the canonical every URL on the site shipped, which told crawlers that
+      /login, /parents and /legal/privacy were all copies of "/". Each public URL
+      is now served its own prerendered HTML with its own canonical
+      (scripts/prerenderSeo.mjs), and src/lib/seo.js rewrites this tag on every
+      client-side navigation after that.
     -->
     <link rel="canonical" href="https://medschoolprep.cloud/" />
 
@@ -30,6 +46,22 @@
     <!-- CDN preconnects -->
     <link rel="preconnect" href="https://img.youtube.com" crossorigin />
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
+    <!--
+      Ahrefs Web Analytics.
+
+      Cookieless and privacy-first by design: it stores nothing on the device,
+      builds no cross-site profile, and collects no personal information — which
+      is why it is the analytics that can sit on a site whose users are minors
+      without contradicting src/legal/privacy.js. It is loaded `async` and
+      `defer`-equivalent, so it never blocks first paint.
+
+      The data-key identifies the Ahrefs project (Site Audit / Web Analytics for
+      medschoolprep.cloud). If Web Analytics ever reports "not installed" after a
+      deploy, check this string character-for-character against the value in
+      Ahrefs → Project settings → Web Analytics before looking anywhere else.
+    -->
+    <script src="https://analytics.ahrefs.com/analytics.js" data-key="TUdzrzI5M3543r3VCv9fDQ" async></script>
 
     <!--
       Google AdSense, tagged for child-directed treatment.
@@ -85,10 +117,65 @@
     <meta property="og:image:alt" content="The MedSchoolPrep logo" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="MedSchoolPrep — Your Path Into Medicine" />
+    <meta name="twitter:description" content="Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, SAT/ACT practice, and a full college application portfolio." />
     <meta name="twitter:image" content="https://medschoolprep.cloud/icon-512.png" />
+
+    <!--
+      Styling for the pre-JavaScript shell in <body> below.
+
+      Inline, and in the head, because it has to be in effect for the very first
+      paint — the whole point of the shell is that something readable is on
+      screen before /src/main.jsx has even been fetched. A stylesheet link would
+      be a second round trip and would sometimes lose the race.
+
+      Colours are the dark palette's literals rather than tokens: src/index.css
+      and the theme system are inside the JS bundle, and by the time either is
+      available this element is already gone. They match theme-color above so
+      the shell, the browser chrome and the app that replaces it are one surface.
+    -->
+    <style>
+      .seo-shell {
+        max-width: 44rem;
+        margin: 0 auto;
+        padding: 2rem 1.25rem 4rem;
+        font-family: Onest, system-ui, -apple-system, "Segoe UI", sans-serif;
+        color: #b7bec9;
+        line-height: 1.65;
+        font-size: 1rem;
+      }
+      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #f2f5f9; line-height: 1.2; letter-spacing: -0.02em; }
+      .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; }
+      .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; }
+      .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; }
+      .seo-shell a { color: #7aa2ff; }
+      .seo-shell .seo-shell-lead { font-size: 1.1rem; color: #d3dae3; }
+      .seo-shell ul, .seo-shell ol, .seo-shell dl { padding-left: 1.2rem; }
+      .seo-shell li, .seo-shell dd { margin: 0.4rem 0; }
+      .seo-shell dt { color: #f2f5f9; font-weight: 600; margin-top: 1rem; }
+      .seo-shell dd { margin-left: 0; }
+      .seo-shell-nav ul, .seo-shell-crumbs ol {
+        list-style: none; padding: 0; margin: 0 0 0.5rem;
+        display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.9rem;
+      }
+      .seo-shell-note { border-left: 3px solid #3a4353; padding-left: 0.9rem; margin: 1rem 0; color: #d3dae3; }
+      .seo-shell-cta { margin-top: 2.5rem; font-weight: 600; }
+      .seo-shell footer { margin-top: 3rem; border-top: 1px solid #262d3a; padding-top: 1rem; font-size: 0.85rem; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      #seo-shell is the anchor scripts/prerenderSeo.mjs replaces, per URL, with
+      that page's real <h1>, body copy and internal links. It ships empty here so
+      that `npm run dev` is unaffected; in dist/ it always has content.
+
+      It lives inside #root deliberately: src/main.jsx removes it immediately
+      before React's first render, so there is exactly one moment where either
+      the shell or the app is on screen and never both. Anyone who arrives
+      before the bundle does — a crawler that doesn't run JS, a phone on a bad
+      connection, a reader with JS disabled — gets the page as plain HTML
+      instead of a blank screen.
+    -->
+    <div id="root"><div id="seo-shell"></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
