@@ -66,7 +66,7 @@ export const SUBVIEWS = {
   progress: {
     state: 'progressView',
     default: 'overview',
-    ids: ['overview', 'verified', 'performance', 'achievements'],
+    ids: ['overview', 'streak', 'verified', 'performance', 'achievements'],
   },
   // Settings was one seven-group scroll with no addressable parts, which made every instruction
   // that ended "…in Settings" a hunt: the Plans lock screen, the parent invitation email, the

@@ -5,7 +5,7 @@
   "description": "A personalized path into medicine for high schoolers \u2014 pathway diagnostic, SAT/ACT prep, and application portfolio",
   "scripts": {
     "dev": "vite",
-    "build": "npm run sitemap && npm run verify:legal && npm run verify:routing && npm run verify:nav && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:contrast && npm run verify:lesson-delivery && npm run verify:master-plan && npm run verify:parent && npm run verify:parent-claim && npm run verify:family-messages && npm run verify:pathway && npm run verify:parallel-pathways && vite build",
+    "build": "npm run sitemap && npm run verify:legal && npm run verify:routing && npm run verify:nav && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:contrast && npm run verify:lesson-delivery && npm run verify:master-plan && npm run verify:parent && npm run verify:parent-claim && npm run verify:family-messages && npm run verify:pathway && npm run verify:parallel-pathways && npm run verify:streak && vite build",
     "sitemap": "node scripts/generateSitemap.mjs",
     "icons": "node scripts/renderIcons.mjs",
     "preview": "vite preview",
@@ -22,7 +22,7 @@
     "verify:nav": "node scripts/verifyNavUnlocks.mjs",
     "verify:contrast": "node scripts/verifyPaletteContrast.mjs",
     "verify:routing-e2e": "node scripts/verifyRoutingE2E.mjs",
-    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run audit:sat-videos && npm run audit:sat-resources && npm run verify:sat-scoring && npm run verify:sat-forms && npm run verify:sat-baseline && npm run verify:tracking && npm run verify:legal && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:routing && npm run verify:nav && npm run verify:contrast && npm run verify:lesson-delivery && npm run verify:master-plan && npm run verify:parent && npm run verify:parent-claim && npm run verify:family-messages && npm run verify:pathway && npm run verify:parallel-pathways",
+    "audit:all": "npm run audit:lessons && npm run audit:videos && npm run audit:sat && npm run audit:sat-videos && npm run audit:sat-resources && npm run verify:sat-scoring && npm run verify:sat-forms && npm run verify:sat-baseline && npm run verify:tracking && npm run verify:legal && npm run verify:goals && npm run verify:opportunities && npm run verify:timeline && npm run verify:resume && npm run verify:routing && npm run verify:nav && npm run verify:contrast && npm run verify:lesson-delivery && npm run verify:master-plan && npm run verify:parent && npm run verify:parent-claim && npm run verify:family-messages && npm run verify:pathway && npm run verify:parallel-pathways && npm run verify:streak",
     "verify:sat-tab": "node scripts/verifySatTab.mjs",
     "verify:sat-tools": "node scripts/verifySatDesmos.mjs",
     "verify:sat-generation": "node scripts/verifySatGeneration.mjs",
@@ -44,6 +44,7 @@
     "verify:family-messages": "node scripts/verifyFamilyMessages.mjs",
     "verify:pathway": "node scripts/verifyPathwayEngagement.mjs",
     "verify:parallel-pathways": "node scripts/verifyParallelPathways.mjs",
+    "verify:streak": "node scripts/verifyStreak.mjs",
     "verify:parallel-pathways-e2e": "node scripts/verifyParallelPathwaysE2E.mjs"
   },
   "dependencies": {

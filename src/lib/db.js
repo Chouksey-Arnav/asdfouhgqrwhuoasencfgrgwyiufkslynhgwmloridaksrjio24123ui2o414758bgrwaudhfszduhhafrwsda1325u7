@@ -6,6 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import Dexie from 'dexie';
 import { localDateStr } from './dateUtils';
+import { computeStreak } from './streak';
 
 const db = new Dexie('MedSchoolPrep');
 
@@ -234,6 +235,36 @@ db.version(16).stores({
   lessonProgress: 'lessonId, updatedAt',
 });
 
+// v17: the earned streak.
+//
+// `dayActivity` — one row per local calendar day, holding the CREDITS earned that day and the
+// per-action counts behind them (see src/lib/streak.js for the weights). This is what replaces
+// "the app was opened today" as the definition of a study day. `met` is stored rather than
+// recomputed on read because the goal it was measured against can change: a student who cleared
+// a Steady day and then raises their goal to Intense has not retroactively failed last Tuesday,
+// so `goalCredits` is stamped onto the row at the time it was met and never re-evaluated.
+//
+// `studyDays` is still written (by recordStreakActivity, only once a day is actually cleared)
+// so the existing heatmap, parent digest and comeback nudge keep working unchanged — it is now
+// a derived index of "days that cleared", not an independent record of app opens.
+//
+// `streakRewards` — the permanent claim ledger for milestone and perfect-week rewards, keyed
+// `milestone:30` / `week:2026-W33`. Permanent is the point: a broken-and-rebuilt streak passing
+// day 30 again does not pay out twice, and a device that syncs late cannot double-claim.
+db.version(17).stores({
+  dayActivity:   'date, met',
+  streakRewards: 'key, claimedAt',
+}).upgrade(async (tx) => {
+  // Every day a pre-v17 student already had on the calendar becomes a cleared day. They earned
+  // those under the old rules, and the one thing a streak system must never do on upgrade is
+  // tell a student with a 90-day streak that it is now zero.
+  const legacy = await tx.table('studyDays').toArray();
+  if (!legacy.length) return;
+  await tx.table('dayActivity').bulkPut(legacy.map(({ date }) => ({
+    date, credits: 0, counts: {}, goalCredits: 0, met: 1, metAt: null, legacy: 1,
+  })));
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -390,37 +421,105 @@ export async function unlockAchievement(key) {
 }
 
 // ── Streak / Study Days ────────────────────────────────────────────────────────
-export async function recordStudyToday() {
-  const today = localDateStr();
-  try { await db.studyDays.add({ date: today }); pushDirty(); } catch { /* already exists */ }
-}
-export async function getStreak() {
-  const days = await db.studyDays.orderBy('date').reverse().toArray();
-  if (!days.length) return 0;
-  const freezes = await db.streakFreezes.toArray();
-  const bridgedDates = new Set(freezes.filter(f => f.usedOn).map(f => f.usedOn));
-  let streak = 0;
-  let check = new Date();
-  check.setHours(0,0,0,0);
-  for (const { date } of days) {
-    const d = new Date(date);
-    d.setHours(0,0,0,0);
-    const diff = Math.round((check - d) / 86400000);
-    if (diff === 0 || diff === 1) {
-      streak++;
-      check = d;
-    } else if (diff === 2) {
-      // Exactly one full day was missed — bridge it only if a streak freeze
-      // was already spent to cover that specific date (see
-      // checkAndApplyStreakFreeze, called once per app load).
-      const missed = new Date(check);
-      missed.setDate(missed.getDate() - 1);
-      const missedKey = localDateStr(missed);
-      if (bridgedDates.has(missedKey)) { streak++; check = d; }
-      else break;
-    } else break;
+//
+// A day is a study day when the student EARNED it — see the header of
+// src/lib/streak.js for why this is not "the app was opened today" any more.
+// Nothing in this section is called on app load; every entry point below is
+// reached from a real, completed piece of work.
+
+/**
+ * Credits `action` (a key of STREAK_ACTIONS) against today, and clears the day
+ * if that pushes it past `goalCredits`.
+ *
+ * Returns everything the caller needs to decide whether to celebrate, without a
+ * second read: `{ date, credits, goalCredits, met, justMet, added }`. `justMet`
+ * is true ONLY on the transition — the call that crossed the line — so the
+ * lesson-complete overlay can show "streak extended" exactly once rather than
+ * on every subsequent action that day.
+ *
+ * Idempotency is the caller's job (a lesson can only be verified once, a quiz
+ * score is only saved once), which is deliberate: re-crediting is a real bug at
+ * the call site, and silently swallowing it here would hide it.
+ */
+export async function recordStreakActivity(action, { credits, goalCredits, times = 1 } = {}) {
+  const date = localDateStr();
+  const add = Math.max(0, credits ?? 0);
+  const target = Math.max(1, goalCredits || 1);
+  const existing = await db.dayActivity.get(date);
+  const prevCredits = existing?.credits || 0;
+  const wasMet = !!existing?.met;
+  const nextCredits = prevCredits + add;
+  // A day already cleared keeps the goal it was cleared against (see the v17
+  // schema note) — raising the daily goal must not un-clear a finished day.
+  const met = wasMet || nextCredits >= target;
+  const counts = { ...(existing?.counts || {}) };
+  if (action) counts[action] = (counts[action] || 0) + Math.max(1, times);
+  // The goal this day is judged against. For a day already cleared it is the goal it
+  // was cleared against, NOT the current one — otherwise raising the daily goal
+  // mid-day makes a finished day start reading as unfinished again everywhere it is
+  // reported, including the overlay the student is looking at right now.
+  const effectiveGoal = wasMet ? (existing.goalCredits || target) : target;
+  await db.dayActivity.put({
+    date,
+    credits: nextCredits,
+    counts,
+    goalCredits: effectiveGoal,
+    met: met ? 1 : 0,
+    metAt: wasMet ? existing.metAt : (met ? Date.now() : null),
+  });
+  // `studyDays` is now the derived index of cleared days — written here and
+  // nowhere else, so the heatmap, the parent digest and the comeback nudge all
+  // describe earned days without any of them needing to know how earning works.
+  if (met && !wasMet) {
+    try { await db.studyDays.add({ date }); } catch { /* already present */ }
   }
-  return streak;
+  pushDirty();
+  return { date, credits: nextCredits, goalCredits: effectiveGoal, met, justMet: met && !wasMet, added: add };
+}
+
+/** Today's row, or a zeroed stand-in so callers never branch on null. */
+export async function getDayActivity(date = localDateStr()) {
+  const row = await db.dayActivity.get(date);
+  return row || { date, credits: 0, counts: {}, goalCredits: 0, met: 0, metAt: null };
+}
+
+/** Every day row, newest last. The calendar and the streak math both read this. */
+export async function getAllDayActivity() {
+  return db.dayActivity.orderBy('date').toArray();
+}
+
+/** Set of YYYY-MM-DD keys that cleared their goal. */
+export async function getMetDays() {
+  const rows = await db.dayActivity.where('met').equals(1).toArray();
+  return new Set(rows.map(r => r.date));
+}
+
+/** Dates a spent streak freeze is covering. */
+export async function getBridgedDates() {
+  const freezes = await db.streakFreezes.toArray();
+  return new Set(freezes.filter(f => f.usedOn).map(f => f.usedOn));
+}
+
+export async function getStreak() {
+  const [metDates, bridged] = await Promise.all([getMetDays(), getBridgedDates()]);
+  return computeStreak(metDates, { bridged });
+}
+
+// ── Streak reward claims ──────────────────────────────────────────────────────
+// Permanent and once-only. `key` is `milestone:<days>` or `week:<isoWeekKey>`.
+export async function getClaimedStreakRewards() {
+  const rows = await db.streakRewards.toArray();
+  return new Set(rows.map(r => r.key));
+}
+/** Returns true only for the claim that actually landed — false if already held. */
+export async function claimStreakReward(key, meta = {}) {
+  try {
+    await db.streakRewards.add({ key, claimedAt: Date.now(), ...meta });
+    pushDirty();
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ── Streak Freezes ────────────────────────────────────────────────────────────
@@ -749,6 +848,7 @@ export async function buildSyncSnapshot() {
     pathwayGoals, coachThreads, coachMessages,
     satAttempts, satResponses, satSkillStats, satReviewLog,
     lessonNotes, lessonHighlights, lessonFeedback, lessonProgress,
+    dayActivity, streakRewards,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -760,6 +860,7 @@ export async function buildSyncSnapshot() {
     db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
     db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
+    db.dayActivity.toArray(), db.streakRewards.toArray(),
   ]);
 
   // SAT attempts travel keyed by `startedAt` rather than by Dexie's autoincrement
@@ -801,6 +902,17 @@ export async function buildSyncSnapshot() {
     catPerf: catPerf.map(({ category, total, count }) => ({ category, total, count })),
     achievements: achievements.map(({ key, unlockedAt }) => ({ key, unlockedAt })),
     studyDays: studyDays.map(d => d.date),
+    // The earned-streak ledger. Credits are additive across devices on merge
+    // (see applyRemoteSnapshot) because a lesson done on the laptop and a quiz
+    // done on the phone are two real pieces of work on the same day — the
+    // Math.max treatment used for the approximate review heatmap would throw
+    // one of them away and could leave a genuinely cleared day showing as
+    // missed.
+    dayActivity: dayActivity.map(({ date, credits, counts, goalCredits, met, metAt, legacy }) => ({
+      date, credits: credits || 0, counts: counts || {}, goalCredits: goalCredits || 0,
+      met: met ? 1 : 0, metAt: metAt || null, legacy: legacy ? 1 : 0,
+    })),
+    streakRewards: streakRewards.map(({ key, claimedAt }) => ({ key, claimedAt })),
     reviewCountsByDate,
     streakFreezes: streakFreezes.map(({ earnedAt, usedOn }) => ({ earnedAt, usedOn: usedOn || null })),
     checkins: checkins.map(({ date, day }) => ({ date, day })),
@@ -890,6 +1002,7 @@ export async function applyRemoteSnapshot(remote) {
     localPathwayGoals, localCoachThreads, localCoachMessages,
     localSatAttempts, localSatSkillStats, localSatReviewLog,
     localLessonNotes, localLessonHighlights, localLessonFeedback, localLessonProgress,
+    localDayActivity, localStreakRewards,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -900,6 +1013,7 @@ export async function applyRemoteSnapshot(remote) {
     db.satAttempts.toArray(), db.satSkillStats.toArray(), db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
     db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
+    db.dayActivity.toArray(), db.streakRewards.toArray(),
   ]);
 
   // ── profile / XP ──
@@ -983,10 +1097,51 @@ export async function applyRemoteSnapshot(remote) {
   await db.achievements.clear();
   if (achMap.size) await db.achievements.bulkPut([...achMap.values()]);
 
-  // ── streak calendar ──
-  const dayKeys = new Set([...localStudyDays.map(r => r.date), ...(remote.studyDays || [])]);
+  // ── earned-streak day ledger ──
+  // Credits ADD across devices (a lesson on the laptop + a quiz on the phone is
+  // one real day's work), per-action counts add the same way, and `met` is
+  // sticky: a day either device considered cleared stays cleared, since both
+  // are reporting work that genuinely happened.
+  const dayMap = new Map(localDayActivity.map(r => [r.date, { ...r }]));
+  for (const r of (remote.dayActivity || [])) {
+    const l = dayMap.get(r.date);
+    if (!l) { dayMap.set(r.date, { ...r, met: r.met ? 1 : 0 }); continue; }
+    const counts = { ...(l.counts || {}) };
+    for (const [k, n] of Object.entries(r.counts || {})) counts[k] = (counts[k] || 0) + n;
+    const metAts = [l.metAt, r.metAt].filter(Boolean).sort((a, b) => a - b);
+    dayMap.set(r.date, {
+      date: r.date,
+      // Legacy (pre-v17) rows carry credits: 0 with met: 1 — adding them is a
+      // no-op, which is the correct outcome: they record that a day happened,
+      // not how much was done in it.
+      credits: (l.credits || 0) + (r.credits || 0),
+      counts,
+      goalCredits: Math.max(l.goalCredits || 0, r.goalCredits || 0),
+      met: (l.met || r.met) ? 1 : 0,
+      metAt: metAts[0] || null,
+      legacy: (l.legacy || r.legacy) ? 1 : 0,
+    });
+  }
+  await db.dayActivity.clear();
+  if (dayMap.size) await db.dayActivity.bulkPut([...dayMap.values()]);
+
+  // ── streak calendar ── (derived: exactly the cleared days, from either side)
+  const dayKeys = new Set([
+    ...localStudyDays.map(r => r.date),
+    ...(remote.studyDays || []),
+    ...[...dayMap.values()].filter(r => r.met).map(r => r.date),
+  ]);
   await db.studyDays.clear();
   if (dayKeys.size) await db.studyDays.bulkPut([...dayKeys].map(date => ({ date })));
+
+  // ── streak reward claims (permanent, earliest claim wins) ──
+  const rewardMap = new Map(localStreakRewards.map(r => [r.key, r]));
+  for (const r of (remote.streakRewards || [])) {
+    const l = rewardMap.get(r.key);
+    if (!l || r.claimedAt < l.claimedAt) rewardMap.set(r.key, { key: r.key, claimedAt: r.claimedAt });
+  }
+  await db.streakRewards.clear();
+  if (rewardMap.size) await db.streakRewards.bulkPut([...rewardMap.values()]);
 
   // ── review counts -> synthetic per-day cardReviews rows (see buildSyncSnapshot comment) ──
   // Intentionally still Math.max-per-day, not additive: this only feeds the streak heatmap's
@@ -1614,5 +1769,6 @@ export async function clearAllData() {
     // next would inherit the previous account's sync baseline (corrupting its own delta math from
     // its very first push) and any of its still-queued reward claims.
     db.syncBaseline.clear(), db.rewardClaimQueue.clear(),
+    db.dayActivity.clear(), db.streakRewards.clear(),
   ]);
 }

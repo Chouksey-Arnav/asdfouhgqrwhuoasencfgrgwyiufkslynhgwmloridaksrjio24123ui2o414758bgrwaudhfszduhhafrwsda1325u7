@@ -61,7 +61,7 @@ Admissions milestones, resumes, activities, and college selection dashboard. Fea
 Generates structured day-by-day and week-by-week study master roadmaps utilizing the high-reasoning **Oracle** model. Supports manual adjustments and accessibility-friendly animations (supporting `reducedMotion` state forwarding).
 
 ### 6. Progress Tab (`/progress/...`)
-The analytics and gamification reporting dashboard. Visualizes lesson completion percentages, quiz histories, achievements earned, daily activity heatmaps, and total acquired XP.
+The analytics and gamification reporting dashboard. Visualizes lesson completion percentages, quiz histories, achievements earned, daily activity heatmaps, and total acquired XP. Also home to **Streak** (`/progress/streak`) — the streak calendar, the student's two streak goals, and the reward ladder (see below).
 
 ### 7. Settings Tab (`/settings`)
 Customizes UI configuration, account profile settings, dark/light theme options, accessibility controls (reduced motion, high-contrast ratios), speech synthesis voices, and reviews user subscription statuses.
@@ -79,6 +79,25 @@ Medabrain operates on a purpose-scoped API key pool to maximize rate limit headr
 
 ### Gamification Engine (`src/lib/gamification.js` & `rewards.js`)
 Calculates and awards XP, tracks streaks, issues achievements, and logs study events. Completing an E-Library study notes milestone awards +15 XP. Unlocking a milestone, verifying a unit, or logging daily check-ins is managed via a transactional, server-synchronized reward queue (`rewardClaimQueue.js`) to prevent double-claiming or progress loss.
+
+### The Earned Streak (`src/lib/streak.js`)
+A streak here is a record of **work done**, not of app opens. Nothing on the app-load path records a study day; a day is earned only once finished work clears the student's own daily goal, measured in *credits*:
+
+| Action | Credits | Per |
+| :--- | :--- | :--- |
+| Verify a pathway lesson | 4 | lesson |
+| Complete a quiz | 2 | quiz |
+| Finish a full-length SAT test | 6 | test |
+| Answer 10 SAT questions | 2 | 10 questions |
+| Practice a mock interview | 2 | session |
+| Read + watch a lesson · 10 flashcards · plan task · portfolio entry | 1 | each |
+
+The default **Steady** goal is 4 credits, tuned so the two most common honest sessions clear it exactly: *one verified lesson*, or *two quizzes*. Students can pick Light (2), Steady (4), Serious (8) or Intense (12), and separately set a **streak target** (7 → 365 days) that every streak progress bar in the app measures against. Raising the daily goal never un-earns a day already finished.
+
+- **Rewards** — eight milestone rungs (3, 7, 14, 30, 50, 100, 180, 365 days) paying deterministic XP plus streak-freeze tokens, and a weekly **Perfect Week** (all seven days of one Monday–Sunday week earned; a freeze does not buy one). Claims live in a permanent, once-ever ledger (`streakRewards`), so a rebuilt streak passing a rung again pays nothing and a late-syncing second device cannot double-claim.
+- **Where it shows up** — a Home card (today's status, the week strip, next reward), a one-line encouragement strip inside the pathway, the streak calendar and settings in Progress → Streak, a pointer from Settings → Profile & Goals, and Medabrain's system prompt (which is told whether *today* is cleared, not just how long the streak is).
+- **The lesson-complete takeover** (`src/components/streak/LessonCompleteOverlay.jsx`) — verifying a lesson opens a full-screen, two-page moment: page one fills the XP bar from the old level position to the new one; page two shows the streak, the week, the streak goal and how close the Perfect Week reward is, and hands the student straight into the next lesson.
+- Guarded by `npm run verify:streak`, which fails the build if anything on the load path starts stamping study days again, if the credit weights drift out of line with the copy printed on the goal picker, or if the ledger stops travelling between devices.
 
 ### Responsive Grid ('RG') and Media Layout Framework
 MedSchoolPrep utilizes a custom grid layout architecture ('G' and 'RG' components) supporting automated column-stacking flags (`m` flags) on mobile screens. Video overlays utilize a specific mobile-responsive `VideoModal` capping max width at 1000px while defaulting to 95% width on small viewports.
@@ -255,6 +274,7 @@ npm run audit:all
 | `npm run verify:tracking` | Event Tracking | Asserts that data tracking (saving opportunities, colleges, essays) is completely lossless, deduped, and idempotent. |
 | `npm run verify:timeline` | Milestones Engine | Validates date calculations and academic-year rollovers for freshman-to-senior grade-gated milestones. |
 | `npm run verify:routing` | Router Integrity | Confirms that routes round-trip perfectly and align with App subnav views. |
+| `npm run verify:streak` | Earned Streak | Asserts the streak is earned rather than attended, that one lesson or two quizzes clears the default day, that a freeze bridges a streak but never buys a Perfect Week, and that reward rungs pay once and only what they advertised. |
 | `npm run verify:routing-e2e`| Playwright Browser | Launches Playwright to perform end-to-end clicks, back/forward history actions, and sitemap exclusions in a headless browser. |
 
 ---

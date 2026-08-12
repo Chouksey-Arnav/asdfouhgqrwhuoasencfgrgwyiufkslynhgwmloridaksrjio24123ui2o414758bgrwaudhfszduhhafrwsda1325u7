@@ -135,7 +135,7 @@ export default function SatReviewLogPanel({
     }
     await finish(retrySession.attemptId, responses);
     setRetrySession(null);
-    onSessionComplete?.('sat_review');
+    onSessionComplete?.('sat_review', { questions: responses.length });
     reload();
   }
 

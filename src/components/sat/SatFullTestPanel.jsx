@@ -205,7 +205,7 @@ export default function SatFullTestPanel({
     });
     setReport({ scored, responsesByStage, allResponses });
     setState(null);
-    onSessionComplete?.('sat_test');
+    onSessionComplete?.('sat_test', { questions: allResponses.length });
     reload();
   }
 
