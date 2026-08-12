@@ -97,7 +97,10 @@ const STUDENT_ONLY = [
 const PARENT_ONLY = ['api/parent/summary.js', 'api/parent/profile.js'];
 
 /** Handlers legitimately used by both roles — profile, export, deletion, the link itself. */
-const EITHER_ROLE = ['api/auth/me.js', 'api/auth/account.js', 'api/parent/links.js', 'api/parent/accept.js', 'api/parent/messages.js'];
+// `quests.js` is here rather than under PARENT_ONLY because a student reads and updates their own
+// board through it constantly — it is only the ASSIGN path that is a parent operation, and that
+// branch re-reads the link per request exactly as summary.js does. See its header.
+const EITHER_ROLE = ['api/auth/me.js', 'api/auth/account.js', 'api/parent/links.js', 'api/parent/accept.js', 'api/parent/messages.js', 'api/parent/quests.js'];
 
 const GUARDS = ['requireStudent', 'requireParent', 'requireUser'];
 

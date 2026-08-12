@@ -505,6 +505,40 @@ export async function getStreak() {
   return computeStreak(metDates, { bridged });
 }
 
+// ── Quest evidence ────────────────────────────────────────────────────────────
+/**
+ * Every local record a quest can be measured against, in one read.
+ *
+ * The quest engine (src/lib/quests.js) is pure and takes a flat list of dated events; this is the
+ * one function that goes and gets the raw material for it. Deliberately a single call rather than
+ * eight scattered ones in App.jsx: a quest's progress must be computed from ONE consistent view of
+ * the database, or a card reviewed between two of those reads lands in one surface's number and
+ * not another's.
+ *
+ * Nothing here is quest-specific storage. Every table read is one the app already maintains for
+ * its own reasons — which is the property that keeps quest progress and the rest of the product's
+ * numbers from drifting apart. `since` bounds the read to the oldest running quest's start; a
+ * student with two years of card reviews should not load all of them to render a 14-day quest.
+ */
+export async function getQuestEvidence({ since = 0 } = {}) {
+  const [lessons, quizScores, cardReviews, satAttempts, satResponses, satReviewLog, dayActivity] =
+    await Promise.all([
+      db.lessons.toArray(),
+      db.quizScores.toArray(),
+      since > 0 ? db.cardReviews.where('reviewedAt').aboveOrEqual(since).toArray() : db.cardReviews.toArray(),
+      db.satAttempts.toArray(),
+      since > 0 ? db.satResponses.where('answeredAt').aboveOrEqual(since).toArray() : db.satResponses.toArray(),
+      db.satReviewLog.toArray(),
+      db.dayActivity.toArray(),
+    ]);
+  return {
+    lessons, quizScores, cardReviews, satAttempts, satResponses,
+    // The engine looks for `clearedAt`/`resolvedAt`; resolveSatReviewEntry writes the latter.
+    satReviewLog: satReviewLog.filter(r => r.resolved),
+    dayActivity,
+  };
+}
+
 // ── Streak reward claims ──────────────────────────────────────────────────────
 // Permanent and once-only. `key` is `milestone:<days>` or `week:<isoWeekKey>`.
 export async function getClaimedStreakRewards() {

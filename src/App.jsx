@@ -23,7 +23,7 @@ import {
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
   Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones, Users,
-  Shuffle, Flag,
+  Shuffle, Flag, Swords, Gift,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
 } from 'lucide-react';
@@ -55,7 +55,7 @@ import { listItems, createItem, migrateLocalPortfolioLogs } from './lib/dataApi'
 import { trackItem, installTrackQueueLifecycle } from './lib/trackQueue';
 import { claimReward as claimRewardXP, installRewardClaimQueueLifecycle } from './lib/rewardClaimQueue';
 import { usePendingTrackKeys } from './lib/useTrackQueue';
-import { trackedKeySet } from './lib/trackingCatalog';
+import { trackedKeySet, isCatalogSourced } from './lib/trackingCatalog';
 import { scheduleCard, getDueCards, sortForStudy, nextReviewLabel, getRetainability, STATE_LABELS } from './lib/fsrs';
 import { buildQuizSearch, buildLibrarySearch, buildDeckSearch, searchDecks, fuseSearch } from './lib/search';
 import { play, setSFX, isSFXEnabled } from './lib/sounds';
@@ -86,6 +86,19 @@ import StreakPanel from './components/streak/StreakPanel';
 import StreakHomeCard from './components/streak/StreakHomeCard';
 import PathwayStreakStrip from './components/streak/PathwayStreakStrip';
 import LessonCompleteOverlay from './components/streak/LessonCompleteOverlay';
+// ── Quests ──────────────────────────────────────────────────────────────────
+// The long-horizon commitment layer (src/data/questCatalog.js + src/lib/quests.js). Deliberately
+// threaded through five surfaces rather than parked in one tab: a quest that is only visible on
+// the screen you go to when you remember quests exist is a quest that gets forgotten in week two.
+import QuestBoard from './components/quests/QuestBoard';
+import QuestHomeCard from './components/quests/QuestHomeCard';
+import QuestStrip from './components/quests/QuestStrip';
+import QuestCompleteOverlay from './components/quests/QuestCompleteOverlay';
+import * as QuestAPI from './lib/questApi';
+import {
+  buildQuestEvents, evaluateAll as evaluateQuests,
+  summarize as summarizeQuests, TERMINAL_STATUSES as QUEST_TERMINAL,
+} from './lib/quests';
 import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
@@ -465,6 +478,11 @@ const PROGRESS_SUBNAV = [
   // opens to ask how they are doing, Home is a one-decision dashboard, and
   // Settings is where records go to be forgotten. See StreakPanel.jsx's header.
   {id:'streak',ic:Flame,label:'Streak',color:C.amber},
+  // Quests sits directly after Streak, and is likewise never gated. The two are the
+  // same kind of object — a live commitment with a deadline on it — and separating
+  // them by three retrospective views would put the only two forward-facing screens
+  // in this tab at opposite ends of it.
+  {id:'quests',ic:Swords,label:'Quests',color:C.violet},
   {id:'verified',ic:ShieldCheck,label:'Verified Progress',color:C.green},
   {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
   {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
@@ -1522,6 +1540,22 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [mmiCasperCount, setMmiCasperCount] = useState(0);
   const [weekCardReviews, setWeekCardReviews] = useState(0);
   const [questTick, setQuestTick] = useState(0);
+  // ── Long-horizon quests ────────────────────────────────────────────────────
+  // `questRows` is the server's list (every status, so the board can show history); `questEvents`
+  // is this device's evidence, rebuilt from Dexie whenever something a quest could measure
+  // happens. Progress itself is never stored in React — it is DERIVED from those two by the
+  // engine, for the same reason the streak derives today's status rather than storing it: one
+  // source, no chance of two surfaces disagreeing about the same bar.
+  const [questRows, setQuestRows] = useState([]);
+  const [questEvents, setQuestEvents] = useState([]);
+  const [questsAvailable, setQuestsAvailable] = useState(true);
+  const [questsLoading, setQuestsLoading] = useState(true);
+  const [questBusyId, setQuestBusyId] = useState(null);
+  const [questError, setQuestError] = useState(null);
+  // The completion takeover, and the set of quest row ids already celebrated this session so a
+  // re-render (or a second progress report) cannot fire it twice.
+  const [questCelebration, setQuestCelebration] = useState(null);
+  const celebratedQuests = useRef(new Set());
   const [pathwayGoal, setPathwayGoalState] = useState(null); // { pathwayKey, startedAt, targetWeeks } | null
 
   // ── UI state ────────────────────────────────────────────────────────────────
@@ -3585,6 +3619,218 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     };
   },[user,refreshStreakState,syncUserFromDb]);
 
+  // ══ QUESTS ═════════════════════════════════════════════════════════════════
+  //
+  // The whole lifecycle lives in this block, in the order it runs:
+  //
+  //   load        pull the student's rows from the server (every status)
+  //   derive      rebuild this device's evidence from Dexie
+  //   evaluate    run the pure engine over the two → what every surface renders
+  //   report      push the derived numbers back so the parent's board agrees
+  //   celebrate   the takeover, once, the moment one completes
+  //   claim       the reward, through the same idempotent path everything else uses
+  //
+  // Progress is never stored in React state. It is recomputed from `questRows` +
+  // `questEvents` on every render by the memo below, which is what makes the Home card,
+  // four strips, and the board structurally incapable of showing different numbers.
+
+  const loadQuests = useCallback(async ()=>{
+    const { quests, available } = await QuestAPI.list();
+    setQuestRows(quests);
+    setQuestsAvailable(available);
+    setQuestsLoading(false);
+    return quests;
+  },[]);
+
+  /**
+   * Rebuild the evidence list from Dexie.
+   *
+   * Bounded to the oldest running quest's start — a student two years in should not read a
+   * hundred thousand card reviews to render a fortnight-long quest. When nothing is running
+   * there is nothing to measure, so the read is skipped entirely.
+   */
+  const refreshQuestEvents = useCallback(async (rows)=>{
+    const live=(rows||[]).filter(q=>!QUEST_TERMINAL.has(q.status));
+    if(!live.length){ setQuestEvents([]); return []; }
+    const since=Math.min(...live.map(q=>q.startedAt||Date.now()));
+    try{
+      const evidence=await DB.getQuestEvidence({since});
+      const events=buildQuestEvents({
+        ...evidence,
+        // The portfolio rows live behind the API rather than in Dexie, so they come from the
+        // snapshot the Portfolio tab already fetches. Absent (student has not opened Portfolio
+        // this session) simply means those metrics do not move yet — they catch up the moment
+        // the tab is visited, and no quest ever loses credit, because this is recomputed from
+        // scratch every time rather than accumulated.
+        portfolio:{
+          activities:portSnapshot?.activities||portActivities,
+          research:portSnapshot?.research||[],
+          skills:portSnapshot?.skills||[],
+          clinical:portSnapshot?.clinical||clinicalHoursEntries,
+          essays:portSnapshot?.essays||[],
+          // "Tracked" means a row that came out of the curated Opportunities/Scholarships
+          // catalogs, which is exactly what isCatalogSourced() already answers for the Tracked
+          // board (src/lib/trackingCatalog.js). Reusing that predicate rather than inventing a
+          // flag is what keeps the quest and the Tracked tab counting the same rows — an
+          // activity the student typed in themselves is portfolio work, not a program they found.
+          tracked:[...(portSnapshot?.activities||[]),...(portSnapshot?.scholarships||portScholarships||[])]
+            .filter(r=>isCatalogSourced(r?.notes)||isCatalogSourced(r?.description)),
+        },
+      });
+      setQuestEvents(events);
+      return events;
+    }catch(e){ console.error('quest evidence',e); return []; }
+  },[portSnapshot,portActivities,clinicalHoursEntries,portScholarships]);
+
+  // First load, once the database is open and we know who this is.
+  useEffect(()=>{
+    if(!dbReady||!user)return;
+    let cancelled=false;
+    (async()=>{
+      const rows=await loadQuests();
+      if(!cancelled) await refreshQuestEvents(rows);
+    })();
+    return ()=>{ cancelled=true; };
+  },[dbReady,user?.id,loadQuests]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Re-derive whenever something a quest could possibly measure has moved. These are the same
+  // counters every other derived surface in the app keys off, so a quest bar updates on exactly
+  // the same beat as the streak and the XP total rather than on a timer of its own.
+  useEffect(()=>{
+    if(!dbReady||!questRows.length)return;
+    refreshQuestEvents(questRows);
+  },[dbReady,questRows,totalReviews,qHistory.length,streak,dayRows,portSnapshot,clinicalHoursTotal,interviewCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The single evaluation every quest surface in the app reads. */
+  const questBoard = useMemo(
+    ()=>evaluateQuests(questRows,questEvents),
+    [questRows,questEvents],
+  );
+  const questStats = useMemo(()=>summarizeQuests(questBoard),[questBoard]);
+
+  /**
+   * Push the derived numbers back to the server.
+   *
+   * Only when they have actually moved — the server takes the max of what it holds and what it
+   * is told (see the handler), so an unchanged report is a request that could not change
+   * anything, and the parent's dashboard polls every 90 seconds regardless.
+   *
+   * The response is authoritative about STATUS: the server is what decides a quest is complete
+   * (it re-checks both the target and the active-day floor), and reflecting its answer back into
+   * `questRows` is what arms the celebration below.
+   */
+  useEffect(()=>{
+    if(!questBoard.length||!questsAvailable)return;
+    const stale=questBoard.filter(({assignment,ev})=>
+      ev.progress>(assignment.progress||0)||ev.activeDays>(assignment.activeDays||0));
+    if(!stale.length)return;
+    let cancelled=false;
+    (async()=>{
+      for(const {assignment,ev} of stale){
+        try{
+          // eslint-disable-next-line no-await-in-loop
+          const {quest}=await QuestAPI.report(assignment.id,{progress:ev.progress,activeDays:ev.activeDays});
+          if(cancelled)return;
+          setQuestRows(prev=>prev.map(q=>q.id===quest.id?quest:q));
+        }catch{ /* offline, or the schema is not deployed — the next render tries again */ }
+      }
+    })();
+    return ()=>{ cancelled=true; };
+  },[questBoard,questsAvailable]);
+
+  // The completion takeover. Fires off the SERVER's status rather than the engine's `done`, so a
+  // quest is never celebrated before the server agrees it is finished — and each row can only
+  // fire once per session (`celebratedQuests`), because a second progress report on an already
+  // completed quest would otherwise re-open it.
+  useEffect(()=>{
+    if(questCelebration)return;
+    const fresh=questBoard.find(({assignment})=>
+      assignment.status==='completed'&&!celebratedQuests.current.has(assignment.id));
+    if(!fresh)return;
+    celebratedQuests.current.add(fresh.assignment.id);
+    celebrateAchievement();play('achieve');
+    setQuestCelebration(fresh);
+  },[questBoard,questCelebration]);
+
+  /**
+   * Take a quest's reward.
+   *
+   * Three steps, in this order and for these reasons:
+   *   1. the server marks the row claimed and hands back ITS xp figure — the client never picks
+   *      the number (see api/_lib/questCatalog.js);
+   *   2. that figure goes through the same idempotent reward-claim outbox as achievements and the
+   *      daily check-in, keyed `quest:assigned:<row id>`, so claiming on a phone and a laptop pays
+   *      exactly once;
+   *   3. the chest opens over the top, which is the reveal ceremony every other milestone gets.
+   */
+  const claimQuestXP = useCallback(async (assignment)=>{
+    if(!assignment||questBusyId)return;
+    setQuestBusyId(assignment.id);
+    setQuestError(null);
+    try{
+      const { quest, xp } = await QuestAPI.claim(assignment.id);
+      setQuestRows(prev=>prev.map(q=>q.id===quest.id?quest:q));
+      setQuestCelebration(null);
+      const claimPromise = claimRewardXP(`quest:assigned:${quest.id}`,xp).then(async(r)=>{ await syncUserFromDb(); return r; });
+      const wonCosmetic = Math.random()<0.4 ? rollCosmetic(cosmetics) : null;
+      openChest({
+        title:'Quest Complete',
+        eyebrow:quest.title,
+        xp,
+        cosmetic:wonCosmetic,
+        onOpen:async()=>{
+          if(wonCosmetic){ await DB.unlockCosmetic(wonCosmetic.key); setCosmetics(prev=>new Set([...prev,wonCosmetic.key])); }
+          const { granted } = await claimPromise;
+          if(granted===false){
+            toast('That quest was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+          }
+        },
+      });
+    }catch(err){
+      setQuestError(err?.message||'Could not claim that quest.');
+      toast.error(err?.message||'Could not claim that quest.');
+    }finally{
+      setQuestBusyId(null);
+    }
+  },[questBusyId,cosmetics,openChest,syncUserFromDb]);
+
+  /** Take one on. The catalog is the same one a parent picks from. */
+  const startQuest = useCallback(async (questId)=>{
+    const { quest } = await QuestAPI.assign({ questId });
+    setQuestRows(prev=>[quest,...prev]);
+    toast.success(`${quest.title} started. It runs until ${new Date(quest.dueAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}.`,
+      {icon:<Swords size={15} color={C.violetL}/>,duration:5000});
+    return quest;
+  },[]);
+
+  /** Say no to something a parent asked for — a real answer, and visible to them as one. */
+  const declineQuest = useCallback(async (assignment)=>{
+    setQuestBusyId(assignment.id);
+    try{
+      const { quest } = await QuestAPI.decline(assignment.id);
+      setQuestRows(prev=>prev.map(q=>q.id===quest.id?quest:q));
+      toast('Declined. They will see that you said no, and why is up to you.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+    }catch(err){ toast.error(err?.message||'Could not decline that.'); }
+    finally{ setQuestBusyId(null); }
+  },[]);
+
+  /** Drop one you set yourself. */
+  const dropQuest = useCallback(async (assignment)=>{
+    setQuestBusyId(assignment.id);
+    try{
+      await QuestAPI.withdraw(assignment.id);
+      setQuestRows(prev=>prev.map(q=>q.id===assignment.id?{...q,status:'cancelled',endedReason:'Dropped'}:q));
+      toast('Dropped. You can pick it up again whenever you want.',{icon:<Info size={14} color={C.t2}/>});
+    }catch(err){ toast.error(err?.message||'Could not drop that.'); }
+    finally{ setQuestBusyId(null); }
+  },[]);
+
+  /** The one button on every quest card: go where the work actually happens. */
+  const goQuestDestination = useCallback((dest)=>{
+    if(!dest)return;
+    goAnywhere(dest.tab,dest.view);
+  },[goAnywhere]);
+
   // ── Streak-at-risk nudge — opportunity-framed, once per day, dismissible ────
   const streakNudgeRef = useRef(false);
   useEffect(()=>{
@@ -4903,6 +5149,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           onStartStudying={()=>goPrep('pathways')}
           m={isMobile}
           reducedMotion={reducedMotion}
+        />
+
+        {/* Quests — directly under the streak, because the two answer the same question on two
+            different clocks: the streak asks "is today done", a quest asks "is this month". One
+            quest at a time (the engine picks the most urgent, or a finished one to claim), with
+            the rest one tap away. Renders even with nothing running — that empty card is the
+            highest-traffic way anybody discovers quests exist. */}
+        <QuestHomeCard
+          rows={questBoard}
+          onOpenBoard={()=>goProgress('quests')}
+          onBrowse={()=>goProgress('quests')}
+          onGo={goQuestDestination}
+          onClaim={claimQuestXP}
+          busyId={questBusyId}
+          m={isMobile}
         />
 
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
@@ -7952,6 +8213,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           />
         )}
 
+        {progressView==='quests'&&(
+          <QuestBoard
+            quests={questRows}
+            events={questEvents}
+            available={questsAvailable}
+            loading={questsLoading}
+            onAssign={startQuest}
+            onClaim={claimQuestXP}
+            onDecline={declineQuest}
+            onWithdraw={dropQuest}
+            onGo={goQuestDestination}
+            busyId={questBusyId}
+            error={questError}
+            m={isMobile}
+          />
+        )}
+
         {progressView==='verified'&&<>
         {/* Verified Progress — credibility view */}
         <div data-tour="progress-deep-verified" style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}}>
@@ -9007,6 +9285,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ═══ MAIN LAYOUT ═══════════════════════════════════════════════════════════════
   // ── Prep: diagnostic/pathway/quizzes/flashcards/coach/library, switched via SubNav ──
   const prepRenders={ diagnostic:tDiag, pathway:tPath, quizzes:tQuizzes, flashcards:tFlash, coach:tCoach, library:tLib };
+  /**
+   * The quest line for a pillar tab.
+   *
+   * One helper rather than four copies, because the whole point of the strip is that it looks and
+   * behaves identically on every surface — a student should learn it once. It picks the quest
+   * earned on THIS screen (see featuredFor in src/lib/quests.js), so the SAT tab shows an SAT
+   * quest and the Prep tab shows a lesson or card quest, and it renders nothing at all when there
+   * is no quest for this surface. A strip that appears everywhere with nothing useful on it is
+   * the thing people learn to scroll past.
+   */
+  function questStripFor(surface){
+    if(!questBoard.length)return null;
+    return(
+      <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
+        <QuestStrip
+          rows={questBoard} surface={surface}
+          onOpen={()=>goProgress('quests')}
+          onClaim={claimQuestXP}
+          busyId={questBusyId}
+          m={isMobile}
+        />
+      </div>
+    );
+  }
+
   function tPrep(){
     // Prep's whole ambient backdrop shifts with the active pathway — switching pathways in the
     // Diagnostic/Pathway tab visibly re-themes every tab under Prep, not just the pathway page
@@ -9022,6 +9325,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <PlanTaskStrip user={user} pillar="prep" accent={pA} onOpenTask={openPlanResource} currentView={prepView} isMobile={isMobile}/>
             </div>
           )}
+          {questStripFor('prep')}
           {(prepRenders[prepView]||tPath)()}
         </div>
         {/* Pathway-level Meta Brain (purpose:'prep') — present across every Prep sub-tab, exact
@@ -9108,6 +9412,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <PlanTaskStrip user={user} pillar="portfolio" accent={portfolioAccent} onOpenTask={openPlanResource} currentView={portfolioView} isMobile={isMobile}/>
           </div>
         )}
+        {questStripFor('portfolio')}
         {(portfolioRenders[portfolioView]||tPort)()}
         <PortfolioMedabrain
           user={user} pathwayLabel={curPath?.label||'college prep'}
@@ -9222,7 +9527,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </div>
       );
     }
-    return <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={planLiveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>;
+    return(
+      <div>
+        {/* Plans is where a student decides what today is for, which makes it the one place a
+            month-long commitment most needs to be visible — a plan built without the quest in
+            view is a plan that quietly competes with it. */}
+        {questStripFor('plans')}
+        <PlansTab user={user} saveUser={saveUser} accent={plansAccent} isMobile={isMobile} goPrep={goPrep} goPortfolio={goPortfolio} goProgress={goProgress} goSettings={goSettings} openResource={openPlanResource} liveSignals={planLiveSignals} initialExpandedDate={plansOpenDate} quizzesTaken={qTaken} reducedMotion={reducedMotion}/>
+      </div>
+    );
   }
   // ── SAT: the test-prep pillar (src/components/sat/) ──
   function tSatWrap(){
@@ -9255,9 +9568,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         medabrainMessages={satBrainMessages}
         onMedabrainMessagesChange={setSatBrainMessages}
         recentActivitySummary={recentActivitySummary}
-        planStrip={user.masterPlan?(
-          <div style={{padding:isMobile?'0 0 12px':'0 0 14px'}}>
-            <PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>
+        // The SAT tab renders its own chrome, so both strips arrive through one slot. The quest
+        // line sits under the plan line for the same reason it does everywhere else: today's
+        // tasks before this month's commitment.
+        planStrip={(user.masterPlan||questBoard.length)?(
+          <div style={{padding:isMobile?'0 0 12px':'0 0 14px',...CC({gap:10})}}>
+            {user.masterPlan&&<PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>}
+            {questBoard.length>0&&(
+              <QuestStrip
+                rows={questBoard} surface="sat"
+                onOpen={()=>goProgress('quests')}
+                onClaim={claimQuestXP}
+                busyId={questBusyId}
+                m={isMobile}
+              />
+            )}
           </div>
         ):null}
       />
@@ -9327,6 +9652,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         onOpenStreak={()=>{setLessonCelebration(null);goProgress('streak');}}
         onClose={()=>setLessonCelebration(null)}
       />
+      {/* The quest takeover. Mounted at the root, beside the lesson one and for the same reason:
+          the last card of a three-week quest can land on any screen in the app, and a celebration
+          that only fires inside one tab is a celebration most people never see. */}
+      <AnimatePresence>
+        {questCelebration&&(
+          <QuestCompleteOverlay
+            key={questCelebration.assignment.id}
+            quest={questCelebration.assignment}
+            ev={questCelebration.ev}
+            busy={questBusyId===questCelebration.assignment.id}
+            onClaim={()=>claimQuestXP(questCelebration.assignment)}
+            onClose={()=>setQuestCelebration(null)}
+            reducedMotion={reducedMotion}
+            m={isMobile}
+          />
+        )}
+      </AnimatePresence>
       {/* First focusable thing on the page. Without it a keyboard or switch user
           has to tab through an eleven-item sidebar on every single navigation. */}
       <a href="#msp-main" className="msp-skip-link">Skip to main content</a>
@@ -9418,7 +9760,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 // Gated on Flashcards actually being unlocked: a count badge advertising a
                 // sub-tab the student can't open yet is worse than no badge at all — it
                 // promises something behind the click that isn't there.
-                const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount:null;
+                // Progress carries a badge too, and only ever for a CLAIMABLE quest — XP sitting
+                // on the table is the one quest state that is urgent in a way navigating there
+                // resolves in a single tap. A badge that also counted running quests would be lit
+                // permanently and therefore read as decoration.
+                const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount
+                  :n.id==='progress'&&questStats.claimable>0?questStats.claimable:null;
                 const planDue=planPillarsDueToday.has(n.id);
                 return(
                   // A real <a href>, not a div: ⌘-click opens the tab in a new browser tab,
@@ -9532,7 +9879,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <nav style={{position:'fixed',bottom:0,left:0,right:0,height:navItems.length<=5?68:64,background:C.s0,borderTop:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'space-around',zIndex:300,paddingBottom:'env(safe-area-inset-bottom)'}}>
             {navItems.map(n=>{
               const nc=navColor[n.id]||accent;
-              const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount:null;
+              const badge=n.id==='prep'&&unlocks.isOpen('prep','flashcards')&&dueDeckCount>0?dueDeckCount
+                :n.id==='progress'&&questStats.claimable>0?questStats.claimable:null;
               const planDue=planPillarsDueToday.has(n.id);
               return(
                 // flex:1 (not a fixed width) so the bar stays balanced regardless of item count —

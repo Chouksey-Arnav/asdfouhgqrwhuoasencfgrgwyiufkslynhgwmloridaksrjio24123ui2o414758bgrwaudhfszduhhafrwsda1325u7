@@ -80,6 +80,7 @@ const EXPECTED_TABLES = [
   'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
   'research_experience', 'reward_claims', 'scholarships', 'sessions', 'skills_certifications',
+  'student_quests',
   'test_scores',
 ];
 

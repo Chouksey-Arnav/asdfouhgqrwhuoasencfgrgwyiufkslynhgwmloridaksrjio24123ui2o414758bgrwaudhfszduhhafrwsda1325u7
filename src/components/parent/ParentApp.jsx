@@ -31,7 +31,7 @@ import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
   UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
-  Mail, KeyRound, X, WifiOff, MessageSquare,
+  Mail, KeyRound, X, WifiOff, MessageSquare, Swords,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, autoGrid, pill, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
@@ -48,6 +48,7 @@ import ProgressSummary from './ProgressSummary';
 import ConnectionsPanel from './ConnectionsPanel';
 import ParentSetup from './ParentSetup';
 import FamilyThread from './FamilyThread';
+import QuestAssignPanel from './QuestAssignPanel';
 
 // Long enough that a parent leaving the tab open all day is not a meaningful load, short enough
 // that "did they do their revision?" is answered by looking rather than by reloading. The server
@@ -60,6 +61,7 @@ const NAV = [
   { id: 'digest', label: 'This week', icon: Brain },
   { id: 'activity', label: 'Activity', icon: CalendarDays },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
+  { id: 'quests', label: 'Quests', icon: Swords },
   { id: 'connections', label: 'Connections', icon: Link2 },
   { id: 'guide', label: 'How this works', icon: LifeBuoy },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -1070,6 +1072,11 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
             })}
           </div>
         )
+      )}
+
+      {/* ── Quests ───────────────────────────────────────────────────────── */}
+      {view === 'quests' && (
+        noStudents ? inviteCta : <QuestAssignPanel students={students} hueFor={hueFor} />
       )}
 
       {/* ── Activity ─────────────────────────────────────────────────────── */}
