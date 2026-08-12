@@ -222,7 +222,7 @@ export default function SatPracticePanel({
     const res = await finish(session.attemptId, responses);
     setSummary({ responses, ...res, questions: session.questions });
     setSession(null);
-    onSessionComplete?.('sat_practice');
+    onSessionComplete?.('sat_practice', { questions: responses.length });
     reload();
   }
 

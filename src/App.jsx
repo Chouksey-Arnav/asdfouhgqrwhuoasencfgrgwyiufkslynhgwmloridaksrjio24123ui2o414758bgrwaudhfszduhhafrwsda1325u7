@@ -67,6 +67,11 @@ import { summarizeRecentActivity } from './lib/recentActivity';
 import { pickNudge } from './lib/nudges';
 import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
 import { localDateStr } from './lib/dateUtils';
+import {
+  PERFECT_WEEK_REWARD, DEFAULT_GOAL_ID, creditsFor, goalCreditsFor, getGoal,
+  streakTargetFor, targetProgress, dayStatus, weekProgress, longestStreak,
+  nextMilestone, unclaimedMilestones, rewardKey, perfectWeekKey,
+} from './lib/streak';
 import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
@@ -77,6 +82,10 @@ import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
 import StreakHeatmap from './components/StreakHeatmap';
+import StreakPanel from './components/streak/StreakPanel';
+import StreakHomeCard from './components/streak/StreakHomeCard';
+import PathwayStreakStrip from './components/streak/PathwayStreakStrip';
+import LessonCompleteOverlay from './components/streak/LessonCompleteOverlay';
 import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
@@ -449,6 +458,13 @@ function resumeSectionFromPath(pathname=''){
 }
 const PROGRESS_SUBNAV = [
   {id:'overview',ic:LineChart,label:'Overview',color:C.blue},
+  // Streak sits directly after Overview and is deliberately NOT gated: it is the
+  // only view in this tab with a live deadline on it (today is still winnable),
+  // and every other Progress view is retrospective. It is also the answer to
+  // "which tab does the streak calendar live in" — Progress is the tab a student
+  // opens to ask how they are doing, Home is a one-decision dashboard, and
+  // Settings is where records go to be forgotten. See StreakPanel.jsx's header.
+  {id:'streak',ic:Flame,label:'Streak',color:C.amber},
   {id:'verified',ic:ShieldCheck,label:'Verified Progress',color:C.green},
   {id:'performance',ic:TrendingUp,label:'Performance',color:C.violet},
   {id:'achievements',ic:Trophy,label:'Achievements',color:C.amber},
@@ -1466,6 +1482,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [streak,   setStreak]   = useState(0);
   const [comebackGap, setComebackGap] = useState(null); // days since last study day (returning-user nudge), null = n/a
   const [streakFreezes, setStreakFreezes] = useState(0);
+  // ── Earned-streak state ────────────────────────────────────────────────────
+  // `dayRows` is every dayActivity row (the calendar's data), `claimedStreakRewards`
+  // the permanent claim ledger. Everything else about the streak — today's status,
+  // the week, the target bar — is DERIVED from these below rather than stored, so
+  // there is exactly one place a number can come from and no chance of two
+  // surfaces disagreeing about whether today is done.
+  const [dayRows, setDayRows] = useState([]);
+  const [bridgedDates, setBridgedDates] = useState(new Set());
+  const [claimedStreakRewards, setClaimedStreakRewards] = useState(new Set());
+  // The full-screen lesson-complete takeover (see LessonCompleteOverlay.jsx).
+  const [lessonCelebration, setLessonCelebration] = useState(null);
   const [cosmetics, setCosmetics] = useState(new Set());
   const [chest, setChest] = useState(null); // { title, eyebrow, xp, cosmetic }
   const upcomingDeadlines = useDeadlines();
@@ -2177,9 +2204,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         }
       }catch(err){console.error('Failed to load Medabrain chat threads',err);}
       setThreadsLoading(false);
-      // Compute the gap since the last study day BEFORE recordStudyToday() stamps
-      // today, so a returning user's actual absence is visible (once today is
-      // recorded, "days since last study day" would trivially read as 0).
+      // The gap since the last EARNED day, for the returning-user nudge. Since the
+      // rewrite this is safe to compute anywhere in the load path: opening the app no
+      // longer stamps today, so today can only already be present if the student has
+      // genuinely done work today.
       if(u){
         const priorDays=(await DB.getStudyDays()).slice().sort();
         if(priorDays.length){
@@ -2191,7 +2219,18 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           }
         }
       }
-      await DB.recordStudyToday();
+      // NOTE: nothing here records a study day any more. The old attendance-based
+      // recorder ran on every app load, which meant the streak measured tab-opening
+      // rather than studying — a student who opened the app and did nothing kept a
+      // 40-day streak alive. Days are earned now, at the call sites that finish real
+      // work (see creditStreak below). scripts/verifyStreak.mjs fails the build if
+      // anything on this path starts stamping days again.
+      const [dayRowsInit, bridgedInit, claimedInit] = await Promise.all([
+        DB.getAllDayActivity(), DB.getBridgedDates(), DB.getClaimedStreakRewards(),
+      ]);
+      setDayRows(dayRowsInit || []);
+      setBridgedDates(bridgedInit || new Set());
+      setClaimedStreakRewards(claimedInit || new Set());
     }
     async function init(){
       try{
@@ -2390,10 +2429,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // already funnels through — generation, task toggles, drag-to-reschedule, the rolling
   // auto-extension, the rollover pass — so the mirror can't be forgotten at a call site. The
   // push is debounced, skips unchanged plans, and can never throw into this path.
+  // Returns the Dexie write so a caller that is about to do its OWN read-modify-write
+  // of the user row (creditStreak, when a streak milestone pays out XP) can await it
+  // first. Without that, the two writes race: creditStreak re-reads `xp` from Dexie,
+  // and if this update has not landed yet it reads the pre-award value and writes back
+  // a total missing the XP that was just granted. Every other caller ignores the
+  // promise exactly as before.
   const saveUser = useCallback((u)=>{
     setUser_(u);
-    DB.saveUser(u).catch(console.error);
+    const written = DB.saveUser(u).catch(console.error);
     if(u?.masterPlan)PlanStore.schedulePlanPush(u.masterPlan);
+    return written;
   },[]);
   // rewardClaimQueue.claimReward() writes xp straight to Dexie itself (so a durable claim intent
   // and its optimistic local grant land together, even if this component isn't mounted to hear
@@ -3403,6 +3449,142 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     })();
   },[dbReady,user]);
 
+  // ══ EARNED STREAK ══════════════════════════════════════════════════════════
+  // One source of truth (dayRows + bridgedDates + the user's two goal settings)
+  // and every streak number in the app derived from it. Home's card, the Progress
+  // tab, the pathway strip and the lesson-complete takeover all read these exact
+  // objects, which is what makes it impossible for two screens to disagree about
+  // whether today is done.
+  const dayActivityMap = useMemo(()=>new Map(dayRows.map(r=>[r.date,r])),[dayRows]);
+  const metDates       = useMemo(()=>new Set(dayRows.filter(r=>r.met).map(r=>r.date)),[dayRows]);
+  const goalCredits    = useMemo(()=>goalCreditsFor(user),[user?.streakGoalId]);
+  const streakTarget   = useMemo(()=>streakTargetFor(user),[user?.streakTarget]);
+  const todayStatus    = useMemo(()=>{
+    const row = dayActivityMap.get(localDateStr());
+    // A day already cleared keeps the goal it was cleared against, so raising the
+    // daily goal mid-day cannot un-earn a finished day (mirrors DB.recordStreakActivity).
+    return dayStatus(row?.credits||0, row?.met ? (row.goalCredits||goalCredits) : goalCredits);
+  },[dayActivityMap,goalCredits]);
+  const weekInfo       = useMemo(()=>weekProgress(metDates,{bridged:bridgedDates}),[metDates,bridgedDates]);
+  const streakTargetInfo = useMemo(()=>targetProgress(streak,streakTarget),[streak,streakTarget]);
+  const bestStreakEver = useMemo(()=>Math.max(streak,longestStreak(metDates,bridgedDates)),[streak,metDates,bridgedDates]);
+  const nextStreakReward = useMemo(()=>nextMilestone(streak),[streak]);
+  // What Medabrain is told about the streak. It gets the student's own goal and
+  // whether TODAY is cleared — not just the streak length — because "you haven't
+  // studied today yet" is the single most useful thing a coach can say here, and
+  // it is only honest if the coach knows a day is earned rather than attended.
+  const medabrainStreakContext = useMemo(()=>({
+    goalLabel:getGoal(user?.streakGoalId).label,
+    goalCredits:todayStatus.goalCredits,
+    creditsToday:todayStatus.credits,
+    dayMet:todayStatus.met,
+    weekMet:weekInfo.met,
+    weekStillPossible:weekInfo.stillPossible,
+    target:streakTarget,
+    freezes:streakFreezes,
+  }),[user?.streakGoalId,todayStatus,weekInfo,streakTarget,streakFreezes]);
+
+  /** Re-reads the whole streak ledger. Called after anything writes to it. */
+  const refreshStreakState = useCallback(async()=>{
+    const [rows,bridged,claimed,str,freezes] = await Promise.all([
+      DB.getAllDayActivity(), DB.getBridgedDates(), DB.getClaimedStreakRewards(),
+      DB.getStreak(), DB.getStreakFreezeCount(),
+    ]);
+    setDayRows(rows||[]);
+    setBridgedDates(bridged||new Set());
+    setClaimedStreakRewards(claimed||new Set());
+    setStreak(str||0);
+    setStreakFreezes(freezes||0);
+    return { rows, bridged, claimed, streak: str||0 };
+  },[]);
+
+  /**
+   * THE one place a streak day is earned.
+   *
+   * Every call site is a piece of finished work (a verified lesson, a submitted
+   * quiz, ten reviewed cards). Nothing about opening, navigating or reading the
+   * app reaches here — that is the whole point of the rewrite.
+   *
+   * Also pays out anything the new streak length unlocked: milestone rungs and
+   * the Perfect Week. Both go through DB.claimStreakReward, which is a permanent
+   * once-ever ledger, so a rebuilt streak passing day 30 again pays nothing and a
+   * second device syncing late cannot double-claim.
+   *
+   * Returns the shape the lesson-complete overlay needs, so the caller does not
+   * have to re-read anything.
+   */
+  const creditStreak = useCallback(async(action,{times=1,silent=false}={})=>{
+    const credits = creditsFor(action,times);
+    if(!credits) return null;
+    const before = await DB.getStreak();
+    let result;
+    try{
+      result = await DB.recordStreakActivity(action,{credits,goalCredits:goalCreditsFor(user),times});
+    }catch(e){ console.error('Failed to record streak activity',e); return null; }
+
+    const after = await DB.getStreak();
+    let xpFromRewards = 0;
+    let milestoneHit = null;
+    let perfectWeekJustEarned = false;
+
+    if(result.justMet){
+      const claimed = await DB.getClaimedStreakRewards();
+      // ── Milestone rungs ──
+      for(const rung of unclaimedMilestones(after,claimed)){
+        // eslint-disable-next-line no-await-in-loop
+        if(!await DB.claimStreakReward(rewardKey(rung.days),{days:rung.days}))continue;
+        xpFromRewards += rung.xp;
+        // eslint-disable-next-line no-await-in-loop
+        for(let i=0;i<(rung.freezes||0);i++) await DB.grantStreakFreeze();
+        if(!milestoneHit||rung.days>milestoneHit.days)milestoneHit=rung;
+      }
+      // ── Perfect week ── recomputed AFTER the write so today counts toward it.
+      const rows = await DB.getAllDayActivity();
+      const met = new Set(rows.filter(r=>r.met).map(r=>r.date));
+      const wk = weekProgress(met,{bridged:await DB.getBridgedDates()});
+      if(wk.complete && await DB.claimStreakReward(perfectWeekKey(wk.weekKey),{week:wk.weekKey})){
+        xpFromRewards += PERFECT_WEEK_REWARD.xp;
+        for(let i=0;i<PERFECT_WEEK_REWARD.freezes;i++) await DB.grantStreakFreeze();
+        perfectWeekJustEarned = true;
+      }
+    }
+
+    // Milestone/perfect-week XP is deterministic on purpose — never routed
+    // through awardXP's variable roll. A reward a student can see coming from ten
+    // days away has to pay exactly what it advertised.
+    if(xpFromRewards>0){
+      const u = await DB.getUser();
+      if(u){ await DB.saveUser({...u,xp:(u.xp||0)+xpFromRewards}); }
+      await syncUserFromDb();
+    }
+
+    const fresh = await refreshStreakState();
+    const wkAfter = weekProgress(
+      new Set((fresh.rows||[]).filter(r=>r.met).map(r=>r.date)),
+      {bridged:fresh.bridged||new Set()},
+    );
+
+    if(!silent){
+      if(milestoneHit){
+        celebrateStreak();play('achieve');
+        toast.success(`${milestoneHit.days}-day streak — ${milestoneHit.title}! +${milestoneHit.xp} XP`,
+          {icon:<Flame size={16} color={C.amberL}/>,duration:5000});
+      }
+      if(perfectWeekJustEarned){
+        celebrateStreak();
+        toast.success(`Perfect Week — all seven days earned. +${PERFECT_WEEK_REWARD.xp} XP and a streak freeze.`,
+          {icon:<Trophy size={16} color={C.goldL}/>,duration:5000});
+      }
+    }
+
+    return {
+      ...result, streakBefore:before, streak:after,
+      milestoneHit, perfectWeekJustEarned, xpFromRewards,
+      week:wkAfter,
+      day:dayStatus(result.credits,result.goalCredits),
+    };
+  },[user,refreshStreakState,syncUserFromDb]);
+
   // ── Streak-at-risk nudge — opportunity-framed, once per day, dismissible ────
   const streakNudgeRef = useRef(false);
   useEffect(()=>{
@@ -3463,8 +3645,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[dbReady,streak]);
 
   // ── Comeback nudge — fires once per session for a returning user who had a
-  // multi-day gap since their last study day (computed in loadFromDb before
-  // recordStudyToday() runs, so it reflects the gap, not "0 days" post-record).
+  // multi-day gap since their last EARNED day (see loadFromDb — opening the app
+  // does not create a day, so the gap it measures is a real absence from studying).
   const comebackCheckedRef = useRef(false);
   useEffect(()=>{
     if(!dbReady||comebackCheckedRef.current||comebackGap==null)return;
@@ -3643,6 +3825,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       dueCards, nextDeadlineTitle:nextDeadline?.title||null, nextDeadlineDays:nextDeadline?.days??null,
       portfolioActivityCount:portActivities.length, clinicalHours:clinicalHoursTotal,
       recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays, streak,
+      streakContext:medabrainStreakContext,
       recentActivitySummary,
       categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
       satProjection, satWeakSkills, satOpenReviews,
@@ -3653,7 +3836,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[secAvgs,cats3,upcomingDeadlines,curPath,pathway,dueCards,portActivities.length,clinicalHoursTotal,recommendersCount,appCounts,streak,recentActivitySummary,catAverages,qTaken,mastery,avgSc,satProjection,satWeakSkills,satOpenReviews,timelineSummary,user]);
+  },[secAvgs,cats3,upcomingDeadlines,curPath,pathway,dueCards,portActivities.length,clinicalHoursTotal,recommendersCount,appCounts,streak,medabrainStreakContext,recentActivitySummary,catAverages,qTaken,mastery,avgSc,satProjection,satWeakSkills,satOpenReviews,timelineSummary,user]);
 
   // ── The plan rewrites itself when the day turns over ──────────────────────
   // The detailed window is today + tomorrow, written today (see WINDOW_DAYS in
@@ -3714,6 +3897,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         researchCount,
         skillsCount,
         streak,
+        streakContext:medabrainStreakContext,
         planSummary:summarizePlanForCoach(user?.masterPlan),
         recentActivitySummary,
         paceText,
@@ -3913,9 +4097,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const baseGain = xpMap[label] + bonus;
     const nextBest = Math.max(sessionStats.bestStreak, nextCombo);
     let xpGain = 0, cardTier = 'none';
+    let cardXpWrite = Promise.resolve();
     if (baseGain > 0) {
       ({ finalXP: xpGain, tier: cardTier } = awardXP(baseGain));
-      saveUser({ ...user, xp: (user?.xp || 0) + xpGain });
+      cardXpWrite = saveUser({ ...user, xp: (user?.xp || 0) + xpGain });
       play('xp');
       if (cardTier === 'jackpot') { celebrateJackpot(); play('jackpot'); }
       else if (cardTier === 'big' || cardTier === 'bonus') { celebrateBonusXP(); }
@@ -3929,6 +4114,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       toast(`Streak broken at ${sessionStats.streak} — back at it.`, { icon: <RefreshCw size={14}/>, duration: 1800 });
     }
     setSessionStats(s => ({ ...s, reviewed: s.reviewed + 1, [label.toLowerCase()]: s[label.toLowerCase()] + 1, streak: nextCombo, bestStreak: nextBest, xp: s.xp + xpGain }));
+    // One streak credit per TEN cards, not per card — a 60-second tap-through of a
+    // deck must not be able to clear a serious daily goal. Counted off the all-time
+    // total so a session split across two sittings still banks the batch. Chained
+    // behind this review's own XP write so a milestone payout can't be clobbered by it.
+    if (newTotal % 10 === 0) cardXpWrite.then(() => creditStreak('flashcards_batch')).catch(console.error);
     if(cIdx===deckCards.length-1)setTimeout(()=>toast.success(pickNudge('flashcard_session_complete'),{icon:<Layers3 size={16}/>,duration:3200}),300);
     setCIdx(i=>Math.min(deckCards.length-1,i+1));
     setFlip(false);
@@ -4250,18 +4440,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         logEvent('unit_lesson_verified',lesson.id);
         setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
         const { finalXP, tier } = awardXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
-        const bumpedUser={...user,xp:(user?.xp||0)+finalXP};
+        const xpBeforeAward=user?.xp||0;
+        const bumpedUser={...user,xp:xpBeforeAward+finalXP};
         // A Plan task could point at either the lesson itself or its verification quiz
         // (resolveTaskResource can resolve a "quiz" task to any real quiz, including this one) —
         // match both so either shape gets credited.
         const lessonMatch=resourceMatch('lesson',lesson.id), quizMatch=resourceMatch('quiz',aQuiz.id);
         const newUser=applyPlanAutoComplete(bumpedUser,t=>lessonMatch(t)||quizMatch(t));
-        saveUser(newUser);
+        // Awaited: creditStreak below may grant milestone XP with its own
+        // read-modify-write of the same row (see saveUser's note).
+        await saveUser(newUser);
         play('xp');
-        if(tier==='jackpot'){celebrateJackpot();play('jackpot');}
-        else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
-        else celebrateXP();
-        toast.success(pickNudge(pct>=90?'lesson_verified_high':'lesson_verified',{lesson:lesson.title,pct}),{icon:<ShieldCheck size={16}/>,duration:3000});
+        // No confetti burst and no "lesson verified" toast here any more: the
+        // full-screen takeover below owns this moment end to end, and firing both
+        // would announce the same event twice, the second time behind the first.
+        // Streak credit + any milestone/perfect-week payout it unlocks. This is the
+        // action the whole streak system is tuned around: one verified lesson clears
+        // the default daily goal exactly.
+        const streakResult=await creditStreak('lesson_verified',{silent:true});
         // Which pathway this lesson belongs to — NOT necessarily the focused one. With parallel
         // pathways a student can start a lesson from another enrolled track straight off the
         // at-a-glance board, and crediting that work to whatever happened to be in focus would
@@ -4295,6 +4491,29 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{pathwayCompletions:new Set([lessonPathKey])});
           }
         }
+        // ── The moment. Full screen, two pages: what you earned, then where it
+        // puts you. See LessonCompleteOverlay.jsx for why this is a takeover and
+        // not the 3-second corner toast it replaced.
+        const upNext=getNextLesson(lesson);
+        const streakNow=streakResult?.streak??streak;
+        setLessonCelebration({
+          lessonTitle:lesson.title,
+          unitTitle:unit.title,
+          pathwayLabel:lessonPath?.label||'',
+          quizScore:pct,
+          xpAwarded:finalXP+(streakResult?.xpFromRewards||0),
+          xpTier:tier,
+          xpBefore:xpBeforeAward,
+          streak:streakNow,
+          streakBefore:streakResult?.streakBefore??streakNow,
+          dailyGoal:streakResult?.day||null,
+          week:streakResult?.week||null,
+          targetInfo:targetProgress(streakNow,streakTargetFor(user)),
+          nextReward:nextMilestone(streakNow),
+          milestoneHit:streakResult?.milestoneHit||null,
+          perfectWeekJustEarned:!!streakResult?.perfectWeekJustEarned,
+          nextLesson:upNext,
+        });
       } else {
         toast(pickNudge(pct>=65?'quiz_close_miss':'quiz_fail',{lesson:lesson.title,pct}),{icon:<RefreshCw size={14}/>,duration:4000});
       }
@@ -4308,11 +4527,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
     const bumpedUser={...user,xp:(user?.xp||0)+xpGain};
     const newUser=applyPlanAutoComplete(bumpedUser,resourceMatch('quiz',aQuiz.id));
-    saveUser(newUser);
+    await saveUser(newUser);
     if(quizTier==='jackpot'){celebrateJackpot();play('jackpot');}
     else if(quizTier==='big'||quizTier==='bonus'){celebrateBonusXP();}
     toast.success(`${pct}% · ${BONUS_COPY[quizTier](xpGain)}`,{icon:pct>=80?<Star size={16}/>:pct>=60?<LineChart size={16}/>:<Dumbbell size={16}/>,duration:quizTier==='jackpot'?4000:3000});
     if(pct===100)setTimeout(()=>toast.success(pickNudge('perfect_quiz',{lesson:aQuiz.title}),{icon:<Star size={16}/>,duration:3500}),350);
+    // Two quizzes clear the default daily goal, which is the second of the two
+    // routes the goal is deliberately tuned around (one lesson, or two quizzes).
+    // Only a first-time score reaches here — the `qScores[aQuiz.id]!==undefined`
+    // guard above returns early on a retake — so a quiz cannot be farmed for credit.
+    await creditStreak('quiz_completed');
     const newQCount=qTaken+1;
     checkAndUnlockAchievements(newUser,newQCount,qHistory.filter(q=>q.score===100).length+(pct===100?1:0),streak,totalReviews,mastery,aiChatCount);
     if(pct===100)setTimeout(()=>celebratePerfect(),300);
@@ -4661,6 +4885,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           </div>
         </div>
+
+        {/* Streak — high on Home because it is the only thing on this screen with a
+            deadline attached (today ends). It carries exactly the three facts that
+            change what a student does right now: is today earned, is a Perfect Week
+            still live, and how far to the next reward. Everything historical lives
+            one tap away in Progress → Streak. */}
+        <StreakHomeCard
+          streak={streak}
+          day={todayStatus}
+          week={weekInfo}
+          targetInfo={streakTargetInfo}
+          nextReward={nextStreakReward}
+          freezesHeld={streakFreezes}
+          nextLessonTitle={nextLesson?.title||null}
+          onOpen={()=>goProgress('streak')}
+          onStartStudying={()=>goPrep('pathways')}
+          m={isMobile}
+          reducedMotion={reducedMotion}
+        />
 
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
@@ -5088,6 +5331,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           rows={pathwayRows} focused={focusedPathway} onFocus={switchPath}
           onAdd={openPathwayManager}
           m={isMobile} reducedMotion={reducedMotion}
+        />
+        {/* The stretch between finishing one lesson and opening the next is where a
+            student actually decides whether to keep going, and until now nothing in
+            the app spoke to them there. One line, state-driven, always pointing at
+            the next concrete thing — see PathwayStreakStrip.jsx. */}
+        <PathwayStreakStrip
+          streak={streak} day={todayStatus} week={weekInfo}
+          remainingLessons={Math.max(0,curPathAllL.length-curPathDoneL)}
+          onOpen={()=>goProgress('streak')} m={isMobile}
         />
         {/* Running more than one? Show all of them, with each one's real next lesson, startable
             in place. The easiest switch is the one you don't have to make. */}
@@ -7672,6 +7924,34 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </details>
         </>}
 
+        {progressView==='streak'&&(
+          <StreakPanel
+            streak={streak}
+            bestStreak={bestStreakEver}
+            freezesHeld={streakFreezes}
+            day={todayStatus}
+            week={weekInfo}
+            targetInfo={streakTargetInfo}
+            activity={dayActivityMap}
+            bridged={bridgedDates}
+            claimedRewards={claimedStreakRewards}
+            goalId={user?.streakGoalId||DEFAULT_GOAL_ID}
+            streakTarget={streakTarget}
+            totalEarnedDays={metDates.size}
+            onSetGoal={(id)=>{
+              saveUser({...user,streakGoalId:id});
+              play('select');
+              toast.success(`Daily goal set to ${getGoal(id).label}. Days you already earned stay earned.`,{duration:3000});
+            }}
+            onSetTarget={(days)=>{
+              saveUser({...user,streakTarget:days});
+              play('select');
+              toast.success(`Streak goal set to ${days} days.`,{duration:2400});
+            }}
+            m={isMobile}
+          />
+        )}
+
         {progressView==='verified'&&<>
         {/* Verified Progress — credibility view */}
         <div data-tour="progress-deep-verified" style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},transparent)`,border:`1px solid ${C.green}25`}}>
@@ -8022,6 +8302,28 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={CC({gap:4,marginBottom:14})}><input style={inp({width:'auto'})} type="number" min="5" max="120" placeholder={user.age ? String(user.age) : 'Your age'} value={sAge} onChange={e=>setSAge(e.target.value)}/></div>
             <button style={btn(accentGrad(accent))} onClick={()=>{const age=Number(sAge);if(isNaN(age)||age<5||age>120)return;saveUser({...user,age});setSAge('');toast.success('Age updated');}}>Save Age</button>
           </div>
+        </div>
+
+        {/* Streak goals live in Progress → Streak, next to the calendar and the reward ladder
+            they steer — changing "how much is a day" only makes sense with the record of your
+            days in front of you. This card exists so Settings, the tab everyone searches when
+            they want to change something, still leads there instead of dead-ending. */}
+        <div style={glass()}>
+          <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+            <SL extra={{marginBottom:0}}>Streak Goals</SL>
+            <span style={{...pill(C.amberDim,C.amberL,{fontSize:11}),display:'inline-flex',alignItems:'center',gap:5}}>
+              <Flame size={11}/>{streak} day{streak===1?'':'s'}
+            </span>
+          </div>
+          <p style={{fontSize:13,color:C.t3,lineHeight:1.6,marginTop:0}}>
+            You're on the <strong style={{color:C.t2}}>{getGoal(user?.streakGoalId).label}</strong> daily
+            goal ({todayStatus.goalCredits} credits — {getGoal(user?.streakGoalId).examples[0]}), aiming
+            for a <strong style={{color:C.t2}}>{streakTarget}-day</strong> streak. A day only counts once
+            you've actually finished that much work; opening the app doesn't count.
+          </p>
+          <button style={{...btnG({fontSize:12}),display:'inline-flex',alignItems:'center',gap:6,marginTop:4}} onClick={()=>goProgress('streak')}>
+            <Flame size={12}/>Change in Progress → Streak<ChevronRight size={12}/>
+          </button>
         </div>
 
         {/* Your Goals — onboarding answers, editable after the fact so they don't stay locked in
@@ -8795,7 +9097,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       onResearchLogged={()=>{setResearchCount(c=>c+1);logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}
       onCredentialChanged={()=>{setSkillsCount(c=>c+1);}}/>,
     recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
-    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});}}/>,
+    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
   };
   function tPortWrap(){
     return(
@@ -8836,9 +9138,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // after today (working ahead in the WeekView) earns +25% XP on top of the base 6.
     const isEarly=date>planTodayStr();
     const {finalXP,tier}=awardXP(isEarly?6+Math.round(6*0.25):6);
-    saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
+    const planWrite=saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
     toast.success(`${BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`}${isEarly?' · +25% early-start bonus!':''}`,{duration:1800});
     if(tier==='jackpot')celebrateJackpot();else if(tier==='big'||tier==='bonus')celebrateBonusXP();else celebrateXP();
+    // `justEarnedXP` is togglePlanTaskDone's own once-per-task guard, so re-checking
+    // a task that was already done cannot re-credit the streak.
+    planWrite.then(()=>creditStreak('plan_task')).catch(console.error);
   }
   function handlePlanSnoozeTask(date,taskId){
     if(!user?.masterPlan)return;
@@ -8927,7 +9232,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         onViewChange={(v,p)=>{ setSatView(v); setSatParams(p||null); }}
         params={satParams}
         onConsumeParams={()=>setSatParams(null)}
-        onSessionComplete={(taskType)=>saveUser(applyPlanAutoComplete(user,typeMatch(taskType)))}
+        onSessionComplete={(taskType,meta)=>{
+          const satWrite=saveUser(applyPlanAutoComplete(user,typeMatch(taskType)));
+          // SAT work earns streak credit by VOLUME, not by "a session happened":
+          // a 22-question timed module and a 5-question smart set are not the same
+          // day's work, and paying them the same would make the cheapest possible
+          // session the rational way to keep a streak alive.
+          const answered=meta?.questions||0;
+          if(taskType==='sat_test'){satWrite.then(()=>creditStreak('sat_full_test')).catch(console.error);return;}
+          const batches=Math.floor(answered/10);
+          if(batches>0)satWrite.then(()=>creditStreak('sat_practice_set',{times:batches})).catch(console.error);
+        }}
         subnavItems={satSubnav}
         subnavLocked={unlocks.locked('sat')[0]}
         subnavHrefFor={satHref}
@@ -8977,6 +9292,40 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         reducedMotion={reducedMotion}
         onGo={()=>{ const id=milestoneUnlock?.id; setMilestoneUnlock(null); if(id==='plans') goPlans(); else if(id) setTab(id.split('/')[0]); }}
         onClose={()=>setMilestoneUnlock(null)}
+      />
+      {/* ── The lesson-complete takeover ─────────────────────────────────────
+          Full screen, two pages: what you just earned, then where that puts your
+          streak, your goal and your Perfect Week. Rendered at the app root (not
+          inside the pathway view) so it survives the lesson player unmounting
+          underneath it and can hand the student straight into the next lesson. */}
+      <LessonCompleteOverlay
+        open={!!lessonCelebration}
+        lessonTitle={lessonCelebration?.lessonTitle}
+        unitTitle={lessonCelebration?.unitTitle}
+        pathwayLabel={lessonCelebration?.pathwayLabel}
+        quizScore={lessonCelebration?.quizScore}
+        xpAwarded={lessonCelebration?.xpAwarded||0}
+        xpTier={lessonCelebration?.xpTier||'none'}
+        xpBefore={lessonCelebration?.xpBefore||0}
+        streak={lessonCelebration?.streak||0}
+        streakBefore={lessonCelebration?.streakBefore||0}
+        dailyGoal={lessonCelebration?.dailyGoal}
+        week={lessonCelebration?.week}
+        targetInfo={lessonCelebration?.targetInfo}
+        nextReward={lessonCelebration?.nextReward}
+        milestoneHit={lessonCelebration?.milestoneHit}
+        perfectWeekJustEarned={!!lessonCelebration?.perfectWeekJustEarned}
+        freezesHeld={streakFreezes}
+        nextLessonTitle={lessonCelebration?.nextLesson?.lesson?.title||null}
+        accent={accent}
+        reducedMotion={reducedMotion}
+        onNextLesson={()=>{
+          const next=lessonCelebration?.nextLesson;
+          setLessonCelebration(null);
+          if(next)openLesson(next.lesson,next.unit);
+        }}
+        onOpenStreak={()=>{setLessonCelebration(null);goProgress('streak');}}
+        onClose={()=>setLessonCelebration(null)}
       />
       {/* First focusable thing on the page. Without it a keyboard or switch user
           has to tab through an eleven-item sidebar on every single navigation. */}

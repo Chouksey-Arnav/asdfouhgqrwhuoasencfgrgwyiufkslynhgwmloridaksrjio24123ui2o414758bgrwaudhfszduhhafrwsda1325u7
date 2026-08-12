@@ -43,6 +43,35 @@ import { analyzeAcademics, gpaBand, gpaPercentileContext } from './academicIntel
 // score they never earned, an essay draft that doesn't exist. Those are
 // completely different failure modes, and the old prompts conflated them into a
 // single blanket refusal.
+
+// ── Streak context ───────────────────────────────────────────────────────────
+// Turns the earned-streak state into sentences Medabrain can act on. Kept here,
+// beside the rest of the profile prose, so both the lesson-scoped and the
+// pathway-scoped prompts say the same thing about the same day.
+//
+// Deliberately factual and never instructive about tone: the prompt says what is
+// true (today is/is not cleared, this much is left, the week is/is not still
+// perfect) and lets the model decide whether that is worth raising. Telling it to
+// "push them" here is how a coach turns into a nag.
+function streakContextLines(ctx, streak = 0) {
+  if (!ctx) return [];
+  const lines = [];
+  const goal = ctx.goalLabel ? `${ctx.goalLabel} (${ctx.goalCredits} credits/day)` : `${ctx.goalCredits} credits/day`;
+  lines.push(ctx.dayMet
+    ? `Today's study goal (${goal}) is already met — do not tell them they still owe work today.`
+    : `Today's study goal (${goal}) is NOT met yet: ${ctx.creditsToday || 0} of ${ctx.goalCredits} credits. One verified lesson, or two quizzes, would clear it.`);
+  if (streak > 0 && !ctx.dayMet) {
+    lines.push(`Their ${streak}-day streak depends on clearing today${ctx.freezes > 0 ? `, though they hold ${ctx.freezes} streak freeze(s) as a safety net` : ' and they hold no streak freezes'}.`);
+  }
+  if (ctx.target) lines.push(`Their own streak goal is ${ctx.target} day(s).`);
+  if (ctx.weekStillPossible && ctx.weekMet != null && ctx.weekMet < 7) {
+    lines.push(`A Perfect Week is still live this week: ${ctx.weekMet}/7 days earned so far.`);
+  } else if (ctx.weekMet === 7) {
+    lines.push(`They earned a Perfect Week — all seven days of this week.`);
+  }
+  return lines;
+}
+
 export const KNOWLEDGE_POLICY = `
 
 ══ WHAT YOU KNOW, AND HOW TO USE IT ══
@@ -281,6 +310,7 @@ export function buildCoachSystemPrompt({
   researchCount = 0,
   skillsCount = 0,
   streak = 0,
+  streakContext = null,   // { goalLabel, goalCredits, creditsToday, dayMet, weekMet, weekStillPossible, target, freezes }
   planSummary = null,
   satProjection = null,
   satWeakSkills = [],
@@ -376,6 +406,10 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
   if (researchCount > 0) liveParts.push(`They've logged ${researchCount} research experience(s).`);
   if (skillsCount > 0) liveParts.push(`They've logged ${skillsCount} skill/certification(s).`);
   liveParts.push(streak > 0 ? `Current study streak: ${streak} day(s).` : `No active study streak right now.`);
+  // The streak is EARNED here (a day counts only once real work clears the student's own
+  // daily goal), so Medabrain must be able to talk about it as work owed today rather than
+  // as attendance — "you haven't studied today yet" is only honest if it knows that.
+  liveParts.push(...streakContextLines(streakContext, streak));
   const liveNote = liveParts.length ? `\n\nWhere they stand right now: ${liveParts.join(' ')}` : '';
 
   // ── Recent cross-app activity — this is what makes Medabrain feel like it's
@@ -662,6 +696,7 @@ export function buildPrepSystemPrompt({
   weakestScore = null,
   dueCards = 0,
   streak = 0,
+  streakContext = null,   // { goalLabel, goalCredits, creditsToday, dayMet, weekMet, weekStillPossible, target, freezes }
   recentActivitySummary = null,
   // See the same parameter on buildCoachSystemPrompt above — the Prep specialist needs it for
   // the same reason: "what should I study next" has a different answer for somebody running
@@ -705,6 +740,7 @@ You are a real tutor with real subject knowledge — biology, chemistry, physics
     if (weakestCategory && weakestScore != null) progressParts.push(`Weakest quiz category so far: ${weakestCategory} at ${weakestScore}% — a strong candidate for what to study next.`);
     if (dueCards > 0) progressParts.push(`${dueCards} flashcard(s) currently due for review.`);
     progressParts.push(streak > 0 ? `Current study streak: ${streak} day(s) — factor this in if they ask about momentum.` : `No active study streak right now.`);
+    progressParts.push(...streakContextLines(streakContext, streak));
     if (recentActivitySummary) progressParts.push(recentActivitySummary);
     scopeBlock = `\n\n── Their pathway ──\n${pathwayLabel} pathway. No specific lesson is open right now — they're asking from the Prep tab in general.${unitLines ? `\n\nUnit-by-unit progress (real, not estimated):\n${unitLines}` : ''}\n\n${progressParts.join(' ')}`;
   }

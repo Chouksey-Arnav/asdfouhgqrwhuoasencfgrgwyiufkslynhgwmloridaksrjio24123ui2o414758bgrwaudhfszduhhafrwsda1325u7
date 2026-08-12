@@ -92,7 +92,7 @@ export default function SatDiagnosticPanel({
     await finish(session.attemptId, responses, { kind: 'diagnostic' });
     setResult({ responses, ranked, bySection });
     setSession(null);
-    onSessionComplete?.('sat_practice');
+    onSessionComplete?.('sat_practice', { questions: responses.length });
     reload();
   }
 
