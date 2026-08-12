@@ -66,7 +66,7 @@ export const SUBVIEWS = {
   progress: {
     state: 'progressView',
     default: 'overview',
-    ids: ['overview', 'streak', 'verified', 'performance', 'achievements'],
+    ids: ['overview', 'streak', 'quests', 'verified', 'performance', 'achievements'],
   },
   // Settings was one seven-group scroll with no addressable parts, which made every instruction
   // that ended "…in Settings" a hunt: the Plans lock screen, the parent invitation email, the
@@ -151,6 +151,11 @@ export const PARENT_VIEWS = {
   // dashboard because it is the one part of this app that is a conversation with a person, and a
   // conversation wedged under a row of statistics gets read as another statistic.
   messages: '/family/messages',
+  // The only screen in this app where a parent asks for something specific rather than reads or
+  // comments. Its own tab because an assignment is a commitment with a deadline on it, and one
+  // wedged into the messages thread would be read as another message — which is exactly the
+  // status a quest must not have.
+  quests: '/family/quests',
   connections: '/family/connections',
   // What this dashboard is, what each number means, where the privacy line is drawn, and what to
   // do when something is not working. Addressable because it is the page a support reply wants to

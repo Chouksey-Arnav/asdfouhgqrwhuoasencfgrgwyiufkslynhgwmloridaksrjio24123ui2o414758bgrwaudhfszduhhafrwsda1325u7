@@ -31,6 +31,7 @@ import parentSummary from './api/parent/summary.js';
 import parentProfile from './api/parent/profile.js';
 import parentClaim from './api/parent/claim.js';
 import parentMessages from './api/parent/messages.js';
+import parentQuests from './api/parent/quests.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -60,6 +61,7 @@ app.all('/api/parent/summary', parentSummary);
 app.all('/api/parent/profile', parentProfile);
 app.all('/api/parent/claim', parentClaim);
 app.all('/api/parent/messages', parentMessages);
+app.all('/api/parent/quests', parentQuests);
 
 // The Vercel handler reads the resource name off req.query.resource (from
 // its [resource].js filename); Express puts route params on req.params, so
