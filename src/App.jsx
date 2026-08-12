@@ -103,6 +103,16 @@ import OpportunitiesPanel from './components/portfolio/OpportunitiesPanel';
 import { buildMatchProfile, matchOpportunities, readPrefs, THEME_BY_ID } from './lib/opportunityMatch';
 import { OPPORTUNITIES } from './data/opportunities';
 import PanelHero, { SectionTitle, StatTile } from './components/ui/PanelHero';
+// Parallel pathways — a student can run up to three tracks at once (see
+// lib/pathwayEnrollment.js for the model, PathwaySwitcher.jsx for the surfaces).
+import {
+  MAX_ACTIVE_PATHWAYS, getActivePathways, getFocusedPathway, activePathwayProgress,
+  enrollPathway, focusPathway, dropPathway, swapPathway, buildLessonPathwayIndex,
+  describeParallelPathways,
+} from './lib/pathwayEnrollment';
+import {
+  PathwayRail, PathwayQuickSwitch, ParallelPathwayBoard, PathwayManager, PATH_ICONS,
+} from './components/PathwaySwitcher';
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab, { fetchPortfolio as fetchPlanPortfolio } from './components/PlansTab';
@@ -1297,11 +1307,13 @@ function NewDeckModal({onCreate,onClose,m=false}){
 }
 
 // ── Pathway Overview Card ────────────────────────────────────────────────────
-const PATH_ICONS = {
-  exploring:Compass, physician:Stethoscope, nursing:HeartPulse, physicianAssistant:ClipboardList,
-  pharmacy:Pill, dentistry:Smile, biomedResearch:Microscope, physicalOccupTherapy:Dumbbell,
-  publicHealth:Globe, healthAdmin:Landmark,
-};
+// PATH_ICONS now lives in components/PathwaySwitcher.jsx (imported above) so the switcher
+// surfaces and this file share exactly one pathway→icon mapping.
+// Which pathway each lesson belongs to. With parallel pathways a student can open a lesson
+// from a pathway that isn't the focused one (straight off the parallel board), so every
+// per-pathway write on completion — unit mastery, milestone nudges, the completion badge —
+// has to ask the lesson rather than assume `user.specialty`.
+const LESSON_PATHWAY = buildLessonPathwayIndex(PATHS);
 // Roadmap item key → icon + accent, used by the Portfolio Class Year Roadmap.
 const ROADMAP_ICONS = {
   diagnostic:{Ic:Compass,color:C.blue}, flashcards:{Ic:Layers3,color:C.violet}, quiz:{Ic:Layers,color:C.green},
@@ -1309,7 +1321,15 @@ const ROADMAP_ICONS = {
   recommenders:{Ic:UserCheck,color:C.violetL}, essays:{Ic:ScrollText,color:C.rose}, deadlines:{Ic:CalendarDays,color:C.roseL},
   interview:{Ic:Mic,color:C.blueL}, resume:{Ic:Award,color:C.violet}, aid:{Ic:Handshake,color:C.green}, mastery:{Ic:Route,color:C.blue},
 };
-function PathwayCard({ pathKey, p, current, onSelect, m=false }){
+/**
+ * The full detail card for a single pathway (diagnostic intro + the "pick one first" screens).
+ *
+ * `current` = this pathway is the one in focus. `enrolled` = it is one of the up-to-three the
+ * student is running. The two are different states now and the card has to say which is which,
+ * because "Currently Active" on a card while two other pathways are also active would be a
+ * straightforward lie. `full` disables adding a fourth, and says why rather than just greying out.
+ */
+function PathwayCard({ pathKey, p, current, enrolled=false, full=false, onSelect, m=false }){
   const Ic = PATH_ICONS[pathKey]||Compass;
   const lessonCount = (p.units||[]).reduce((s,u)=>s+(u.lessons?.length||0),0);
   return(
@@ -1320,7 +1340,9 @@ function PathwayCard({ pathKey, p, current, onSelect, m=false }){
         <div style={{flex:1,minWidth:0}}>
           <div style={R({gap:8})}>
             <div style={{fontSize:16,fontWeight:800,color:C.t1,fontFamily:C.FD,letterSpacing:'-.01em'}}>{p.label}</div>
-            {current&&<span style={{...pill(`${p.accent}20`,p.accent,{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>Current</span>}
+            {current
+              ?<span style={{...pill(`${p.accent}20`,p.accent,{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>In focus</span>
+              :enrolled&&<span style={{...pill(`${p.accent}18`,accentText(p.accent),{fontSize:9}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Check size={9}/>Studying</span>}
           </div>
           {p.tagline&&<div style={{fontSize:12,color:accentText(p.accent),marginTop:2,fontWeight:600,lineHeight:1.4}}>{p.tagline}</div>}
         </div>
@@ -1351,11 +1373,20 @@ function PathwayCard({ pathKey, p, current, onSelect, m=false }){
       </div>}
       <div style={R({justifyContent:'space-between'})}>
         <span style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>{(p.units||[]).length} units · {lessonCount} lessons</span>
-        <motion.button whileHover={{scale:1.03}} whileTap={{scale:.97}} disabled={current}
-          style={{...btn(current?C.s3:accentGrad(p.accent),{fontSize:11.5,padding:'8px 16px',opacity:current?.6:1,cursor:current?'default':'pointer',boxShadow:current?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
-          onClick={()=>!current&&onSelect(pathKey)}>
-          {current?<>Currently Active<Check size={13}/></>:<>Select This Pathway<ChevronRight size={13}/></>}
-        </motion.button>
+        {(()=>{
+          const blocked=current||(full&&!enrolled);
+          return(
+            <motion.button whileHover={blocked?undefined:{scale:1.03}} whileTap={blocked?undefined:{scale:.97}} disabled={blocked}
+              title={full&&!enrolled&&!current?`You're already studying ${MAX_ACTIVE_PATHWAYS} pathways — swap one out on the Pathways page to add this.`:undefined}
+              style={{...btn(blocked?C.s3:accentGrad(p.accent),{fontSize:11.5,padding:'8px 16px',opacity:blocked?.6:1,cursor:blocked?'default':'pointer',boxShadow:blocked?'none':`0 4px 14px ${p.accent}35`}),display:'inline-flex',alignItems:'center',gap:6}}
+              onClick={()=>!blocked&&onSelect(pathKey)}>
+              {current?<>Studying now<Check size={13}/></>
+                :enrolled?<>Switch to this<ChevronRight size={13}/></>
+                :full?<>All {MAX_ACTIVE_PATHWAYS} slots in use<Lock size={12}/></>
+                :<>Add This Pathway<Plus size={13}/></>}
+            </motion.button>
+          );
+        })()}
       </div>
     </motion.div>
   );
@@ -2566,6 +2597,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── Computed values ──────────────────────────────────────────────────────────
   const eSpec   = user?.specialty||'exploring';
   const curPath = PATHS[eSpec]||PATHS['exploring'];
+  // ── Parallel pathways ───────────────────────────────────────────────────────
+  // `eSpec` above keeps its exact old meaning — the pathway currently IN FOCUS — so every
+  // existing reader of user.specialty (plan generation, opportunity matching, college
+  // scoring, Medabrain prompts, the Prep accent wash) needs no change and simply follows
+  // whichever pathway the student is looking at. What's new is that up to three can be
+  // enrolled at once, and switching focus between them is free: no data moves, nothing is
+  // reset, and the other two keep their progress exactly where it was.
+  const activePathways = useMemo(()=>getActivePathways(user,PATHS),[user]);
+  const focusedPathway = useMemo(()=>getFocusedPathway(user,PATHS),[user]);
+  const isParallel = activePathways.length>1;
+  // Whether the Pathways page's add/swap/drop catalogue is expanded. Collapsed by default so
+  // the page opens on the student's own work rather than on ten choices — the wall of options
+  // this app deliberately keeps tearing down.
+  const [pathwayManagerOpen,setPathwayManagerOpen]=useState(false);
+  // Expanding the catalogue is useless if it opens below the fold — the "Add pathway" affordances
+  // scattered around the app all route through here so the student actually lands on it.
+  const openPathwayManager = useCallback(()=>{
+    setPathwayManagerOpen(true);
+    if(typeof document==='undefined')return;
+    // Retried rather than fired once: this is also the landing point for the sidebar's "Add
+    // pathway" from another tab entirely, where the Pathways view has to mount first.
+    let tries=0;
+    const land=()=>{
+      const el=document.getElementById('msp-pathway-manager');
+      if(el){ el.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+      if(tries++<12)setTimeout(land,60);
+    };
+    requestAnimationFrame(()=>requestAnimationFrame(land));
+  },[]);
+  // "Add a pathway" from anywhere in the shell: go to the Pathways view, then open and scroll to
+  // the catalogue — rather than dropping the student on the page and leaving them to find it.
+  const goManagePathways = useCallback(()=>{ goPrep('pathways'); openPathwayManager(); },[goPrep,openPathwayManager]);
   // The Overview's Opportunities card shows the SAME top picks the Opportunities tab leads with —
   // one matcher, one answer, so the card is a real preview of the tab rather than a second, quieter
   // recommendation that happens to disagree with it. Memoized here for the same reason
@@ -2619,6 +2682,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     .filter(Boolean)
     .sort((a,b)=>a-b),
   [curPathAllL,pathway]);
+  // Every enrolled pathway's live progress + its exact next lesson, in slot order. ONE
+  // computation feeding every parallel surface there is — the rail, the sidebar switcher, the
+  // at-a-glance board, the Home strip, the ⌘K entries and the coach's context — so no two of
+  // them can ever disagree about how far along a pathway is, or about which pathway ⌥2 means.
+  const pathwayRows = useMemo(
+    ()=>activePathwayProgress(user,PATHS,pathway,isLessonComplete),
+    [user,pathway,isLessonComplete]);
+  const parallelSummary = useMemo(()=>describeParallelPathways(pathwayRows),[pathwayRows]);
   // ONE computation of "are they on pace", shared by the Pathway editor card, the Home
   // dashboard card and both Medabrain system prompts. Two surfaces disagreeing about whether
   // a student is behind is worse than neither of them saying anything.
@@ -2929,10 +3000,127 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     plans:     { section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
     progress:  { section:'Progress', color:C.cyan, title:'Proof of the work', body:"Verified mastery, performance by topic, and every badge you've earned.", onEnter:()=>setTab('progress') },
   }),[goSat]);
+  // ── Parallel pathway actions ────────────────────────────────────────────────
+  // Switching focus is deliberately the cheapest operation in the app: one write of a single
+  // string. No progress moves, no plan regenerates, nothing resets — which is exactly why it
+  // can be bound to a click, a keystroke, a ⌘K entry and a popover row all at once without
+  // any of them needing a confirmation step.
+  const switchPath = useCallback((key,{ silent=false }={})=>{
+    if(!user)return;
+    const { user:next, status } = focusPathway(user,key,PATHS);
+    if(status==='unknown'||status==='unchanged')return;
+    saveUser(next);
+    play('click');
+    logEvent('pathway_focused',key);
+    // If the student is looking at the Pathways page when they switch, bring the rail back into
+    // view. Without it, someone scrolled down to unit 6 of Physician lands at the same pixel
+    // offset in Nursing — mid-way through units they've never seen, with no idea the page
+    // changed under them. Everywhere else in the app (sidebar, ⌘K, ⌥1-3) the scroll position is
+    // left exactly alone, since it has nothing to do with what just changed.
+    if(typeof document!=='undefined'){
+      const rail=document.querySelector('[data-tour="pathway-rail"]');
+      if(rail)requestAnimationFrame(()=>rail.scrollIntoView({behavior:reducedMotion?'auto':'smooth',block:'start'}));
+    }
+    if(silent)return;
+    const p=PATHS[key];
+    toast(
+      status==='enrolled'?`${p?.label} added — now studying ${getActivePathways(next,PATHS).length} pathways in parallel.`
+                         :`Now in focus: ${p?.label}`,
+      {icon:<RefreshCw size={16}/>,duration:2200});
+  },[user,saveUser,reducedMotion]);
+
+  const enrollPath = useCallback((key)=>{
+    if(!user)return;
+    const { user:next, status } = enrollPathway(user,key,PATHS);
+    const p=PATHS[key];
+    if(status==='full'){
+      toast(`You're already running ${MAX_ACTIVE_PATHWAYS} pathways — swap one out to add ${p?.label}.`,{icon:<Info size={16}/>,duration:3600});
+      return;
+    }
+    if(status==='unknown')return;
+    saveUser(next);
+    play('click');
+    logEvent(status==='enrolled'?'pathway_enrolled':'pathway_focused',key);
+    if(status==='enrolled'){
+      const count=getActivePathways(next,PATHS).length;
+      celebrateXP();
+      toast.success(
+        count>1?`${p?.label} added — ${count} pathways running in parallel. Switch anytime with ⌥${count}.`
+               :`${p?.label} pathway activated.`,
+        {icon:<Route size={16}/>,duration:3600});
+    }else{
+      toast(`Now in focus: ${p?.label}`,{icon:<RefreshCw size={16}/>,duration:2200});
+    }
+  },[user,saveUser]);
+
+  const dropPath = useCallback((key)=>{
+    if(!user)return;
+    const { user:next, status, focused } = dropPathway(user,key,PATHS);
+    if(status!=='dropped')return;
+    saveUser(next);
+    logEvent('pathway_dropped',key);
+    toast(
+      focused?`Stopped studying ${PATHS[key]?.label}. Your progress is saved — now in focus: ${PATHS[focused]?.label}.`
+             :`Stopped studying ${PATHS[key]?.label}. Your progress is saved — pick a pathway whenever you're ready.`,
+      {icon:<Info size={16}/>,duration:4000});
+  },[user,saveUser]);
+
+  const swapPath = useCallback((outKey,inKey)=>{
+    if(!user)return;
+    const { user:next, status } = swapPathway(user,outKey,inKey,PATHS);
+    if(status==='unknown')return;
+    saveUser(next);
+    play('click');
+    logEvent('pathway_swapped',`${outKey}->${inKey}`);
+    toast.success(`${PATHS[inKey]?.label} swapped in for ${PATHS[outKey]?.label} — the old progress is kept.`,{icon:<Route size={16}/>,duration:3600});
+  },[user,saveUser]);
+
+  // "Continue" on a pathway that ISN'T in focus. The whole point of running three at once is
+  // that a five-minute lesson in the other track shouldn't cost a context switch, so this opens
+  // the lesson directly and leaves focus alone. Everything that lesson writes on completion is
+  // keyed off the lesson's own pathway (see LESSON_PATHWAY), not the focused one.
+  const resumePathwayRow = useCallback((row)=>{
+    if(!row?.resume)return;
+    goPrep('pathways');
+    openLesson(row.resume.lesson,row.resume.unit);
+    if(row.key!==focusedPathway){
+      toast(`Opened in ${PATHS[row.key]?.label} — your focus stays on ${PATHS[focusedPathway]?.label}.`,
+        {icon:<Route size={15}/>,duration:2800});
+    }
+  },[goPrep,focusedPathway]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ⌥1 / ⌥2 / ⌥3 — jump straight to the nth pathway from anywhere in the app.
+  // Keyed off e.code, not e.key: on macOS Alt+1 emits '¡', so matching on the character
+  // would make the shortcut work on Windows and silently fail on a Mac. Suppressed while a
+  // text field or a modal has focus, so typing "3" into a search box never re-themes the app.
+  useEffect(()=>{
+    if(activePathways.length<2)return undefined;
+    function onKey(e){
+      if(!e.altKey||e.metaKey||e.ctrlKey)return;
+      const idx=['Digit1','Digit2','Digit3'].indexOf(e.code);
+      if(idx===-1||idx>=activePathways.length)return;
+      const el=document.activeElement;
+      if(el&&(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.isContentEditable))return;
+      e.preventDefault();
+      const key=activePathways[idx];
+      if(key===focusedPathway)return;
+      switchPath(key);
+    }
+    document.addEventListener('keydown',onKey);
+    return ()=>document.removeEventListener('keydown',onKey);
+  },[activePathways,focusedPathway,switchPath]);
+
   const TOUR_STEPS = useMemo(()=>[
     ...navItems.filter(n=>TOUR_COPY[n.id]).map(n=>({ target:`nav-${n.id}`, ...TOUR_COPY[n.id] })),
+    // Only worth a step once there's actually something to switch between — a tour that
+    // explains parallel pathways to somebody running one is teaching a feature they can't see.
+    ...(activePathways.length>1?[{
+      target:'pathway-quickswitch', section:'Everywhere', color:C.violetL, title:'Your pathways, side by side',
+      body:`You're studying ${activePathways.length} pathways at once. This stays with you on every screen — click it to switch, or press ⌥1 / ⌥2${activePathways.length>2?' / ⌥3':''}. Nothing is lost when you move between them.`,
+      onEnter:()=>{setCmdOpen(false);},
+    }]:[]),
     { target:'cmdk', section:'Everywhere', color:C.blueL, title:'Quick Jump — ⌘K', body:"From anywhere, press ⌘K (Ctrl+K) to jump straight to any section. That's it — go explore.", onEnter:()=>{setTab('home');setCmdOpen(false);} },
-  ],[navItems,TOUR_COPY]);
+  ],[navItems,TOUR_COPY,activePathways]);
 
   // ── Quick-switch command palette — one searchable jump point across every ────
   // pillar/subview so the whole product (Prep, Portfolio, Progress, and every
@@ -2943,6 +3131,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Calculator with no scores in it, is the wall of options again with a search
   // box in front of it. It re-grows automatically as the ladder opens.
   const COMMANDS = useMemo(()=>[
+    // Every enrolled pathway, switchable by name — first in the list, because for a student
+    // running three at once "switch to Nursing" is the most-repeated action in the app, and
+    // because this array's order is also the keyboard order: filteredCmds[0] is what Enter
+    // picks the moment the palette opens, so it has to be what the eye lands on too.
+    ...(activePathways.length>1?pathwayRows.filter(r=>r.key!==focusedPathway).map(r=>({
+      id:`path-${r.key}`, label:`${r.label} — ${r.done}/${r.total} lessons`, group:'Pathways',
+      ic:PATH_ICONS[r.key]||Route, action:()=>switchPath(r.key),
+    })):[]),
+    ...(activePathways.length<MAX_ACTIVE_PATHWAYS?[{
+      id:'path-add', label:'Add another pathway', group:'Pathways', ic:Plus, action:goManagePathways,
+    }]:[]),
     ...navItems.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
     ...prepSubnav.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...portfolioSubnav.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
@@ -2961,7 +3160,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Access earns its place here more than most: it is the one settings screen another person
     // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
     ...settingsSubnav.map(n=>({ id:`set-${n.id}`, label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
-  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat,goSettings]);
+  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
     if(!q) return COMMANDS;
@@ -3070,6 +3269,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[user?.name,curPath]);
 
   // ── Pathway helpers ──────────────────────────────────────────────────────────
+  // Which pathway a lesson actually belongs to, and its key. Everything the lesson player shows
+  // or records — its title strip, its accent, its "next lesson", its verification quiz, the
+  // tutor's grounding — has to come from THIS, not from `curPath`: a student running three
+  // pathways can open a Nursing lesson while Physician is in focus, and labelling that lesson
+  // "Physician (MD/DO)" in blue is simply wrong. (Lesson ids are unique across pathways, which
+  // is what makes the lookup unambiguous — guarded by verifyParallelPathways.mjs.)
+  const pathwayKeyOf = useCallback((lesson)=>(lesson?.id&&LESSON_PATHWAY.get(lesson.id))||eSpec,[eSpec]);
+  const pathwayOf = useCallback((lesson)=>PATHS[pathwayKeyOf(lesson)]||curPath,[pathwayKeyOf,curPath]);
   const unitM = (unit)=>unit?.lessons?.length?Math.round(unit.lessons.filter(l=>isLessonComplete(l,pathway[l.id])).length/unit.lessons.length*100):0;
   // States: 'verified' (quiz passed), 'done' (legacy self-report, no curated quiz on this lesson),
   // 'studying' (opened but not yet verified — does NOT unlock the next unit), 'available', 'locked'.
@@ -3084,8 +3291,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(!prev)return'available';
     return prev.lessons.every(l=>isLessonComplete(l,pathway[l.id]))?'available':'locked';
   };
-
-  function switchPath(sp){if(!PATHS[sp]||!user)return;saveUser({...user,specialty:sp});toast(`Switched to ${PATHS[sp]?.label} pathway`,{icon:<RefreshCw size={16}/>});}
 
   async function signOut(){
     // Flush any progress still sitting behind the debounce window before wiping this device's
@@ -3513,6 +3718,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         recentActivitySummary,
         paceText,
         feedbackSummary:feedbackSummary.promptText,
+        parallelPathwaysSummary:isParallel?parallelSummary:null,
       });
       const lastUser=[...history].reverse().find(m=>m.role==='user');
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
@@ -3732,8 +3938,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // VERIFY_PASS_PCT is imported from lib/quizPersonalization — it lives next to the
   // per-student draw logic precisely so it's obvious that the *questions* vary per
   // student while the *bar* never does.
+  // "Next lesson" means the next one in THIS lesson's pathway. With parallel pathways the open
+  // lesson isn't always from the focused track — a Nursing lesson started from the parallel board
+  // must hand off to the next Nursing lesson, not drop the student into Physician's unit 1.
   function getNextLesson(lesson){
-    const flat=(curPath?.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
+    const path=pathwayOf(lesson);
+    const flat=(path?.units||[]).flatMap(u=>u.lessons.map(l=>({lesson:l,unit:u})));
     const idx=flat.findIndex(x=>x.lesson.id===lesson.id);
     return (idx===-1||idx===flat.length-1)?null:flat[idx+1];
   }
@@ -4016,7 +4226,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // profile, pathway and attempt number (lib/quizPersonalization.js). Same 70% bar for everyone.
   function openVerifyQuiz(lesson,unit){
     const attempt=getAttemptCount(lesson.id);
-    const quiz=buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:eSpec,attempt});
+    // Personalized against the lesson's OWN pathway, matching the blurb the player showed.
+    const quiz=buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:pathwayKeyOf(lesson),attempt});
     if(!quiz){toast.error('No verification quiz found for this lesson yet.');return;}
     recordAttempt(lesson.id);
     logEvent('quiz_attempt',lesson.id);
@@ -4051,9 +4262,15 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         else if(tier==='big'||tier==='bonus'){celebrateBonusXP();}
         else celebrateXP();
         toast.success(pickNudge(pct>=90?'lesson_verified_high':'lesson_verified',{lesson:lesson.title,pct}),{icon:<ShieldCheck size={16}/>,duration:3000});
+        // Which pathway this lesson belongs to — NOT necessarily the focused one. With parallel
+        // pathways a student can start a lesson from another enrolled track straight off the
+        // at-a-glance board, and crediting that work to whatever happened to be in focus would
+        // quietly corrupt both pathways' unit mastery and milestone state.
+        const lessonPathKey=LESSON_PATHWAY.get(lesson.id)||eSpec;
+        const lessonPath=PATHS[lessonPathKey]||curPath;
         const allVerified=unit.lessons.every(l=>l.id===lesson.id?true:pathway[l.id]?.verified);
         if(allVerified){
-          await DB.verifyUnit(eSpec,unit.id,aQuiz.id,pct);
+          await DB.verifyUnit(lessonPathKey,unit.id,aQuiz.id,pct);
           logEvent('unit_verified',unit.id);
           setTimeout(()=>celebrateMastery(),400);
           toast.success(pickNudge('unit_verified',{unit:unit.title}),{duration:4000});
@@ -4061,21 +4278,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // Pathway-wide milestone nudge (25/50/75/100%) — computed off this
         // pathway's own lessons (not the global cross-pathway `mastery`), and
         // fired at most once per threshold per pathway via a localStorage flag.
-        const pathLessons=(curPath?.units||[]).flatMap(u=>u.lessons);
+        const pathLessons=(lessonPath?.units||[]).flatMap(u=>u.lessons);
         const pathDoneCount=pathLessons.filter(l=>l.id===lesson.id?true:isLessonComplete(l,pathway[l.id])).length;
         const pathPct=pathLessons.length?Math.round((pathDoneCount/pathLessons.length)*100):0;
         const milestone=[100,75,50,25].find(m=>pathPct>=m);
         if(milestone){
-          const flagKey=`pathwayMilestone:${eSpec}:${milestone}`;
+          const flagKey=`pathwayMilestone:${lessonPathKey}:${milestone}`;
           if(!localStorage.getItem(flagKey)){
             localStorage.setItem(flagKey,'1');
-            toast.success(pickNudge(`pathway_${milestone}`,{pathway:curPath?.label}),{duration:4500,icon:<Milestone size={16}/>});
+            toast.success(pickNudge(`pathway_${milestone}`,{pathway:lessonPath?.label}),{duration:4500,icon:<Milestone size={16}/>});
           }
           // Pathway-completion badge — checkAndUnlockAchievements/DB.unlockAchievement are
           // both idempotent (already-unlocked keys are skipped), so it's safe to call this
           // every time 100% is reached rather than gating it behind the nudge's one-time flag.
           if(milestone===100){
-            checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{pathwayCompletions:new Set([eSpec])});
+            checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{pathwayCompletions:new Set([lessonPathKey])});
           }
         }
       } else {
@@ -4454,9 +4671,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             surfaced permanently so it's revisitable, not a one-time onboarding screen. */}
         {user.generatedPlan?.summary && <MyPlanCard plan={user.generatedPlan} accent={accent} onGoUnlock={()=>goPlans()}/>}
 
-        {/* Continue where you left off */}
-        {(nextLesson||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
-          <div style={{flex:1,minWidth:220}}>
+        {/* Running several pathways? The dashboard says so, and lets the student pick up any of
+            them from here. Home is where a study session starts, so "which of my three do I
+            touch today" is a Home-level question — answering it anywhere else would mean two
+            navigations before a single lesson opens. When only one pathway is enrolled this is
+            silent and the classic single "Continue" card below is unchanged. */}
+        {isParallel&&unlocks.isOpen('prep','pathways')&&(
+          <div>
+            <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+              <SectionTitle icon={Layers3} color={C.violetL} extra={{marginBottom:0}}>Your {activePathways.length} pathways</SectionTitle>
+              <button onClick={()=>goPrep('pathways')} style={{...btnG({fontSize:11,padding:'5px 12px'}),display:'inline-flex',alignItems:'center',gap:5}}>Manage<ChevronRight size={11}/></button>
+            </div>
+            <ParallelPathwayBoard
+              rows={pathwayRows} focused={focusedPathway}
+              onFocus={switchPath} onResume={resumePathwayRow}
+              m={isMobile} reducedMotion={reducedMotion}
+            />
+          </div>
+        )}
+
+        {/* Continue where you left off — the focused pathway's next lesson. Suppressed while
+            several pathways are running, since the board directly above already offers this
+            exact lesson (and the other two), and showing it twice would make the dashboard
+            argue with itself about what "continue" means. */}
+        {((nextLesson&&!isParallel)||topPick)&&<div style={{...glass({padding:20}),display:'flex',gap:16,flexWrap:'wrap'}}>
+          {!isParallel&&<div style={{flex:1,minWidth:220}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8}}>Continue</div>
             {nextLesson?(
               <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -4468,7 +4707,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               </div>
             ):<div style={{fontSize:13,color:C.t2}}>Your pathway is fully complete — nice work.</div>}
             {nextLesson&&<button onClick={()=>goPrep('pathways')} style={btn(C.blueGrad,{marginTop:14,fontSize:12,padding:'8px 18px'})}>Resume Lesson</button>}
-          </div>
+          </div>}
           {topPick&&<div style={{flex:1,minWidth:220,borderLeft:`1px solid ${C.b1}`,paddingLeft:16}}>
             <div style={{fontSize:10,fontWeight:700,color:C.t3,letterSpacing:'.1em',textTransform:'uppercase',marginBottom:8,display:'flex',alignItems:'center',gap:6}}><Brain size={11} color={C.violetL}/>Medabrain's #1 Pick</div>
             <div style={{display:'flex',alignItems:'center',gap:12}}>
@@ -4683,7 +4922,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <p style={{color:C.t2,maxWidth:480,margin:'0 auto 12px',lineHeight:1.75,fontSize:14}}>Based on your answers — how you think, what pulls you in, and what you already know about these careers — <strong style={{color:C.t1}}>{path?.label}</strong> is your closest match.</p>
           <p style={{color:C.t3,maxWidth:480,margin:'0 auto 28px',lineHeight:1.6,fontSize:12}}>Starting this pathway loads {totalLessons} lessons across {(path?.units||[]).length} units, sequenced around the content most relevant to {path?.label}.</p>
           <div style={R({justifyContent:'center',gap:12})}>
-            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{saveUser({...user,specialty:dRes});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');toast.success(`${path?.label} pathway activated`);}}>Accept & Start Pathway<ChevronRight size={16}/></button>
+            <button style={{...btn(path?.gradient||C.blueGrad,{padding:'12px 32px',fontSize:14}),display:'inline-flex',alignItems:'center',gap:8}} onClick={()=>{enrollPath(dRes);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}}>Accept & Start Pathway<ChevronRight size={16}/></button>
             <button style={{...btnG({padding:'12px 24px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDD(false);setDS(0);setDA([]);}}><RefreshCw size={13}/>Retake</button>
           </div>
         </motion.div>
@@ -4721,7 +4960,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Sparkles} color={C.violetL}>You Might Also Fit</SectionTitle>
           <div style={G(2,10,{},isMobile)}>
             {alternates.map(p=>{const key=Object.entries(PATHS).find(([,v])=>v===p)?.[0];const AltIcon=PATH_ICONS[key]||Compass;return(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'}),display:'flex',alignItems:'center',gap:12}}>
                 <div style={{width:36,height:36,borderRadius:10,background:`${p.accent}18`,border:`1px solid ${p.accent}35`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><AltIcon size={16} color={accentText(p.accent)}/></div>
                 <div>
                   <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
@@ -4735,7 +4974,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <SectionTitle icon={Compass} color={C.cyanL}>All Pathways</SectionTitle>
           <div style={G(3,10,{},isMobile)}>
             {Object.entries(PATHS).filter(([k])=>k!==dRes).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{saveUser({...user,specialty:key});setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
+              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>{enrollPath(key);setDD(false);setDS(0);setDA([]);setTab('prep');setPrepView('pathways');}} style={{...glass2({cursor:'pointer',padding:14,transition:'background .15s'})}}>
                 <div style={{fontSize:13,fontWeight:700,color:accentText(p.accent),fontFamily:C.FD}}>{p.label}</div>
                 {p.tagline&&<div style={{fontSize:11,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
                 <div style={{fontSize:10,color:C.t4,marginTop:6,fontFamily:C.FM}}>{p.units.length} units</div>
@@ -4772,8 +5011,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
-                <PathwayCard key={key} pathKey={key} p={p} current={eSpec===key} m={isMobile}
-                  onSelect={(k)=>{saveUser({...user,specialty:k});goPrep('pathways');toast.success(`${p.label} pathway activated`);}}/>
+                <PathwayCard key={key} pathKey={key} p={p} m={isMobile}
+                  current={focusedPathway===key} enrolled={activePathways.includes(key)} full={activePathways.length>=MAX_ACTIVE_PATHWAYS}
+                  onSelect={(k)=>{enrollPath(k);goPrep('pathways');}}/>
               ))}
             </div>
           </div>
@@ -4822,8 +5062,63 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── PATHWAY ───────────────────────────────────────────────────────────────────
   function tPath(){
     const units=curPath?.units||[];
+    // Dropping every pathway is a legitimate state (it's how a student clears the decks and
+    // starts over), so it gets a real screen rather than silently falling back to Exploring.
+    if(activePathways.length===0){
+      return(
+        <div style={CC({gap:22})}>
+          <PanelHero icon={Route} color={C.blue} color2={C.violet} m={isMobile}
+            eyebrow="Pathways" title="Pick where to start"
+            sub={`Choose up to ${MAX_ACTIVE_PATHWAYS} pathways and study them side by side — nothing is locked in, and switching between them takes one click.`}/>
+          <PathwayManager
+            paths={PATHS} rows={pathwayRows} focused={focusedPathway}
+            onEnroll={enrollPath} onFocus={switchPath} onDrop={dropPath} onSwap={swapPath}
+            onDetails={()=>{setDIntro(true);goPrep('diagnostic');}}
+            m={isMobile} reducedMotion={reducedMotion}
+          />
+        </div>
+      );
+    }
     return(
       <div style={CC({gap:22})}>
+        {/* The switcher, first thing on the page and above the pathway's own hero: on the one
+            screen that is entirely about pathways, "which of mine am I looking at" outranks
+            "what is this one called". */}
+        <PathwayRail
+          rows={pathwayRows} focused={focusedPathway} onFocus={switchPath}
+          onAdd={openPathwayManager}
+          m={isMobile} reducedMotion={reducedMotion}
+        />
+        {/* Running more than one? Show all of them, with each one's real next lesson, startable
+            in place. The easiest switch is the one you don't have to make. */}
+        {isParallel&&(
+          <div>
+            <div style={R({justifyContent:'space-between',marginBottom:10,flexWrap:'wrap',gap:8})}>
+              <SectionTitle icon={Layers3} color={C.violetL} extra={{marginBottom:0}}>Running in parallel</SectionTitle>
+              <span style={{fontSize:10.5,color:C.t3,fontFamily:C.FM}}>
+                {isMobile?'Tap a card to jump in':`⌥1–⌥${activePathways.length} to switch · ⌘K to search`}
+              </span>
+            </div>
+            <ParallelPathwayBoard
+              rows={pathwayRows} focused={focusedPathway}
+              onFocus={switchPath} onResume={resumePathwayRow}
+              onAdd={openPathwayManager}
+              m={isMobile} reducedMotion={reducedMotion}
+            />
+          </div>
+        )}
+        {/* Keyed on the focused pathway so React remounts this whole block on a switch and
+            framer-motion plays one short cross-fade. Without it, switching swapped every colour,
+            title and progress number in place in a single frame — correct, but it read as a
+            glitch rather than as a move between two things you own. */}
+        <motion.div
+          key={eSpec} id="pathway-rail-panel"
+          role="tabpanel" aria-labelledby={`pathway-rail-tab-${eSpec}`}
+          initial={reducedMotion?false:{opacity:0,y:8}}
+          animate={{opacity:1,y:0}}
+          transition={{duration:reducedMotion?0:.28,ease:[.22,.61,.36,1]}}
+          style={CC({gap:22})}
+        >
         <div data-tour="prep-deep-pathway" style={{...glass({padding:22,background:`linear-gradient(120deg,${accent}22,${curPath?.accent2||accent}12 60%,transparent)`,border:`1px solid ${accent}35`,position:'relative',overflow:'hidden'}),display:'flex',alignItems:'center',gap:18,flexWrap:'wrap'}}>
           <div style={{position:'absolute',top:0,left:0,right:0,height:2,background:`linear-gradient(90deg,${accent},${curPath?.accent2||accent}00)`}}/>
           <div style={{position:'absolute',inset:0,background:curPath?.gradient||C.blueGrad,opacity:0.08,pointerEvents:'none'}}/>
@@ -4980,20 +5275,51 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </motion.div>
           );
         })}
-        <div style={glass({padding:18})}>
-          <div style={R({justifyContent:'space-between',marginBottom:14})}>
-            <SectionTitle icon={Route} color={accent} extra={{marginBottom:0}}>Switch Study Track</SectionTitle>
-            <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+        </motion.div>
+        {/* Replaces the old "Switch Study Track" grid, where every tile silently replaced the
+            student's pathway with no warning and no way back. Now the same ten tiles ADD to
+            what you're running (up to three), state exactly what a click does, and keep every
+            finished lesson when something is dropped. Collapsed by default so the page still
+            ends on the student's own pathway rather than on a catalogue. */}
+        <div id="msp-pathway-manager" style={glass({padding:18})}>
+          <div style={R({justifyContent:'space-between',marginBottom:pathwayManagerOpen?14:0,flexWrap:'wrap',gap:10})}>
+            <SectionTitle icon={Route} color={accent} extra={{marginBottom:0}}>
+              {isParallel?`Your ${activePathways.length} pathways`:'Study another pathway too'}
+            </SectionTitle>
+            <div style={R({gap:8})}>
+              <button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setDIntro(true);goPrep('diagnostic');}}>Full pathway details<ChevronRight size={12}/></button>
+              <button
+                aria-expanded={pathwayManagerOpen} aria-controls="msp-pathway-manager-body"
+                style={{...btnSm(pathwayManagerOpen?`${accent}16`:C.surfHi,{fontSize:11,color:pathwayManagerOpen?accent:C.t2,border:`1px solid ${pathwayManagerOpen?`${accent}35`:C.b1}`}),display:'inline-flex',alignItems:'center',gap:6}}
+                onClick={()=>{const next=!pathwayManagerOpen;setPathwayManagerOpen(next);if(next)openPathwayManager();}}>
+                {pathwayManagerOpen?<><X size={11}/>Done</>:<><Plus size={11}/>Add or change pathways</>}
+              </button>
+            </div>
           </div>
-          <div style={G(3,10,{},isMobile)}>
-            {Object.entries(PATHS).map(([key,p])=>(
-              <motion.div key={key} whileHover={{borderColor:`${p.accent}40`,background:`${p.accent}08`}} onClick={()=>switchPath(key)} style={{...glass2({padding:14,cursor:'pointer',border:eSpec===key?`1px solid ${p.accent}50`:undefined,transition:'all .15s'})}} >
-                <div style={{fontSize:12,fontWeight:700,color:eSpec===key?accentText(p.accent):C.t2,fontFamily:C.FD}}>{p.label}</div>
-                {p.tagline&&<div style={{fontSize:10.5,color:C.t3,marginTop:4,lineHeight:1.5}}>{p.tagline}</div>}
-                {eSpec===key&&<div style={{fontSize:10,color:accentText(p.accent),marginTop:6,fontWeight:700,display:'inline-flex',alignItems:'center',gap:4}}><Check size={10}/>Current</div>}
+          {!pathwayManagerOpen&&(
+            <div style={{fontSize:11.5,color:C.t3,marginTop:8,lineHeight:1.6}}>
+              {activePathways.length<MAX_ACTIVE_PATHWAYS
+                ? `You can run up to ${MAX_ACTIVE_PATHWAYS} pathways at once — ${MAX_ACTIVE_PATHWAYS-activePathways.length} slot${MAX_ACTIVE_PATHWAYS-activePathways.length===1?'':'s'} open. Progress in one never affects another.`
+                : `All ${MAX_ACTIVE_PATHWAYS} slots are in use. Swap one out whenever you want — nothing you've finished is ever lost.`}
+            </div>
+          )}
+          <AnimatePresence initial={false}>
+            {pathwayManagerOpen&&(
+              <motion.div id="msp-pathway-manager-body"
+                initial={reducedMotion?{opacity:0}:{opacity:0,height:0}}
+                animate={{opacity:1,height:'auto'}}
+                exit={reducedMotion?{opacity:0}:{opacity:0,height:0}}
+                transition={{duration:reducedMotion?0:.22}}
+                style={{overflow:'hidden'}}>
+                <PathwayManager
+                  paths={PATHS} rows={pathwayRows} focused={focusedPathway}
+                  onEnroll={enrollPath} onFocus={switchPath} onDrop={dropPath} onSwap={swapPath}
+                  onDetails={()=>{setDIntro(true);goPrep('diagnostic');}}
+                  m={isMobile} reducedMotion={reducedMotion}
+                />
               </motion.div>
-            ))}
-          </div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );
@@ -8281,9 +8607,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // ═══ ACTIVE QUIZ FULLSCREEN ════════════════════════════════════════════════════
   if(aQuiz){
+    // A verification quiz belongs to the lesson that launched it, so it wears that lesson's
+    // pathway colour — a Nursing lesson's quiz shouldn't turn Physician-blue mid-verification
+    // just because Physician is the pathway in focus. A plain Quiz Library quiz has no pathway
+    // of its own and keeps the focused accent.
+    const qAccent=verifyCtx?.lesson?accentText(pathwayOf(verifyCtx.lesson)?.accent||C.blue):accent;
     return(
       <ErrorBoundary>
-        <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${accent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
+        <div style={{minHeight:'var(--msp-vh)',width:'100%',flex:1,background:`radial-gradient(ellipse 90% 55% at 50% -10%,${qAccent}18 0%,transparent 60%),${C.bg}`,color:C.t1,fontFamily:C.FB}}>
           <Toaster position="top-right"/>
           <div style={{maxWidth:780,margin:'0 auto',padding:'24px 24px 60px'}}>
             <div style={{...glass({padding:'14px 22px',marginBottom:18}),...R()}}>
@@ -8292,7 +8623,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <span style={{marginLeft:'auto',...pill(C.s3,C.t3,{fontSize:10})}}>{aQuiz.diff}</span>
             </div>
             <div style={glass({padding:isMobile?0:24})}>
-              <QuizEngine quiz={aQuiz} onFinish={finishQuiz} onClose={()=>setAQ(null)} accent={accent} readonly={!!aQuiz.readonly} m={isMobile}/>
+              <QuizEngine quiz={aQuiz} onFinish={finishQuiz} onClose={()=>setAQ(null)} accent={qAccent} readonly={!!aQuiz.readonly} m={isMobile}/>
             </div>
           </div>
         </div>
@@ -8305,11 +8636,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const {lesson,unit}=activeLesson;
     const nextInfo=getNextLesson(lesson);
     const lessonContent=LESSON_CONTENT[lesson.id];
+    // The pathway THIS lesson belongs to — see pathwayKeyOf/pathwayOf above. Everything below
+    // reads from these instead of curPath/eSpec so a lesson opened from another enrolled
+    // pathway is titled, coloured, quizzed and tutored as itself.
+    const lPathKey=pathwayKeyOf(lesson);
+    const lPath=PATHS[lPathKey]||curPath;
+    const lAccent=lPath?.accent||C.blue;
     return(
       <ErrorBoundary>
         <Toaster position="top-right"/>
         <LessonPlayer
-          lesson={lesson} unit={unit} pathwayLabel={curPath?.label}
+          lesson={lesson} unit={unit} pathwayLabel={lPath?.label}
           pathwayEntry={pathway[lesson.id]}
           step={lessonStep} onStep={setLessonStep}
           articleRead={articleRead} onArticleRead={()=>setArticleRead(true)}
@@ -8319,20 +8656,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           onStartQuiz={()=>{ setReviewMode(false); openVerifyQuiz(lesson,unit); }}
           onNextLesson={()=>{ if(nextInfo)openLesson(nextInfo.lesson,nextInfo.unit); }}
           hasNextLesson={!!nextInfo}
-          accent={curPath?.accent||C.blue} m={isMobile}
+          accent={lAccent} m={isMobile}
           highlights={lessonHighlights} onAddHighlight={addLessonHighlight} onRemoveHighlight={removeLessonHighlight}
-          quizBlurb={describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:eSpec,attempt:getAttemptCount(lesson.id)}))}
+          quizBlurb={describeVerificationQuiz(buildVerificationQuiz(lesson,ALL_QUIZZES,{user,pathwayKey:lPathKey,attempt:getAttemptCount(lesson.id)}))}
           confirms={lessonConfirms} onConfirmStep={confirmLessonStep} onContinueLater={continueLessonLater}
           reviewMode={reviewMode}
           feedbackSlot={
             <LessonDifficultyCheck
               lesson={lesson} unit={unit} content={lessonContent}
-              pathwayKey={eSpec} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
+              pathwayKey={lPathKey} pathwayLabel={lPath?.label} gradeLabel={gradeLabel}
               user={user} lessonNote={lessonNote}
               feedbackSummary={feedbackSummary.promptText}
               existing={lessonFeedbackRow}
               onSubmit={submitLessonFeedback} onUpdate={updateLessonFeedbackRow}
-              accent={curPath?.accent||C.blue} isMobile={isMobile}
+              accent={lAccent} isMobile={isMobile}
             />
           }
         />
@@ -8341,8 +8678,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PrepMedabrain
           open={prepBrainOpen} onOpenChange={setPrepBrainOpen}
           messages={prepBrainMessages} onMessagesChange={setPrepBrainMessages}
-          user={user} pathwayLabel={curPath?.label} gradeLabel={gradeLabel}
-          accent={curPath?.accent||C.blue} isMobile={isMobile}
+          user={user} pathwayLabel={lPath?.label} gradeLabel={gradeLabel}
+          accent={lAccent} isMobile={isMobile}
           lesson={lesson} unit={unit}
           articleSections={lessonContent?.article?.sections||[]}
           keyTakeaways={lessonContent?.article?.keyTakeaways||[]}
@@ -8352,13 +8689,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           notesDigest={notesDigest} highlightsDigest={highlightsDigest}
           feedbackSummary={feedbackSummary.promptText} paceText={paceText}
           recentActivitySummary={recentActivitySummary}
+          parallelPathwaysSummary={isParallel?parallelSummary:null}
         />
         {/* Left-side notes panel — per-lesson free-text notes, autosaved and fully readable by
             Meta Brain above (see buildPrepSystemPrompt's lessonNote block). */}
         <LessonNotesPanel
           open={notesOpen} onOpenChange={setNotesOpen}
           lessonTitle={lesson.title} value={lessonNote} onSave={saveLessonNoteText}
-          accent={curPath?.accent||C.blue} isMobile={isMobile}
+          accent={lAccent} isMobile={isMobile}
         />
       </ErrorBoundary>
     );
@@ -8403,6 +8741,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           notesDigest={notesDigest} highlightsDigest={highlightsDigest}
           feedbackSummary={feedbackSummary.promptText} paceText={paceText}
           recentActivitySummary={recentActivitySummary}
+          parallelPathwaysSummary={isParallel?parallelSummary:null}
         />
       </div>
     );
@@ -8546,8 +8885,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Plans are built around a pathway (see masterPlanGenerator.js — every generator call reads
   // user.specialty), so a student who hasn't picked one yet — manually or via the diagnostic —
   // gets a requirement screen here instead of a plan silently defaulting to "Exploring Pre-Health."
+  // (With parallel pathways, "which pathway" means the one currently IN FOCUS — the plan follows
+  // focus, so switching pathways re-points the plan generator at the new one. The gate below is
+  // therefore about having *any* pathway enrolled, not about having exactly one.)
   function tPlans(){
-    if(!user?.specialty){
+    if(activePathways.length===0){
       return(
         <div style={CC({gap:22})}>
           <PanelHero icon={Compass} color={C.fuchsia} color2={C.violet} m={isMobile}
@@ -8566,8 +8908,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <SectionTitle icon={Route} color={C.cyanL}>All Pathways — Choose Manually</SectionTitle>
             <div style={G(isMobile?1:2,16,{},false)}>
               {Object.entries(PATHS).map(([key,p])=>(
-                <PathwayCard key={key} pathKey={key} p={p} current={false} m={isMobile}
-                  onSelect={(k)=>{saveUser({...user,specialty:k});toast.success(`${p.label} pathway activated`);}}/>
+                <PathwayCard key={key} pathKey={key} p={p} m={isMobile}
+                  current={focusedPathway===key} enrolled={activePathways.includes(key)} full={activePathways.length>=MAX_ACTIVE_PATHWAYS}
+                  onSelect={(k)=>{enrollPath(k);}}/>
               ))}
             </div>
           </div>
@@ -8643,9 +8986,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {/* ══ MOBILE HEADER ════════════════════════════════════════════════════ */}
         {isMobile && (
           <header style={{padding:'12px 16px',borderBottom:`1px solid ${C.b1}`,background:C.s0,display:'flex',alignItems:'center',justifyContent:'space-between',zIndex:100}}>
-            <div style={R({gap:10})}>
+            <div style={R({gap:10,minWidth:0})}>
               <AnimatedLogo size={30} variant="hover" glow={false}/>
-              <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+              {/* On a phone the wordmark gives way to the pathway switcher the moment there's
+                  more than one pathway to switch between — knowing (and changing) which track
+                  you're in matters more, on every screen, than seeing the app's name again. */}
+              {pathwayRows.length>1?(
+                <div style={{flex:'0 0 auto'}}>
+                  <PathwayQuickSwitch
+                    rows={pathwayRows} focused={focusedPathway}
+                    onFocus={switchPath} onResume={resumePathwayRow}
+                    onAdd={goManagePathways} onManage={goManagePathways}
+                    compact reducedMotion={reducedMotion}
+                  />
+                </div>
+              ):(
+                <div style={{fontSize:14,fontWeight:800,color:C.t1,fontFamily:C.FD}}>MedSchoolPrep</div>
+              )}
             </div>
             <div style={R({gap:10})}>
               <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
@@ -8690,6 +9047,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <Bar pct={levelInfo.pct} color={accent} h={3} glow/>
               {streak>0&&<div style={{...R({gap:6,marginTop:8})}}><span style={pill(C.amberDim,C.amberL,{fontSize:10})}><Flame size={10}/>{streak}d streak</span></div>}
             </div>
+            {/* The switcher lives in the shell, not on the Pathways page, and that placement is
+                the feature: a student writing an essay in Portfolio or grinding SAT questions can
+                see which pathway is in focus and move to another one without navigating anywhere
+                first. Parallel pathways are a property of the whole app, so the control for them
+                belongs where the whole app can see it. */}
+            {pathwayRows.length>0&&(
+              <div style={{padding:'12px 18px',borderBottom:`1px solid ${C.b1}`}}>
+                <PathwayQuickSwitch
+                  rows={pathwayRows} focused={focusedPathway}
+                  onFocus={switchPath} onResume={resumePathwayRow}
+                  onAdd={goManagePathways} onManage={goManagePathways}
+                  reducedMotion={reducedMotion}
+                />
+              </div>
+            )}
             <nav style={{flex:1,padding:'8px 10px',overflowY:'auto'}}>
               {navItems.map(n=>{
                 const active=tab===n.id;
@@ -8864,7 +9236,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>
                 <div style={{overflowY:'auto',padding:8}}>
                   {filteredCmds.length===0&&<div style={{padding:'24px 12px',textAlign:'center',fontSize:12.5,color:C.t3}}>No matches — try a different word.</div>}
-                  {['Jump to','SAT','Prep','Portfolio','Progress'].map(group=>{
+                  {/* 'Pathways' leads: for a student running three tracks, "switch to Nursing"
+                      is the single most-repeated action in the app. ('Settings' is listed here
+                      too because those commands were already being built and matched by the
+                      filter — including by Enter on the keyboard — but never rendered.) */}
+                  {['Pathways','Jump to','SAT','Prep','Portfolio','Progress','Settings'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(

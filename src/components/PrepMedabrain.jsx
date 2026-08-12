@@ -48,6 +48,9 @@ export default function PrepMedabrain({
   // how they've rated lesson difficulty, and the pace goal they set themselves. All of it is
   // already stored — this is what makes Medabrain actually use it.
   lessonHighlights = [], notesDigest = null, highlightsDigest = null, feedbackSummary = null, paceText = null,
+  // One line describing every pathway this student is running at once (null when they're on
+  // just one). See lib/pathwayEnrollment.js — `pathwayLabel` above is only the focused one.
+  parallelPathwaysSummary = null,
 }) {
   const [input, setInput] = React.useState('');
   const [loading, setLoading] = React.useState(false);
@@ -79,6 +82,7 @@ export default function PrepMedabrain({
         units, totalDone, totalLessons, weakestCategory, weakestScore, dueCards, streak,
         recentActivitySummary,
         lessonHighlights, notesDigest, highlightsDigest, feedbackSummary, paceText,
+        parallelPathwaysSummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',
