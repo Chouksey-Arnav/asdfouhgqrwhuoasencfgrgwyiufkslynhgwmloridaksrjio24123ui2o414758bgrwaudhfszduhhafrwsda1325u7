@@ -7,6 +7,7 @@
 // (req, res) shape (res.status().json(), req.body, req.headers) is already
 // Express-compatible.
 import express from 'express';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -41,6 +42,26 @@ const app = express();
 // large-but-legal requests with a body-parser error before the handler's own cap ever ran.
 app.use(express.json({ limit: '3mb' }));
 
+// The security headers vercel.json declares, applied here too.
+//
+// vercel.json only governs the Vercel deployment; production is served by this
+// file (Coolify/VPS), so anything declared only there was never actually sent.
+//
+// HSTS is the addition. The edge already answers http:// with a redirect to
+// https://, which is correct but costs every first-time visitor a round trip —
+// and a crawler counts that hop as a redirect on the site. This tells the
+// browser to make the switch itself for the next two years, so the hop happens
+// once per client instead of once per visit. Deliberately without `preload`:
+// that submits the domain to a hard-coded browser list and is effectively
+// irreversible, which is not a commitment to make as a side effect of an SEO fix.
+app.use((req, res, next) => {
+  res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  next();
+});
+
 app.all('/api/auth/send-otp', sendOtp);
 app.all('/api/auth/verify-otp', verifyOtp);
 app.all('/api/auth/complete-signup', completeSignup);
@@ -72,7 +93,59 @@ app.all('/api/data/:resource', (req, res) => {
 });
 
 const distDir = path.join(__dirname, 'dist');
-app.use(express.static(distDir));
+
+// `redirect: false` matters. Left on (the default), a request for /login would
+// find dist/login/ — a directory, because that is where the prerenderer puts
+// that page — and answer with a 301 to /login/. That turns every public URL on
+// the site into a redirect: the canonical URL in the sitemap would 301, the
+// canonical tag and the URL serving it would disagree, and a crawler would spend
+// its budget on hops. The prerender lookup below serves those directories'
+// index.html directly instead, with no redirect and no trailing slash.
+app.use(express.static(distDir, { redirect: false }));
+
+// ── Prerendered pages ───────────────────────────────────────────────────────
+//
+// The public URLs (/, /login, /parents, /legal/privacy, …) are each served their
+// own HTML file, built by scripts/prerenderSeo.mjs with that page's own <title>,
+// description, canonical, <h1>, body copy, internal links and JSON-LD. Serving
+// index.html for all of them — which is what the catch-all below did for every
+// URL until now — is what made six of seven sitemap URLs look like duplicates of
+// the landing page to anything that does not run JavaScript.
+//
+// Read from a manifest the build writes rather than probed off disk, for two
+// reasons: the runtime image ships dist/, api/ and server.js and has no src/ to
+// import the route table from (see Dockerfile), and a manifest is an explicit
+// allowlist — an arbitrary request path never reaches the filesystem, so there
+// is no traversal to get wrong.
+//
+// Read once at boot: the files are immutable for the life of a container, and a
+// per-request stat on the hot path buys nothing.
+const PRERENDERED = (() => {
+  try {
+    const manifest = JSON.parse(
+      fs.readFileSync(path.join(distDir, 'prerender-manifest.json'), 'utf8'),
+    );
+    const resolved = new Map();
+    for (const [route, file] of Object.entries(manifest)) {
+      const abs = path.join(distDir, file);
+      if (abs.startsWith(distDir + path.sep) && fs.existsSync(abs)) resolved.set(route, abs);
+    }
+    console.log(`prerender: serving ${resolved.size} static pages`);
+    return resolved;
+  } catch {
+    // A dev build, or a `vite build` run without the prerender step. The SPA
+    // fallback below still serves a working app — it just serves the generic
+    // shell, which is exactly the pre-prerender behaviour.
+    console.warn('prerender: no manifest in dist/ — falling back to index.html for all routes');
+    return new Map();
+  }
+})();
+
+/** Normalized for manifest lookup: no query, no trailing slash, always leading one. */
+function routeKey(reqPath) {
+  const trimmed = String(reqPath || '/').replace(/\/+$/, '');
+  return trimmed || '/';
+}
 
 // SPA fallback — but only for app routes.
 //
@@ -91,7 +164,8 @@ app.use(express.static(distDir));
 const FILE_REQUEST = /\.[a-zA-Z0-9]+$/;
 app.get('*', (req, res) => {
   if (FILE_REQUEST.test(req.path)) return res.status(404).type('text/plain').send('Not found');
-  return res.sendFile(path.join(distDir, 'index.html'));
+  const prerendered = PRERENDERED.get(routeKey(req.path));
+  return res.sendFile(prerendered || path.join(distDir, 'index.html'));
 });
 
 const port = process.env.PORT || 3000;
