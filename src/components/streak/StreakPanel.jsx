@@ -3,10 +3,10 @@
 //
 // ── WHY THIS TAB, AND WHY HERE ───────────────────────────────────────────────
 // It is not Home: Home is a one-decision dashboard ("what do I do next"), and
-// burying a settings surface, a month calendar and an eight-rung reward ladder
-// in it would bury the one thing Home is for. It is not Settings either — the
-// streak is not a preference, it is a record, and nobody browses Settings for
-// motivation.
+// burying a settings surface, a month calendar, a check-in calendar and a
+// fourteen-rung reward ladder in it would bury the one thing Home is for. It is
+// not Settings either — the streak is not a preference, it is a record, and
+// nobody browses Settings for motivation.
 //
 // Progress is the tab a student opens to ask "how am I actually doing", which
 // is the exact question a streak answers, and it already holds the other two
@@ -14,20 +14,40 @@
 // Progress sub-nav because it is the only one of the four with a live deadline
 // attached — today is still winnable, and the others are all retrospective.
 //
+// ── The order of this screen ────────────────────────────────────────────────
+// Ordered by "how urgent is this right now", not by "how permanent is it":
+//
+//   0. THE REPAIR OFFER, when there is one. A broken streak is the only thing on
+//      this page with a clock on it, and it goes above everything.
+//   1. TODAY. The hero — the number, the league, and whether today is earned.
+//   2. THE LIVE STUFF. Perfect Week, Perfect Month, your target, running boosts.
+//   3. PROTECTION. Freezes: what you hold, what it costs, what has been spent.
+//   4. THE CHECK-IN CALENDAR. The other ladder — turning up, not working.
+//   5. THE RECORD. The month calendar.
+//   6. THE LADDERS. Milestones and leagues.
+//   7. SETTINGS. Your daily goal and your streak target.
+//   8. REFERENCE. What earns credit.
+//
 // Home still carries a compact streak card (StreakHomeCard) that links here.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Flame, Snowflake, Trophy, Target, Check, Lock, CalendarCheck,
-  Sparkles, TrendingUp, Info,
+  Flame, Snowflake, Trophy, Target, Check, Lock, CalendarCheck, CalendarRange,
+  Sparkles, TrendingUp, Info, Zap,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, pill, R, CC, lbl, tint, onTint, autoGrid } from '../../lib/theme';
 import {
   STREAK_GOALS, STREAK_TARGETS, STREAK_REWARDS, STREAK_ACTIONS,
-  PERFECT_WEEK_REWARD, rewardKey, perfectWeekKey, remainingCopy, nextMilestone,
+  PERFECT_WEEK_REWARD, PERFECT_MONTH_REWARD, rewardKey, perfectWeekKey, perfectMonthKey,
+  remainingCopy, nextMilestone, leagueFor, streakBonusLabel, activeBoosts,
 } from '../../lib/streak';
 import StreakCalendar from './StreakCalendar';
+import StreakLeagueCard, { LeagueChip, LeagueLadder } from './StreakLeague';
+import FreezeCard from './FreezeCard';
+import StreakRepairCard from './StreakRepairCard';
+import CheckInCalendar from './CheckInCalendar';
+import { BoostList } from './BoostChip';
 
 const ACCENT = C.amber;
 
@@ -35,8 +55,11 @@ export default function StreakPanel({
   streak = 0,
   bestStreak = 0,
   freezesHeld = 0,
+  freezeHistory = [],
+  xp = 0,
   day = null,              // dayStatus() for today
   week = null,             // weekProgress()
+  month = null,            // monthProgress()
   targetInfo = null,       // targetProgress()
   activity = new Map(),
   bridged = new Set(),
@@ -44,37 +67,55 @@ export default function StreakPanel({
   goalId,
   streakTarget,
   totalEarnedDays = 0,
+  boosts = [],
+  repair = null,           // repairOffer() output, or null
+  checkin = null,          // loadCheckinState() output
   onSetGoal,
   onSetTarget,
+  onBuyFreeze,
+  onRepair,
+  onClaimCheckin,
+  busy = {},               // { freeze, repair, checkin }
   m = false,
 }) {
   const next = useMemo(() => nextMilestone(streak), [streak]);
   const goalCredits = day?.goalCredits || 4;
+  const league = useMemo(() => leagueFor(streak), [streak]);
+  const bonusLabel = useMemo(() => streakBonusLabel(streak), [streak]);
+  const liveBoosts = useMemo(() => activeBoosts(boosts), [boosts]);
 
   return (
     <div style={CC({ gap: 20 })}>
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
+      {/* ── 0. The repair offer ──────────────────────────────────────────── */}
+      {repair && (
+        <StreakRepairCard offer={repair} xp={xp} onRepair={onRepair} busy={!!busy.repair} m={m} />
+      )}
+
+      {/* ── 1. Hero ─────────────────────────────────────────────────────── */}
       <div style={{
         ...glass({ padding: m ? 20 : 26 }),
-        background: `linear-gradient(150deg, ${tint(ACCENT, 0.13)}, ${tint(C.orange, 0.04)})`,
-        border: `1px solid ${tint(ACCENT, 0.3)}`,
+        background: `linear-gradient(150deg, ${tint(league.color, 0.14)}, ${tint(C.orange, 0.04)})`,
+        border: `1px solid ${tint(league.color, 0.3)}`,
         position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{ position: 'absolute', right: -70, top: -70, width: 220, height: 220, borderRadius: '50%', background: `radial-gradient(circle, ${ACCENT}22, transparent 70%)`, pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: -70, top: -70, width: 220, height: 220, borderRadius: '50%', background: `radial-gradient(circle, ${tint(league.color, 0.22)}, transparent 70%)`, pointerEvents: 'none' }} />
         <div style={{ position: 'relative', display: 'flex', gap: m ? 16 : 24, alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{
             width: m ? 74 : 88, height: m ? 74 : 88, borderRadius: '50%', flexShrink: 0,
-            background: `radial-gradient(circle at 50% 62%, ${tint(ACCENT, 0.3)}, ${tint(ACCENT, 0.07)})`,
-            border: `2px solid ${tint(ACCENT, 0.45)}`,
+            background: `radial-gradient(circle at 50% 62%, ${tint(league.color, 0.3)}, ${tint(league.color, 0.07)})`,
+            border: `2px solid ${tint(league.color, 0.45)}`,
             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 44px ${ACCENT}40`,
+            boxShadow: `0 0 44px ${tint(league.color, 0.4)}`,
           }}>
-            <Flame size={m ? 22 : 26} color={ACCENT} fill={streak > 0 ? ACCENT : 'none'} />
+            <Flame size={m ? 22 : 26} color={league.color} fill={streak > 0 ? league.color : 'none'} />
             <div style={{ fontSize: m ? 20 : 24, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 2 }}>{streak}</div>
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ fontSize: 10.5, fontWeight: 700, color: ACCENT, letterSpacing: '.14em', textTransform: 'uppercase', marginBottom: 6 }}>
-              Current streak
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 6 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: league.color, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+                Current streak
+              </span>
+              <LeagueChip streak={streak} size="sm" />
             </div>
             <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, margin: '0 0 10px', fontFamily: C.FD, letterSpacing: '-.02em' }}>
               {streak === 0 ? 'Start one today' : `${streak} day${streak === 1 ? '' : 's'} in a row`}
@@ -82,9 +123,19 @@ export default function StreakPanel({
             <div style={R({ gap: 7, flexWrap: 'wrap' })}>
               <span style={pill(C.s3, C.t2, { fontFamily: C.FM })}><Trophy size={11} style={{ marginRight: 4 }} />Best {bestStreak}</span>
               <span style={pill(C.s3, C.t2, { fontFamily: C.FM })}>{totalEarnedDays} days earned all-time</span>
+              {bonusLabel && (
+                <span style={{ ...pill(tint(C.amber, 0.14), C.amberL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <TrendingUp size={11} />{bonusLabel} on everything
+                </span>
+              )}
               {freezesHeld > 0 && (
                 <span style={{ ...pill(C.blueDim, C.blueL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                   <Snowflake size={11} />{freezesHeld} freeze{freezesHeld > 1 ? 's' : ''}
+                </span>
+              )}
+              {liveBoosts.length > 0 && (
+                <span style={{ ...pill(C.violetDim, C.violetL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <Zap size={11} />{liveBoosts.length} boost{liveBoosts.length > 1 ? 's' : ''} live
                 </span>
               )}
             </div>
@@ -100,7 +151,7 @@ export default function StreakPanel({
                   ? <span style={{ width: 20, height: 20, borderRadius: '50%', background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={13} color={onTint(C.green)} strokeWidth={3} /></span>
                   : <Target size={15} color={C.t2} />}
                 <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>
-                  {day.met ? "Today is earned" : "Today's goal"}
+                  {day.met ? 'Today is earned' : "Today's goal"}
                 </span>
               </span>
               <span style={{ fontSize: 12, color: C.t3, fontFamily: C.FM }}>{day.credits} / {day.goalCredits} credits</span>
@@ -123,13 +174,35 @@ export default function StreakPanel({
         )}
       </div>
 
-      {/* ── Perfect week + your goal ──────────────────────────────────────── */}
+      {/* ── 2. The live stuff ────────────────────────────────────────────── */}
       <div style={autoGrid(280, 16)}>
         {week && <PerfectWeekCard week={week} claimed={claimedRewards.has(perfectWeekKey(week.weekKey))} m={m} />}
+        {month && <PerfectMonthCard month={month} claimed={claimedRewards.has(perfectMonthKey(month.monthKey))} m={m} />}
         {targetInfo && <TargetCard targetInfo={targetInfo} streak={streak} next={next} m={m} />}
       </div>
 
-      {/* ── Calendar ──────────────────────────────────────────────────────── */}
+      {liveBoosts.length > 0 && (
+        <div style={glass({ padding: m ? 16 : 20 })}>
+          <div style={{ ...lbl({ marginBottom: 4 }) }}>Boosts running</div>
+          <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 14 }}>
+            A boost multiplies every XP award while it lasts, on top of your league bonus.
+          </div>
+          <BoostList boosts={boosts} streakBonusLabel={bonusLabel} m={m} />
+        </div>
+      )}
+
+      {/* ── 3. Protection ────────────────────────────────────────────────── */}
+      <FreezeCard
+        streak={streak} held={freezesHeld} xp={xp} history={freezeHistory}
+        onBuy={onBuyFreeze} busy={!!busy.freeze} m={m}
+      />
+
+      {/* ── 4. The other ladder ──────────────────────────────────────────── */}
+      {checkin && (
+        <CheckInCalendar state={checkin} onClaim={onClaimCheckin} busy={!!busy.checkin} m={m} />
+      )}
+
+      {/* ── 5. The record ────────────────────────────────────────────────── */}
       <div style={glass({ padding: m ? 16 : 22 })}>
         <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
           <div>
@@ -140,11 +213,14 @@ export default function StreakPanel({
         <StreakCalendar activity={activity} bridged={bridged} goalCredits={goalCredits} accent={ACCENT} m={m} />
       </div>
 
-      {/* ── Rewards ladder ────────────────────────────────────────────────── */}
+      {/* ── 6. The ladders ───────────────────────────────────────────────── */}
+      <StreakLeagueCard streak={streak} freezesHeld={freezesHeld} m={m} />
+
       <div style={glass({ padding: m ? 16 : 22 })}>
         <div style={{ ...lbl(), marginBottom: 4 }}>Streak rewards</div>
         <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 16 }}>
-          Every rung pays out once, ever — automatically, the moment you reach it.
+          Every rung pays out once, ever — automatically, the moment you reach it. The first four
+          are all inside your first fortnight, because that is the part that is actually hard.
         </div>
         <div style={CC({ gap: 8 })}>
           {STREAK_REWARDS.map(r => (
@@ -156,7 +232,16 @@ export default function StreakPanel({
         </div>
       </div>
 
-      {/* ── Goals ─────────────────────────────────────────────────────────── */}
+      <div style={glass({ padding: m ? 16 : 22 })}>
+        <div style={{ ...lbl(), marginBottom: 4 }}>Leagues</div>
+        <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 16 }}>
+          Your league is your streak length, given a name. It sets how many freezes you can hold and
+          how much extra XP everything you do is worth.
+        </div>
+        <LeagueLadder streak={streak} m={m} />
+      </div>
+
+      {/* ── 7. Settings ──────────────────────────────────────────────────── */}
       <div style={glass({ padding: m ? 16 : 22 })}>
         <div style={{ ...lbl(), marginBottom: 4 }}>Your daily goal</div>
         <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 16 }}>
@@ -212,15 +297,16 @@ export default function StreakPanel({
         </div>
       </div>
 
-      {/* ── What counts ───────────────────────────────────────────────────── */}
+      {/* ── 8. What counts ───────────────────────────────────────────────── */}
       <div style={glass({ padding: m ? 16 : 22 })}>
         <div style={R({ gap: 7, marginBottom: 4 })}>
           <Info size={13} color={C.t3} />
           <div style={{ ...lbl(), marginBottom: 0 }}>What earns credit</div>
         </div>
         <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 16, lineHeight: 1.5 }}>
-          Opening the app earns nothing. A streak here is a record of work, so only finished work
-          moves it — which is what makes it worth having.
+          Opening the app earns nothing here — that is what the check-in calendar above is for. A
+          streak is a record of work, so only finished work moves it, which is what makes it worth
+          having.
         </div>
         <div style={autoGrid(210, 10)}>
           {Object.entries(STREAK_ACTIONS).map(([key, a]) => (
@@ -288,6 +374,60 @@ function PerfectWeekCard({ week, claimed, m }) {
   );
 }
 
+/**
+ * The Perfect Month.
+ *
+ * Deliberately measured against ELAPSED days rather than the whole month: a bar
+ * reading 26% on the 8th of a flawless month is telling a student they are
+ * failing at the thing they are currently winning, which is the single fastest
+ * way to make somebody stop looking at a progress bar.
+ */
+function PerfectMonthCard({ month, claimed, m }) {
+  const tone = month.complete ? C.green : month.stillPossible ? C.violet : C.t3;
+  return (
+    <div style={{
+      ...glass({ padding: m ? 16 : 20 }),
+      border: `1px solid ${month.complete ? tint(C.green, 0.35) : month.stillPossible ? tint(C.violet, 0.28) : C.b1}`,
+      background: month.complete ? tint(C.green, 0.07) : month.stillPossible ? tint(C.violet, 0.05) : C.surf,
+    }}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+        <span style={R({ gap: 7 })}>
+          <CalendarRange size={15} color={tone} />
+          <span style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Perfect {month.label}</span>
+        </span>
+        <span style={pill(tint(tone, 0.14), tone, { fontSize: 10.5 })}>
+          {claimed ? 'Claimed' : month.complete ? 'Earned' : `${month.met}/${month.elapsed}`}
+        </span>
+      </div>
+
+      {/* One pip per day of the month. Dense on purpose — the shape of the month
+          is the information, not any individual square. */}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(16, month.daysInMonth)}, 1fr)`, gap: 3, marginBottom: 12 }}>
+        {month.days.map(d => (
+          <div
+            key={d.key}
+            title={`${d.key}${d.met ? ' — earned' : d.frozen ? ' — frozen' : ''}`}
+            style={{
+              height: 14, borderRadius: 3,
+              background: d.met ? C.violet : d.frozen ? tint(C.blue, 0.22) : d.future ? 'transparent' : C.s2,
+              border: d.isToday ? `1px solid ${C.t1}` : `1px solid ${d.future ? C.b0 : 'transparent'}`,
+              opacity: d.future ? 0.4 : 1,
+            }}
+          />
+        ))}
+      </div>
+
+      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>
+        {month.complete
+          ? `Every day of ${month.label} earned — +${PERFECT_MONTH_REWARD.xp} XP and ${PERFECT_MONTH_REWARD.freezes} freezes.`
+          : month.stillPossible
+            ? `Still flawless. ${month.remaining} day${month.remaining === 1 ? '' : 's'} left in ${month.label} for +${PERFECT_MONTH_REWARD.xp} XP and ${PERFECT_MONTH_REWARD.freezes} freezes.`
+            : `${month.missed} day${month.missed === 1 ? '' : 's'} missed — this one is gone, and a fresh month starts on the 1st. Freezes do not cover it.`}
+      </div>
+    </div>
+  );
+}
+
 function TargetCard({ targetInfo, streak, next, m }) {
   return (
     <div style={glass({ padding: m ? 16 : 20 })}>
@@ -308,7 +448,7 @@ function TargetCard({ targetInfo, streak, next, m }) {
       <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>
         {targetInfo.remaining > 0
           ? `${targetInfo.remaining} more day${targetInfo.remaining === 1 ? '' : 's'} to hit ${targetInfo.target}.`
-          : `You are at your goal. Set a longer one below.`}
+          : 'You are at your goal. Set a longer one below.'}
         {targetInfo.surpassed && ` You already passed ${targetInfo.original}.`}
       </div>
       {next && (

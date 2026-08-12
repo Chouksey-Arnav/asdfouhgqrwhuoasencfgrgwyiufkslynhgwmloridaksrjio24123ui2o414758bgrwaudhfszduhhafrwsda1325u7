@@ -65,14 +65,22 @@ export function useSatSession({ onFinished } = {}) {
     }
   }, []);
 
-  /** Close out an attempt, award XP, and record the study day. */
+  /**
+   * Close out an attempt and award XP.
+   *
+   * Deliberately does NOT touch the streak. Streak credit for SAT work is paid by volume
+   * (`sat_practice_set` per ten questions, `sat_full_test` for a sitting) from App.jsx's
+   * `onSessionComplete` handler, which is the single place in the app allowed to reach the
+   * streak recorder — see the header of src/lib/streak.js. This used to call a
+   * `DB.recordStudyToday()` that the earned-streak rewrite removed, which threw here and took
+   * the XP award down with it.
+   */
   const finish = useCallback(async (id, responses, result = {}) => {
     if (!id) return null;
     const correct = responses.filter(r => r.correct).length;
     await DB.finishSatAttempt(id, {
       result: { correct, total: responses.length, ...result },
     });
-    await DB.recordStudyToday();
 
     const base = correct * XP_PER_CORRECT + responses.length * XP_PER_ATTEMPT;
     const { finalXP } = awardXP(base, { allowBonus: true });

@@ -16,6 +16,11 @@
  *      student can move a quest's progress or status.
  *   6. EVERY SURFACE IS WIRED. The board, the Home card, four strips, the takeover, the nav
  *      badge, both routes.
+ *   7. THE DAILY SET IS DETERMINISTIC. Three quests a day, the same three on every device,
+ *      unrerollable by a reload, and drawn only from things the student can actually do. A
+ *      daily set that changes under somebody mid-session is a set nobody trusts.
+ *   8. CHAINS ARE LADDERS, NOT GATES. Every chain names real quests, in ascending difficulty,
+ *      and nothing in the catalog is unreachable.
  *
  * Run by `npm run verify:quests` (and by `npm run build`).
  */
@@ -40,6 +45,8 @@ const section = (name) => console.log(`\n${name}`);
 
 const CAT = await load('src/data/questCatalog.js');
 const Q = await load('src/lib/quests.js');
+const DCAT = await load('src/data/dailyQuestCatalog.js');
+const D = await load('src/lib/dailyQuests.js');
 const SERVER = await load('api/_lib/questCatalog.js');
 const { SUBVIEWS, PARENT_VIEWS } = await load('src/lib/routes.js');
 
@@ -226,7 +233,8 @@ const ev = (type, at, value = 1) => ({ type, at, value });
   // Recommendations: explainable, never duplicated, never something already running.
   const recs = Q.recommendQuests({}, []);
   assert('a brand-new student gets a starter recommendation', recs.length > 0);
-  assert('...beginning with the gentlest one', recs[0].id === 'consist_first_week');
+  assert('...beginning with the gentlest one in the catalog', recs[0].id === 'consist_warmup',
+    `got ${recs[0]?.id} — a first quest exists to be finished, so the five-day Warm-up must outrank the seven-day one`);
   for (const r of recs) {
     assert(`recommendation ${r.id} exists in the catalog`, !!CAT.QUEST_BY_ID[r.id]);
     assert(`recommendation ${r.id} says why`, !!r.reason && r.reason.length > 25);
@@ -359,6 +367,214 @@ assert('quests add no storage of their own',
 
 assert('the client never throws a quest error into a study surface',
   /export async function list\(\)[\s\S]{0,400}catch \{\s*\n?\s*return \{ quests: \[\], available: false \};/.test(read('src/lib/questApi.js')));
+
+// ── 7. Chains are ladders, not gates ────────────────────────────────────────
+section('Every chain is a real ladder');
+
+for (const [id, chain] of Object.entries(CAT.QUEST_CHAINS)) {
+  eq(`chain ${id} knows its own id`, chain.id, id);
+  assert(`chain ${id} has a label and a reason to climb it`, !!chain.label && chain.blurb?.length > 20);
+  assert(`chain ${id} is worth climbing (3+ rungs)`, chain.steps.length >= 3, `${chain.steps.length} rungs`);
+  assert(`chain ${id} names only real quests`, chain.steps.every((s) => !!CAT.QUEST_BY_ID[s]),
+    chain.steps.filter((s) => !CAT.QUEST_BY_ID[s]).join(', '));
+  assert(`chain ${id} never repeats a rung`, new Set(chain.steps).size === chain.steps.length);
+  // Ascending difficulty. A ladder whose third rung is easier than its second is not a ladder.
+  const tiers = chain.steps.map((s) => CAT.tierRank(CAT.QUEST_BY_ID[s]?.tier));
+  assert(`chain ${id} climbs in difficulty`, tiers.every((t, i) => i === 0 || t >= tiers[i - 1]),
+    chain.steps.map((s, i) => `${s}=${CAT.QUEST_BY_ID[s]?.tier}`).join(' → '));
+  // The back-reference has to agree, or a card says "step 2 of 5" about a different ladder.
+  chain.steps.forEach((qid, i) => {
+    const quest = CAT.QUEST_BY_ID[qid];
+    eq(`${qid} points back at ${id}`, quest.chain, id);
+    eq(`${qid} knows it is step ${i + 1}`, quest.chainStep, i + 1);
+  });
+  // nextInChain walks it, and stops at the top.
+  for (let i = 0; i < chain.steps.length - 1; i += 1) {
+    eq(`nextInChain(${chain.steps[i]}) is the rung above`, CAT.nextInChain(chain.steps[i])?.id, chain.steps[i + 1]);
+  }
+  eq(`the top of ${id} has nothing above it`, CAT.nextInChain(chain.steps[chain.steps.length - 1]), null);
+}
+
+{
+  // chainProgress marks exactly one 'next', and a fully claimed chain is complete.
+  const chain = CAT.QUEST_CHAINS.pathway_road;
+  const fresh = Q.chainProgress('pathway_road', { activeIds: [], doneIds: [] });
+  eq('a fresh chain points at its first rung', fresh.next?.id, chain.steps[0]);
+  eq('...and marks exactly one rung as next', fresh.steps.filter((s) => s.state === 'next').length, 1);
+  const partial = Q.chainProgress('pathway_road', { doneIds: [chain.steps[0], chain.steps[1]] });
+  eq('a partly-climbed chain counts what is done', partial.completed, 2);
+  eq('...and points at the rung above', partial.next?.id, chain.steps[2]);
+  const full = Q.chainProgress('pathway_road', { doneIds: chain.steps });
+  assert('a fully claimed chain is complete', full.complete && full.pct === 100);
+  assert('...and has nothing left to point at', full.next === null);
+  assert('an unknown chain id is null rather than a crash', Q.chainProgress('nope') === null);
+}
+
+{
+  // The recommender promotes the rung above anything already claimed.
+  const withDone = Q.recommendQuests({ lessonsVerified: 6, quizzesTaken: 5, activeDaysLast7: 4 }, [], ['path_first_unit']);
+  assert('finishing a rung recommends the one above it',
+    withDone.some((r) => r.id === 'path_steady_dozen'));
+  assert('...and never re-recommends the finished one',
+    !withDone.some((r) => r.id === 'path_first_unit'));
+}
+
+// ── 8. The catalog is big enough to be a catalog ────────────────────────────
+section('The catalog covers the product');
+
+assert('the catalog is substantial', CAT.QUESTS.length >= 50, `${CAT.QUESTS.length} quests`);
+for (const cat of Object.keys(CAT.QUEST_CATEGORIES)) {
+  assert(`category '${cat}' has at least three quests`, CAT.questsInCategory(cat).length >= 3,
+    `${CAT.questsInCategory(cat).length}`);
+}
+assert('every category is reachable from some surface',
+  Object.keys(CAT.QUEST_CATEGORIES).every((c) => CAT.QUESTS.some((q) => q.category === c && q.surfaces.length)));
+assert('CATEGORY_ORDER lists every category exactly once',
+  CAT.CATEGORY_ORDER.length === Object.keys(CAT.QUEST_CATEGORIES).length
+  && new Set(CAT.CATEGORY_ORDER).size === CAT.CATEGORY_ORDER.length);
+assert('there is a five-day-or-under entry point',
+  CAT.QUESTS.some((q) => q.windowDays <= 7 && CAT.QUEST_TIERS[q.tier].xp <= 100),
+  'a first quest exists to be finished; the old 200 XP / 7-day floor was the wrong one');
+assert('tier XP climbs monotonically with tier rank',
+  CAT.TIER_ORDER.every((t, i) => i === 0 || CAT.QUEST_TIERS[t].xp > CAT.QUEST_TIERS[CAT.TIER_ORDER[i - 1]].xp));
+assert('every metric a quest names carries its own evidence line',
+  CAT.QUESTS.every((q) => (CAT.QUEST_METRICS[q.metric].evidence || '').length > 12),
+  'a metric whose provenance is unexplained is one a suspicious parent assumes is self-reported');
+
+// Every icon any catalog names must resolve, or a card renders the generic mark.
+{
+  const icons = read('src/components/quests/questIcons.js');
+  const named = new Set([
+    ...CAT.QUESTS.map((q) => q.icon),
+    ...Object.values(CAT.QUEST_CHAINS).map((c) => c.icon),
+    ...Object.values(CAT.QUEST_CATEGORIES).map((c) => c.icon),
+    ...DCAT.DAILY_QUESTS.map((q) => q.icon),
+  ]);
+  for (const name of named) {
+    assert(`icon '${name}' resolves`, new RegExp(`\\b${name}\\b`).test(icons));
+  }
+}
+
+// ── 9. The daily set ────────────────────────────────────────────────────────
+section("Today's three are the same three all day, on every device");
+
+assert('the pool is big enough to feel like a rotation', DCAT.DAILY_QUESTS.length >= 30,
+  `${DCAT.DAILY_QUESTS.length} templates`);
+assert('daily quest ids are unique',
+  new Set(DCAT.DAILY_QUESTS.map((q) => q.id)).size === DCAT.DAILY_QUESTS.length);
+for (const q of DCAT.DAILY_QUESTS) {
+  assert(`${q.id} names a real metric`, !!CAT.QUEST_METRICS[q.metric], q.metric);
+  assert(`${q.id} names a real tier`, !!DCAT.DAILY_TIERS[q.tier], q.tier);
+  assert(`${q.id} has a destination`, !!Q.QUEST_DESTINATIONS[q.metric]);
+  assert(`${q.id} asks for at least one unit`, q.target >= 1);
+  assert(`${q.id} says what it is`, !!q.title && q.blurb?.length > 15);
+  if (q.requires) assert(`${q.id} names a real requirement`, DCAT.DAILY_REQUIREMENTS.includes(q.requires), q.requires);
+}
+for (const tier of DCAT.DAILY_TIER_ORDER) {
+  assert(`every tier has enough templates to rotate ('${tier}')`, DCAT.dailyByTier(tier).length >= 8,
+    `${DCAT.dailyByTier(tier).length}`);
+}
+assert('daily XP climbs with the tier',
+  DCAT.DAILY_TIER_ORDER.every((t, i) => i === 0 || DCAT.DAILY_TIERS[t].xp > DCAT.DAILY_TIERS[DCAT.DAILY_TIER_ORDER[i - 1]].xp));
+assert('the set bonus is worth more than any single quest in it',
+  DCAT.DAILY_SET_BONUS.xp > Math.max(...Object.values(DCAT.DAILY_TIERS).map((t) => t.xp)),
+  'the bonus is the mechanic that gets the third card done — pricing it below the gold quest wastes it');
+
+{
+  const caps = D.capabilities({ hasPathway: true, satQuestions: 500, hasPlan: true, deckCount: 3 });
+  const a = D.dailySet({ userKey: 'abc', date: '2026-08-12', caps });
+  const b = D.dailySet({ userKey: 'abc', date: '2026-08-12', caps });
+  eq('the same student on the same day gets the same three',
+    a.map((q) => q.id).join(','), b.map((q) => q.id).join(','));
+  eq('...which is exactly three', a.length, 3);
+  eq('...one of each tier', a.map((q) => q.tier).join(','), DCAT.DAILY_TIER_ORDER.join(','));
+  const tomorrow = D.dailySet({ userKey: 'abc', date: '2026-08-13', caps });
+  assert('a different day is a different set',
+    tomorrow.map((q) => q.id).join(',') !== a.map((q) => q.id).join(','));
+  const other = D.dailySet({ userKey: 'zzz', date: '2026-08-12', caps });
+  assert('a different student gets a different set',
+    other.map((q) => q.id).join(',') !== a.map((q) => q.id).join(','));
+  eq('tomorrowSet agrees with tomorrow\'s dailySet',
+    D.tomorrowSet({ userKey: 'abc', date: '2026-08-12', caps }).map((q) => q.id).join(','),
+    tomorrow.map((q) => q.id).join(','));
+
+  // A student who has never touched the SAT tab is never handed a full-length test.
+  const bare = D.capabilities({ hasPathway: false, satQuestions: 0, satTouched: false, hasPlan: false, deckCount: 0 });
+  for (const date of ['2026-08-12', '2026-08-13', '2026-08-14', '2026-08-15', '2026-08-16', '2026-09-01', '2026-10-11']) {
+    const set = D.dailySet({ userKey: 'new-student', date, caps: bare });
+    eq(`a brand-new student still gets three on ${date}`, set.length, 3);
+    assert(`...none of which they cannot do (${date})`,
+      set.every((q) => !q.requires || bare[q.requires]),
+      set.filter((q) => q.requires && !bare[q.requires]).map((q) => q.id).join(', '));
+  }
+}
+
+{
+  // Progress, claim keys, and the set bonus.
+  const caps = D.capabilities({ hasPathway: true, satQuestions: 500, hasPlan: true, deckCount: 3 });
+  const date = '2026-08-12';
+  const set = D.dailySet({ userKey: 'abc', date, caps });
+  const at = new Date(2026, 7, 12, 13, 0, 0).getTime();
+  const events = set.flatMap((q) => Array.from({ length: q.target }, () => ({ type: q.metric, at, value: 1 })));
+
+  const empty = D.evaluateDay({ userKey: 'abc', date, caps, events: [] });
+  eq('an untouched day has nothing claimable', empty.claimable, 0);
+  assert('...and the set bonus is locked', !empty.setBonus.claimable && !empty.setBonus.allDone);
+  assert('...and the headline points at something to do', /start with|next up|one left/i.test(empty.headline), empty.headline);
+
+  const doneDay = D.evaluateDay({ userKey: 'abc', date, caps, events });
+  eq('finishing all three makes all three claimable', doneDay.claimable, 3);
+  assert('...but the set bonus waits until they are CLAIMED, not merely done',
+    doneDay.setBonus.allDone && !doneDay.setBonus.claimable,
+    'three claims then a chest is a better ending than a chest and then three claims');
+
+  const claimedAll = new Set(doneDay.rows.map((r) => r.key));
+  const swept = D.evaluateDay({ userKey: 'abc', date, caps, events, claimedKeys: claimedAll });
+  assert('claiming all three unlocks the bonus', swept.setBonus.claimable);
+  eq('...and nothing is claimable twice', swept.claimable, 0);
+  const paid = D.evaluateDay({ userKey: 'abc', date, caps, events, claimedKeys: new Set([...claimedAll, swept.setBonus.key]) });
+  assert('a claimed bonus stays claimed', paid.setBonus.claimed && !paid.setBonus.claimable);
+
+  // Work from another day never counts.
+  const yesterday = D.evaluateDay({
+    userKey: 'abc', date, caps,
+    events: events.map((e) => ({ ...e, at: e.at - 24 * 60 * 60 * 1000 })),
+  });
+  eq('yesterday\'s work does not finish today\'s quests', yesterday.claimable, 0);
+
+  // Claim keys are per date and per quest, and cannot collide with the streak ledger.
+  const k = D.dailyKey(date, set[0].id);
+  assert('a daily claim key names its date', k.includes(date));
+  assert('...and is distinguishable from every other kind of claim', D.isDailyKey(k));
+  assert('...and never collides with the set bonus key', k !== D.dailySetKey(date));
+  assert('a milestone key is not mistaken for a daily one', !D.isDailyKey('milestone:30'));
+  assert('a repair key is not mistaken for a daily one', !D.isDailyKey('repair:2026-08-12'));
+
+  // featuredDaily biases to the surface, but claimable wins anywhere.
+  const partialEvents = events.filter((e) => e.type === set[2].metric);
+  const partial = D.evaluateDay({ userKey: 'abc', date, caps, events: partialEvents });
+  assert('a claimable daily quest is featured from any surface',
+    D.featuredDaily(partial, 'portfolio')?.claimable === true);
+  assert('with nothing claimable, the cheapest open one is offered',
+    D.featuredDaily(empty, null)?.tier.id === 'bronze');
+  assert('a fully swept day features nothing', D.featuredDaily(paid, null) === null);
+}
+
+section('Daily quests are wired into the app');
+assert('Home carries the daily rail', /<DailyQuestRail\n?\s+day=\{dailyDay\}/.test(app));
+assert('the board carries it too', /day=\{dailyDay\}/.test(app));
+assert('the tab strips carry the compact form', /compact day=\{dailyDay\} surface=/.test(app));
+assert('there is exactly one daily evaluation in the app',
+  (app.match(/const dailyDay\s*=\s*useMemo/g) || []).length === 1,
+  'two evaluations is two sets of three that can disagree about the same day');
+assert('daily claims go through the permanent ledger before the XP',
+  /DB\.claimStreakReward\(row\.key/.test(app) && /claimRewardXP\(row\.key, row\.xp\)/.test(app),
+  'the ledger row is the idempotency gate — a second tap or a second device must fail there');
+assert('the set bonus is claimed through the same outbox',
+  /claimRewardXP\(bonus\.key,bonus\.xp\)/.test(app));
+assert('daily quests add no storage of their own',
+  !/^\s*daily\w*\s*:\s*'/im.test(db),
+  'a table for something thrown away at midnight is a table that will drift');
 
 // ── Report ──────────────────────────────────────────────────────────────────
 console.log(`\n${passed} passed, ${failures.length} failed`);

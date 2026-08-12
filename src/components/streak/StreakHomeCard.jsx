@@ -14,9 +14,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Flame, Check, Snowflake, Trophy, ChevronRight, Target } from 'lucide-react';
+import { Flame, Check, Snowflake, Trophy, ChevronRight, Target, Zap, TrendingUp } from 'lucide-react';
 import { C, glass, pill, R, tint, onTint, btn } from '../../lib/theme';
-import { PERFECT_WEEK_REWARD, remainingCopy } from '../../lib/streak';
+import { PERFECT_WEEK_REWARD, remainingCopy, leagueFor, streakBonusLabel, activeBoosts, boostCountdown } from '../../lib/streak';
+import { LeagueChip } from './StreakLeague';
 
 const ACCENT = C.amber;
 
@@ -27,6 +28,7 @@ export default function StreakHomeCard({
   targetInfo = null,
   nextReward = null,
   freezesHeld = 0,
+  boosts = [],
   onOpen,            // → Progress → Streak
   onStartStudying,   // → the next lesson, when today isn't earned yet
   nextLessonTitle = null,
@@ -35,32 +37,41 @@ export default function StreakHomeCard({
 }) {
   const met = !!day?.met;
   const atRisk = !met && streak > 0;
+  // The league is the streak's identity — it tints the whole card, so a student
+  // on day 40 is looking at a visibly different object from one on day 2.
+  const league = leagueFor(streak);
+  const bonus = streakBonusLabel(streak);
+  const live = activeBoosts(boosts);
+  const topBoost = live[0] || null;
 
   return (
     <div style={{
       ...glass({ padding: m ? 16 : 20 }),
-      border: `1px solid ${atRisk ? tint(C.orange, 0.4) : met ? tint(C.green, 0.28) : tint(ACCENT, 0.26)}`,
-      background: `linear-gradient(135deg, ${tint(atRisk ? C.orange : met ? C.green : ACCENT, 0.09)}, transparent 70%)`,
+      border: `1px solid ${atRisk ? tint(C.orange, 0.4) : met ? tint(C.green, 0.28) : tint(league.color, 0.26)}`,
+      background: `linear-gradient(135deg, ${tint(atRisk ? C.orange : met ? C.green : league.color, 0.09)}, transparent 70%)`,
       position: 'relative', overflow: 'hidden',
     }}>
-      <div style={{ position: 'absolute', right: -50, top: -50, width: 160, height: 160, borderRadius: '50%', background: `radial-gradient(circle, ${ACCENT}18, transparent 70%)`, pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', right: -50, top: -50, width: 160, height: 160, borderRadius: '50%', background: `radial-gradient(circle, ${tint(league.color, 0.16)}, transparent 70%)`, pointerEvents: 'none' }} />
 
       <div style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
         {/* Flame + count */}
         <div style={{
           width: 56, height: 56, borderRadius: 18, flexShrink: 0,
-          background: tint(ACCENT, 0.15), border: `1.5px solid ${tint(ACCENT, 0.4)}`,
+          background: tint(league.color, 0.15), border: `1.5px solid ${tint(league.color, 0.4)}`,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          boxShadow: streak > 0 ? `0 0 26px ${ACCENT}38` : 'none',
+          boxShadow: streak > 0 ? `0 0 26px ${tint(league.color, 0.4)}` : 'none',
         }}>
-          <Flame size={17} color={ACCENT} fill={streak > 0 ? ACCENT : 'none'} />
+          <Flame size={17} color={league.color} fill={streak > 0 ? league.color : 'none'} />
           <div style={{ fontSize: 16, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 1 }}>{streak}</div>
         </div>
 
         <div style={{ flex: 1, minWidth: 170 }}>
           <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
-            <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
-              {streak === 0 ? 'No streak yet' : `${streak}-day streak`}
+            <span style={{ ...R({ gap: 7, flexWrap: 'wrap' }) }}>
+              <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+                {streak === 0 ? 'No streak yet' : `${streak}-day streak`}
+              </span>
+              {streak > 0 && <LeagueChip streak={streak} showBonus={false} size="sm" />}
             </span>
             <button
               onClick={onOpen}
@@ -95,12 +106,12 @@ export default function StreakHomeCard({
             >
               <div style={{
                 height: 26, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: d.met ? ACCENT : d.frozen ? tint(C.blue, 0.2) : d.future ? 'transparent' : C.s2,
+                background: d.met ? league.color : d.frozen ? tint(C.blue, 0.2) : d.future ? 'transparent' : C.s2,
                 border: d.isToday ? `1.5px solid ${C.t1}` : `1px solid ${d.future ? C.b1 : 'transparent'}`,
                 opacity: d.future ? 0.35 : 1,
-                boxShadow: d.met ? `0 0 10px ${ACCENT}50` : 'none',
+                boxShadow: d.met ? `0 0 10px ${tint(league.color, 0.5)}` : 'none',
               }}>
-                {d.met ? <Check size={12} color={onTint(ACCENT)} strokeWidth={3} />
+                {d.met ? <Check size={12} color={onTint(league.color)} strokeWidth={3} />
                   : d.frozen ? <Snowflake size={10} color={C.blueL} />
                     : <span style={{ fontSize: 9, color: C.t4 }}>·</span>}
               </div>
@@ -142,6 +153,18 @@ export default function StreakHomeCard({
           {freezesHeld > 0 && (
             <span style={pill(C.blueDim, C.blueL, { fontSize: 10 })}>
               <Snowflake size={10} style={{ marginRight: 4 }} />{freezesHeld}
+            </span>
+          )}
+          {/* The two chips that say the streak is worth something right now,
+              rather than only worth something sentimentally. */}
+          {bonus && (
+            <span style={pill(tint(C.amber, 0.13), C.amberL, { fontSize: 10 })}>
+              <TrendingUp size={10} style={{ marginRight: 4 }} />{bonus}
+            </span>
+          )}
+          {topBoost && (
+            <span style={pill(tint(topBoost.def.color, 0.15), topBoost.def.color, { fontSize: 10, fontWeight: 800 })}>
+              <Zap size={10} style={{ marginRight: 4 }} />×{topBoost.def.multiplier} · {boostCountdown(topBoost.msLeft)}
             </span>
           )}
         </div>

@@ -65,12 +65,21 @@ import { getCached, setCached, dailyKey } from './lib/aiCache';
 import { logEvent } from './lib/eventLog';
 import { summarizeRecentActivity } from './lib/recentActivity';
 import { pickNudge } from './lib/nudges';
-import { getTodayCheckinStatus, getNextCheckinDay, claimCheckin, getCheckinReward } from './lib/dailyCheckin';
+import {
+  loadCheckinState, claimCheckin, getCheckinReward, CYCLE_LENGTH, rewardSummary,
+} from './lib/dailyCheckin';
 import { localDateStr } from './lib/dateUtils';
 import {
-  PERFECT_WEEK_REWARD, DEFAULT_GOAL_ID, creditsFor, goalCreditsFor, getGoal,
-  streakTargetFor, targetProgress, dayStatus, weekProgress, longestStreak,
-  nextMilestone, unclaimedMilestones, rewardKey, perfectWeekKey,
+  PERFECT_WEEK_REWARD, PERFECT_MONTH_REWARD, DEFAULT_GOAL_ID, creditsFor, goalCreditsFor, getGoal,
+  streakTargetFor, targetProgress, dayStatus, weekProgress, monthProgress, longestStreak,
+  nextMilestone, unclaimedMilestones, rewardKey, perfectWeekKey, perfectMonthKey,
+  // ── The expansion layer ──
+  // Leagues give the streak an identity and a real, compounding benefit; boosts are the
+  // short timed multipliers the check-in calendar hands out; repair is what the app says
+  // the morning after a long streak actually breaks. See src/lib/streak.js for why each
+  // exists and what it deliberately does NOT do.
+  leagueFor, leagueProgress, streakBonusLabel, xpMultiplier, activeBoosts, BOOST_KINDS,
+  freezeCost, canBuyFreeze, repairOffer, repairCost, freezeCapFor,
 } from './lib/streak';
 import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
 import { rollCosmetic } from './lib/cosmetics';
@@ -86,6 +95,8 @@ import StreakPanel from './components/streak/StreakPanel';
 import StreakHomeCard from './components/streak/StreakHomeCard';
 import PathwayStreakStrip from './components/streak/PathwayStreakStrip';
 import LessonCompleteOverlay from './components/streak/LessonCompleteOverlay';
+import BoostChip from './components/streak/BoostChip';
+import { CheckInHomeCard } from './components/streak/CheckInCalendar';
 // ── Quests ──────────────────────────────────────────────────────────────────
 // The long-horizon commitment layer (src/data/questCatalog.js + src/lib/quests.js). Deliberately
 // threaded through five surfaces rather than parked in one tab: a quest that is only visible on
@@ -94,11 +105,23 @@ import QuestBoard from './components/quests/QuestBoard';
 import QuestHomeCard from './components/quests/QuestHomeCard';
 import QuestStrip from './components/quests/QuestStrip';
 import QuestCompleteOverlay from './components/quests/QuestCompleteOverlay';
+import DailyQuestRail from './components/quests/DailyQuestRail';
 import * as QuestAPI from './lib/questApi';
 import {
   buildQuestEvents, evaluateAll as evaluateQuests,
   summarize as summarizeQuests, TERMINAL_STATUSES as QUEST_TERMINAL,
+  recommendQuests, claimedIds as claimedQuestIds, nextInChain,
 } from './lib/quests';
+// ── Daily quests ────────────────────────────────────────────────────────────
+// The other half of the quest system: three small jobs drawn fresh every morning, gone by
+// midnight, deterministic per student per day so they cannot be rerolled and do not need
+// syncing. See src/lib/dailyQuests.js. `dailyKey` is deliberately NOT imported — the name is
+// already taken by lib/aiCache's cache-key helper, and every surface here reads `row.key`.
+import {
+  evaluateDay as evaluateDailyQuests, capabilities as dailyCapabilities,
+  tomorrowSet as tomorrowDailySet, streakOverlap as dailyStreakOverlap,
+  DAILY_SET_BONUS,
+} from './lib/dailyQuests';
 import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
@@ -1484,6 +1507,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [qScores,  setQScores_] = useState({});
   const [qHistory, setQHistory] = useState([]);
   const [cDecks,   setCDecks_]  = useState({});
+  // A ref mirror, so the stable `saveDeck` callback below can ask "is this deck new" without
+  // taking `cDecks` as a dependency — which would rebuild it on every card edit and re-render
+  // every deck surface in the app.
+  const cDecksRef = useRef({});
+  // Highlights are credited in threes (see addLessonHighlight); this counts toward the next one.
+  const highlightRunRef = useRef(0);
   const [deckCreatedAt, setDeckCreatedAt] = useState({});
   const [portActivities, setPortActivities] = useState([]);
   const [portAwards,     setPortAwards]     = useState([]);
@@ -1509,6 +1538,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [dayRows, setDayRows] = useState([]);
   const [bridgedDates, setBridgedDates] = useState(new Set());
   const [claimedStreakRewards, setClaimedStreakRewards] = useState(new Set());
+  // ── The expansion layer's own state ────────────────────────────────────────
+  // `boosts` are the live XP multipliers (Dexie `boosts`, swept on read). `freezeHistory` is
+  // every freeze row spent and unspent, for the receipt on the freeze card. `checkinState` is
+  // the whole 28-day calendar in one object. `streakBusy` keys the three buttons that hit the
+  // network or the database so each can disable itself without a spinner-per-callback.
+  const [boosts, setBoosts] = useState([]);
+  const [freezeHistory, setFreezeHistory] = useState([]);
+  const [checkinState, setCheckinState] = useState(null);
+  const [streakBusy, setStreakBusy] = useState({});
+  // Today's three. `dailyEvents` is a SEPARATE evidence read from the long quests' one: theirs
+  // is bounded by the oldest running quest and is empty when nothing is running, and a daily
+  // quest has to work for a student who has never taken a long quest in their life.
+  const [dailyEvents, setDailyEvents] = useState([]);
+  const [dailyBusyKey, setDailyBusyKey] = useState(null);
   // The full-screen lesson-complete takeover (see LessonCompleteOverlay.jsx).
   const [lessonCelebration, setLessonCelebration] = useState(null);
   const [cosmetics, setCosmetics] = useState(new Set());
@@ -2457,6 +2500,34 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const openChest = useCallback((opts)=>{ setChest(opts); },[]);
   const closeChest = useCallback(()=>{ setChest(null); },[]);
 
+  // ── The XP multiplier ──────────────────────────────────────────────────────
+  // Two things scale every XP award in the app: the streak LEAGUE (a permanent percentage that
+  // climbs with the streak) and any live BOOST (a short timed multiplier from the check-in
+  // calendar). They stack multiplicatively and are applied here, at the award site, on top of
+  // the variable-ratio roll in lib/rewards.js.
+  //
+  // Deliberately a ref rather than a closed-over value: the five call sites below live inside
+  // event handlers and plain functions declared at different points in this component, and a
+  // stale closure on the multiplier would silently pay a student the wrong amount — the single
+  // worst class of bug this system can have. The ref is written by the effect under it on every
+  // change to the streak or the boost list, so every award reads the current number.
+  //
+  // Milestone rewards (streak rungs, quest claims, check-ins) are NOT routed through here: they
+  // are deterministic and advertised in advance, and a milestone that paid a different number
+  // than the card showed is worse than one that paid nothing.
+  const xpMultRef = useRef(1);
+  const awardBoostedXP = useCallback((base, opts)=>{
+    const rolled = awardXP(base, opts);
+    const mult = xpMultRef.current;
+    if(!(mult>1) || !(rolled.finalXP>0)) return { ...rolled, multiplierApplied:1, boosted:false };
+    return {
+      ...rolled,
+      finalXP: Math.max(1, Math.round(rolled.finalXP * mult)),
+      multiplierApplied: mult,
+      boosted: true,
+    };
+  },[]);
+
   // ── Optimistic save helpers ──────────────────────────────────────────────────
   // Every write to the user record also mirrors the master plan into its own database row
   // (src/lib/masterPlanStore.js). This is the one choke point every plan mutation in the app
@@ -2503,7 +2574,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const today=planTodayStr();
     const earlyCount=completed.filter(c=>c.date>today).length;
     const rawXP=6*completed.length+Math.round(6*earlyCount*0.25);
-    const {finalXP,tier}=awardXP(rawXP);
+    const {finalXP,tier}=awardBoostedXP(rawXP);
     // Contextual "staying on track" nudge — fires the moment a Plan-linked quiz/lesson/deck is
     // actually completed (not just when the whole day wraps up), so the reinforcement lands right
     // where the student is working, not only back on Home. Wording and the live plan streak vary
@@ -2629,9 +2700,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[]);
   const saveQuizScore = useCallback(async(quizId,score)=>{ setQScores_(q=>({...q,[quizId]:score})); await DB.saveQuizScore(quizId,score); const h=await DB.getQuizHistory(); setQHistory(h); },[]);
   const saveDeck = useCallback(async(name,cards)=>{
+    // Only the FIRST save of a name is a deck being built — every save after that is a card
+    // being edited, and crediting those would turn "build a deck" into "type in a deck and
+    // then rename a card nine times".
+    const isNew = !cDecksRef.current[name];
     setCDecks_(d=>({...d,[name]:cards}));
     setDeckCreatedAt(m=>m[name]?m:{...m,[name]:Date.now()});
     await DB.saveDeck(name,cards);
+    if(isNew) creditStreak('deck_created',{silent:true}).catch(console.error);
   },[]);
   const deleteDeck_ = useCallback(async(name)=>{
     setCDecks_(d=>{const nd={...d};delete nd[name];return nd;});
@@ -3422,7 +3498,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // already a stable, globally-unique-per-account identity) so it can only ever land once.
         if(u&&bonusXP>0){ claimRewardXP(`achievement:${achievement.key}`,bonusXP).then(syncUserFromDb).catch(console.error); }
         if(achievement.key==='streak_7'||achievement.key==='streak_30'){
-          const granted=await DB.grantStreakFreeze();
+          const granted=await DB.grantStreakFreeze({streak,source:'achievement'});
           if(granted){
             setStreakFreezes(await DB.getStreakFreezeCount());
             toast(pickNudge('streak_freeze_earned'),{icon:<Snowflake size={14} color={C.blueL}/>,duration:4500});
@@ -3446,42 +3522,108 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     prevLvlRef.current=curLvl;
   },[user?.xp]);
 
-  // ── Daily check-in (rewards opening the app, before any studying) ───────────
+  // ── The check-in calendar (rewards opening the app, before any studying) ───
+  //
+  // This is the OTHER ladder. The streak below measures work; this measures turning up. They
+  // are drawn differently, named differently, and never share a number — a check-in can never
+  // clear a streak day, and studying can never advance the check-in cycle.
+  //
+  // The cycle is 28 days and deliberately lumpy: nine specific days carry freezes, chests and
+  // XP boosts, and the calendar is drawn in full so a student on day 12 can see that day 14 is
+  // a chest and six hours of Double XP. That two-days-out visibility is the actual mechanic;
+  // the chest animation is just the payment.
   const checkinTriggeredRef = useRef(false);
+
+  /** Re-reads the whole cycle. Called on load and after every claim. */
+  const refreshCheckin = useCallback(async()=>{
+    try{
+      const state = await loadCheckinState();
+      setCheckinState(state);
+      return state;
+    }catch(e){ console.error('check-in state',e); return null; }
+  },[]);
+
+  /**
+   * Take today's check-in.
+   *
+   * Everything a day can carry is granted here and nowhere else: XP (through the idempotent
+   * reward-claim outbox, keyed `checkin:<date>`, so claiming on a phone and a laptop pays
+   * once), a streak freeze, an XP boost, and the chest ceremony. `claimCheckin` is the local
+   * gate — it fails on a second call for the same date, which is what makes a reload race or a
+   * double tap harmless.
+   */
+  const claimTodayCheckin = useCallback(async({ceremony=true}={})=>{
+    const state = checkinState || await refreshCheckin();
+    if(!state?.claimable) return;
+    const { day, reward, everChecked } = state;
+    setStreakBusy(b=>({...b,checkin:true}));
+    try{
+      const cosmetic = reward.chest ? rollCosmetic(cosmetics) : null;
+      const grant = async()=>{
+        const claimed = await claimCheckin(day);
+        // Today was already recorded on this device (reload race) — do not double-grant.
+        if(!claimed) return;
+        play('xp');
+        if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
+        // A freeze, if the day carries one and the league cap allows it.
+        if(reward.freeze>0){
+          let granted=0;
+          for(let i=0;i<reward.freeze;i++){
+            // eslint-disable-next-line no-await-in-loop
+            if(await DB.grantStreakFreeze({streak,source:'checkin'})) granted+=1;
+          }
+          if(granted>0){
+            toast(`Day ${day}: ${granted} streak freeze${granted>1?'s':''} added.`,
+              {icon:<Snowflake size={14} color={C.blueL}/>,duration:4500});
+          }else{
+            // Being honest about the cap beats silently swallowing a reward the card promised.
+            toast(`Day ${day}'s freeze could not be added — you are already holding the ${freezeCapFor(streak)} your league allows.`,
+              {icon:<Info size={14} color={C.t2}/>,duration:5000});
+          }
+        }
+        // A boost, if the day carries one.
+        if(reward.boost && BOOST_KINDS[reward.boost]){
+          const def = BOOST_KINDS[reward.boost];
+          await DB.grantBoost(def.id, def.hours, {source:`checkin:${day}`});
+          toast.success(`${def.label} active — ${def.blurb}`,
+            {icon:<Zap size={15} color={def.color}/>,duration:6000});
+        }
+        // XP last, through the outbox. Optimistic locally, reconciled with the server in the
+        // background; a losing claim rolls its local grant back and says so.
+        const { granted: xpGranted } = await claimRewardXP(`checkin:${localDateStr()}`, reward.xp);
+        await syncUserFromDb();
+        if(xpGranted===false){
+          toast('That check-in was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+        }
+        await Promise.all([refreshCheckin(), refreshStreakState()]);
+      };
+
+      if(ceremony){
+        openChest({
+          title: reward.label ? `Day ${day} · ${reward.label}` : `Day ${day} Check-in`,
+          eyebrow: everChecked ? 'Welcome back' : 'Welcome',
+          xp: reward.xp,
+          cosmetic,
+          onOpen: grant,
+        });
+      }else{
+        await grant();
+      }
+    }finally{
+      setStreakBusy(b=>({...b,checkin:false}));
+    }
+  },[checkinState,refreshCheckin,cosmetics,streak,openChest,syncUserFromDb,refreshStreakState]);
+
+  // Load the cycle once the database is open, and offer today's chest automatically — the
+  // ceremony is the reason the first tap of the day feels like something.
   useEffect(()=>{
     if(!dbReady||!user||checkinTriggeredRef.current)return;
     checkinTriggeredRef.current=true;
     (async()=>{
-      const already = await getTodayCheckinStatus();
-      if(already)return;
-      const [day,everChecked] = await Promise.all([getNextCheckinDay(),DB.hasAnyCheckin()]);
-      const reward = getCheckinReward(day);
-      const cosmetic = reward.chest ? rollCosmetic(cosmetics) : null;
-      openChest({
-        title: `Day ${day} Check-in`,
-        eyebrow: everChecked ? 'Welcome back' : 'Welcome',
-        xp: reward.xp,
-        cosmetic,
-        onOpen: async ()=>{
-          const claimed = await claimCheckin(day);
-          if(!claimed)return; // today's check-in was already recorded locally (e.g. reload race) — don't double-grant
-          play('xp');
-          if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
-          // Grants XP optimistically (instant, same as always) and reconciles with the server in
-          // the background — the local `checkins` row above only proves THIS device hasn't shown
-          // today's chest yet, not that another device hasn't already claimed it in the last few
-          // seconds. `checkin:<date>` is a stable, once-per-calendar-day key, so whichever device's
-          // claim reaches the server first wins; a losing claim rolls its local grant back and
-          // says so, rather than staying silently double-counted. See rewardClaimQueue.js.
-          const { granted } = await claimRewardXP(`checkin:${localDateStr()}`, reward.xp);
-          await syncUserFromDb();
-          if(granted===false){
-            toast('That check-in was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
-          }
-        },
-      });
+      const state = await refreshCheckin();
+      if(state?.claimable) await claimTodayCheckin();
     })();
-  },[dbReady,user]);
+  },[dbReady,user]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ══ EARNED STREAK ══════════════════════════════════════════════════════════
   // One source of truth (dayRows + bridgedDates + the user's two goal settings)
@@ -3489,6 +3631,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // tab, the pathway strip and the lesson-complete takeover all read these exact
   // objects, which is what makes it impossible for two screens to disagree about
   // whether today is done.
+  useEffect(()=>{ cDecksRef.current = cDecks; },[cDecks]);
+
   const dayActivityMap = useMemo(()=>new Map(dayRows.map(r=>[r.date,r])),[dayRows]);
   const metDates       = useMemo(()=>new Set(dayRows.filter(r=>r.met).map(r=>r.date)),[dayRows]);
   const goalCredits    = useMemo(()=>goalCreditsFor(user),[user?.streakGoalId]);
@@ -3500,9 +3644,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     return dayStatus(row?.credits||0, row?.met ? (row.goalCredits||goalCredits) : goalCredits);
   },[dayActivityMap,goalCredits]);
   const weekInfo       = useMemo(()=>weekProgress(metDates,{bridged:bridgedDates}),[metDates,bridgedDates]);
+  const monthInfo      = useMemo(()=>monthProgress(metDates,{bridged:bridgedDates}),[metDates,bridgedDates]);
   const streakTargetInfo = useMemo(()=>targetProgress(streak,streakTarget),[streak,streakTarget]);
   const bestStreakEver = useMemo(()=>Math.max(streak,longestStreak(metDates,bridgedDates)),[streak,metDates,bridgedDates]);
   const nextStreakReward = useMemo(()=>nextMilestone(streak),[streak]);
+  // The streak's identity, and the two numbers it is actually worth.
+  const streakLeague   = useMemo(()=>leagueFor(streak),[streak]);
+  const xpMult         = useMemo(()=>xpMultiplier({streak,boosts}),[streak,boosts]);
+  const liveBoosts     = useMemo(()=>activeBoosts(boosts),[boosts]);
+  // Keep the award-site ref in step with the derived multiplier. See awardBoostedXP above for
+  // why this is a ref and not a closed-over value.
+  useEffect(()=>{ xpMultRef.current = xpMult.total; },[xpMult.total]);
+  /**
+   * The comeback offer. Recomputed from the ledger rather than stored, so it appears the moment
+   * a streak is actually broken and disappears the moment one is rebuilt, with nothing to clean
+   * up either way. `lastRepairAt` comes off the permanent claim ledger, so the once-a-month
+   * cooldown is per ACCOUNT rather than per device.
+   */
+  const [lastRepairAt, setLastRepairAt] = useState(null);
+  const streakRepair = useMemo(()=>repairOffer(metDates,{
+    bridged: bridgedDates, lastRepairAt, xp: user?.xp||0,
+  }),[metDates,bridgedDates,lastRepairAt,user?.xp]);
   // What Medabrain is told about the streak. It gets the student's own goal and
   // whether TODAY is cleared — not just the streak length — because "you haven't
   // studied today yet" is the single most useful thing a coach can say here, and
@@ -3520,15 +3682,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   /** Re-reads the whole streak ledger. Called after anything writes to it. */
   const refreshStreakState = useCallback(async()=>{
-    const [rows,bridged,claimed,str,freezes] = await Promise.all([
+    const [rows,bridged,claimed,str,freezes,history,live,repairedAt] = await Promise.all([
       DB.getAllDayActivity(), DB.getBridgedDates(), DB.getClaimedStreakRewards(),
       DB.getStreak(), DB.getStreakFreezeCount(),
+      DB.getStreakFreezes(), DB.getActiveBoosts(), DB.getLastRepairAt(),
     ]);
     setDayRows(rows||[]);
     setBridgedDates(bridged||new Set());
     setClaimedStreakRewards(claimed||new Set());
     setStreak(str||0);
     setStreakFreezes(freezes||0);
+    setFreezeHistory(history||[]);
+    setBoosts(live||[]);
+    setLastRepairAt(repairedAt||null);
     return { rows, bridged, claimed, streak: str||0 };
   },[]);
 
@@ -3560,6 +3726,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     let xpFromRewards = 0;
     let milestoneHit = null;
     let perfectWeekJustEarned = false;
+    let perfectMonthJustEarned = false;
 
     if(result.justMet){
       const claimed = await DB.getClaimedStreakRewards();
@@ -3568,18 +3735,31 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // eslint-disable-next-line no-await-in-loop
         if(!await DB.claimStreakReward(rewardKey(rung.days),{days:rung.days}))continue;
         xpFromRewards += rung.xp;
+        // The cap a freeze grant is checked against is the LEAGUE's cap at the streak length
+        // that just unlocked this rung — so the rung that promotes a student to Blaze can
+        // itself pay out the third freeze Blaze allows.
         // eslint-disable-next-line no-await-in-loop
-        for(let i=0;i<(rung.freezes||0);i++) await DB.grantStreakFreeze();
+        for(let i=0;i<(rung.freezes||0);i++) await DB.grantStreakFreeze({streak:after,source:'milestone'});
         if(!milestoneHit||rung.days>milestoneHit.days)milestoneHit=rung;
       }
       // ── Perfect week ── recomputed AFTER the write so today counts toward it.
       const rows = await DB.getAllDayActivity();
       const met = new Set(rows.filter(r=>r.met).map(r=>r.date));
-      const wk = weekProgress(met,{bridged:await DB.getBridgedDates()});
+      const bridgedNow = await DB.getBridgedDates();
+      const wk = weekProgress(met,{bridged:bridgedNow});
       if(wk.complete && await DB.claimStreakReward(perfectWeekKey(wk.weekKey),{week:wk.weekKey})){
         xpFromRewards += PERFECT_WEEK_REWARD.xp;
-        for(let i=0;i<PERFECT_WEEK_REWARD.freezes;i++) await DB.grantStreakFreeze();
+        for(let i=0;i<PERFECT_WEEK_REWARD.freezes;i++) await DB.grantStreakFreeze({streak:after,source:'week'});
         perfectWeekJustEarned = true;
+      }
+      // ── Perfect month ── the same idea one octave down, and genuinely hard: a single
+      // missed Sunday in week one ends it. Only checked on the day it can actually complete,
+      // which is the last day of the month.
+      const mo = monthProgress(met,{bridged:bridgedNow});
+      if(mo.complete && await DB.claimStreakReward(perfectMonthKey(mo.monthKey),{month:mo.monthKey})){
+        xpFromRewards += PERFECT_MONTH_REWARD.xp;
+        for(let i=0;i<PERFECT_MONTH_REWARD.freezes;i++) await DB.grantStreakFreeze({streak:after,source:'month'});
+        perfectMonthJustEarned = true;
       }
     }
 
@@ -3609,15 +3789,96 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         toast.success(`Perfect Week — all seven days earned. +${PERFECT_WEEK_REWARD.xp} XP and a streak freeze.`,
           {icon:<Trophy size={16} color={C.goldL}/>,duration:5000});
       }
+      if(perfectMonthJustEarned){
+        celebrateStreak();play('achieve');
+        toast.success(`Perfect Month — every single day. +${PERFECT_MONTH_REWARD.xp} XP and ${PERFECT_MONTH_REWARD.freezes} freezes.`,
+          {icon:<Trophy size={16} color={C.goldL}/>,duration:6000});
+      }
     }
 
     return {
       ...result, streakBefore:before, streak:after,
-      milestoneHit, perfectWeekJustEarned, xpFromRewards,
+      milestoneHit, perfectWeekJustEarned, perfectMonthJustEarned, xpFromRewards,
       week:wkAfter,
       day:dayStatus(result.credits,result.goalCredits),
     };
   },[user,refreshStreakState,syncUserFromDb]);
+
+  // ── The freeze shop ────────────────────────────────────────────────────────
+  /**
+   * Buy a streak freeze with XP.
+   *
+   * XP, never money. A paid streak freeze sells relief from anxiety the product itself
+   * manufactured, which is the most cynical mechanic in this category of app. XP is a real
+   * budget with real alternative uses, so the decision stays meaningful and nobody's parent
+   * gets a charge for a missed Tuesday.
+   *
+   * The debit happens first and is rolled back if the grant is refused, so a cap reached on
+   * another device between the check and the write cannot silently take the XP.
+   */
+  const buyFreeze = useCallback(async()=>{
+    const held = await DB.getStreakFreezeCount();
+    const offer = canBuyFreeze({streak,held,xp:user?.xp||0});
+    if(!offer.ok){ toast(offer.reason,{icon:<Info size={14} color={C.t2}/>,duration:4500}); return; }
+    setStreakBusy(b=>({...b,freeze:true}));
+    try{
+      const u = await DB.getUser();
+      if(!u || (u.xp||0) < offer.cost){ toast.error('Not enough XP for that.'); return; }
+      await DB.saveUser({...u,xp:(u.xp||0)-offer.cost});
+      const granted = await DB.grantStreakFreeze({streak,source:'purchase'});
+      if(!granted){
+        await DB.saveUser({...u,xp:u.xp||0}); // refund — the cap was reached elsewhere
+        toast('You are already holding as many freezes as your league allows.',{icon:<Info size={14} color={C.t2}/>,duration:4500});
+        return;
+      }
+      await syncUserFromDb();
+      await refreshStreakState();
+      play('achieve');
+      toast.success(`Freeze bought for ${offer.cost.toLocaleString()} XP. One missed day is now survivable.`,
+        {icon:<Snowflake size={15} color={C.blueL}/>,duration:4500});
+    }catch(e){
+      console.error('buy freeze',e);
+      toast.error('Could not buy that freeze. Nothing was charged.');
+    }finally{
+      setStreakBusy(b=>({...b,freeze:false}));
+    }
+  },[streak,user?.xp,syncUserFromDb,refreshStreakState]);
+
+  // ── The comeback ───────────────────────────────────────────────────────────
+  /**
+   * Buy back a broken streak.
+   *
+   * The repaired days are written as bridged (exactly what a freeze produces), so the run
+   * continues and NOTHING else changes: a repaired day can never complete a Perfect Week or a
+   * Perfect Month, and it never moves a study-day quest. Continuity is purchasable; credit for
+   * work that did not happen is not.
+   */
+  const doStreakRepair = useCallback(async()=>{
+    const offer = streakRepair;
+    if(!offer?.available) return;
+    setStreakBusy(b=>({...b,repair:true}));
+    try{
+      const u = await DB.getUser();
+      if(!u || (u.xp||0) < offer.cost){ toast.error('Not enough XP to restore that streak.'); return; }
+      await DB.saveUser({...u,xp:(u.xp||0)-offer.cost});
+      const ok = await DB.repairStreak(offer.dates);
+      if(!ok){
+        await DB.saveUser({...u,xp:u.xp||0}); // refund — another device repaired first
+        toast('That streak was already restored on your other device.',{icon:<Info size={14} color={C.t2}/>,duration:4500});
+      }else{
+        celebrateStreak();play('achieve');
+        toast.success(`${offer.lost}-day streak restored. Do not waste it — go and earn today.`,
+          {icon:<Flame size={16} color={C.amberL}/>,duration:6000});
+      }
+      await syncUserFromDb();
+      await refreshStreakState();
+    }catch(e){
+      console.error('streak repair',e);
+      toast.error('Could not restore that streak. Nothing was charged.');
+    }finally{
+      setStreakBusy(b=>({...b,repair:false}));
+    }
+  },[streakRepair,syncUserFromDb,refreshStreakState]);
 
   // ══ QUESTS ═════════════════════════════════════════════════════════════════
   //
@@ -3649,38 +3910,62 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
    * hundred thousand card reviews to render a fortnight-long quest. When nothing is running
    * there is nothing to measure, so the read is skipped entirely.
    */
+  //
+  // The portfolio half of the evidence, shared by the long quests and today's three.
+  //
+  // These rows live behind the API rather than in Dexie, so they come from the snapshot the
+  // Portfolio tab already fetches. Absent (student has not opened Portfolio this session) simply
+  // means those metrics do not move yet — they catch up the moment the tab is visited, and no
+  // quest ever loses credit, because everything here is recomputed from scratch every time
+  // rather than accumulated.
+  const questPortfolio = useMemo(()=>({
+    activities:portSnapshot?.activities||portActivities,
+    research:portSnapshot?.research||[],
+    skills:portSnapshot?.skills||[],
+    clinical:portSnapshot?.clinical||clinicalHoursEntries,
+    essays:portSnapshot?.essays||[],
+    awards:portSnapshot?.awards||portAwards||[],
+    colleges:portSnapshot?.colleges||[],
+    scholarships:portSnapshot?.scholarships||portScholarships||[],
+    recommenders:portSnapshot?.recommenders||[],
+    // "Tracked" means a row that came out of the curated Opportunities/Scholarships
+    // catalogs, which is exactly what isCatalogSourced() already answers for the Tracked
+    // board (src/lib/trackingCatalog.js). Reusing that predicate rather than inventing a
+    // flag is what keeps the quest and the Tracked tab counting the same rows — an
+    // activity the student typed in themselves is portfolio work, not a program they found.
+    tracked:[...(portSnapshot?.activities||[]),...(portSnapshot?.scholarships||portScholarships||[])]
+      .filter(r=>isCatalogSourced(r?.notes)||isCatalogSourced(r?.description)),
+  }),[portSnapshot,portActivities,clinicalHoursEntries,portScholarships,portAwards]);
+
   const refreshQuestEvents = useCallback(async (rows)=>{
     const live=(rows||[]).filter(q=>!QUEST_TERMINAL.has(q.status));
     if(!live.length){ setQuestEvents([]); return []; }
     const since=Math.min(...live.map(q=>q.startedAt||Date.now()));
     try{
       const evidence=await DB.getQuestEvidence({since});
-      const events=buildQuestEvents({
-        ...evidence,
-        // The portfolio rows live behind the API rather than in Dexie, so they come from the
-        // snapshot the Portfolio tab already fetches. Absent (student has not opened Portfolio
-        // this session) simply means those metrics do not move yet — they catch up the moment
-        // the tab is visited, and no quest ever loses credit, because this is recomputed from
-        // scratch every time rather than accumulated.
-        portfolio:{
-          activities:portSnapshot?.activities||portActivities,
-          research:portSnapshot?.research||[],
-          skills:portSnapshot?.skills||[],
-          clinical:portSnapshot?.clinical||clinicalHoursEntries,
-          essays:portSnapshot?.essays||[],
-          // "Tracked" means a row that came out of the curated Opportunities/Scholarships
-          // catalogs, which is exactly what isCatalogSourced() already answers for the Tracked
-          // board (src/lib/trackingCatalog.js). Reusing that predicate rather than inventing a
-          // flag is what keeps the quest and the Tracked tab counting the same rows — an
-          // activity the student typed in themselves is portfolio work, not a program they found.
-          tracked:[...(portSnapshot?.activities||[]),...(portSnapshot?.scholarships||portScholarships||[])]
-            .filter(r=>isCatalogSourced(r?.notes)||isCatalogSourced(r?.description)),
-        },
-      });
+      const events=buildQuestEvents({...evidence, portfolio:questPortfolio});
       setQuestEvents(events);
       return events;
     }catch(e){ console.error('quest evidence',e); return []; }
-  },[portSnapshot,portActivities,clinicalHoursEntries,portScholarships]);
+  },[questPortfolio]);
+
+  /**
+   * Today's evidence, for the daily quests.
+   *
+   * A separate read from the long quests' one on purpose. Theirs is bounded by the oldest
+   * RUNNING quest and returns nothing at all when nothing is running — and today's three have
+   * to work for a student who has never taken a long quest in their life. Bounding this at
+   * local midnight also keeps it cheap: it is the smallest useful window there is.
+   */
+  const refreshDailyEvents = useCallback(async ()=>{
+    try{
+      const start=new Date(); start.setHours(0,0,0,0);
+      const evidence=await DB.getQuestEvidence({since:start.getTime()});
+      const events=buildQuestEvents({...evidence, portfolio:questPortfolio});
+      setDailyEvents(events);
+      return events;
+    }catch(e){ console.error('daily quest evidence',e); return []; }
+  },[questPortfolio]);
 
   // First load, once the database is open and we know who this is.
   useEffect(()=>{
@@ -3700,6 +3985,189 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(!dbReady||!questRows.length)return;
     refreshQuestEvents(questRows);
   },[dbReady,questRows,totalReviews,qHistory.length,streak,dayRows,portSnapshot,clinicalHoursTotal,interviewCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── TODAY'S THREE ──────────────────────────────────────────────────────────
+  //
+  // Deterministic per student per day (see src/lib/dailyQuests.js): the same three on every
+  // device, unrerollable by a reload, and stored nowhere. Progress comes from the evidence
+  // pipeline the long quests use, and claims go in the same permanent reward ledger the streak
+  // milestones use — so the whole feature adds no storage of its own and nothing to drift.
+
+  // Which templates the draw is even allowed to offer. Handing "sit a full-length SAT test" to
+  // a student who has never opened the SAT tab is not a challenge, it is a card they have to
+  // ignore — and a set with one ignorable item in it is a set nobody clears.
+  //
+  // ── Why this is frozen for the session ──────────────────────────────────────
+  // The draw is a pure function of (student, date, capabilities), so a capability that CHANGES
+  // changes the set — and every input here arrives asynchronously. `satStats` reads zero until
+  // Dexie reports in, `cDecks` is empty until the decks load, and a student who enrols in a
+  // pathway at 8pm would flip `hasPathway` mid-evening. Any of those would reshuffle today's
+  // three under somebody who was halfway through one of them, which is the single thing this
+  // system promises not to do.
+  //
+  // So: nothing is drawn until the inputs are actually known (`satStats.loaded` gates it, the
+  // same signal the unlock ladder already waits on), and the first known value is the one that
+  // holds for the rest of the session. New capabilities are picked up tomorrow morning, which is
+  // exactly when a new set is due anyway. Both devices converge because the underlying data is
+  // persisted — the freeze is per session, not per account.
+  const dailyCapsLive = useMemo(()=>dailyCapabilities({
+    hasPathway: !!curPath,
+    satQuestions: satStats.questions,
+    satTouched: satStats.questions>0||satStats.diagnosticDone||satStats.baselineDone,
+    hasPlan: !!user?.masterPlan,
+    deckCount: Object.keys(cDecks||{}).length,
+    portfolioTouched: true,
+  }),[curPath,satStats,user?.masterPlan,cDecks]);
+  const dailyCapsRef = useRef(null);
+  const dailyCaps = useMemo(()=>{
+    if(!dbReady||!satStats.loaded) return dailyCapsRef.current;
+    if(!dailyCapsRef.current) dailyCapsRef.current = dailyCapsLive;
+    return dailyCapsRef.current;
+  },[dbReady,satStats.loaded,dailyCapsLive]);
+
+  // The student key the draw is seeded from. Stable per account, so a phone and a laptop
+  // derive the same three with nothing to sync.
+  const dailySeedKey = useMemo(()=>String(user?.email||user?.id||''),[user?.email,user?.id]);
+
+  /**
+   * The one evaluation every daily-quest surface reads. Same rule as questBoard below: two
+   * evaluations would be two sets of three that can disagree about the same day.
+   *
+   * Null until the capabilities are known, and every surface renders nothing for a null day —
+   * so the rail appears once, fully formed, rather than appearing with a placeholder set and
+   * then swapping it.
+   */
+  const dailyDay = useMemo(()=>(dailyCaps ? evaluateDailyQuests({
+    userKey: dailySeedKey,
+    caps: dailyCaps,
+    events: dailyEvents,
+    claimedKeys: claimedStreakRewards,
+  }) : null),[dailySeedKey,dailyCaps,dailyEvents,claimedStreakRewards]);
+
+  const dailyTomorrow = useMemo(
+    ()=>(dailyCaps ? tomorrowDailySet({userKey:dailySeedKey,caps:dailyCaps}) : []),
+    [dailySeedKey,dailyCaps],
+  );
+  // The one honest line tying today's set to the streak, when there is one to draw.
+  const dailyStreakHint = useMemo(()=>dailyStreakOverlap(dailyDay,todayStatus),[dailyDay,todayStatus]);
+
+  // Rebuild today's evidence on the same beat as everything else. These are the counters every
+  // other derived surface keys off, so a daily quest bar moves at exactly the moment the streak
+  // and the XP total do rather than on a timer of its own.
+  useEffect(()=>{
+    if(!dbReady||!user)return;
+    refreshDailyEvents();
+  },[dbReady,user?.id,totalReviews,qHistory.length,streak,dayRows,portSnapshot,clinicalHoursTotal,interviewCount,aiChatCount]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Claim one of today's three.
+   *
+   * Two writes, in this order: the permanent ledger row (which is the idempotency gate — a
+   * second tap or a second device fails here and stops), then the XP through the same outbox
+   * every other once-only reward uses. Keyed `daily:<date>:<questId>`, so yesterday's quiz
+   * quest and today's are different claims and a template can be drawn again next week.
+   */
+  const claimDailyQuest = useCallback(async(row)=>{
+    if(!row?.claimable||dailyBusyKey)return;
+    setDailyBusyKey(row.key);
+    try{
+      const took = await DB.claimStreakReward(row.key,{daily:row.quest.id,xp:row.xp});
+      if(!took){
+        toast('Already claimed — probably on your other device.',{icon:<Info size={14} color={C.t2}/>,duration:4000});
+        await refreshStreakState();
+        return;
+      }
+      const { granted } = await claimRewardXP(row.key, row.xp);
+      await syncUserFromDb();
+      await refreshStreakState();
+      play('xp');
+      if(granted===false){
+        toast('That one was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+      }else{
+        celebrateXP();
+        toast.success(`${row.quest.title} — +${row.xp} XP`,{icon:<Gift size={15} color={C.greenL}/>,duration:3500});
+      }
+    }catch(e){
+      console.error('claim daily quest',e);
+      toast.error('Could not claim that one. It will still be there in a moment.');
+    }finally{
+      setDailyBusyKey(null);
+    }
+  },[dailyBusyKey,refreshStreakState,syncUserFromDb]);
+
+  /**
+   * Claim the Clean Sweep — all three claimed.
+   *
+   * Worth more than the gold quest on purpose: it is the mechanic that gets the third card done
+   * on an evening a student would have stopped after two. Gets the chest ceremony, because
+   * clearing a whole day is the kind of thing that deserves one.
+   */
+  const claimDailySetBonus = useCallback(async()=>{
+    const bonus = dailyDay?.setBonus;
+    if(!bonus?.claimable||dailyBusyKey)return;
+    setDailyBusyKey(bonus.key);
+    try{
+      const took = await DB.claimStreakReward(bonus.key,{daily:'set',xp:bonus.xp});
+      if(!took){
+        await refreshStreakState();
+        return;
+      }
+      const cosmetic = Math.random()<0.35 ? rollCosmetic(cosmetics) : null;
+      const claimPromise = claimRewardXP(bonus.key,bonus.xp).then(async(r)=>{ await syncUserFromDb(); return r; });
+      openChest({
+        title:'Clean Sweep',
+        eyebrow:'All three, done',
+        xp:bonus.xp,
+        cosmetic,
+        onOpen:async()=>{
+          play('achieve');
+          if(cosmetic){ await DB.unlockCosmetic(cosmetic.key); setCosmetics(prev=>new Set([...prev,cosmetic.key])); }
+          const { granted } = await claimPromise;
+          if(granted===false){
+            toast('That bonus was already claimed on your other device — XP adjusted.',{icon:<Info size={14} color={C.t2}/>,duration:5000});
+          }
+          await refreshStreakState();
+        },
+      });
+    }catch(e){
+      console.error('claim daily set',e);
+      toast.error('Could not claim the bonus. It will still be there in a moment.');
+    }finally{
+      setDailyBusyKey(null);
+    }
+  },[dailyDay,dailyBusyKey,cosmetics,openChest,refreshStreakState,syncUserFromDb]);
+
+  /**
+   * What to suggest the student take on next.
+   *
+   * The same recommender the parent dashboard uses, given the student's own numbers. It is
+   * chain-aware — a claimed quest promotes the rung above it — which is what turns the picker
+   * from a catalog into a road, and every suggestion carries the sentence that justifies it.
+   */
+  const questRecommendations = useMemo(()=>recommendQuests({
+    activeDaysLast7: dayRows.filter(r=>r.met&&r.date>=localDateStr(new Date(Date.now()-7*86400000))).length,
+    activeDaysLast28: dayRows.filter(r=>r.met&&r.date>=localDateStr(new Date(Date.now()-28*86400000))).length,
+    lessonsVerified: Object.values(pathway).filter(l=>l?.verified).length,
+    quizzesTaken: qHistory.length,
+    averageScore: qHistory.length ? Math.round(qHistory.reduce((a,q)=>a+(q.score||0),0)/qHistory.length) : null,
+    satTestsTaken: satStats.fullTests,
+    satQuestions: satStats.questions,
+    cardReviewsLast28: totalReviews,
+    activitiesLogged: portActivities.length,
+    clinicalHours: clinicalHoursTotal,
+    gradeLevel: user?.gradeStage||'',
+    hasPlan: !!user?.masterPlan,
+    planCompletionPct: user?.masterPlan ? Math.round((getPlanStreak(user.masterPlan)>0?60:20)) : 0,
+    coachChats: aiChatCount,
+    collegeCount: appCounts.colleges,
+    scholarshipCount: portScholarships.length,
+    essayCount: appCounts.essays,
+    recommenderCount: recommendersCount,
+    interviewCount,
+  },
+  questRows.filter(q=>!QUEST_TERMINAL.has(q.status)).map(q=>q.questId),
+  claimedQuestIds(questRows),
+  ),[dayRows,pathway,qHistory,satStats,totalReviews,portActivities.length,clinicalHoursTotal,user?.gradeStage,user?.masterPlan,aiChatCount,appCounts,portScholarships.length,recommendersCount,interviewCount,questRows]);
 
   /** The single evaluation every quest surface in the app reads. */
   const questBoard = useMemo(
@@ -4345,7 +4813,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     let xpGain = 0, cardTier = 'none';
     let cardXpWrite = Promise.resolve();
     if (baseGain > 0) {
-      ({ finalXP: xpGain, tier: cardTier } = awardXP(baseGain));
+      ({ finalXP: xpGain, tier: cardTier } = awardBoostedXP(baseGain));
       cardXpWrite = saveUser({ ...user, xp: (user?.xp || 0) + xpGain });
       play('xp');
       if (cardTier === 'jackpot') { celebrateJackpot(); play('jackpot'); }
@@ -4517,6 +4985,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
   async function addLessonHighlight({sectionIdx,start,end,color}){
     if(!activeLesson)return;
+    // Every third highlight in a session earns a credit. Batched for the same reason
+    // flashcards are: one highlight is a click, three is reading with a pen in your hand.
+    highlightRunRef.current += 1;
+    if(highlightRunRef.current % 3 === 0) creditStreak('notes_batch',{silent:true}).catch(console.error);
     const content=LESSON_CONTENT[activeLesson.lesson.id];
     const body=content?.article?.sections?.[sectionIdx]?.body||'';
     const text=body.slice(start,end);
@@ -4685,7 +5157,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         clearAttempts(lesson.id);
         logEvent('unit_lesson_verified',lesson.id);
         setPathway_(pw=>({...pw,[lesson.id]:{completedAt:Date.now(),verified:true,quizScore:pct,studying:false}}));
-        const { finalXP, tier } = awardXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
+        const { finalXP, tier } = awardBoostedXP(15); // 10 XP already awarded on Study — verifying tops the lesson up to the usual 25 XP baseline
         const xpBeforeAward=user?.xp||0;
         const bumpedUser={...user,xp:xpBeforeAward+finalXP};
         // A Plan task could point at either the lesson itself or its verification quiz
@@ -4714,6 +5186,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         if(allVerified){
           await DB.verifyUnit(lessonPathKey,unit.id,aQuiz.id,pct);
           logEvent('unit_verified',unit.id);
+          // A unit is a bigger thing than the lesson that finished it, and it gets its own
+          // credit on top. Silent: the lesson-complete takeover is already on screen and a
+          // second streak toast behind it would be noise, not celebration.
+          creditStreak('unit_verified',{silent:true}).catch(console.error);
           setTimeout(()=>celebrateMastery(),400);
           toast.success(pickNudge('unit_verified',{unit:unit.title}),{duration:4000});
         }
@@ -4770,7 +5246,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(qScores[aQuiz.id]!==undefined){setAQ(null);return;}
     await saveQuizScore(aQuiz.id,pct);
     saveCatPerf(aQuiz.cat,pct);
-    const { finalXP:xpGain, tier:quizTier } = awardXP(Math.round(pct*0.5));
+    const { finalXP:xpGain, tier:quizTier } = awardBoostedXP(Math.round(pct*0.5));
     const bumpedUser={...user,xp:(user?.xp||0)+xpGain};
     const newUser=applyPlanAutoComplete(bumpedUser,resourceMatch('quiz',aQuiz.id));
     await saveUser(newUser);
@@ -5111,7 +5587,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
-                {streak>0&&<span style={{...pill(C.amberDim,C.amberL),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                {streak>0&&<span style={{...pill(tint(streakLeague.color,0.14),streakLeague.color),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
+                <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} />
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
                 {/* Same rule as the nav badge: don't advertise decks from a tab this student
                     hasn't unlocked yet. Flashcards open after their first quiz. */}
@@ -5132,6 +5609,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           </div>
         </div>
 
+        {/* Today's three — the first thing on Home under the header, because it is the only
+            block on this screen that answers "what should I do in the next twenty minutes"
+            rather than "how am I doing". Everything below it is context; this is the decision. */}
+        <DailyQuestRail
+          day={dailyDay}
+          onClaim={claimDailyQuest}
+          onClaimSet={claimDailySetBonus}
+          onGo={goQuestDestination}
+          busyKey={dailyBusyKey}
+          streakHint={dailyStreakHint}
+          m={isMobile}
+        />
+
+        {/* The check-in calendar's compact form. Hidden entirely once today is claimed and
+            there is no upcoming milestone worth naming — an always-present card with nothing
+            in it is the thing students learn to scroll past. */}
+        <CheckInHomeCard
+          state={checkinState}
+          onClaim={()=>claimTodayCheckin()}
+          onOpen={()=>goProgress('streak')}
+          busy={!!streakBusy.checkin}
+          m={isMobile}
+        />
+
         {/* Streak — high on Home because it is the only thing on this screen with a
             deadline attached (today ends). It carries exactly the three facts that
             change what a student does right now: is today earned, is a Perfect Week
@@ -5144,6 +5645,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           targetInfo={streakTargetInfo}
           nextReward={nextStreakReward}
           freezesHeld={streakFreezes}
+          boosts={boosts}
           nextLessonTitle={nextLesson?.title||null}
           onOpen={()=>goProgress('streak')}
           onStartStudying={()=>goPrep('pathways')}
@@ -8190,8 +8692,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             streak={streak}
             bestStreak={bestStreakEver}
             freezesHeld={streakFreezes}
+            freezeHistory={freezeHistory}
+            xp={user?.xp||0}
             day={todayStatus}
             week={weekInfo}
+            month={monthInfo}
+            boosts={boosts}
+            repair={streakRepair}
+            checkin={checkinState}
             targetInfo={streakTargetInfo}
             activity={dayActivityMap}
             bridged={bridgedDates}
@@ -8209,6 +8717,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               play('select');
               toast.success(`Streak goal set to ${days} days.`,{duration:2400});
             }}
+            onBuyFreeze={buyFreeze}
+            onRepair={doStreakRepair}
+            onClaimCheckin={()=>claimTodayCheckin()}
+            busy={streakBusy}
             m={isMobile}
           />
         )}
@@ -8226,6 +8738,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             onGo={goQuestDestination}
             busyId={questBusyId}
             error={questError}
+            day={dailyDay}
+            tomorrow={dailyTomorrow}
+            streakHint={dailyStreakHint}
+            onClaimDaily={claimDailyQuest}
+            onClaimDailySet={claimDailySetBonus}
+            dailyBusyKey={dailyBusyKey}
+            recommended={questRecommendations}
             m={isMobile}
           />
         )}
@@ -9296,16 +9815,33 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
    * the thing people learn to scroll past.
    */
   function questStripFor(surface){
-    if(!questBoard.length)return null;
+    // Two strips, at most, and usually one. The daily strip is the one that changes what
+    // somebody does in the next twenty minutes, so it goes first; the long-quest strip is the
+    // one that says what this month is about. Either renders nothing when it has nothing
+    // useful for THIS screen, which is what keeps a strip from becoming furniture.
+    const showDaily = dailyDay?.rows?.length>0;
+    if(!questBoard.length && !showDaily) return null;
     return(
-      <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0'}}>
-        <QuestStrip
-          rows={questBoard} surface={surface}
-          onOpen={()=>goProgress('quests')}
-          onClaim={claimQuestXP}
-          busyId={questBusyId}
-          m={isMobile}
-        />
+      <div style={{padding:isMobile?'12px 16px 0':'14px 24px 0',display:'flex',flexDirection:'column',gap:8}}>
+        {showDaily&&(
+          <DailyQuestRail
+            compact day={dailyDay} surface={surface}
+            onClaim={claimDailyQuest}
+            onClaimSet={claimDailySetBonus}
+            onGo={goQuestDestination}
+            busyKey={dailyBusyKey}
+            m={isMobile}
+          />
+        )}
+        {questBoard.length>0&&(
+          <QuestStrip
+            rows={questBoard} surface={surface}
+            onOpen={()=>goProgress('quests')}
+            onClaim={claimQuestXP}
+            busyId={questBusyId}
+            m={isMobile}
+          />
+        )}
       </div>
     );
   }
@@ -9442,7 +9978,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // Same early-start bonus as applyPlanAutoComplete — manually checking off a task dated
     // after today (working ahead in the WeekView) earns +25% XP on top of the base 6.
     const isEarly=date>planTodayStr();
-    const {finalXP,tier}=awardXP(isEarly?6+Math.round(6*0.25):6);
+    const {finalXP,tier}=awardBoostedXP(isEarly?6+Math.round(6*0.25):6);
     const planWrite=saveUser({...user,masterPlan:updated,xp:(user.xp||0)+finalXP});
     toast.success(`${BONUS_COPY[tier]?BONUS_COPY[tier](finalXP):`+${finalXP} XP`}${isEarly?' · +25% early-start bonus!':''}`,{duration:1800});
     if(tier==='jackpot')celebrateJackpot();else if(tier==='big'||tier==='bonus')celebrateBonusXP();else celebrateXP();
@@ -9571,9 +10107,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // The SAT tab renders its own chrome, so both strips arrive through one slot. The quest
         // line sits under the plan line for the same reason it does everywhere else: today's
         // tasks before this month's commitment.
-        planStrip={(user.masterPlan||questBoard.length)?(
+        planStrip={(user.masterPlan||questBoard.length||dailyDay?.rows?.length)?(
           <div style={{padding:isMobile?'0 0 12px':'0 0 14px',...CC({gap:10})}}>
             {user.masterPlan&&<PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>}
+            {dailyDay?.rows?.length>0&&(
+              <DailyQuestRail
+                compact day={dailyDay} surface="sat"
+                onClaim={claimDailyQuest}
+                onClaimSet={claimDailySetBonus}
+                onGo={goQuestDestination}
+                busyKey={dailyBusyKey}
+                m={isMobile}
+              />
+            )}
             {questBoard.length>0&&(
               <QuestStrip
                 rows={questBoard} surface="sat"
@@ -9664,6 +10210,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             busy={questBusyId===questCelebration.assignment.id}
             onClaim={()=>claimQuestXP(questCelebration.assignment)}
             onClose={()=>setQuestCelebration(null)}
+            onTakeNext={async(questId)=>{
+              // Claim first, then start the next rung. A student who taps "take it on" without
+              // taking the reward they just earned has been robbed by the interface.
+              await claimQuestXP(questCelebration.assignment);
+              await startQuest(questId);
+            }}
             reducedMotion={reducedMotion}
             m={isMobile}
           />
@@ -9698,7 +10250,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             <div style={R({gap:10})}>
               <button data-tour="cmdk" onClick={()=>setCmdOpen(true)} aria-label="Quick switch" style={{width:32,height:32,borderRadius:10,background:C.s2,border:`1px solid ${C.b1}`,display:'flex',alignItems:'center',justifyContent:'center',color:C.t2,cursor:'pointer'}}><Search size={14}/></button>
               <ThemeToggle mode={a11y.themeMode} onChange={m=>updateA11y({themeMode:m})} size={32} align="right" accent={accent}/>
-              {streak>0&&<span style={{...pill(C.amberDim,C.amberL,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0}}><Flame size={10}/>{streak}d</span>}
+              {/* The two things in the header that are counting down: the streak (today ends)
+                  and any live XP boost (this one ends sooner). A boost applied silently to a
+                  number the student was going to earn anyway changes no behaviour at all —
+                  seeing it run is the entire mechanic. */}
+              <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} m />
+              {streak>0&&<span onClick={()=>goProgress('streak')} style={{...pill(tint(streakLeague.color,0.14),streakLeague.color,{fontSize:10}),display:'inline-flex',alignItems:'center',gap:4,flexShrink:0,cursor:'pointer'}}><Flame size={10}/>{streak}d</span>}
               <div style={{textAlign:'right'}}>
                 <div style={{fontSize:10,color:C.t3,fontFamily:C.FM}}>Lv.{lvl}</div>
                 <div style={{fontSize:11,fontWeight:700,color:C.t1}}>{user.name}</div>

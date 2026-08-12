@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import Dexie from 'dexie';
 import { localDateStr } from './dateUtils';
-import { computeStreak } from './streak';
+import { computeStreak, freezeCapFor, repairKey } from './streak';
 
 const db = new Dexie('MedSchoolPrep');
 
@@ -265,6 +265,23 @@ db.version(17).stores({
   })));
 });
 
+// v18: `boosts` — time-limited XP multipliers (see BOOST_KINDS in src/lib/streak.js).
+//
+// A boost is granted by the check-in calendar's milestone days and by the occasional Clean
+// Sweep, and it multiplies every XP award until it expires. It is a table rather than a field
+// on the user row for one reason: two boosts can be live at once (a 24-hour Surge granted on
+// Monday and a 6-hour Double granted on Tuesday evening), they stack multiplicatively, and a
+// single field cannot represent that without either dropping one or lying about when it ends.
+//
+// `expiresAt` is indexed because the only query that matters is "what is live right now", asked
+// on every XP award and on every render of the boost chip.
+//
+// Expired rows are swept on read rather than by a timer: a background sweep in a tab that might
+// be asleep for six hours is a worse guarantee than a filter that is correct by construction.
+db.version(18).stores({
+  boosts: '++id, kind, expiresAt',
+});
+
 // ── User ─────────────────────────────────────────────────────────────────────
 export async function getUser() {
   return db.user.toCollection().first();
@@ -521,21 +538,37 @@ export async function getStreak() {
  * student with two years of card reviews should not load all of them to render a 14-day quest.
  */
 export async function getQuestEvidence({ since = 0 } = {}) {
-  const [lessons, quizScores, cardReviews, satAttempts, satResponses, satReviewLog, dayActivity] =
-    await Promise.all([
-      db.lessons.toArray(),
-      db.quizScores.toArray(),
-      since > 0 ? db.cardReviews.where('reviewedAt').aboveOrEqual(since).toArray() : db.cardReviews.toArray(),
-      db.satAttempts.toArray(),
-      since > 0 ? db.satResponses.where('answeredAt').aboveOrEqual(since).toArray() : db.satResponses.toArray(),
-      db.satReviewLog.toArray(),
-      db.dayActivity.toArray(),
-    ]);
+  const [
+    lessons, quizScores, cardReviews, satAttempts, satResponses, satReviewLog, dayActivity,
+    unitMastery, coachMessages, lessonNotes, lessonHighlights, deckMeta,
+  ] = await Promise.all([
+    db.lessons.toArray(),
+    db.quizScores.toArray(),
+    since > 0 ? db.cardReviews.where('reviewedAt').aboveOrEqual(since).toArray() : db.cardReviews.toArray(),
+    db.satAttempts.toArray(),
+    since > 0 ? db.satResponses.where('answeredAt').aboveOrEqual(since).toArray() : db.satResponses.toArray(),
+    db.satReviewLog.toArray(),
+    db.dayActivity.toArray(),
+    db.unitMastery.toArray(),
+    // Coach messages are the one unbounded table here — a chatty student
+    // accumulates thousands — so the window bound matters more than anywhere
+    // else. `ts` is indexed on coachMessages only via the compound declaration,
+    // so this filters in memory over a bounded-by-nothing read; the rows are
+    // small and the alternative is a schema version for a quest metric, which is
+    // exactly the parallel telemetry this system exists to avoid.
+    db.coachMessages.toArray(),
+    db.lessonNotes.toArray(),
+    db.lessonHighlights.toArray(),
+    db.deckMeta.toArray(),
+  ]);
   return {
     lessons, quizScores, cardReviews, satAttempts, satResponses,
     // The engine looks for `clearedAt`/`resolvedAt`; resolveSatReviewEntry writes the latter.
     satReviewLog: satReviewLog.filter(r => r.resolved),
     dayActivity,
+    unitMastery,
+    coachMessages: since > 0 ? coachMessages.filter(m => (m.ts || 0) >= since) : coachMessages,
+    lessonNotes, lessonHighlights, deckMeta,
   };
 }
 
@@ -557,43 +590,169 @@ export async function claimStreakReward(key, meta = {}) {
 }
 
 // ── Streak Freezes ────────────────────────────────────────────────────────────
-// Earned (not purchased) safety net against loss-aversion streak breaks —
-// capped at 2 held at once so consistency still matters.
-const MAX_STREAK_FREEZES = 2;
+//
+// The safety net against loss-aversion streak breaks. A freeze covers exactly one missed day.
+//
+// The hold cap is the student's LEAGUE cap (see STREAK_LEAGUES in src/lib/streak.js), not a
+// constant: protecting a four-month streak should be easier than protecting a two-day one,
+// because the four-month streak is the thing actually worth protecting. Callers pass the streak
+// so this module never has to derive it (and never has to import the whole engine to do so).
+//
+// The floor of 1 matters: a brand-new student who wins a freeze from an achievement must be able
+// to hold it, or the reward silently evaporates on the way in.
 
 export async function getStreakFreezeCount() {
   return db.streakFreezes.filter(f => !f.usedOn).count();
 }
-export async function grantStreakFreeze() {
+
+/** Every freeze row, spent and unspent — the freeze card's history list. */
+export async function getStreakFreezes() {
+  return db.streakFreezes.orderBy('earnedAt').reverse().toArray();
+}
+
+/**
+ * Add a freeze, if the cap allows.
+ *
+ * @param {object} opts
+ * @param {number} opts.streak  current streak, for the league cap. 0 is safe (cap 1).
+ * @param {string} opts.source  where it came from — 'milestone' | 'week' | 'month' |
+ *                              'achievement' | 'purchase' | 'checkin'. Shown in the history.
+ * @returns {boolean} true only when one was actually added.
+ */
+export async function grantStreakFreeze({ streak = 0, source = 'earned' } = {}) {
   const held = await getStreakFreezeCount();
-  if (held >= MAX_STREAK_FREEZES) return false;
-  await db.streakFreezes.add({ earnedAt: Date.now(), usedOn: null });
+  const cap = Math.max(1, freezeCapFor(streak));
+  if (held >= cap) return false;
+  await db.streakFreezes.add({ earnedAt: Date.now(), usedOn: null, source });
   pushDirty();
   return true;
 }
+
 /**
  * Run once per app load, before getStreak(). If exactly one day was missed
  * since the last study day and an unused freeze is available, spends it to
  * bridge that specific date so getStreak() can see it via `usedOn`.
- * Returns true if a freeze was newly applied this call.
+ * Returns the bridged date if a freeze was newly applied this call, else null.
+ *
+ * Deliberately still automatic. A freeze the student has to remember to spend is a freeze that
+ * is sitting unspent on the morning they needed it, which is the failure this exists to prevent —
+ * and the app tells them it happened (see the toast at the call site) rather than doing it
+ * silently, which is the part that makes automatic acceptable.
  */
 export async function checkAndApplyStreakFreeze() {
   const days = await db.studyDays.orderBy('date').reverse().toArray();
-  if (!days.length) return false;
+  if (!days.length) return null;
   const mostRecent = new Date(days[0].date); mostRecent.setHours(0,0,0,0);
   const today = new Date(); today.setHours(0,0,0,0);
   const gapDays = Math.round((today - mostRecent) / 86400000);
-  if (gapDays !== 2) return false; // only bridges a single missed day
+  if (gapDays !== 2) return null; // only bridges a single missed day
   const missed = new Date(mostRecent); missed.setDate(missed.getDate() + 1);
   const missedKey = localDateStr(missed);
   const alreadyBridged = await db.streakFreezes.where('usedOn').equals(missedKey).count();
-  if (alreadyBridged) return false;
+  if (alreadyBridged) return null;
   const unused = await db.streakFreezes.filter(f => !f.usedOn).first();
-  if (!unused) return false;
-  await db.streakFreezes.update(unused.id, { usedOn: missedKey });
+  if (!unused) return null;
+  await db.streakFreezes.update(unused.id, { usedOn: missedKey, spentAt: Date.now() });
+  pushDirty();
+  return missedKey;
+}
+
+/**
+ * Buy a freeze with XP.
+ *
+ * The XP debit is the CALLER's job — it goes through the same user-record write every other XP
+ * movement uses, so the balance stays consistent with the sync baseline. This function's only
+ * responsibility is the cap check and the row, and it returns false without side effects when the
+ * cap is reached, so a caller that debits first and grants second can refund on false.
+ */
+export async function buyStreakFreeze({ streak = 0 } = {}) {
+  return grantStreakFreeze({ streak, source: 'purchase' });
+}
+
+// ── Streak repair ─────────────────────────────────────────────────────────────
+/**
+ * When the last repair was, or null. Read off the permanent claim ledger, which is where the
+ * cooldown lives — a device-local timestamp would let a student repair once per device.
+ */
+export async function getLastRepairAt() {
+  const rows = await db.streakRewards.filter(r => String(r.key || '').startsWith('repair:')).toArray();
+  if (!rows.length) return null;
+  return Math.max(...rows.map(r => r.claimedAt || 0)) || null;
+}
+
+/**
+ * Bridge a broken run.
+ *
+ * Writes one spent-freeze row per missed date, marked `source: 'repair'`, which is what makes a
+ * repaired day behave exactly like a frozen one everywhere in the app: it holds the streak
+ * together (computeStreak reads `usedOn`), and it can never complete a Perfect Week or a Perfect
+ * Month or count toward a study-day quest, because all three of those read `metDates` and none of
+ * them read `bridged`. That equivalence is the whole safety property — there is no way to buy a
+ * reward, only to buy back continuity.
+ *
+ * The ledger row (`repair:<date>`) is what enforces the cooldown, and it is permanent and
+ * cross-device for the same reason milestone claims are.
+ *
+ * @returns {boolean} false if this repair was already recorded (a second device got there first).
+ */
+export async function repairStreak(dates = []) {
+  const clean = (dates || []).filter(Boolean);
+  if (!clean.length) return false;
+  const today = localDateStr();
+  // The ledger add is first and is the gate: if another device already repaired today, this
+  // throws on the unique key and we do nothing else, so two tabs cannot double-bridge.
+  try {
+    await db.streakRewards.add({ key: repairKey(today), claimedAt: Date.now(), dates: clean });
+  } catch {
+    return false;
+  }
+  const now = Date.now();
+  for (const date of clean) {
+    const already = await db.streakFreezes.where('usedOn').equals(date).count();
+    if (already) continue;
+    await db.streakFreezes.add({ earnedAt: now, usedOn: date, spentAt: now, source: 'repair' });
+  }
   pushDirty();
   return true;
 }
+
+// ── XP boosts ─────────────────────────────────────────────────────────────────
+/**
+ * Live boosts only. Expired rows are deleted on the way past — a sweep on read rather than on a
+ * timer, because a timer in a backgrounded tab is not a guarantee and a filter is.
+ */
+export async function getActiveBoosts() {
+  const now = Date.now();
+  const rows = await db.boosts.toArray();
+  const dead = rows.filter(b => (b.expiresAt || 0) <= now);
+  if (dead.length) { try { await db.boosts.bulkDelete(dead.map(b => b.id)); } catch { /* raced */ } }
+  return rows.filter(b => (b.expiresAt || 0) > now);
+}
+
+/**
+ * Start a boost.
+ *
+ * Re-granting a boost of the same kind EXTENDS the live one rather than adding a second row.
+ * Two identical multipliers stacking to ×4 is not something any surface in this app promises,
+ * and a student who earns a second Double XP an hour into the first should get more time, not a
+ * number the copy never described.
+ */
+export async function grantBoost(kind, hours, { source = null } = {}) {
+  const ms = Math.max(1, Number(hours) || 1) * 3600 * 1000;
+  const now = Date.now();
+  const existing = (await getActiveBoosts()).find(b => b.kind === kind);
+  if (existing) {
+    await db.boosts.update(existing.id, { expiresAt: existing.expiresAt + ms });
+    pushDirty();
+    return { ...existing, expiresAt: existing.expiresAt + ms, extended: true };
+  }
+  const row = { kind, startedAt: now, expiresAt: now + ms, source };
+  const id = await db.boosts.add(row);
+  pushDirty();
+  return { ...row, id, extended: false };
+}
+
+export async function clearBoosts() { await db.boosts.clear(); }
 
 // ── Daily Check-in ────────────────────────────────────────────────────────────
 export async function getCheckin(date) {
@@ -607,6 +766,11 @@ export async function recordCheckin(date, day) {
 // day 1 after a long absence ("Welcome back").
 export async function hasAnyCheckin() {
   return (await db.checkins.count()) > 0;
+}
+/** How many times a given cycle day has been reached — `countCheckinsOnDay(28)`
+ *  is how many full 28-day check-in cycles this account has completed. */
+export async function countCheckinsOnDay(day) {
+  return db.checkins.filter(c => Number(c.day) === Number(day)).count();
 }
 
 // ── Cosmetics (chest-reveal unlocks) ─────────────────────────────────────────
@@ -882,7 +1046,7 @@ export async function buildSyncSnapshot() {
     pathwayGoals, coachThreads, coachMessages,
     satAttempts, satResponses, satSkillStats, satReviewLog,
     lessonNotes, lessonHighlights, lessonFeedback, lessonProgress,
-    dayActivity, streakRewards,
+    dayActivity, streakRewards, boosts,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -894,7 +1058,7 @@ export async function buildSyncSnapshot() {
     db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
     db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
-    db.dayActivity.toArray(), db.streakRewards.toArray(),
+    db.dayActivity.toArray(), db.streakRewards.toArray(), db.boosts.toArray(),
   ]);
 
   // SAT attempts travel keyed by `startedAt` rather than by Dexie's autoincrement
@@ -946,7 +1110,13 @@ export async function buildSyncSnapshot() {
       date, credits: credits || 0, counts: counts || {}, goalCredits: goalCredits || 0,
       met: met ? 1 : 0, metAt: metAt || null, legacy: legacy ? 1 : 0,
     })),
-    streakRewards: streakRewards.map(({ key, claimedAt }) => ({ key, claimedAt })),
+    streakRewards: streakRewards.map(({ key, claimedAt, dates }) => ({ key, claimedAt, ...(dates ? { dates } : {}) })),
+    // A boost is a wall-clock window, so it travels as its absolute expiry and is simply
+    // dropped on arrival if it has already run out. Keyed by `startedAt`, which is unique
+    // per grant and stable across devices in a way Dexie's autoincrement id is not.
+    boosts: boosts
+      .filter(b => (b.expiresAt || 0) > Date.now())
+      .map(({ kind, startedAt, expiresAt, source }) => ({ kind, startedAt, expiresAt, source: source || null })),
     reviewCountsByDate,
     streakFreezes: streakFreezes.map(({ earnedAt, usedOn }) => ({ earnedAt, usedOn: usedOn || null })),
     checkins: checkins.map(({ date, day }) => ({ date, day })),
@@ -1036,7 +1206,7 @@ export async function applyRemoteSnapshot(remote) {
     localPathwayGoals, localCoachThreads, localCoachMessages,
     localSatAttempts, localSatSkillStats, localSatReviewLog,
     localLessonNotes, localLessonHighlights, localLessonFeedback, localLessonProgress,
-    localDayActivity, localStreakRewards,
+    localDayActivity, localStreakRewards, localBoosts,
   ] = await Promise.all([
     db.user.toCollection().first(), db.lessons.toArray(), db.quizScores.toArray(),
     db.flashCards.toArray(), db.deckMeta.toArray(), db.catPerf.toArray(),
@@ -1047,7 +1217,7 @@ export async function applyRemoteSnapshot(remote) {
     db.satAttempts.toArray(), db.satSkillStats.toArray(), db.satReviewLog.toArray(),
     db.lessonNotes.toArray(), db.lessonHighlights.toArray(),
     db.lessonFeedback.toArray(), db.lessonProgress.toArray(),
-    db.dayActivity.toArray(), db.streakRewards.toArray(),
+    db.dayActivity.toArray(), db.streakRewards.toArray(), db.boosts.toArray(),
   ]);
 
   // ── profile / XP ──
@@ -1203,6 +1373,25 @@ export async function applyRemoteSnapshot(remote) {
   }
   await db.streakFreezes.clear();
   if (freezeMap.size) await db.streakFreezes.bulkPut([...freezeMap.values()]);
+
+  // ── XP boosts ──
+  // Union by `startedAt`, keeping the LATER expiry when both sides have the same grant: a boost
+  // extended on the phone and not on the laptop should end when the phone says it ends. Anything
+  // already expired is dropped rather than merged, so a stale snapshot cannot resurrect one.
+  {
+    const now = Date.now();
+    const boostMap = new Map(localBoosts.filter(b => (b.expiresAt || 0) > now).map(b => [b.startedAt, b]));
+    for (const r of (remote.boosts || [])) {
+      if ((r.expiresAt || 0) <= now) continue;
+      const l = boostMap.get(r.startedAt);
+      boostMap.set(r.startedAt, {
+        kind: r.kind, startedAt: r.startedAt, source: r.source || null,
+        expiresAt: Math.max(l?.expiresAt || 0, r.expiresAt || 0),
+      });
+    }
+    await db.boosts.clear();
+    if (boostMap.size) await db.boosts.bulkPut([...boostMap.values()]);
+  }
 
   // ── daily check-ins ──
   const checkinMap = new Map(localCheckins.map(r => [r.date, r]));
@@ -1803,6 +1992,6 @@ export async function clearAllData() {
     // next would inherit the previous account's sync baseline (corrupting its own delta math from
     // its very first push) and any of its still-queued reward claims.
     db.syncBaseline.clear(), db.rewardClaimQueue.clear(),
-    db.dayActivity.clear(), db.streakRewards.clear(),
+    db.dayActivity.clear(), db.streakRewards.clear(), db.boosts.clear(),
   ]);
 }

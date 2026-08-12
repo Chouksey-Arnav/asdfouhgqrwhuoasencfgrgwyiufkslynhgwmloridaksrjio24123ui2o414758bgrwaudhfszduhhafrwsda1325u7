@@ -17,6 +17,12 @@
  *   6. RAISING YOUR GOAL NEVER UN-EARNS A FINISHED DAY.
  *   7. EVERY SURFACE IS WIRED. The tab exists, has a URL, and the streak ledger travels
  *      with the student across devices.
+ *   8. THE LEAGUE PAYS WHAT IT SAYS. A streak's XP bonus and freeze cap are derived from the
+ *      streak alone and can never disagree with the number they are drawn beside.
+ *   9. A REPAIR BUYS CONTINUITY, NEVER CREDIT. A repaired day bridges the streak exactly like
+ *      a freeze and can never complete a Perfect Week, a Perfect Month, or a study-day quest.
+ *  10. THE CHECK-IN LADDER IS THE FORGIVING ONE. It never punishes a miss, and it is never
+ *      mistaken for the streak.
  *
  * Run by `npm run verify:streak` (and by `npm run build`).
  */
@@ -41,6 +47,7 @@ const section = (name) => console.log(`\n${name}`);
 
 const S = await load('src/lib/streak.js');
 const { SUBVIEWS } = await load('src/lib/routes.js');
+const CHECKIN = await load('src/data/checkinCalendar.js');
 const app = read('src/App.jsx');
 const db = read('src/lib/db.js');
 
@@ -184,16 +191,25 @@ assert('reward keys are unique — two rungs cannot share a claim',
   new Set(S.STREAK_REWARDS.map((r) => S.rewardKey(r.days))).size === S.STREAK_REWARDS.length);
 assert('milestone and perfect-week keys can never collide',
   !S.STREAK_REWARDS.some((r) => S.rewardKey(r.days) === S.perfectWeekKey('2026-W33')));
+assert('...nor with a perfect-month, a repair, or a daily-quest key',
+  new Set([
+    S.rewardKey(30), S.perfectWeekKey('2026-W33'), S.perfectMonthKey('2026-08'),
+    S.repairKey('2026-08-12'), 'daily:2026-08-12:d_quiz_one',
+  ]).size === 5,
+  'every one of these lives in the same permanent ledger — a collision silently voids a reward');
 assert('the ladder covers the long horizons the product promises (100 and 365)',
   S.STREAK_REWARDS.some((r) => r.days === 100) && S.STREAK_REWARDS.some((r) => r.days === 365));
 eq('the next milestone above 0 is the first rung', S.nextMilestone(0).days, S.STREAK_REWARDS[0].days);
 eq('past the top of the ladder there is no next rung', S.nextMilestone(9999), null);
-eq('a 30-day streak has reached four rungs', S.reachedMilestones(30).length, 4);
+eq('a 30-day streak has reached seven rungs', S.reachedMilestones(30).length, 7);
+assert('the first four rungs all land inside the first fortnight',
+  S.STREAK_REWARDS.slice(0, 4).every((r) => r.days <= 14),
+  'that window is where essentially all streak abandonment happens — it is the only part of the ladder doing real work');
 {
   const claimed = new Set([S.rewardKey(3), S.rewardKey(7)]);
   const owed = S.unclaimedMilestones(30, claimed);
-  eq('already-claimed rungs are never offered again', owed.length, 2);
-  assert('...and the ones owed are the unclaimed ones', owed.every((r) => [14, 30].includes(r.days)));
+  eq('already-claimed rungs are never offered again', owed.length, 5);
+  assert('...and the ones owed are the unclaimed ones', owed.every((r) => [5, 10, 14, 21, 30].includes(r.days)));
   eq('a fully-claimed ladder owes nothing',
     S.unclaimedMilestones(30, new Set(S.STREAK_REWARDS.map((r) => S.rewardKey(r.days)))).length, 0);
 }
@@ -314,6 +330,242 @@ assert('a day either device considered earned stays earned after a merge',
 assert('the v17 upgrade carries pre-existing study days forward as earned days',
   /db\.version\(17\)[\s\S]{0,1400}?upgrade\([\s\S]{0,600}?studyDays/.test(db),
   'without this, every existing student wakes up to a streak of 0');
+
+// ── 9. Leagues ──────────────────────────────────────────────────────────────
+section('The league is derived from the streak and pays what it says');
+
+assert('the ladder climbs', S.STREAK_LEAGUES.every((l, i) => i === 0 || l.min > S.STREAK_LEAGUES[i - 1].min));
+assert('the XP bonus climbs with it', S.STREAK_LEAGUES.every((l, i) => i === 0 || l.xpBonus >= S.STREAK_LEAGUES[i - 1].xpBonus));
+assert('so does the freeze cap', S.STREAK_LEAGUES.every((l, i) => i === 0 || l.freezeCap >= S.STREAK_LEAGUES[i - 1].freezeCap));
+assert('every league says what it is and what it is worth',
+  S.STREAK_LEAGUES.every((l) => l.label && l.blurb?.length > 20 && l.icon && l.color && l.freezeCap >= 1));
+eq('the bottom league starts at zero', S.STREAK_LEAGUES[0].min, 0);
+eq('a zero streak is still in a league', S.leagueFor(0).id, S.STREAK_LEAGUES[0].id);
+assert('the top bonus is capped at something sane',
+  S.STREAK_LEAGUES[S.STREAK_LEAGUES.length - 1].xpBonus <= 0.25,
+  'past a quarter, breaking a long streak costs so much earning power that ignoring XP becomes rational');
+eq('a nonsense streak falls back rather than crashing', S.leagueFor(null).id, S.STREAK_LEAGUES[0].id);
+eq('the top league has nothing above it', S.nextLeague(100000), null);
+for (const l of S.STREAK_LEAGUES) {
+  eq(`a streak of exactly ${l.min} is already ${l.label}`, S.leagueFor(l.min).id, l.id);
+  eq(`...and one day short of it is not`, S.leagueFor(l.min - 1).id === l.id, l.min === 0);
+  eq(`freezeCapFor(${l.min}) agrees with the league`, S.freezeCapFor(l.min), l.freezeCap);
+  eq(`the multiplier for ${l.label} is 1 + its bonus`, S.streakXPMultiplier(l.min), 1 + l.xpBonus);
+}
+{
+  const p = S.leagueProgress(0);
+  assert('a fresh streak has somewhere to climb to', !!p.next && p.remaining === p.next.min);
+  assert('...and a bar that starts empty', p.pct === 0);
+  const top = S.leagueProgress(100000);
+  assert('the top of the ladder reports itself as promoted', top.promoted && top.pct === 100 && top.next === null);
+  assert('a streak with no bonus says so rather than showing +0%', S.streakBonusLabel(0) === null);
+  assert('a streak with a bonus states it as a percentage', /^\+\d+% XP$/.test(S.streakBonusLabel(30)));
+}
+
+section('Boosts multiply, expire, and never silently apply');
+{
+  const now = Date.now();
+  const live = { kind: 'double', expiresAt: now + 3600000 };
+  const dead = { kind: 'triple', expiresAt: now - 1000 };
+  eq('an expired boost multiplies nothing', S.boostMultiplier([dead], now), 1);
+  eq('a live boost multiplies by its kind', S.boostMultiplier([live], now), 2);
+  eq('two live boosts stack multiplicatively',
+    S.boostMultiplier([live, { kind: 'surge', expiresAt: now + 1000 }], now), 3);
+  eq('no boosts is no multiplier', S.boostMultiplier([], now), 1);
+  eq('expired boosts are filtered out of the live list', S.activeBoosts([live, dead], now).length, 1);
+  assert('...soonest to expire first',
+    S.activeBoosts([{ kind: 'surge', expiresAt: now + 9e6 }, live], now)[0].kind === 'double');
+  assert('every boost kind is a real, positive multiplier',
+    Object.values(S.BOOST_KINDS).every((b) => b.multiplier > 1 && b.hours > 0 && b.label && b.blurb));
+
+  const m = S.xpMultiplier({ streak: 30, boosts: [live], now });
+  eq('the total is league × boost', Math.round(m.total * 1000), Math.round(1.12 * 2 * 1000));
+  assert('...and both halves are reported separately so a surface can explain the number',
+    m.leagueLabel && m.boostLabel && m.any);
+  assert('a plain student has no multiplier and says so', !S.xpMultiplier({ streak: 0, boosts: [] }).any);
+  assert('a countdown is human-readable', /left$/.test(S.boostCountdown(90 * 60000)));
+}
+
+section('The freeze economy is priced, capped, and explains itself');
+{
+  eq('the first freeze costs the base price', S.freezeCost(0), S.FREEZE_BASE_COST);
+  assert('each one after costs more', S.freezeCost(1) > S.freezeCost(0) && S.freezeCost(2) > S.freezeCost(1),
+    'stockpiling should be possible and expensive — nobody may simply buy immunity from showing up');
+  const rich = S.canBuyFreeze({ streak: 30, held: 0, xp: 999999 });
+  assert('a student who can afford one is told so', rich.ok && /costs/i.test(rich.reason));
+  const capped = S.canBuyFreeze({ streak: 0, held: 1, xp: 999999 });
+  assert('a capped student is refused', !capped.ok);
+  assert('...and told how to raise the cap rather than just being disabled',
+    /reach|maximum/i.test(capped.reason), capped.reason);
+  const broke = S.canBuyFreeze({ streak: 30, held: 0, xp: 0 });
+  assert('a student who cannot afford one is told the gap', !broke.ok && /more XP/.test(broke.reason));
+}
+
+// ── 10. Repair ──────────────────────────────────────────────────────────────
+section('A repair buys continuity, never credit');
+
+assert('a repair is priced against what was lost',
+  S.repairCost(60) > S.repairCost(5), `${S.repairCost(5)} vs ${S.repairCost(60)}`);
+assert('...and capped, so a very long streak is not unpurchasable',
+  S.repairCost(100000) === S.REPAIR_MAX_COST);
+eq('there is nothing to repair when today is already earned',
+  S.repairOffer(new Set(keysBack(5)), { xp: 99999 }), null);
+eq('...nor when yesterday was, because today is still open',
+  S.repairOffer(new Set(keysBack(5, daysAgo(1))), { xp: 99999 }), null);
+{
+  // A ten-day run that ended two days ago.
+  const met = new Set(keysBack(10, daysAgo(2)));
+  const offer = S.repairOffer(met, { xp: 99999 });
+  assert('a genuinely broken recent streak is offered a repair', !!offer);
+  eq('...knowing what was lost', offer.lost, 10);
+  eq('...and how many days it has to bridge', offer.missedDays, 1);
+  eq('...and exactly which ones', offer.dates.length, 1);
+  eq('...bridging the day that was actually missed', offer.dates[0], key(daysAgo(1)));
+  assert('today is never counted as missed — it is still open',
+    !offer.dates.includes(key(daysAgo(0))));
+  assert('...and it names the number in its headline', /10-day/.test(offer.headline));
+  assert('...and is available to somebody who can pay', offer.available);
+  assert('a student who cannot pay is offered it but cannot take it',
+    S.repairOffer(met, { xp: 0 })?.available === false);
+  assert('a student inside the cooldown cannot take it either',
+    S.repairOffer(met, { xp: 99999, lastRepairAt: Date.now() - 86400000 })?.available === false);
+  assert('...and is told when they can', !!S.repairOffer(met, { xp: 99999, lastRepairAt: Date.now() - 86400000 })?.nextAvailableAt);
+}
+eq('a streak abandoned long ago is a fresh start, not a repair',
+  S.repairOffer(new Set(keysBack(10, daysAgo(30))), { xp: 99999 }), null);
+eq('a one-day streak is not worth buying back',
+  S.repairOffer(new Set([key(daysAgo(2))]), { xp: 99999 }), null);
+{
+  // THE safety property: a bridged day is not an earned day, anywhere.
+  const monday = S.startOfWeek(new Date());
+  const week = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i); return key(d);
+  });
+  const six = new Set(week.slice(1));
+  const repaired = S.weekProgress(six, { date: monday, bridged: new Set([week[0]]) });
+  assert('a repaired day cannot complete a Perfect Week', !repaired.complete);
+  const monthMet = new Set();
+  const now = new Date();
+  for (let d = 1; d <= new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(); d += 1) {
+    if (d !== 2) monthMet.add(key(new Date(now.getFullYear(), now.getMonth(), d)));
+  }
+  const repairedMonth = S.monthProgress(monthMet, { date: now, bridged: new Set([key(new Date(now.getFullYear(), now.getMonth(), 2))]) });
+  assert('...nor a Perfect Month', !repairedMonth.complete);
+  assert('...but it does hold the streak together',
+    S.computeStreak(new Set([key(daysAgo(0)), key(daysAgo(2))]), { bridged: new Set([key(daysAgo(1))]) }) === 3);
+}
+assert('the repair ledger key is dated, so the cooldown is per account not per device',
+  /^repair:\d{4}-\d{2}-\d{2}$/.test(S.repairKey('2026-08-12')));
+assert('db.js writes a repaired day as a spent freeze, not as an earned day',
+  /source: 'repair'/.test(db) && /usedOn: date/.test(db),
+  'anything else would sell a student credit for work they did not do');
+assert('...and gates the whole repair on the ledger row landing first',
+  /streakRewards\.add\(\{ key: repairKey\(today\)/.test(db),
+  'two tabs must not be able to double-bridge the same gap');
+
+section('The Perfect Month is a real month');
+{
+  const now = new Date();
+  const all = new Set();
+  const dim = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  for (let d = 1; d <= dim; d += 1) all.add(key(new Date(now.getFullYear(), now.getMonth(), d)));
+  const full = S.monthProgress(all, { date: now });
+  assert('every day of the month completes it', full.complete && full.met === dim);
+  const empty = S.monthProgress(new Set(), { date: now });
+  assert('a missed elapsed day closes it out', !empty.stillPossible || now.getDate() === 1);
+  eq('the month key is year-month', S.monthKeyOf(new Date(2026, 7, 12)), '2026-08');
+  // The bar is measured against ELAPSED days, not the whole month.
+  const soFar = new Set();
+  for (let d = 1; d <= now.getDate(); d += 1) soFar.add(key(new Date(now.getFullYear(), now.getMonth(), d)));
+  eq('a flawless month-so-far reads as 100%, not as a fraction of the whole month',
+    S.monthProgress(soFar, { date: now }).pct, 100);
+  assert('...and is still winnable', S.monthProgress(soFar, { date: now }).stillPossible);
+  assert('the month reward is worth more than the week reward',
+    S.PERFECT_MONTH_REWARD.xp > S.PERFECT_WEEK_REWARD.xp);
+}
+
+// ── 11. The check-in ladder ─────────────────────────────────────────────────
+section('The check-in calendar rewards turning up, and forgives');
+
+eq('the cycle is 28 days', CHECKIN.CHECKIN_DAYS.length, CHECKIN.CYCLE_LENGTH);
+assert('every day is numbered in order',
+  CHECKIN.CHECKIN_DAYS.every((d, i) => d.day === i + 1));
+assert('every day pays something', CHECKIN.CHECKIN_DAYS.every((d) => d.xp > 0));
+assert('the big days are a minority — that is what makes them big',
+  CHECKIN.MILESTONE_DAYS.length >= 6 && CHECKIN.MILESTONE_DAYS.length <= CHECKIN.CYCLE_LENGTH / 2,
+  `${CHECKIN.MILESTONE_DAYS.length} of ${CHECKIN.CYCLE_LENGTH}`);
+assert('every milestone day says what it gives',
+  CHECKIN.CHECKIN_DAYS.filter((d) => CHECKIN.isMilestoneDay(d.day)).every((d) => d.label && d.blurb?.length > 15));
+assert('the last day is the biggest',
+  CHECKIN.CHECKIN_DAYS[27].xp === Math.max(...CHECKIN.CHECKIN_DAYS.map((d) => d.xp)));
+assert('every boost a day names is a real boost kind',
+  CHECKIN.CHECKIN_DAYS.filter((d) => d.boost).every((d) => !!S.BOOST_KINDS[d.boost]));
+assert('a milestone is never more than a week away from any day',
+  CHECKIN.CHECKIN_DAYS.every((d) => {
+    const next = CHECKIN.nextMilestone(d.day);
+    return !next || next.inDays <= 7;
+  }),
+  'the distance to the next real reward is the mechanic; a fortnight-long gap in it is a fortnight nobody looks');
+eq('past the last milestone there is nothing to promise', CHECKIN.nextMilestone(28), null);
+assert('a reward summary always leads with the thing worth changing an evening for',
+  /chest/.test(CHECKIN.rewardSummary(CHECKIN.getCheckinReward(7))));
+assert('an ordinary day summarises as its XP', /^\+\d+ XP$/.test(CHECKIN.rewardSummary(CHECKIN.getCheckinReward(1))));
+assert('the cycle survives a short gap rather than resetting',
+  CHECKIN.GRACE_DAYS >= 1,
+  'a ladder that resets on the first miss is one most students only ever see the bottom of');
+{
+  const cycle = CHECKIN.buildCycle({ currentDay: 12, claimedToday: false });
+  eq('the calendar is drawn in full, always', cycle.tiles.length, CHECKIN.CYCLE_LENGTH);
+  eq('...with today marked exactly once', cycle.tiles.filter((t) => t.state === 'today').length, 1);
+  assert('...everything before it claimed', cycle.tiles.slice(0, 11).every((t) => t.state === 'claimed'));
+  assert('...and everything after it visible in advance',
+    cycle.tiles.slice(12).every((t) => t.state === 'upcoming'),
+    'seeing that day 14 is a chest is the entire reason the whole cycle is drawn');
+  assert('the next milestone is named', !!cycle.next && cycle.next.day > 12);
+}
+{
+  // Scoped to the handler's own body: turning up is not studying, so nothing in the check-in
+  // path may credit a streak day. A check-in that moved the streak would undo the whole rewrite.
+  const start = app.indexOf('const claimTodayCheckin');
+  const body = app.slice(start, app.indexOf('\n  // Load the cycle once the database is open', start));
+  assert('the check-in handler exists', start !== -1 && body.length > 200);
+  assert('...and never credits a streak day',
+    !/creditStreak\(|recordStreakActivity\(/.test(body));
+  assert('...but it does grant the day\'s freeze and boost when the calendar says so',
+    /grantStreakFreeze\(/.test(body) && /grantBoost\(/.test(body));
+}
+assert('the check-in XP still goes through the idempotent outbox',
+  /claimRewardXP\(`checkin:\$\{localDateStr\(\)\}`/.test(app));
+
+section('The expansion is wired into the app');
+assert('XP awards are scaled by the league and any live boost',
+  /const awardBoostedXP\s*=\s*useCallback/.test(app) && /xpMultRef\.current/.test(app));
+assert('...at every award site, with none left on the raw roll',
+  (app.match(/(?<![A-Za-z])awardXP\(/g) || []).length === 1,
+  'exactly one raw roll is correct — the one inside awardBoostedXP. Any other call site pays a long-streak student less than the card promised');
+assert('...and there are real award sites using the wrapper',
+  (app.match(/awardBoostedXP\(/g) || []).length >= 5);
+assert('milestone payouts are still deterministic, never boosted',
+  /Milestone\/perfect-week XP is deterministic on purpose/.test(app));
+assert('freeze grants are capped by the league rather than by a constant',
+  /grantStreakFreeze\(\{ ?streak/.test(app) && /freezeCapFor/.test(db));
+assert('the freeze purchase debits XP before granting, and refunds on refusal',
+  /const buyFreeze\s*=\s*useCallback/.test(app) && /refund — the cap was reached elsewhere/.test(app));
+assert('the repair debits XP before bridging, and refunds on refusal',
+  /const doStreakRepair\s*=\s*useCallback/.test(app) && /refund — another device repaired first/.test(app));
+assert('the Streak tab carries the repair offer, the freeze card and the check-in calendar',
+  /repair=\{streakRepair\}/.test(app) && /freezeHistory=\{freezeHistory\}/.test(app) && /checkin=\{checkinState\}/.test(app));
+assert('a live boost is visible in the header rather than applied silently',
+  (app.match(/<BoostChip/g) || []).length >= 2);
+
+for (const table of ['boosts']) {
+  assert(`${table} is created by a schema version`, new RegExp(`${table}:\\s*'`).test(db));
+  assert(`${table} is included in the cross-device snapshot`, new RegExp(`${table}: ${table}`).test(db));
+  assert(`${table} is merged back on the receiving device`, new RegExp(`remote\\.${table}`).test(db));
+  assert(`${table} is cleared on a full account reset`, new RegExp(`db\\.${table}\\.clear\\(\\)`).test(db));
+}
+assert('an expired boost is never resurrected by a stale snapshot',
+  /if \(\(r\.expiresAt \|\| 0\) <= now\) continue;/.test(db));
 
 // ── Report ──────────────────────────────────────────────────────────────────
 console.log(`\n${passed} passed, ${failures.length} failed`);

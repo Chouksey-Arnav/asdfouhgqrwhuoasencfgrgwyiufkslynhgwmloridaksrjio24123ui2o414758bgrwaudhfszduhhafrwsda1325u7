@@ -29,12 +29,14 @@
 import { localDateStr } from './dateUtils.js';
 import {
   QUESTS, QUEST_BY_ID, QUEST_TIERS, QUEST_CATEGORIES, QUEST_METRICS,
-  getQuest, questXP, questColor,
+  QUEST_CHAINS, CATEGORY_ORDER, TIER_ORDER, tierRank,
+  getQuest, questXP, questColor, chainFor, nextInChain, chainQuests, questsInCategory,
 } from '../data/questCatalog.js';
 
 export {
   QUESTS, QUEST_BY_ID, QUEST_TIERS, QUEST_CATEGORIES, QUEST_METRICS,
-  getQuest, questXP, questColor,
+  QUEST_CHAINS, CATEGORY_ORDER, TIER_ORDER, tierRank,
+  getQuest, questXP, questColor, chainFor, nextInChain, chainQuests, questsInCategory,
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -278,20 +280,32 @@ export const toneFor = (ev) => QUEST_TONES[ev?.state] || QUEST_TONES.on_track;
 export const QUEST_DESTINATIONS = {
   lesson_verified:   { tab: 'prep',      view: 'pathways',  label: 'Open your pathway' },
   lesson_studied:    { tab: 'prep',      view: 'pathways',  label: 'Open your pathway' },
+  lesson_perfect:    { tab: 'prep',      view: 'pathways',  label: 'Open your pathway' },
+  unit_verified:     { tab: 'prep',      view: 'pathways',  label: 'Open your pathway' },
   quiz_completed:    { tab: 'prep',      view: 'quizzes',   label: 'Take a quiz' },
   quiz_strong:       { tab: 'prep',      view: 'quizzes',   label: 'Take a quiz' },
   quiz_perfect:      { tab: 'prep',      view: 'quizzes',   label: 'Take a quiz' },
   flashcard_review:  { tab: 'prep',      view: 'flashcards',label: 'Review cards' },
+  deck_created:      { tab: 'prep',      view: 'flashcards',label: 'Build a deck' },
+  note_written:      { tab: 'prep',      view: 'pathways',  label: 'Open a lesson' },
+  coach_session:     { tab: 'prep',      view: 'coach',     label: 'Ask Medabrain' },
   sat_question:      { tab: 'sat',       view: 'practice',  label: 'Practise SAT' },
+  sat_correct:       { tab: 'sat',       view: 'practice',  label: 'Practise SAT' },
   sat_full_test:     { tab: 'sat',       view: 'tests',     label: 'Start a full test' },
   sat_review_clear:  { tab: 'sat',       view: 'review',    label: 'Open the review log' },
   plan_task:         { tab: 'plans',     view: null,        label: "Open today's plan" },
   interview_session: { tab: 'portfolio', view: 'interview', label: 'Practise an interview' },
   portfolio_entry:   { tab: 'portfolio', view: 'resume',    label: 'Log an entry' },
   clinical_hour:     { tab: 'portfolio', view: 'resume',    label: 'Log clinical hours' },
+  award_logged:      { tab: 'portfolio', view: 'resume',    label: 'Log an award' },
   essay_work:        { tab: 'portfolio', view: 'essays',    label: 'Open your essays' },
   opportunity_track: { tab: 'portfolio', view: 'opportunities', label: 'Find opportunities' },
+  scholarship_track: { tab: 'portfolio', view: 'aid',       label: 'Find scholarships' },
+  college_saved:     { tab: 'portfolio', view: 'colleges',  label: 'Build your college list' },
+  recommender_ask:   { tab: 'portfolio', view: 'recommenders', label: 'Add a recommender' },
   study_day:         { tab: 'prep',      view: 'pathways',  label: 'Earn today' },
+  perfect_day:       { tab: 'prep',      view: 'pathways',  label: 'Go past your goal' },
+  weekend_day:       { tab: 'prep',      view: 'pathways',  label: 'Earn this weekend' },
 };
 export const destinationFor = (metric) => QUEST_DESTINATIONS[metric] || QUEST_DESTINATIONS.lesson_verified;
 
@@ -321,6 +335,11 @@ export function buildQuestEvents({
   satReviewLog = [],
   lessons = [],
   dayActivity = [],
+  unitMastery = [],
+  coachMessages = [],
+  lessonNotes = [],
+  lessonHighlights = [],
+  deckMeta = [],
   portfolio = {},
 } = {}) {
   const events = [];
@@ -346,9 +365,13 @@ export function buildQuestEvents({
   // Flashcards — one event per review, which is what the cap is denominated in.
   for (const r of cardReviews) push('flashcard_review', r?.reviewedAt);
 
-  // SAT — a response is a question answered; a completed attempt of kind
-  // 'test'/'baseline' is a full-length sitting.
-  for (const r of satResponses) push('sat_question', r?.answeredAt);
+  // SAT — a response is a question answered; a correct response is additionally
+  // the accuracy metric, which is the one volume cannot brute-force. A completed
+  // attempt of kind 'test'/'baseline' is a full-length sitting.
+  for (const r of satResponses) {
+    push('sat_question', r?.answeredAt);
+    if (r?.correct) push('sat_correct', r.answeredAt);
+  }
   for (const a of satAttempts) {
     if (a?.status !== 'complete' && !a?.finishedAt) continue;
     if (a?.kind === 'test' || a?.kind === 'baseline') push('sat_full_test', a.finishedAt || a.startedAt);
@@ -357,17 +380,56 @@ export function buildQuestEvents({
     if (item?.clearedAt || item?.resolvedAt) push('sat_review_clear', item.clearedAt || item.resolvedAt);
   }
 
-  // Lessons — verified is the one that matters; studied is the softer variant.
+  // Lessons — verified is the one that matters; studied is the softer variant;
+  // perfect is a verification quiz taken clean. The 100 threshold matches the
+  // one quiz_perfect uses above, so "aced" means the same thing everywhere.
   for (const l of lessons) {
     if (l?.verified && l?.completedAt) push('lesson_verified', l.completedAt);
     if (l?.completedAt) push('lesson_studied', l.completedAt);
+    if (l?.verified && l?.completedAt && num(l.quizScore) >= 100) push('lesson_perfect', l.completedAt);
   }
 
+  // Units — the level above lessons. `unitMastery` rows are written once, when
+  // the unit quiz is passed, so these are exact.
+  for (const u of unitMastery) push('unit_verified', u?.verifiedAt);
+
+  // Medabrain — the student's OWN messages only. Counting the assistant's
+  // replies would double every conversation and make a quest for "ask five
+  // questions" finishable by asking two.
+  for (const msg of coachMessages) {
+    if (msg?.role === 'user') push('coach_session', msg.ts);
+  }
+
+  // Notes and highlights are one metric, because they are one behaviour: the
+  // student decided a specific sentence mattered enough to keep. Splitting them
+  // would mean a student who only highlights can never finish a notes quest.
+  for (const n of lessonNotes) {
+    // An empty note row is a panel that was opened and closed. Text is the proof.
+    if (String(n?.text || '').trim().length >= 3) push('note_written', n.updatedAt);
+  }
+  for (const h of lessonHighlights) push('note_written', h?.createdAt);
+
+  // Decks the student built or generated themselves. `deckMeta` only ever holds
+  // custom decks — the built-in decks have no row here — so this needs no filter.
+  for (const d of deckMeta) push('deck_created', d?.createdAt);
+
   // The streak ledger, replayed at day granularity.
+  //
+  // `perfect_day` and `weekend_day` are both derived here rather than stored,
+  // and both are measured against the goal the day was CLEARED AGAINST rather
+  // than the student's current goal — the same rule dayActivity itself follows
+  // (see recordStreakActivity in db.js). Otherwise lowering your daily goal
+  // would retroactively turn ordinary days into double days.
   for (const d of dayActivity) {
     const at = noonOf(d?.date);
     if (!at) continue;
-    if (d?.met) push('study_day', at);
+    if (d?.met) {
+      push('study_day', at);
+      const dow = new Date(at).getDay();
+      if (dow === 0 || dow === 6) push('weekend_day', at);
+      const goal = clampPos(d.goalCredits);
+      if (goal > 0 && clampPos(d.credits) >= goal * 2) push('perfect_day', at);
+    }
     const counts = d?.counts || {};
     for (let i = 0; i < clampPos(counts.plan_task); i += 1) push('plan_task', at);
     for (let i = 0; i < clampPos(counts.interview_session); i += 1) push('interview_session', at);
@@ -383,8 +445,26 @@ export function buildQuestEvents({
     push('portfolio_entry', at);
     push('clinical_hour', at, Math.max(1, Math.round(num(c?.hours) || 1)));
   }
+  // An award is a portfolio entry as well as an award: a student logging five
+  // honours has built five rows of their record, and a portfolio quest that
+  // ignored them would be telling them otherwise.
+  for (const w of (portfolio.awards || [])) {
+    const at = w?.createdAt || w?.created_at;
+    push('portfolio_entry', at);
+    push('award_logged', at);
+  }
   for (const e of (portfolio.essays || [])) push('essay_work', e?.updatedAt || e?.updated_at || e?.createdAt);
   for (const t of (portfolio.tracked || [])) push('opportunity_track', t?.createdAt || t?.created_at);
+  // Scholarships are tracked opportunities too — the Money Sweep is the narrower
+  // quest, the Opportunity Hunt is the broader one, and a saved scholarship
+  // honestly satisfies both.
+  for (const s of (portfolio.scholarships || [])) {
+    const at = s?.createdAt || s?.created_at;
+    push('scholarship_track', at);
+    push('opportunity_track', at);
+  }
+  for (const c of (portfolio.colleges || [])) push('college_saved', c?.createdAt || c?.created_at);
+  for (const r of (portfolio.recommenders || [])) push('recommender_ask', r?.createdAt || r?.created_at);
 
   return events.sort((a, b) => a.at - b.at);
 }
@@ -470,11 +550,14 @@ export function featuredFor(rows = [], surface = null) {
  *
  * Never recommends something already running (`activeIds`).
  */
-export function recommendQuests(signals = {}, activeIds = []) {
+export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   const taken = new Set(activeIds);
+  // A quest already claimed is not a recommendation, it is a memory. The chain
+  // rules below use the same set to offer the NEXT rung instead.
+  const finished = new Set(doneIds);
   const out = [];
   const add = (id, reason, priority) => {
-    if (taken.has(id) || out.some((r) => r.id === id) || !QUEST_BY_ID[id]) return;
+    if (taken.has(id) || finished.has(id) || out.some((r) => r.id === id) || !QUEST_BY_ID[id]) return;
     out.push({ id, quest: QUEST_BY_ID[id], reason, priority });
   };
 
@@ -491,44 +574,78 @@ export function recommendQuests(signals = {}, activeIds = []) {
   const clinicalHours = num(s.clinicalHours);
   const gradeLevel = String(s.gradeLevel || '');
   const daysToExam = s.daysToExam == null ? null : num(s.daysToExam);
+  const notes = num(s.notesWritten);
+  const coachChats = num(s.coachChats);
+  const colleges = num(s.collegeCount);
+  const scholarships = num(s.scholarshipCount);
+  const essays = num(s.essayCount);
+  const recommenders = num(s.recommenderCount);
+  const interviews = num(s.interviewCount);
   const brandNew = lessonsVerified === 0 && quizzes === 0 && satQuestions === 0;
 
   // 1. Showing up at all. Nothing else is worth assigning to a student who is
   //    not opening the app, and the gentlest quest here is the right first ask.
+  //    Note the ladder: a genuinely cold student is offered the five-day
+  //    Warm-up, not the seven-day quest — a first quest exists to be finished,
+  //    and the difference between 3-of-5 and 5-of-7 is the difference between a
+  //    student who has completed something and one who has not.
   if (brandNew) {
-    add('consist_first_week', 'They are just getting started. A short, winnable quest first — finishing one makes the next far more likely to be started.', 100);
-    add('path_first_unit', 'The first five lessons, verified. This is the habit the rest of the product is built on.', 95);
+    add('consist_warmup', 'They are just getting started. Three days out of five is the smallest promise in the catalog — and finishing one quest is what makes the next one worth starting.', 100);
+    add('path_warmup', 'Three verified lessons, one a day. It establishes the one habit everything else in this app is built on: lessons get verified, not skimmed.', 96);
+  } else if (activeDays7 <= 1) {
+    add('consist_warmup', `Only ${activeDays7} active day${activeDays7 === 1 ? '' : 's'} in the last week. Start smaller than feels necessary — a quest they abandon costs more than one they were not set.`, 99);
   } else if (activeDays7 <= 2) {
-    add('consist_first_week', `Only ${activeDays7} active day${activeDays7 === 1 ? '' : 's'} in the last week. Consistency is the thing to fix before anything else.`, 98);
+    add('consist_first_week', `Only ${activeDays7} active days in the last week. Consistency is the thing to fix before anything else.`, 98);
+  } else if (activeDays28 >= 24) {
+    add('consist_mythic_season', `${activeDays28} active days in the last month. They have already proved they can hold a month — this is the eight-week version and the largest reward in the app.`, 74);
   } else if (activeDays28 >= 20) {
     add('consist_month', `${activeDays28} active days in the last month — they can already hold this pace, and this is the reward for proving it.`, 70);
   } else if (activeDays7 >= 4) {
     add('consist_ten_days', `${activeDays7} active days last week. Ten out of fourteen is the next honest step up.`, 65);
   }
+  // The specific failure mode: a student who studies on school days and stops
+  // on Friday. Fires only when there is enough history for the gap to be real.
+  if (activeDays28 >= 8 && activeDays28 < 20 && activeDays7 >= 3) {
+    add('consist_weekends', 'They study on school days and stop at the weekend, which is where nearly every broken streak in this product breaks. This quest names that directly.', 63);
+  }
 
   // 2. The pathway — the core of the product, and the clearest thing to ask for.
   if (!brandNew) {
-    if (lessonsVerified < 5) add('path_first_unit', `${lessonsVerified} lesson${lessonsVerified === 1 ? '' : 's'} verified so far. Five is one unit, and one unit is where the app starts personalising.`, 92);
+    if (lessonsVerified < 3) add('path_warmup', `${lessonsVerified} lesson${lessonsVerified === 1 ? '' : 's'} verified so far. Three, one a day, is the version of this they will finish.`, 93);
+    else if (lessonsVerified < 5) add('path_first_unit', `${lessonsVerified} lessons verified so far. Five is one unit, and one unit is where the app starts personalising.`, 92);
     else if (lessonsVerified < 25) add('path_steady_dozen', `${lessonsVerified} lessons verified. Twelve more at two a day is a third of a pathway without wrecking a school week.`, 85);
     else add('path_crucible', `${lessonsVerified} lessons already verified — they are past the hard part, and a month at this pace would finish the track.`, 60);
+    if (lessonsVerified >= 10) {
+      add('path_unit_master', 'Units are the level the pathway is actually organised around. Three mastered is a nameable chunk of a career track rather than a scattered handful of pages.', 58);
+    }
   }
 
   // 3. SAT — driven by the test date if there is one.
   if (daysToExam != null && daysToExam > 0 && daysToExam <= 70) {
     add('sat_legend', `Test day is ${daysToExam} days out. This is the whole prep season, priced accordingly.`, 96);
     add('sat_three_tests', 'Three timed full-lengths before test day is the single most reliable predictor of the real score.', 90);
+    add('sat_accuracy_drive', 'Volume quests can be satisfied by guessing. This one counts only correct answers, which is the honest measure this close to a test date.', 87);
   } else if (satQuestions === 0) {
-    add('sat_first_hundred', 'No SAT questions answered yet. A hundred is where the skill breakdown starts telling you which section is actually the problem.', 80);
+    add('sat_warmup', 'No SAT questions answered yet. Thirty is one short session a day for three days — enough for the skill heat map to have something to say.', 82);
+  } else if (satQuestions < 100) {
+    add('sat_first_hundred', `${satQuestions} SAT questions so far. A hundred is where the skill breakdown starts telling you which section is actually the problem.`, 80);
   } else if (satQuestions < 400) {
     add('sat_grind', `${satQuestions} SAT questions so far. Volume is the part of prep with the most reliable link to a score, and the part students avoid.`, 75);
+  } else {
+    add('sat_marathon_month', `${satQuestions} questions answered already. The next honest step is accuracy — six hundred correct, which a student guessing their way through cannot finish.`, 66);
   }
   if (satTests >= 1 && satQuestions >= 100) {
     add('sat_clear_the_log', 'They have questions in the review log they got wrong and have not gone back to. That list is the highest-value work in the SAT tab.', 78);
+  } else if (satQuestions >= 40) {
+    add('sat_review_habit', 'Two review-log items a day for six days. The gentle version — it is what stops the log becoming the intimidating pile students abandon.', 57);
   }
 
   // 4. Quality vs volume.
   if (quizzes >= 8 && avgScore != null && avgScore < 75) {
     add('mastery_strong_ten', `Quiz average is ${avgScore}%. The volume is there; this quest asks for the scores instead.`, 88);
+    add('mastery_strong_start', `At ${avgScore}%, ten strong scores may be a stretch. Five, one a day, is the version that gets finished.`, 83);
+  } else if (quizzes >= 20 && avgScore != null && avgScore >= 88) {
+    add('mastery_relentless', `Averaging ${avgScore}% across ${quizzes} quizzes. Six weeks of holding that standard is the only quest in the catalog they cannot shortcut.`, 64);
   } else if (quizzes >= 15 && avgScore != null && avgScore >= 85) {
     add('mastery_perfect_five', `Averaging ${avgScore}% across ${quizzes} quizzes. Five clean hundreds is the next thing that is actually hard for them.`, 62);
   } else if (quizzes < 12) {
@@ -536,34 +653,100 @@ export function recommendQuests(signals = {}, activeIds = []) {
   }
 
   // 5. Retention.
-  if (cardsLast28 < 100) {
+  if (cardsLast28 === 0) {
+    add('flash_warmup', 'No card reviews at all in the last month. Sixty across a week is four short sessions — the smallest dose that still behaves like spaced repetition.', 72);
+  } else if (cardsLast28 < 100) {
     add('flash_fortnight', `${cardsLast28} card reviews in the last month. Spaced repetition only works if the spacing is real — the daily cap here enforces it.`, 68);
   } else if (cardsLast28 >= 300) {
     add('flash_marathon', 'They already review most days. This is the month-long version, and it pays like one.', 50);
+  } else {
+    add('flash_century_club', `${cardsLast28} reviews last month. Fourteen days of it is the point at which students stop needing to be reminded to open the decks.`, 54);
   }
 
-  // 6. Portfolio — weighted up for older students, because the deadline is real.
+  // 6. Curiosity — the quiet failure modes. A student who never asks and never
+  //    writes anything down is a student who stalls silently at the first thing
+  //    they do not understand, and neither gap shows up in any other number.
+  if (coachChats === 0) {
+    add('explore_first_questions', 'They have never asked the coach anything. Students who do not ask are the ones who quietly stall on the first thing they do not understand.', 76);
+  } else if (coachChats < 15) {
+    add('explore_coach_habit', 'Asking for help is a learnable skill and most students are bad at it. Fifteen questions turns the coach from a novelty into the thing they reach for when stuck.', 51);
+  }
+  if (notes < 5 && lessonsVerified >= 3) {
+    add('explore_notes', 'They are finishing lessons without writing anything down. Note-taking is the cheapest intervention in learning science and the one students skip first.', 61);
+  } else if (notes >= 15) {
+    add('explore_deep_notes', 'They already take notes. Forty across a month leaves them with an annotated version of their own pathway — the best revision material they will ever have.', 46);
+  }
+
+  // 7. Portfolio — weighted up for older students, because the deadline is real.
   const upperYear = /11|12|junior|senior/i.test(gradeLevel);
-  if (activities < 5) {
+  if (activities === 0) {
+    add('port_first_entries', 'The résumé is empty, and a blank résumé screen is the wall students do not get past. Three entries, one a day, clears it.', upperYear ? 88 : 66);
+  } else if (activities < 5) {
     add('port_build_record', upperYear
       ? 'Applications are close and the activity record is thin. This is the cheapest gap on the list to close.'
       : 'Most students cannot remember in Year 12 what they did in Year 10. This fixes that two years early.', upperYear ? 86 : 52);
+  } else if (upperYear && activities >= 8) {
+    add('app_season_mythic', 'The record is real now. Eight weeks of building it properly is what walking into application season prepared actually looks like.', 68);
   }
-  if (clinicalHours < 50) {
+  if (clinicalHours === 0) {
+    add('port_clinical_start', 'Twelve hours is three afternoons — the version of clinical experience a student with no contacts and no car can actually achieve.', upperYear ? 80 : 50);
+  } else if (clinicalHours < 50) {
     add('port_clinical_fifty', 'Fifty clinical or shadowing hours is the number admissions readers start taking seriously — and most of this quest is earned outside the app.', upperYear ? 82 : 48);
+  } else if (clinicalHours >= 50) {
+    add('port_clinical_legend', 'They are past fifty hours. A hundred and fifty is the number that stops being "some shadowing" and starts being what an interviewer asks about for ten minutes.', 56);
   }
   if (upperYear) {
-    add('port_essay_push', 'Essays are written by people who sit down twelve times, not once.', 72);
-    add('port_interview_drill', 'Six separate days of speaking out loud. Interview nerves are a volume problem.', 58);
+    if (essays < 3) add('app_essay_sprint', 'Five sittings is the smallest number that produces something recognisable as a draft — and the cap is what stops it being one panicked evening.', 74);
+    else add('port_essay_push', 'Essays are written by people who sit down twelve times, not once.', 72);
+    if (recommenders < 3) {
+      add('app_recommenders', 'Letters are the part of an application a student cannot write and cannot rush, and the part they leave until October. Three names in the spring is the whole intervention.', 79);
+    }
+    if (interviews < 6) {
+      add('port_interview_drill', 'Six separate days of speaking out loud. Interview nerves are a volume problem.', 58);
+    } else {
+      add('port_interview_marathon', 'They have done a few. Fifteen separate sittings is what makes a real interview feel familiar, which is the entire objective.', 53);
+    }
+  }
+  if (colleges < 8) {
+    add('app_college_list', 'A named list — reach, match and safety — is what turns "I want to do medicine" into a plan with numbers attached.', upperYear ? 84 : 49);
+  }
+  if (scholarships < 10) {
+    add('app_scholarship_sweep', 'The highest hourly rate a high schooler will ever earn. Fifteen tracked scholarships is thousands of dollars of expected value for a few hours of work.', upperYear ? 81 : 47);
   }
   add('port_opportunity_hunt', 'Deadlines they never found are the applications they never made. Cheap, fast, high leverage.', 45);
 
-  // 7. The plan, if they have one they are not following.
-  if (s.hasPlan && num(s.planCompletionPct) < 60) {
+  // 8. The plan, if they have one they are not following.
+  if (s.hasPlan && num(s.planCompletionPct) < 30) {
+    add('consist_plan_sprint', 'The plan is being ignored rather than followed. A fortnight of it, capped at three tasks a day, is the version that rebuilds the habit.', 85);
+  } else if (s.hasPlan && num(s.planCompletionPct) < 60) {
     add('consist_plan_follow', 'The plan already says what to do each day; this quest is about actually doing it.', 84);
   }
 
+  // 9. Chains. Finishing a rung is the single highest-intent moment this system
+  //    has, so the rung above anything they have already claimed is boosted
+  //    above the generic rules — but never above the "they have stopped showing
+  //    up" rules at the top, because a student who is absent does not need a
+  //    harder quest, they need a smaller one.
+  for (const id of finished) {
+    const next = nextInChain(id);
+    if (!next) continue;
+    const chain = QUEST_CHAINS[next.chain];
+    add(next.id, `They finished ${QUEST_BY_ID[id]?.title || 'the rung below this'}. This is step ${next.chainStep} of ${chain?.steps.length || '?'} on ${chain?.label || 'the same ladder'} — the next thing on a road they are already walking.`, 89);
+  }
+
   return out.sort((a, b) => b.priority - a.priority);
+}
+
+/**
+ * The one quest to lead a picker with, and why.
+ *
+ * Same engine as recommendQuests, narrowed to a single answer — because a
+ * student opening the picker wants a decision made for them, and a parent
+ * opening theirs wants to be told what to ask for. Both surfaces still show the
+ * full catalog underneath; this is what sits above it.
+ */
+export function topRecommendation(signals = {}, activeIds = [], doneIds = []) {
+  return recommendQuests(signals, activeIds, doneIds)[0] || null;
 }
 
 /**
@@ -588,3 +771,71 @@ export function weeklyCost(quest) {
   const per = Math.ceil(spec.target / weeks);
   return `${per} ${unit}${per === 1 ? '' : 's'} a week for ${Math.round(weeks)} week${weeks < 1.5 ? '' : 's'}`;
 }
+
+/**
+ * A day's honest cost, for the same purpose as weeklyCost but at the resolution
+ * a student actually plans in. Never larger than the daily cap, because the cap
+ * is the ceiling on what a day is allowed to be worth.
+ */
+export function dailyCost(quest) {
+  const spec = questSpec(quest?.id ? { questId: quest.id } : quest);
+  const days = Math.max(1, minimumDays(quest?.id ? { questId: quest.id } : quest));
+  const unit = QUEST_METRICS[spec.metric]?.unit || 'step';
+  const per = Math.min(spec.dailyCap, Math.ceil(spec.target / days));
+  return `${per} ${unit}${per === 1 ? '' : 's'} a day, ${days} day${days === 1 ? '' : 's'} minimum`;
+}
+
+// ── Chains ───────────────────────────────────────────────────────────────────
+
+/**
+ * A chain rendered as progress: every rung, with what happened to it.
+ *
+ * `state` per rung is one of 'done' | 'running' | 'next' | 'locked-out' | 'open'.
+ * Nothing is ever actually locked — 'next' is simply the rung the app is
+ * pointing at, and 'open' is everything above it. A ladder that refused to let a
+ * student skip to the top would punish the ones who arrive already good at this,
+ * and there are plenty of those.
+ */
+export function chainProgress(chainId, { activeIds = [], doneIds = [] } = {}) {
+  const chain = QUEST_CHAINS[chainId];
+  if (!chain) return null;
+  const active = new Set(activeIds);
+  const done = new Set(doneIds);
+  let nextAssigned = false;
+  const steps = chain.steps.map((id, i) => {
+    const quest = getQuest(id);
+    let state;
+    if (done.has(id)) state = 'done';
+    else if (active.has(id)) state = 'running';
+    else if (!nextAssigned) { state = 'next'; nextAssigned = true; }
+    else state = 'open';
+    return { id, quest, step: i + 1, state, xp: questXP(quest) };
+  });
+  const completed = steps.filter((s) => s.state === 'done').length;
+  return {
+    ...chain,
+    steps,
+    completed,
+    of: steps.length,
+    pct: Math.round((completed / steps.length) * 100),
+    complete: completed === steps.length,
+    // The prize at the end, quoted on the header so a five-rung ladder has a
+    // visible reason to be climbed rather than only a next step.
+    finaleXP: questXP(getQuest(chain.steps[chain.steps.length - 1])),
+    next: steps.find((s) => s.state === 'next')?.quest || null,
+  };
+}
+
+/** Every chain, as progress. The order QUEST_CHAINS declares them in. */
+export function allChainProgress(opts = {}) {
+  return Object.keys(QUEST_CHAINS).map((id) => chainProgress(id, opts)).filter(Boolean);
+}
+
+/**
+ * The ids a board should treat as "already done" — claimed quests only.
+ *
+ * Deliberately not "any terminal status": a declined or expired quest has not
+ * been finished, and offering the rung above it would be the app misreading a
+ * refusal as an achievement.
+ */
+export const claimedIds = (rows = []) => rows.filter((r) => r.status === 'claimed').map((r) => r.questId);

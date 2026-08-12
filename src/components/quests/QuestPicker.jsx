@@ -14,22 +14,24 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Search, Check, Clock, CalendarDays, Loader2, Info } from 'lucide-react';
+import { X, Search, Check, Clock, CalendarDays, Loader2, Info, Route, Sparkles } from 'lucide-react';
 import { C, glass, glass2, pill, R, CC, tint, btn, btnG, onTint } from '../../lib/theme';
 import Portal from '../ui/Portal';
 import {
-  QUESTS, QUEST_CATEGORIES, QUEST_TIERS, questXP, questColor,
-  minimumDays, weeklyCost,
+  QUESTS, QUEST_CATEGORIES, CATEGORY_ORDER, QUEST_TIERS, questXP, questColor,
+  minimumDays, weeklyCost, dailyCost, chainFor, tierRank,
 } from '../../lib/quests';
 import { questIcon } from './questIcons';
 
 const ALL = '__all__';
+const CATEGORIES = CATEGORY_ORDER.map((id) => QUEST_CATEGORIES[id]);
 
 export default function QuestPicker({
   open,
   onClose,
   onPick,                 // (questId, note) → Promise
   activeIds = [],
+  doneIds = [],           // already claimed — shown as finished rather than offered fresh
   audience = 'student',   // 'student' | 'parent'
   studentName = null,
   recommended = [],       // [{ id, reason }] — the parent's ranked list, if any
@@ -43,6 +45,7 @@ export default function QuestPicker({
   const [note, setNote] = useState('');
 
   const taken = useMemo(() => new Set(activeIds), [activeIds]);
+  const finished = useMemo(() => new Set(doneIds), [doneIds]);
   const reasons = useMemo(() => Object.fromEntries(recommended.map((r) => [r.id, r.reason])), [recommended]);
   const recOrder = useMemo(() => new Map(recommended.map((r, i) => [r.id, i])), [recommended]);
 
@@ -57,7 +60,12 @@ export default function QuestPicker({
         const ra = recOrder.has(a.id) ? recOrder.get(a.id) : 999;
         const rb = recOrder.has(b.id) ? recOrder.get(b.id) : 999;
         if (ra !== rb) return ra - rb;
-        return questXP(a) - questXP(b);
+        // Then easiest first. A picker that leads with the six-week Legend sells
+        // quests that get abandoned in week two, and an abandoned quest teaches
+        // a student that the whole system is noise.
+        const t = tierRank(a.tier) - tierRank(b.tier);
+        if (t) return t;
+        return a.windowDays - b.windowDays;
       });
   }, [cat, q, recOrder]);
 
@@ -108,7 +116,7 @@ export default function QuestPicker({
 
             {/* Filters */}
             <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 13 }}>
-              {[{ id: ALL, label: 'All', color: C.t2 }, ...Object.values(QUEST_CATEGORIES)].map((c) => (
+              {[{ id: ALL, label: 'All', color: C.t2 }, ...CATEGORIES].map((c) => (
                 <button
                   key={c.id} onClick={() => setCat(c.id)}
                   style={{
@@ -142,8 +150,10 @@ export default function QuestPicker({
               const Icon = questIcon(quest.icon);
               const tier = QUEST_TIERS[quest.tier];
               const running = taken.has(quest.id);
+              const done = finished.has(quest.id);
               const minDays = minimumDays({ questId: quest.id });
               const reason = reasons[quest.id];
+              const chain = chainFor(quest.id);
               const busy = busyId === quest.id;
 
               return (
@@ -153,7 +163,7 @@ export default function QuestPicker({
                     ...glass2({ padding: 14 }),
                     border: `1px solid ${reason ? tint(color, 0.34) : C.b1}`,
                     background: reason ? `linear-gradient(135deg, ${tint(color, 0.08)}, transparent 70%)` : C.surf2,
-                    opacity: running ? 0.55 : 1,
+                    opacity: running || done ? 0.55 : 1,
                   }}
                 >
                   <div style={R({ gap: 12, alignItems: 'flex-start' })}>
@@ -169,6 +179,11 @@ export default function QuestPicker({
                         <span style={pill(tint(tier.color, 0.15), tier.color, { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' })}>{tier.label}</span>
                         <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 9.5, fontFamily: C.FM, fontWeight: 800 })}>+{questXP(quest)} XP</span>
                         {reason && <span style={pill(tint(C.violet, 0.15), C.violetL, { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em' })}>Suggested</span>}
+                        {chain && (
+                          <span style={{ ...pill(tint(chain.color, 0.13), chain.color, { fontSize: 9, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                            <Route size={9} />{chain.label} {chain.step}/{chain.of}
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>{quest.blurb}</div>
 
@@ -181,6 +196,9 @@ export default function QuestPicker({
                           <Clock size={11} color={C.t3} />{quest.windowDays}-day window
                         </span>
                         <span style={{ fontSize: 10.5, color: C.t3 }}>≈ {weeklyCost(quest)}</span>
+                      </div>
+                      <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>
+                        Day to day, that is <b style={{ color: C.t2 }}>{dailyCost(quest)}</b>.
                       </div>
 
                       <div style={{ fontSize: 10.5, color: C.t3, marginTop: 7, lineHeight: 1.55 }}>
@@ -210,6 +228,8 @@ export default function QuestPicker({
                     <div style={{ flexShrink: 0 }}>
                       {running ? (
                         <span style={{ ...pill(tint(C.green, 0.13), C.greenL, { fontSize: 10, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}><Check size={10} />Running</span>
+                      ) : done ? (
+                        <span style={{ ...pill(tint(C.gold, 0.13), C.goldL, { fontSize: 10, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkles size={10} />Finished</span>
                       ) : audience === 'parent' && noteFor !== quest.id ? (
                         <button onClick={() => { setNoteFor(quest.id); setNote(''); }} style={btnG({ fontSize: 11.5, padding: '7px 14px' })}>Choose</button>
                       ) : (

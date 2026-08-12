@@ -16,9 +16,9 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Gift, Swords, Users, Plus } from 'lucide-react';
+import { ChevronRight, Gift, Swords, Users, Plus, Route } from 'lucide-react';
 import { C, glass, pill, R, CC, tint, btn, btnG, onTint } from '../../lib/theme';
-import { questHeadline, toneFor, destinationFor, getQuest, questColor, featuredFor, summarize } from '../../lib/quests';
+import { questHeadline, toneFor, destinationFor, getQuest, questColor, featuredFor, summarize, chainFor } from '../../lib/quests';
 import { questIcon } from './questIcons';
 
 export default function QuestHomeCard({
@@ -50,7 +50,7 @@ export default function QuestHomeCard({
         <div style={{ flex: 1, minWidth: 190 }}>
           <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>No quest running</div>
           <div style={{ fontSize: 11.5, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>
-            Weeks of paced work for up to 2,000 XP — the largest reward in the app, and the only one that cannot be crammed.
+            From five days to eight weeks, for up to 3,500 XP — the largest rewards in the app, and the only ones that cannot be crammed.
           </div>
         </div>
         <button
@@ -68,6 +68,10 @@ export default function QuestHomeCard({
   const Icon = questIcon(def?.icon);
   const dest = destinationFor(ev.spec.metric);
   const others = rows.length - 1;
+  // Where this quest sits on its road. One chip, because "step 3 of 5" reframes
+  // a single commitment as progress through something larger — which is the
+  // whole reason the chains exist.
+  const chain = chainFor(assignment.questId);
 
   return (
     <div style={{
@@ -92,6 +96,11 @@ export default function QuestHomeCard({
             {assignment.assignedBy === 'parent' && (
               <span style={{ ...pill(tint(C.violet, 0.14), C.violetL, { fontSize: 9.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Users size={9} />{assignment.assignerName || 'Parent'} asked
+              </span>
+            )}
+            {chain && (
+              <span style={{ ...pill(tint(chain.color, 0.13), chain.color, { fontSize: 9.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Route size={9} />{chain.label} {chain.step}/{chain.of}
               </span>
             )}
           </div>
