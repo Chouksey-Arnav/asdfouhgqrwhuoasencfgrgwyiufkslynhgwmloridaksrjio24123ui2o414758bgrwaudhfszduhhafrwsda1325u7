@@ -24,108 +24,17 @@ const VIOLET = '168,85,247';
 const CYAN = '34,211,238';
 
 function Crest({ idPrefix, animate = true }) {
-  const p = idPrefix;
   return (
-    <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ display: 'block' }}>
-      <defs>
-        <radialGradient id={`${p}tile`} cx="50" cy="54" r="64" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#141d45" /><stop offset="0.52" stopColor="#0a0e24" /><stop offset="1" stopColor="#03050d" />
-        </radialGradient>
-        <linearGradient id={`${p}sweep`} x1="10" y1="92" x2="90" y2="16" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#A855F7" /><stop offset="0.2" stopColor="#8B5CF6" /><stop offset="0.42" stopColor="#6366F1" />
-          <stop offset="0.62" stopColor="#3B82F6" /><stop offset="0.82" stopColor="#22D3EE" /><stop offset="1" stopColor="#67E8F9" />
-        </linearGradient>
-        <linearGradient id={`${p}rim`} x1="50" y1="18" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity="0.95" />
-          <stop offset="0.45" stopColor="#BEEBFF" stopOpacity="0.6" />
-          <stop offset="1" stopColor="#8FD7FF" stopOpacity="0.12" />
-        </linearGradient>
-        <linearGradient id={`${p}column`} x1="50" y1="26" x2="50" y2="92" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#EAF9FF" stopOpacity="0.34" />
-          <stop offset="0.55" stopColor="#7FB6FF" stopOpacity="0.09" />
-          <stop offset="1" stopColor="#7DD3FC" stopOpacity="0.16" />
-        </linearGradient>
-        <radialGradient id={`${p}head`} cx="46.5" cy="13.5" r="14" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FFFFFF" /><stop offset="0.35" stopColor="#C4E9FF" /><stop offset="1" stopColor="#5B8DF9" />
-        </radialGradient>
-        <radialGradient id={`${p}bloom`} cx="50" cy="48" r="48" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#4C6BFF" stopOpacity="0.36" />
-          <stop offset="0.62" stopColor="#3B82F6" stopOpacity="0.1" />
-          <stop offset="1" stopColor="#3B82F6" stopOpacity="0" />
-        </radialGradient>
-        <filter id={`${p}glow`} x="-35%" y="-35%" width="170%" height="170%">
-          <feGaussianBlur stdDeviation="1.8" result="b" />
-          <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-        <filter id={`${p}soft`} x="-60%" y="-40%" width="220%" height="180%">
-          <feGaussianBlur stdDeviation="2.4" />
-        </filter>
-        <clipPath id={`${p}clip`}><rect width="100" height="100" rx="22" /></clipPath>
-      </defs>
-
-      <rect width="100" height="100" rx="22" fill={`url(#${p}tile)`} />
-      <g clipPath={`url(#${p}clip)`}>
-        {/* Bloom behind the mark, breathing with the pulse */}
-        <motion.circle
-          cx="50" cy="48" r="48" fill={`url(#${p}bloom)`}
-          animate={animate ? { opacity: [0.75, 1, 0.75] } : undefined}
-          transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
-        />
-
-        {/* Light column rising through the gap between the wings */}
-        <motion.path
-          d="M50 26 L53.6 90 H46.4 Z" fill={`url(#${p}column)`} filter={`url(#${p}soft)`}
-          animate={animate ? { opacity: [0.7, 1, 0.7] } : undefined}
-          transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
-        />
-
-        {/* The M: two mirrored wings, each a solid blade carrying a leaf-shaped
-            counter. One path per wing with evenodd, so the counter is a true
-            hole and the tile reads through it. */}
-        <g filter={`url(#${p}glow)`}>
-          <g fill={`url(#${p}sweep)`} fillRule="evenodd">
-            <path d="M12.5 88 C9.5 60 12 29 24.5 16.5 C30 11 37 12.5 40.5 19 C46 28 48.5 55 47.2 88 Z M30.5 27.5 C38 36.5 42.5 60 35 84 C25.5 76.5 21.5 48 30.5 27.5 Z" />
-            <path d="M87.5 88 C90.5 60 88 29 75.5 16.5 C70 11 63 12.5 59.5 19 C54 28 51.5 55 52.8 88 Z M69.5 27.5 C62 36.5 57.5 60 65 84 C74.5 76.5 78.5 48 69.5 27.5 Z" />
-          </g>
-          {/* The brightest line in the mark: the two inner edges falling to centre */}
-          <g fill="none" stroke={`url(#${p}rim)`} strokeWidth="1.3" strokeLinecap="round">
-            <path d="M42.6 23 C46.6 30 48.6 56 47.2 88" />
-            <path d="M57.4 23 C53.4 30 51.4 56 52.8 88" />
-          </g>
-        </g>
-
-        {/* Stair-steps at the base of the column. They light in sequence from the
-            bottom up, so the mark always reads as a climb in progress. */}
-        <g fill="#E4F6FF" filter={`url(#${p}glow)`}>
-          {[
-            { x: 46.6, y: 74.4, w: 6.8, h: 1.7, o: 0.95 },
-            { x: 45.4, y: 78.2, w: 9.2, h: 1.8, o: 0.8 },
-            { x: 44.0, y: 82.2, w: 12.0, h: 1.9, o: 0.62 },
-            { x: 42.5, y: 86.4, w: 15.0, h: 2.0, o: 0.44 },
-            { x: 40.9, y: 90.8, w: 18.2, h: 2.1, o: 0.26 },
-          ].map((s, i, all) => (
-            <motion.rect
-              key={i} x={s.x} y={s.y} width={s.w} height={s.h} rx={s.h / 2}
-              animate={animate ? { opacity: [s.o, Math.min(1, s.o + 0.35), s.o] } : undefined}
-              transition={animate ? {
-                duration: 2.4, repeat: Infinity, ease: 'easeInOut',
-                // Bottom step first, so the highlight travels upward.
-                delay: (all.length - 1 - i) * 0.16,
-              } : undefined}
-              opacity={s.o}
-            />
-          ))}
-        </g>
-
-        {/* The figure rising between the wings */}
-        <motion.circle
-          cx="50" cy="17" r="8.4" fill={`url(#${p}head)`} filter={`url(#${p}glow)`}
-          style={{ originX: '50px', originY: '17px' }}
-          animate={animate ? { scale: [1, 1.07, 1], opacity: [0.92, 1, 0.92] } : undefined}
-          transition={animate ? { duration: 3.2, repeat: Infinity, ease: 'easeInOut' } : undefined}
-        />
-      </g>
-    </svg>
+    <img
+      src="/logo.png"
+      alt="Medschoolprep Logo"
+      style={{
+        display: 'block',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain'
+      }}
+    />
   );
 }
 
@@ -184,7 +93,7 @@ export default function AnimatedLogo({ size = 34, variant = 'pop', glow = true, 
 
   const inner = (
     <motion.div
-      style={{ width: size, height: size, borderRadius: radius }}
+      style={{ width: size, height: size, borderRadius: radius, overflow: 'hidden' }}
       animate={{ scale: breath }}
       transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
       whileHover={{ scale: variant === 'hover' ? 1.14 : 1.12, rotate: variant === 'hover' ? -4 : 3, transition: POP_TRANSITION }}
