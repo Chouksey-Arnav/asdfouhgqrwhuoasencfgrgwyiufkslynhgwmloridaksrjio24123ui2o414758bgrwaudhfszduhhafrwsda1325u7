@@ -17,7 +17,7 @@
  * would make the sitemap worse, not better:
  *
  *   Everything behind those URLs is gated on sign-in. A crawler fetching
-  *   /portfolio/essays gets index.html (rewrites all app paths to it),
+ *   /portfolio/essays gets index.html (rewrites all app paths to it),
  *   the app finds no session, and it renders the landing page. Listing them would
  *   hand Google a dozen URLs that all resolve to the same page — textbook
  *   duplicate content, and it burns crawl budget that should go to the real one.
