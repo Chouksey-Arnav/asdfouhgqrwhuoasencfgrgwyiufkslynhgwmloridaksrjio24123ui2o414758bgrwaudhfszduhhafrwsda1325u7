@@ -1,5 +1,5 @@
-// Regenerates every raster icon in public/ from the one master vector,
-// public/icon.svg, so the favicon, the PWA install icons and the iOS home
+// Regenerates every raster icon in public/ from the official master logo,
+// public/logo.png, so the favicon, the PWA install icons and the iOS home
 // screen icon can never drift away from the mark the app actually renders.
 //
 //   npm run icons
@@ -13,7 +13,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const master = path.join(root, 'public', 'icon.svg');
+const master = path.join(root, 'public', 'logo.png');
 
 // The apple-touch icon is composited onto the tile itself (iOS ignores
 // transparency and would otherwise flatten it onto white).
@@ -26,7 +26,9 @@ const TARGETS = [
   ['apple-touch-icon.png', 180],
 ];
 
-const svg = fs.readFileSync(master, 'utf8');
+const pngBuffer = fs.readFileSync(master);
+const base64Logo = pngBuffer.toString('base64');
+
 // CHROMIUM_PATH lets a preinstalled browser stand in when the local Playwright
 // build revision doesn't match what's on disk (CI images, sandboxes).
 const browser = await chromium.launch(
@@ -42,7 +44,7 @@ for (const [name, size] of TARGETS) {
   await page.setContent(
     `<body style="margin:0;background:${opaque ? '#03050d' : 'transparent'}">` +
     `<div style="width:${size}px;height:${size}px">` +
-    svg.replace('<svg ', `<svg width="${size}" height="${size}" `) +
+    `<img src="data:image/png;base64,${base64Logo}" style="width:100%;height:100%;display:block;object-fit:contain" />` +
     `</div></body>`
   );
   await page.screenshot({ path: path.join(root, 'public', name), omitBackground: !opaque });
@@ -51,4 +53,4 @@ for (const [name, size] of TARGETS) {
 }
 
 await browser.close();
-console.log('\nIcons regenerated from public/icon.svg');
+console.log('\nIcons regenerated from public/logo.png');
