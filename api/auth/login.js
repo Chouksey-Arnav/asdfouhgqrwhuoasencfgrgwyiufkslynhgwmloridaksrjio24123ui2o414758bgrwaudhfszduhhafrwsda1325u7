@@ -18,7 +18,7 @@
 // new password and sign in with it. Emailed-code sign-in reaches the same place through the same
 // proof, without making the person invent and remember a password on the way. It is strictly less
 // state — no new password hash written, nothing for the account owner to have changed under them.
-import { getSupabaseAdmin } from '../_lib/supabaseAdmin.js';
+import { getSupabaseAdmin, withRetry } from '../_lib/supabaseAdmin.js';
 import { verifyPassword } from '../_lib/password.js';
 import { consumeVerificationToken } from '../_lib/verificationToken.js';
 import { serializeUser } from '../_lib/serializeUser.js';
@@ -66,7 +66,7 @@ export default async function handler(req, res) {
 
     const record = (success) => supabase.from('login_attempts').insert({ email, ip, success }).then(() => {}, () => {});
 
-    const { data: user, error: userErr } = await supabase.from('app_users').select('*').eq('email', email).maybeSingle();
+    const { data: user, error: userErr } = await withRetry(() => supabase.from('app_users').select('*').eq('email', email).maybeSingle());
     if (userErr) throw userErr;
 
     if (!user) {
@@ -103,11 +103,11 @@ export default async function handler(req, res) {
 
     await record(true);
 
-    const { data: session, error: sessErr } = await supabase
+    const { data: session, error: sessErr } = await withRetry(() => supabase
       .from('sessions')
       .insert({ user_id: user.id, expires_at: new Date(Date.now() + SESSION_TTL_MS).toISOString() })
       .select('*')
-      .single();
+      .single());
     if (sessErr) throw sessErr;
 
     return res.status(200).json({ token: session.id, user: serializeUser(user) });

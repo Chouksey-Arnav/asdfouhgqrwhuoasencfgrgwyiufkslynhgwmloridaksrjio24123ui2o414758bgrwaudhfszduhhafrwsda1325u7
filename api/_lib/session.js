@@ -12,7 +12,7 @@
 // requireStudent/requireParent answer "may they be here", and every /api handler calls exactly one
 // of them. scripts/verifyParentDashboard.mjs asserts that mechanically, because the failure mode
 // of forgetting is silent.
-import { getSupabaseAdmin } from './supabaseAdmin.js';
+import { getSupabaseAdmin, withRetry } from './supabaseAdmin.js';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -25,11 +25,11 @@ export async function getUserFromRequest(req) {
   if (!token || !UUID_RE.test(token)) return null;
 
   const supabase = getSupabaseAdmin();
-  const { data: session } = await supabase
+  const { data: session } = await withRetry(() => supabase
     .from('sessions')
     .select('*, app_users(*)')
     .eq('id', token)
-    .maybeSingle();
+    .maybeSingle());
 
   if (!session || new Date(session.expires_at) < new Date()) return null;
   return session.app_users;
