@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import AuthGate from './components/AuthGate.jsx';
+import RootErrorBoundary from './components/RootErrorBoundary.jsx';
 import './index.css';
 
 const container = document.getElementById('root');
@@ -16,10 +17,12 @@ container?.querySelector('#seo-shell')?.remove();
 
 ReactDOM.createRoot(container).render(
   <React.StrictMode>
-    <AuthGate>
-      {({ user, setUser, openLegal }) => (
-        <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
-      )}
-    </AuthGate>
+    <RootErrorBoundary>
+      <AuthGate>
+        {({ user, setUser, openLegal }) => (
+          <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
+        )}
+      </AuthGate>
+    </RootErrorBoundary>
   </React.StrictMode>
 );
