@@ -84,7 +84,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       let timelineSummary = null;
       try {
         timelineSummary = summarizeTimelineForPrompt(buildTimeline({
-          user, snapshot: portfolioData || {}, testScores: portfolioData?.testScores || [],
+          user, snapshot: portfolioData || {},
         }));
       } catch { /* the prompt is still complete without it */ }
       const sys = buildPortfolioSystemPrompt({

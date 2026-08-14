@@ -289,10 +289,6 @@ export const QUEST_DESTINATIONS = {
   deck_created:      { tab: 'prep',      view: 'flashcards',label: 'Build a deck' },
   note_written:      { tab: 'prep',      view: 'pathways',  label: 'Open a lesson' },
   coach_session:     { tab: 'prep',      view: 'coach',     label: 'Ask Medabrain' },
-  sat_question:      { tab: 'sat',       view: 'practice',  label: 'Practise SAT' },
-  sat_correct:       { tab: 'sat',       view: 'practice',  label: 'Practise SAT' },
-  sat_full_test:     { tab: 'sat',       view: 'tests',     label: 'Start a full test' },
-  sat_review_clear:  { tab: 'sat',       view: 'review',    label: 'Open the review log' },
   plan_task:         { tab: 'plans',     view: null,        label: "Open today's plan" },
   interview_session: { tab: 'portfolio', view: 'interview', label: 'Practise an interview' },
   portfolio_entry:   { tab: 'portfolio', view: 'resume',    label: 'Log an entry' },
@@ -315,14 +311,14 @@ export const destinationFor = (metric) => QUEST_DESTINATIONS[metric] || QUEST_DE
  * Turn the app's own records into the flat, dated event list `evaluate` wants.
  *
  * Every source here is something the app ALREADY stores for another reason —
- * quiz history, the card-review log, SAT responses, the day-activity ledger the
+ * quiz history, the card-review log, the day-activity ledger the
  * streak writes. Nothing new is recorded to make quests work, which matters: a
  * quest system that needs its own parallel telemetry is a quest system whose
  * numbers drift away from the rest of the product within a month.
  *
  * `dayActivity` is the interesting one. The streak already stores a per-day
  * count of every qualifying action (see recordStreakActivity in db.js), so
- * lessons, plan tasks, interviews and SAT question batches can be replayed from
+ * lessons, plan tasks and interviews can be replayed from
  * it at day granularity — which is all a daily-capped quest ever needed. Events
  * are stamped at local noon of their day so they can never land in the
  * neighbouring day under any timezone arithmetic.
@@ -330,9 +326,6 @@ export const destinationFor = (metric) => QUEST_DESTINATIONS[metric] || QUEST_DE
 export function buildQuestEvents({
   quizScores = [],
   cardReviews = [],
-  satResponses = [],
-  satAttempts = [],
-  satReviewLog = [],
   lessons = [],
   dayActivity = [],
   unitMastery = [],
@@ -364,21 +357,6 @@ export function buildQuestEvents({
 
   // Flashcards — one event per review, which is what the cap is denominated in.
   for (const r of cardReviews) push('flashcard_review', r?.reviewedAt);
-
-  // SAT — a response is a question answered; a correct response is additionally
-  // the accuracy metric, which is the one volume cannot brute-force. A completed
-  // attempt of kind 'test'/'baseline' is a full-length sitting.
-  for (const r of satResponses) {
-    push('sat_question', r?.answeredAt);
-    if (r?.correct) push('sat_correct', r.answeredAt);
-  }
-  for (const a of satAttempts) {
-    if (a?.status !== 'complete' && !a?.finishedAt) continue;
-    if (a?.kind === 'test' || a?.kind === 'baseline') push('sat_full_test', a.finishedAt || a.startedAt);
-  }
-  for (const item of satReviewLog) {
-    if (item?.clearedAt || item?.resolvedAt) push('sat_review_clear', item.clearedAt || item.resolvedAt);
-  }
 
   // Lessons — verified is the one that matters; studied is the softer variant;
   // perfect is a verification quiz taken clean. The 100 threshold matches the
@@ -567,13 +545,10 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   const lessonsVerified = num(s.lessonsVerified);
   const quizzes = num(s.quizzesTaken);
   const avgScore = s.averageScore == null ? null : num(s.averageScore);
-  const satTests = num(s.satTestsTaken);
-  const satQuestions = num(s.satQuestions);
   const cardsLast28 = num(s.cardReviewsLast28);
   const activities = num(s.activitiesLogged);
   const clinicalHours = num(s.clinicalHours);
   const gradeLevel = String(s.gradeLevel || '');
-  const daysToExam = s.daysToExam == null ? null : num(s.daysToExam);
   const notes = num(s.notesWritten);
   const coachChats = num(s.coachChats);
   const colleges = num(s.collegeCount);
@@ -581,7 +556,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   const essays = num(s.essayCount);
   const recommenders = num(s.recommenderCount);
   const interviews = num(s.interviewCount);
-  const brandNew = lessonsVerified === 0 && quizzes === 0 && satQuestions === 0;
+  const brandNew = lessonsVerified === 0 && quizzes === 0;
 
   // 1. Showing up at all. Nothing else is worth assigning to a student who is
   //    not opening the app, and the gentlest quest here is the right first ask.
@@ -620,27 +595,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
     }
   }
 
-  // 3. SAT — driven by the test date if there is one.
-  if (daysToExam != null && daysToExam > 0 && daysToExam <= 70) {
-    add('sat_legend', `Test day is ${daysToExam} days out. This is the whole prep season, priced accordingly.`, 96);
-    add('sat_three_tests', 'Three timed full-lengths before test day is the single most reliable predictor of the real score.', 90);
-    add('sat_accuracy_drive', 'Volume quests can be satisfied by guessing. This one counts only correct answers, which is the honest measure this close to a test date.', 87);
-  } else if (satQuestions === 0) {
-    add('sat_warmup', 'No SAT questions answered yet. Thirty is one short session a day for three days — enough for the skill heat map to have something to say.', 82);
-  } else if (satQuestions < 100) {
-    add('sat_first_hundred', `${satQuestions} SAT questions so far. A hundred is where the skill breakdown starts telling you which section is actually the problem.`, 80);
-  } else if (satQuestions < 400) {
-    add('sat_grind', `${satQuestions} SAT questions so far. Volume is the part of prep with the most reliable link to a score, and the part students avoid.`, 75);
-  } else {
-    add('sat_marathon_month', `${satQuestions} questions answered already. The next honest step is accuracy — six hundred correct, which a student guessing their way through cannot finish.`, 66);
-  }
-  if (satTests >= 1 && satQuestions >= 100) {
-    add('sat_clear_the_log', 'They have questions in the review log they got wrong and have not gone back to. That list is the highest-value work in the SAT tab.', 78);
-  } else if (satQuestions >= 40) {
-    add('sat_review_habit', 'Two review-log items a day for six days. The gentle version — it is what stops the log becoming the intimidating pile students abandon.', 57);
-  }
-
-  // 4. Quality vs volume.
+  // 3. Quality vs volume.
   if (quizzes >= 8 && avgScore != null && avgScore < 75) {
     add('mastery_strong_ten', `Quiz average is ${avgScore}%. The volume is there; this quest asks for the scores instead.`, 88);
     add('mastery_strong_start', `At ${avgScore}%, ten strong scores may be a stretch. Five, one a day, is the version that gets finished.`, 83);
@@ -652,7 +607,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
     add('quiz_dozen', 'A dozen quizzes in a fortnight gives the recommendation engine enough signal to personalise what comes next.', 55);
   }
 
-  // 5. Retention.
+  // 4. Retention.
   if (cardsLast28 === 0) {
     add('flash_warmup', 'No card reviews at all in the last month. Sixty across a week is four short sessions — the smallest dose that still behaves like spaced repetition.', 72);
   } else if (cardsLast28 < 100) {
@@ -663,7 +618,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
     add('flash_century_club', `${cardsLast28} reviews last month. Fourteen days of it is the point at which students stop needing to be reminded to open the decks.`, 54);
   }
 
-  // 6. Curiosity — the quiet failure modes. A student who never asks and never
+  // 5. Curiosity — the quiet failure modes. A student who never asks and never
   //    writes anything down is a student who stalls silently at the first thing
   //    they do not understand, and neither gap shows up in any other number.
   if (coachChats === 0) {
@@ -677,7 +632,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
     add('explore_deep_notes', 'They already take notes. Forty across a month leaves them with an annotated version of their own pathway — the best revision material they will ever have.', 46);
   }
 
-  // 7. Portfolio — weighted up for older students, because the deadline is real.
+  // 6. Portfolio — weighted up for older students, because the deadline is real.
   const upperYear = /11|12|junior|senior/i.test(gradeLevel);
   if (activities === 0) {
     add('port_first_entries', 'The résumé is empty, and a blank résumé screen is the wall students do not get past. Three entries, one a day, clears it.', upperYear ? 88 : 66);
@@ -715,14 +670,14 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   }
   add('port_opportunity_hunt', 'Deadlines they never found are the applications they never made. Cheap, fast, high leverage.', 45);
 
-  // 8. The plan, if they have one they are not following.
+  // 7. The plan, if they have one they are not following.
   if (s.hasPlan && num(s.planCompletionPct) < 30) {
     add('consist_plan_sprint', 'The plan is being ignored rather than followed. A fortnight of it, capped at three tasks a day, is the version that rebuilds the habit.', 85);
   } else if (s.hasPlan && num(s.planCompletionPct) < 60) {
     add('consist_plan_follow', 'The plan already says what to do each day; this quest is about actually doing it.', 84);
   }
 
-  // 9. Chains. Finishing a rung is the single highest-intent moment this system
+  // 8. Chains. Finishing a rung is the single highest-intent moment this system
   //    has, so the rung above anything they have already claimed is boosted
   //    above the generic rules — but never above the "they have stopped showing
   //    up" rules at the top, because a student who is absent does not need a

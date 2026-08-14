@@ -42,8 +42,8 @@ const MAX_PER_DAY = 25;
 // so `topic` can never become a free-text field that renders into the student's app.
 const TOPICS = [
   'Anything — you pick',
-  'SAT Math',
-  'SAT Reading & Writing',
+  'Math & Data',
+  'Reading & Writing',
   'Biology & Biochemistry',
   'Chemistry & Physics',
   'Psychology & Sociology',

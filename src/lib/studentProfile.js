@@ -5,9 +5,9 @@
 // "onboarding completeness" readout for the dashboard.
 //
 // Before this module existed, the ~30-screen onboarding flow collected a
-// goal, target score, study obstacles, preferred study method, and a list of
+// goal, study obstacles, preferred study method, and a list of
 // things the student wanted to accomplish — but completeOnboarding() in
-// App.jsx only ever persisted name/grade/testTrack. Everything else was
+// App.jsx only ever persisted name/grade. Everything else was
 // computed once for routing and then thrown away, so Medabrain (and the rest
 // of the app) never actually used it. This module is the fix: every call
 // site that needs "who is this student and what do they want" reads from
@@ -19,7 +19,7 @@
 import {
   GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
-  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS,
 } from '../components/onboarding/Onboarding';
 import { buildPersonalBriefBlock } from './personalBrief';
 import { parseScholarshipNotes } from './scholarshipNotes';
@@ -136,17 +136,21 @@ export const getCertaintyLabel = (v) => labelOf(CERTAINTY_OPTIONS, v);
 export const getGpaLabel = (v) => labelOf(GPA_OPTIONS, v);
 export const getScienceLabels = (arr) => labelsOf(SCIENCE_OPTIONS, arr);
 export const getExperienceLabels = (arr) => labelsOf(EXPERIENCE_OPTIONS, arr);
-export const getTestTimelineLabel = (v) => labelOf(TEST_TIMELINE_OPTIONS, v);
 
 // The fields completeOnboarding() now stamps onto the user record — see
 // App.jsx. Kept as one list so completeness scoring and the recap card can't
 // silently drift apart from what's actually saved.
 const ONBOARDING_FIELDS = [
-  'goal', 'obstacles', 'studyMethod', 'accomplish', 'studyHours', 'onboardingTargetScore',
+  'goal', 'obstacles', 'studyMethod', 'accomplish', 'studyHours',
   // Med-focused fields added by the redesigned onboarding — students who
   // onboarded before it shipped will read lower here, which is the intended
   // nudge toward Settings > "Update my goals."
-  'whyMedicine', 'dreamRole', 'certainty', 'gpaBand', 'sciences', 'healthExperience', 'testTimeline',
+  //
+  // 'onboardingTargetScore' and 'testTimeline' used to be in this list. They
+  // went with the SAT pillar (src/lib/betaFlags.js): onboarding no longer asks
+  // for a target score or a test date, so scoring a profile as incomplete for
+  // missing them would mean every account permanently below 100% with no
+  // screen anywhere that could fix it.
 ];
 
 function isFilled(value) {
@@ -168,9 +172,9 @@ export function computeOnboardingCompleteness(user) {
 // ── Plan readiness gate ────────────────────────────────────────────────────
 // Two layers, both required before Medabrain's Oracle will build the full day-by-day
 // plan: (1) PROFILE — the onboarding facts it needs to reason about the student at all
-// (goal, what's in the way, pace, target score, grades, timing). Any student who
+// (goal, what's in the way, pace, grades). Any student who
 // completes the current onboarding flow (every screen is forced, nothing skippable)
-// already has all six by construction; this only actually gates legacy accounts that
+// already has all four by construction; this only actually gates legacy accounts that
 // onboarded before these fields existed. (2) ACTIVITY — real signal beyond self-report,
 // so the plan is grounded in something the student has actually DONE, not just
 // answered. This is deliberately a low bar (one of each) — "not too much, so the AI is
@@ -178,10 +182,10 @@ export function computeOnboardingCompleteness(user) {
 // diagnostic, tried one quiz, and logged one Portfolio item has given the Oracle real
 // signal on their level, habits, and what they're already building — enough to be
 // confident without asking for more than a first-day's worth of engagement.
-export const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'onboardingTargetScore', 'gpaBand', 'testTimeline'];
+export const PLAN_READINESS_FIELDS = ['goal', 'obstacles', 'studyHours', 'gpaBand'];
 const PLAN_READINESS_LABELS = {
   goal: 'Your top goal', obstacles: "What's in your way", studyHours: 'Weekly study time',
-  onboardingTargetScore: 'Your target score', gpaBand: 'Your grades', testTimeline: 'Your test timing',
+  gpaBand: 'Your grades',
 };
 // Where each unanswered profile question is actually answered, so the lock screen's checklist
 // can be a set of working links rather than a list of things to go hunt for. `goField` is the
@@ -192,9 +196,7 @@ export const PLAN_READINESS_TARGETS = {
   goal: { goTab: 'settings', goField: 'goal', hint: 'Settings → Your Goals' },
   obstacles: { goTab: 'settings', goField: 'obstacles', hint: 'Settings → Your Goals' },
   studyHours: { goTab: 'settings', goField: 'studyHours', hint: 'Settings → Your Goals' },
-  onboardingTargetScore: { goTab: 'settings', goField: 'onboardingTargetScore', hint: 'Settings → Your Goals' },
-  gpaBand: { goTab: 'settings', goField: 'gpaBand', hint: 'Settings → Grades & Test Timing' },
-  testTimeline: { goTab: 'settings', goField: 'testTimeline', hint: 'Settings → Grades & Test Timing' },
+  gpaBand: { goTab: 'settings', goField: 'gpaBand', hint: 'Settings → Your Grades' },
 };
 const profileItem = (f) => ({ field: f, label: PLAN_READINESS_LABELS[f], kind: 'profile', ...PLAN_READINESS_TARGETS[f] });
 // signals: { quizzesTaken, portfolioItemCount } — live counts the caller gathers from
@@ -267,7 +269,6 @@ export function buildOnboardingRecap(user) {
   if (roleLabel && user.dreamRole !== 'undecided') items.push({ label: 'Dream role', value: roleLabel });
   const goalLabel = getGoalLabel(user.goal);
   if (goalLabel) items.push({ label: 'Your goal', value: goalLabel });
-  if (user.onboardingTargetScore && user.testTrack) items.push({ label: 'Target score', value: `${user.onboardingTargetScore} ${user.testTrack}` });
   const obstacleLabels = getObstacleLabels(user.obstacles);
   if (obstacleLabels.length) items.push({ label: "What's in your way", value: obstacleLabels.join(', ') });
   const accomplishLabels = getAccomplishLabels(user.accomplish);
@@ -279,8 +280,6 @@ export function buildOnboardingRecap(user) {
   if (scienceLabels.length && !(user.sciences || []).every(v => v === 'none_yet')) items.push({ label: 'Science courses', value: scienceLabels.filter(l => l !== 'None of these yet').join(', ') });
   const expLabels = getExperienceLabels(user.healthExperience);
   if (expLabels.length && !(user.healthExperience || []).every(v => v === 'none')) items.push({ label: 'Health experience', value: expLabels.filter(l => !l.startsWith('Nothing yet')).join(', ') });
-  const timelineLabel = getTestTimelineLabel(user.testTimeline);
-  if (timelineLabel && user.testTimeline !== 'unscheduled') items.push({ label: 'Test date', value: timelineLabel });
   return items;
 }
 
@@ -312,9 +311,6 @@ export function buildCoachSystemPrompt({
   streak = 0,
   streakContext = null,   // { goalLabel, goalCredits, creditsToday, dayMet, weekMet, weekStillPossible, target, freezes }
   planSummary = null,
-  satProjection = null,
-  satWeakSkills = [],
-  satOpenReviews = 0,
   // Cross-app "what have they actually been doing" digest — see
   // src/lib/recentActivity.js. Null when nothing has been logged recently.
   recentActivitySummary = null,
@@ -338,9 +334,11 @@ export function buildCoachSystemPrompt({
   // pathway" in the singular to somebody who is deliberately comparing three of them.
   parallelPathwaysSummary = null,
 } = {}) {
-  const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for the SAT/ACT and undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
+  const base = `You are Medabrain, the AI coach inside MedSchoolPrep, a prep platform built specifically for high school students in grades 9-12 who are interested in medicine or a health career — every student you talk to is roughly 14-18 years old, preparing for undergraduate admissions with an eye toward a future health-science major, not currently in or applying to medical/graduate school. Never bring up the MCAT, clinical rotations, or clinical-style interview formats (MMI, CASPer) unless the student explicitly asks about their long-term future — and even then, frame it as years-away context, not something to act on now.
 
-The platform is organized around four areas: SAT (a skill diagnostic, adaptive practice drills, full-length adaptive practice tests with real module routing, a review log for analyzing every missed question, and per-skill mastery tracking across the 28 tested skills), Prep (a pathway diagnostic, pathway study units, a quiz library, spaced-repetition flashcards, and a curated e-library), Portfolio (SAT/ACT score tracking, an admissions calculator, college application tracking, essay workspace, deadlines, financial aid, an activities/clinical-hours resume builder, and mock interview practice), and Progress (XP, achievements, and readiness analytics) — point students at the right one when it's the natural next step. For anything about raising an SAT score, the SAT tab is the answer, not the Prep quiz library (which is science content, not SAT content).
+The platform is organized around three areas: Prep (a pathway diagnostic, pathway study units, a quiz library, spaced-repetition flashcards, and a curated e-library), Portfolio (an admissions calculator, college application tracking, essay workspace, deadlines, financial aid, an activities/clinical-hours resume builder, and mock interview practice), and Progress (XP, achievements, and readiness analytics) — point students at the right one when it's the natural next step.
+
+The app does NOT currently offer SAT or ACT preparation: there is no question bank, no practice test, no score estimate and no score tracking available to this student. If they ask about the SAT or ACT, answer what you genuinely know about the test itself, and be straight that MedSchoolPrep has no test-prep tools for them yet — never send them to a tab to do SAT practice, never quote them a score estimate from this app, and never build test prep into a plan or a week.
 
 You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel}` : ''} on the ${pathwayLabel} pathway. Use their name occasionally, not every message. ${parallelPathwaysSummary ? `\n\nThey are studying more than one pathway at the same time — this is a supported, deliberate choice, not a mistake or a sign of indecision: ${parallelPathwaysSummary} ${pathwayLabel} is simply the one they have in focus right now. Never tell them to "pick one" or imply they are spreading themselves thin unless they raise that worry themselves; if they ask how to split their time, help them plan across the tracks they chose. When comparing the paths, use what their real progress in each one shows.\n\n` : ''}${pathCoachNote}${gradeLabel === 'Senior' ? " As a senior, application deadlines are the most time-sensitive thing in their life right now — weight advice accordingly." : ''}${gradeLabel === 'Freshman' ? ' As a freshman, they have years of runway — prioritize building strong habits and exploring interests over deadline pressure.' : ''}`;
 
@@ -368,9 +366,6 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
   const expLabels = getExperienceLabels(user?.healthExperience).filter(l => !l.startsWith('Nothing yet'));
   if (expLabels.length) onboardingParts.push(`Hands-on health experience so far: ${expLabels.join(', ')}.`);
   else if ((user?.healthExperience || []).includes('none')) onboardingParts.push('They have no hands-on health experience yet — treat a first shadowing/volunteering step as a meaningful milestone to work toward.');
-  const timelineLabel = getTestTimelineLabel(user?.testTimeline);
-  if (timelineLabel) onboardingParts.push(`Planned ${user?.testTrack || 'SAT'} timing: ${timelineLabel}.`);
-  if (user?.onboardingTargetScore && user?.testTrack) onboardingParts.push(`They're targeting a ${user.onboardingTargetScore} ${user.testTrack} (their self-reported starting score was ${user.onboardingCurrentScore || 'not given'}).`);
   if (obstacleLabels.length) onboardingParts.push(`They told us their biggest obstacles are: ${obstacleLabels.join(', ')} — proactively address these when they're relevant instead of waiting to be asked (e.g. if "losing motivation" is listed and they seem discouraged, acknowledge it directly rather than generic encouragement).`);
   if (accomplishLabels.length) onboardingParts.push(`Things they specifically said they want to accomplish: ${accomplishLabels.join(', ')}.`);
   if (studyMethodLabel && user?.studyMethod !== 'none') onboardingParts.push(`They're currently also using: ${studyMethodLabel}.`);
@@ -379,21 +374,6 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
 
   // ── Live/current-state signals ────────────────────────────────────────────
   const liveParts = [];
-  // SAT facts come first: they are the most concrete, most actionable thing we
-  // know, and "what should I work on for the SAT" is the single most common
-  // question this coach gets. Note the projection is a measured RANGE with a
-  // confidence level — never restate it as a single confident number.
-  if (satProjection) {
-    liveParts.push(`Measured SAT estimate: ${satProjection.low}-${satProjection.high} (midpoint ${satProjection.mid}, ${satProjection.confidence} confidence, based on ${satProjection.basis === 'full_test' ? 'a full-length practice test' : satProjection.basis === 'diagnostic' ? 'their diagnostic' : 'practice questions only'}). Always present this as a range, never a single number, and never promise a specific future score.`);
-  } else {
-    liveParts.push('They have not done enough SAT practice for a score estimate yet — if they ask what they will score, say honestly that we cannot tell them yet and point them at the SAT diagnostic.');
-  }
-  if (satWeakSkills?.length) {
-    liveParts.push(`Their weakest SAT skills by leverage (weakness x how heavily the exam tests it): ${satWeakSkills.slice(0, 4).map(s => `${s.label} (${Math.round((s.mastery || 0) * 100)}% from ${s.attempts || 0} questions)`).join(', ')}. Recommend these by name when they ask what to study.`);
-  }
-  if (satOpenReviews > 0) {
-    liveParts.push(`They have ${satOpenReviews} unreviewed SAT mistakes sitting in their review log. Reviewing those beats answering new questions — say so if they ask what to do next.`);
-  }
   if (courses?.length) liveParts.push(`Currently taking: ${courses.join(', ')}${apIb ? ' (AP/IB student)' : ''} — tailor examples to these courses when relevant.`);
   if (weakestCategory && weakestScore != null) liveParts.push(`Their weakest quiz section is ${weakestCategory} at ${weakestScore}% — proactively bring this up if it's relevant to what they ask.`);
   if (dueCards > 0) liveParts.push(`They have ${dueCards} flashcard(s) due for review.`);

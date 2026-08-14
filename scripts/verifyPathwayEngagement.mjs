@@ -52,8 +52,10 @@ const WEEK = 7 * 24 * 60 * 60 * 1000;
 section('Smart Mix deals the whole library, freshly, every time');
 
 const allBuiltinCards = Object.values(FLASH_DECKS).flat();
-assert('the built-in library is the full 866-card set',
-  allBuiltinCards.length >= 866, `found ${allBuiltinCards.length}`);
+// Was 866. The four SAT/ACT strategy decks (78 cards) went with the SAT pillar
+// — see src/lib/betaFlags.js and DECK_CATEGORIES in src/data/constants.js.
+assert('the built-in library is the full 788-card set',
+  allBuiltinCards.length >= 788, `found ${allBuiltinCards.length}`);
 
 const deck = allBuiltinCards.map((c, i) => ({ ...c, _i: i }));
 const seedA = 12345, seedB = 999983;

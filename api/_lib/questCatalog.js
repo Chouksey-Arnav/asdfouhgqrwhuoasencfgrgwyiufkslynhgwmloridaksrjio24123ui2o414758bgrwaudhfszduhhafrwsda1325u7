@@ -42,16 +42,6 @@ export const QUEST_SPECS = {
   path_flawless:         { title: 'Five Flawless Lessons',     tier: 'elite',     metric: 'lesson_perfect',    target: 5,   windowDays: 21, dailyCap: 1,  minActiveDays: 5 },
   path_wide_read:        { title: 'The Wide Read',             tier: 'hard',      metric: 'lesson_studied',    target: 20,  windowDays: 21, dailyCap: 2,  minActiveDays: 10 },
 
-  // ── SAT ───────────────────────────────────────────────────────────────────
-  sat_warmup:            { title: 'Thirty to Start',           tier: 'starter',   metric: 'sat_question',      target: 30,  windowDays: 7,  dailyCap: 10, minActiveDays: 3 },
-  sat_first_hundred:     { title: 'First Hundred',             tier: 'standard',  metric: 'sat_question',      target: 100, windowDays: 14, dailyCap: 25, minActiveDays: 4 },
-  sat_accuracy_drive:    { title: 'Two Hundred and Fifty Right', tier: 'hard',    metric: 'sat_correct',       target: 250, windowDays: 21, dailyCap: 20, minActiveDays: 13 },
-  sat_grind:             { title: 'The Question Grind',        tier: 'elite',     metric: 'sat_question',      target: 400, windowDays: 28, dailyCap: 40, minActiveDays: 12 },
-  sat_legend:            { title: 'Test-Season Siege',         tier: 'legendary', metric: 'sat_question',      target: 900, windowDays: 42, dailyCap: 50, minActiveDays: 24 },
-  sat_three_tests:       { title: 'Three Under Timing',        tier: 'elite',     metric: 'sat_full_test',     target: 3,   windowDays: 28, dailyCap: 1,  minActiveDays: 3 },
-  sat_review_habit:      { title: 'The Review Habit',          tier: 'standard',  metric: 'sat_review_clear',  target: 12,  windowDays: 14, dailyCap: 2,  minActiveDays: 6 },
-  sat_clear_the_log:     { title: 'Clear the Review Log',      tier: 'hard',      metric: 'sat_review_clear',  target: 30,  windowDays: 21, dailyCap: 6,  minActiveDays: 6 },
-  sat_marathon_month:    { title: 'Six Hundred Right',         tier: 'legendary', metric: 'sat_correct',       target: 600, windowDays: 42, dailyCap: 30, minActiveDays: 22 },
 
   // ── Retention ─────────────────────────────────────────────────────────────
   flash_warmup:          { title: 'Sixty Cards',               tier: 'starter',   metric: 'flashcard_review',  target: 60,  windowDays: 7,  dailyCap: 15, minActiveDays: 4 },

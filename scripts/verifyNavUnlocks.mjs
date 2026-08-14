@@ -38,8 +38,7 @@ const section = (name) => console.log(`\n${name}`);
 // A student who has done everything the app can measure. Every rule must open
 // for this person, or the feature it guards is unreachable by design.
 const MAXED = {
-  quizzes: 999, lessons: 999, satQuestions: 9999,
-  satBaselineDone: true, satDiagnosticDone: true, satFullTests: 9,
+  quizzes: 999, lessons: 999,
   colleges: 20, essays: 20, activities: 20, trackedItems: 20,
   achievements: 40, level: 50, planBuilt: true, onboarded: true, planReady: true, applicationUrgent: true,
 };
@@ -55,7 +54,11 @@ function idsIn(constName) {
   const block = app.slice(start, app.indexOf('\n];', start));
   return [...block.matchAll(/\{id:'([^']+)'/g)].map((m) => m[1]);
 }
-const SUBNAV_CONST = { sat: 'SAT_SUBNAV', prep: 'PREP_SUBNAV', portfolio: 'PORTFOLIO_SUBNAV', progress: 'PROGRESS_SUBNAV' };
+// SAT_SUBNAV is deliberately absent. The SAT pillar is sealed for v1
+// (src/lib/betaFlags.js) — its sub-nav renders behind SatBetaCover and cannot be
+// reached, clicked or tabbed into, so gating it would be gating a screen nobody
+// can open. The tab itself still appears in NAV, carrying a BETA badge.
+const SUBNAV_CONST = { prep: 'PREP_SUBNAV', portfolio: 'PORTFOLIO_SUBNAV', progress: 'PROGRESS_SUBNAV' };
 const LABELS = {};
 for (const id of idsIn('NAV') || []) LABELS[id] = null;
 for (const [tab, name] of Object.entries(SUBNAV_CONST)) {
@@ -136,7 +139,6 @@ for (const [tab, name] of Object.entries(SUBNAV_CONST)) {
 section('The ladder climbs');
 const STEPS = [
   ['after 1 quiz', { ...FRESH, quizzes: 1 }, ['portfolio', 'prep/quizzes', 'prep/flashcards', 'prep/coach']],
-  ['after the SAT baseline', { ...FRESH, satBaselineDone: true, satQuestions: 22 }, ['sat/diagnostic', 'sat/practice', 'sat/scores', 'sat/review', 'sat/skills']],
   ['after 5 sessions', { ...FRESH, quizzes: 3, lessons: 2 }, ['portfolio', 'progress', 'prep/library']],
   ['onboarded + first lesson + ready to plan', { ...FRESH, onboarded: true, lessons: 1, planReady: true }, ['plans', 'portfolio/resume:clinical']],
   ['with a college list', { ...FRESH, quizzes: 1, colleges: 2 }, ['portfolio/essays', 'portfolio/resume', 'portfolio/aid', 'portfolio/resume:academics']],
@@ -222,7 +224,7 @@ section('"Unlocks next" copy');
 const topNext = fresh.locked('');
 if (!topNext.length) fail('a fresh account is shown no upcoming top-level unlocks');
 if (topNext.some((r) => r.id.includes('/'))) fail("locked('') leaked a sub-view into the top-level list");
-if (fresh.locked('sat').some((r) => !r.id.startsWith('sat/'))) fail("locked('sat') leaked a non-SAT destination");
+if (fresh.locked('sat').length) fail("locked('sat') returned rules for the sealed SAT pillar");
 if (!failures) ok(`fresh account is told about ${topNext.length} upcoming pillars, nearest first: ${topNext.map((r) => r.label).join(' → ')}`);
 
 // ── 7. App.jsx actually routes its nav through the gate ─────────────────────

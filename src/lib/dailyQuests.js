@@ -85,18 +85,14 @@ function rng(seed) {
  *
  * Everything defaults to TRUE when the caller does not know, which is the
  * deliberate choice: a student whose portfolio has not loaded yet should see a
- * portfolio quest they can act on, not have it silently withheld. The one thing
- * that is gated tightly is `satDeep`, because offering a full-length test to
- * somebody who has answered nine questions is not a challenge, it is noise.
+ * portfolio quest they can act on, not have it silently withheld.
  */
 export function capabilities({
-  hasPathway = true, satQuestions = 0, satTouched = null,
+  hasPathway = true,
   hasPlan = true, deckCount = 1, portfolioTouched = true,
 } = {}) {
   return {
     pathway: !!hasPathway,
-    sat: satTouched == null ? num(satQuestions) > 0 : !!satTouched,
-    satDeep: num(satQuestions) >= 60,
     plan: !!hasPlan,
     decks: num(deckCount) > 0,
     portfolio: !!portfolioTouched,
@@ -284,8 +280,8 @@ function dayHeadline({ rows = [], done = 0, claimable = 0, total = 0, allClaimed
  *
  * Claimable always wins, because claiming is one tap from anywhere. After that
  * it is the cheapest unfinished thing they can do HERE — a card quest on the
- * Flashcards tab is actionable now; the same quest shown on the SAT tab is an
- * interruption. Mirrors featuredFor() in lib/quests.js exactly.
+ * Flashcards tab is actionable now; the same quest shown on the Portfolio tab
+ * is an interruption. Mirrors featuredFor() in lib/quests.js exactly.
  */
 export function featuredDaily(day, surface = null) {
   if (!day?.rows?.length) return null;
@@ -298,7 +294,7 @@ export function featuredDaily(day, surface = null) {
     if (local) return local;
   }
   // Cheapest first: a student who is nearly out of evening should be pointed at
-  // the bronze, not at the full-length test.
+  // the bronze, not at the gold.
   return open.sort((a, b) => a.xp - b.xp)[0];
 }
 
@@ -319,5 +315,5 @@ export function streakOverlap(day, dayStatusRow) {
 
 /** Metrics whose daily quest, if finished, also clears a default streak day. */
 const STREAK_CLEARING_METRICS = new Set([
-  'lesson_verified', 'lesson_perfect', 'unit_verified', 'sat_full_test',
+  'lesson_verified', 'lesson_perfect', 'unit_verified',
 ]);

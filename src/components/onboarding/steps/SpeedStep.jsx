@@ -4,19 +4,17 @@ import { StepHeader, ContinueButton, flowAccentColor, C } from '../primitives';
 import { COMMIT_LEVELS, commitmentIntel } from '../personalize';
 import { play } from '../../../lib/sounds';
 
-// Daily time commitment — replaces the old "points per week" slider, which
-// happily offered 50 pts/week to a student sitting at 1590. Minutes are the
-// one thing every student can actually control, and commitmentIntel() adapts
-// what those minutes buy to their real situation: score growth for most,
-// experiences-and-application time when the score is already handled, an
-// honest nudge toward the higher gears when the climb is steep.
+// Daily time commitment. Minutes are the one thing every student can actually
+// control, and commitmentIntel() describes what those minutes buy: science
+// depth, real-world experience, and application work — the three things the
+// plan is built out of.
 export function SpeedStep({ value, answers, onChange, onNext, accent = flowAccentColor() }) {
   const idx = value ?? 1;
   const intel = commitmentIntel(answers, idx);
   return (
     <>
       <StepHeader eyebrow="Your commitment" emoji="⚡" accent={accent} title="How much time can you give this each day?"
-        subtitle="Your whole plan — prep, experiences, and application — is paced around this. Honest beats heroic." />
+        subtitle="Your whole plan — coursework, experiences, and application — is paced around this. Honest beats heroic." />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center', marginBottom: 26 }}>
           <div style={{ fontSize: 42, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>

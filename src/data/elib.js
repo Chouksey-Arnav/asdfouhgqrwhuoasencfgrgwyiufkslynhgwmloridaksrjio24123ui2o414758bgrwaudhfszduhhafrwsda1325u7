@@ -1445,4 +1445,17 @@ const ELIB_CORE = [
 // app instead of requiring a trip to YouTube's own playlist browser. Every
 // id/title pair was pulled from the playlist's own page and independently
 // re-verified against the YouTube oEmbed endpoint.
-export const ELIB = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F, ...ELIB_EXPANSION_G, ...ELIB_EXPANSION_H, ...ELIB_EXPANSION_I, ...ELIB_EXPANSION_J, ...ELIB_EXPANSION_K];
+const ELIB_ALL = [...ELIB_CORE, ...ELIB_EXTRA, ...ELIB_EXPANSION_A, ...ELIB_EXPANSION_B, ...ELIB_EXPANSION_C, ...ELIB_EXPANSION_D, ...ELIB_EXPANSION_E, ...ELIB_EXPANSION_F, ...ELIB_EXPANSION_G, ...ELIB_EXPANSION_H, ...ELIB_EXPANSION_I, ...ELIB_EXPANSION_J, ...ELIB_EXPANSION_K];
+
+// Categories the library does not surface in version one.
+//
+// 'Test Prep' is a hundred-odd curated SAT/ACT resources — genuinely good links,
+// and exactly the promise this release is not making (see src/lib/betaFlags.js).
+// A student who cannot practise for the SAT anywhere in this app should not find
+// a shelf of SAT material in the E-Library either.
+//
+// The rows are FILTERED, not deleted: they are hand-curated, they cost nothing to
+// carry, and they come back by deleting one line the day the SAT pillar ships.
+const HIDDEN_CATEGORIES = new Set(['Test Prep']);
+
+export const ELIB = ELIB_ALL.filter(r => !HIDDEN_CATEGORIES.has(r?.cat));

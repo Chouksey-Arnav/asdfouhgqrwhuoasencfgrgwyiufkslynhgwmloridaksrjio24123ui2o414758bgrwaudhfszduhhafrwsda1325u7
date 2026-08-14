@@ -280,8 +280,18 @@ function checkAllowlist() {
   assert('question ids from test attempts do not travel', !/"questionIds"/.test(serialized));
 
   assert('the derivation is still useful (it is not empty)',
-    summary.effort.xp === 1200 && summary.coursework.lessonsVerified === 1 && summary.testing?.total === 1200,
-    JSON.stringify({ xp: summary.effort.xp, verified: summary.coursework.lessonsVerified, total: summary.testing?.total }));
+    summary.effort.xp === 1200 && summary.coursework.lessonsVerified === 1,
+    JSON.stringify({ xp: summary.effort.xp, verified: summary.coursework.lessonsVerified }));
+
+  // The SAT pillar is sealed for v1 (src/lib/betaFlags.js), so no test scores
+  // are derived any more — not the composite, not the section split, not a
+  // milestone row. A parent dashboard that reports a score for a test the
+  // student had no way to sit is worse than one that reports nothing.
+  assert('no test score reaches the parent summary', summary.testing === undefined,
+    JSON.stringify(summary.testing));
+  assert('no test milestone reaches the parent summary',
+    !(summary.milestones || []).some(m => m.kind === 'test_completed'),
+    JSON.stringify(summary.milestones));
 
   const lib = readFileSync(path.join(ROOT, 'api/_lib/parentSummary.js'), 'utf8');
   assert('the derivation never spreads the snapshot wholesale',
@@ -338,21 +348,22 @@ function checkDerivation() {
   assert('the trend compares the last ten quizzes with everything earlier',
     manyQuizzes.coursework.quizzes.trend === 30, `got ${manyQuizzes.coursework.quizzes.trend}`);
 
-  const improving = build({
+  const withOldAttempts = build({
     satAttempts: [
       { kind: 'test', finishedAt: 200, result: { total: 1300, rw: 650, math: 650 } },
       { kind: 'test', finishedAt: 100, result: { total: 1100 } },
     ],
   }, at(2026, 2, 10));
-  assert('a test score reports its change from the previous one', improving.testing.change === 200,
-    `got ${improving.testing.change}`);
-  assert('the latest test wins regardless of array order', improving.testing.total === 1300);
+  assert('legacy SAT attempts in a stored snapshot derive nothing',
+    withOldAttempts.testing === undefined
+    && !JSON.stringify(withOldAttempts).includes('1300'),
+    JSON.stringify(withOldAttempts.testing));
 
   // A brand-new account must render an empty dashboard, not a broken one. Null here would have to
   // be special-cased by every caller, and one of them would forget.
   const empty = buildParentSummary({ student: { id: 'u', name: 'S' }, snapshot: null, now: at(2026, 2, 10) });
   assert('a student who has never synced yields a complete, zeroed summary',
-    empty && empty.effort.xp === 0 && empty.effort.calendar.length === 56 && empty.testing === null);
+    empty && empty.effort.xp === 0 && empty.effort.calendar.length === 56);
 
   const corrupt = buildParentSummary({
     student: { id: 'u', name: 'S' },
@@ -385,7 +396,6 @@ function digestCases() {
     student: { name: 'Alex Kim', gradeLevel: '11th' },
     effort: { xp: 0, level: 1, streakDays: 0, activeDaysLast7: 0, activeDaysLast28: 0, calendar: [], lastActiveAt: null },
     coursework: { lessonsStarted: 0, lessonsVerified: 0, unitsVerified: 0, quizzes: { taken: 0, averageScore: null, trend: null } },
-    testing: null,
     milestones: [],
   };
   const merge = (patch) => ({
@@ -404,7 +414,7 @@ function digestCases() {
     quietWeek: merge({ effort: { activeDaysLast7: 0, activeDaysLast28: 6, lastActiveAt: '2026-02-20' }, coursework: { quizzes: { taken: 4, averageScore: 72 } } }),
     longQuiet: merge({ effort: { activeDaysLast7: 0, activeDaysLast28: 0, lastActiveAt: '2025-12-01' }, coursework: { lessonsStarted: 3 } }),
     steady: merge({ effort: { activeDaysLast7: 2, activeDaysLast28: 9, lastActiveAt: '2026-03-09' }, coursework: { lessonsVerified: 4, quizzes: { taken: 8, averageScore: 74, trend: -6 } } }),
-    strong: merge({ effort: { activeDaysLast7: 5, activeDaysLast28: 20, streakDays: 9, lastActiveAt: '2026-03-10' }, coursework: { lessonsVerified: 12, quizzes: { taken: 20, averageScore: 84, trend: 7 } }, testing: { total: 1290, change: 60, testsTaken: 2 } }),
+    strong: merge({ effort: { activeDaysLast7: 5, activeDaysLast28: 20, streakDays: 9, lastActiveAt: '2026-03-10' }, coursework: { lessonsVerified: 12, unitsVerified: 3, quizzes: { taken: 20, averageScore: 84, trend: 7 } } }),
     // A malformed summary must still produce a sentence rather than throw inside a render.
     empty: {},
   };

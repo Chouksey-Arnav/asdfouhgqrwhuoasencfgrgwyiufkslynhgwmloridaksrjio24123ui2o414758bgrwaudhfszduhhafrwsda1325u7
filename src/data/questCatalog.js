@@ -62,7 +62,7 @@
 // already good at this, and there are plenty of those.
 //
 // ── What a quest may measure ────────────────────────────────────────────────
-// Only work the app can see happen: a verified lesson, a submitted quiz, an SAT
+// Only work the app can see happen: a verified lesson, a submitted quiz, a
 // question answered, a card reviewed, a cleared review-log item, a logged
 // activity, a note actually written. Nothing here measures time-in-app, tab
 // opens, or scroll depth — same position the streak rewrite took
@@ -147,10 +147,6 @@ export const QUEST_METRICS = {
   deck_created:      { label: 'decks built',              unit: 'deck',     verb: 'Build',    surface: 'prep',      evidence: 'a new deck was created or generated' },
   note_written:      { label: 'notes and highlights',     unit: 'note',     verb: 'Write',    surface: 'prep',      evidence: 'a lesson note was saved or a passage highlighted' },
   coach_session:     { label: 'questions asked of Medabrain', unit: 'question', verb: 'Ask',  surface: 'prep',      evidence: 'a question was sent to Medabrain' },
-  sat_question:      { label: 'SAT questions answered',   unit: 'question', verb: 'Answer',   surface: 'sat',       evidence: 'a question was answered in Practice, a Test, or the Baseline' },
-  sat_correct:       { label: 'SAT questions correct',    unit: 'question', verb: 'Get right',surface: 'sat',       evidence: 'a question was answered correctly' },
-  sat_full_test:     { label: 'full-length SAT tests',    unit: 'test',     verb: 'Sit',      surface: 'sat',       evidence: 'a full-length adaptive test was finished, not abandoned' },
-  sat_review_clear:  { label: 'review-log items cleared', unit: 'item',     verb: 'Clear',    surface: 'sat',       evidence: 'a missed question was reworked and marked resolved' },
   plan_task:         { label: 'plan tasks completed',     unit: 'task',     verb: 'Complete', surface: 'plans',     evidence: 'a task on the study plan was ticked or auto-verified' },
   interview_session: { label: 'mock interviews',          unit: 'session',  verb: 'Practise', surface: 'portfolio', evidence: 'a mock interview was answered end to end' },
   portfolio_entry:   { label: 'portfolio entries logged', unit: 'entry',    verb: 'Log',      surface: 'portfolio', evidence: 'an activity, research, skill or clinical row was saved' },
@@ -175,7 +171,6 @@ export const QUEST_METRICS = {
  */
 export const QUEST_CATEGORIES = {
   pathway:     { id: 'pathway',     order: 1, label: 'Pathway',     color: '#3b82f6', icon: 'Route',      blurb: 'The lessons that finish a health-career track.' },
-  sat:         { id: 'sat',         order: 2, label: 'SAT',         color: '#0ea5e9', icon: 'Target',     blurb: 'Score work: volume, accuracy, full tests, and the review log.' },
   retention:   { id: 'retention',   order: 3, label: 'Retention',   color: '#8b5cf6', icon: 'Layers3',    blurb: 'Flashcards and quizzes — remembering it a month later.' },
   mastery:     { id: 'mastery',     order: 4, label: 'Mastery',     color: '#ec4899', icon: 'TrendingUp', blurb: 'Doing it well, not just doing it.' },
   consistency: { id: 'consistency', order: 5, label: 'Consistency', color: '#10b981', icon: 'Flame',      blurb: 'Showing up, on days nobody is watching.' },
@@ -204,11 +199,6 @@ export const QUEST_CHAINS = {
     id: 'pathway_road', label: 'The Pathway Road', color: '#3b82f6', icon: 'Route',
     blurb: 'Three lessons, then five, then twelve, then a track. The spine of the whole product.',
     steps: ['path_warmup', 'path_first_unit', 'path_steady_dozen', 'path_crucible', 'path_legend'],
-  },
-  sat_ladder: {
-    id: 'sat_ladder', label: 'The Score Ladder', color: '#0ea5e9', icon: 'Target',
-    blurb: 'Thirty questions to nine hundred, with accuracy work in the middle where it belongs.',
-    steps: ['sat_warmup', 'sat_first_hundred', 'sat_accuracy_drive', 'sat_grind', 'sat_legend'],
   },
   habit_ladder: {
     id: 'habit_ladder', label: 'The Habit Ladder', color: '#10b981', icon: 'Flame',
@@ -334,98 +324,6 @@ export const QUESTS = [
     icon: 'BookOpen', surfaces: ['prep'], season: 'any',
   },
 
-  // ── SAT ───────────────────────────────────────────────────────────────────
-  {
-    id: 'sat_warmup',
-    title: 'Thirty to Start',
-    blurb: 'Answer 30 SAT questions in 7 days, capped at 10 a day.',
-    proof: 'Any SAT question answered in Practice, a Full Test, or the Baseline counts once.',
-    why: 'The cheapest way into the SAT tab. Thirty questions is one short session a day for three days and is enough for the skill heat map to have something to say.',
-    category: 'sat', tier: 'starter', metric: 'sat_question',
-    target: 30, windowDays: 7, dailyCap: 10, minActiveDays: 3,
-    icon: 'Sparkles', surfaces: ['sat', 'home'], chain: 'sat_ladder', chainStep: 1, season: 'any',
-  },
-  {
-    id: 'sat_first_hundred',
-    title: 'First Hundred',
-    blurb: 'Answer 100 SAT questions in 14 days, capped at 25 a day.',
-    proof: 'Any SAT question answered in Practice, a Full Test, or the Baseline counts once.',
-    why: 'The entry point to score work. A hundred questions is where the skill breakdown stops being noise and starts telling you which section is actually the problem.',
-    category: 'sat', tier: 'standard', metric: 'sat_question',
-    target: 100, windowDays: 14, dailyCap: 25, minActiveDays: 4,
-    icon: 'Target', surfaces: ['sat', 'home'], chain: 'sat_ladder', chainStep: 2, season: 'any',
-  },
-  {
-    id: 'sat_accuracy_drive',
-    title: 'Two Hundred and Fifty Right',
-    blurb: 'Get 250 SAT questions CORRECT in 21 days, capped at 20 a day.',
-    proof: 'Only correct answers count. A wrong answer costs nothing but moves nothing.',
-    why: 'The one SAT quest volume cannot brute-force. A student guessing their way through practice sees this bar barely move, which is the feedback a raw question count can never give them.',
-    category: 'sat', tier: 'hard', metric: 'sat_correct',
-    target: 250, windowDays: 21, dailyCap: 20, minActiveDays: 13,
-    icon: 'CircleCheck', surfaces: ['sat', 'home'], chain: 'sat_ladder', chainStep: 3, season: 'test',
-  },
-  {
-    id: 'sat_grind',
-    title: 'The Question Grind',
-    blurb: 'Answer 400 SAT questions in 28 days, capped at 40 a day.',
-    proof: 'Four hundred questions across a month. The cap means at least ten days of real sessions.',
-    why: 'Volume is the part of SAT prep with the most reliable relationship to a score, and the part students avoid. The daily cap is what makes this training rather than a cram.',
-    category: 'sat', tier: 'elite', metric: 'sat_question',
-    target: 400, windowDays: 28, dailyCap: 40, minActiveDays: 12,
-    icon: 'Layers', surfaces: ['sat', 'home'], chain: 'sat_ladder', chainStep: 4, season: 'test',
-  },
-  {
-    id: 'sat_legend',
-    title: 'Test-Season Siege',
-    blurb: '900 SAT questions in 42 days, capped at 50 a day, across at least 24 days.',
-    proof: 'Nine hundred questions and twenty-four separate days of work in six weeks.',
-    why: 'Assign this only against a real test date eight to ten weeks out. It is the whole of a serious prep season, and the reward is priced to match.',
-    category: 'sat', tier: 'legendary', metric: 'sat_question',
-    target: 900, windowDays: 42, dailyCap: 50, minActiveDays: 24,
-    icon: 'Crown', surfaces: ['sat', 'home'], chain: 'sat_ladder', chainStep: 5, season: 'test',
-  },
-  {
-    id: 'sat_three_tests',
-    title: 'Three Under Timing',
-    blurb: 'Sit 3 full-length SAT tests in 28 days — one per day, maximum.',
-    proof: 'A full-length adaptive test, finished. A test abandoned halfway does not count.',
-    why: 'Nothing predicts a real test-day score like a timed full-length test, and nothing gets postponed harder. Three of them in a month is how a projected score becomes a real one.',
-    category: 'sat', tier: 'elite', metric: 'sat_full_test',
-    target: 3, windowDays: 28, dailyCap: 1, minActiveDays: 3,
-    icon: 'ClipboardList', surfaces: ['sat'], season: 'test',
-  },
-  {
-    id: 'sat_review_habit',
-    title: 'The Review Habit',
-    blurb: 'Clear 12 review-log items in 14 days, capped at 2 a day.',
-    proof: 'An item clears when the question behind it has been reworked and understood, not dismissed.',
-    why: 'The gentle version of clearing the log. Two a day for six days is a habit rather than a chore, and it is the habit that stops the log becoming the intimidating pile students abandon.',
-    category: 'sat', tier: 'standard', metric: 'sat_review_clear',
-    target: 12, windowDays: 14, dailyCap: 2, minActiveDays: 6,
-    icon: 'ListChecks', surfaces: ['sat'], season: 'any',
-  },
-  {
-    id: 'sat_clear_the_log',
-    title: 'Clear the Review Log',
-    blurb: 'Clear 30 review-log items in 21 days, capped at 6 a day.',
-    proof: 'An item clears when the question behind it has been reworked and understood, not dismissed.',
-    why: 'The review log is the list of things they got wrong and have not fixed. It is the highest-value work in the SAT tab and the least fun, which is exactly what a quest is for.',
-    category: 'sat', tier: 'hard', metric: 'sat_review_clear',
-    target: 30, windowDays: 21, dailyCap: 6, minActiveDays: 6,
-    icon: 'AlertTriangle', surfaces: ['sat'], season: 'test',
-  },
-  {
-    id: 'sat_marathon_month',
-    title: 'Six Hundred Right',
-    blurb: 'Get 600 SAT questions correct in 42 days, capped at 30 a day, across at least 22 days.',
-    proof: 'Six hundred correct answers, and twenty-two separate days of work behind them.',
-    why: 'The accuracy counterpart to Test-Season Siege, and harder than it looks: a student at 60% accuracy has to answer a thousand questions to finish this. Assign it against a real test date with two months of runway.',
-    category: 'sat', tier: 'legendary', metric: 'sat_correct',
-    target: 600, windowDays: 42, dailyCap: 30, minActiveDays: 22,
-    icon: 'Crosshair', surfaces: ['sat'], season: 'test',
-  },
-
   // ── Retention ─────────────────────────────────────────────────────────────
   {
     id: 'flash_warmup',
@@ -549,7 +447,7 @@ export const QUESTS = [
     why: 'The gentlest thing in the catalog. Three days out of five is a promise a student in a bad week can still keep, and keeping one is what makes the next one worth starting.',
     category: 'consistency', tier: 'starter', metric: 'study_day',
     target: 3, windowDays: 5, dailyCap: 1, minActiveDays: 3,
-    icon: 'Sparkles', surfaces: ['home', 'prep', 'sat', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 1, season: 'any',
+    icon: 'Sparkles', surfaces: ['home', 'prep', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 1, season: 'any',
   },
   {
     id: 'consist_first_week',
@@ -569,7 +467,7 @@ export const QUESTS = [
     why: 'The purest discipline quest in the catalog. It says nothing about what they study, only that they show up ten days out of fourteen.',
     category: 'consistency', tier: 'hard', metric: 'study_day',
     target: 10, windowDays: 14, dailyCap: 1, minActiveDays: 10,
-    icon: 'Flame', surfaces: ['home', 'prep', 'sat', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 3, season: 'any',
+    icon: 'Flame', surfaces: ['home', 'prep', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 3, season: 'any',
   },
   {
     id: 'consist_month',
@@ -579,7 +477,7 @@ export const QUESTS = [
     why: 'The hardest thing in this app that has nothing to do with talent. A student who finishes this has built the habit the rest of the product is trying to build.',
     category: 'consistency', tier: 'legendary', metric: 'study_day',
     target: 25, windowDays: 30, dailyCap: 1, minActiveDays: 25,
-    icon: 'CalendarCheck', surfaces: ['home', 'prep', 'sat', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 4, season: 'any',
+    icon: 'CalendarCheck', surfaces: ['home', 'prep', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 4, season: 'any',
   },
   {
     id: 'consist_mythic_season',
@@ -589,7 +487,7 @@ export const QUESTS = [
     why: 'The top of the habit ladder and the largest reward in the app. Assign this only to a student who has already finished Twenty-Five in Thirty — it is a summer, or a whole term, and starting it cold is how a student learns that quests are not finishable.',
     category: 'consistency', tier: 'mythic', metric: 'study_day',
     target: 45, windowDays: 56, dailyCap: 1, minActiveDays: 45,
-    icon: 'Infinity', surfaces: ['home', 'prep', 'sat', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 5, season: 'summer',
+    icon: 'Infinity', surfaces: ['home', 'prep', 'portfolio', 'plans'], chain: 'habit_ladder', chainStep: 5, season: 'summer',
   },
   {
     id: 'consist_weekends',
@@ -637,7 +535,7 @@ export const QUESTS = [
     id: 'explore_first_questions',
     title: 'Ask Five Questions',
     blurb: 'Ask Medabrain 5 questions in 7 days, capped at 2 a day.',
-    proof: 'A question sent to Medabrain anywhere in the app — the coach, a lesson, the SAT tab.',
+    proof: 'A question sent to Medabrain anywhere in the app — the coach, a lesson, the Portfolio panel.',
     why: 'Students who never ask the coach anything are the students who quietly stall on the first thing they do not understand. Five questions is enough to find out it answers properly.',
     category: 'exploration', tier: 'starter', metric: 'coach_session',
     target: 5, windowDays: 7, dailyCap: 2, minActiveDays: 3,
@@ -869,7 +767,7 @@ export function questsInCategory(categoryId) {
     .sort((a, b) => tierRank(a.tier) - tierRank(b.tier));
 }
 
-/** Every quest whose strip belongs on a given app surface ('prep', 'sat', …). */
+/** Every quest whose strip belongs on a given app surface ('prep', 'portfolio', …). */
 export function questsForSurface(surface) {
   return QUESTS.filter((q) => q.surfaces.includes(surface));
 }

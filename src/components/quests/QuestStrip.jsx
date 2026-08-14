@@ -2,9 +2,9 @@
 // The quest strip — one line, everywhere.
 //
 // This is the component that makes quests part of the app rather than a tab in
-// it. It sits at the top of Prep, SAT, Portfolio and Plans, and it shows the
+// it. It sits at the top of Prep, Portfolio and Plans, and it shows the
 // quest that is earned ON THAT SCREEN: a flashcard quest on the Flashcards tab
-// is one tap from progress; the same quest on the SAT tab is an interruption.
+// is one tap from progress; the same quest on the Portfolio tab is an interruption.
 // `surface` is what the engine biases on (featuredFor), and a claimable quest
 // overrides the bias from anywhere, because claiming is one tap regardless.
 //
@@ -24,7 +24,7 @@ import { questIcon } from './questIcons';
 
 export default function QuestStrip({
   rows = [],
-  surface = null,     // 'prep' | 'sat' | 'portfolio' | 'plans' | 'home'
+  surface = null,     // 'prep' | 'portfolio' | 'plans' | 'home'
   onOpen,             // → the board
   onClaim,
   busyId = null,

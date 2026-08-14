@@ -271,7 +271,7 @@ function StudentCard({ entry, onOpen, href }) {
     { label: 'This week', value: `${effort.activeDaysLast7 ?? 0}/7 days` },
     { label: 'Lessons passed', value: summary?.coursework?.lessonsVerified ?? 0 },
     { label: 'Quiz average', value: quizzes.averageScore != null ? `${quizzes.averageScore}%` : '—' },
-    { label: 'Latest test', value: summary?.testing?.total ?? '—' },
+    { label: 'Units mastered', value: summary?.coursework?.unitsVerified ?? 0 },
   ];
 
   return (
@@ -412,9 +412,9 @@ function Guide({ user, onGo }) {
           Practice, not exams, and quizzes get harder as they progress — a dip usually means new
           material rather than a problem.
         </Line>
-        <Line term="Practice-test scores">
-          The one number that maps to the real thing. Test-to-test movement is noisy; the direction
-          over three or four is the signal.
+        <Line term="Units mastered">
+          A whole unit finished and its unit quiz passed — the largest single chunk of the
+          curriculum, and the one worth mentioning at dinner.
         </Line>
       </Block>
 
@@ -965,7 +965,7 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {view === 'students' && (
         noStudents ? inviteCta : (
           <div style={CC({ gap: 18 })}>
-            <SectionTitle sub="One page each. Open a student for their full dashboard — study days, coursework, tests and what changed recently.">
+            <SectionTitle sub="One page each. Open a student for their full dashboard — study days, coursework and what changed recently.">
               Students
             </SectionTitle>
             {students.map((s) => (

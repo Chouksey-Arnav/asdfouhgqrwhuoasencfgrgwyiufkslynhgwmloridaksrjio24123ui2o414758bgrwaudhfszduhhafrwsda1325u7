@@ -29,8 +29,8 @@
 //      cross-year leakage.
 //   2. A GENERATED DATE IS NEVER A PROMISE. Milestones the student didn't enter
 //      carry confidence:'typical' and say so in the UI. FAFSA has opened Oct 1
-//      in recent years; the March SAT is usually the second Saturday. "Usually"
-//      is the honest word and it stays in the product. Only dates the student
+//      in recent years, and AP exams usually run over the first two weeks of
+//      May. "Usually" is the honest word and it stays in the product. Only dates the student
 //      (or their college list) actually supplied are 'exact'.
 //   3. A MILESTONE THEY'VE ALREADY HANDLED STOPS NAGGING. Every catalog entry
 //      can declare done(ctx) against real rows, so "ask two teachers for
@@ -70,9 +70,9 @@ export function shiftDays(key, n) {
 }
 
 /**
- * The date of the Nth given weekday of a month — how the real SAT/ACT calendar
- * is actually shaped ("the first Saturday in October", "the second Saturday in
- * March"), which is far closer to the truth than pinning a fixed day number.
+ * The date of the Nth given weekday of a month — how a real admissions
+ * calendar is actually shaped ("the first Saturday in October"), which is far
+ * closer to the truth than pinning a fixed day number.
  * weekday: 0=Sun..6=Sat. n is 1-based; n=-1 means the last one in the month.
  */
 export function nthWeekday(year, month1, weekday, n) {
@@ -175,7 +175,6 @@ export function resolveDate(yearSlot, monthDay, years) {
 // theme imports so it can run under plain Node.
 export const TIMELINE_KINDS = [
   { id: 'application', label: 'Applications', colorKey: 'violet', blurb: 'Submitting to colleges — the dates that cannot slip.' },
-  { id: 'testing',     label: 'Testing',      colorKey: 'sky',     blurb: 'SAT/ACT/PSAT/AP sittings and their registration cutoffs.' },
   { id: 'aid',         label: 'Money & Aid',  colorKey: 'green',   blurb: 'FAFSA, CSS Profile, and scholarship windows.' },
   { id: 'essays',      label: 'Essays',       colorKey: 'fuchsia', blurb: 'Drafting time, not just due dates.' },
   { id: 'recommenders',label: 'Recommenders', colorKey: 'pink',    blurb: 'Asking early is the whole game here.' },
@@ -291,21 +290,6 @@ export const MILESTONES = [
     done: (c) => c.leadershipRoles > 0, doneLabel: 'Leading something',
   },
   {
-    id: 'so_psat', title: 'PSAT (practice year)', kind: 'testing', weight: P.important,
-    grades: ['sophomore'], year: 'sophomore', monthDay: '10-15',
-    detail: 'Sophomore PSAT does not count for National Merit — it is a free, low-stakes read on where you actually are. Treat the score report as a study plan, not a verdict.',
-    action: { tab: 'sat', view: 'diagnostic', label: 'Take the SAT diagnostic' },
-    why: () => 'It is the first real, timed data point you will have, and it costs you nothing.',
-  },
-  {
-    id: 'so_sat_baseline', title: 'Get a real SAT baseline', kind: 'testing', weight: P.important,
-    grades: ['sophomore'], year: 'sophomore', monthDay: '01-20',
-    detail: 'Take the in-app diagnostic so there is a measured starting point before junior year. You cannot plan a score jump from a number nobody has measured.',
-    action: { tab: 'sat', view: 'diagnostic', label: 'Open the diagnostic' },
-    why: (c) => c.satTargetScore ? `You are aiming for a ${c.satTargetScore} — a baseline is what turns that into a plan.` : 'A measured baseline is what makes every later study decision non-random.',
-    done: (c) => c.satDiagnosticDone, doneLabel: 'Baseline measured',
-  },
-  {
     id: 'so_course_selection', title: 'Pick next year\'s courses — junior year is the one they read hardest', kind: 'academics', weight: P.critical,
     grades: ['sophomore'], year: 'sophomore', monthDay: '02-10',
     detail: 'Junior year rigor is the single most-scrutinized line on a transcript. Choose the hardest science and math load you can carry without wrecking the grade.',
@@ -346,22 +330,6 @@ export const MILESTONES = [
     grades: ['junior'], year: 'junior', monthDay: '08-25',
     detail: 'This is the last full year of grades most colleges will see before they decide. Everything from here is about consistency, not heroics.',
     why: () => 'Junior year grades carry more weight in admissions than any other single year.',
-  },
-  {
-    id: 'jr_fall_test_reg', title: 'Register for a fall SAT/ACT sitting', kind: 'testing', weight: P.critical,
-    grades: ['junior'], year: 'junior', monthDay: '09-05',
-    detail: 'Registration closes about four weeks before each test date, and late registration costs extra. Pick your date now and work backward from it.',
-    action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-    when: (c) => c.testTimeline !== 'unscheduled' || c.gradeStage === 'junior',
-    why: (c) => c.examDate ? `Your test date is set for ${c.examDate} — this is the registration window that protects it.` : 'You have not set a test date yet, and the seats at nearby test centers go first.',
-    done: (c) => !!c.examDate, doneLabel: 'Date set',
-  },
-  {
-    id: 'jr_psat', title: 'PSAT/NMSQT — the one that counts', kind: 'testing', weight: P.critical,
-    grades: ['junior'], year: 'junior', monthDay: '10-15',
-    detail: 'Junior-year PSAT is the only one that qualifies for National Merit. Same format as the digital SAT, so SAT prep is PSAT prep.',
-    action: { tab: 'sat', view: 'practice', label: 'Practice' },
-    why: () => 'This is the only administration that can put National Merit money on the table.',
   },
   {
     id: 'jr_college_fair', title: 'Go to a college fair or info session', kind: 'planning', weight: P.helpful,
@@ -473,16 +441,6 @@ export const MILESTONES = [
     action: { tab: 'portfolio', view: 'colleges', label: 'Open your college list' },
     why: () => 'Application season starts here, and the students who read all the supplements in August never panic in October.',
     done: (c) => c.collegesStarted > 0, doneLabel: 'Started',
-  },
-  {
-    id: 'sr_fall_test_reg', title: 'Register for your last SAT/ACT', kind: 'testing', weight: P.critical,
-    grades: ['senior', 'gap'], year: 'senior', monthDay: '08-25',
-    detail: 'For early deadlines, an October sitting is usually the last score that arrives in time; for regular decision, December. Registration closes about four weeks ahead.',
-    action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-    when: (c) => !c.satSatisfied,
-    why: (c) => c.satTargetScore && c.satProjectionMid
-      ? `Your measured range centers near ${c.satProjectionMid} against a ${c.satTargetScore} target — one more sitting is still worth it.`
-      : 'One more sitting before early deadlines is the last score most schools will see.',
   },
   {
     id: 'sr_confirm_recs', title: 'Confirm recommenders — now, not October', kind: 'recommenders', weight: P.critical,
@@ -690,81 +648,10 @@ export const MILESTONES = [
   },
 ];
 
-// ── Test administrations ─────────────────────────────────────────────────────
-// Shaped the way the real calendar is shaped ("first Saturday in October"), not
-// as fixed day numbers. Still flagged 'typical': the College Board and ACT
-// publish exact dates a year ahead and occasionally move one.
-const SAT_ADMINISTRATIONS = [
-  { month: 8,  nth: -1, label: 'August SAT' },
-  { month: 10, nth: 1,  label: 'October SAT' },
-  { month: 11, nth: 1,  label: 'November SAT' },
-  { month: 12, nth: 1,  label: 'December SAT' },
-  { month: 3,  nth: 2,  label: 'March SAT' },
-  { month: 5,  nth: 1,  label: 'May SAT' },
-  { month: 6,  nth: 1,  label: 'June SAT' },
-];
-const ACT_ADMINISTRATIONS = [
-  { month: 9,  nth: 2, label: 'September ACT' },
-  { month: 10, nth: 4, label: 'October ACT' },
-  { month: 12, nth: 2, label: 'December ACT' },
-  { month: 2,  nth: 2, label: 'February ACT' },
-  { month: 4,  nth: 2, label: 'April ACT' },
-  { month: 6,  nth: 2, label: 'June ACT' },
-  { month: 7,  nth: 3, label: 'July ACT' },
-];
-// Registration closes roughly four weeks out for both tests. We surface it as a
-// derived "register by" milestone rather than a promise of an exact cutoff.
-const REGISTRATION_LEAD_DAYS = 28;
-
-/**
- * Which sittings this student should see, and why.
- *
- * Freshmen see none — a freshman does not have an SAT date, and putting seven
- * of them on the calendar is exactly the noise this engine exists to prevent.
- * Juniors get their spring run plus the senior-fall last chances; seniors get
- * fall only, because a March sitting of senior year reaches nobody in time.
- */
-export function testAdministrationsFor(ctx) {
-  const { gradeStage, years, testTrack } = ctx;
-  // No grade on record means no class-year calendar to hang a sitting off, and a
-  // guessed one would be worse than none.
-  if (!gradeStage || gradeStage === 'freshman' || gradeStage === 'sophomore') return [];
-  const admins = testTrack === 'ACT' ? ACT_ADMINISTRATIONS : SAT_ADMINISTRATIONS;
-  const track = testTrack === 'ACT' ? 'ACT' : 'SAT';
-  const slots = [];
-  if (gradeStage === 'junior') {
-    // Junior spring is the standard first real sitting; senior fall is the retake.
-    slots.push({ yearSlot: 'junior', months: [3, 5, 6], note: 'Junior spring is the standard first real sitting.' });
-    slots.push({ yearSlot: 'senior', months: [8, 9, 10], note: 'Senior-fall retake — the last score early deadlines will see.' });
-  } else {
-    slots.push({ yearSlot: 'senior', months: [8, 9, 10, 11, 12], note: 'The last sittings that reach early and regular deadlines in time.' });
-  }
-  const out = [];
-  slots.forEach(({ yearSlot, months, note }) => {
-    admins.filter(a => months.includes(a.month)).forEach(a => {
-      const fall = years[yearSlot];
-      const year = a.month >= 8 ? fall : fall + 1;
-      const date = nthWeekday(year, a.month, 6, a.nth);
-      out.push({ date, label: a.label, track, note, yearSlot });
-    });
-  });
-  return out.sort((a, b) => a.date.localeCompare(b.date));
-}
-
-// ── Context ──────────────────────────────────────────────────────────────────
-
 const arr = (v) => (Array.isArray(v) ? v : []);
 const UC_PATTERN = /university of california|^uc\s|uc\s?(berkeley|davis|irvine|los angeles|merced|riverside|san diego|santa barbara|santa cruz)|ucla|ucsd|ucsb|ucla/i;
 
-/**
- * Everything the catalog is allowed to reason about, in one flat object.
- *
- * Built once per timeline so a milestone's when/done/why can be a cheap pure
- * function of real values rather than each one re-deriving counts from raw rows
- * (which is how two milestones end up disagreeing about how many recommenders
- * a student has).
- */
-export function buildTimelineContext({ user = null, snapshot = {}, testScores = [], sat = {}, now = new Date(), counts = null } = {}) {
+export function buildTimelineContext({ user = null, snapshot = {}, now = new Date(), counts = null } = {}) {
   const gradeStage = effectiveGradeStage(user, now);
   const years = classFallYears(gradeStage, now);
   const colleges = arr(snapshot.colleges);
@@ -782,9 +669,6 @@ export function buildTimelineContext({ user = null, snapshot = {}, testScores = 
 
     // Onboarding-derived
     apIb: !!user?.apIb,
-    testTrack: user?.testTrack === 'ACT' ? 'ACT' : 'SAT',
-    testTimeline: user?.testTimeline || null,
-    examDate: user?.examDate || null,
     certainty: user?.certainty || null,
     dreamRole: user?.dreamRole || null,
     pathway: user?.specialty || null,
@@ -823,11 +707,6 @@ export function buildTimelineContext({ user = null, snapshot = {}, testScores = 
     hasFafsaDeadlineRow: deadlines.some(d => d.kind === 'fafsa'),
     hasApDeadlineRow: deadlines.some(d => d.kind === 'ap_exam' || d.kind === 'ib_exam'),
 
-    // SAT signals
-    satTargetScore: user?.onboardingTargetScore || (testScores.find(s => s.is_target)?.composite ?? null),
-    satProjectionMid: sat?.projection?.mid ?? null,
-    satDiagnosticDone: !!sat?.diagnosticDone || !!user?.satDiagnostic,
-    satSatisfied: !!(sat?.projection?.mid && user?.onboardingTargetScore && sat.projection.mid >= Number(user.onboardingTargetScore)),
 
     // Escape hatch for callers that hold real counts but not the rows behind them.
     // App.jsx keeps running totals (colleges, essays, clinical hours, recommenders…) for the
@@ -873,79 +752,13 @@ function catalogEvents(ctx) {
   return out;
 }
 
-function testingEvents(ctx) {
-  const out = [];
-  // The student's own test date always wins over the generated calendar.
-  if (ctx.examDate) {
-    out.push({
-      id: 'exam_day', date: ctx.examDate, title: `${ctx.testTrack} test day`, kind: 'testing', weight: P.critical,
-      detail: 'The date you set in Settings. Everything in the SAT tab — practice sets, the review log, full-length tests — is paced against it.',
-      source: 'profile', confidence: 'exact',
-      action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-      why: 'This is the date you told us you are testing on.',
-      ...classify(ctx.examDate, ctx.today, { weight: P.critical }),
-    });
-    const reg = shiftDays(ctx.examDate, -REGISTRATION_LEAD_DAYS);
-    if (daysBetween(ctx.today, reg) >= 0) {
-      out.push({
-        id: 'exam_reg', date: reg, title: `Registration closes for your ${ctx.testTrack}`, kind: 'testing', weight: P.critical,
-        detail: 'Registration for both tests closes roughly four weeks before test day, and late registration costs extra and limits which centers are left.',
-        source: 'profile', confidence: 'typical',
-        action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-        why: 'Counted back about four weeks from the test date you set.',
-        ...classify(reg, ctx.today, { weight: P.critical }),
-      });
-    }
-    const release = shiftDays(ctx.examDate, 14);
-    out.push({
-      id: 'exam_scores', date: release, title: `${ctx.testTrack} scores released`, kind: 'testing', weight: P.helpful,
-      detail: 'Digital SAT scores typically post about two weeks after test day; ACT multiple-choice scores in roughly the same window. Log it in the SAT tab so your projection updates.',
-      source: 'profile', confidence: 'typical',
-      action: { tab: 'sat', view: 'scores', label: 'Log your score' },
-      why: 'About two weeks after the test date you set.',
-      ...classify(release, ctx.today, { weight: P.helpful }),
-    });
-  }
-
-  // Generated administrations — a sitting within three weeks of the student's
-  // own test date is dropped rather than printed beside it.
-  testAdministrationsFor(ctx).forEach((a, i) => {
-    if (ctx.examDate && Math.abs(daysBetween(ctx.examDate, a.date)) <= 21) return;
-    out.push({
-      id: `admin_${a.date}`, date: a.date, title: a.label, kind: 'testing', weight: P.important,
-      detail: `${a.note} Confirm the exact date and register on the official ${a.track} site — the calendar is published about a year ahead.`,
-      source: 'catalog', confidence: 'typical',
-      action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-      why: ctx.examDate ? 'A backup sitting near your planned test date.' : `You are a ${ctx.gradeLabel || 'student'} on the ${a.track} track and have not set a test date yet.`,
-      ...classify(a.date, ctx.today, { weight: P.important }),
-    });
-    // Only the next couple of sittings get their own registration reminder —
-    // seven "register by" rows is a wall, not a timeline.
-    if (i < 2) {
-      const reg = shiftDays(a.date, -REGISTRATION_LEAD_DAYS);
-      if (daysBetween(ctx.today, reg) >= -7) {
-        out.push({
-          id: `admin_reg_${a.date}`, date: reg, title: `Register by — ${a.label}`, kind: 'testing', weight: P.important,
-          detail: 'Registration closes about four weeks before test day for both tests, and the nearest test centers fill first.',
-          source: 'catalog', confidence: 'typical',
-          action: { tab: 'sat', view: 'overview', label: 'Open the SAT tab' },
-          why: 'Counted back about four weeks from that sitting.',
-          ...classify(reg, ctx.today, { weight: P.important }),
-        });
-      }
-    }
-  });
-  return out;
-}
-
 const DEADLINE_KIND_MAP = {
   common_app_open: 'application', early_action: 'application', early_decision: 'application',
   regular_decision: 'application', fafsa: 'aid', css_profile: 'aid', scholarship: 'aid',
   ap_exam: 'academics', ib_exam: 'academics', custom: 'application',
 };
 
-/** Events from rows the student actually created — always confidence:'exact'. */
-function profileEvents(ctx, snapshot, testScores) {
+function profileEvents(ctx, snapshot) {
   const out = [];
   const today = ctx.today;
 
@@ -1053,18 +866,6 @@ function profileEvents(ctx, snapshot, testScores) {
     });
   });
 
-  arr(testScores).forEach(s => {
-    if (s.is_target || !s.test_date) return;
-    out.push({
-      id: `score_${s.id || s.test_date}`, date: s.test_date, title: `${s.test_type} ${s.composite}`,
-      kind: 'logged', weight: P.helpful,
-      detail: 'A score you logged. Your projection and study plan both read from these.',
-      source: 'profile', confidence: 'exact',
-      action: { tab: 'sat', view: 'scores', label: 'Open scores' },
-      why: 'From your score history.',
-      ...classify(s.test_date, today, { weight: P.helpful }),
-    });
-  });
 
   return out;
 }
@@ -1106,16 +907,14 @@ export function groupUpcoming(events, today) {
 /**
  * The whole timeline for one student.
  *
- * @param {object}   opts.user        the local user record (grade, onboarding answers, examDate)
+ * @param {object}   opts.user        the local user record (grade, onboarding answers)
  * @param {object}   opts.snapshot    buildPortfolioSnapshot() output
- * @param {Array}    opts.testScores  rows from the test_scores resource
- * @param {object}   opts.sat         { projection, diagnosticDone } from the SAT tab
  * @param {Date}     opts.now         injectable clock (the verify script pins it)
  * @param {object}   opts.counts      optional overrides for callers holding counts, not rows
  */
-export function buildTimeline({ user = null, snapshot = {}, testScores = [], sat = {}, now = new Date(), counts = null } = {}) {
-  const ctx = buildTimelineContext({ user, snapshot, testScores, sat, now, counts });
-  const raw = [...catalogEvents(ctx), ...testingEvents(ctx), ...profileEvents(ctx, snapshot, testScores)];
+export function buildTimeline({ user = null, snapshot = {}, now = new Date(), counts = null } = {}) {
+  const ctx = buildTimelineContext({ user, snapshot, now, counts });
+  const raw = [...catalogEvents(ctx), ...profileEvents(ctx, snapshot)];
 
   // Dedupe by id, then sort: date first, then priority, then title — so two
   // things on the same day always come out in the same order for the same input.

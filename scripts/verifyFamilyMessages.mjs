@@ -200,11 +200,11 @@ section('A parent says something and the student answers');
   const { parent, student, link } = connect();
 
   const sent = await call('POST', parent.token, {
-    body: { linkId: link.id, kind: 'quiz_request', topic: 'SAT Math', body: 'Ten minutes before dinner would do it.' },
+    body: { linkId: link.id, kind: 'quiz_request', topic: 'Math & Data', body: 'Ten minutes before dinner would do it.' },
   });
   assert('the parent can send a quiz request', sent.statusCode === 200, JSON.stringify(sent.body));
   assert('…which comes back marked as theirs', sent.body?.message?.mine === true);
-  assert('…carrying the topic they chose', sent.body?.message?.topic === 'SAT Math');
+  assert('…carrying the topic they chose', sent.body?.message?.topic === 'Math & Data');
   assert('…and starts open', sent.body?.message?.status === 'open');
 
   const inbox = await call('GET', student.token);

@@ -26,7 +26,7 @@ export const CHAPTERS = [
     key: 'why',
     label: 'Your why',
     rail: 'Why medicine?',
-    line: 'Before any scores or schedules — the reason you clicked into this at all.',
+    line: 'Before any schedules or checklists — the reason you clicked into this at all.',
     accent: 'rose',
     emoji: '🩺',
   },
@@ -50,7 +50,7 @@ export const CHAPTERS = [
     key: 'aim',
     label: 'Where you’re going',
     rail: 'What you’re aiming at',
-    line: 'The target, the timeline, and a straight answer about whether they fit.',
+    line: 'What you want most out of this, and the time you can honestly give it.',
     accent: 'violet',
     emoji: '🎯',
   },
@@ -78,10 +78,8 @@ export const STEP_CHAPTER = {
   rhythm: 'rhythm',
   showcase: 'rhythm',
 
-  target: 'aim',
-  realistic: 'aim',
+  goal: 'aim',
   speed: 'aim',
-  paceForecast: 'aim',
 
   challenges: 'plan',
   obstacleEmpathy: 'plan',
@@ -98,7 +96,7 @@ export const STEP_CHAPTER = {
 // ever asked about ten things.
 export const QUESTION_STEPS = new Set([
   'why', 'startingPoint', 'academics', 'experience',
-  'rhythm', 'target', 'speed', 'challenges', 'prefs', 'saveProgress',
+  'rhythm', 'goal', 'speed', 'challenges', 'prefs', 'saveProgress',
 ]);
 
 export const chapterByKey = (key) => CHAPTERS.find(c => c.key === key) || null;

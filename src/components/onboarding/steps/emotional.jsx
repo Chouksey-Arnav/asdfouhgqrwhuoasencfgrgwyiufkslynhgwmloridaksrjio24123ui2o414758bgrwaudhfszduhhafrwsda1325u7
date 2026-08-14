@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { Quote, Sparkles, CheckCircle2, Target, Clock3, HeartPulse, Flag } from 'lucide-react';
 import { StepHeader, ContinueButton, CompareBars, C } from '../primitives';
 import { LogoMark, EKGLine } from '../brand';
-import { identityContent, experienceInsight, obstacleEmpathy, gradeInfo, scoreScenario, COMMIT_LEVELS } from '../personalize';
+import { identityContent, experienceInsight, obstacleEmpathy, gradeInfo, COMMIT_LEVELS } from '../personalize';
 import { play } from '../../../lib/sounds';
 
 // ── Identity: "Future Physician" ─────────────────────────────────────────────
@@ -103,23 +103,17 @@ export function ObstacleEmpathyStep({ answers, onNext }) {
 // Recaps the student's own numbers as a personal pledge, each line landing in
 // sequence, then hands straight off to plan generation — the flow's peak.
 export function CommitmentStep({ answers, onNext }) {
-  const { targetScore, testTrack, speedLevel, gradeIdx } = answers;
+  const { speedLevel, gradeIdx } = answers;
   const minutes = (COMMIT_LEVELS[speedLevel] || COMMIT_LEVELS[1]).minutes;
   const g = gradeInfo(gradeIdx);
-  const sc = scoreScenario(answers);
-  // The score pledge tells the truth the trajectory screen already told: an
-  // already-there or nearly-done score pledges maintenance-plus-story, an
-  // impossible-timeline gap pledges the honest interim number, everyone else
-  // pledges their real target.
-  const scorePledge = (sc.band === 'beyond' || sc.band === 'polish')
-    ? `Keep my ${testTrack} sharp — and pour my real energy into experiences and my story.`
-    : sc.band === 'reset'
-      ? `Chase ${sc.achievable} on the ${testTrack} this sitting — then take the mapped road to ${targetScore}.`
-      : `Aim for ${targetScore} on the ${testTrack} — my number, my reasons.`;
+  // The third pledge used to be a target SAT/ACT score. It went with the SAT
+  // pillar (src/lib/betaFlags.js) — a pledge the product cannot help anyone
+  // keep is not a pledge. What replaced it is the commitment this app is
+  // actually built to support: the science foundation underneath everything.
   const pledges = [
     { icon: HeartPulse, color: C.roseL, text: 'Take one real step toward medicine every week — experience, science, or story.' },
     { icon: Clock3, color: C.amberL, text: `Show up for ~${minutes} focused minutes a day. Small days, big compounding.` },
-    { icon: Target, color: C.blueL, text: scorePledge },
+    { icon: Target, color: C.blueL, text: 'Build the science foundation medicine runs on — one lesson, one quiz at a time.' },
     { icon: Flag, color: C.greenL, text: `Trust the plan, one ${g.label}-sized week at a time.` },
   ];
   const [armed, setArmed] = useState(false);

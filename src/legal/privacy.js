@@ -102,7 +102,7 @@ export const PRIVACY_SECTIONS = [
       },
       {
         list: [
-          'Account details: your email address, and — if you set them — a display name, your grade level, and your test track (SAT or ACT). If you sign in with Google, we receive your Google account email address and whether it is verified; we never receive your Google password.',
+          'Account details: your email address, and — if you set them — a display name and your grade level. If you sign in with Google, we receive your Google account email address and whether it is verified; we never receive your Google password.',
           'Date of birth: collected during onboarding to verify you meet the minimum age.',
           'Authentication data: a hashed form of your password (we never store the password itself), and short-lived one-time sign-in codes together with the IP address that requested them, which we use to rate-limit abuse of the code-sending endpoint.',
           'Study data you create: practice and quiz results, flashcard review history, lesson completion, study sessions, streaks, and achievements.',

@@ -5,7 +5,7 @@
 // to reach it were: be sent an invitation by a student who already knew the feature existed, or
 // notice a second option inside a role picker on the sign-up form. A parent who typed the site
 // into their phone and looked for "how do I see how my daughter is doing" found a marketing page
-// about the SAT and no answer.
+// aimed at students and no answer.
 //
 // So there is a page now, at a URL a person can be told over the phone, and it is public in
 // exactly the sense the legal documents are: it renders for someone signed out, someone signed

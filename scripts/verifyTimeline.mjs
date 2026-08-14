@@ -24,7 +24,7 @@ import {
   MILESTONES, TIMELINE_KINDS, KIND_BY_ID, GRADE_KEYS,
   buildTimeline, buildTimelineContext, summarizeTimelineForPrompt,
   academicFallYear, classFallYears, effectiveGradeStage, resolveDate, nthWeekday,
-  daysBetween, dayKey, shiftDays, testAdministrationsFor, groupUpcoming,
+  daysBetween, dayKey, shiftDays, groupUpcoming,
 } from '../src/lib/timeline.js';
 
 let passed = 0;
@@ -41,15 +41,15 @@ const NOW = new Date(2026, 9, 15, 12, 0, 0); // 2026-10-15, local
 const SPRING = new Date(2027, 2, 3, 12, 0, 0); // 2027-03-03 — same school year, other side of Jan 1
 
 const userFor = (gradeStage, extra = {}) => ({
-  name: 'Test', gradeStage, gradeStageYear: 2026, testTrack: 'SAT', ...extra,
+  name: 'Test', gradeStage, gradeStageYear: 2026, ...extra,
 });
 const EMPTY = {
   activities: [], awards: [], colleges: [], deadlines: [], essays: [], essayVersions: [],
   scholarships: [], research: [], skills: [], clinicalHours: [], recommenders: [],
   gpaEntries: [], interviewSessions: [],
 };
-const build = (gradeStage, { user = {}, snapshot = {}, testScores = [], sat = {}, now = NOW } = {}) =>
-  buildTimeline({ user: userFor(gradeStage, user), snapshot: { ...EMPTY, ...snapshot }, testScores, sat, now });
+const build = (gradeStage, { user = {}, snapshot = {}, now = NOW } = {}) =>
+  buildTimeline({ user: userFor(gradeStage, user), snapshot: { ...EMPTY, ...snapshot }, now });
 
 // ─── 1. Date primitives ───────────────────────────────────────────────────────
 eq('academicFallYear: October 2026 is the 2026 school year', academicFallYear(NOW), 2026);
@@ -135,7 +135,6 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
     [...t.events.filter(e => e.kind === 'application').map(e => e.title)].join(', '));
   assert('freshman sees no recommender milestones', !kinds.has('recommenders'),
     [...t.events.filter(e => e.kind === 'recommenders').map(e => e.title)].join(', '));
-  assert('freshman gets no SAT/ACT sitting dates', testAdministrationsFor(t.ctx).length === 0);
   assert('freshman still gets a real timeline', t.upcoming.length >= 4, `${t.upcoming.length} upcoming`);
   const horizon = Math.max(...t.events.map(e => daysBetween(t.ctx.today, e.date)));
   assert('freshman horizon stays inside about a year', horizon <= 400, `${horizon} days out`);
@@ -150,8 +149,6 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
   assert('sophomore sees no aid milestones', !kinds.has('aid'));
   assert('sophomore sees no application milestones', !kinds.has('application'));
   assert('sophomore sees no decision milestones', !kinds.has('decision'));
-  assert('sophomore gets the PSAT practice year', t.events.some(e => /PSAT/.test(e.title)));
-  assert('sophomore gets no live SAT sitting dates', testAdministrationsFor(t.ctx).length === 0);
 }
 
 // ─── 5. Juniors and seniors get the heavy calendar ────────────────────────────
@@ -166,12 +163,14 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
   const commonApp = jr.events.find(e => e.id === 'jr_lookahead_commonapp');
   assert('junior gets exactly one senior-year look-ahead', !!commonApp);
   eq('...and it lands on the August after junior year', commonApp?.date, '2027-08-01');
-  assert('junior gets real SAT sittings', testAdministrationsFor(jr.ctx).length >= 4);
-  assert('junior timeline is genuinely dense', jr.upcoming.length >= 12, `${jr.upcoming.length} upcoming`);
+  // Was >= 12. Removing the SAT/ACT calendar (see section 8) took two junior
+  // milestones with it — the fall registration window and the PSAT — so the
+  // honest floor is ten. Anything below that means real content went missing.
+  assert('junior timeline is genuinely dense', jr.upcoming.length >= 10, `${jr.upcoming.length} upcoming`);
 
   const sr = build('senior');
   const srKinds = new Set(sr.events.map(e => e.kind));
-  ['application', 'aid', 'essays', 'recommenders', 'decision', 'testing'].forEach(k =>
+  ['application', 'aid', 'essays', 'recommenders', 'decision'].forEach(k =>
     assert(`senior gets ${k} milestones`, srKinds.has(k)));
   const fafsa = sr.events.find(e => e.id === 'sr_fafsa');
   eq('senior FAFSA lands Oct 1 of senior fall', fafsa?.date, '2026-10-01');
@@ -180,9 +179,6 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
   eq('senior RD deadline lands Jan 1 after senior fall',
     sr.events.find(e => e.id === 'sr_rd')?.date, '2027-01-01');
   assert('senior timeline is dense', sr.upcoming.length >= 12, `${sr.upcoming.length} upcoming`);
-  assert('senior sees no spring SAT sittings (they arrive too late to matter)',
-    !testAdministrationsFor(sr.ctx).some(a => a.date > '2027-01-31'),
-    testAdministrationsFor(sr.ctx).map(a => a.date).join(','));
 
   // A gap-year applicant runs the senior calendar against the CURRENT year.
   const gap = build('gap');
@@ -270,19 +266,26 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
     handled.events.find(e => e.id === 'jr_build_list')?.why);
 }
 
-// ─── 8. Test dates: the student's own date wins ───────────────────────────────
+// ─── 8. No standardized-test calendar at all ──────────────────────────────────
+// The SAT pillar is sealed for v1 (src/lib/betaFlags.js), so the timeline no
+// longer generates SAT/ACT sittings, registration cutoffs, score-release dates
+// or PSAT milestones, and no longer reads a student's exam date. A dated
+// milestone whose only action is "open the SAT tab" would land on a locked
+// screen; these assertions are what stop one creeping back in.
 {
-  const t = build('junior', { user: { examDate: '2027-03-13' } });
-  const day = t.events.find(e => e.id === 'exam_day');
-  eq('the exam date the student set is on the timeline', day?.date, '2027-03-13');
-  eq('...and it is exact, not typical', day?.confidence, 'exact');
-  eq('a registration cutoff is derived four weeks back', t.events.find(e => e.id === 'exam_reg')?.date, '2027-02-13');
-  eq('a score-release date is derived two weeks forward', t.events.find(e => e.id === 'exam_scores')?.date, '2027-03-27');
-  assert('the generated March sitting is suppressed next to their own date',
-    !t.events.some(e => e.id === 'admin_2027-03-13'));
-  const act = build('junior', { user: { testTrack: 'ACT' } });
-  assert('an ACT student gets ACT sittings', act.events.some(e => /ACT/.test(e.title)));
-  assert('...and no SAT sittings', !act.events.some(e => /\bSAT\b/.test(e.title) && e.source === 'catalog' && e.kind === 'testing' && /SAT$/.test(e.title)));
+  for (const stage of ['freshman', 'sophomore', 'junior', 'senior', 'gap']) {
+    const t = build(stage, { user: { examDate: '2027-03-13', testTrack: 'SAT' } });
+    assert(`${stage}: no 'testing' milestones`, !t.events.some(e => e.kind === 'testing'),
+      t.events.filter(e => e.kind === 'testing').map(e => e.title).join(', '));
+    assert(`${stage}: nothing mentions the SAT, the ACT or the PSAT`,
+      !t.events.some(e => /\bP?SAT\b|\bACT\b/.test(`${e.title} ${e.detail || ''}`)),
+      t.events.filter(e => /\bP?SAT\b|\bACT\b/.test(`${e.title} ${e.detail || ''}`)).map(e => e.title).join(', '));
+    assert(`${stage}: nothing sends the student to the sealed SAT tab`,
+      !t.events.some(e => e.action?.tab === 'sat'),
+      t.events.filter(e => e.action?.tab === 'sat').map(e => e.title).join(', '));
+    assert(`${stage}: a stored exam date no longer generates milestones`,
+      !t.events.some(e => ['exam_day', 'exam_reg', 'exam_scores'].includes(e.id)));
+  }
 }
 
 // ─── 9. Personalization from the college list ─────────────────────────────────

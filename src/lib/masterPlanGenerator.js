@@ -45,7 +45,7 @@ import { ELIB } from '../data/elib';
 import {
   GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
-  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS,
 } from '../components/onboarding/Onboarding';
 import { deriveLoad } from './planGenerator';
 
@@ -68,15 +68,13 @@ function gradeIdxFromStage(stage) {
   return idx >= 0 ? idx : 2;
 }
 
-// How many weeks the roadmap should span. A set test date drives it directly;
-// otherwise grade stage stands in for "how much runway does this student have"
-// — a freshman gets a longer horizon than a senior, capped to something a
-// human advisor would actually plan (never a multi-year mega-roadmap).
+// How many weeks the roadmap should span. Grade stage stands in for "how much
+// runway does this student have" — a freshman gets a longer horizon than a
+// senior, capped to something a human advisor would actually plan (never a
+// multi-year mega-roadmap). A test date used to drive this directly; that went
+// with the SAT pillar (src/lib/betaFlags.js), which is also why no plan this
+// generator produces contains test prep any more.
 export function computeHorizonWeeks(user) {
-  if (user?.examDate) {
-    const days = daysBetween(todayStr(), user.examDate);
-    if (days > 0) return Math.min(40, Math.max(6, Math.ceil(days / 7)));
-  }
   const byGrade = [28, 24, 20, 16, 16]; // freshman, sophomore, junior, senior, gap
   return byGrade[gradeIdxFromStage(user?.gradeStage)] ?? 20;
 }
@@ -153,7 +151,7 @@ export function buildResourceCatalog(specialtyKey, gradeStage = null, pathwaySta
     ? null
     : lessonInfo.open.length
       ? `LESSONS THIS STUDENT CAN ACTUALLY START RIGHT NOW (pick pathway lesson tasks ONLY from this list — everything else in the pathway is either finished or still locked behind it): ${lessonInfo.open.slice(0, 12).map(l => `"${l.title}" (${l.unitTitle})`).join('; ')}`
-      : 'THE STUDENT HAS COMPLETED EVERY UNLOCKED PATHWAY LESSON — do not schedule new pathway lessons; use review, quizzes, SAT work and Portfolio tasks instead.';
+      : 'THE STUDENT HAS COMPLETED EVERY UNLOCKED PATHWAY LESSON — do not schedule new pathway lessons; use review, quizzes and Portfolio tasks instead.';
   const quizCatCounts = {};
   for (const q of ALL_QUIZZES) quizCatCounts[q.cat] = (quizCatCounts[q.cat] || 0) + 1;
   const quizCats = Object.keys(quizCatCounts);
@@ -375,7 +373,6 @@ function buildPortfolioGapText(portfolio, user) {
   else if (!p.activities.some(a => a.leadership_role)) add(3, 'No leadership role in any logged activity', 'Portfolio → Activities & Résumé');
   if (isUpperclass && !p.recommenders.length) add(2, 'No recommenders identified yet — teachers get asked early or they get overbooked', 'Portfolio → Recommenders');
   if (isUpperclass && !p.essays.length) add(2, 'No essay drafts started', 'Portfolio → Essay Workspace');
-  if (!p.testScores.length) add(3, 'No test scores logged, so score progress cannot be tracked against their target', 'Portfolio → Test Scores');
   if (!p.gpaEntries.length) add(4, 'No GPA terms logged, so academic trend is invisible to the plan', 'Portfolio → Activities & Résumé (Academics)');
   if (!p.research.length && gradeIdx >= 1) add(4, 'No research experience logged', 'Portfolio → Research Log');
   if (!p.skills.length) add(4, 'No skills/certifications logged (CPR, first aid, lab techniques all count)', 'Portfolio → Skills & Certifications');
@@ -470,13 +467,6 @@ function buildPerformanceFactsText(liveSignals = {}) {
   }
   if (Number.isFinite(s.quizzesTaken)) lines.push(`Quizzes completed so far: ${s.quizzesTaken}.`);
   if (Number.isFinite(s.pathwayMastery)) lines.push(`Pathway lesson completion: ${s.pathwayMastery}%.`);
-  if (s.satProjection) {
-    lines.push(`Current SAT projection: ${s.satProjection.low}-${s.satProjection.high} (midpoint ${s.satProjection.mid}, ${s.satProjection.confidence} confidence).`);
-  } else {
-    lines.push('No SAT projection yet — they have not done enough SAT work in the app to estimate a score.');
-  }
-  if (s.satWeakSkills?.length) lines.push(`Weakest SAT skills right now: ${s.satWeakSkills.slice(0, 6).map(k => (typeof k === 'string' ? k : k?.label || k?.skill)).filter(Boolean).join(', ')}.`);
-  if (s.satOpenReviews > 0) lines.push(`${s.satOpenReviews} SAT question(s) sitting unreviewed in their Review Log — reviewing a miss is worth more than a new question.`);
   if (Number.isFinite(s.dueCards) && s.dueCards > 0) lines.push(`${s.dueCards} flashcard(s) due for review right now.`);
   if (s.applicationStrength) {
     const sub = s.applicationStrength.subscores || {};
@@ -497,8 +487,6 @@ export function buildProfileFactsText(user, liveSignals = {}, portfolio = null, 
   const lines = [
     `Name: ${user?.name || 'the student'}`,
     `Grade: ${gradeLabel}`,
-    `Test track: ${user?.testTrack || 'SAT'} (current ~${user?.onboardingCurrentScore || 'unknown'}, target ~${user?.onboardingTargetScore || 'unknown'})`,
-    user?.examDate ? `Test date: ${user.examDate}` : 'Test date: not set yet',
     `Weekly study time available: ${user?.studyHours || 'unsure'}`,
     `Pace: about ${dailyMinutes} minutes/day, ${weeklyQuestions} practice questions/week`,
     `Primary goal: ${goalLabel}`,
@@ -508,7 +496,6 @@ export function buildProfileFactsText(user, liveSignals = {}, portfolio = null, 
     (user?.gpaBand && user.gpaBand !== 'unsure') ? `Self-reported grades: ${labelOf(GPA_OPTIONS, user.gpaBand)}` : null,
     labelsOf(SCIENCE_OPTIONS, user?.sciences).length ? `Science courses: ${labelsOf(SCIENCE_OPTIONS, user.sciences).join(', ')}` : null,
     labelsOf(EXPERIENCE_OPTIONS, user?.healthExperience).length ? `Hands-on health experience: ${labelsOf(EXPERIENCE_OPTIONS, user.healthExperience).join(', ')}` : null,
-    labelOf(TEST_TIMELINE_OPTIONS, user?.testTimeline) ? `Planned test timing: ${labelOf(TEST_TIMELINE_OPTIONS, user?.testTimeline)}` : null,
     accomplish.length ? `Wants to accomplish: ${accomplish.join(', ')}` : null,
     obstacles.length ? `Their stated obstacles: ${obstacles.join(', ')}` : null,
     (studyMethodLabel && user?.studyMethod !== 'none') ? `Also currently using: ${studyMethodLabel}` : null,
@@ -563,7 +550,7 @@ export function buildProfileFactsText(user, liveSignals = {}, portfolio = null, 
 }
 
 const AGE_APPROPRIATE_RULES = `- They are years away from medical school. NEVER mention the MCAT, medical-school applications, residency, clinical rotations, MMI, or CASPer. Frame everything as high-school and undergraduate-admissions prep with an eye toward a future health career.
-- SAT/ACT prep matters but is one part of a balanced plan — weave in science foundations, Portfolio-building (activities, shadowing, essays, deadlines), and honest exploration of whether medicine fits, not just test-prep.
+- NEVER schedule SAT or ACT work, test-prep sessions, practice tests or score goals: this product has no test-prep tools, so such a task is one the student cannot open. Build the plan from science foundations, Portfolio-building (activities, shadowing, essays, deadlines), and honest exploration of whether medicine fits.
 - Be emotionally attuned to their stated obstacles and pace — this is a teenager, not a client.
 - Reference their actual goal, grade, pace, pathway, and obstacles by name so it reads as built for them, not templated.
 - Ground every concrete task or resource mention ONLY in things listed in the MedSchoolPrep resource catalog below — never invent a book, tool, or resource that isn't in that list.`;
@@ -592,7 +579,7 @@ const num = (v) => (Number.isFinite(Number(v)) ? Number(v) : null);
 // on the wire — which is the right contract, and was also how this feature broke without anyone
 // being able to see it. A 429, a truncated completion or a timeout produced `null`, `null` became
 // the deterministic heuristic days, and the student got a plan that arrived in under a second and
-// said "SAT practice set / Continue your pathway / Flashcard review" every single time. It looked
+// said "Practice quiz / Continue your pathway / Flashcard review" every single time. It looked
 // like a plan. It was an error message wearing a plan's clothes.
 //
 // Two things fix that here. First, real retries: a rate limit or a transient upstream failure is
@@ -685,8 +672,13 @@ export const VALID_DESTINATIONS = new Set([
   'portfolio:aid', 'portfolio:resume', 'portfolio:research', 'portfolio:skills', 'portfolio:clinical',
   'portfolio:recommenders', 'portfolio:interview', 'portfolio:tracked', 'portfolio:calc',
   'progress:overview', 'progress:verified', 'progress:performance', 'progress:achievements',
-  'sat:overview', 'sat:diagnostic', 'sat:practice', 'sat:tests', 'sat:review', 'sat:skills', 'sat:scores',
 ]);
+// No 'sat:*' destinations. The SAT pillar is sealed for v1
+// (src/lib/betaFlags.js), so a plan task pointing at it would land the student
+// on a locked screen. Plans generated before the seal can still carry them;
+// sanitizeDestination() drops the link, and isRetiredTask() below drops the
+// task itself, so an old roadmap degrades to its non-SAT days rather than
+// showing work nobody can do.
 // Sub-views that were merged away. A master plan is stored on the student's
 // record and re-read for months, so plans generated before the Deadlines and
 // Timeline tabs became one still carry the old ids — they get remapped rather
@@ -700,15 +692,28 @@ function sanitizeDestination(tab, view) {
   if (!VALID_DESTINATIONS.has(`${tab}:${v}`)) return { resourceTab: null, resourceView: null };
   return { resourceTab: tab, resourceView: v };
 }
-const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'sat', 'rest']);
-// sat_practice / sat_review / sat_test route into the SAT tab. Before these
-// existed, plans emitted tasks literally titled "SAT practice set" that linked
-// to prep/quizzes — a quiz library containing no SAT content whatsoever.
-const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'coach', 'activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'interview', 'reflection', 'rest', 'sat_practice', 'sat_review', 'sat_test']);
+const VALID_PILLARS = new Set(['prep', 'portfolio', 'progress', 'rest']);
+const VALID_TASK_TYPES = new Set(['lesson', 'quiz', 'flashcards', 'reading', 'coach', 'activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'interview', 'reflection', 'rest']);
+
+// Task shapes that existed before the SAT pillar was sealed. A master plan
+// lives on the student's record for months, so plans built while SAT work was
+// schedulable are still out there. Rather than leave a student staring at
+// "Smart Set: 12 questions on Boundaries" with no way to open it, these are
+// dropped wherever a stored plan is read.
+const RETIRED_TASK_TYPES = new Set(['sat_practice', 'sat_review', 'sat_test']);
+export function isRetiredTask(task) {
+  return RETIRED_TASK_TYPES.has(task?.type) || task?.pillar === 'sat' || task?.resourceTab === 'sat';
+}
+/** Strip retired tasks out of a stored plan's days. Returns the same shape. */
+export function dropRetiredTasks(days) {
+  if (!Array.isArray(days)) return days;
+  return days.map((d) => (Array.isArray(d?.tasks) && d.tasks.some(isRetiredTask)
+    ? { ...d, tasks: d.tasks.filter((t) => !isRetiredTask(t)) }
+    : d));
+}
 
 // ── Specific-resource resolution — the "give me the actual link" layer ─────
-// A task saying "SAT practice set" is only useful if clicking it opens THE
-// practice set. Every task is resolved here, deterministically and locally,
+// A task saying "take a quiz" is only useful if clicking it opens THE quiz. Every task is resolved here, deterministically and locally,
 // to a concrete launchable resource: a real quiz id, a real pathway lesson
 // id, a real flashcard deck name, or a real E-Library article title. The AI
 // may *suggest* a resource by name (resourceName in the day-chunk schema);
@@ -723,14 +728,10 @@ const TYPE_DEFAULT_DEST = {
   deadline: ['portfolio', 'milestones'], clinical: ['portfolio', 'clinical'], research: ['portfolio', 'research'],
   recommender: ['portfolio', 'recommenders'], interview: ['portfolio', 'interview'],
   reflection: ['progress', 'overview'], rest: null,
-  sat_practice: ['sat', 'practice'], sat_review: ['sat', 'review'], sat_test: ['sat', 'tests'],
 };
 const VIEW_LABELS = {
   'prep:diagnostic': 'Pathway Diagnostic', 'prep:pathways': 'Your Pathway', 'prep:quizzes': 'Quiz Library',
   'prep:flashcards': 'Flashcards', 'prep:coach': 'AI Coach', 'prep:library': 'E-Library',
-  'sat:overview': 'SAT Overview', 'sat:diagnostic': 'SAT Diagnostic', 'sat:practice': 'SAT Practice',
-  'sat:tests': 'Full-Length Test', 'sat:review': 'SAT Review Log', 'sat:skills': 'SAT Skill Mastery',
-  'sat:scores': 'Test Scores',
   'portfolio:overview': 'Portfolio Overview', 'portfolio:milestones': 'Milestones', 'portfolio:colleges': 'College List',
   'portfolio:essays': 'Essay Workspace', 'portfolio:aid': 'Financial Aid',
   'portfolio:resume': 'Activities & Resume', 'portfolio:research': 'Research Log', 'portfolio:skills': 'Skills & Certs',
@@ -949,13 +950,12 @@ const OBSTACLE_STRATEGY = {
 };
 
 export function heuristicRoadmap(user, horizonWeeks, catalog) {
-  const track = user?.testTrack || 'SAT';
   const goalLabel = labelOf(GOAL_OPTIONS, user?.goal) || 'building a strong path into medicine';
   const obstacles = labelsOf(OBSTACLE_OPTIONS, user?.obstacles);
   const phaseCount = clampPhaseCount(horizonWeeks);
   const templates = [
-    { title: 'Foundations', theme: `Get oriented in ${catalog.pathwayLabel} and build the ${track} habit`, objectives: [`Take the Pathway Diagnostic if you haven't yet`, `Establish a daily ${track} practice habit`, `Complete Unit 1 of your pathway`], resources: [catalog.unitTitles[0] || catalog.pathwayLabel, 'Quiz Library', 'Flashcards'] },
-    { title: 'Momentum', theme: `Deepen ${track} skills while rounding out your Portfolio basics`, objectives: ['Grow weekly practice-question volume', 'Start your College List and log any activities', 'Complete Unit 2 of your pathway'], resources: [catalog.unitTitles[1] || catalog.pathwayLabel, 'College List', 'Activities & Resume Builder'] },
+    { title: 'Foundations', theme: `Get oriented in ${catalog.pathwayLabel} and build a daily study habit`, objectives: [`Take the Pathway Diagnostic if you haven't yet`, `Establish a daily quiz-and-flashcard habit`, `Complete Unit 1 of your pathway`], resources: [catalog.unitTitles[0] || catalog.pathwayLabel, 'Quiz Library', 'Flashcards'] },
+    { title: 'Momentum', theme: 'Deepen your science foundation while rounding out your Portfolio basics', objectives: ['Grow weekly practice-question volume', 'Start your College List and log any activities', 'Complete Unit 2 of your pathway'], resources: [catalog.unitTitles[1] || catalog.pathwayLabel, 'College List', 'Activities & Resume Builder'] },
     { title: 'Application Readiness', theme: 'Turn consistent prep into real application progress', objectives: ['Hit your target practice pace every week', 'Draft at least one essay', 'Complete Unit 3 of your pathway'], resources: [catalog.unitTitles[2] || catalog.pathwayLabel, 'Essay Workspace', 'Deadlines Tracker'] },
     { title: 'Polish & Push', theme: 'Tighten weak spots and keep every deadline covered', objectives: ['Target your weakest quiz category directly', 'Review and revise essay drafts', 'Confirm recommenders and deadlines are on track'], resources: ['Quiz Library', 'Essay Workspace', 'Recommenders Tracker'] },
     { title: 'Final Stretch', theme: 'Steady, sustainable effort through to the finish', objectives: ['Keep the daily habit unbroken', 'Close out any open Portfolio items', 'Reflect on how far you have come'], resources: ['Flashcards', 'Financial Aid Tracker', 'AI Coach'] },
@@ -982,15 +982,15 @@ export function heuristicRoadmap(user, horizonWeeks, catalog) {
     return { obstacle: label, strategy: OBSTACLE_STRATEGY[key] || 'Small, repeatable daily actions beat occasional long sessions — the plan is built around that.' };
   });
   return {
-    headline: `Your ${horizonWeeks}-week ${track} + pre-health roadmap`,
-    overview: `This is a ${horizonWeeks}-week plan built around ${goalLabel.toLowerCase()}, paced for where you are right now as a student on the ${catalog.pathwayLabel} track. It balances steady ${track} practice with the early science foundations and Portfolio-building that make a future health-career application strong — not a test-prep bootcamp, a real roadmap. Each phase below has its own focus, and every week has a concrete theme so you always know what "on track" looks like.`,
+    headline: `Your ${horizonWeeks}-week pre-health roadmap`,
+    overview: `This is a ${horizonWeeks}-week plan built around ${goalLabel.toLowerCase()}, paced for where you are right now as a student on the ${catalog.pathwayLabel} track. It balances the early science foundations with the Portfolio-building that makes a future health-career application strong. Each phase below has its own focus, and every week has a concrete theme so you always know what "on track" looks like.`,
     pillarStrategy: {
-      prep: `Steady ${track} practice plus your ${catalog.pathwayLabel} pathway units, quizzes, and flashcards keep your academic foundation growing every week.`,
+      prep: `Your ${catalog.pathwayLabel} pathway units, quizzes, and flashcards keep your academic foundation growing every week.`,
       portfolio: `College list, activities, essays, and deadlines get built up gradually alongside prep, not crammed in at the end.`,
       progress: `Weekly themes and milestones give you a clear way to check "am I on track" without guessing.`,
     },
     phases, weeklyThemes, milestones, riskMitigation, horizonWeeks,
-    ninetyDayGoal: `In 90 days: a steady daily study habit, a measurable ${track} score bump, and real Portfolio progress (college list started, at least one activity logged, one essay draft underway).`,
+    ninetyDayGoal: 'In 90 days: a steady daily study habit, a real dent in your science foundation, and real Portfolio progress (college list started, at least one activity logged, one essay draft underway).',
     encouragement: `You're building this early, which is a real advantage — small, steady days compound more than you'll notice week to week. We've got you.`,
     source: 'fallback',
   };
@@ -1007,7 +1007,7 @@ ${AGE_APPROPRIATE_RULES}
 ══ USE THE WHOLE FILE, OR THIS IS JUST A TEMPLATE ══
 The profile below is not background reading. It contains their measured performance, their entire Portfolio row by row, a ranked list of the gaps in it, their admissions timeline, and — if they already have a plan — how much of it they have actually been completing. A roadmap that would read the same for any student on this pathway has failed, no matter how well written it is. Specifically:
 - ANCHOR ON THE RANKED GAPS. The gap list is ordered by urgency and each entry names the panel that closes it. Your phases must visibly close the top gaps in roughly that order; a milestone that ignores gap #1 is the wrong milestone.
-- NAME THEIR REAL THINGS. Their colleges, their essays, their clinical sites, their deadlines, their weakest quiz category and SAT skills — by name, in the overview, the objectives, and the success metrics. Never invent one that is not in the profile.
+- NAME THEIR REAL THINGS. Their colleges, their essays, their clinical sites, their deadlines, their weakest quiz category — by name, in the overview, the objectives, and the success metrics. Never invent one that is not in the profile.
 - RESPECT THE ADHERENCE DATA. If they are completing 40% of what is scheduled, a heavier plan is a worse plan. Pace to what they demonstrably do, then build up.
 - SEQUENCE AGAINST REAL DATES. Their timeline and their tracked deadlines dictate what must happen early; do not put essay work after the deadline it serves.
 - THE OBSTACLES ARE DESIGN CONSTRAINTS, not a sympathy note. If they said they are busy, the plan's shape must show it.
@@ -1126,7 +1126,6 @@ function phaseForWeek(plan, week) { return plan?.phases?.find(p => week >= p.wee
 // plan is stamped `generation.degraded` so the UI says so and offers a retry, rather than passing
 // this off as Medabrain's considered plan for their day.
 export function heuristicDays(plan, fromDate, numDays, catalog, user, liveSignals = {}) {
-  const track = user?.testTrack || 'SAT';
   // Never point the fallback at a locked or already-finished lesson either — the same rule the
   // generated path follows. With no unlock data, openLessons is the whole pathway, as before.
   const openLessons = catalog?.openLessons?.length ? catalog.openLessons : null;
@@ -1141,10 +1140,7 @@ export function heuristicDays(plan, fromDate, numDays, catalog, user, liveSignal
     const lesson = openLessons ? openLessons[i % openLessons.length] : null;
     const tasks = [];
     if (!isWeekend) {
-      // Previously: pillar 'prep', type 'quiz', linked to prep/quizzes — a task
-      // promising SAT practice that opened a library of MCAT-style science
-      // quizzes. Now it opens the SAT tab's adaptive practice.
-      tasks.push({ pillar: 'sat', type: 'sat_practice', title: `${track} practice set`, detail: 'Smart Set — weighted to your weakest skills', estMinutes: 20, timeOfDay: 'afternoon', ...sanitizeDestination('sat', 'practice') });
+      tasks.push({ pillar: 'prep', type: 'quiz', title: 'Practice quiz', detail: 'A quiz from the library, aimed at your weakest category', estMinutes: 20, timeOfDay: 'afternoon', ...sanitizeDestination('prep', 'quizzes') });
       tasks.push({ pillar: 'prep', type: 'lesson', title: lesson ? `Lesson: ${lesson.title}` : 'Continue your pathway', detail: lesson ? `${lesson.title} — ${lesson.unitTitle}` : `${catalog.pathwayLabel} — ${catalog.unitTitles[i % catalog.unitTitles.length]}`, resourceName: lesson?.title || null, estMinutes: 15, timeOfDay: 'afternoon', ...sanitizeDestination('prep', 'pathways') });
       tasks.push({ pillar: 'prep', type: 'flashcards', title: 'Flashcard review', detail: 'Clear any cards due today', estMinutes: 10, timeOfDay: 'evening', ...sanitizeDestination('prep', 'flashcards') });
       if (i % 3 === 2) tasks.push({ pillar: 'portfolio', type: 'activity', title: 'Portfolio check-in', detail: 'Log any new activity, clinical, or research hours', estMinutes: 10, timeOfDay: 'evening', ...sanitizeDestination('portfolio', 'resume') });
@@ -1168,7 +1164,7 @@ export function heuristicDays(plan, fromDate, numDays, catalog, user, liveSignal
 // thought per day and a plan whose back half was invented for a future that had not happened yet.
 // Two days is the horizon a student actually acts on, and at two days there is room to say WHY
 // each task is there, WHEN in the day it belongs, and what finishing it well looks like.
-const BANNED_TASK_TITLES = ['SAT practice set', 'Continue your pathway', 'Flashcard review', 'Portfolio check-in', 'Study session'];
+const BANNED_TASK_TITLES = ['Practice quiz', 'Continue your pathway', 'Flashcard review', 'Portfolio check-in', 'Study session'];
 
 function buildDayChunkSystemPrompt(numDays, catalogText, prefsNote = '') {
   const windowWord = numDays <= 2 ? `${numDays === 1 ? 'single day' : 'two days'}` : `${numDays}-day window`;
@@ -1177,18 +1173,18 @@ function buildDayChunkSystemPrompt(numDays, catalogText, prefsNote = '') {
 This is a short window on purpose. You are not sketching a fortnight — you are writing ${numDays === 1 ? "one day" : 'two days'} properly, with the care of an advisor who knows this student and has half an hour to think about their week. Depth per day is the whole point. Think hard before you answer.
 
 ${AGE_APPROPRIATE_RULES}
-- Each day gets 3-5 tasks, mixing Prep (pathway lessons/quizzes/flashcards/library/coach), SAT work, and Portfolio (colleges/essays/deadlines/activities/clinical hours/research/recommenders/interview prep). Not every task is test prep.
+- Each day gets 3-5 tasks, mixing Prep (pathway lessons/quizzes/flashcards/library/coach) and Portfolio (colleges/essays/deadlines/activities/clinical hours/research/recommenders/interview prep).
 - Weekend days are lighter — a shorter catch-up, reflection, or reading day, not a full load.
 - Order the tasks within each day the way you would actually do them, and say when each belongs (morning/afternoon/evening/anytime).${prefsNote}
 
 ══ THE BAR THIS HAS TO CLEAR ══
 A plan that could have been written without reading this student's file has failed, however tidy it looks. Concretely:
-- NEVER emit a generic task. These exact titles are forbidden, and so is anything as empty as them: ${BANNED_TASK_TITLES.map(t => `"${t}"`).join(', ')}. Name the thing. "Smart Set: 12 questions on Boundaries — your weakest skill at 41%" is a task; "SAT practice set" is a placeholder.
+- NEVER emit a generic task. These exact titles are forbidden, and so is anything as empty as them: ${BANNED_TASK_TITLES.map(t => `"${t}"`).join(', ')}. Name the thing. "Quiz: Cell Structure & Transport — your weakest category at 41%" is a task; "Practice quiz" is a placeholder.
 - EVERY PORTFOLIO TASK NAMES A REAL ROW. The profile lists their actual colleges, essays (with word counts and how long since each was touched), clinical sites, activities, recommenders and deadlines. "Work on your essays" is a failure; "Get the Michigan supplement from 140 to 300 words — it hasn't been touched in 3 weeks" is the standard.
 - ONLY SCHEDULE PATHWAY LESSONS THE STUDENT CAN ACTUALLY OPEN. The catalog marks every lesson as open, already done, or LOCKED. A locked lesson is behind unfinished work and tapping it hits a padlock — never schedule one, and never schedule a lesson already marked done.
 - CLOSE THE RANKED GAPS. The profile ends with a priority-ordered gap list, each naming the exact panel that fixes it. Put a concrete step against the top gap in this window.
 - OVERDUE BEATS UPCOMING. Anything already past due is handled on the first day, explicitly.
-- MATCH THE MEASURED WEAKNESS. Quiz and SAT tasks target their weakest measured category/skills by name, and unreviewed Review Log questions come before brand-new practice.
+- MATCH THE MEASURED WEAKNESS. Quiz tasks target their weakest measured category by name, and a category they have already failed once comes before a brand-new one.
 - FIT THE REAL DAY. Total estMinutes across a day must be close to their stated pace. The adherence data (if present) says which weekdays and which task types actually get done — put the demanding work where they historically follow through, not where it looks tidy.
 - THE TWO DAYS ARE DIFFERENT DAYS. Same shape twice is the most common failure here. Vary the resource, the angle, and the pillar mix.
 - EVERY TASK EARNS ITS "why". One sentence, addressed to the student, naming the real reason THIS task is on THEIR plan today — their score gap, their deadline, their untouched draft. "It's good practice" is not a reason.
@@ -1197,7 +1193,7 @@ Here is the real MedSchoolPrep resource catalog to ground tasks in:
 ${catalogText}
 
 Respond with ONLY valid JSON (no markdown, no code fences, no prose) matching exactly this schema:
-{ "days": [ { "dayIndex": number, "headline": "a real title for this specific day, max 8 words", "theme": "short line tying the day to its week theme", "coachNote": "2-3 sentences to the student about the shape of this day — what matters most, what to protect, what to let go if time runs short", "tasks": [ { "pillar": "prep|portfolio|progress|sat|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest|sat_practice|sat_review|sat_test", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource and the actual target", "why": "one sentence to the student on why this task is on their plan today, citing something real from their profile", "successCriteria": "one short sentence describing what finishing this well looks like", "timeOfDay": "morning|afternoon|evening|anytime", "estMinutes": number, "resourceTab": "prep|portfolio|progress|sat or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathways, colleges, essays, practice, review) or null", "resourceName": "the EXACT title of the one specific quiz, lesson, flashcard deck, or E-Library resource this task uses, copied verbatim from the catalog above — or null for tasks that don't target a single named resource" } ], "reflectionPrompt": "string or null — a short end-of-day question, on the last day of the window or a natural reflection day" } ] }
+{ "days": [ { "dayIndex": number, "headline": "a real title for this specific day, max 8 words", "theme": "short line tying the day to its week theme", "coachNote": "2-3 sentences to the student about the shape of this day — what matters most, what to protect, what to let go if time runs short", "tasks": [ { "pillar": "prep|portfolio|progress|rest", "type": "lesson|quiz|flashcards|reading|coach|activity|college|essay|deadline|clinical|research|recommender|interview|reflection|rest", "title": "short specific action, max 12 words", "detail": "one specific sentence naming the actual resource and the actual target", "why": "one sentence to the student on why this task is on their plan today, citing something real from their profile", "successCriteria": "one short sentence describing what finishing this well looks like", "timeOfDay": "morning|afternoon|evening|anytime", "estMinutes": number, "resourceTab": "prep|portfolio|progress or null", "resourceView": "the specific sub-view id (e.g. quizzes, pathways, colleges, essays, practice, review) or null", "resourceName": "the EXACT title of the one specific quiz, lesson, flashcard deck, or E-Library resource this task uses, copied verbatim from the catalog above — or null for tasks that don't target a single named resource" } ], "reflectionPrompt": "string or null — a short end-of-day question, on the last day of the window or a natural reflection day" } ] }
 Provide EXACTLY one "days" entry per dayIndex, 1 through ${numDays}, in order, with the tasks already in the order they should be done. For every quiz/lesson/flashcards/reading task, ALWAYS fill "resourceName" with a real name from the catalog — this becomes a clickable link that opens that exact resource for the student.`;
 }
 
@@ -1415,12 +1411,11 @@ export const WINDOW_DAYS = 2; // today + tomorrow
 // snapshot of the profile fields it was actually built from onto the plan.
 // planIsStale() compares that snapshot to the student's CURRENT profile so
 // the UI can prompt a refresh the moment something the plan depends on
-// (goal, target score, pathway, obstacles, ...) has genuinely changed —
+// (goal, pathway, obstacles, ...) has genuinely changed —
 // instead of the plan silently going stale until the student happens to hit
 // "Rebuild Roadmap" themselves.
 const PROFILE_SNAPSHOT_FIELDS = [
   'goal', 'obstacles', 'accomplish', 'studyMethod', 'studyHours',
-  'onboardingTargetScore', 'onboardingCurrentScore', 'testTrack', 'examDate', 'testTimeline',
   'gpaBand', 'sciences', 'healthExperience', 'whyMedicine', 'dreamRole', 'certainty',
   'specialty', 'gradeStage',
 ];
@@ -1724,7 +1719,7 @@ export function resourceMatch(kind, id) {
 // unambiguous in-app "this happened" signal — matched by task type instead of
 // a specific resource. `interview` is included for consistency even though its
 // call site predates this helper and in-lines the same predicate.
-export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'coach', 'interview', 'sat_practice', 'sat_review', 'sat_test']);
+export const AUTO_VERIFIABLE_TYPES = new Set(['activity', 'college', 'essay', 'deadline', 'clinical', 'research', 'recommender', 'coach', 'interview']);
 export function typeMatch(type) { return (t) => t.type === type; }
 
 // Auto-checks off every not-yet-done task across the whole plan (not just

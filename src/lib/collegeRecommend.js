@@ -67,13 +67,10 @@ export function resolveStudentScores(testScores = [], user = null) {
   let satSource = sat != null ? 'logged' : null;
   let actSource = act != null ? 'logged' : null;
 
-  // Onboarding fallback — only for a test the student hasn't logged a real sitting for.
-  const onboard = Number(user?.onboardingCurrentScore);
-  if (Number.isFinite(onboard) && onboard > 0) {
-    const track = user?.testTrack === 'ACT' ? 'ACT' : (onboard <= 36 ? 'ACT' : 'SAT');
-    if (track === 'SAT' && sat == null) { sat = onboard; satSource = 'onboarding'; }
-    if (track === 'ACT' && act == null) { act = onboard; actSource = 'onboarding'; }
-  }
+  // There used to be an onboarding fallback here, reading the self-reported score the signup flow
+  // collected. Onboarding no longer asks for one (see src/lib/betaFlags.js), so the only scores in
+  // play are real logged sittings. No score on file means the recommender runs on GPA alone, which
+  // it already knows how to do — see recommendByAcademics in academicIntel.js.
 
   // A single effective SAT-scale number, so schools can be ranked on one axis. If the student has
   // both tests we use whichever converts higher — colleges accept either, so the stronger result is
