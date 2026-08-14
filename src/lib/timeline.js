@@ -758,6 +758,70 @@ const DEADLINE_KIND_MAP = {
   ap_exam: 'academics', ib_exam: 'academics', custom: 'application',
 };
 
+/**
+ * The student's Roadmap items, as timeline events.
+ *
+ * ── Why the Roadmap feeds the Milestones timeline at all ────────────────────
+ * Because otherwise the app has two calendars, and a student with two calendars
+ * has none. The Roadmap tab is where a year is decided; Milestones is where a
+ * student looks to ask "what is next" — and a Roadmap item that never reaches
+ * that feed is a commitment the rest of the product cannot see. Home's next-up
+ * card, the coach's timeline summary, the ICS export and the parent digest all
+ * read this list.
+ *
+ * ── The rules, which are the same honesty rules the Roadmap tab enforces ────
+ *  - Only OPEN items. A done or skipped item is a decision already made.
+ *  - The student's own pinned date wins over the catalog's, always.
+ *  - `confidence` maps straight onto the tab's own rule: a student-pinned or
+ *    structurally fixed date is 'exact', everything else is 'typical' — which is
+ *    what makes the feed, the AI summary and the calendar export all say
+ *    "confirm this" about exactly the same set of dates the Roadmap tab does.
+ *  - `action` deep-links back into the Roadmap rather than duplicating the
+ *    item's controls here. There is one place to work on a roadmap item, and it
+ *    is the tab that owns it.
+ *
+ * Roadmap items are plain data (see src/lib/roadmap/model.js for the shape), so
+ * this reads them directly rather than importing that module — which would be a
+ * cycle, since model.js imports this file's date helpers.
+ */
+function roadmapEvents(ctx, roadmap) {
+  const items = arr(roadmap?.items);
+  if (!items.length) return [];
+  const today = ctx.today;
+  return items.flatMap(item => {
+    if (item.status === 'done' || item.status === 'skipped') return [];
+    const date = item.studentDate || item.due || item.on || item.anchor;
+    if (!date) return [];
+    const exact = !!item.studentDate || item.confidence === 'fixed' || item.addedBy === 'student';
+    const weight = item.priority === 'critical' ? P.critical : item.priority === 'important' ? P.important : P.helpful;
+    return [{
+      id: `roadmap_${item.id}`,
+      date,
+      title: item.title,
+      detail: item.howThisHelps || item.why || '',
+      // Roadmap tracks and timeline kinds are two vocabularies for the same
+      // idea; the ones that do not line up fall back to 'planning', which is
+      // exactly what an un-categorised forward-looking commitment is.
+      kind: ROADMAP_TRACK_KIND[item.track] || 'planning',
+      weight,
+      source: 'roadmap',
+      confidence: exact ? 'exact' : 'typical',
+      action: { tab: 'roadmap', view: 'list', label: 'Open in your roadmap' },
+      why: item.startBy && item.startBy !== date
+        ? `On your roadmap. The work on this needs to start around ${item.startBy}, not on the deadline.`
+        : 'On your twelve-month roadmap.',
+      ...classify(date, today, { weight }),
+    }];
+  });
+}
+
+/** Roadmap track → timeline kind. Both vocabularies live in this repo; this is the only join. */
+const ROADMAP_TRACK_KIND = {
+  application: 'application', competition: 'experience', program: 'experience',
+  scholarship: 'aid', testing: 'academics', aid: 'aid', experience: 'experience',
+  academics: 'academics', essays: 'essays', relationships: 'recommenders',
+};
+
 function profileEvents(ctx, snapshot) {
   const out = [];
   const today = ctx.today;
@@ -911,10 +975,15 @@ export function groupUpcoming(events, today) {
  * @param {object}   opts.snapshot    buildPortfolioSnapshot() output
  * @param {Date}     opts.now         injectable clock (the verify script pins it)
  * @param {object}   opts.counts      optional overrides for callers holding counts, not rows
+ * @param {object}   opts.roadmap     the student's Roadmap document, if they have built one
  */
-export function buildTimeline({ user = null, snapshot = {}, now = new Date(), counts = null } = {}) {
+export function buildTimeline({ user = null, snapshot = {}, now = new Date(), counts = null, roadmap = null } = {}) {
   const ctx = buildTimelineContext({ user, snapshot, now, counts });
-  const raw = [...catalogEvents(ctx), ...profileEvents(ctx, snapshot)];
+  // Roadmap events go LAST so that when a roadmap item and a catalog milestone describe the
+  // same thing, the dedupe below keeps the catalog's copy — which carries the richer detail,
+  // the `done` state derived from the student's real rows, and the deep link to the panel that
+  // owns it. The roadmap's copy adds nothing the catalog's does not already say better.
+  const raw = [...catalogEvents(ctx), ...profileEvents(ctx, snapshot), ...roadmapEvents(ctx, roadmap)];
 
   // Dedupe by id, then sort: date first, then priority, then title — so two
   // things on the same day always come out in the same order for the same input.

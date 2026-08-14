@@ -1,0 +1,230 @@
+import React from 'react';
+import {
+  Trophy, GraduationCap, FlaskConical, PiggyBank, ClipboardList, HandCoins,
+  Stethoscope, BookOpen, ScrollText, UserCheck, AlertTriangle, Clock, CheckCircle2,
+  CircleDot, Circle, CalendarSearch, ExternalLink, Sparkles,
+} from 'lucide-react';
+import { C, tint, pill } from '../../lib/theme';
+import { TRACK_BY_ID, displaysExactDate, dateCaption } from '../../data/roadmap/index.js';
+import { linkableUrl } from '../../lib/roadmap/model';
+
+// Shared presentation for the Roadmap tab: the vocabulary of colour, icon and
+// wording that every roadmap surface uses, in one place so the tab reads as one
+// system rather than six screens that happen to be adjacent.
+//
+// ── The rule this file exists to enforce ────────────────────────────────────
+// NOTHING in the Roadmap tab prints a raw date. Every date on screen goes
+// through <ItemDate>, which delegates to displaysExactDate()/dateCaption() in
+// the catalog schema. That is the single mechanism standing between a student
+// and a confidently-stated deadline that is wrong by three weeks, and it is a
+// component rather than a convention because a convention is one careless
+// `{item.due}` away from failing silently. scripts/verifyRoadmap.mjs greps this
+// folder for raw date interpolation and fails the build if it finds any.
+
+/** Track id → the palette colour it is drawn in. Keys match TRACK_BY_ID's colorKey. */
+export const trackColor = (trackId) => {
+  const key = TRACK_BY_ID[trackId]?.colorKey;
+  return C[key] || C.blue;
+};
+
+export const TRACK_ICON = {
+  application: GraduationCap,
+  competition: Trophy,
+  program: FlaskConical,
+  scholarship: PiggyBank,
+  testing: ClipboardList,
+  aid: HandCoins,
+  experience: Stethoscope,
+  academics: BookOpen,
+  essays: ScrollText,
+  relationships: UserCheck,
+};
+
+/**
+ * Urgency → how it looks and what it is called.
+ *
+ * 'start-now' is the one that earns this whole feature. It is the state of an
+ * item whose deadline is comfortably far away and whose PREPARATION has to
+ * begin today — the thing every other calendar in a student's life renders as
+ * "in 70 days" and which is, in fact, the most urgent thing on the screen. It
+ * gets the loudest treatment for that reason.
+ */
+export const URGENCY_META = {
+  missed: { label: 'Passed', color: C.rose, icon: AlertTriangle },
+  critical: { label: 'This week', color: C.rose, icon: AlertTriangle },
+  'start-now': { label: 'Start now', color: C.amber, icon: Sparkles },
+  soon: { label: 'Coming up', color: C.sky, icon: Clock },
+  later: { label: 'Later', color: C.t3, icon: Circle },
+  undated: { label: 'Find the date', color: C.violet, icon: CalendarSearch },
+  settled: { label: 'Done', color: C.green, icon: CheckCircle2 },
+};
+
+export const STATUS_META = {
+  todo: { label: 'Not started', icon: Circle, color: C.t3 },
+  doing: { label: 'In progress', icon: CircleDot, color: C.sky },
+  done: { label: 'Done', icon: CheckCircle2, color: C.green },
+  skipped: { label: 'Skipped', icon: Circle, color: C.t4 },
+};
+
+export const SELECTIVITY_LABEL = {
+  open: 'Open to you',
+  selective: 'Selective',
+  'highly-selective': 'Very selective',
+  lottery: 'Long shot',
+};
+
+export const EFFORT_LABEL = {
+  light: 'Light',
+  moderate: 'Moderate',
+  heavy: 'Heavy',
+  immersive: 'Immersive',
+};
+
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** '2027-03-25' → 'Mar 25, 2027'. Never parses as UTC (see src/lib/dateUtils.js). */
+export function fmtDate(key, { withYear = true } = {}) {
+  if (!key) return '';
+  const [y, m, d] = String(key).split('-').map(Number);
+  if (!y || !m || !d) return String(key);
+  return `${MONTHS_SHORT[m - 1]} ${d}${withYear ? `, ${y}` : ''}`;
+}
+
+/** 'Mar 2027' for a YYYY-MM month key. */
+export function fmtMonth(key) {
+  const [y, m] = String(key || '').split('-').map(Number);
+  return y && m ? `${MONTHS_SHORT[m - 1]} ${y}` : String(key || '');
+}
+
+/**
+ * The ONLY way a roadmap date reaches the screen.
+ *
+ * A confirmed date renders as a date. An unconfirmed one renders as a window
+ * with the caveat attached and a marker the student can tap to enter the real
+ * one. There is no prop that turns the caveat off, on purpose.
+ */
+export function ItemDate({ item, size = 12, showIcon = true, onFindDate = null }) {
+  const exact = displaysExactDate(item);
+  const caption = dateCaption(item, (d) => fmtDate(d));
+  const color = exact ? C.t2 : C.violetL || C.violet;
+  const Icon = exact ? Clock : CalendarSearch;
+  const body = (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: size, color, fontFamily: C.FM }}>
+      {showIcon && <Icon size={size} color={color} />}
+      {caption}
+    </span>
+  );
+  if (exact || !onFindDate) return body;
+  return (
+    <button
+      type="button"
+      onClick={onFindDate}
+      title="Look this date up and pin it — the roadmap will re-plan around it"
+      style={{
+        background: 'transparent', border: 0, padding: 0, cursor: 'pointer',
+        font: 'inherit', textAlign: 'left', textDecoration: 'underline', textUnderlineOffset: 3,
+        textDecorationStyle: 'dotted', textDecorationColor: tint(C.violet, 0.6),
+      }}
+    >
+      {body}
+    </button>
+  );
+}
+
+/** Small tinted chip. The tab's workhorse — used for track, selectivity, effort, cost. */
+export function Chip({ children, color = C.t3, icon: Icon, title, size = 10.5 }) {
+  return (
+    <span title={title} style={{
+      ...pill(tint(color, 0.12), color, {
+        fontSize: size, fontWeight: 700, padding: '3px 9px', gap: 4,
+        border: `1px solid ${tint(color, 0.24)}`,
+      }),
+    }}>
+      {Icon && <Icon size={size} color={color} />}
+      {children}
+    </span>
+  );
+}
+
+/** The track's own chip, with its icon and colour. */
+export function TrackChip({ track, size = 10.5 }) {
+  const color = trackColor(track);
+  const Icon = TRACK_ICON[track];
+  return <Chip color={color} icon={Icon} size={size}>{TRACK_BY_ID[track]?.short || track}</Chip>;
+}
+
+export function UrgencyChip({ urgency, size = 10.5 }) {
+  const meta = URGENCY_META[urgency] || URGENCY_META.later;
+  return <Chip color={meta.color} icon={meta.icon} size={size}>{meta.label}</Chip>;
+}
+
+/**
+ * The "confirm this on the official site" line.
+ *
+ * Rendered beside every item that is not a student-entered or structurally
+ * fixed date. Mirrors the persistent notice ScholarshipDatabase.jsx carries,
+ * for the same reason and with the same instruction not to remove it without an
+ * equivalent elsewhere.
+ */
+export function ConfirmNotice({ item, compact = false }) {
+  if (displaysExactDate(item)) return null;
+  const isLocal = item?.confidence === 'varies';
+  return (
+    <div style={{
+      display: 'flex', gap: 8, alignItems: 'flex-start',
+      background: tint(C.violet, 0.07), border: `1px solid ${tint(C.violet, 0.18)}`,
+      borderRadius: 9, padding: compact ? '7px 10px' : '10px 12px', marginTop: 8,
+    }}>
+      <CalendarSearch size={13} color={C.violet} style={{ flexShrink: 0, marginTop: 1 }} />
+      <div style={{ fontSize: compact ? 10.5 : 11.5, color: C.t2, lineHeight: 1.55 }}>
+        {isLocal
+          ? 'This one runs on a local schedule we cannot know — your chapter, your school, your hospital. Look up the real date and pin it here, and the roadmap will re-plan everything around it.'
+          : 'This is the window this program normally runs in, not a confirmed date. Check the official page before you plan around it.'}
+        {linkableUrl(item?.url) && (
+          <>
+            {' '}
+            <a href={linkableUrl(item.url)} target="_blank" rel="noopener noreferrer"
+              style={{ color: C.violet, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+              Official page <ExternalLink size={10} style={{ verticalAlign: -1 }} />
+            </a>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The degraded-generation banner.
+ *
+ * Shown whenever roadmap.generation.degraded is true — i.e. at least one pass
+ * fell back to the deterministic catalog slate. Non-negotiable: the fallback
+ * roadmap is genuinely useful and it is NOT what the student was promised, and
+ * quietly presenting one as the other is the failure mode
+ * masterPlanGenerator.js's header documents at length.
+ */
+export function DegradedNotice({ generation, onRetry, busy = false }) {
+  if (!generation?.degraded) return null;
+  return (
+    <div style={{
+      display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+      background: tint(C.amber, 0.1), border: `1px solid ${tint(C.amber, 0.28)}`,
+      borderRadius: 12, padding: '12px 16px',
+    }}>
+      <AlertTriangle size={16} color={C.amber} style={{ flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.6 }}>
+        <b style={{ color: C.t1 }}>This roadmap was not fully written for you.</b>{' '}
+        Medabrain could not be reached for part of the build, so some of it was assembled from the
+        deadline catalog by rule rather than by judgment. Every date on it is still real — the
+        reasoning is what is missing.
+      </div>
+      {onRetry && (
+        <button onClick={onRetry} disabled={busy} style={{
+          background: tint(C.amber, 0.18), border: `1px solid ${tint(C.amber, 0.4)}`,
+          color: C.amberL || C.amber, borderRadius: 8, padding: '7px 14px',
+          fontSize: 12, fontWeight: 700, fontFamily: C.FB, cursor: busy ? 'wait' : 'pointer',
+        }}>{busy ? 'Rebuilding…' : 'Rebuild it properly'}</button>
+      )}
+    </div>
+  );
+}

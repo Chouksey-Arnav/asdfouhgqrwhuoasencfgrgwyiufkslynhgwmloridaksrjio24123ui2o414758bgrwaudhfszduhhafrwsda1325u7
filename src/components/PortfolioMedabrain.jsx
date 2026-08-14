@@ -6,6 +6,7 @@ import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
 import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
+import { summarizeRoadmapForPrompt } from '../lib/roadmap/model';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import MedabrainLauncher from './MedabrainLauncher';
 
@@ -84,9 +85,15 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       let timelineSummary = null;
       try {
         timelineSummary = summarizeTimelineForPrompt(buildTimeline({
-          user, snapshot: portfolioData || {},
+          user, snapshot: portfolioData || {}, roadmap: user?.roadmap || null,
         }));
       } catch { /* the prompt is still complete without it */ }
+      // Their twelve-month Roadmap, if they have built one. This specialist gets asked "what
+      // should I apply to" more than any other surface in the app — which is precisely the
+      // question the Roadmap tab has already answered in detail after a thirteen-question
+      // intake. Without this the two would offer the same student two different years.
+      let roadmapSummary = null;
+      try { roadmapSummary = summarizeRoadmapForPrompt(user?.roadmap); } catch { /* optional */ }
       const sys = buildPortfolioSystemPrompt({
         user, pathwayLabel, gradeLabel,
         colleges: portfolioData?.colleges || [], essays: portfolioData?.essays || [],
@@ -95,7 +102,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
         skills: portfolioData?.skills || [], clinicalHours: portfolioData?.clinicalHours || [],
         recommenders: portfolioData?.recommenders || [], testScores: portfolioData?.testScores || [],
         awards: portfolioData?.awards || [], gpaEntries: portfolioData?.gpaEntries || [],
-        recentActivitySummary, timelineSummary,
+        recentActivitySummary, timelineSummary, roadmapSummary,
       });
       const res = await fetch('/api/groq', {
         method: 'POST',

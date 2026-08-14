@@ -321,6 +321,7 @@ export function buildCoachSystemPrompt({
   // from. The engine already gated every date on this student's class year, so the coach's
   // job is to reason over the list, not to invent it.
   timelineSummary = null,
+  roadmapSummary = null,
   // The pathway pace goal the student set for themselves (describePace() in lib/paceGoal.js)
   // and how they've been rating lesson difficulty (summarizeLessonFeedback() in
   // lib/lessonFeedback.js). The head coach needs both for the same reason the Prep specialist
@@ -405,6 +406,17 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
     ? `\n\n${timelineSummary} When they ask what's next, what they should be worrying about, or how much time they have, answer from THIS list — it is already filtered to their class year and their real data, and the Timeline tab inside Portfolio is where they can see all of it.`
     : '';
 
+  // ── Their roadmap — the twelve-month plan they can see in the Roadmap tab.
+  //
+  // Sits immediately after the timeline because the two answer the same question at two
+  // horizons, and the coach must not contradict either. This one carries the extra weight: the
+  // student sat through a thirteen-question intake for it and reads it as a commitment, so a
+  // coach that recommends something the roadmap deliberately left out, or ignores the thing the
+  // roadmap says starts this week, reads as two products disagreeing about the same student.
+  const roadmapNote = roadmapSummary
+    ? `\n\n${roadmapSummary}\nThis roadmap is the plan they have actually committed to. Argue with it if you genuinely disagree — say so out loud and say why — but never quietly recommend something that contradicts it, and never bring up an opportunity it deliberately left out without acknowledging that it was left out on purpose.`
+    : '';
+
   // ── Master plan awareness — the "meta brain" link. Scout, Guide, and Sage all
   // build their system prompt from this same function, so whichever tier answers
   // a given message, it knows the same plan the Plans tab shows the student.
@@ -437,7 +449,7 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
     ? `\n\n── How they rate their own lessons ──\n${feedbackSummary} Pitch your explanations accordingly. This is what they reported, not a measure of their ability — never hand it back to them as a judgement.`
     : '';
 
-  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + planNote + paceNote + levelNote + portfolioBrainNote + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + tail;
+  return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + roadmapNote + planNote + paceNote + levelNote + portfolioBrainNote + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + tail;
 }
 
 // ── Meta Brain — Portfolio Intelligence system prompt ─────────────────────────
@@ -469,6 +481,7 @@ export function buildPortfolioSystemPrompt({
   // the same reason it gets the full tracker: so "what should I work on next" is answered
   // against real dates that are already gated on this student's class year.
   timelineSummary = null,
+  roadmapSummary = null,
 } = {}) {
   const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialised on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
@@ -620,11 +633,18 @@ Questions that stray outside the application (a study-plan question, a science q
     ? `\n\n── Their timeline ──\n${timelineSummary}`
     : '';
 
+  // The Portfolio specialist is the surface most likely to be asked "what should I apply to",
+  // which is the exact question the Roadmap tab has already answered in detail. Handing it the
+  // roadmap is what stops the two from offering a student two different years.
+  const roadmapBlock = roadmapSummary
+    ? `\n\n── Their 12-month roadmap ──\n${roadmapSummary}`
+    : '';
+
   const rules = `\n\nRules: never invent a college on their list, a deadline they logged, a dollar amount, a test score, a GPA or an essay draft that isn't in the data above — those are claims about THEM and the data above is the only source for them. Facts about the wider admissions world are a different matter entirely: answer those from your own knowledge, in detail, and say when a date or policy is the kind of thing that shifts year to year. If a category is empty (no colleges, no essays, no clinical hours, no scores), answer the question first, then say plainly what isn't logged yet and name the exact panel that captures it. When asked "what should I work on next," prioritize real urgency (the soonest thing on their timeline, an essay for a school with no draft started, a category with nothing logged at all) over generic advice, and never point a student at a milestone their class year has not reached. Keep replies focused and concrete — 2-5 sentences unless a genuinely structured breakdown (e.g. ranking every upcoming deadline) is what was asked for. Format with markdown: **bold** key facts, bullet lists for multi-item breakdowns.
 
 You are the one reader who will tell them the truth about this application before an admissions officer does. A thin activities list is thin; a college list with six reaches and no safety is a bad list; an essay draft that says nothing is a draft that says nothing. Say it, say why it costs them, and say what to do about it — do not soften a real gap into "you're off to a good start."${PERSONA_GUARDRAIL}`;
 
-  return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + rules;
+  return base + buildPersonalBriefBlock(user) + dataBlock + timelineBlock + roadmapBlock + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + rules;
 }
 
 // ── Medabrain — Prep (pathway/lesson) system prompt ──────────────────────────

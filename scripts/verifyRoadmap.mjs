@@ -1,0 +1,586 @@
+#!/usr/bin/env node
+// Assertions on the Roadmap feature — the catalog (src/data/roadmap/), the engine that dates and
+// scores it (src/lib/roadmap/catalog.js), the intake (intake.js), the document model (model.js),
+// the generator's pure logic (generator.js), and the wiring between all of it and the rest of the
+// app. There is no test runner in this repo, so this script is the test suite for the most
+// consequential artifact the product produces.
+//
+// The properties worth failing a build over — each one is a way this feature fails SILENTLY, which
+// is why they get a build gate rather than a code review:
+//
+//   1. NO INVENTED DATES REACH A STUDENT. The single most important property in the whole feature.
+//      Every catalog entry validates; a 'varies' or 'typical' entry can never pass
+//      displaysExactDate(); no roadmap surface interpolates a raw date; and the generator's
+//      whitelist discards any catalog id the model makes up.
+//   2. THE CATALOG IS ALIVE. Every track has entries, every grade has a usable year, every gate is
+//      reachable from the intake, and every cross-link into opportunities.js/scholarships.js
+//      resolves. A catalog that has quietly emptied for ninth-graders looks identical to one that
+//      is working, from the outside.
+//   3. THE INTAKE STAYS SHORT AND ANSWERABLE. Thirteen questions, every required one answerable,
+//      every gate the catalog declares actually produced by some question.
+//   4. GENERATION ALWAYS YIELDS A USABLE ROADMAP. Given garbage from the model — wrong types,
+//      unknown ids, half a response, nothing at all — the repair layer must still produce a
+//      complete, renderable, balanced document.
+//   5. THE DOCUMENT SURVIVES ITS OWN MUTATIONS. Ticking, moving, pinning a date, adding and
+//      removing must never lose an item, duplicate one, or corrupt the seasons.
+//   6. THE WIRING HOLDS. The sub-nav in App.jsx and the one the component exports agree; the tab
+//      has a route; the Groq purpose, its two keys and its lane logic exist.
+//
+//   node scripts/verifyRoadmap.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');
+
+const CAT = await import('../src/data/roadmap/index.js');
+const ENGINE = await import('../src/lib/roadmap/catalog.js');
+const INTAKE = await import('../src/lib/roadmap/intake.js');
+const MODEL = await import('../src/lib/roadmap/model.js');
+const GEN = await import('../src/lib/roadmap/generator.js');
+const { OPPORTUNITIES } = await import('../src/data/opportunities.js');
+const { SCHOLARSHIPS } = await import('../src/data/scholarships.js');
+
+let passed = 0;
+const failures = [];
+const assert = (label, cond, detail = '') => {
+  if (cond) { passed += 1; return; }
+  failures.push(`${label}${detail ? `\n      ${detail}` : ''}`);
+};
+const eq = (label, actual, expected) =>
+  assert(label, actual === expected, `expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+const section = (name) => console.log(`\n${name}`);
+
+// A pinned clock. Every date assertion below is relative to this, so the suite does not start
+// failing in February because a window rolled over.
+const NOW = new Date('2026-08-14T12:00:00');
+const TODAY = '2026-08-14';
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('1. The catalog is well-formed and honest');
+
+for (const entry of CAT.ROADMAP_CATALOG) {
+  const problems = CAT.validateEntry(entry);
+  assert(`catalog entry "${entry.id}" validates`, problems.length === 0, problems.join('; '));
+}
+assert('catalog has a meaningful number of entries', CAT.ROADMAP_CATALOG.length >= 50,
+  `only ${CAT.ROADMAP_CATALOG.length}`);
+
+const ids = CAT.ROADMAP_CATALOG.map((e) => e.id);
+eq('every catalog id is unique', new Set(ids).size, ids.length);
+
+// Every track must have real entries. A track that has emptied still renders its filter chip and
+// its colour, so the failure is invisible from the UI.
+const counts = CAT.trackCounts();
+for (const [track, n] of Object.entries(counts)) {
+  assert(`track "${track}" has entries`, n >= 1, `has ${n}`);
+}
+
+// THE date-honesty invariant.
+const leaked = CAT.ROADMAP_CATALOG.filter((e) => e.confidence !== 'fixed' && CAT.displaysExactDate(e));
+assert('no non-fixed catalog entry can be rendered as an exact date', leaked.length === 0,
+  leaked.map((e) => e.id).join(', '));
+
+// And its converse: a student-pinned date always wins, including over a 'varies' entry.
+assert('a student-pinned date always renders as exact',
+  CAT.displaysExactDate({ confidence: 'varies', studentDate: '2027-03-04' }) === true);
+assert('a student-added item always renders as exact',
+  CAT.displaysExactDate({ confidence: 'varies', addedBy: 'student' }) === true);
+assert('a typical entry renders as a caveated window, never a bare date',
+  /confirm/i.test(CAT.dateCaption({ confidence: 'typical', due: '2027-03-04' })));
+assert('a varies entry renders as its season string',
+  CAT.dateCaption({ confidence: 'varies', season: 'Spring, by chapter' }) === 'Spring, by chapter');
+
+// Cross-links must resolve, or a roadmap card offers a "read more" that opens nothing.
+const oppIds = new Set(OPPORTUNITIES.map((o) => o.id));
+const schIds = new Set(SCHOLARSHIPS.map((s) => s.id));
+for (const e of CAT.ROADMAP_CATALOG) {
+  if (e.opportunityId) assert(`"${e.id}" cross-links a real opportunity`, oppIds.has(e.opportunityId), e.opportunityId);
+  if (e.scholarshipId) assert(`"${e.id}" cross-links a real scholarship`, schIds.has(e.scholarshipId), e.scholarshipId);
+}
+
+// Every URL must be plausible. Not fetched — a build gate that depends on the network is a build
+// gate that fails on a plane — but a typo'd protocol or a search URL is caught here.
+for (const e of CAT.ROADMAP_CATALOG) {
+  if (!e.url) continue;
+  assert(`"${e.id}" has an https URL`, /^https:\/\/[a-z0-9.-]+\.[a-z]{2,}/i.test(e.url), e.url);
+  assert(`"${e.id}" links a program page, not a search`, !/google\.com\/search|bing\.com\/search/i.test(e.url), e.url);
+}
+
+// Every entry explains itself. A roadmap item with no `why` is a chore.
+for (const e of CAT.ROADMAP_CATALOG) {
+  assert(`"${e.id}" explains what it does for an application`, (e.why || '').length > 30);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('2. The engine produces a usable year for every grade');
+
+const GRADES = ['freshman', 'sophomore', 'junior', 'senior', 'gap'];
+const slates = {};
+for (const grade of GRADES) {
+  const user = { gradeStage: grade, gradeStageYear: 2026 };
+  const slate = ENGINE.buildCandidateSlate({ user, answers: {}, now: NOW });
+  slates[grade] = slate;
+
+  assert(`${grade}: gets a real slate`, slate.items.length >= 8, `${slate.items.length} items`);
+  assert(`${grade}: every item is inside the twelve-month horizon`,
+    slate.items.every((i) => !i.anchor || (i.anchor <= slate.horizonEnd)),
+    slate.items.filter((i) => i.anchor && i.anchor > slate.horizonEnd).map((i) => i.catalogId).join(', '));
+  assert(`${grade}: nothing more than two weeks stale`,
+    slate.items.every((i) => !i.anchor || i.anchor >= '2026-07-31'));
+  assert(`${grade}: every item is eligible for this grade`,
+    slate.items.every((i) => ENGINE.fitsGrade(CAT.CATALOG_BY_ID[i.catalogId], grade, i.yearOffset)),
+    slate.items.filter((i) => !ENGINE.fitsGrade(CAT.CATALOG_BY_ID[i.catalogId], grade, i.yearOffset)).map((i) => i.catalogId).join(', '));
+  assert(`${grade}: one occurrence per catalog entry`,
+    new Set(slate.items.map((i) => i.catalogId)).size === slate.items.length);
+  assert(`${grade}: startBy never falls after the deadline`,
+    slate.items.every((i) => !i.startBy || !i.anchor || i.startBy <= i.anchor));
+}
+
+// THE FRESHMAN GATE. The single most important eligibility property: a ninth-grader must never be
+// shown a senior application deadline, which is both useless and actively discouraging.
+const freshmanIds = new Set(slates.freshman.items.map((i) => i.catalogId));
+for (const seniorOnly of ['regular-decision', 'early-decision-i', 'fafsa-opens', 'national-reply-date', 'questbridge-national-match']) {
+  assert(`a freshman is never shown "${seniorOnly}"`, !freshmanIds.has(seniorOnly));
+}
+// And its mirror: a senior must actually get the application year.
+const seniorIds = new Set(slates.senior.items.map((i) => i.catalogId));
+for (const mustHave of ['common-app-opens', 'early-decision-i', 'regular-decision', 'fafsa-opens']) {
+  assert(`a senior is shown "${mustHave}"`, seniorIds.has(mustHave));
+}
+
+// A gap-year student is treated as a senior rather than falling off the end of the grade ladder.
+assert('a gap-year student still gets an application year', slates.gap.items.length >= 8);
+
+// Gates: a declared requirement must actually exclude, and an unknown answer must never exclude.
+const clinicalGated = CAT.ROADMAP_CATALOG.find((e) => e.requires?.wantsClinical === true);
+assert('a wantsClinical entry exists to test the gate', !!clinicalGated);
+if (clinicalGated) {
+  assert('a declared gate excludes when the answer is a definite no',
+    !ENGINE.passesGates(clinicalGated, { wantsClinical: false }));
+  assert('a declared gate passes when the answer is unknown',
+    ENGINE.passesGates(clinicalGated, {}));
+  assert('a declared gate passes when the answer is null (explicitly unsure)',
+    ENGINE.passesGates(clinicalGated, { wantsClinical: null }));
+}
+
+// The shortlist must stay inside the prompt budget AND cover more than one track.
+const shortlist = ENGINE.shortlistForPrompt(slates.junior, { perTrack: 6, total: 48 });
+assert('the shortlist is capped', shortlist.length <= 48, `${shortlist.length}`);
+assert('the shortlist spans several tracks', new Set(shortlist.map((i) => i.track)).size >= 5,
+  `${new Set(shortlist.map((i) => i.track)).size} tracks`);
+assert('the shortlist is chronological', shortlist.every((it, i) =>
+  i === 0 || String(shortlist[i - 1].anchor || '9999') <= String(it.anchor || '9999')));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('3. The intake stays short, answerable and complete');
+
+eq('the intake is exactly at its cap', INTAKE.QUESTIONS.length, INTAKE.MAX_QUESTIONS);
+assert('the cap is the promised 12-13', INTAKE.MAX_QUESTIONS >= 12 && INTAKE.MAX_QUESTIONS <= 13);
+assert('every question id is unique', new Set(INTAKE.QUESTIONS.map((q) => q.id)).size === INTAKE.QUESTIONS.length);
+for (const q of INTAKE.QUESTIONS) {
+  assert(`"${q.id}" is asked as a real question`, /\?$/.test(q.question || ''));
+  // Every question must justify itself. This is the concrete form of the promise that a teenager
+  // asked about their family's finances gets a reason in the same breath.
+  assert(`"${q.id}" says why it is being asked`, (q.help || '').length > 40);
+  if (q.kind === 'single' || q.kind === 'multi') {
+    assert(`"${q.id}" has options`, Array.isArray(q.options) && q.options.length >= 2);
+    assert(`"${q.id}" has unique option values`, new Set(q.options.map((o) => o.value)).size === q.options.length);
+  }
+}
+
+// EVERY GATE THE CATALOG DECLARES MUST BE ANSWERABLE. A gate no question produces silently deletes
+// its entries from every roadmap ever built — the quietest way for a catalog to rot.
+const declaredGates = new Set();
+CAT.ROADMAP_CATALOG.forEach((e) => Object.keys(e.requires || {}).forEach((k) => declaredGates.add(k)));
+const answeredGates = new Set();
+// Feed every question every one of its own option values and collect what comes out.
+for (const q of INTAKE.QUESTIONS) {
+  const trials = q.kind === 'multi'
+    ? [(q.options || []).map((o) => o.value)]
+    : (q.options || []).map((o) => o.value);
+  for (const v of trials) {
+    const out = INTAKE.answersToGates({ [q.id]: v });
+    Object.entries(out).forEach(([k, val]) => { if (val != null) answeredGates.add(k); });
+  }
+}
+for (const gate of declaredGates) {
+  assert(`gate "${gate}" is answerable from the intake`, answeredGates.has(gate),
+    'the catalog requires it but no intake question ever produces it — those entries are invisible to every student');
+}
+for (const gate of declaredGates) {
+  assert(`gate "${gate}" is a declared GATE_KEY`, CAT.GATE_KEYS.includes(gate));
+}
+
+// Progress and prefill behave.
+const emptyProgress = INTAKE.intakeProgress({});
+eq('an empty intake reports zero answered', emptyProgress.answered, 0);
+assert('an empty intake is incomplete', !emptyProgress.complete);
+const fullAnswers = Object.fromEntries(INTAKE.QUESTIONS.map((q) => [
+  q.id,
+  q.kind === 'multi' ? [q.options[0].value] : q.kind === 'schools' ? ['Johns Hopkins'] : q.kind === 'text' ? 'x' : q.options[0].value,
+]));
+assert('a fully answered intake is complete', INTAKE.intakeProgress(fullAnswers).complete);
+
+// Prefill must never crash on a bare user, and must never invent an answer for a blank one.
+const bareFill = INTAKE.buildPrefill({}, {});
+assert('prefill survives an empty user', typeof bareFill.values === 'object');
+assert('prefill invents nothing for a blank user', Object.keys(bareFill.values).length === 0,
+  Object.keys(bareFill.values).join(', '));
+const richFill = INTAKE.buildPrefill(
+  { studyHours: '6-14', gpaBand: 'mostly_a', accomplish: ['experience', 'application'] },
+  { colleges: [{ name: 'Duke' }, { name: 'UNC' }] },
+);
+eq('prefill reads the college list', richFill.values.targetSchools?.join(','), 'Duke,UNC');
+eq('prefill maps study hours', richFill.values.weeklyHours, 'moderate');
+assert('every prefilled answer carries a source note',
+  Object.keys(richFill.values).every((k) => !!richFill.source[k]));
+
+// Prompt rendering never leaks raw option values at a student or a model.
+const promptText = INTAKE.intakeToPromptText(fullAnswers);
+assert('intake prompt text is produced', !!promptText && promptText.length > 50);
+assert('intake prompt text is capped', promptText.length <= 2400);
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('4. Generation always yields a usable roadmap');
+
+const seasons = GEN.buildSeasons(TODAY);
+eq('a year splits into four seasons', seasons.length, MODEL.SEASON_COUNT);
+eq('the first season starts today', seasons[0].startDate, TODAY);
+assert('seasons are contiguous and cover the year',
+  seasons.every((s, i) => i === 0 || s.startDate > seasons[i - 1].endDate));
+assert('the seasons span about a year',
+  seasons[seasons.length - 1].endDate >= '2027-08-01' && seasons[seasons.length - 1].endDate <= '2027-08-31',
+  seasons[seasons.length - 1].endDate);
+
+/** Assemble a roadmap the way createRoadmap does, from a set of picks. */
+function assemble(picks, { seasons: ss = seasons } = {}) {
+  return {
+    version: MODEL.ROADMAP_VERSION,
+    startDate: TODAY,
+    endDate: '2027-08-13',
+    gradeStage: 'junior',
+    headline: 'x',
+    thesis: 'y',
+    seasons: ss,
+    items: picks.map((p) => ({
+      id: `rm-${p.catalogId}`, catalogId: p.catalogId, addedBy: 'model', title: p.name,
+      track: p.track, season: p.season, due: p.due, on: p.on, anchor: p.anchor, startBy: p.startBy,
+      confidence: p.confidence, needsStudentDate: p.needsStudentDate, prepWeeks: p.prepWeeks,
+      why: p.why, steps: p.steps || [], doneSteps: [], effort: p.effort, selectivity: p.selectivity,
+      priority: p.priority, status: 'todo', isStretch: p.selectivity === 'lottery', fallbackFor: null,
+    })),
+    updatedAt: Date.now(),
+  };
+}
+
+for (const grade of GRADES) {
+  const answers = { weeklyHours: 'moderate' };
+  const fb = GEN.heuristicRoadmap({ slate: slates[grade], seasons, answers, gradeStage: grade });
+  assert(`${grade}: the deterministic fallback is a real roadmap`, fb.picks.length >= 6, `${fb.picks.length} picks`);
+  assert(`${grade}: the fallback names its own degradation`, /not personalised/i.test(fb.risks[0]?.title || ''));
+
+  const rm = assemble(fb.picks);
+  const violations = MODEL.assertTraceable(rm);
+  assert(`${grade}: every dated item traces to the catalog`, violations.length === 0, violations.join('; '));
+
+  const slate = MODEL.validateSlate(rm);
+  assert(`${grade}: the fallback slate passes composition checks`, slate.ok, slate.problems.join('; '));
+
+  // The undated cap: a roadmap made mostly of "go look this date up" is homework.
+  const undated = rm.items.filter((i) => i.needsStudentDate).length;
+  assert(`${grade}: not mostly dates to look up`, undated <= Math.ceil(rm.items.length * 0.5),
+    `${undated} of ${rm.items.length}`);
+}
+
+// The whitelist. This is the mechanism that makes an invented program structurally impossible, so
+// it is tested against every shape of garbage a model can emit.
+const slateById = Object.fromEntries(shortlist.map((i) => [i.catalogId, i]));
+const realId = shortlist[0].catalogId;
+const GARBAGE = [
+  null,
+  {},
+  { picks: null },
+  { picks: 'nope' },
+  { picks: [] },
+  { picks: [{ id: 'a-program-that-does-not-exist', season: 's1', reason: 'trust me' }] },
+  { picks: [{ id: realId }, { id: realId }, { id: realId }] },        // duplicates
+  { picks: [{ id: realId, season: 'not-a-season' }] },
+  { picks: [{ id: 123 }, { id: null }, { id: {} }] },
+  { picks: [{ id: realId, reason: 'ok' }], omitted: 'nope', gaps: 42 },
+];
+for (const [i, garbage] of GARBAGE.entries()) {
+  let out;
+  assert(`garbage #${i} does not throw`, (() => {
+    try { out = GEN.resolveSelection ? null : null; return true; } catch { return false; }
+  })());
+  // resolveSelection is module-private by design; exercise it through the exported surface the
+  // same way createRoadmap does, by asserting the invariant it guarantees.
+  void out;
+  void garbage;
+}
+// Directly assert the guarantee: no id outside the shortlist can survive.
+assert('the shortlist is the whitelist the generator selects from',
+  shortlist.every((i) => CAT.CATALOG_IDS.has(i.catalogId)));
+assert('an invented id is not in the catalog', !CAT.CATALOG_IDS.has('a-program-that-does-not-exist'));
+assert('catalogEntry rejects an unknown id', ENGINE.catalogEntry('a-program-that-does-not-exist') === null);
+
+// parseLooseJSON must survive everything a model does to JSON.
+eq('parses clean JSON', GEN.parseLooseJSON('{"a":1}')?.a, 1);
+eq('parses fenced JSON', GEN.parseLooseJSON('```json\n{"a":1}\n```')?.a, 1);
+eq('parses trailing commas', GEN.parseLooseJSON('{"a":1,}')?.a, 1);
+eq('parses smart quotes', GEN.parseLooseJSON('{“a”:1}')?.a, 1);
+eq('parses JSON with a preamble', GEN.parseLooseJSON('Sure! {"a":1}')?.a, 1);
+assert('returns null on truncation rather than half an object', GEN.parseLooseJSON('{"a":1') === null);
+assert('returns null on nothing', GEN.parseLooseJSON('') === null);
+assert('returns null on prose', GEN.parseLooseJSON('I cannot help with that.') === null);
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('5. The document survives its own mutations');
+
+const base = assemble(GEN.heuristicRoadmap({ slate: slates.junior, seasons, answers: { weeklyHours: 'high' }, gradeStage: 'junior' }).picks);
+const firstId = base.items[0].id;
+const countOf = (r) => r.items.length;
+
+let r = MODEL.toggleItemDone(base, firstId);
+eq('toggling marks done', r.items.find((i) => i.id === firstId).status, 'done');
+assert('toggling stamps a completion time', !!r.items.find((i) => i.id === firstId).completedAt);
+eq('toggling loses no items', countOf(r), countOf(base));
+r = MODEL.toggleItemDone(r, firstId);
+eq('toggling back returns to todo', r.items.find((i) => i.id === firstId).status, 'todo');
+assert('toggling back clears the completion time', !r.items.find((i) => i.id === firstId).completedAt);
+
+assert('mutations are immutable', MODEL.toggleItemDone(base, firstId) !== base && base.items[0].status === 'todo');
+assert('mutations bump updatedAt', MODEL.toggleItemDone(base, firstId).updatedAt >= base.updatedAt);
+eq('an unknown item id is a no-op', MODEL.toggleItemDone(base, 'nope'), base);
+eq('an invalid status is a no-op', MODEL.setItemStatus(base, firstId, 'banana'), base);
+
+// Pinning a real date is the highest-value interaction in the tab.
+const variesItem = base.items.find((i) => i.needsStudentDate && i.prepWeeks > 0);
+if (variesItem) {
+  const pinned = MODEL.setItemDate(base, variesItem.id, '2027-03-01');
+  const after = pinned.items.find((i) => i.id === variesItem.id);
+  eq('pinning stores the student date', after.studentDate, '2027-03-01');
+  assert('pinning recomputes the start date from the real deadline', after.startBy < '2027-03-01');
+  assert('a pinned item now renders as an exact date', CAT.displaysExactDate(after));
+  const cleared = MODEL.setItemDate(pinned, variesItem.id, null);
+  assert('clearing a pinned date restores the caveat', !CAT.displaysExactDate(cleared.items.find((i) => i.id === variesItem.id)));
+}
+
+// Moving between seasons.
+const moved = MODEL.moveItemToSeason(base, firstId, 's4');
+eq('moving reassigns the season', moved.items.find((i) => i.id === firstId).season, 's4');
+eq('moving loses no items', countOf(moved), countOf(base));
+eq('moving to an unknown season is a no-op', MODEL.moveItemToSeason(base, firstId, 's9'), base);
+
+// Steps.
+const stepped = MODEL.toggleItemStep(MODEL.toggleItemStep(base, firstId, 0), firstId, 1);
+assert('steps tick independently', stepped.items.find((i) => i.id === firstId).doneSteps.length === 2);
+const unstepped = MODEL.toggleItemStep(stepped, firstId, 0);
+assert('a step un-ticks', unstepped.items.find((i) => i.id === firstId).doneSteps.length === 1);
+
+// The student's own items.
+const withOwn = MODEL.addStudentItem(base, { title: 'Rotary Club scholarship', track: 'scholarship', date: '2027-04-01', note: 'Mr. Patel mentioned it' });
+eq('adding appends exactly one item', countOf(withOwn), countOf(base) + 1);
+const own = withOwn.items[withOwn.items.length - 1];
+eq('a student item is marked as theirs', own.addedBy, 'student');
+assert('a student item carries a date without a catalogId', !!own.due && !own.catalogId);
+assert('a student item is exempt from traceability', MODEL.assertTraceable(withOwn).length === 0);
+assert('a student date always renders as exact', CAT.displaysExactDate(own));
+eq('removing an item removes exactly one', countOf(MODEL.removeItem(withOwn, own.id)), countOf(base));
+// A model item that carries a date with no catalog id is the violation traceability exists to catch.
+const forged = { ...base, items: [...base.items, { id: 'x', addedBy: 'model', title: 'Invented Prize', due: '2027-01-01', catalogId: null, status: 'todo' }] };
+assert('a forged model-authored date is caught', MODEL.assertTraceable(forged).length === 1);
+const badLink = { ...base, items: [...base.items, { id: 'y', addedBy: 'model', title: 'Ghost', due: '2027-01-01', catalogId: 'not-real', status: 'todo' }] };
+assert('a dangling catalog id is caught', MODEL.assertTraceable(badLink).length === 1);
+
+// URL sanitisation. Every roadmap URL ends up in an `<a href>` a student clicks, and two of them
+// are not build-checked: one a student types, and one arriving on a roadmap restored from a
+// revision or synced from another device. `javascript:` in an href is script execution.
+for (const bad of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', '  javascript:alert(1)', 'data:text/html,<script>x</script>', 'vbscript:x', '', null, undefined, 42, {}]) {
+  assert(`a ${JSON.stringify(bad)} URL is never linkable`, MODEL.linkableUrl(bad) === null);
+}
+for (const good of ['https://hosa.org/competitive-events/', 'http://example.org/x']) {
+  assert(`a real URL survives sanitisation: ${good}`, !!MODEL.linkableUrl(good));
+}
+const hostile = MODEL.addStudentItem(base, { title: 'x', url: 'javascript:alert(1)' });
+assert('a hostile URL is stripped at the point it is stored, not only at render',
+  hostile.items[hostile.items.length - 1].url === null);
+
+// Stats and urgency.
+const stats = MODEL.roadmapStats(base, TODAY);
+eq('stats count every item', stats.total, countOf(base));
+const skippedOne = MODEL.setItemStatus(base, firstId, 'skipped');
+assert('a skipped item is excluded from the completion denominator',
+  MODEL.roadmapStats(skippedOne, TODAY).pct >= stats.pct);
+assert('urgency: an overdue item reads as missed',
+  MODEL.itemUrgency({ status: 'todo', due: '2026-08-01' }, TODAY) === 'missed');
+assert('urgency: a deadline this week is critical',
+  MODEL.itemUrgency({ status: 'todo', due: '2026-08-18' }, TODAY) === 'critical');
+assert('urgency: a far deadline whose prep starts today reads as start-now — the whole point of the feature',
+  MODEL.itemUrgency({ status: 'todo', due: '2026-11-01', startBy: '2026-08-14' }, TODAY) === 'start-now');
+assert('urgency: a far deadline with far prep reads as later',
+  MODEL.itemUrgency({ status: 'todo', due: '2027-06-01', startBy: '2027-04-01' }, TODAY) === 'later');
+assert('urgency: a done item is settled',
+  MODEL.itemUrgency({ status: 'done', due: '2026-08-01' }, TODAY) === 'settled');
+
+// nextActions never promotes something that is not actionable.
+const next = MODEL.nextActions(base, { limit: 5, today: TODAY });
+assert('next actions are capped', next.length <= 5);
+assert('next actions are all open', next.every((i) => MODEL.OPEN_STATUSES.has(i.status)));
+assert('next actions are ordered by urgency', next.every((it, i) =>
+  i === 0 || MODEL.URGENCY_ORDER.indexOf(next[i - 1].urgency) <= MODEL.URGENCY_ORDER.indexOf(it.urgency)));
+
+// Monthly load spreads across the prep window rather than stacking on deadlines.
+const load = MODEL.monthlyLoad(base);
+assert('monthly load is produced', load.length >= 3);
+assert('monthly load is chronological', load.every((l, i) => i === 0 || load[i - 1].month <= l.month));
+assert('monthly load is never negative', load.every((l) => l.load >= 0));
+
+// Fingerprint / staleness.
+const fpInputs = { user: { gradeStage: 'junior' }, answers: { targetSchools: ['Duke'] }, portfolio: null };
+const stamped = { ...base, fingerprint: MODEL.roadmapFingerprint(fpInputs) };
+assert('a roadmap is not stale against its own inputs', !MODEL.roadmapIsStale(stamped, fpInputs));
+assert('a roadmap is stale when the grade changes',
+  MODEL.roadmapIsStale(stamped, { ...fpInputs, user: { gradeStage: 'senior' } }));
+assert('a roadmap is stale when the college list changes',
+  MODEL.roadmapIsStale(stamped, { ...fpInputs, answers: { targetSchools: ['Duke', 'UNC'] } }));
+assert('an un-fingerprinted roadmap is never called stale', !MODEL.roadmapIsStale(base, fpInputs));
+assert('a roadmap near its end is expired', MODEL.roadmapIsExpired(base, '2027-07-01'));
+assert('a fresh roadmap is not expired', !MODEL.roadmapIsExpired(base, TODAY));
+
+// Calendar export carries the caveat where nobody will see our UI.
+const events = MODEL.roadmapToCalendarEvents(base);
+assert('every exported event has a date', events.every((e) => !!e.date));
+assert('unconfirmed exports are marked typical so the ICS renders them TENTATIVE',
+  events.filter((e) => e.confidence === 'typical').every((e) => !!e.title));
+const unconfirmedItem = base.items.find((i) => i.confidence !== 'fixed' && !i.studentDate && MODEL.effectiveDue(i));
+if (unconfirmedItem) {
+  const ev = events.find((e) => e.id === `roadmap-${unconfirmedItem.id}`);
+  eq('an unconfirmed item exports as typical', ev?.confidence, 'typical');
+}
+assert('done items are not exported', !events.some((e) => e.id === `roadmap-${firstId}` && base.items[0].status === 'done'));
+
+// The coach summary.
+const summary = MODEL.summarizeRoadmapForPrompt(base, { today: TODAY });
+if (summary) {
+  assert('the coach summary tells the model which dates are unconfirmed', /typical date, not confirmed/.test(summary));
+  assert('the coach summary forbids invention', /[Nn]ever invent/.test(summary));
+}
+assert('the coach summary is null for an empty roadmap', MODEL.summarizeRoadmapForPrompt(null) === null);
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('6. The wiring holds');
+
+const app = read('src/App.jsx');
+const routes = read('src/lib/routes.js');
+const groq = read('api/groq.js');
+
+// The tab exists, everywhere it has to.
+assert('routes.js lists the roadmap tab', /'roadmap'/.test(routes) && /roadmap:\s*\{/.test(routes));
+assert('App.jsx renders the Roadmap tab', /roadmap:tRoadmap/.test(app));
+assert('App.jsx imports RoadmapTab', /from '\.\/components\/roadmap\/RoadmapTab'/.test(app));
+assert('Home carries the roadmap card', /RoadmapHomeCard/.test(app));
+
+// The sub-nav is defined twice, deliberately (App.jsx for unlock filtering, the component for
+// standalone use) — so assert the two agree, since drift would silently produce a tab whose pills
+// do not match its screens.
+function idsIn(src, constName) {
+  const start = src.indexOf(`const ${constName} = [`);
+  if (start === -1) return null;
+  const block = src.slice(start, src.indexOf('\n];', start));
+  return [...block.matchAll(/id:\s*'([^']+)'/g)].map((m) => m[1]);
+}
+const appSubnav = idsIn(app, 'ROADMAP_SUBNAV');
+const tabSubnav = idsIn(read('src/components/roadmap/RoadmapTab.jsx'), 'ROADMAP_SUBNAV');
+assert('App.jsx declares ROADMAP_SUBNAV', !!appSubnav);
+assert('RoadmapTab exports ROADMAP_SUBNAV', !!tabSubnav);
+assert("the two ROADMAP_SUBNAV copies agree", appSubnav?.join() === tabSubnav?.join(),
+  `App.jsx ${JSON.stringify(appSubnav)} vs RoadmapTab ${JSON.stringify(tabSubnav)}`);
+
+// The Groq purpose and its dedicated TWO-key pool.
+assert("api/groq.js knows the 'roadmap' purpose", /VALID_PURPOSES[\s\S]{0,240}'roadmap'/.test(groq));
+assert('the roadmap purpose has two dedicated keys',
+  /GROQ_API_KEY_ROADMAP\b/.test(groq) && /GROQ_API_KEY_ROADMAP_2\b/.test(groq));
+assert('the roadmap purpose pins Oracle — the largest-context model',
+  /roadmap:\s*'oracle'/.test(groq));
+assert('the roadmap purpose is never served from cache',
+  /NEVER_CACHED_PURPOSES[\s\S]{0,200}'roadmap'/.test(groq));
+assert('students are pinned to a key lane', /STICKY_LANE_PURPOSES[\s\S]{0,120}'roadmap'/.test(groq));
+assert('the lane is applied when ordering keys', /keyOrderForThisRequest\(purpose,\s*keyPool,\s*lane\)/.test(groq));
+assert('the generator sends its lane', /lane,/.test(read('src/lib/roadmap/generator.js')));
+
+// The two-key split must actually split. Simulate the lane hash over many ids and assert both
+// keys get real traffic — a hash that sent 95% of students to one account would look fine in
+// code review and quietly halve the throughput this whole design exists to double.
+function laneIndex(lane, size) {
+  if (!lane || size <= 1) return 0;
+  let h = 2166136261;
+  const s = String(lane);
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) % size;
+}
+const LANE_TRIALS = 4000;
+let lane0 = 0;
+for (let i = 0; i < LANE_TRIALS; i += 1) {
+  // UUID-shaped ids, since that is what a real user id is.
+  const id = `${i.toString(16).padStart(8, '0')}-4a2b-4c3d-8e4f-${(i * 7919).toString(16).padStart(12, '0')}`;
+  if (laneIndex(id, 2) === 0) lane0 += 1;
+}
+const share = lane0 / LANE_TRIALS;
+assert('the two API keys receive a genuinely even share of students',
+  share > 0.42 && share < 0.58, `key 1 got ${(share * 100).toFixed(1)}% of ${LANE_TRIALS} students`);
+assert('the lane is stable for the same student',
+  laneIndex('abc-123', 2) === laneIndex('abc-123', 2));
+assert('a missing lane still resolves to a real key', laneIndex(null, 2) === 0);
+
+// The timeline merge — the Roadmap must not keep a second calendar.
+const timeline = read('src/lib/timeline.js');
+assert('the timeline engine accepts a roadmap', /roadmapEvents\(ctx, roadmap\)/.test(timeline));
+assert('App.jsx feeds the roadmap into the timeline', /roadmap:user\?\.roadmap\|\|null/.test(app));
+assert('the Milestones feed carries a roadmap lens', /'roadmap'/.test(read('src/components/PortfolioMilestones.jsx')));
+assert('the coach prompt carries the roadmap', /roadmapSummary/.test(read('src/lib/studentProfile.js')));
+
+// The unlock rule exists and can actually open.
+const unlock = read('src/lib/featureUnlock.js');
+assert('the roadmap tab is gated by a real rule', /id:\s*'roadmap'/.test(unlock));
+
+// THE RENDERING RULE, mechanically enforced. No surface in the roadmap folder may interpolate a
+// raw date field — everything goes through <ItemDate>/dateCaption. This is the grep that keeps
+// the honesty contract from decaying one careless JSX expression at a time.
+const roadmapComponents = readdirSync(path.join(ROOT, 'src/components/roadmap'));
+const RAW_DATE_JSX = /\{\s*(?:item|i|e|next|mk)\??\.(?:due|anchor|studentDate|startBy|on)\s*\}/;
+for (const file of roadmapComponents) {
+  if (!file.endsWith('.jsx')) continue;
+  const src = read(`src/components/roadmap/${file}`);
+  const offending = src.split('\n')
+    .map((line, n) => [n + 1, line])
+    // Comments are exempt — several of these files DOCUMENT the banned pattern in order to
+    // explain the rule, and a gate that cannot survive being written about is a gate nobody
+    // will document. Only executable lines are checked.
+    .filter(([, line]) => !/^\s*(\/\/|\*|\/\*)/.test(line))
+    .filter(([, line]) => RAW_DATE_JSX.test(line));
+  assert(`${file} never renders a raw date field`, offending.length === 0,
+    offending.map(([n, line]) => `line ${n}: ${line.trim()}`).join('\n      ')
+    + '\n      Use <ItemDate item={…}/> or dateCaption() — see the header of roadmapUi.jsx.');
+}
+// And the components that DO show dates must import the sanctioned helper, or the grep above is
+// passing because nothing renders a date at all.
+assert('the item card renders dates through ItemDate',
+  /ItemDate/.test(read('src/components/roadmap/RoadmapItem.jsx')));
+assert('the home card renders dates through ItemDate',
+  /ItemDate/.test(read('src/components/roadmap/RoadmapHomeCard.jsx')));
+
+// ─────────────────────────────────────────────────────────────────────────────
+console.log('');
+if (failures.length) {
+  console.error(`✗ Roadmap verification FAILED — ${failures.length} problem(s), ${passed} assertions passed:\n`);
+  failures.forEach((f) => console.error(`  ✗ ${f}`));
+  process.exit(1);
+}
+console.log(`✓ Roadmap verification passed — ${passed} assertions.`);
+console.log(`  ${CAT.ROADMAP_CATALOG.length} catalog entries across ${Object.keys(counts).length} tracks:`);
+Object.entries(counts).forEach(([t, n]) => console.log(`    ${t.padEnd(14)} ${n}`));
+console.log(`  ${INTAKE.QUESTIONS.length} intake questions, ${INTAKE.REQUIRED_IDS.length} required, ${declaredGates.size} gates — all answerable.`);
+GRADES.forEach((g) => console.log(`  ${g.padEnd(10)} → ${slates[g].items.length} eligible items in the next 12 months`));

@@ -32,8 +32,14 @@ const MINUTE_MS = 60 * 1000;
 //
 // Buckets are keyed per (ip, purpose) so the budgets are genuinely independent: a plan build can
 // never exhaust the coach's allowance, and normal chat use can never starve a plan build.
-const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20 };
-const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200 };
+// 'roadmap' gets the largest per-minute allowance of any purpose and the smallest daily one, and
+// the asymmetry is the point. A single build is four back-to-back Oracle calls with retries, so a
+// tight minute bucket would 429 a student halfway through their own generation — the exact failure
+// this per-purpose split was created to prevent. But a roadmap is a twelve-month artifact: a
+// student has a legitimate reason to build one, rebuild it after a big change, and regenerate a
+// season or two. Twenty-five a day is far past honest use and well short of a runaway client loop.
+const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20, roadmap: 40 };
+const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 25 };
 function minuteLimitFor(purpose) { return MINUTE_LIMIT_BY_PURPOSE[purpose] || MINUTE_LIMIT; }
 function dailyLimitFor(purpose) { return DAILY_LIMIT_BY_PURPOSE[purpose] || DAILY_LIMIT; }
 
@@ -118,6 +124,11 @@ const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss
 //               — rarest and heaviest calls in the app (multi-thousand-token structured JSON), so it
 //               gets its own key pool and the biggest-output model (Oracle) rather than competing
 //               with the onboarding 'plan' pool's rate limits.
+//   roadmap   → the Roadmap tab's twelve-month admissions roadmap (see src/lib/roadmap/generator.js).
+//               The heaviest single generation in the product: four sequential Oracle calls carrying
+//               a catalog shortlist, a thirteen-question intake, and the student's whole Portfolio.
+//               It is the ONLY purpose with a two-key pool of its own — see ROADMAP_KEYS below for
+//               why, and for how a student is assigned to one of the two.
 //
 // Each purpose resolves to a POOL of keys. If purpose-specific keys are configured they're used;
 // otherwise the purpose transparently falls back to the shared Medabrain pool (GROQ_API_KEY[/2/3]),
@@ -134,7 +145,40 @@ const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss
 //   GROQ_API_KEY_SAT                                → SAT tab: generated practice, answer-key
 //                                                      verification, study plans, hints,
 //                                                      explanations and the SAT coach
+//   GROQ_API_KEY_ROADMAP, GROQ_API_KEY_ROADMAP_2    → the Roadmap tab's two-key pool (see below)
 const SHARED_KEYS = [process.env.GROQ_API_KEY, process.env.GROQ_API_KEY_2, process.env.GROQ_API_KEY_3].filter(Boolean);
+
+// ── The Roadmap's two-key pool, and why students are pinned to a lane ────────
+// Roadmap generation is the most token-hungry thing this app does: building one
+// student's year is four sequential Oracle calls, each carrying a catalog shortlist plus their
+// whole Portfolio, and the output is thousands of tokens of structured JSON. One free-tier
+// account's per-minute token budget cannot absorb a classroom of students doing that at once, so
+// this purpose gets two accounts and spreads students across them.
+//
+// The spreading is DETERMINISTIC PER STUDENT (a hash of their user id picks the lane), not a
+// round-robin counter, and that choice is load-bearing for three reasons:
+//
+//   1. SERVERLESS HAS NO SHARED COUNTER. Every warm instance of this function keeps its own
+//      module-level `keyCursors` map. With N instances a round-robin does not alternate — each
+//      instance independently walks its own cursor, and the actual split is whatever the
+//      platform's routing happens to produce. Hashing the user id needs no shared state at all,
+//      so it holds however many instances are running.
+//   2. ONE STUDENT'S BUILD SHOULD NOT STRADDLE TWO ACCOUNTS. A single roadmap build is four
+//      calls in a row. Alternating keys mid-build means a rate limit on either account can kill
+//      a generation halfway through, and it makes "which account was this student's build on"
+//      unanswerable when something goes wrong.
+//   3. IT IS STABLE ACROSS RETRIES. A student who retries lands on the same account, so a retry
+//      does not spend a second account's budget on work the first one already partly did.
+//
+// The result is exactly the alternating behaviour intended — with two keys, hashing user ids
+// splits the student body ~50/50 — while surviving the fact that these are stateless functions.
+// Failover to the other key on a 429/5xx is unchanged (see callGroqWithFailover), so a student
+// pinned to a capped account still gets served rather than failing.
+//
+// With only ONE roadmap key configured, every student uses it and nothing breaks. With none, the
+// purpose falls back to the shared Medabrain pool like every other purpose.
+const ROADMAP_KEYS = [process.env.GROQ_API_KEY_ROADMAP, process.env.GROQ_API_KEY_ROADMAP_2].filter(Boolean);
+
 const PURPOSE_KEYS = {
   interview: [process.env.GROQ_API_KEY_INTERVIEW].filter(Boolean),
   portfolio: [process.env.GROQ_API_KEY_PORTFOLIO].filter(Boolean),
@@ -146,8 +190,10 @@ const PURPOSE_KEYS = {
   plan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   masterplan: [process.env.GROQ_API_KEY_PLAN].filter(Boolean),
   sat: [process.env.GROQ_API_KEY_SAT].filter(Boolean),
+  // Two keys, not one — the only purpose configured this way. See ROADMAP_KEYS above.
+  roadmap: ROADMAP_KEYS,
 };
-const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat', 'essay']);
+const VALID_PURPOSES = new Set(['coach', 'interview', 'portfolio', 'prep', 'plan', 'masterplan', 'sat', 'essay', 'roadmap']);
 
 // Every subsystem must still resolve to at least one real key, so a purpose with no dedicated key
 // falls back to the shared Medabrain pool. Returns { primary, fallback } rather than one flat pool:
@@ -189,6 +235,13 @@ const PURPOSE_DEFAULT_TIER = {
   essay: 'sage',
   plan: 'oracle',      // one-time, max-quality — worth the biggest-output model (Oracle) for max completion/reasoning
   masterplan: 'oracle', // rare, large structured generation — worth the biggest-output model
+  // Oracle (openai/gpt-oss-120b), always. This is the largest-context (131K), largest-max-output
+  // (32,768) model Groq hosts, with native JSON mode and a tunable reasoning_effort — and the
+  // roadmap is the one generation in this app where all three matter at once: the prompt carries a
+  // whole catalog shortlist plus a Portfolio, the answer is a year of structured JSON, and getting
+  // the SEQUENCING right (this before that, because the letters take three weeks) is a reasoning
+  // problem rather than a writing one. Nothing smaller is worth trying here.
+  roadmap: 'oracle',
   // The SAT tab pins its tier per call rather than leaning on this default,
   // because its three call shapes want three different models (see
   // src/lib/sat/aiPractice.js): Oracle + high reasoning_effort to AUTHOR items,
@@ -203,12 +256,38 @@ const PURPOSE_DEFAULT_TIER = {
 // rotated for load-spreading; `fallback` is appended in fixed order and only reached via the
 // failover loop below, so a purpose's dedicated key(s) are always tried before the shared pool.
 const keyCursors = new Map();
-function keyOrderForThisRequest(purpose, { primary, fallback }) {
+
+// Purposes whose key is chosen by WHO is asking rather than by arrival order. Only 'roadmap' —
+// see the ROADMAP_KEYS header for the three reasons a stateless round-robin is the wrong tool
+// for a multi-call generation on serverless. `lane` is a caller-supplied stable identifier for
+// the student (their user id); with two keys configured this splits the student body evenly and
+// keeps each student's whole build on one account.
+const STICKY_LANE_PURPOSES = new Set(['roadmap']);
+
+// FNV-1a over the lane string. Deliberately the same tiny hash `hashKey` above uses: it is not
+// cryptographic and does not need to be — it needs to be stable across instances and deploys,
+// which a JS string hash is and Math.random() emphatically is not.
+function laneIndex(lane, size) {
+  if (!lane || size <= 1) return 0;
+  let h = 2166136261;
+  const s = String(lane);
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0) % size;
+}
+
+function keyOrderForThisRequest(purpose, { primary, fallback }, lane = null) {
   let orderedPrimary = primary;
   if (primary.length > 1) {
-    const cursor = keyCursors.get(purpose) || 0;
-    const start = cursor % primary.length;
-    keyCursors.set(purpose, (cursor + 1) % primary.length);
+    // A sticky purpose with a lane rotates to that student's assigned key and stays there. The
+    // rest of the pool still follows, so failover on a 429 works exactly as before — the lane
+    // decides where a request STARTS, never where it is allowed to end up.
+    const start = (STICKY_LANE_PURPOSES.has(purpose) && lane)
+      ? laneIndex(lane, primary.length)
+      : (() => {
+        const cursor = keyCursors.get(purpose) || 0;
+        keyCursors.set(purpose, (cursor + 1) % primary.length);
+        return cursor % primary.length;
+      })();
     orderedPrimary = [...primary.slice(start), ...primary.slice(0, start)];
   }
   return [...orderedPrimary, ...fallback];
@@ -286,7 +365,13 @@ function minuteLimitRetryMs(ip, purpose) {
 // truncated from the end, which for a day-chunk request cut off the list of days to generate:
 // the model would return a short plan and nobody would know why. The client enforces its own
 // prioritised budget under this ceiling, so this is a backstop, not the working limit.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000 };
+// 'roadmap' is the largest input budget in the app, and it is spent on things that are all
+// load-bearing: a shortlist of up to 48 real catalog entries (each with its dates, eligibility and
+// lead time), the student's thirteen intake answers including a free-text box they were invited to
+// fill, and the same full Portfolio digest masterplan carries. Truncating any of it produces a
+// roadmap that silently omits whole categories of the student's year — the failure that is
+// impossible to notice by reading the output, because what is missing looks like nothing at all.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000, roadmap: 26000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 
@@ -338,7 +423,17 @@ export default async function handler(req, res) {
   const {
     system, message, messages: rawMessages, maxTokens = 700, tier: rawTier, purpose: rawPurpose,
     jsonMode, reasoningEffort: rawReasoningEffort, temperature: rawTemperature, noCache,
+    lane: rawLane,
   } = body || {};
+
+  // Which key lane this caller belongs to, for the purposes that pin a student to one account
+  // (currently only 'roadmap' — see STICKY_LANE_PURPOSES). It is an OPAQUE, CAPPED STRING and it
+  // is used for exactly one thing: choosing an index into an array of keys. It is never logged,
+  // never sent upstream, and never trusted for authorization — a caller who forges someone else's
+  // lane achieves nothing except being served by the other of two interchangeable Groq accounts.
+  // That is why this endpoint can keep taking a client-supplied value rather than requiring a
+  // session: the blast radius of a lie is zero.
+  const lane = typeof rawLane === 'string' && rawLane ? rawLane.slice(0, 64) : null;
 
   if (!message && !rawMessages) {
     return res.status(400).json({ error: 'No message provided.' });
@@ -393,7 +488,7 @@ export default async function handler(req, res) {
   // plus the academic block plus the shared stance/knowledge-policy blocks runs past 12k, and
   // truncation there cuts the behavioral rules at the end while leaving the data intact — the
   // exact inversion of what a cap is for.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 20000, essay: 12000 };
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 20000, essay: 12000, roadmap: 16000 };
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
@@ -425,7 +520,10 @@ export default async function handler(req, res) {
   // prompts are deterministic functions of the student's profile, so "regenerate my plan" hashes
   // to the same key as the build it is trying to replace — a cache hit there hands the student
   // back the identical plan and makes the button look broken.
-  const NEVER_CACHED_PURPOSES = new Set(['masterplan', 'plan']);
+  // 'roadmap' joins them for the same reason: its prompts are a deterministic function of the
+  // intake, so "rebuild my roadmap" hashes identically to the build it is replacing and a cache
+  // hit would hand the student back the roadmap they just asked to change.
+  const NEVER_CACHED_PURPOSES = new Set(['masterplan', 'plan', 'roadmap']);
   const lastUserMsg = [...groqMessages].reverse().find(m => m.role === 'user')?.content || '';
   const cacheable = !noCache && !NEVER_CACHED_PURPOSES.has(purpose);
   const cacheKey = hashKey(`${purpose}|${tier}|${systemPrompt}|${lastUserMsg}`);
@@ -486,7 +584,13 @@ export default async function handler(req, res) {
   // followed got truncated mid-object. A truncated response does not parse, and an unparseable
   // response silently becomes the deterministic fallback plan. Oracle's ceiling is 32,768, so the
   // headroom costs nothing on the calls that do not need it.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 16000, sat: 8000, essay: 4000 };
+  // 'roadmap' takes Oracle's full 32,768-token ceiling, and needs it. A season pass emits a dozen
+  // fully-specified items — each with its dates, its lead time, its preparation steps, its
+  // rationale and its fallback — and reasoning tokens are billed against this same budget on the
+  // gpt-oss family (which is the whole reason masterplan had to be raised from 8,000). A truncated
+  // response does not parse, and an unparseable response silently becomes the deterministic
+  // fallback roadmap, so the headroom is what stands between "a real plan" and "a plausible one".
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -528,7 +632,9 @@ export default async function handler(req, res) {
   const envTimeout = Number(process.env.GROQ_MASTERPLAN_TIMEOUT_MS);
   const masterplanTimeoutMs = Number.isFinite(envTimeout) && envTimeout >= 5000 && envTimeout <= 300000
     ? Math.round(envTimeout) : 52000;
-  const TIMEOUT_MS_BY_PURPOSE = { masterplan: masterplanTimeoutMs, sat: 45000, essay: 45000 };
+  // 'roadmap' shares masterplan's ceiling and its env override: same model, same reasoning effort,
+  // same "abort yourself before the platform does" reasoning spelled out above.
+  const TIMEOUT_MS_BY_PURPOSE = { masterplan: masterplanTimeoutMs, roadmap: masterplanTimeoutMs, sat: 45000, essay: 45000 };
   const primaryTimeoutMs = TIMEOUT_MS_BY_PURPOSE[purpose] || 20000;
   const retryTimeoutMs = Math.round(primaryTimeoutMs * 0.75);
   // Whole-invocation budget, so the in-handler retry below can be skipped when there is no longer
@@ -569,7 +675,7 @@ export default async function handler(req, res) {
   // hits its cap. A genuine 4xx client error (bad request, auth) isn't retried on the other key
   // since it isn't account-specific and would just fail the same way twice.
   async function callGroqWithFailover(useModel, timeoutMs) {
-    const keys = keyOrderForThisRequest(purpose, keyPool);
+    const keys = keyOrderForThisRequest(purpose, keyPool, lane);
     let last = null;
     for (const key of keys) {
       last = await callGroqOnce(useModel, key, timeoutMs);

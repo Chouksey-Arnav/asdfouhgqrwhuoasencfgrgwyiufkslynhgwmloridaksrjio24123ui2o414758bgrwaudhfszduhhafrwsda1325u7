@@ -50,7 +50,7 @@ if (!navIds) fail('could not find NAV in src/App.jsx');
 else if (navIds.join() !== TABS.join()) fail(`NAV ${JSON.stringify(navIds)} !== TABS ${JSON.stringify(TABS)}`);
 else ok(`NAV matches TABS (${TABS.length} tabs)`);
 
-for (const [tab, name] of [['sat', 'SAT_SUBNAV'], ['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['progress', 'PROGRESS_SUBNAV'], ['settings', 'SETTINGS_SUBNAV']]) {
+for (const [tab, name] of [['sat', 'SAT_SUBNAV'], ['prep', 'PREP_SUBNAV'], ['portfolio', 'PORTFOLIO_SUBNAV'], ['roadmap', 'ROADMAP_SUBNAV'], ['progress', 'PROGRESS_SUBNAV'], ['settings', 'SETTINGS_SUBNAV']]) {
   const ids = idsIn(name);
   if (!ids) { fail(`could not find ${name} in src/App.jsx`); continue; }
   const known = SUBVIEWS[tab].ids;

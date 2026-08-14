@@ -17,7 +17,7 @@
 // The hook that wires this to history lives in ./useAppRouter.js.
 
 /** Top-level tabs, in nav order. Must match NAV in src/App.jsx. */
-export const TABS = ['home', 'sat', 'prep', 'portfolio', 'plans', 'progress', 'settings'];
+export const TABS = ['home', 'sat', 'prep', 'portfolio', 'roadmap', 'plans', 'progress', 'settings'];
 
 /**
  * Tabs that own a SubNav, and the sub-view ids that bar can select.
@@ -62,6 +62,21 @@ export const SUBVIEWS = {
     // Résumé they became (see RESUME_SECTION_FOR_VIEW there), so an old link
     // lands on the exact form it used to open, not just the right tab.
     aliases: { timeline: 'milestones', deadlines: 'milestones', research: 'resume', skills: 'resume', clinical: 'resume' },
+  },
+  // The twelve-month admissions roadmap. Sits between Portfolio and Plans in
+  // TABS for the same reason it does in the nav: Portfolio is the record of what
+  // a student has done, Plans is what they are doing today, and the Roadmap is
+  // the year that connects them.
+  //
+  // 'intake' is a real addressable view rather than a modal, and deliberately
+  // so: it is the screen a student is sent back to whenever their answers go
+  // stale, it is what a support reply or a parent's nudge needs to be able to
+  // link to, and a thirteen-question flow that cannot be resumed from a URL is
+  // one a student abandons and never finds again.
+  roadmap: {
+    state: 'roadmapView',
+    default: 'overview',
+    ids: ['overview', 'year', 'seasons', 'list', 'intake'],
   },
   progress: {
     state: 'progressView',
@@ -369,6 +384,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
     satView: SUBVIEWS.sat.ids.includes(persisted.satView) ? persisted.satView : SUBVIEWS.sat.default,
     prepView: SUBVIEWS.prep.ids.includes(persisted.prepView) ? persisted.prepView : SUBVIEWS.prep.default,
     portfolioView: resolveView('portfolio', persisted.portfolioView) || SUBVIEWS.portfolio.default,
+    roadmapView: SUBVIEWS.roadmap.ids.includes(persisted.roadmapView) ? persisted.roadmapView : SUBVIEWS.roadmap.default,
     progressView: SUBVIEWS.progress.ids.includes(persisted.progressView) ? persisted.progressView : SUBVIEWS.progress.default,
     settingsView: SUBVIEWS.settings.ids.includes(persisted.settingsView) ? persisted.settingsView : SUBVIEWS.settings.default,
     overlay: null,
@@ -391,7 +407,7 @@ export function bootRoute(persisted = {}, pathname = typeof window !== 'undefine
  * used every render to decide whether the address bar is still telling the
  * truth.
  */
-export function routeFromState({ tab, satView, prepView, portfolioView, progressView, settingsView, overlay = null }) {
-  const views = { sat: satView, prep: prepView, portfolio: portfolioView, progress: progressView, settings: settingsView };
+export function routeFromState({ tab, satView, prepView, portfolioView, roadmapView, progressView, settingsView, overlay = null }) {
+  const views = { sat: satView, prep: prepView, portfolio: portfolioView, roadmap: roadmapView, progress: progressView, settings: settingsView };
   return { tab, view: SUBVIEWS[tab] ? views[tab] : null, overlay };
 }

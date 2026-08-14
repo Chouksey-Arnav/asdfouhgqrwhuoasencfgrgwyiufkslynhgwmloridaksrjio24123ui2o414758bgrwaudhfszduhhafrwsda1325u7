@@ -24,6 +24,7 @@ key pool and a cost-appropriate default model:
 | `masterplan` | The **Plans tab**'s full day-by-day roadmap generation (rare, heaviest)| Oracle (biggest)   | `GROQ_API_KEY_PLAN`         |
 | `sat`        | SAT drills, hints, step-by-step explanations, and coach               | Sage (best)        | `GROQ_API_KEY_SAT`          |
 | `essay`      | Essay critique + supplemental-prompt lookup (Essay Workspace)         | Sage (best)        | `GROQ_API_KEY_ESSAY`        |
+| `roadmap`    | The **Roadmap tab**'s 12-month plan (heaviest generation in the app)   | Oracle (biggest)   | `GROQ_API_KEY_ROADMAP` + `_2` |
 
 `essay` is the one purpose with a two-step fallback: it uses `GROQ_API_KEY_ESSAY` if set, then
 `GROQ_API_KEY_PORTFOLIO` (essay critique *is* portfolio work), then the shared pool. It also runs
@@ -55,8 +56,54 @@ GROQ_API_KEY_PREP=gsk_...         # 6th account → in-context prep help
 GROQ_API_KEY_PLAN=gsk_...         # 7th account → Plans tab full day-by-day roadmap generation
 GROQ_API_KEY_SAT=gsk_...          # 8th account → SAT tab drills, hints, and explanations
 GROQ_API_KEY_ESSAY=gsk_...        # 9th account → essay critique + supplemental essay prompts
+
+# The Roadmap tab's TWO-key pool — the only purpose with two dedicated accounts.
+# Set BOTH if you can: students are split evenly across them (see below), which
+# doubles the free-tier throughput available to the heaviest generation in the app.
+# With only the first set, every student uses it and nothing breaks. With neither,
+# the purpose falls back to the shared pool like every other one.
+GROQ_API_KEY_ROADMAP=gsk_...      # 10th account → Roadmap tab, key 1
+GROQ_API_KEY_ROADMAP_2=gsk_...    # 11th account → Roadmap tab, key 2
+
 # GROQ_API_KEY_MASTERPLAN=gsk_... # Reserved for other purposes down the road
 ```
+
+### The Roadmap's two keys, and how students are split between them
+
+Building one student's twelve-month roadmap is **four sequential calls** to
+`openai/gpt-oss-120b` (Oracle), each carrying a catalog shortlist plus that student's whole
+Portfolio, and each returning thousands of tokens of structured JSON. It is by a wide margin
+the most token-hungry thing this app does, and one free-tier account's per-minute budget
+cannot absorb a classroom doing it at once. Hence two accounts.
+
+**How a student is assigned to a key.** Not round-robin — a hash of the student's user id
+picks their lane, so with two keys configured the student body splits roughly 50/50 and each
+student stays on one account:
+
+| | |
+|---|---|
+| Student A (`id` hashes to 0) | always key 1 |
+| Student B (`id` hashes to 1) | always key 2 |
+| Student C | whichever their id hashes to |
+
+Three reasons it is a hash and not a counter — all three are the difference between this
+working and quietly not working:
+
+1. **Serverless has no shared counter.** Every warm instance of `api/groq.js` keeps its own
+   module-level cursor. With N instances a round-robin does not alternate; each instance walks
+   its own cursor independently and the real split is whatever the platform's routing happens
+   to produce. A hash needs no shared state, so it holds however many instances are running.
+2. **One student's build must not straddle two accounts.** A build is four calls in a row.
+   Alternating mid-build means a rate limit on *either* account can kill a generation halfway
+   through, and "which account was this build on" becomes unanswerable when something breaks.
+3. **It is stable across retries.** A student who retries lands on the same account rather than
+   spending a second account's budget on work the first one already partly did.
+
+Failover is unchanged: a student pinned to a capped account still fails over to the other key
+on a 429 or 5xx. The lane decides where a request *starts*, never where it is allowed to end up.
+
+`scripts/verifyRoadmap.mjs` simulates the hash over 4,000 realistic user ids and fails the
+build if the split drifts outside 42–58%.
 
 Put the same values in a `.env.local` at the project root for local dev.
 
