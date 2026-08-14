@@ -23,9 +23,11 @@ import {
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
   Highlighter, Accessibility, Gauge, Info, Download, Headphones, Users,
-  Shuffle, Flag, Swords, Gift,
+  Shuffle, Flag, Swords, Gift, ListChecks,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
+  // Aliased for the same reason: `Map` is a JavaScript global this file uses.
+  Map as MapIcon,
 } from 'lucide-react';
 
 const ACH_ICONS = { Target, Star, Trophy, Sparkles, Gem, Flame, Dumbbell, Layers3, BookOpen, Milestone, MessageCircle, Building2, CalendarDays, ScrollText, Award, Mic, GraduationCap, Stethoscope, UserCheck, ShieldCheck, Layers, Crown, Compass };
@@ -83,6 +85,7 @@ import {
   freezeCost, canBuyFreeze, repairOffer, repairCost, freezeCapFor,
 } from './lib/streak';
 import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './lib/timeline';
+import { summarizeRoadmapForPrompt } from './lib/roadmap/model';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
 import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
@@ -162,6 +165,8 @@ import {
 import MyPlanCard from './components/MyPlanCard';
 import TodayPlanNudge from './components/TodayPlanNudge';
 import PlansTab, { fetchPortfolio as fetchPlanPortfolio } from './components/PlansTab';
+import RoadmapTab from './components/roadmap/RoadmapTab';
+import RoadmapHomeCard from './components/roadmap/RoadmapHomeCard';
 import PlanTaskStrip from './components/ui/PlanTaskStrip';
 import PortfolioPlanWeek from './components/PortfolioPlanWeek';
 import WeeklyGoalsBoard from './components/portfolio/WeeklyGoalsBoard';
@@ -399,6 +404,11 @@ const NAV = [
   {id:'sat',ic:Target,label:'SAT'},
   {id:'prep',ic:Compass,label:'Prep'},
   {id:'portfolio',ic:Building2,label:'Portfolio'},
+  // Sits between Portfolio and Plans, and the ordering is the argument: Portfolio is the record
+  // of what a student has already done, Plans is what they are doing today, and the Roadmap is
+  // the twelve months that connect the two. It is the only tab in this nav that looks further
+  // ahead than next week.
+  {id:'roadmap',ic:MapIcon,label:'Roadmap'},
   {id:'plans',ic:CalendarClock,label:'Plans'},
   {id:'progress',ic:LineChart,label:'Progress'},
   {id:'settings',ic:Settings,label:'Settings'},
@@ -491,6 +501,18 @@ function resumeSectionFromPath(pathname=''){
   const parts = String(pathname).split('/').filter(Boolean);
   return (parts[0]==='portfolio' && RESUME_SECTION_FOR_VIEW[parts[1]]) || null;
 }
+// The Roadmap pillar. Defined here, in the same shape and the same place as every other
+// sub-nav, so scripts/verifyRouting.mjs can pin it to SUBVIEWS.roadmap in routes.js the way it
+// pins the rest — the tab's own module exports the identical array (see ROADMAP_SUBNAV in
+// src/components/roadmap/RoadmapTab.jsx) and verifyRoadmap.mjs asserts the two agree, so the
+// component and the router can never drift apart.
+const ROADMAP_SUBNAV = [
+  {id:'overview',ic:Compass,label:'Overview',color:C.violet},
+  {id:'year',ic:CalendarDays,label:'Your Year',color:C.sky},
+  {id:'seasons',ic:Layers,label:'Seasons',color:C.teal},
+  {id:'list',ic:ListChecks,label:'Everything',color:C.amber},
+  {id:'intake',ic:Target,label:'Your Answers',color:C.fuchsia},
+];
 const PROGRESS_SUBNAV = [
   {id:'overview',ic:LineChart,label:'Overview',color:C.blue},
   // Streak sits directly after Overview and is deliberately NOT gated: it is the
@@ -536,6 +558,7 @@ const UNLOCK_LABELS = Object.fromEntries([
   ...SAT_SUBNAV.map(n=>[`sat/${n.id}`,n.label]),
   ...PREP_SUBNAV.map(n=>[`prep/${n.id}`,n.label]),
   ...PORTFOLIO_SUBNAV.map(n=>[`portfolio/${n.id}`,n.label]),
+  ...ROADMAP_SUBNAV.map(n=>[`roadmap/${n.id}`,n.label]),
   ...PROGRESS_SUBNAV.map(n=>[`progress/${n.id}`,n.label]),
   ...SETTINGS_SUBNAV.map(n=>[`settings/${n.id}`,n.label]),
   // The five parts of Activities & Résumé are gated one level deeper than a
@@ -1694,6 +1717,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // pins to the *_SUBNAV arrays above so a new sub-tab can't ship without a URL.
   const [prepView, setPrepView] = useState(boot.prepView); // diagnostic|pathway|quizzes|flashcards|coach|library
   const [portfolioView, setPortfolioView] = useState(boot.portfolioView); // overview|tracked|milestones|colleges|essays|aid|resume|interview|calc
+  const [roadmapView, setRoadmapView] = useState(boot.roadmapView); // overview|year|seasons|list|intake
   const [progressView, setProgressView] = useState(boot.progressView); // overview|verified|performance|achievements
   const [satView, setSatView] = useState(boot.satView); // overview|diagnostic|practice|tests|review|skills|scores
   const [settingsView, setSettingsView] = useState(boot.settingsView); // profile|study|family|appearance|medabrain|data|account
@@ -1793,6 +1817,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },[]);
   const [plansOpenDate,setPlansOpenDate]=useState(null);
   const goPlans = useCallback((dateStr)=>{ setTab('plans'); setPlansOpenDate(dateStr||null); }, []);
+  const goRoadmap = useCallback((view)=>{ setTab('roadmap'); if(view) setRoadmapView(view); }, []);
   // One generic (tab, view) jump, for surfaces that carry their own deep links as data rather
   // than as hard-coded callbacks — the Timeline's per-milestone actions (src/lib/timeline.js)
   // are the first of them, so a milestone can say "this is handled in Portfolio > Financial Aid"
@@ -1809,7 +1834,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
-  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, progressView, satView, settingsView }); },[tab, prepView, portfolioView, progressView, satView, settingsView]);
+  useEffect(()=>{ saveViewState({ tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView }); },[tab, prepView, portfolioView, roadmapView, progressView, satView, settingsView]);
 
   // Keep the browser tab title in sync with where the student actually is — previously the
   // <title> in index.html ("MedSchoolPrep — Your Path Into Medicine") never changed after load,
@@ -1823,12 +1848,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     const subLabel=
       tab==='prep'?PREP_SUBNAV.find(n=>n.id===prepView)?.label:
       tab==='portfolio'?PORTFOLIO_SUBNAV.find(n=>n.id===portfolioView)?.label:
+      tab==='roadmap'?ROADMAP_SUBNAV.find(n=>n.id===roadmapView)?.label:
       tab==='progress'?PROGRESS_SUBNAV.find(n=>n.id===progressView)?.label:
       tab==='sat'?SAT_SUBNAV.find(n=>n.id===satView)?.label:
       tab==='settings'?SETTINGS_SUBNAV.find(n=>n.id===settingsView)?.label:
       null;
     document.title=`${subLabel?`${subLabel} · `:''}${navLabel} · MedSchoolPrep`;
-  },[tab,prepView,portfolioView,progressView,satView,settingsView]);
+  },[tab,prepView,portfolioView,roadmapView,progressView,satView,settingsView]);
 
   // ── Post-onboarding product tour — a short spotlight walkthrough hitting each ──
   // top-level pillar once, offered right after a new account is created (see
@@ -1886,8 +1912,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     : aQuiz      ? { kind:'quiz', quizId:aQuiz.id }
     : null
   ),[activeLesson,aQuiz]);
-  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, progressView, settingsView, overlay:overlayRoute }),
-    [tab,satView,prepView,portfolioView,progressView,settingsView,overlayRoute]);
+  const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, roadmapView, progressView, settingsView, overlay:overlayRoute }),
+    [tab,satView,prepView,portfolioView,roadmapView,progressView,settingsView,overlayRoute]);
 
   // Flat [{lesson,unit}] for the active pathway, so a lesson URL can be resolved back
   // to the lesson it names. A ref (filled by an effect further down) rather than a
@@ -1913,6 +1939,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         const section = resumeSectionFromPath(window.location.pathname);
         if (section) setResumeSection(section);
       }
+      else if (next.tab === 'roadmap') setRoadmapView(next.view);
       else if (next.tab === 'progress') setProgressView(next.view);
       else if (next.tab === 'settings') setSettingsView(next.view);
     }
@@ -1943,12 +1970,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // shows the destination on hover, and a copied link actually lands where it says.
   // Each points at the sub-view the student last had open in that tab, matching exactly
   // where clicking will take them.
-  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView,settings:settingsView}),
-    [satView,prepView,portfolioView,progressView,settingsView]);
+  const subViewOf = useMemo(()=>({sat:satView,prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView,settings:settingsView}),
+    [satView,prepView,portfolioView,roadmapView,progressView,settingsView]);
   const tabHref = useCallback((id)=>formatPath({tab:id,view:subViewOf[id]}),[subViewOf]);
   const satHref = useCallback((v)=>formatPath({tab:'sat',view:v}),[]);
   const prepHref = useCallback((v)=>formatPath({tab:'prep',view:v}),[]);
   const portfolioHref = useCallback((v)=>formatPath({tab:'portfolio',view:v}),[]);
+  const roadmapHref = useCallback((v)=>formatPath({tab:'roadmap',view:v}),[]);
   const progressHref = useCallback((v)=>formatPath({tab:'progress',view:v}),[]);
   const settingsHref = useCallback((v)=>formatPath({tab:'settings',view:v}),[]);
   // Shared by every nav item: keep modified clicks with the browser, handle plain ones.
@@ -2839,11 +2867,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const settingsAccent = C.amber;
   const plansAccent = C.pink;
   const satAccent = C.sky;
+  // Violet, which the Prep nav item also uses — deliberate, and the only shared nav colour in
+  // the app. Prep is "learn the material" and Roadmap is "learn what to do with your year";
+  // they are the two forward-looking pillars, and reading as a pair is closer to the truth than
+  // spending the last unused hue on a tab that would then match nothing.
+  const roadmapAccent = C.violet;
   // Same identity, applied to the nav itself — so the active tab actually highlights in its own
   // fixed color instead of every nav item lighting up in whatever the current pathway's accent
   // happens to be. Home/Prep's own content can still layer pathway-adaptive tinting on top
   // (Home's hero, Prep's pathway/diagnostic views) — this only fixes the nav identity.
-  const navColor = { home: C.blue, sat: satAccent, prep: C.violet, portfolio: portfolioAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
+  const navColor = { home: C.blue, sat: satAccent, prep: C.violet, portfolio: portfolioAccent, roadmap: roadmapAccent, plans: plansAccent, progress: progressAccent, settings: settingsAccent };
   // What onboarding collected, turned back into human-readable copy — shown on both the
   // Progress overview (read-only recap) and Settings ("Your Goals," editable). See
   // src/lib/studentProfile.js for why this exists: onboarding answers used to be discarded
@@ -3080,6 +3113,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const satSubnav      = useMemo(()=>visibleItems(SAT_SUBNAV,unlocks,'sat'),[unlocks]);
   const prepSubnav     = useMemo(()=>visibleItems(PREP_SUBNAV,unlocks,'prep'),[unlocks]);
   const portfolioSubnav= useMemo(()=>visibleItems(PORTFOLIO_SUBNAV,unlocks,'portfolio'),[unlocks]);
+  const roadmapSubnav  = useMemo(()=>visibleItems(ROADMAP_SUBNAV,unlocks,'roadmap'),[unlocks]);
   const progressSubnav = useMemo(()=>visibleItems(PROGRESS_SUBNAV,unlocks,'progress'),[unlocks]);
   // Settings deliberately runs through the same filter as the others even though nothing in it
   // is gated: the day someone does gate a settings group, the sub-nav will already respect it.
@@ -3092,11 +3126,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // front of you yet", never "you may not have this".
   useEffect(()=>{
     if(!user||!dbReady) return;
-    const view={sat:satView,prep:prepView,portfolio:portfolioView,progress:progressView}[tab]||null;
+    const view={sat:satView,prep:prepView,portfolio:portfolioView,roadmap:roadmapView,progress:progressView}[tab]||null;
     if(unlocks.isOpen(tab,view)) return;
     const recorded=recordUnlocks(user,[tab,view?`${tab}/${view}`:null].filter(Boolean));
     if(recorded) saveUser(recorded);
-  },[tab,satView,prepView,portfolioView,progressView,unlocks,user,dbReady,saveUser]);
+  },[tab,satView,prepView,portfolioView,roadmapView,progressView,unlocks,user,dbReady,saveUser]);
 
   // The same guarantee, one level deeper: the five sections of Activities & Résumé are
   // gated too (a publications form is not a day-one ask), and /portfolio/clinical is a
@@ -3283,12 +3317,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       { id:'port-research', label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
       { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
     ]:[]),
+    ...roadmapSubnav.map(n=>({ id:`road-${n.id}`, label:n.label, group:'Roadmap', ic:n.ic, action:()=>goRoadmap(n.id) })),
     ...progressSubnav.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
     // Settings has sub-tabs now, so it gets the same treatment as every other pillar. Family
     // Access earns its place here more than most: it is the one settings screen another person
     // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
     ...settingsSubnav.map(n=>({ id:`set-${n.id}`, label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
-  ],[navItems,prepSubnav,portfolioSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
+  ],[navItems,prepSubnav,portfolioSubnav,roadmapSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goRoadmap,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
   const filteredCmds = useMemo(()=>{
     const q=cmdQ.trim().toLowerCase();
     if(!q) return COMMANDS;
@@ -4462,6 +4497,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     try{
       return buildTimeline({
         user,
+        // The Roadmap's open items become timeline events too, so Home's "next up", the coach's
+        // timeline summary and the Milestones feed all describe one calendar rather than two.
+        roadmap:user?.roadmap||null,
         // Once the Portfolio tab has been opened, portSnapshot holds every row and the engine
         // derives everything itself. Before that it hasn't been fetched, so we hand over the
         // partial rows App does keep plus its running counts — enough for the engine to tell a
@@ -4479,6 +4517,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const timelineSummary=useMemo(()=>{
     try{ return summarizeTimelineForPrompt(appTimeline); }catch{ return null; }
   },[appTimeline]);
+  // The Roadmap, condensed for every Medabrain prompt in the app. Built here rather than inside
+  // the tab because the coach, the Prep specialist and the plan generator all need it and none
+  // of them mounts the Roadmap tab — a summary computed where it is rendered would be missing
+  // from every surface that matters.
+  const roadmapSummary=useMemo(()=>{
+    try{ return summarizeRoadmapForPrompt(user?.roadmap); }catch{ return null; }
+  },[user?.roadmap]);
 
   // ── Everything measurable the app knows, in one object, for the planner ────
   // Hoisted out of the Plans tab's own render because the plan no longer only updates while that
@@ -4508,7 +4553,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       streakContext:medabrainStreakContext,
       recentActivitySummary,
       categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
-      timelineSummary, personalBrief:buildPersonalBriefBlock(user),
+      timelineSummary, roadmapSummary, personalBrief:buildPersonalBriefBlock(user),
       applicationStrength:computeApplicationStrength({
         mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal,
         recommendersConfirmed:recommendersCount, collegeCount:appCounts.colleges, essayCount:appCounts.essays,
@@ -4564,6 +4609,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         nextDeadlineTitle:nextDeadline?.title||null,
         nextDeadlineDays:nextDeadline?.days??null,
         timelineSummary,
+        roadmapSummary,
         portfolioActivityCount:portActivities.length,
         clinicalHours:clinicalHoursTotal,
         recommendersCount,
@@ -5627,6 +5673,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           busyId={questBusyId}
           m={isMobile}
         />
+
+        {/* The Roadmap's one line on Home: the single most urgent thing on their twelve-month
+            year, which is nearly always something whose PREPARATION starts now for a deadline
+            months away. TodayPlanNudge below answers "what do I do today" and structurally
+            cannot see past tomorrow — this is the half of the question it cannot reach.
+            Suppressed until the tab is unlocked, so it never advertises a locked destination. */}
+        {unlocks.isOpen('roadmap')&&(
+          <RoadmapHomeCard
+            user={user} isMobile={isMobile}
+            onOpen={()=>goRoadmap('overview')}
+            onStart={()=>goRoadmap('intake')}
+          />
+        )}
 
         {/* Today's Plan nudge — keeps today's day-by-day tasks visible from Home, not just
             inside the Plans tab, so "what do I still need to do today" is always one glance
@@ -9970,7 +10029,26 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     );
     return SAT_ENABLED ? pillar : <SatBetaCover isMobile={isMobile}>{pillar}</SatBetaCover>;
   }
-  const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
+  // ── Roadmap: the twelve-month admissions plan ───────────────────────────────
+  // Thin on purpose. The tab fetches its own Portfolio and builds its own digest (the same
+  // fetchPortfolio + buildProfileFactsText the master plan uses), so all App.jsx owes it is the
+  // live signals it already computes for Plans, the unlock-filtered sub-nav, and the two deep
+  // links out. Everything else — generation, persistence, the intake — lives in the pillar.
+  function tRoadmap(){
+    return(
+      <div>
+        {questStripFor('roadmap')}
+        <RoadmapTab
+          user={user} saveUser={saveUser} liveSignals={planLiveSignals}
+          accent={roadmapAccent} isMobile={isMobile}
+          view={roadmapView} onViewChange={setRoadmapView}
+          subnavItems={roadmapSubnav} hrefFor={roadmapHref} lockedItem={unlocks.locked('roadmap')[0]}
+          goPortfolio={goPortfolio} goPlans={()=>setTab('plans')}
+        />
+      </div>
+    );
+  }
+  const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, roadmap:tRoadmap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
     <ErrorBoundary>

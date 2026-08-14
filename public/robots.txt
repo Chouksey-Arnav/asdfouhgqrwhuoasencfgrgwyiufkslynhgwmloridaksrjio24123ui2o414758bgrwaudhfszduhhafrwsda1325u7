@@ -25,6 +25,7 @@ Disallow: /home
 Disallow: /sat
 Disallow: /prep
 Disallow: /portfolio
+Disallow: /roadmap
 Disallow: /plans
 Disallow: /progress
 Disallow: /settings

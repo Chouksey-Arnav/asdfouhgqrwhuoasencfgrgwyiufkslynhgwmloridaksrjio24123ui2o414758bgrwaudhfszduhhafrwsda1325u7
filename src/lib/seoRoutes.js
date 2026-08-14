@@ -481,6 +481,7 @@ export const DISALLOW = [
   '/sat',
   '/prep',
   '/portfolio',
+  '/roadmap',
   '/plans',
   '/progress',
   '/settings',

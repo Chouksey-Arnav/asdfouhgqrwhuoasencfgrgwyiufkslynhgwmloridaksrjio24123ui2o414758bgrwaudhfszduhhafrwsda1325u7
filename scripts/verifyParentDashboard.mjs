@@ -88,6 +88,10 @@ const PUBLIC_HANDLERS = {
 const STUDENT_ONLY = [
   'api/progress-sync.js',
   'api/master-plan.js',
+  // The Roadmap tab's twelve-month plan. Student-only for the same reason the master plan is: it
+  // is one student's own work, and a parent account hitting it would write nonsense rows under
+  // their own id. The parent dashboard reads a roadmap through api/parent/summary.js instead.
+  'api/roadmap.js',
   'api/reward-claim.js',
   'api/data/[resource].js',
   'api/lesson-feedback.js',

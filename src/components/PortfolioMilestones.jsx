@@ -50,6 +50,8 @@ import {
   Sparkles, GraduationCap, Info, ArrowRight, Filter, ListChecks, FileText, Plus, Trash2,
   Stethoscope, TrendingUp, UserCheck, Wallet, ScrollText, Compass, Trophy, BookOpen,
   CalendarX, Loader2, CalendarPlus, Layers, X, Loader,
+  // Aliased: `Map` is a JavaScript global.
+  Map as MapIcon,
 } from 'lucide-react';
 import { C, glass, glass2, R, CC, G, pill, tint, btn, btnSm, btnG, inp, onTint } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
@@ -119,6 +121,11 @@ const LENSES = [
   { id: 'all', label: 'Everything', icon: Layers, blurb: null },
   { id: 'mine', label: 'Your dates', icon: CheckCircle2, blurb: 'Only dates you entered yourself or that came off your college list, scholarships, and recommenders. Every one of these is exact.' },
   { id: 'generated', label: 'Typical dates', icon: Sparkles, blurb: 'Only the dates MedSchoolPrep generated from your class year and track. Treat these as a normal year, not as your year — confirm each one on the official site.' },
+  // The Roadmap's own items, as a lens rather than a fourth tab — same reasoning that merged
+  // Deadlines and Timeline in the first place. These are commitments the student chose during a
+  // thirteen-question intake, and reading them beside the dates they typed and the dates we
+  // generated is the whole point of having one feed.
+  { id: 'roadmap', label: 'From your roadmap', icon: MapIcon, blurb: 'Only the items on your twelve-month roadmap. Work on any of them happens in the Roadmap tab — this is where they sit on your calendar.' },
 ];
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -152,7 +159,10 @@ export function useMilestoneFeed(user, refreshKey = 0) {
     (async () => {
       const snapshot = await buildPortfolioSnapshot().catch(() => ({}));
       if (!alive) return;
-      const build = (snap) => buildTimeline({ user, snapshot: snap });
+      // The roadmap travels in so its open items interleave with the student's own dates and the
+      // generated milestones in one true chronological feed — see roadmapEvents in lib/timeline.js
+      // for why the Roadmap must not keep a second calendar of its own.
+      const build = (snap) => buildTimeline({ user, snapshot: snap, roadmap: user?.roadmap || null });
       let timeline;
       try { timeline = build(snapshot); } catch { timeline = build({}); }
       setState({ timeline, snapshot, loading: false });
@@ -293,6 +303,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const matchesExceptMonth = useCallback((e) => {
     if (hidden.has(e.id)) return false;
     if (lens === 'mine' && e.source !== 'profile') return false;
+    if (lens === 'roadmap' && e.source !== 'roadmap') return false;
     if (lens === 'generated' && e.source !== 'catalog') return false;
     if (kindFilter && e.kind !== kindFilter) return false;
     return true;
@@ -520,7 +531,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           <Filter size={12} color={accent} style={{ flexShrink: 0 }} />
           <span style={{ flex: 1, minWidth: 160, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             You're only seeing {[
-              lens === 'mine' ? 'dates you added yourself' : lens === 'generated' ? 'typical dates' : null,
+              lens === 'mine' ? 'dates you added yourself' : lens === 'generated' ? 'typical dates' : lens === 'roadmap' ? 'items from your roadmap' : null,
               kindFilter ? (TIMELINE_KINDS.find(k => k.id === kindFilter)?.label || 'one category').toLowerCase() : null,
               monthFilter ? fmtMonth(monthFilter) : null,
             ].filter(Boolean).join(' · ')} — some of your dates are hidden.
@@ -539,7 +550,7 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           {LENSES.map(l => {
             const on = lens === l.id;
             const Ic = l.icon;
-            const col = l.id === 'mine' ? C.violet : l.id === 'generated' ? C.sky : accent;
+            const col = l.id === 'mine' ? C.violet : l.id === 'generated' ? C.sky : l.id === 'roadmap' ? C.fuchsia : accent;
             return (
               <button key={l.id} onClick={() => setLens(l.id)} aria-pressed={on} style={{
                 ...pill(on ? tint(col, 0.18) : C.s3, on ? col : C.t3, {
@@ -922,6 +933,7 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
                 {e.doneLabel && <span style={pill(tint(C.green, 0.14), C.greenL, { fontSize: 9 })}>{e.doneLabel}</span>}
                 {e.confidence === 'typical' && <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span>}
                 {e.confidence === 'exact' && e.source === 'profile' && <span style={pill(tint(C.sky, 0.12), C.skyL, { fontSize: 9 })}>yours</span>}
+                {e.source === 'roadmap' && <span style={pill(tint(C.fuchsia, 0.12), C.fuchsia, { fontSize: 9 })}>roadmap</span>}
               </div>
             </div>
             {StatusIcon && <StatusIcon size={13} color={col} style={{ flexShrink: 0 }} />}

@@ -163,6 +163,30 @@ export const UNLOCK_RULES = [
     progress: (s) => [(s.onboarded ? 1 : 0) + Math.min(s.lessons || 0, 1) + (s.planReady ? 1 : 0), 3],
   },
   {
+    id: 'roadmap',
+    label: 'Roadmap',
+    // ── Gated much more lightly than Plans, on purpose ──────────────────────
+    // Plans is gated hard (onboarding + a lesson + the generator's own readiness bar) because a
+    // day-by-day plan is only meaningful once there is measured behaviour to plan around. The
+    // Roadmap is the opposite kind of artifact: it is built from a student's CIRCUMSTANCES —
+    // their grade, their target schools, their money, their transport — every one of which is
+    // true on day one and none of which improves by waiting.
+    //
+    // And the cost of waiting is not symmetric. A freshman who does not see this until March has
+    // already missed the hospital volunteer intake, the science-fair registration and the summer
+    // programme deadlines for that year — a whole year of opportunities gone, silently, because a
+    // gate was protecting them from a feature that was ready for them the entire time. There is
+    // no equivalent harm in the other direction: the worst case for showing it early is a
+    // student who looks at their year and closes the tab.
+    //
+    // So it opens as soon as onboarding is done and there is one piece of evidence they are
+    // actually using the app. `applicationUrgent` bypasses even that: a senior in October does
+    // not have time for a ladder.
+    hint: 'Finish setting up and complete one lesson or quiz — then Medabrain maps your whole year.',
+    at: (s) => s.applicationUrgent || (s.onboarded && studyActions(s) >= 1),
+    progress: (s) => [(s.onboarded ? 1 : 0) + Math.min(studyActions(s), 1), 2],
+  },
+  {
     id: 'progress',
     label: 'Progress',
     // Deliberately last of the pillars. A progress dashboard opened on day one
