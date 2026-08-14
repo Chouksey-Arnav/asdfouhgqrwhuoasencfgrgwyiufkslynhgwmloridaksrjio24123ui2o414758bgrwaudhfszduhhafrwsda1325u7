@@ -16,6 +16,31 @@ export function getSupabaseAdmin() {
 }
 
 /**
+ * Retries a Supabase call on a transient failure — this project's free-tier compute
+ * periodically kills a PostgREST request thread under load ("Warp server error: Thread killed
+ * by timeout manager" in the project logs), which surfaces here as a rejected fetch rather than
+ * an ordinary {error} response. That is invisible to anything that awaits the call once: a
+ * session lookup that hits it 401s a signed-in user, and a session insert that hits it strands
+ * someone who just typed their password correctly on a screen with nothing to show for it.
+ *
+ * Both call sites this wraps are safe to retry blind — getUserFromRequest is a read, and the
+ * session insert in api/auth/login.js is allowed to produce an extra row (a user can already
+ * hold several sessions at once, one per device) rather than fail the sign-in.
+ */
+export async function withRetry(fn, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) await new Promise((resolve) => setTimeout(resolve, 200 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
+/**
  * The one seam a test can use to stand in for the database.
  *
  * ── Why this is here rather than in a test helper ───────────────────────────
