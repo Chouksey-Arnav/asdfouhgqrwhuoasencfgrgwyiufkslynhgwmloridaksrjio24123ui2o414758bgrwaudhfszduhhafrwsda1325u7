@@ -22,7 +22,7 @@ import {
   Mic, Hammer, Sun, ShieldCheck, Crown, Lightbulb, Brain, Wand2, Snowflake,
   Stethoscope, HeartPulse, ClipboardList, Pill, Smile, Microscope, Globe, Landmark, UserCheck,
   Copy, RotateCcw, BadgeCheck, Pencil, Menu, Volume2, UserCog, Cloud, CloudOff, CalendarClock,
-  Highlighter, Accessibility, Gauge, Loader2, Info, Download, Headphones, Users,
+  Highlighter, Accessibility, Gauge, Info, Download, Headphones, Users,
   Shuffle, Flag, Swords, Gift,
   // Aliased: `Radar` is already taken in this file by react-chartjs-2's chart component.
   Radar as RadarIcon,
@@ -39,6 +39,7 @@ import { rankQuizzes, getMedabrainPickPrompt, medabrainPicksProgress, MEDABRAIN_
 import { scorePathways, explainMatch } from './lib/diagnosticEngine';
 import QuizRecommendationsPanel from './components/QuizRecommendationsPanel';
 import AnimatedLogo from './components/AnimatedLogo';
+import { BrandLoader, BrandLoaderScreen, BrandShowcase, useBrandShowcase, useFirstPassGate } from './components/BrandJourney';
 import ThemeToggle from './components/ThemeToggle';
 import { getLevelInfo, getWeeklyQuests, getIsoWeekKey, getStartOfWeek, getClaimedQuests, claimQuest, bumpWeeklyCoachCount, getWeeklyCoachCount, dueDecksBadge, dueDecksSub } from './lib/gamification';
 import InterviewPrepPanel from './components/InterviewPrepPanel';
@@ -613,12 +614,17 @@ class ErrorBoundary extends React.Component {
 }
 
 // ── Loading Screen ────────────────────────────────────────────────────────────
-function LoadingScreen() {
+// The boot wait is the one moment every student sits through, so it runs the
+// brand journey (src/components/BrandJourney.jsx): the mark assembles itself in
+// six beats — book, spark, climber, path, star, ring — which is the product's
+// whole promise stated without a word of copy.
+function LoadingScreen({onFirstPass}) {
   return (
-    <div style={{minHeight:'var(--msp-vh)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,gap:20}}>
-      <AnimatedLogo size={64} variant="pop"/>
-      <div style={{fontSize:14,color:C.t3,letterSpacing:'.05em'}}>Loading MedSchoolPrep…</div>
-    </div>
+    <BrandLoaderScreen
+      caption="Loading MedSchoolPrep…"
+      sub="Opening your pathway, your plan, and everything you've earned so far."
+      onFirstPass={onFirstPass}
+    />
   );
 }
 
@@ -1686,6 +1692,27 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // this attempt"), set by the Overview's next-best-action card and by the
   // Review Log. Cleared by the receiving panel once consumed.
   const [satParams, setSatParams] = useState(null);
+
+  // ── The brand journey ───────────────────────────────────────────────────────
+  // Two hooks, both about the loading animation in src/components/BrandJourney.jsx.
+  //
+  // `bootPlayed` holds the boot screen open until the six beats have actually
+  // played once. Without it a student on a fast connection sees a book start to
+  // open and then the app cuts in — which is worse than no animation at all.
+  // It is a per-tab gate, so a reload a minute later goes straight through.
+  //
+  // `showcase` is the same story shown when nothing is loading, because a
+  // student whose data always arrives quickly would otherwise never see past
+  // the first beat. It waits for a tab change (a moment they are already
+  // pausing), stays out of the way while anything is genuinely in progress, and
+  // does not come back for another twenty-five minutes.
+  const [bootPlayed, markBootPlayed] = useFirstPassGate();
+  const showcase = useBrandShowcase(
+    tab,
+    !activeLesson && !vidM && !cmdOpen && !questCelebration && !previewOnboarding
+      && !(tab === 'sat' && ['tests', 'practice', 'diagnostic'].includes(satView)),
+  );
+
   // Resolves retired sub-view ids on the way in (resolveView), which is what makes
   // goPrep('pathway') keep working: that id is still sitting inside every master plan row
   // generated before the rename, and a plan task whose destination silently no-ops is worse
@@ -7812,10 +7839,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // to their real values a moment later.
     if(!portLoaded){
       return(
-        <div style={{...glass({padding:40}),display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:14,minHeight:360}}>
-          <Loader2 className="spin" size={26} color={C.blue} />
-          <div style={{fontSize:13.5,fontWeight:600,color:C.t2}}>Loading your Portfolio…</div>
-          <div style={{fontSize:11.5,color:C.t3}}>Pulling in your activities, awards, and GPA history.</div>
+        <div style={{...glass({padding:40})}}>
+          <BrandLoader
+            size={186} minHeight={360}
+            caption="Loading your Portfolio…"
+            sub="Pulling in your activities, awards, and GPA history."
+          />
         </div>
       );
     }
@@ -9690,7 +9719,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
 
   // ═══ ONBOARDING ════════════════════════════════════════════════════════════════
-  if(!dbReady) return <LoadingScreen/>;
+  // Held on either count: the local store is still opening, or the journey has
+  // not finished its first pass yet this session.
+  if(!dbReady||!bootPlayed) return <LoadingScreen onFirstPass={markBootPlayed}/>;
 
   if(previewOnboarding){
     return(
@@ -10227,6 +10258,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           />
         )}
       </AnimatePresence>
+      {/* The idle showcase — the loading journey played when nothing is loading.
+          Sits above everything, leaves on the first tap or key. */}
+      {showcase.showing && <BrandShowcase onDone={showcase.dismiss}/>}
       {/* First focusable thing on the page. Without it a keyboard or switch user
           has to tab through an eleven-item sidebar on every single navigation. */}
       <a href="#msp-main" className="msp-skip-link">Skip to main content</a>

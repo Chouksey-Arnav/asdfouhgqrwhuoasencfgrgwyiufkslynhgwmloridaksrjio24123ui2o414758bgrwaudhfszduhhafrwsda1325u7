@@ -22,6 +22,15 @@
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/icon-16.png" />
+
+    <!--
+      The first two frames of the loading animation (src/components/BrandJourney.jsx).
+      Everything else it draws is needed a second or more in, by which time the
+      images have streamed in on their own; these two are on screen immediately,
+      and without the hint a cold first visit opens on an empty circle.
+    -->
+    <link rel="preload" as="image" href="/brand/book-left.png" />
+    <link rel="preload" as="image" href="/brand/book-right.png" />
     <title>MedSchoolPrep — Your Path Into Medicine</title>
 
     <!--

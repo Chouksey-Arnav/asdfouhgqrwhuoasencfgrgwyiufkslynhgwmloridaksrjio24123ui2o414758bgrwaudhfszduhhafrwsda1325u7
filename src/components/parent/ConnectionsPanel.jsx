@@ -21,6 +21,7 @@
 // to the invited address, so it is safe to text, read out over the phone, or write on a fridge —
 // and any of those routes gets the family connected when the email does not.
 import React, { useCallback, useEffect, useState } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import toast from 'react-hot-toast';
 import {
   Loader2, Mail, UserPlus, X, ShieldCheck, Clock, Check, Copy, Send, Share2, RefreshCw,
@@ -323,7 +324,7 @@ export default function ConnectionsPanel({ role = 'student', onChanged }) {
   }
 
   if (loading) {
-    return <div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}><Loader2 className="spin" size={18} color={C.blueL} /></div>;
+    return <div style={{ padding: 20 }}><BrandLoader size={128} /></div>;
   }
 
   return (

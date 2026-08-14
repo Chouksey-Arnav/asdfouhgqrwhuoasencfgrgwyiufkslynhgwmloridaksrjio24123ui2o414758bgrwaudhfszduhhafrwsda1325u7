@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
-import { Loader2 } from 'lucide-react';
 import { C, tint, getStoredMode, storeMode, watchSystemTheme } from '../lib/theme';
 import { loadA11y, applyA11y } from '../lib/a11y';
 import { getToken, setToken, clearToken, fetchMe, logout, revokeSession } from '../lib/authApi';
@@ -11,6 +10,7 @@ import {
 import { applySeoMeta } from '../lib/seo';
 import LandingPage from './LandingPage';
 import LegalPage from './legal/LegalPage';
+import { BrandLoaderScreen } from './BrandJourney';
 import AuthShell from './auth/AuthShell';
 import LoginView from './auth/LoginView';
 import SignupView from './auth/SignupView';
@@ -326,11 +326,9 @@ export default function AuthGate({ children }) {
   }
 
   if (status === 'checking') {
-    return (
-      <div style={{ height: 'var(--msp-vh)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: C.bg }}>
-        <Loader2 className="spin" size={22} color={C.blueL} />
-      </div>
-    );
+    // A full-screen wait with nothing else on it — the brand journey belongs
+    // here rather than a spinner. See src/components/BrandJourney.jsx.
+    return <BrandLoaderScreen caption="Checking your session…" size={200} />;
   }
 
   if (invite.token || invite.code) {

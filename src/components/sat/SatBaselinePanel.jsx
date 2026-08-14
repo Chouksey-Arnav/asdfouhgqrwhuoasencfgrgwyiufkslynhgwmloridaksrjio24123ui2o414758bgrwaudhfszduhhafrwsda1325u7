@@ -19,11 +19,12 @@
 // end. All of that arrives at once on the results screen, where it belongs.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Gauge, Sparkles, ChevronRight, Clock, TrendingUp, TrendingDown, Minus,
-  AlertTriangle, CheckCircle2, XCircle, Loader, Target, Lock, RotateCcw,
+  AlertTriangle, CheckCircle2, XCircle, Target, Lock, RotateCcw,
   BarChart3, Brain, ArrowRight, ShieldCheck, Zap,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, R, CC, tint, pill, lbl, inp, accentFill } from '../../lib/theme';
@@ -266,7 +267,7 @@ export default function SatBaselinePanel({
 
   // ═══════════════════════════════════════════════════════════════════════════
   if (loading) {
-    return <div style={{ ...glass({ padding: 40, textAlign: 'center' }) }}><Loader size={20} className="spin" color={C.t3} /></div>;
+    return <div style={glass({ padding: 40 })}><BrandLoader size={150} caption="Loading your baseline…" /></div>;
   }
 
   if (result) return <Results result={result} history={history} accent={accent} isMobile={isMobile} onNavigate={onNavigate} onDone={() => { setResult(null); setSession(null); setRowId(null); }} reviewIdx={reviewIdx} setReviewIdx={setReviewIdx} />;

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -330,9 +331,8 @@ export default function TrackedPanel({
 
       {/* ── The board ── */}
       {loading && !items.length ? (
-        <div style={{ ...glass({ padding: 36 }), display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-          <Loader2 className="spin" size={22} color={accent} />
-          <div style={{ fontSize: 12.5, color: C.t2 }}>Pulling in everything you're tracking…</div>
+        <div style={glass({ padding: 36 })}>
+          <BrandLoader size={140} caption="Pulling in everything you're tracking…" />
         </div>
       ) : !items.length ? (
         <EmptyState

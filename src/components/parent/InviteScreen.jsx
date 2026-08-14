@@ -25,6 +25,7 @@
 // family, and none of them is "the login screen" — so AuthGate renders this ahead of its own
 // branch, exactly like the legal documents.
 import React, { useCallback, useEffect, useState } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import toast from 'react-hot-toast';
 import {
   Loader2, ShieldCheck, EyeOff, Eye, ArrowRight, BadgeCheck, Mail, KeyRound, Lock,
@@ -252,7 +253,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
   }
 
   if (mode === 'resolving') {
-    return <Frame><div style={{ display: 'flex', justifyContent: 'center', padding: 20 }}><Loader2 className="spin" size={20} color={C.blueL} /></div></Frame>;
+    return <Frame><div style={{ padding: 20 }}><BrandLoader size={140} caption="Checking your invitation…" /></div></Frame>;
   }
 
   if (mode === 'error') {

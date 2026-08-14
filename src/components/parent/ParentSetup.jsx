@@ -21,6 +21,7 @@
 // short beats — you, your student, what you are signing — each with a reason stated above it,
 // gets more accurate answers out of the same six inputs.
 import React, { useCallback, useEffect, useState } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import toast from 'react-hot-toast';
 import {
   Loader2, ShieldCheck, ArrowRight, ArrowLeft, UserCog, GraduationCap, Check, Info,
@@ -199,8 +200,8 @@ export default function ParentSetup({ user, onDone, onSkip }) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-        <Loader2 className="spin" size={20} color={C.blueL} />
+      <div style={{ padding: 48 }}>
+        <BrandLoader size={150} caption="Setting up your family account…" />
       </div>
     );
   }
