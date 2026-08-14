@@ -195,9 +195,10 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
   const catCount = (id) => colleges.filter(c => c.category === id).length;
 
   // ── Score-driven recommendations ────────────────────────────────────────────
-  // Everything below runs off the scores the student has actually given MedSchoolPrep: their
-  // logged SAT/ACT sittings from the Score Tracker first, their onboarding self-report as a
-  // fallback. No score on file means no recommendations — we say so rather than guessing.
+  // Everything below runs off the scores the student has actually given MedSchoolPrep — real
+  // logged SAT/ACT sittings only. (The onboarding self-report that used to back this up went with
+  // the SAT pillar; see src/lib/betaFlags.js.) No score on file means the matcher falls back to
+  // GPA alone — we say so rather than guessing a score.
   const scores = useMemo(() => resolveStudentScores(testScores, user), [testScores, user]);
   const recommendations = useMemo(
     () => recommendColleges({ scores, existing: colleges }).filter(r => !dismissedRecs.includes(r.name)),
@@ -326,7 +327,7 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
         <div style={{...CC({gap:7}),marginTop:11}}>
           {hintSat
             ? <HelpNote>Pick a school from the dropdown and we'll guess Reach, Target or Safety for you by comparing its typical SAT/ACT against your {scores.primaryTest === 'ACT' && scores.act != null ? `ACT ${scores.act} (about SAT ${hintSat})` : `SAT ${hintSat}`}. Change it whenever you want.</HelpNote>
-            : <HelpNote>Not sure whether a school is a reach or a safety? Log an SAT or ACT score and we'll work it out for you.</HelpNote>}
+            : <HelpNote>Not sure whether a school is a reach or a safety? Add a GPA term in Activities &amp; Résumé and we'll work it out from your grades.</HelpNote>}
           {/* Scope note — stated where the search actually is, so nobody hunts for a school
               abroad and assumes the search is broken. Source of truth: constants.js. */}
           <HelpNote icon={Info}>{US_ONLY_NOTE}</HelpNote>
@@ -346,18 +347,18 @@ export default function CollegeListPanel({ accent = C.blue, user = null, student
         title="Schools that fit your scores"
         sub={scores.hasScore
           ? `${recommendations.length || 'No'} suggestion${recommendations.length === 1 ? '' : 's'} left, picked from ${SCHOOL_DATA.length} U.S. schools by comparing their SAT and ACT ranges to yours.`
-          : `We'll match you against ${SCHOOL_DATA.length} U.S. schools once you've logged a test score.`}>
+          : `We'll match you against ${SCHOOL_DATA.length} U.S. schools once you've added a GPA term.`}>
       <div>
         {!scores.hasScore ? (
           <div style={{fontSize:12.5,color:C.t3,lineHeight:1.6}}>
-            You haven't logged an SAT or ACT yet. Put a real score into the Score Tracker and we'll compare it against
+            No test score on file. Add a GPA term in Activities &amp; Résumé and we'll compare your grades against
             all {SCHOOL_DATA.length} U.S. schools we track, then suggest a mix of reach, target and safety schools right here.
           </div>
         ) : (
           <>
             <div style={{...R({gap:8,flexWrap:'wrap',marginBottom:14})}}>
               {scores.sat != null && (
-                <span style={pill(`${C.blue}18`, C.blue)}>Your SAT {scores.sat}{scores.satSource === 'onboarding' ? ' (onboarding)' : ''}</span>
+                <span style={pill(`${C.blue}18`, C.blue)}>Your SAT {scores.sat}</span>
               )}
               {scores.act != null && (
                 <span style={pill(`${C.green}18`, C.green)}>Your ACT {scores.act}{scores.actSource === 'onboarding' ? ' (onboarding)' : ''}</span>

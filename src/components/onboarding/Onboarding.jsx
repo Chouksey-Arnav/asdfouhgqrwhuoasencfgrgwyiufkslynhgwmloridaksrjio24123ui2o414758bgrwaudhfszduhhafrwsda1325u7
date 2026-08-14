@@ -1,3 +1,12 @@
+// ── Version one asks nothing about the SAT ───────────────────────────────────
+// The flow used to collect a test track, a current score, a target score and a
+// test date, then spend three screens forecasting a score jump. All four fed
+// the SAT pillar, which is sealed for v1 (src/lib/betaFlags.js) — so a promise
+// about a score is a promise this product currently has no way to help anyone
+// keep. Those questions and those screens are gone; what remains asks about
+// grades, science coursework, real-world experience and time, which is what the
+// plan is actually built from.
+//
 // The full MedSchoolPrep onboarding flow — a Cal AI-style funnel (splash →
 // warm-up → personalization → animated proof moments → plan-generation reveal
 // → save-progress) rebuilt around medicine rather than generic test prep.
@@ -11,9 +20,8 @@
 //      blank slate or celebrates a head start.
 //   3. THEIR RHYTHM — hours, tools and prior apps together, then what the
 //      product actually is.
-//   4. WHERE THEY'RE GOING — goal + target score + test date on ONE screen, an
-//      honest timeline-aware verdict on that combination, a daily time
-//      commitment in minutes, and a whole-journey projection.
+//   4. WHERE THEY'RE GOING — the goal they're chasing, then a daily time
+//      commitment in minutes.
 //   5. THEIR PLAN — obstacles and ambitions together, empathy, potential, plan
 //      preferences, a personal pledge, then real plan generation.
 //
@@ -42,8 +50,7 @@ import { GroupedStep } from './steps/grouped';
 import { StartingPointStep } from './steps/StartingPointStep';
 import { MONTHS as DOB_MONTHS, DAYS as DOB_DAYS, YEARS as DOB_YEARS } from './steps/BirthdateStep';
 import AgeBlockedStep from './steps/AgeBlockedStep';
-import { TargetScoreStep } from './steps/TargetScoreStep';
-import { RealisticTargetStep, PaceForecastStep } from './steps/RealisticTargetStep';
+import { GoalStep } from './steps/GoalStep';
 import { SpeedStep } from './steps/SpeedStep';
 import { FeatureShowcaseStep } from './steps/FeatureShowcaseStep';
 import { IdentityStep, ExperienceInsightStep, ObstacleEmpathyStep, CommitmentStep } from './steps/emotional';
@@ -59,7 +66,7 @@ import { isUnderMinAge, isAgeBlocked, recordAgeBlocked } from '../../lib/ageGate
 import {
   STUDY_HOURS_OPTIONS, GOAL_OPTIONS, STUDY_METHOD_OPTIONS, OBSTACLE_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS,
-  EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+  EXPERIENCE_OPTIONS,
 } from './options';
 
 // Option lists live in ./options (dependency-free, shared with the steps and
@@ -68,7 +75,7 @@ import {
 export {
   STUDY_HOURS_OPTIONS, GOAL_OPTIONS, STUDY_METHOD_OPTIONS, OBSTACLE_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS,
-  EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+  EXPERIENCE_OPTIONS,
 };
 
 // The step list is computed per-render from the answers so far, so the journey
@@ -81,7 +88,7 @@ function buildSteps(answers) {
     'why', 'identity',
     'startingPoint', 'academics', 'experience', 'expInsight',
     'rhythm', 'showcase',
-    'target', 'realistic', 'speed', 'paceForecast',
+    'goal', 'speed',
     'challenges',
   ];
   if (obstacleEmpathy(answers.obstacles)) steps.push('obstacleEmpathy');
@@ -101,7 +108,7 @@ const DEFAULT_ANSWERS = {
   // grade question is now a row of tap targets, and a pre-ticked answer on a
   // visible control is an answer the student never actually gave — which then
   // rides into the plan, the timeline and the coach prompts as if it had.
-  gradeIdx: null, testTrack: 'SAT', currentScore: 1000,
+  gradeIdx: null,
   // The birthdate wheels open on an age below the minimum on purpose; see
   // BirthdateWheels. `dobTouched` is what makes the student answer rather than
   // scroll past and get gated on a date they never picked.
@@ -109,7 +116,7 @@ const DEFAULT_ANSWERS = {
   gpa: null, sciences: [], experience: [],
   studyHours: null, studyMethod: null, triedApps: null, source: null,
   // Direction
-  goal: null, targetScore: 1200, testTimeline: null, speedLevel: 1,
+  goal: null, speedLevel: 1,
   obstacles: [], accomplish: [],
   // Preferences & output
   addBack: true, rollover: true, name: '', generatedPlan: null,
@@ -316,27 +323,10 @@ export default function Onboarding({ account, onComplete, preview = false }) {
       content = <FeatureShowcaseStep onNext={next} />; break;
 
     // ── Chapter 4: where they're going ───────────────────────────────────
-    case 'target':
-      content = (
-        <TargetScoreStep
-          testTrack={answers.testTrack} currentScore={answers.currentScore} value={answers.targetScore}
-          timeline={answers.testTimeline} goal={answers.goal} accent={accent}
-          // Seed a sensible target relative to where they actually are — never
-          // a flat 1200 that can sit *below* a strong student's current score.
-          onGoal={v => update({
-            goal: v,
-            targetScore: answers.testTrack === 'ACT'
-              ? Math.min(36, answers.currentScore + 4)
-              : Math.min(1600, Math.round((answers.currentScore + 150) / 10) * 10),
-          })}
-          onChange={v => update({ targetScore: v })} onTimeline={v => update({ testTimeline: v })} onNext={next} />
-      ); break;
-    case 'realistic':
-      content = <RealisticTargetStep answers={answers} onNext={next} />; break;
+    case 'goal':
+      content = <GoalStep value={answers.goal} onChange={v => update({ goal: v })} onNext={next} accent={accent} />; break;
     case 'speed':
       content = <SpeedStep value={answers.speedLevel} answers={answers} onChange={v => update({ speedLevel: v })} onNext={next} />; break;
-    case 'paceForecast':
-      content = <PaceForecastStep answers={answers} onNext={next} />; break;
 
     // ── Chapter 5: what's in the way, and the plan ───────────────────────
     case 'challenges':

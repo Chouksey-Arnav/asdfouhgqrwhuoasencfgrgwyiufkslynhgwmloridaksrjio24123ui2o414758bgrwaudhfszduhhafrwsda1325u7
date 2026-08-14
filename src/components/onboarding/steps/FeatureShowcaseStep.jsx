@@ -3,18 +3,19 @@ import { motion } from 'framer-motion';
 import { Stethoscope, BrainCircuit, Library, Compass, FolderHeart, GraduationCap } from 'lucide-react';
 import { StepHeader, ContinueButton, C } from '../primitives';
 
-// The "everything you need, in one place" moment — replaces the generic
-// score-curve proof screen. Instead of telling students the app works, it
-// shows the actual product surface: every card below is a real pillar of the
-// app they're about to land in (pathway diagnostic, coach, e-library,
-// opportunities, portfolio, test prep). One screen, six reasons to believe.
+// The "everything you need, in one place" moment. Instead of telling students
+// the app works, it shows the actual product surface: every card below is a
+// real pillar of the app they're about to land in. Every card must stay a
+// pillar they can actually open — the SAT/test-prep card was removed with the
+// SAT pillar (src/lib/betaFlags.js), because a promise on this screen that
+// lands on a locked tab is the worst possible first impression.
 const FEATURES = [
   { icon: Stethoscope, color: C.tealL, dim: C.tealDim, title: 'Pathway Diagnostic', desc: 'Find your fit in medicine — specialty by specialty, honestly scored' },
   { icon: BrainCircuit, color: C.violetL, dim: C.violetDim, title: 'AI Coach', desc: 'A mentor that knows your goals, your gaps, and your week' },
   { icon: Library, color: C.blueL, dim: C.blueDim, title: 'Medical E-Library', desc: 'Structured lessons across the sciences medicine is built on' },
   { icon: Compass, color: C.amberL, dim: C.amberDim, title: 'Opportunities & Scholarships', desc: 'Real programs, internships, and funding — matched to you' },
   { icon: FolderHeart, color: C.roseL, dim: C.roseDim, title: 'Application Portfolio', desc: 'Essays, activities, college list — your story, built as you go' },
-  { icon: GraduationCap, color: C.greenL, dim: C.greenDim, title: 'Test Prep, Built In', desc: 'SAT/ACT practice woven into the plan — one thread, not the whole rope' },
+  { icon: GraduationCap, color: C.greenL, dim: C.greenDim, title: 'Quizzes & Flashcards', desc: 'Spaced repetition across the sciences, scheduled into your week' },
 ];
 
 export function FeatureShowcaseStep({ onNext }) {

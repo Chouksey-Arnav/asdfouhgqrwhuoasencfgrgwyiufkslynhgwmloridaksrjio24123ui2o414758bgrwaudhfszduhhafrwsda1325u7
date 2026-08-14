@@ -265,7 +265,7 @@ function AppReplica() {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>3 decks due today</div>
-                    <div style={{ fontSize: 9.5, color: C.t2, marginTop: 2 }}>Cell Biology · Organic Chemistry · SAT Math</div>
+                    <div style={{ fontSize: 9.5, color: C.t2, marginTop: 2 }}>Cell Biology · Organic Chemistry · Anatomy</div>
                   </div>
                   <span style={{ background: accentGrad(C.violet), color: C.onAccent, fontSize: 9.5, fontWeight: 700, padding: '6px 12px', borderRadius: 8, flexShrink: 0 }}>Review</span>
                 </div>
@@ -502,18 +502,18 @@ function FlashcardsMock() {
 // ── Medabrain live chat demo — autoplays a script, then hands control to
 //    whatever the visitor actually types (matched against a small keyword bank).
 const AUTO_SCRIPT = [
-  { q: "What's high-yield for SAT Math I'm probably missing?", a: 'Start with systems of equations and linear functions — they show up on nearly every test and are the fastest points to lock in. Want a 2-week plan built around that?' },
-  { q: 'Build my ACT Science plan', a: 'ACT Science is really a reading-speed test. Two weeks: days 1–4 drill data representation for pace, 5–8 conflicting viewpoints, 9–12 timed full sections, last two review your misses. I can drop this onto your calendar.' },
+  { q: "I want to shadow a doctor — where do I even start?", a: 'Start with people already one step from you: your own physician, a parent\u2019s colleague, a hospital volunteer office. Ask for four hours, not a summer. Want me to draft the email and put the follow-up on your plan?' },
+  { q: 'Build my biology study plan', a: 'Two weeks: days 1\u20134 cell structure and transport, 5\u20138 genetics, 9\u201312 metabolism, last two on whatever your quiz scores say you actually missed. I can drop this onto your calendar.' },
   { q: 'Explain photosynthesis simply', a: 'Picture the plant as a solar-powered kitchen: chloroplasts catch light, split water for electrons, then the Calvin cycle spends that energy turning CO₂ into glucose. Light makes the fuel; the cycle builds the sugar.' },
 ];
-const COACH_PRESETS = ['Explain photosynthesis simply', 'Build my ACT Science plan', 'What should I study tonight?', 'How do I log clinical hours?'];
+const COACH_PRESETS = ['Explain photosynthesis simply', 'Build my biology study plan', 'What should I study tonight?', 'How do I log clinical hours?'];
 const ANSWER_BANK = [
   { kw: ['photosynth'], a: 'Picture the plant as a solar-powered kitchen: chloroplasts catch light, split water for electrons, then the Calvin cycle spends that energy turning CO₂ into glucose. Light makes the fuel; the cycle builds the sugar.' },
-  { kw: ['act science', 'act'], a: 'ACT Science is really a reading-speed test. Two weeks: days 1–4 drill data representation for pace, 5–8 conflicting viewpoints, 9–12 timed full sections, last two review your misses. I can add this to your schedule.' },
-  { kw: ['sat math', 'math', 'sat'], a: 'Start with systems of equations and linear functions — they show up on nearly every test and are the fastest points to lock in. Want a 2-week plan built around that?' },
+  { kw: ['biology', 'bio', 'cell'], a: 'Two weeks: days 1\u20134 cell structure and transport, 5\u20138 genetics, 9\u201312 metabolism, last two on whatever your quiz scores say you actually missed. I can add this to your schedule.' },
+  { kw: ['shadow', 'shadowing'], a: 'Start with people already one step from you: your own physician, a parent\u2019s colleague, a hospital volunteer office. Ask for four hours, not a summer. Want me to draft the email?' },
   { kw: ['clinical', 'hours', 'shadow'], a: "Open Portfolio → Activities & Résumé and pick Clinical Hours, tap Log Hours, and add the date, site, and a one-line reflection. Add a supervisor's contact and the entry can be marked verified instead of self-reported." },
   { kw: ['tonight', 'study', 'today'], a: "With your 12-day streak going, I'd do 15 minutes of due flashcards first, then one Organic Chemistry lesson and its verification quiz. That keeps your pathway mastery climbing without burning you out." },
-  { kw: ['plan', 'schedule', 'week'], a: "Here's a simple frame: pick the one section that's costing you the most points, block 30 minutes a day on it for two weeks, and end each week with a timed check. Want me to build it around a specific test?" },
+  { kw: ['plan', 'schedule', 'week'], a: "Here's a simple frame: pick the one subject that's costing you the most points, block 30 minutes a day on it for two weeks, and end each week with a quiz to check. Want me to build it around a specific class?" },
   { kw: ['nursing', 'pathway', 'career', 'fit'], a: 'Take the pathway diagnostic first — it scores you across all ten health careers in about six minutes. Nursing, PA, and pharmacy are common strong matches for students who love patient contact but want a faster route than MD.' },
 ];
 function answerFor(text) {

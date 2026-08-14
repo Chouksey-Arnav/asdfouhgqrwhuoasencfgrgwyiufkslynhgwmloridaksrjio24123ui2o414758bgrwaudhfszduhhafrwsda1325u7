@@ -31,7 +31,7 @@ import { ORIGIN, INDEXABLE_PATHS, routeFor, absoluteUrl } from './seoRoutes';
 /** Fallbacks for the signed-in surfaces, which are noindexed and have no entry. */
 const APP_TITLE = 'MedSchoolPrep — Your Path Into Medicine';
 const APP_DESCRIPTION =
-  'Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, SAT/ACT practice, and a full college application portfolio.';
+  'Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, flashcards, and a full college application portfolio.';
 
 function upsert(selector, create) {
   let el = document.head.querySelector(selector);

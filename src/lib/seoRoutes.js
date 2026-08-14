@@ -116,7 +116,7 @@ export const PUBLIC_ROUTES = [
     path: '/',
     title: 'MedSchoolPrep — Your Path Into Medicine',
     description:
-      'Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, SAT/ACT practice, and a full college application portfolio.',
+      'Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, flashcards, and a full college application portfolio.',
     navLabel: 'Home',
     changefreq: 'weekly',
     priority: '1.0',
@@ -124,7 +124,7 @@ export const PUBLIC_ROUTES = [
     content: {
       h1: 'Find your path into medicine. Then actually walk it.',
       lead:
-        'MedSchoolPrep is a free platform for high schoolers heading toward a health career. It starts with a diagnostic that scores you against ten pathways rather than assuming you have already chosen one, and then gives you the lessons, the practice tests, the AI study coach and the entire college application in one place.',
+        'MedSchoolPrep is a free platform for high schoolers heading toward a health career. It starts with a diagnostic that scores you against ten pathways rather than assuming you have already chosen one, and then gives you the lessons, the quizzes, the AI study coach and the entire college application in one place.',
       faq: true,
       sections: [
         {
@@ -150,13 +150,6 @@ export const PUBLIC_ROUTES = [
           paras: [
             'Every pathway carries a full lesson track — more than ninety lessons across articles, videos and guided reading. A lesson is not complete because you scrolled to the bottom of it: each one ends with a real quiz, and you need 70% or better for it to count as verified. That is the same bar used for pathway certificates, which is what keeps a certificate worth showing.',
             'What you get wrong turns into flashcards automatically, scheduled by a spaced-repetition engine so the cards you keep missing come back sooner and the ones you know stop wasting your evenings. Medabrain, the built-in AI study coach, sits alongside the lesson you are actually on — it can re-explain a concept, quiz you on it, or work through where an answer went wrong.',
-          ],
-        },
-        {
-          h2: 'SAT and ACT practice that tracks every attempt',
-          paras: [
-            'Start with a baseline test to find out where you actually stand, then work through targeted practice by skill, full-length timed practice tests, and a review queue built from your own wrong answers. A built-in graphing toolkit mirrors the one you get in the real digital SAT, so practice conditions match test conditions.',
-            'Every attempt is plotted rather than replaced, so you can see the trend line instead of guessing at it — and so can a parent, if you choose to connect one.',
           ],
         },
         {
@@ -259,7 +252,7 @@ export const PUBLIC_ROUTES = [
     path: '/login',
     title: 'Log In — MedSchoolPrep',
     description:
-      'Log in to MedSchoolPrep to pick up your pathway lessons, flashcards, SAT and ACT practice, and application portfolio exactly where you left off.',
+      'Log in to MedSchoolPrep to pick up your pathway lessons, flashcards, quizzes and application portfolio exactly where you left off.',
     navLabel: 'Log in',
     changefreq: 'monthly',
     priority: '0.3',
@@ -267,14 +260,14 @@ export const PUBLIC_ROUTES = [
     content: {
       h1: 'Log in to MedSchoolPrep',
       lead:
-        'Sign in to pick up exactly where you left off — the lesson you were on, the flashcards that are due today, your practice-test history and your application portfolio.',
+        'Sign in to pick up exactly where you left off — the lesson you were on, the flashcards that are due today, your quiz history and your application portfolio.',
       sections: [
         {
           h2: 'What is waiting behind the login',
           list: [
             'Your pathway lesson track, and how far through it you are.',
             'The flashcards scheduled for today by the spaced-repetition engine.',
-            'Your SAT and ACT practice history, with every attempt plotted.',
+            'Your quiz history, with every attempt plotted.',
             'Your portfolio: college list, essays, activities, deadlines and recommenders.',
             'Your streak, quests and progress against the weekly goals you set.',
           ],

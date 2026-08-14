@@ -13,7 +13,7 @@ export const STUDY_HOURS_OPTIONS = [
 ];
 
 export const GOAL_OPTIONS = [
-  { value: 'boost_score', emoji: '📈', label: 'Strengthen my academics & test readiness', sublabel: 'Build the scores a pre-med path expects' },
+  { value: 'boost_score', emoji: '📈', label: 'Strengthen my academics', sublabel: 'Build the coursework and science depth a pre-med path expects' },
   { value: 'build_application', emoji: '🏆', label: 'Build a standout pre-med application', sublabel: 'Experiences, story, and a portfolio that gets noticed' },
   { value: 'explore_pathway', emoji: '🧭', label: 'Discover if medicine is right for me', sublabel: 'Explore careers, specialties, and what the life is really like' },
 ];
@@ -31,13 +31,13 @@ export const OBSTACLE_OPTIONS = [
   { value: 'what_to_study', emoji: '🌫️', label: 'Not knowing what to focus on' },
   { value: 'guidance', emoji: '🧭', label: 'No mentor or guidance into medicine' },
   { value: 'busy', emoji: '🗓️', label: 'A packed schedule' },
-  { value: 'anxiety', emoji: '😰', label: 'Test & performance anxiety' },
+  { value: 'anxiety', emoji: '😰', label: 'Exam & performance anxiety' },
   { value: 'motivation', emoji: '🔋', label: 'Losing motivation' },
   { value: 'no_plan', emoji: '🧩', label: 'No structured plan' },
 ];
 
 export const ACCOMPLISH_OPTIONS = [
-  { value: 'score', emoji: '📈', label: 'Strengthen my academics & test scores' },
+  { value: 'score', emoji: '📈', label: 'Strengthen my academics & grades' },
   { value: 'application', emoji: '🏆', label: 'Build a competitive pre-med application' },
   { value: 'explore', emoji: '🧭', label: 'Find my fit in medicine' },
   { value: 'experience', emoji: '🩺', label: 'Gain clinical or research experience' },

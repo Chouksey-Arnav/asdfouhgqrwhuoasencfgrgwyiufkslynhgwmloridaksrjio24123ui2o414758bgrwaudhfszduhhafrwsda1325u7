@@ -27,7 +27,7 @@ const MINUTE_MS = 60 * 1000;
 // my plan" click would burn the student's whole minute budget and then start 429-ing itself
 // halfway through — and because every generation call resolves to a deterministic fallback rather
 // than throwing, the student got a plan that looked finished, arrived suspiciously fast, and said
-// the same three generic things every time ("SAT practice set", "Continue your pathway",
+// the same three generic things every time ("Practice quiz", "Continue your pathway",
 // "Flashcard review"). That is exactly the failure this split exists to make impossible.
 //
 // Buckets are keyed per (ip, purpose) so the budgets are genuinely independent: a plan build can
@@ -397,7 +397,7 @@ export default async function handler(req, res) {
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
-    : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for the SAT/ACT and undergraduate admissions — not graduate or professional school. Be concise, accurate, and encouraging.';
+    : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for undergraduate admissions and a future health career — not graduate or professional school. Be concise, accurate, and encouraging.';
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {

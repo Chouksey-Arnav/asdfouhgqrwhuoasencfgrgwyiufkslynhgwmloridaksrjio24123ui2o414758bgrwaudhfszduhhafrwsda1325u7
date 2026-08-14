@@ -55,7 +55,7 @@ const PROMPT_GROUPS = [
     prompts: [
       'What my school is like and which classes I am taking',
       'How I study, and what has not worked for me before',
-      'What I find hardest about the SAT specifically',
+      'Which subjects I find hardest, and why',
       'How much time I actually have in a normal week',
     ],
   },
@@ -468,7 +468,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
         <Info size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65 }}>
           Everything here is sent to Medabrain with every question you ask it — in the main coach, in Portfolio,
-          in Prep, and in the SAT tab. Where it conflicts with your sign-up answers or your tracker,{' '}
+          and in Prep. Where it conflicts with your sign-up answers or your tracker,{' '}
           <strong style={{ color: C.t2 }}>what you said here wins</strong>, and the most recent entry wins over an older one.
           It stays on your account and is never shown to other students.
         </div>

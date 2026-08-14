@@ -832,9 +832,9 @@ export const CLASS_YEAR_ROADMAP = {
     ],
   },
   sophomore: {
-    label:'Sophomore Year Roadmap', blurb:'Deepen the activities you started, get comfortable with SAT/ACT-style questions, and start paying attention to what colleges look for.',
+    label:'Sophomore Year Roadmap', blurb:'Deepen the activities you started, get comfortable with timed practice questions, and start paying attention to what colleges look for.',
     items:[
-      { key:'quiz',        label:'Take a full practice quiz in each SAT/ACT section', pillar:'prep', view:'quizzes' },
+      { key:'quiz',        label:'Take a full practice quiz in each science area', pillar:'prep', view:'quizzes' },
       { key:'activity',    label:'Grow into a leadership or ongoing role in an activity', pillar:'portfolio', view:'resume' },
       { key:'clinical',    label:'Keep growing your shadowing / clinical hours', pillar:'portfolio', view:'clinical' },
       { key:'colleges',    label:'Start a loose college list — no commitment yet', pillar:'portfolio', view:'colleges' },
@@ -842,9 +842,9 @@ export const CLASS_YEAR_ROADMAP = {
     ],
   },
   junior: {
-    label:'Junior Year Roadmap', blurb:'This is the highest-leverage year — serious SAT/ACT prep, a real college list, and the first building blocks of your application.',
+    label:'Junior Year Roadmap', blurb:'This is the highest-leverage year — serious coursework, a real college list, and the first building blocks of your application.',
     items:[
-      { key:'quiz',        label:'Take SAT/ACT prep seriously across all sections', pillar:'prep', view:'quizzes' },
+      { key:'quiz',        label:'Take your science coursework seriously across every subject', pillar:'prep', view:'quizzes' },
       { key:'colleges',    label:'Build out your real college list', pillar:'portfolio', view:'colleges' },
       { key:'recommenders',label:'Start lining up letters of recommendation', pillar:'portfolio', view:'recommenders' },
       { key:'essays',      label:'Start brainstorming your personal statement', pillar:'portfolio', view:'essays' },
@@ -891,31 +891,6 @@ export const FLASH_DECKS = {
     { front:'Negative exponent rule?', back:'a⁻ⁿ = 1/aⁿ — a negative exponent means "reciprocal," not "negative number."' },
     { front:'What is a rational function?', back:'A function that is a ratio of two polynomials, f(x) = p(x)/q(x), undefined where q(x) = 0.' },
     { front:'How do you solve a system of equations by substitution?', back:'Solve one equation for a variable, then substitute that expression into the other equation.' },
-  ],
-  'SAT Reading & Writing: Grammar Rules': [
-    { front:'Subject-verb agreement rule?', back:'A singular subject takes a singular verb; a plural subject takes a plural verb — watch for words between subject and verb.' },
-    { front:'When do you use "who" vs. "whom"?', back:'"Who" is a subject pronoun (who did it); "whom" is an object pronoun (to whom it was given).' },
-    { front:'What is a comma splice?', back:'Joining two independent clauses with only a comma — fix with a period, semicolon, or conjunction.' },
-    { front:'Its vs. it\'s?', back:'"Its" is possessive (the dog wagged its tail); "it\'s" is a contraction of "it is."' },
-    { front:'What does a semicolon connect?', back:'Two independent clauses that are closely related, without a conjunction.' },
-    { front:'What is a dangling modifier?', back:'A descriptive phrase that doesn\'t clearly connect to the word it\'s meant to modify, often at the start of a sentence.' },
-    { front:'When do you use "affect" vs. "effect"?', back:'"Affect" is usually a verb (to influence); "effect" is usually a noun (the result).' },
-    { front:'What is a run-on sentence?', back:'Two or more independent clauses joined without proper punctuation or a conjunction.' },
-    { front:'What is parallel structure?', back:'Using the same grammatical form for items in a list or comparison (e.g., "to run, to jump, and to swim").' },
-    { front:'When should you use "fewer" vs. "less"?', back:'"Fewer" for countable nouns (fewer apples); "less" for uncountable/singular quantities (less water).' },
-    { front:'What does a colon introduce?', back:'A list, explanation, or elaboration that follows a complete independent clause.' },
-    { front:'How do you form a plural possessive?', back:'Add \'s to a plural noun not ending in s (children\'s); add just an apostrophe if it already ends in s (students\').' },
-    { front:'What is a nonrestrictive clause and how is it punctuated?', back:'Extra, non-essential information set off with commas (e.g., "My car, which is red, is fast").' },
-    { front:'"Between you and I" — correct or incorrect?', back:'Incorrect — "between" takes an object pronoun, so it should be "between you and me."' },
-    { front:'What is the difference between "which" and "that"?', back:'"That" introduces essential (restrictive) info with no comma; "which" introduces extra (nonrestrictive) info set off by commas.' },
-    { front:'What is a sentence fragment?', back:'An incomplete sentence missing a subject, a verb, or a complete thought, but punctuated as if it were a full sentence.' },
-    { front:'What is the difference between "who\'s" and "whose"?', back:'"Who\'s" is a contraction of "who is" or "who has"; "whose" is possessive, showing ownership.' },
-    { front:'What is an appositive, and how is it punctuated?', back:'A noun phrase that renames or explains another noun right next to it (e.g., "my sister, a doctor, called"); nonessential appositives are set off with commas.' },
-    { front:'What\'s the rule for using "lay" vs. "lie"?', back:'"Lay" requires a direct object (you lay something down); "lie" does not (you lie down yourself).' },
-    { front:'What is subject-verb agreement with collective nouns like "team" or "committee"?', back:'Collective nouns usually take a singular verb when acting as one unit (e.g., "the team is winning"), unless members are acting individually.' },
-    { front:'When should you use a hyphen in a compound adjective before a noun?', back:'When two or more words act together as a single adjective before a noun (e.g., "a well-known author") — no hyphen needed after the noun ("the author is well known").' },
-    { front:'What is the difference between "farther" and "further"?', back:'"Farther" refers to physical distance; "further" refers to figurative or additional degree/extent (e.g., "further discussion").' },
-    { front:'What is faulty modifier placement, and how do you fix it?', back:'When a descriptive phrase is placed too far from the word it modifies, creating confusion or an unintended meaning — fix it by moving the modifier next to the word it actually describes.' },
   ],
   'U.S. History: Key Events': [
     { front:'What did the Declaration of Independence (1776) establish?', back:'The 13 colonies\' formal separation from Britain and the philosophical basis of natural rights and self-government.' },
@@ -1095,35 +1070,10 @@ export const FLASH_DECKS = {
     { front:'What is variance?', back:'The average of the squared differences from the mean — measures how spread out data is (standard deviation is its square root).' },
     { front:'What is a null hypothesis?', back:'A default assumption that there is no effect or difference, which a statistical test tries to reject or fail to reject.' },
   ],
-  'SAT Math Strategies': [
-    { front:'Best strategy when stuck on a hard SAT math problem?', back:'Plug in answer choices or pick simple numbers for variables — often faster than solving algebraically.' },
-    { front:'How should you manage time on the SAT Math section?', back:'Don\'t linger — mark difficult questions and return if time allows; easier questions are worth the same as hard ones.' },
-    { front:'What\'s a common trap in SAT word problems?', back:'Misreading what\'s actually being asked (e.g., solving for x when the question asks for x + 2) — always reread the question before selecting an answer.' },
-    { front:'When should you use a calculator strategically?', back:'For arithmetic-heavy or multi-step problems; skip it for problems better solved by recognizing patterns or simplifying algebraically.' },
-    { front:'How do you approach data/graph interpretation questions?', back:'Read axis labels and units first, then locate the specific data point or trend the question asks about before calculating.' },
-    { front:'What should you do first on a multi-step SAT problem?', back:'Identify exactly what the question is asking for before starting calculations, so you don\'t solve for the wrong variable.' },
-    { front:'How can estimation help on SAT math?', back:'Roughly estimating an answer lets you quickly eliminate unreasonable answer choices before calculating precisely.' },
-    { front:'How should you handle geometry problems marked "not drawn to scale"?', back:'Rely on given values and rules, not visual appearance — but a rough proportional sketch can still help catch mistakes.' },
-    { front:'How should you handle SAT math problems with variables in the answer choices?', back:'Plug in your own simple numbers for the variables and test which answer choice matches.' },
-    { front:'What is a common trap with percent problems?', back:'Confusing "percent of" a value with "percent change" — always identify the correct base for the percentage.' },
-    { front:'When is it faster to backsolve from answer choices?', back:'When an equation looks complex to set up algebraically — plug in each answer choice (starting with the middle one) to see which satisfies the equation.' },
-    { front:'How should you pace yourself across the SAT Math section?', back:'Spend less time on early, typically easier questions to bank time for harder questions later in the section.' },
-    { front:'What is a good strategy for "systems of equations" word problems?', back:'Translate the words into two equations first, then solve using substitution or elimination.' },
-    { front:'Why should you double-check units in word problems?', back:'Answer choices are often designed to match calculations that used the wrong units or skipped a conversion step.' },
-    { front:'What is a useful check after solving any SAT math problem?', back:'Plug your answer back into the original question or equation to confirm it makes logical sense.' },
-    { front:'What is a smart strategy for questions involving rates (distance/time/speed)?', back:'Set up the relevant formula (rate × time = distance) clearly with matching units before solving, rather than guessing which numbers to divide or multiply.' },
-    { front:'How should you approach "which of the following could be true" questions?', back:'Test each answer choice against the given constraints rather than trying to solve algebraically for a single value.' },
-    { front:'What is a useful strategy for average (mean) problems?', back:'Use the total = average × number of items relationship to solve for a missing value or a new average after adding/removing items.' },
-    { front:'How should you handle SAT math problems that combine geometry and algebra?', back:'Write down every given geometric relationship (angle sums, similar triangles, Pythagorean theorem) as an equation first, then solve algebraically.' },
-    { front:'What is a smart way to handle absolute value equations/inequalities?', back:'Split into two cases — one where the expression inside is positive, one where it\'s negative — and solve each separately.' },
-    { front:'How do you approach "increasing by a percent" vs. "increasing to a percent" problems?', back:'Carefully distinguish whether the answer choices represent the new total value or just the amount of change — misreading this is a very common error.' },
-    { front:'What is a good strategy when a question gives you a function defined by a table instead of an equation?', back:'Read directly off the table for the specific input/output asked, rather than trying to derive an unnecessary formula.' },
-    { front:'Why should you circle or write down exactly what the question asks before solving?', back:'It prevents the common mistake of solving correctly for the wrong quantity, especially on multi-step word problems.' },
-  ],
   'Study Skills & Test Strategy': [
     { front:'What is spaced repetition?', back:'Reviewing material at increasing intervals over time to move information into long-term memory more efficiently than cramming.' },
     { front:'What is active recall?', back:'Testing yourself on material (e.g., flashcards, practice questions) rather than passively re-reading notes — proven to improve retention.' },
-    { front:'How far ahead should you start studying for the SAT/ACT?', back:'Ideally 2–3 months of consistent practice, with full-length timed practice tests in the final few weeks.' },
+    { front:'How far ahead should you start studying for a big exam?', back:'Ideally 2–3 months of consistent practice, with full-length timed practice runs in the final few weeks.' },
     { front:'What should you do after a practice test?', back:'Review every wrong answer, understand why the correct answer is right, and identify patterns in your mistakes.' },
     { front:'Why is sleep important before a test?', back:'Sleep consolidates memory and restores focus — pulling an all-nighter typically hurts performance more than extra cramming helps.' },
     { front:'What is the Pomodoro Technique?', back:'A time-management method: study in focused intervals (e.g., 25 minutes) followed by short breaks, to sustain concentration.' },
@@ -1197,7 +1147,7 @@ export const FLASH_DECKS = {
     { front:'What is esterification?', back:'A reaction between a carboxylic acid and an alcohol that forms an ester and water, often producing fruity odors.' },
   ],
   'Reading Comprehension Tactics': [
-    { front:'What should you do before reading an SAT/ACT passage in detail?', back:'Skim the first and last sentences of paragraphs and any introductory blurb to get context before close reading.' },
+    { front:'What should you do before reading a dense passage in detail?', back:'Skim the first and last sentences of paragraphs and any introductory blurb to get context before close reading.' },
     { front:'How should you approach "main idea" questions?', back:'Look for the passage\'s central argument or purpose, not just a detail mentioned somewhere in the text.' },
     { front:'What is a common wrong-answer trap on reading questions?', back:'An answer choice that is true based on outside knowledge but not actually supported by the passage itself.' },
     { front:'How should you handle vocabulary-in-context questions?', back:'Cover the answer choices, predict a word from context first, then match your prediction to the closest choice.' },
@@ -1813,57 +1763,19 @@ export const FLASH_DECKS = {
     { front:'What is a common mistake students make with scholarship essays?', back:'Reusing the exact same generic essay for every application without tailoring it to what each specific scholarship values.' },
     { front:'Why is it worth asking a college\'s financial aid office directly about appeals?', back:'If your family\'s financial situation changes (job loss, medical expenses), most schools have a formal appeal process that can result in a revised aid offer.' },
   ],
-  'ACT Science Reasoning Strategies': [
-    { front:'What does the ACT Science section primarily test?', back:'Scientific reasoning and data interpretation skills, not memorized science content — most questions can be answered directly from the passage\'s graphs, tables, and text.' },
-    { front:'What are the three main passage types on ACT Science?', back:'Data Representation (graphs/tables), Research Summaries (experiment descriptions), and Conflicting Viewpoints (competing hypotheses/scientists).' },
-    { front:'What is the best first step when starting a Data Representation passage?', back:'Skim the graph/table titles, axis labels, and units before reading detailed question text — most answers are found directly in the visual data.' },
-    { front:'How should you approach a Conflicting Viewpoints passage differently from the others?', back:'Read more carefully for each scientist\'s core claim and reasoning, since questions often ask you to compare or distinguish between viewpoints rather than just read a chart.' },
-    { front:'What is a common trap in ACT Science trend questions?', back:'Extrapolating beyond the given data range — only draw conclusions supported by the actual data shown, not values outside the tested range.' },
-    { front:'How should you handle a question asking about the relationship between two variables in a graph?', back:'Look directly at how one variable changes as the other changes (positive, negative, or no clear trend) rather than relying on outside science knowledge.' },
-    { front:'Why is time management especially critical on ACT Science?', back:'You have very little time per question (about 52 seconds average across 40 questions in 35 minutes) — efficient data-reading matters more than deep content knowledge.' },
-    { front:'What is a good strategy if a question requires combining data from two different figures?', back:'Identify exactly which axis or variable links the two figures, then trace the shared value across both to connect the data.' },
-    { front:'How should you approach the rare questions that do require outside scientific knowledge?', back:'Recognize them as the minority (usually just a few per test) and don\'t let them slow down your pace on the many data-based questions.' },
-    { front:'What is the value of underlining or noting units as you read a passage?', back:'It prevents easy mistakes from comparing values with mismatched units or misreading a scale.' },
-    { front:'Why should you answer Data Representation passages before Conflicting Viewpoints if you\'re running low on time?', back:'Data Representation questions are typically faster to answer since they don\'t require deep reading of competing arguments.' },
-    { front:'How do you identify which variable was intentionally changed in an experiment (the independent variable)?', back:'Look for what the researchers manipulated across different trials or groups, usually described early in a Research Summary passage.' },
-    { front:'What is a control group, and why does the ACT test understanding of it?', back:'A group in an experiment that doesn\'t receive the treatment/variable being tested, used as a baseline for comparison — tested because it\'s central to understanding experimental design.' },
-    { front:'What should you do if two answer choices both seem to fit the data?', back:'Re-check exactly what the question is asking (value, trend, or comparison) — one choice usually answers a slightly different question than what\'s asked.' },
-    { front:'Why is practicing with real, timed ACT Science passages especially important?', back:'The section\'s speed and data-reading demands are unlike typical science class questions, so pattern familiarity from practice pays off more than content review.' },
-    { front:'What is a smart strategy for passages with unfamiliar scientific terms or topics?', back:'Don\'t panic — treat unfamiliar terms as defined by the passage itself; nearly all information needed to answer is provided directly in the passage.' },
-  ],
-  'ACT English & Grammar Strategies': [
-    { front:'What does the ACT English section primarily test?', back:'Grammar, punctuation, sentence structure, and rhetorical skills (organization, style, strategy) within the context of full passages.' },
-    { front:'How is ACT English different from SAT Writing in format?', back:'ACT English gives you 45 minutes for 75 questions across 5 passages — a faster pace requiring quick, confident grammar judgment.' },
-    { front:'What is the "concise is usually correct" rule of thumb on ACT English?', back:'When multiple answer choices are grammatically correct, the shortest, clearest option is usually the best choice — the ACT favors concision over wordiness.' },
-    { front:'What is redundancy, and why does the ACT test it?', back:'Saying the same thing twice in different words (e.g., "each and every," "past history") — the ACT frequently offers a redundant wrong answer alongside a concise correct one.' },
-    { front:'What is the rule for using commas around nonessential (parenthetical) information?', back:'Nonessential information — extra detail that could be removed without changing the sentence\'s core meaning — should be set off with a pair of commas.' },
-    { front:'How do you check if a comma is being used correctly to join two clauses?', back:'Comma + a conjunction (and, but, so, etc.) can join two independent clauses; a comma alone cannot — that creates a comma splice.' },
-    { front:'What is the ACT\'s approach to testing verb tense consistency?', back:'Look for the established time frame of the passage/paragraph — a verb\'s tense should stay consistent with surrounding sentences unless a clear time shift is indicated.' },
-    { front:'What is a "rhetorical" question on ACT English, and how does it differ from a grammar question?', back:'Rhetorical questions ask about organization, relevance, or effectiveness (e.g., "Should this sentence be added?") rather than grammar rules — they require reading for meaning and purpose, not just correctness.' },
-    { front:'What should you do with a "NO CHANGE" answer choice?', back:'Treat it like any other option — it\'s correct roughly as often as any other choice, so don\'t avoid or favor it out of instinct.' },
-    { front:'How should you handle questions asking you to add a transition word between sentences?', back:'Determine the logical relationship between the two ideas (contrast, cause-effect, addition) before picking a transition word that matches that relationship.' },
-    { front:'What is the ACT\'s general rule about pronoun-antecedent agreement?', back:'A pronoun must match its antecedent in number (singular/plural) and clearly refer to one specific noun without ambiguity.' },
-    { front:'Why should you read a full sentence (not just the underlined portion) before answering an ACT English question?', back:'Grammar and meaning often depend on context beyond the underlined section — reading only the underlined part can lead to a technically-fine but contextually wrong answer.' },
-    { front:'What is a common ACT trap involving apostrophes?', back:'Confusing plural forms with possessives (e.g., "students\'" vs. "students") or contractions with possessive pronouns (e.g., "it\'s" vs. "its").' },
-    { front:'How should you approach a question asking for the best place to insert a new sentence into a paragraph?', back:'Identify what the new sentence logically connects to (a specific idea, example, or transition) and place it where that connection flows most naturally.' },
-    { front:'What is the ACT testing when it asks whether a paragraph or essay should end with a certain sentence?', back:'Whether that sentence effectively summarizes, concludes, or ties back to the passage\'s main idea — an effective ending, not just a grammatically correct one.' },
-    { front:'Why is building pacing awareness important for ACT English specifically?', back:'With over 1.5 questions per minute required, ACT English rewards quick, confident pattern recognition more than any other section — practice builds the speed needed to finish all 75 questions.' },
-  ],
 };
 
 // ── FLASHCARD DECK CATEGORIES ────────────────────────────────────────────────────
-// Groups every built-in deck into a category + subcategory (SAT > Math, SAT > Reading &
-// Writing, Science > Biology, etc.) so the Flashcards tab can section decks off instead of
+// Groups every built-in deck into a category + subcategory (Core Skills > Math,
+// Science > Biology, etc.) so the Flashcards tab can section decks off instead of
 // showing one long flat list. A deck not listed here (i.e. any student-created deck) falls back
 // to the "My Decks" category in the UI rather than needing an entry added here.
 export const DECK_CATEGORIES = {
-  'Algebra II Essentials':                   { category: 'SAT', subcategory: 'Math' },
-  'SAT Math Strategies':                     { category: 'SAT', subcategory: 'Math' },
-  'Statistics & Data Basics':                { category: 'SAT', subcategory: 'Math' },
-  'SAT Reading & Writing: Grammar Rules':    { category: 'SAT', subcategory: 'Reading & Writing' },
-  'Vocabulary Builder':                      { category: 'SAT', subcategory: 'Reading & Writing' },
-  'Essay Writing Toolkit':                   { category: 'SAT', subcategory: 'Reading & Writing' },
-  'Reading Comprehension Tactics':           { category: 'SAT', subcategory: 'Reading & Writing' },
+  'Algebra II Essentials':                   { category: 'Core Skills', subcategory: 'Math' },
+  'Statistics & Data Basics':                { category: 'Core Skills', subcategory: 'Math' },
+  'Vocabulary Builder':                      { category: 'Core Skills', subcategory: 'Reading & Writing' },
+  'Essay Writing Toolkit':                   { category: 'Core Skills', subcategory: 'Reading & Writing' },
+  'Reading Comprehension Tactics':           { category: 'Core Skills', subcategory: 'Reading & Writing' },
   'Biology Basics':                          { category: 'Science', subcategory: 'Biology' },
   'Anatomy & Physiology Basics':             { category: 'Science', subcategory: 'Biology' },
   'Genetics & Heredity':                     { category: 'Science', subcategory: 'Biology' },
@@ -1909,14 +1821,16 @@ export const DECK_CATEGORIES = {
   'Personal Statements & "Why Medicine" Essays':  { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
   'Letters of Recommendation & Interview Basics': { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
   'Financial Aid & Scholarships for Pre-Health Students': { category: 'Pathway & Admissions', subcategory: 'Application Portfolio' },
-  'ACT Science Reasoning Strategies':        { category: 'SAT', subcategory: 'ACT' },
-  'ACT English & Grammar Strategies':        { category: 'SAT', subcategory: 'ACT' },
 };
-// Display order for the category pill row — deliberately SAT-first since that's the app's core
-// focus, then the broader subject areas, then Pathway & Admissions (choosing a health career and
-// building the application that gets you there — the app's other core pillar alongside test prep),
-// with a "My Decks" bucket (any deck not in the map above, i.e. every student-created deck) always last.
-export const DECK_CATEGORY_ORDER = ['SAT', 'Science', 'Social Studies', 'Study Skills', 'Pathway & Admissions', 'My Decks'];
+// Display order for the category pill row — the sciences first, since that is what this product
+// actually teaches, then the broader subject areas, then Pathway & Admissions (choosing a health
+// career and building the application that gets you there), with a "My Decks" bucket (any deck not
+// in the map above, i.e. every student-created deck) always last.
+//
+// 'SAT' used to lead this row. It went with the SAT pillar (src/lib/betaFlags.js) — the four
+// SAT/ACT strategy decks were removed and the general math/reading decks that shared the category
+// are now 'Core Skills', which is what they always were.
+export const DECK_CATEGORY_ORDER = ['Science', 'Core Skills', 'Social Studies', 'Study Skills', 'Pathway & Admissions', 'My Decks'];
 export function getDeckCategory(deckName, builtin) {
   if (!builtin) return { category: 'My Decks', subcategory: 'My Decks' };
   return DECK_CATEGORIES[deckName] || { category: 'Study Skills', subcategory: 'General' };

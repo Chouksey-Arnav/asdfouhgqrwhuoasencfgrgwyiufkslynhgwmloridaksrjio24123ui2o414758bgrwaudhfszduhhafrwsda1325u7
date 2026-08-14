@@ -19,7 +19,7 @@
 //
 // ── WHY CREDITS RATHER THAN A CHECKLIST ──────────────────────────────────────
 // A checklist ("verify 1 lesson") makes every other honest study session worth
-// nothing: a student who spends an hour on a full SAT test and no lessons is
+// nothing: a student who spends an hour mastering a unit and no lessons is
 // told they did not study. Credits let every real form of work count, weighted
 // by how much of it there is, while still making the pathway the cheapest and
 // most direct route to the goal — which is where we want students to spend
@@ -50,8 +50,6 @@ export const STREAK_ACTIONS = {
   lesson_studied:    { credits: 1, label: 'Read + watch a lesson',         short: 'Lesson studied',    per: 'lesson' },
   unit_verified:     { credits: 4, label: 'Master a pathway unit',         short: 'Unit mastered',     per: 'unit' },
   quiz_completed:    { credits: 2, label: 'Complete a quiz',               short: 'Quiz completed',    per: 'quiz' },
-  sat_practice_set:  { credits: 2, label: 'Answer 10 SAT questions',       short: 'SAT practice',      per: '10 questions' },
-  sat_full_test:     { credits: 6, label: 'Finish a full-length SAT test', short: 'Full SAT test',     per: 'test' },
   flashcards_batch:  { credits: 1, label: 'Review 10 flashcards',          short: 'Flashcards',        per: '10 cards' },
   deck_created:      { credits: 1, label: 'Build a flashcard deck',        short: 'Deck built',        per: 'deck' },
   notes_batch:       { credits: 1, label: 'Highlight 3 passages',          short: 'Notes written',     per: '3 highlights' },
@@ -81,17 +79,17 @@ export const STREAK_GOALS = [
   {
     id: 'steady', label: 'Steady', credits: 4, minutes: '~25 min/day',
     blurb: 'One real lesson a day. This is the pace that finishes a pathway.',
-    examples: ['1 verified lesson', '2 quizzes', '20 SAT questions'],
+    examples: ['1 verified lesson', '2 quizzes', '4 plan tasks'],
   },
   {
     id: 'serious', label: 'Serious', credits: 8, minutes: '~50 min/day',
-    blurb: 'Two lessons, or a lesson plus a solid SAT block. Real daily volume.',
-    examples: ['2 verified lessons', '1 lesson + 20 SAT questions', '4 quizzes'],
+    blurb: 'Two lessons, or a lesson plus a solid quiz block. Real daily volume.',
+    examples: ['2 verified lessons', '1 lesson + 2 quizzes', '4 quizzes'],
   },
   {
     id: 'intense', label: 'Intense', credits: 12, minutes: '~90 min/day',
-    blurb: 'Test-season pace. Only pick this if you can actually hold it.',
-    examples: ['3 verified lessons', '1 full SAT test + a lesson', '6 quizzes'],
+    blurb: 'Exam-season pace. Only pick this if you can actually hold it.',
+    examples: ['3 verified lessons', '1 unit mastered + a lesson', '6 quizzes'],
   },
 ];
 

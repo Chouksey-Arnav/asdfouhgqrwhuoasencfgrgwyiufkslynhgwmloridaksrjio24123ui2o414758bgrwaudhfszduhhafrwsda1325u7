@@ -98,9 +98,6 @@ const PILLAR_META = {
   prep: { color: C.violet, label: 'Prep' },
   portfolio: { color: C.green, label: 'Portfolio' },
   progress: { color: C.cyan, label: 'Progress' },
-  // 'sat' is a valid pillar the generator emits (see VALID_PILLARS) but had no entry here, so
-  // every SAT task in the plan rendered in Prep's violet with a "Prep" chip on it.
-  sat: { color: C.sky, label: 'SAT' },
   rest: { color: C.amber, label: 'Rest & Reflect' },
 };
 const TYPE_ICON = {
@@ -108,9 +105,6 @@ const TYPE_ICON = {
   activity: Award, college: GraduationCap, essay: ScrollText, deadline: CalendarDays,
   clinical: Stethoscope, research: FlaskConical, recommender: UserCheck, interview: Mic,
   reflection: Sparkles, rest: Moon,
-  // Same omission as the 'sat' pillar above: the three SAT task types fell through to the generic
-  // book icon, so an SAT practice set looked identical to an E-Library reading.
-  sat_practice: Target, sat_review: History, sat_test: ScrollText,
 };
 // Generation is deliberately unhurried now (see callOracle in masterPlanGenerator.js — real
 // retries with backoff, high reasoning effort, a two-day window written properly rather than a

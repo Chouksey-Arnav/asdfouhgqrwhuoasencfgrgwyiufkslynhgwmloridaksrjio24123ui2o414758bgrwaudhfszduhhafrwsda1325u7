@@ -113,8 +113,8 @@ export const markThreadRead = (linkId) =>
  */
 export const QUIZ_TOPICS = [
   'Anything — you pick',
-  'SAT Math',
-  'SAT Reading & Writing',
+  'Math & Data',
+  'Reading & Writing',
   'Biology & Biochemistry',
   'Chemistry & Physics',
   'Psychology & Sociology',

@@ -10,6 +10,10 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
   const p = plan && plan.summary ? plan : heuristicPlan(profile || {});
   const dailyMins = p.dailyMinutes;
   const weeklyQs = p.weeklyQuestions;
+  // Was the onboarding target score. That question is gone with the SAT pillar
+  // (src/lib/betaFlags.js), so the third ring shows the one weekly commitment
+  // the plan actually makes: real pre-med steps.
+  const weeklySteps = p.weeklySteps || (p.focusAreas?.length || 3);
 
   return (
     <>
@@ -43,8 +47,8 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
           </RadialRing>
           <RadialRing pct={0.85} color={C.violet} size={82}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{profile.targetScore}</div>
-              <div style={{ fontSize: 8.5, color: C.t3 }}>target</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{weeklySteps}</div>
+              <div style={{ fontSize: 8.5, color: C.t3 }}>steps/week</div>
             </div>
           </RadialRing>
         </div>

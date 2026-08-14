@@ -69,18 +69,16 @@ export const DAILY_SET_BONUS = { xp: 120, label: 'Clean Sweep' };
  * they have no way to do.
  *
  * This is the difference between a daily quest system that feels personal and
- * one that feels random: offering "sit a full-length SAT test" to a student who
- * has never opened the SAT tab is not a challenge, it is a bug they have to
- * ignore, and a set with one ignorable item in it is a set nobody clears.
+ * one that feels random: offering "review ten cards" to a student with no decks
+ * is not a challenge, it is a bug they have to ignore, and a set with one
+ * ignorable item in it is a set nobody clears.
  *
- *   sat        the student has done any SAT work at all
- *   satDeep    the student has answered enough questions for a full test to be sane
  *   portfolio  the portfolio tab has been used
  *   plan       a study plan exists
  *   decks      at least one deck with cards in it
  *   pathway    a pathway is enrolled
  */
-export const DAILY_REQUIREMENTS = ['sat', 'satDeep', 'portfolio', 'plan', 'decks', 'pathway'];
+export const DAILY_REQUIREMENTS = ['portfolio', 'plan', 'decks', 'pathway'];
 
 /**
  * One daily quest template.
@@ -102,8 +100,6 @@ export const DAILY_QUESTS = [
     title: 'Take one quiz',           blurb: 'Any quiz, any score. Five minutes and today has something in it.' },
   { id: 'd_cards_ten',      tier: 'bronze', metric: 'flashcard_review', target: 10, icon: 'Layers3',         surface: 'prep', requires: 'decks',
     title: 'Review 10 cards',         blurb: 'Ten cards is one bus ride, and it is genuinely how memory works.' },
-  { id: 'd_sat_ten',        tier: 'bronze', metric: 'sat_question',     target: 10, icon: 'Target',          surface: 'sat', requires: 'sat',
-    title: 'Answer 10 SAT questions', blurb: 'Ten questions. Not a study session — just keeping the muscle warm.' },
   { id: 'd_lesson_read',    tier: 'bronze', metric: 'lesson_studied',   target: 1,  icon: 'BookOpen',        surface: 'prep', requires: 'pathway',
     title: 'Read one lesson',         blurb: 'Article and video. The quiz can wait for tomorrow.' },
   { id: 'd_note_one',       tier: 'bronze', metric: 'note_written',     target: 1,  icon: 'PenLine',         surface: 'prep',
@@ -114,8 +110,6 @@ export const DAILY_QUESTS = [
     title: 'Clear one plan task',     blurb: "The plan already picked it. You just have to do it." },
   { id: 'd_portfolio_one',  tier: 'bronze', metric: 'portfolio_entry',  target: 1,  icon: 'FilePlus2',       surface: 'portfolio',
     title: 'Log one thing you did',   blurb: 'A club, a shift, a competition. Two minutes now, remembered forever.' },
-  { id: 'd_review_one',     tier: 'bronze', metric: 'sat_review_clear', target: 1,  icon: 'RotateCcw',       surface: 'sat', requires: 'sat',
-    title: 'Fix one missed question', blurb: 'One item off the review log. The least fun and most valuable minute today.' },
   { id: 'd_track_one',      tier: 'bronze', metric: 'opportunity_track',target: 1,  icon: 'Bookmark',        surface: 'portfolio',
     title: 'Track one opportunity',   blurb: 'One program, competition or scholarship saved before its deadline finds you.' },
   { id: 'd_college_one',    tier: 'bronze', metric: 'college_saved',    target: 1,  icon: 'School',          surface: 'portfolio',
@@ -128,10 +122,6 @@ export const DAILY_QUESTS = [
     title: 'Take two quizzes',        blurb: 'Two quizzes is the other way to clear a Steady streak day.' },
   { id: 'd_cards_25',       tier: 'silver', metric: 'flashcard_review', target: 25, icon: 'Layers',          surface: 'prep', requires: 'decks',
     title: 'Review 25 cards',         blurb: 'A proper deck session. Long enough that the scheduler learns something.' },
-  { id: 'd_sat_25',         tier: 'silver', metric: 'sat_question',     target: 25, icon: 'Crosshair',       surface: 'sat', requires: 'sat',
-    title: 'Answer 25 SAT questions', blurb: 'A real practice block — about twenty-five minutes of it.' },
-  { id: 'd_sat_correct_15', tier: 'silver', metric: 'sat_correct',      target: 15, icon: 'CircleCheck',     surface: 'sat', requires: 'sat',
-    title: 'Get 15 SAT questions right', blurb: 'Only correct answers count today. Guessing will make this one long.' },
   { id: 'd_notes_three',    tier: 'silver', metric: 'note_written',     target: 3,  icon: 'Highlighter',     surface: 'prep',
     title: 'Three notes or highlights',blurb: 'Three things worth keeping out of whatever you read today.' },
   { id: 'd_coach_three',    tier: 'silver', metric: 'coach_session',    target: 3,  icon: 'Bot',             surface: 'prep',
@@ -148,8 +138,6 @@ export const DAILY_QUESTS = [
     title: 'Add two colleges',        blurb: 'Two more schools on the list, with the numbers attached.' },
   { id: 'd_track_three',    tier: 'silver', metric: 'opportunity_track',target: 3,  icon: 'Compass',         surface: 'portfolio',
     title: 'Track three programs',    blurb: 'Twenty minutes of hunting now is an application you would not have made.' },
-  { id: 'd_review_three',   tier: 'silver', metric: 'sat_review_clear', target: 3,  icon: 'ListRestart',     surface: 'sat', requires: 'sat',
-    title: 'Clear three from the log',blurb: 'Three questions you got wrong, reworked until they make sense.' },
   { id: 'd_deck_build',     tier: 'silver', metric: 'deck_created',     target: 1,  icon: 'FolderPlus',      surface: 'prep',
     title: 'Build a deck',            blurb: 'Make cards from your own notes. Writing them is most of the learning.' },
   { id: 'd_entries_two',    tier: 'silver', metric: 'portfolio_entry',  target: 2,  icon: 'Award',           surface: 'portfolio',
@@ -162,18 +150,10 @@ export const DAILY_QUESTS = [
     title: 'Score 100% on a quiz',    blurb: 'A clean sweep. Retakes count — going back and fixing it is the point.' },
   { id: 'd_cards_50',       tier: 'gold',   metric: 'flashcard_review', target: 50, icon: 'Brain',           surface: 'prep', requires: 'decks',
     title: 'Review 50 cards',         blurb: 'A serious recall session. Split it across the day if you want.' },
-  { id: 'd_sat_50',         tier: 'gold',   metric: 'sat_question',     target: 50, icon: 'Layers',          surface: 'sat', requires: 'satDeep',
-    title: 'Answer 50 SAT questions', blurb: 'A full practice sitting. Roughly what a real section costs you.' },
-  { id: 'd_sat_correct_35', tier: 'gold',   metric: 'sat_correct',      target: 35, icon: 'Crosshair',       surface: 'sat', requires: 'satDeep',
-    title: 'Get 35 SAT questions right', blurb: 'Accuracy, not volume. At 70% that is fifty questions.' },
   { id: 'd_quiz_strong_two',tier: 'gold',   metric: 'quiz_strong',      target: 2,  icon: 'TrendingUp',      surface: 'prep',
     title: 'Two quizzes at 80%+',     blurb: 'Two clean passes in one day. Volume plus standard.' },
   { id: 'd_lesson_ace',     tier: 'gold',   metric: 'lesson_perfect',   target: 1,  icon: 'Medal',           surface: 'prep', requires: 'pathway',
     title: 'Ace a lesson',            blurb: '100% on a lesson verification quiz. Read it properly first.' },
-  { id: 'd_full_test',      tier: 'gold',   metric: 'sat_full_test',    target: 1,  icon: 'ClipboardList',   surface: 'sat', requires: 'satDeep',
-    title: 'Sit a full-length test',  blurb: 'The big one. Block out the afternoon — it pays like it costs.' },
-  { id: 'd_review_six',     tier: 'gold',   metric: 'sat_review_clear', target: 6,  icon: 'AlertTriangle',   surface: 'sat', requires: 'satDeep',
-    title: 'Clear six from the log',  blurb: 'Six missed questions, properly reworked. The hardest hour in the SAT tab.' },
   { id: 'd_clinical_four',  tier: 'gold',   metric: 'clinical_hour',    target: 4,  icon: 'Stethoscope',     surface: 'portfolio', requires: 'portfolio',
     title: 'Log four clinical hours', blurb: 'An afternoon on site, logged the same day so the details are still real.' },
   { id: 'd_essay_two',      tier: 'gold',   metric: 'essay_work',       target: 2,  icon: 'FileCheck2',      surface: 'portfolio', requires: 'portfolio',

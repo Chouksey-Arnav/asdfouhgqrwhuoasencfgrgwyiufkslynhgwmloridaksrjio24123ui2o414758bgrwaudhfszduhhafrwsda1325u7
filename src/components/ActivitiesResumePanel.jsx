@@ -935,7 +935,7 @@ export default function ActivitiesResumePanel({
             <SectionTitle icon={Target} color={C.violetL}>Colleges matched to your academic record</SectionTitle>
             {!academics.hasData && !scores.hasScore ? (
               <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
-                Nothing to match on yet. Add a GPA term above (or log a real SAT/ACT in the Score Tracker) and this fills with U.S. schools picked from your actual numbers and the career you told us you want — each one addable to your college list in a tap, already categorized.
+                Nothing to match on yet. Add a GPA term above and this fills with U.S. schools picked from your actual numbers and the career you told us you want — each one addable to your college list in a tap, already categorized.
               </div>
             ) : (
               <>

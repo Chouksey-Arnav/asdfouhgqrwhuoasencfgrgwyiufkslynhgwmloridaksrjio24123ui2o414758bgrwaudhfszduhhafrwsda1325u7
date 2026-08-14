@@ -2,10 +2,10 @@
 // Recent-activity digest — turns the local studyEvents log (src/lib/eventLog.js,
 // Dexie `studyEvents` table, docs/PROFILING_PLAN.md Phase 1) into one compact,
 // human-readable line MedaBrain can reference on every surface: the head coach,
-// the Prep/Portfolio/SAT specialists, and plan generation. Before this existed,
+// the Prep and Portfolio specialists, and plan generation. Before this existed,
 // the log only powered the Verified Progress view — nothing MedaBrain said ever
 // referenced it, so a student's day-to-day activity across quizzes, flashcards,
-// SAT practice, and Portfolio never visibly fed back into what MedaBrain "knew."
+// quizzes, and Portfolio never visibly fed back into what MedaBrain "knew."
 // This is what closes that loop: every surface can now say "I saw you did X
 // yesterday" instead of only ever citing onboarding answers and static counts.
 import * as DB from './db';
@@ -17,9 +17,6 @@ const EVENT_LABELS = {
   unit_verified: { unit: 'pathway unit completed', plural: 'pathway units completed' },
   lesson_video_watched: { unit: 'lesson studied', plural: 'lessons studied' },
   flashcard_reviewed: { unit: 'flashcard reviewed', plural: 'flashcards reviewed' },
-  sat_attempt_completed: { unit: 'SAT practice session', plural: 'SAT practice sessions' },
-  sat_diagnostic_completed: { unit: 'SAT diagnostic taken', plural: 'SAT diagnostics taken' },
-  sat_baseline_completed: { unit: 'SAT baseline test taken', plural: 'SAT baseline tests taken' },
   pathway_diagnostic_completed: { unit: 'pathway diagnostic taken', plural: 'pathway diagnostics taken' },
   portfolio_item_added: { unit: 'Portfolio item added', plural: 'Portfolio items added' },
   interview_session_completed: { unit: 'mock interview completed', plural: 'mock interviews completed' },
@@ -30,7 +27,7 @@ const EVENT_LABELS = {
 // regardless of the order studyEvents happened to come back in.
 const EVENT_ORDER = [
   'quiz_scored', 'quiz_attempt', 'unit_lesson_verified', 'unit_verified', 'lesson_video_watched',
-  'flashcard_reviewed', 'sat_attempt_completed', 'sat_diagnostic_completed', 'sat_baseline_completed',
+  'flashcard_reviewed',
   'pathway_diagnostic_completed', 'portfolio_item_added', 'interview_session_completed', 'coach_message_sent',
 ];
 

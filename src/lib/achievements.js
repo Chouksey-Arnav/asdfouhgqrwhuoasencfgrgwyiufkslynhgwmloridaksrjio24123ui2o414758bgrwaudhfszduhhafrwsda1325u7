@@ -7,15 +7,6 @@ export const ACHIEVEMENTS = {
   first_quiz:   { key:'first_quiz',   name:'First Steps',      desc:'Complete your first quiz',         icon:'Target', xp:50  },
   perfect_score:{ key:'perfect_score',name:'Perfect Score',    desc:'Score 100% on any quiz',           icon:'Star', xp:100 },
   quiz_10:      { key:'quiz_10',      name:'Quiz Champion',    desc:'Complete 10 quizzes',              icon:'Trophy', xp:150 },
-  // ── SAT ── deliberately weighted toward reviewing errors and re-measuring,
-  // not toward raw question volume, since that is what actually moves a score.
-  sat_diagnostic:  { key:'sat_diagnostic',  name:'Baseline Set',      desc:'Complete the SAT diagnostic',            icon:'Compass', xp:150 },
-  sat_first_test:  { key:'sat_first_test',  name:'Full Distance',     desc:'Finish a full-length adaptive SAT test', icon:'Trophy', xp:400 },
-  sat_three_tests: { key:'sat_three_tests', name:'Test Day Ready',    desc:'Finish 3 full-length SAT tests',         icon:'Crown', xp:600 },
-  sat_100_q:       { key:'sat_100_q',       name:'Hundred Down',      desc:'Answer 100 SAT questions',               icon:'Layers', xp:200 },
-  sat_500_q:       { key:'sat_500_q',       name:'Rep Machine',       desc:'Answer 500 SAT questions',               icon:'Dumbbell', xp:450 },
-  sat_log_clear:   { key:'sat_log_clear',   name:'Nothing Left Open', desc:'Clear every item in your SAT review log', icon:'ShieldCheck', xp:350 },
-  sat_skill_master:{ key:'sat_skill_master',name:'Skill Locked In',   desc:'Reach 80% mastery on an SAT skill',      icon:'Star', xp:250 },
   level_5:      { key:'level_5',      name:'Rising Star',      desc:'Reach Level 5',                   icon:'Sparkles', xp:200 },
   level_10:     { key:'level_10',     name:'Dedicated Scholar',desc:'Reach Level 10',                  icon:'Gem', xp:300 },
   streak_7:     { key:'streak_7',     name:'Week Warrior',     desc:'Study 7 days in a row',           icon:'Flame', xp:250 },
@@ -72,20 +63,13 @@ export const ACHIEVEMENTS = {
 export const PATHWAY_KEYS = ['exploring','physician','nursing','physicianAssistant','pharmacy','dentistry','biomedResearch','physicalOccupTherapy','publicHealth','healthAdmin'];
 
 /** Check which new achievements should be unlocked given current state */
-export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), satDiagnosticDone=false, satFullTests=0, satQuestions=0, satLogCleared=false, satMasteredSkills=0, unlocked }) {
+export function checkAchievements({ level, quizCount, perfectScores, streak, cardReviews, mastery, aiChats, interviewSessions=0, colleges=0, essays=0, activities=0, deadlines=0, resumeBuilt=false, clinicalHours=0, recommenders=0, mmiCasperSessions=0, pathwayCompletions=new Set(), unlocked }) {
   const toUnlock = [];
   const check = (key, condition) => { if (condition && !unlocked.has(key)) toUnlock.push(ACHIEVEMENTS[key]); };
 
   check('first_quiz',    quizCount >= 1);
   check('perfect_score', perfectScores >= 1);
   check('quiz_10',       quizCount >= 10);
-  check('sat_diagnostic',   satDiagnosticDone);
-  check('sat_first_test',   satFullTests >= 1);
-  check('sat_three_tests',  satFullTests >= 3);
-  check('sat_100_q',        satQuestions >= 100);
-  check('sat_500_q',        satQuestions >= 500);
-  check('sat_log_clear',    satLogCleared);
-  check('sat_skill_master', satMasteredSkills >= 1);
   check('level_5',       level >= 5);
   check('level_10',      level >= 10);
   check('streak_7',      streak >= 7);

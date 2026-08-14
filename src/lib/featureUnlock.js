@@ -41,7 +41,7 @@
 // DOM — which is what lets `npm run verify:nav` prove every rule is reachable
 // and that the ids here still match the nav arrays in App.jsx.
 
-/** How a student refers to a destination internally: 'portfolio', 'sat/review'. */
+/** How a student refers to a destination internally: 'portfolio', 'prep/quizzes'. */
 export const key = (tab, view) => (view ? `${tab}/${view}` : tab);
 
 /**
@@ -58,7 +58,7 @@ export const sectionKey = (tab, view, section) => `${key(tab, view)}${SECTION_SE
 
 /**
  * The thing a locked destination hangs off, for scoping "what opens next":
- * 'plans' → '' (top level), 'sat/review' → 'sat', 'portfolio/resume:clinical'
+ * 'plans' → '' (top level), 'prep/quizzes' → 'prep', 'portfolio/resume:clinical'
  * → 'portfolio/resume'. A SubNav asks for its own scope and therefore never
  * advertises a section belonging to one of its views, and the résumé's section
  * row asks for 'portfolio/resume' and gets exactly its own five.
@@ -82,10 +82,6 @@ export const NAV_MODES = { GUIDED: 'guided', EVERYTHING: 'everything' };
 export const EMPTY_SIGNALS = {
   quizzes: 0,            // quizzes submitted
   lessons: 0,            // pathway lessons completed
-  satQuestions: 0,       // SAT questions answered, any mode
-  satBaselineDone: false,
-  satDiagnosticDone: false,
-  satFullTests: 0,
   colleges: 0,
   essays: 0,
   activities: 0,         // portfolio activity rows (incl. clinical/research)
@@ -106,18 +102,18 @@ export const EMPTY_SIGNALS = {
 /**
  * Anything a student has done that counts as "using the app". The unlock
  * ladder is built on this rather than on any single feature so a student who
- * only does SAT work and a student who only does pathway lessons both progress
+ * only takes quizzes and a student who only does pathway lessons both progress
  * — the point is to gate on engagement, not to force one route through.
  */
 export function studyActions(s) {
-  return (s.quizzes || 0) + (s.lessons || 0) + Math.floor((s.satQuestions || 0) / 5);
+  return (s.quizzes || 0) + (s.lessons || 0);
 }
 
 /**
  * Every gated destination, in the order a student meets it.
  *
  * Ids not listed here are open from the first second — that list is
- * deliberately tiny (Home, SAT, Prep, Settings, and the first two sub-tabs of
+ * deliberately tiny (Home, Prep, Settings, and the first two sub-tabs of
  * each pillar) because it is the answer to "where do I go?" for someone who
  * has never seen the app.
  *
@@ -130,7 +126,7 @@ export const UNLOCK_RULES = [
   {
     id: 'portfolio',
     label: 'Portfolio',
-    hint: 'Finish one lesson, quiz, or SAT set to start building your application.',
+    hint: 'Finish one lesson or quiz to start building your application.',
     at: (s) => studyActions(s) >= 1 || s.applicationUrgent,
     progress: (s) => [Math.min(studyActions(s), 1), 1],
   },
@@ -175,69 +171,6 @@ export const UNLOCK_RULES = [
     hint: 'Complete 5 study sessions — then there\'s a real chart to look at.',
     at: (s) => studyActions(s) >= 5 || s.level >= 2,
     progress: (s) => [Math.min(studyActions(s), 5), 5],
-  },
-
-  // ── SAT ──────────────────────────────────────────────────────────────────
-  // Overview and Baseline stay open: the baseline is the one thing a new
-  // student should do in this pillar, and it is what makes every other panel
-  // here say something true instead of something generic.
-  {
-    id: 'sat/diagnostic',
-    label: 'Diagnostic',
-    hint: 'Take your Baseline first — the diagnostic builds on your starting score.',
-    at: (s) => s.satBaselineDone || s.satQuestions >= 5,
-  },
-  {
-    id: 'sat/practice',
-    label: 'Practice',
-    hint: 'Take your Baseline to unlock practice aimed at your weak spots.',
-    at: (s) => s.satBaselineDone || s.satDiagnosticDone || s.satQuestions >= 5,
-  },
-  {
-    id: 'sat/toolkit',
-    label: 'Calculator',
-    hint: 'Answer 5 SAT questions to unlock the Desmos calculator and formula sheet.',
-    at: (s) => s.satQuestions >= 5,
-    progress: (s) => [Math.min(s.satQuestions, 5), 5],
-  },
-  {
-    id: 'sat/review',
-    label: 'Review Log',
-    // A review log is a list of your own mistakes. Before you have made any it
-    // is an empty state pretending to be a feature.
-    hint: 'Answer 10 SAT questions — anything you miss lands here to redo.',
-    at: (s) => s.satQuestions >= 10,
-    progress: (s) => [Math.min(s.satQuestions, 10), 10],
-  },
-  {
-    id: 'sat/library',
-    label: 'Library',
-    hint: 'Answer 10 SAT questions to browse the full question bank.',
-    at: (s) => s.satQuestions >= 10,
-    progress: (s) => [Math.min(s.satQuestions, 10), 10],
-  },
-  {
-    id: 'sat/scores',
-    label: 'Scores',
-    hint: 'Finish your Baseline to start tracking your score over time.',
-    at: (s) => s.satBaselineDone || s.satFullTests >= 1,
-  },
-  {
-    id: 'sat/skills',
-    label: 'Skill Mastery',
-    hint: 'Answer 20 SAT questions — mastery needs enough evidence to be honest.',
-    at: (s) => s.satQuestions >= 20,
-    progress: (s) => [Math.min(s.satQuestions, 20), 20],
-  },
-  {
-    id: 'sat/tests',
-    label: 'Full Tests',
-    // Held back the longest on purpose: a full digital SAT is a ~2h20m sitting.
-    // Offering it to someone on their first session is how you get an abandoned
-    // attempt and a student who believes they are bad at the test.
-    hint: 'Answer 30 SAT questions first — a full test is a 2h20m sitting.',
-    at: (s) => s.satQuestions >= 30 || s.satFullTests >= 1,
-    progress: (s) => [Math.min(s.satQuestions, 30), 30],
   },
 
   // ── Prep ─────────────────────────────────────────────────────────────────
@@ -299,8 +232,8 @@ export const UNLOCK_RULES = [
   {
     id: 'portfolio/calc',
     label: 'Admissions Calc',
-    hint: 'Add a college and finish your SAT Baseline — the calculator needs both.',
-    at: (s) => s.colleges >= 1 && (s.satBaselineDone || s.satFullTests >= 1),
+    hint: 'Add a college to your list — the calculator compares you against real schools.',
+    at: (s) => s.colleges >= 1,
   },
   {
     id: 'portfolio/aid',
@@ -468,9 +401,9 @@ export function unlockState(user, rawSignals) {
     },
     /**
      * What is still to come, nearest first. `scope` narrows to one pillar's
-     * sub-views ('sat'), to one sub-view's sections ('portfolio/resume'), or to
+     * sub-views ('prep'), to one sub-view's sections ('portfolio/resume'), or to
      * the top level (''), which is how the sidebar shows "Portfolio unlocks
-     * next" while the SAT sub-nav and the résumé's section row each show their
+     * next" while the Prep sub-nav and the résumé's section row each show their
      * own. Unscoped, the marquee milestone sorts to the front: on Home it is
      * the thing worth telling a new student about, not the fourth row down.
      */

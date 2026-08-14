@@ -177,15 +177,16 @@ import QuizPlanToday from './components/QuizPlanToday';
 import {
   summarizePlanForCoach, autoCompleteResourceTasks, resourceMatch, typeMatch, getTodayPlanEntry, getNextPlanDay, getPlanStreak,
   toggleTaskDone as togglePlanTaskDone, moveTaskToDay, todayStr as planTodayStr, addDaysStr as planAddDaysStr,
-  needsExtension as needsPlanExtension, refreshDayWindow as refreshPlanWindow,
+  needsExtension as needsPlanExtension, refreshDayWindow as refreshPlanWindow, dropRetiredTasks,
 } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
 import EmptyState from './components/ui/EmptyState';
 import { useMediaQuery, Arc, Bar, Stat } from './components/ui/primitives';
+// The SAT pillar ships sealed for v1 — the tab renders behind SatBetaCover and
+// nothing outside it integrates with SAT any more. See src/lib/betaFlags.js.
 import SatTab from './components/sat/SatTab';
-import { projectScore } from './lib/sat/projection';
-import { computeAllMastery, rankSkillsByLeverage } from './lib/sat/mastery';
-import { SCORE_DISCLAIMER } from './data/sat/scoring';
+import SatBetaCover from './components/sat/SatBetaCover';
+import { SAT_ENABLED } from './lib/betaFlags';
 import AppTour from './components/AppTour';
 // Progressive feature unlocking — the nav shows what this student can use today,
 // not everything the product contains. See src/lib/featureUnlock.js for the ladder
@@ -193,7 +194,7 @@ import AppTour from './components/AppTour';
 import { unlockState, visibleItems, recordUnlocks, seedExistingAccount, sectionKey, ruleCopy, MARQUEE_IDS, NAV_MODES } from './lib/featureUnlock';
 import NextUnlockCard from './components/NextUnlockCard';
 import UnlockCelebration from './components/UnlockCelebration';
-import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS, GPA_OPTIONS, TEST_TIMELINE_OPTIONS, SCIENCE_OPTIONS, EXPERIENCE_OPTIONS } from './components/onboarding/Onboarding';
+import Onboarding, { GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS, STUDY_HOURS_OPTIONS, GPA_OPTIONS, SCIENCE_OPTIONS, EXPERIENCE_OPTIONS } from './components/onboarding/Onboarding';
 import { computeApplicationStrength } from './lib/applicationStrength';
 // snapshotItemCount is deliberately NOT re-exported here — it lives in weeklyGoals.js (see the
 // note at the top of portfolioData.js) and nothing in this file uses it. Importing it anyway was
@@ -232,7 +233,7 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 // a module-level object literal would freeze the dark palette at import time
 // and never follow a theme change.
 const DECK_CAT_HUES = {
-  'SAT':            ['sky',    'oceanGrad',  '\u270f\ufe0f'],
+  'Core Skills':    ['sky',    'oceanGrad',  '\u270f\ufe0f'],
   'Science':        ['green',  'forestGrad', '\ud83e\uddea'],
   'Social Studies': ['pink',   'sunsetGrad', '\ud83c\udfdb\ufe0f'],
   'Study Skills':   ['teal',   'forestGrad', '\ud83e\udde0'],
@@ -273,9 +274,6 @@ const tierC  = t => ({Likely:C.green,Target:C.blue,Reach:C.amber,Stretch:C.rose}
 const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Vercel environment variables.';
 
 // NOTE: a `scoreToSection` helper used to live here, mapping a science-quiz
-// percentage onto a 400-1600 "predicted SAT score". It was removed — see the
-// satProjection comment below. Real SAT estimates come from
-// src/lib/sat/projection.js, driven by actual SAT practice data.
 
 function scoreSchool(s, gpa, sat, lead, ec, vol, st, specialty = 'exploring', rigor = '2', clinicalHours = 0) {
   let sc = 100;
@@ -557,7 +555,8 @@ const QUICK_P_GROUPS = [
     'Give me a 2-week study schedule for the ACT Science section',
   ]},
 ];
-const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Math & Data','Behavioral & Social Sciences','Research Methods','Clinical Exposure','Test Prep','Admissions & Planning','Wellness & Balance'];
+// No 'Test Prep' shelf in v1 — those rows are filtered out of ELIB itself (see src/data/elib.js).
+const LIB_CATS  = ['All','Life Sciences','Physical Sciences','Math & Data','Behavioral & Social Sciences','Research Methods','Clinical Exposure','Admissions & Planning','Wellness & Balance'];
 const COURSE_GROUPS = [
   { group:'Math', items:['Algebra II','Precalculus','Calculus AB','Calculus BC','Statistics'] },
   { group:'Science', items:['Biology','Chemistry','Physics','Environmental Science'] },
@@ -1508,7 +1507,20 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [dbReady, setDbReady] = useState(false);
 
   // ── Core state ──────────────────────────────────────────────────────────────
-  const [user,     setUser_]    = useState(null);
+  // Every user record entering React state passes through here first, so a
+  // master plan generated before the SAT pillar was sealed (src/lib/betaFlags.js)
+  // loses its SAT tasks on the way in — one choke point rather than a filter in
+  // PlansTab, PlanTaskStrip, PortfolioPlanWeek and every progress counter. The
+  // stored record is left alone; the next saveUser writes the cleaned plan back.
+  const [user, setUserRaw] = useState(null);
+  const setUser_ = useCallback((next) => {
+    setUserRaw((prev) => {
+      const value = typeof next === 'function' ? next(prev) : next;
+      if (!value?.masterPlan?.days?.length) return value;
+      const days = dropRetiredTasks(value.masterPlan.days);
+      return days === value.masterPlan.days ? value : { ...value, masterPlan: { ...value.masterPlan, days } };
+    });
+  }, []);
   const [pathway,  setPathway_] = useState({});
   const [qScores,  setQScores_] = useState({});
   const [qHistory, setQHistory] = useState([]);
@@ -1641,13 +1653,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // open/closed state survives a student entering or exiting a lesson, instead of resetting.
   const [prepBrainOpen, setPrepBrainOpen] = useState(false);
   const [prepBrainMessages, setPrepBrainMessages] = useState([]);
-  // ── SAT Medabrain (purpose:'sat') — lifted here for the same reason as Prep's above, though
-  // the trigger is different: SatTab unmounts whenever the student leaves the SAT tab, so
-  // owning the conversation inside it would throw away the thread every time they glanced at
-  // Plans and came back. The 'sat' Groq key pool already existed for generated drills and
-  // explanations (api/groq.js); this is its first conversational surface.
-  const [satBrainOpen, setSatBrainOpen] = useState(false);
-  const [satBrainMessages, setSatBrainMessages] = useState([]);
+  // The SAT tab used to lift its own Medabrain conversation up here for the same
+  // reason Prep's is lifted. It is gone with the seal (src/lib/betaFlags.js):
+  // SatTab is passed a permanently-closed panel and an empty thread, because a
+  // coach a student can neither open nor type into has no state worth keeping.
   // ── Lesson notes + highlights — loaded fresh for whichever lesson is active, so switching
   // lessons never bleeds one lesson's notes/highlights into another's UI, even for an instant.
   const [notesOpen, setNotesOpen] = useState(false);
@@ -1748,8 +1757,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const SETTINGS_VIEW_FOR_FIELD = useMemo(()=>({
     name:'profile', age:'profile', gpaBand:'profile', sciences:'profile', healthExperience:'profile',
     goal:'profile', accomplish:'profile', obstacles:'profile', whyMedicine:'profile', dreamRole:'profile',
-    gradeStage:'study', specialty:'study', testTrack:'study', testTimeline:'study', studyHours:'study',
-    studyMethod:'study', targetScore:'study', addBack:'study', rollover:'study',
+    gradeStage:'study', specialty:'study', studyHours:'study',
+    studyMethod:'study', addBack:'study', rollover:'study',
   }),[]);
   const goSettings = useCallback((field=null,view=null)=>{
     setTab('settings');
@@ -2167,7 +2176,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   };
 
   // ── Settings ────────────────────────────────────────────────────────────────
-  const [sName,setSN]=useState('');const [sAge,setSAge]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);const [sExamDate,setSExamDate]=useState('');
+  const [sName,setSN]=useState('');const [sAge,setSAge]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);
   // Settings > "Your Goals" — lets a student revisit/update what onboarding collected (goal,
   // obstacles, study method, things they want to accomplish) instead of it being locked in at
   // signup forever. Buffers are only seeded from `user` when the Edit button is clicked (tSettings()).
@@ -2176,11 +2185,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [sObstacles,setSObstacles]=useState([]);
   const [sStudyMethod,setSStudyMethod]=useState(null);
   const [sAccomplish,setSAccomplish]=useState([]);
-  // studyHours/onboardingTargetScore are both in ONBOARDING_FIELDS (studentProfile.js) — without
-  // an edit path here, a student who skipped or wants to update either one could never reach
-  // 100% onboarding completeness, since these were previously onboarding-only fields.
+  // studyHours is in ONBOARDING_FIELDS (studentProfile.js) — without an edit path here, a
+  // student who skipped it could never reach 100% onboarding completeness, since it was
+  // previously an onboarding-only field.
   const [sStudyHours,setSStudyHours]=useState(null);
-  const [sTargetScore,setSTargetScore]=useState('');
 
   // ── Settings deep-link focus ────────────────────────────────────────────────
   // goSettings('gpaBand') has to do three things before the student sees anything: open the
@@ -2188,7 +2196,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // in the DOM at all), scroll that field into view, and mark it so it is visually obvious
   // which of the ~20 controls on the page they were sent to. The scroll waits a frame for the
   // editor to mount; the highlight clears itself so it never becomes permanent chrome.
-  const GOALS_EDITOR_FIELDS=useMemo(()=>new Set(['goal','obstacles','studyMethod','accomplish','studyHours','onboardingTargetScore']),[]);
+  const GOALS_EDITOR_FIELDS=useMemo(()=>new Set(['goal','obstacles','studyMethod','accomplish','studyHours']),[]);
   // Scrolling happens once per deep link. Without this guard the effect would re-fire on the
   // next saveUser — i.e. the moment the student answers the question they were sent here for —
   // and yank the page back to the field they had just finished with.
@@ -2197,7 +2205,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(tab!=='settings'||!settingsFocus){ if(!settingsFocus)scrolledForRef.current=null; return; }
     if(GOALS_EDITOR_FIELDS.has(settingsFocus)&&!sGoalsEditing){
       setSGoal(user?.goal||null);setSObstacles(user?.obstacles||[]);setSStudyMethod(user?.studyMethod||null);
-      setSAccomplish(user?.accomplish||[]);setSStudyHours(user?.studyHours||null);setSTargetScore(user?.onboardingTargetScore||'');
+      setSAccomplish(user?.accomplish||[]);setSStudyHours(user?.studyHours||null);
       setSGoalsEditing(true);
       return; // re-runs once the editor is open and the anchor exists
     }
@@ -2636,10 +2644,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
   // Runs once the full ~30-screen onboarding flow (src/components/onboarding/Onboarding.jsx)
   // finishes. Creates the local (per-device) profile immediately so the app feels instant, and
-  // separately pushes name/grade/testTrack/onboardingComplete to the Supabase-backed account —
-  // fire-and-forget, since local state is already the source of truth for this render. Also
-  // seeds a target test score row so the Portfolio score tracker picks up the goal the user
-  // just set. Which pillar a brand-new user lands in depends on the goal they chose during
+  // separately pushes name/grade/onboardingComplete to the Supabase-backed account —
+  // fire-and-forget, since local state is already the source of truth for this render.
+  // Which pillar a brand-new user lands in depends on the goal they chose during
   // onboarding — "explore" sends them to the pathway diagnostic, "application" to Portfolio,
   // and "boost score" (the default) straight into practice quizzes.
   const completeOnboarding = useCallback((profile)=>{
@@ -2662,15 +2669,13 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     saveUser({
       name, specialty:null, gradeStage, age, xp:0, streak:1, lastActive:Date.now(), email:account?.email,
       goal:profile.goal||null, obstacles:profile.obstacles||[], studyMethod:profile.studyMethod||null,
-      accomplish:profile.accomplish||[], studyHours:profile.studyHours||null, testTrack:profile.testTrack||'SAT',
-      onboardingCurrentScore:profile.currentScore||null, onboardingTargetScore:profile.targetScore||null,
+      accomplish:profile.accomplish||[], studyHours:profile.studyHours||null,
       generatedPlan:profile.generatedPlan||null,
       // Med-focused profile answers from the redesigned flow — persisted so the
       // coach prompt, plan generators, and dashboard recap can use them (see
       // studentProfile.js / planGenerator.js).
       whyMedicine:profile.whyMedicine||null, dreamRole:profile.dreamRole||null, certainty:profile.certainty||null,
       gpaBand:profile.gpa||null, sciences:profile.sciences||[], healthExperience:profile.experience||[],
-      testTimeline:profile.testTimeline||null,
       // The onboarding toggleAddBack/toggleRollover steps promise these are used to shape the
       // Plans tab's day-by-day roadmap (see applyRolloverPrefs/applyAddBackPrefs in
       // masterPlanGenerator.js) and are editable later in Settings — persisting them here is what
@@ -2684,10 +2689,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // src/lib/timeline.js, which advances the stored grade by the years elapsed since.
       gradeStageYear:academicFallYear(new Date()),
     });
-    AuthAPI.updateMe({ name, gradeLevel:gradeStage, testTrack:profile.testTrack, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
-    if(profile.targetScore){
-      createItem('test_scores',{ test_type:profile.testTrack==='ACT'?'ACT':'SAT', test_date:localDateStr(), composite:profile.targetScore, section_scores:{}, is_target:true }).catch(()=>{});
-    }
+    AuthAPI.updateMe({ name, gradeLevel:gradeStage, onboardingComplete:true }).then(({user:updated})=>onAccountChange?.(updated)).catch(()=>{});
     // The parent invitation the student asked for on the family step, sent now that there is an
     // account for it to come from. Fire-and-forget on purpose: a failed send must not block or
     // undo an otherwise-finished onboarding, and Settings ▸ Family Access is a working second
@@ -2919,7 +2921,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     };
   },[qHistory,qTaken,lvl,streak,totalReviews,mastery,aiChatCount,appCounts,upcomingDeadlines,portActivities,interviewCount,clinicalHoursTotal,recommendersCount,mmiCasperCount,pathway]);
   const pomPct  = pomM==='focus'?(pomT/(25*60))*100:(pomT/(5*60))*100;
-  const daysToExam = user?.examDate ? Math.ceil((new Date(user.examDate+'T00:00:00') - new Date(new Date().toDateString())) / 86400000) : null;
 
   // Science-quiz category averages. These are legitimate measures of quiz
   // performance and feed the coach, the radar chart and the insight callouts —
@@ -2927,26 +2928,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const cats3   = ['Life Sciences','Physical Sciences','Behavioral & Social Sciences'];
   const secAvgs = cats3.map(cat=>{const cQ=ALL_QUIZZES.filter(q=>q.cat===cat);const tk=cQ.filter(q=>qScores[q.id]!==undefined);return tk.length?Math.round(tk.reduce((s,q)=>s+qScores[q.id],0)/tk.length):null;});
 
-  // ── SAT score projection ──────────────────────────────────────────────────
-  // This REPLACES the app's old `predSAT`, which averaged the student's scores
-  // on the three MCAT-style science quiz categories (Life Sciences / Physical
-  // Sciences / Behavioral & Social) and mapped the percentage through
-  // `400 + (pct/100)*1200`. That number had no relationship to the SAT at all,
-  // yet was rendered on Home and Progress as a confident single figure and even
-  // offered as a fill-in for the admissions calculator.
-  //
-  // The replacement reads only real SAT practice data (src/lib/sat/projection.js)
-  // and returns a RANGE with an explicit confidence level, or null when there is
-  // not enough evidence to say anything honest — in which case the UI points the
-  // student at the diagnostic instead of inventing a number.
-  const [satProjection,setSatProjection]=useState(null);
-  const [satWeakSkills,setSatWeakSkills]=useState([]);
-  const [satOpenReviews,setSatOpenReviews]=useState(0);
-  // baselineDone is read by the progressive-unlock ladder (src/lib/featureUnlock.js) as much as
-  // by the SAT panels: the Baseline is the gate that opens Diagnostic, Practice and Scores, so
-  // "has this student placed themselves yet" has to be a first-class signal here, not something
-  // only SatOverviewPanel knows.
-  const [satStats,setSatStats]=useState({loaded:false,diagnosticDone:false,baselineDone:false,fullTests:0,questions:0,logCleared:false,masteredSkills:0});
+  // No SAT score projection here any more. The pillar is sealed for v1
+  // (src/lib/betaFlags.js), so a student cannot generate SAT practice data, and
+  // a projection built from nothing is exactly the invented number this app
+  // removed once already. Home, Progress and the admissions calculator ask for
+  // a real score instead of estimating one.
+
   // Cross-app "what has this student actually been doing" digest (src/lib/recentActivity.js,
   // reading the studyEvents log) — fed into every Medabrain surface (coach/prep/portfolio/sat/plan
   // generation) so MedaBrain's knowledge keeps expanding from real activity, not just onboarding
@@ -2980,42 +2967,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     })();
     return()=>{cancelled=true;};
   },[dbReady,user,saveUser]);
-  useEffect(()=>{
-    let cancelled=false;
-    (async()=>{
-      try{
-        const [attempts,responses,reviewLog,baselines]=await Promise.all([
-          DB.getSatAttempts(),DB.getSatResponses(),DB.getSatReviewLog({includeResolved:true}),DB.getSatBaselines(),
-        ]);
-        if(cancelled) return;
-        const masteryMap=computeAllMastery(responses);
-        const open=reviewLog.filter(r=>!r.resolved);
-        setSatProjection(projectScore({masteryMap,attempts,responses}));
-        setSatWeakSkills(rankSkillsByLeverage(masteryMap).filter(s=>s.attempts>0).slice(0,4));
-        setSatOpenReviews(open.length);
-        setSatStats({
-          // `loaded` gates the unlock toast below: until Dexie has reported in, every
-          // SAT counter reads zero, and a "you just unlocked 6 things" toast fired at
-          // the moment they stop reading zero would be a lie told to every returning
-          // student on every single load.
-          loaded:true,
-          diagnosticDone:attempts.some(a=>a.kind==='diagnostic'&&a.status==='complete'),
-          baselineDone:(baselines||[]).some(b=>b.status==='complete'),
-          fullTests:attempts.filter(a=>a.kind==='full'&&a.status==='complete').length,
-          questions:responses.length,
-          // Only counts as "cleared" if there was ever anything to clear.
-          logCleared:reviewLog.length>0&&open.length===0,
-          masteredSkills:Object.values(masteryMap).filter(m=>m.mastery>=0.8&&m.attempts>=8).length,
-        });
-      }catch{ if(!cancelled){ setSatProjection(null); setSatWeakSkills([]); setSatOpenReviews(0); setSatStats(st=>({...st,loaded:true})); } }
-    })();
-    return()=>{cancelled=true;};
-    // user.xp is in here purely as a cheap "something happened" ping: every SAT action awards
-    // XP, and these counts now gate which SAT sub-tabs are even visible, so a student who
-    // finishes their Baseline must see Diagnostic/Practice/Scores appear immediately rather
-    // than on their next tab switch.
-  },[tab,satView,user?.xp]);
-
   // ══ PROGRESSIVE FEATURE UNLOCKING ═════════════════════════════════════════════
   // The nav used to be a directory of everything the product contains: seven top-level
   // tabs and thirty-one sub-tabs, all visible in the first second of the first visit,
@@ -3036,10 +2987,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const unlockSignals = useMemo(()=>({
     quizzes: qTaken,
     lessons: doneL,
-    satQuestions: satStats.questions,
-    satBaselineDone: satStats.baselineDone,
-    satDiagnosticDone: satStats.diagnosticDone,
-    satFullTests: satStats.fullTests,
     colleges: appCounts.colleges,
     essays: appCounts.essays,
     activities: portActivities.length,
@@ -3065,7 +3012,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // the deadline is the thing, so Portfolio, Recommenders and Interview Prep are
     // open from the first second. The ladder is for students who have time to climb it.
     applicationUrgent: user?.gradeStage==='senior' || user?.gradeStage==='gap',
-  }),[qTaken,doneL,satStats,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user,portLoaded,portfolioItems]);
+  }),[qTaken,doneL,appCounts,portActivities.length,trackedSummary.items.length,achiev,lvl,user,portLoaded,portfolioItems]);
   const unlocks = useMemo(()=>unlockState(user,unlockSignals),[user,unlockSignals]);
 
   // Two writes, both one-way, both here so nothing else in the app has to think about them.
@@ -3101,7 +3048,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // returning account it would read as two dozen simultaneous unlocks, every load. Until
   // then we keep re-baselining what counts as already-seen, so the first real toast can
   // only be a gate this student crossed with their own hands.
-  const signalsSettled = dbReady && portLoaded && satStats.loaded;
+  const signalsSettled = dbReady && portLoaded;
   useEffect(()=>{
     if(!user) return;
     if(!signalsSettled){ seenUnlocks.current=new Set([...(user.unlockedFeatures||[]),...unlocks.earned]); return; }
@@ -3171,18 +3118,17 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // step needed; the whole point is the tour picks up the instant onboarding ends.
   //
   // Built from `navItems`, not NAV: the tour must never spotlight a pillar the
-  // student can't see. On a brand-new account that means a three-beat tour (Home,
-  // SAT, Prep) plus the ⌘K tip instead of a seven-beat march through tabs that
+  // student can't see, and never the sealed SAT tab. On a brand-new account that
+  // means a two-beat tour (Home, Prep) plus the ⌘K tip instead of a seven-beat march through tabs that
   // won't exist when they get back to the app — which is a shorter, truer tour
   // and exactly the direction the tour's own history says to go.
   const TOUR_COPY = useMemo(()=>({
     home:      { section:'Home', color:C.blue, title:'Your dashboard', body:"Streak, XP, and today's next lesson — every session starts here.", onEnter:()=>setTab('home') },
-    sat:       { section:'SAT', color:C.sky, title:'Raise your score', body:"Start with the Baseline — it places you, and everything else here aims at what it finds.", onEnter:()=>goSat('overview') },
     prep:      { section:'Prep', color:C.violet, title:'Your curriculum', body:"Take the 2-minute diagnostic to find your pathway, then work through it lesson by lesson.", onEnter:()=>setTab('prep') },
     portfolio: { section:'Portfolio', color:C.green, title:'Your application', body:"College list, essays, deadlines, and activities — everything admissions cares about, in one place.", onEnter:()=>setTab('portfolio') },
     plans:     { section:'Plans', color:C.fuchsia, title:'Your roadmap', body:"One click builds a day-by-day plan pulled from everything above, and keeps extending itself as you go.", onEnter:()=>setTab('plans') },
     progress:  { section:'Progress', color:C.cyan, title:'Proof of the work', body:"Verified mastery, performance by topic, and every badge you've earned.", onEnter:()=>setTab('progress') },
-  }),[goSat]);
+  }),[]);
   // ── Parallel pathway actions ────────────────────────────────────────────────
   // Switching focus is deliberately the cheapest operation in the app: one write of a single
   // string. No progress moves, no plan regenerates, nothing resets — which is exactly why it
@@ -3338,7 +3284,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
     ]:[]),
     ...progressSubnav.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
-    ...satSubnav.map(n=>({ id:`sat-${n.id}`, label:n.label, group:'SAT', ic:n.ic, action:()=>goSat(n.id) })),
     // Settings has sub-tabs now, so it gets the same treatment as every other pillar. Family
     // Access earns its place here more than most: it is the one settings screen another person
     // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
@@ -3505,11 +3450,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       interviewSessions: extra.interviewSessions??interviewCount, colleges: extra.colleges??appCounts.colleges, essays: extra.essays??appCounts.essays,
       activities: extra.activities??portActivities.length, deadlines: extra.deadlines??(upcomingDeadlines||[]).length, resumeBuilt: extra.resumeBuilt??appCounts.resume,
       clinicalHours: extra.clinicalHours??clinicalHoursTotal, recommenders: extra.recommenders??recommendersCount, mmiCasperSessions: extra.mmiCasperSessions??mmiCasperCount,
-      satDiagnosticDone: extra.satDiagnosticDone??satStats.diagnosticDone,
-      satFullTests: extra.satFullTests??satStats.fullTests,
-      satQuestions: extra.satQuestions??satStats.questions,
-      satLogCleared: extra.satLogCleared??satStats.logCleared,
-      satMasteredSkills: extra.satMasteredSkills??satStats.masteredSkills,
       pathwayCompletions,
       unlocked,
     });
@@ -3534,7 +3474,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         showAchievementToast(achievement);
       }
     }
-  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount,satStats]);
+  },[saveUser,interviewCount,appCounts,upcomingDeadlines,portActivities,clinicalHoursTotal,recommendersCount,mmiCasperCount]);
 
   // ── Level-up checker ─────────────────────────────────────────────────────────
   const prevLvlRef = useRef(1);
@@ -4026,37 +3966,33 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // pipeline the long quests use, and claims go in the same permanent reward ledger the streak
   // milestones use — so the whole feature adds no storage of its own and nothing to drift.
 
-  // Which templates the draw is even allowed to offer. Handing "sit a full-length SAT test" to
-  // a student who has never opened the SAT tab is not a challenge, it is a card they have to
-  // ignore — and a set with one ignorable item in it is a set nobody clears.
+  // Which templates the draw is even allowed to offer: a card a student has no way to act on
+  // is a card they have to ignore, and a set with one ignorable item in it is a set nobody
+  // clears.
   //
   // ── Why this is frozen for the session ──────────────────────────────────────
   // The draw is a pure function of (student, date, capabilities), so a capability that CHANGES
-  // changes the set — and every input here arrives asynchronously. `satStats` reads zero until
-  // Dexie reports in, `cDecks` is empty until the decks load, and a student who enrols in a
-  // pathway at 8pm would flip `hasPathway` mid-evening. Any of those would reshuffle today's
-  // three under somebody who was halfway through one of them, which is the single thing this
-  // system promises not to do.
+  // changes the set — and every input here arrives asynchronously. `cDecks` is empty until the
+  // decks load, and a student who enrols in a pathway at 8pm would flip `hasPathway`
+  // mid-evening. Either would reshuffle today's three under somebody who was halfway through
+  // one of them, which is the single thing this system promises not to do.
   //
-  // So: nothing is drawn until the inputs are actually known (`satStats.loaded` gates it, the
-  // same signal the unlock ladder already waits on), and the first known value is the one that
+  // So: nothing is drawn until Dexie has reported in, and the first known value is the one that
   // holds for the rest of the session. New capabilities are picked up tomorrow morning, which is
   // exactly when a new set is due anyway. Both devices converge because the underlying data is
   // persisted — the freeze is per session, not per account.
   const dailyCapsLive = useMemo(()=>dailyCapabilities({
     hasPathway: !!curPath,
-    satQuestions: satStats.questions,
-    satTouched: satStats.questions>0||satStats.diagnosticDone||satStats.baselineDone,
     hasPlan: !!user?.masterPlan,
     deckCount: Object.keys(cDecks||{}).length,
     portfolioTouched: true,
-  }),[curPath,satStats,user?.masterPlan,cDecks]);
+  }),[curPath,user?.masterPlan,cDecks]);
   const dailyCapsRef = useRef(null);
   const dailyCaps = useMemo(()=>{
-    if(!dbReady||!satStats.loaded) return dailyCapsRef.current;
+    if(!dbReady) return dailyCapsRef.current;
     if(!dailyCapsRef.current) dailyCapsRef.current = dailyCapsLive;
     return dailyCapsRef.current;
-  },[dbReady,satStats.loaded,dailyCapsLive]);
+  },[dbReady,dailyCapsLive]);
 
   // The student key the draw is seeded from. Stable per account, so a phone and a laptop
   // derive the same three with nothing to sync.
@@ -4183,8 +4119,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     lessonsVerified: Object.values(pathway).filter(l=>l?.verified).length,
     quizzesTaken: qHistory.length,
     averageScore: qHistory.length ? Math.round(qHistory.reduce((a,q)=>a+(q.score||0),0)/qHistory.length) : null,
-    satTestsTaken: satStats.fullTests,
-    satQuestions: satStats.questions,
     cardReviewsLast28: totalReviews,
     activitiesLogged: portActivities.length,
     clinicalHours: clinicalHoursTotal,
@@ -4200,7 +4134,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   },
   questRows.filter(q=>!QUEST_TERMINAL.has(q.status)).map(q=>q.questId),
   claimedQuestIds(questRows),
-  ),[dayRows,pathway,qHistory,satStats,totalReviews,portActivities.length,clinicalHoursTotal,user?.gradeStage,user?.masterPlan,aiChatCount,appCounts,portScholarships.length,recommendersCount,interviewCount,questRows]);
+  ),[dayRows,pathway,qHistory,totalReviews,portActivities.length,clinicalHoursTotal,user?.gradeStage,user?.masterPlan,aiChatCount,appCounts,portScholarships.length,recommendersCount,interviewCount,questRows]);
 
   /** The single evaluation every quest surface in the app reads. */
   const questBoard = useMemo(
@@ -4533,7 +4467,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // partial rows App does keep plus its running counts — enough for the engine to tell a
         // student with nine schools on their list from one with none.
         snapshot:portSnapshot||{ deadlines:upcomingDeadlines||[], clinicalHours:clinicalHoursEntries||[], scholarships:portScholarships||[] },
-        sat:{ projection:satProjection, diagnosticDone:!!user?.satDiagnostic },
         counts:portSnapshot?null:{
           colleges:appCounts.colleges, essays:appCounts.essays, activities:portActivities.length,
           clinicalHours:clinicalHoursTotal, recommenders:recommendersCount,
@@ -4542,7 +4475,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         },
       });
     }catch{ return null; }
-  },[user,portSnapshot,upcomingDeadlines,clinicalHoursEntries,portScholarships,satProjection,appCounts,portActivities.length,clinicalHoursTotal,recommendersCount,scholarshipCount,researchCount,skillsCount,interviewCount]);
+  },[user,portSnapshot,upcomingDeadlines,clinicalHoursEntries,portScholarships,appCounts,portActivities.length,clinicalHoursTotal,recommendersCount,scholarshipCount,researchCount,skillsCount,interviewCount]);
   const timelineSummary=useMemo(()=>{
     try{ return summarizeTimelineForPrompt(appTimeline); }catch{ return null; }
   },[appTimeline]);
@@ -4575,7 +4508,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       streakContext:medabrainStreakContext,
       recentActivitySummary,
       categoryAverages:catAverages, quizzesTaken:qTaken, pathwayMastery:mastery,
-      satProjection, satWeakSkills, satOpenReviews,
       timelineSummary, personalBrief:buildPersonalBriefBlock(user),
       applicationStrength:computeApplicationStrength({
         mastery, avgQuizScore:avgSc, clinicalHours:clinicalHoursTotal,
@@ -4583,7 +4515,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       }),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[secAvgs,cats3,upcomingDeadlines,curPath,pathway,dueCards,portActivities.length,clinicalHoursTotal,recommendersCount,appCounts,streak,medabrainStreakContext,recentActivitySummary,catAverages,qTaken,mastery,avgSc,satProjection,satWeakSkills,satOpenReviews,timelineSummary,user]);
+  },[secAvgs,cats3,upcomingDeadlines,curPath,pathway,dueCards,portActivities.length,clinicalHoursTotal,recommendersCount,appCounts,streak,medabrainStreakContext,recentActivitySummary,catAverages,qTaken,mastery,avgSc,timelineSummary,user]);
 
   // ── The plan rewrites itself when the day turns over ──────────────────────
   // The detailed window is today + tomorrow, written today (see WINDOW_DAYS in
@@ -4628,9 +4560,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         apIb:!!user?.apIb,
         weakestCategory:weakIdx?cats3[weakIdx.i]:null,
         weakestScore:weakIdx?weakIdx.v:null,
-        satProjection,
-        satWeakSkills:satWeakSkills,
-        satOpenReviews:satOpenReviews,
         dueCards,
         nextDeadlineTitle:nextDeadline?.title||null,
         nextDeadlineDays:nextDeadline?.days??null,
@@ -5626,8 +5555,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 {/* Same rule as the nav badge: don't advertise decks from a tab this student
                     hasn't unlocked yet. Flashcards open after their first quiz. */}
                 {dueDeckCount>0&&unlocks.isOpen('prep','flashcards')&&<span style={{...pill(C.violetDim,C.violetL),display:'inline-flex',alignItems:'center',gap:5}}><Layers3 size={11}/>{dueDecksBadge(dueDeckCount)}</span>}
-                {daysToExam!==null&&<span style={{...pill(daysToExam<=30?C.roseDim:C.s3,daysToExam<=30?C.roseL:C.t2,{fontFamily:C.FM}),display:'inline-flex',alignItems:'center',gap:5}}><CalendarDays size={11}/>{daysToExam>0?`${daysToExam}d to test day`:'Test day is here'}</span>}
-                {satProjection&&<span style={pill(C.greenDim,C.greenL,{fontFamily:C.FM})}>SAT {satProjection.low}–{satProjection.high}</span>}
                 {/* Pace status sits beside the streak because it answers the same question the
                     streak does — "am I actually keeping up?" — but against a target the student
                     chose rather than a generic daily habit. */}
@@ -5889,34 +5816,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 </div>}
               </div>;
             })}
-          </div>
-        </div>
-
-        {/* SAT score estimate — a measured range, or a prompt to go measure. */}
-        <div onClick={()=>goSat(satProjection?'overview':'diagnostic')} style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`,cursor:'pointer'}}>
-          <div style={R({gap:14})}>
-            <div style={{width:52,height:52,borderRadius:12,background:`${C.green}15`,border:`1px solid ${C.green}25`,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-              {satProjection
-                ? <><div style={{fontSize:14,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1.1}}>{satProjection.low}</div><div style={{fontSize:14,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1.1}}>{satProjection.high}</div></>
-                : <Target size={22} color={C.green}/>}
-            </div>
-            <div style={{flex:1,minWidth:0}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.t1,fontFamily:C.FD,marginBottom:3}}>
-                {satProjection?'SAT score estimate':'No SAT estimate yet'}
-              </div>
-              <div style={{fontSize:12,color:C.t2,lineHeight:1.5}}>
-                {satProjection
-                  ? satProjection.note
-                  : 'Take the diagnostic in the SAT tab and we will show you where you actually stand — measured from real SAT questions, not guessed.'}
-              </div>
-              {satProjection&&(
-                <div style={{...R({gap:8,marginTop:8,flexWrap:'wrap'})}}>
-                  <span style={pill(`${C.green}18`,C.greenL,{fontSize:10})}>{satProjection.confidence} confidence</span>
-                  <span style={pill(`${C.blue}18`,C.blueL,{fontSize:10})}>~{satProjection.percentile}th percentile</span>
-                </div>
-              )}
-            </div>
-            <ChevronRight size={16} color={C.t3} style={{flexShrink:0}}/>
           </div>
         </div>
 
@@ -6391,17 +6290,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <PanelHero tourTag="prep-deep-quizzes" icon={Layers} color={C.green} color2={C.cyan} m={isMobile}
           eyebrow="Quiz Library" title="Practice Quizzes"
           sub="Exam-style questions across every subject."/>
-        {/* This library is science content, not SAT content — a distinction that
-            used to be invisible, since plan tasks labelled "SAT practice set"
-            linked straight here. Say it plainly and point at the real thing. */}
-        <div onClick={()=>goSat('practice')} style={{...glass2({padding:'12px 16px'}),border:`1px solid ${C.lime}30`,background:`linear-gradient(120deg,${C.limeDim},rgba(255,255,255,0.015))`,cursor:'pointer',display:'flex',alignItems:'center',gap:12}}>
-          <Target size={16} color={C.limeL} style={{flexShrink:0}}/>
-          <div style={{flex:1,minWidth:0}}>
-            <div style={{fontSize:12.5,fontWeight:700,color:C.t1}}>Looking for SAT practice?</div>
-            <div style={{fontSize:11.5,color:C.t2,marginTop:2,lineHeight:1.5}}>These quizzes are science content. SAT questions, full-length adaptive tests and your review log live in the SAT tab.</div>
-          </div>
-          <ChevronRight size={15} color={C.t3} style={{flexShrink:0}}/>
-        </div>
         {/* Medabrain ranked quiz recommendations — placed first, above the stat
             tiles and filter toolbar, so it's the first thing a student sees
             rather than something buried below the library's chrome. Ranking
@@ -6524,18 +6412,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── AI COACH ─────────────────────────────────────────────────────────────────
   const COACH_ICONS = { FlaskConical, Compass, Sparkles };
   // Builds a "For You Right Now" group from the same profile signals already
-  // fed into buildCoachSystemPrompt (weakest category, exam countdown, due
-  // cards, stated goal) so the starter prompts a student actually sees are
+  // fed into buildCoachSystemPrompt (weakest category, due cards, stated
+  // goal) so the starter prompts a student actually sees are
   // grounded in their real data instead of the same three generic examples
   // every account was shown before.
   const personalizedQuickPrompts=useCallback(()=>{
     const personal=[];
     const weakIdx=secAvgs.map((v,i)=>({v,i})).filter(o=>o.v!==null).sort((a,b)=>a.v-b.v)[0];
     if(weakIdx)personal.push(`I'm scoring lowest in ${cats3[weakIdx.i]} (${weakIdx.v}%) — walk me through how to approach it`);
-    if(user?.examDate){
-      const days=Math.ceil((new Date(user.examDate)-new Date())/86400000);
-      if(days>=0)personal.push(`I have ${days} day${days===1?'':'s'} until my test — what should I focus on right now?`);
-    }
     if(dueCards>0)personal.push(`Quiz me out loud on my ${dueCards} due flashcard${dueCards===1?'':'s'} instead of the review screen`);
     const goalLabel=GOAL_OPTIONS.find(o=>o.value===user?.goal)?.label;
     if(goalLabel)personal.push(`My goal is "${goalLabel}" — what's the single highest-leverage thing I should do this week?`);
@@ -7540,7 +7424,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 lCat === 'Physical Sciences' ? "In Physical Sciences, problem-solving is king. After reading about laws or formulas, work through practice problems from MIT OCW or watch walkthroughs by The Organic Chemistry Tutor." :
                 lCat === 'Behavioral & Social Sciences' ? "Behavioral sciences connect biology to society. Many medical colleges seek candidates with deep cultural competence. Yale's Science of Well-Being is a fantastic, stress-busting primer." :
                 lCat === 'Research Methods' ? "Clinical and basic science research is a major pre-med differentiator. Explore Science Journal for Kids or the NIH archive to learn how real scientific hypotheses are formulated and tested." :
-                lCat === 'Test Prep' ? "Consistency beats cramming. Use Anki for spaced repetition and take advantage of official, free Khan Academy Digital SAT/ACT materials. Tackling 10-15 questions daily yields huge score gains!" :
                 lCat === 'Admissions & Planning' ? "Medical school admissions committee members look for holistic preparation. Study the AAMC Core Competencies to see how your extracurriculars, clinical hours, and volunteering align with entering student expectations." :
                 lCat === 'Clinical Exposure' ? "Real exposure beats reading about medicine. Use MedlinePlus and the professional-association sites here to understand a field, then turn that into shadowing, volunteering, or a CPR certification you can actually log." :
                 lCat === 'Wellness & Balance' ? "The best students protect their sleep, focus, and mental health on purpose. Try one study-skills technique (like the Pomodoro timer or spaced repetition) and one wellbeing habit this week — burnout helps no one." :
@@ -8221,7 +8104,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 {/* Only offers a real, measured estimate — the old version prefilled a
                     number derived from science-quiz averages, which then propagated
                     into admissions-chance calculations as if it were a test score. */}
-                {satProjection&&!cSAT&&<button title={satProjection.note} style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`,fontSize:10}),whiteSpace:'nowrap'}} onClick={()=>setCSAT(String(satProjection.mid))}>Use estimate: {satProjection.mid}</button>}
               </div>
               <input type="number" min="400" max="1600" style={inp()} placeholder="1350" value={cSAT} onChange={e=>setCSAT(e.target.value)}/>
             </div>
@@ -8823,33 +8705,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         </>}
 
         {progressView==='performance'&&<>
-        {/* SAT score estimate — measured from real SAT practice, or absent. */}
-        <div style={{...glass({padding:20}),background:`linear-gradient(135deg,${C.greenDim},${C.blueDim})`,border:`1px solid ${C.green}20`}}>
-          <SL extra={{marginBottom:12}}>SAT Score Estimate</SL>
-          {satProjection?(
-            <div style={R({gap:20,flexWrap:'wrap'})}>
-              <div style={{textAlign:'center'}}>
-                <div style={{fontSize:38,fontWeight:800,fontFamily:C.FM,color:C.green,lineHeight:1}}>{satProjection.low}–{satProjection.high}</div>
-                <div style={{fontSize:12,color:C.t3,marginTop:6}}>midpoint {satProjection.mid} · ~{satProjection.percentile}th percentile</div>
-              </div>
-              <div style={{flex:1,minWidth:200}}>
-                <div style={{fontSize:12,color:C.t2,lineHeight:1.6,marginBottom:10}}>{satProjection.note}</div>
-                <span style={pill(`${C.green}18`,C.greenL,{fontSize:10})}>{satProjection.confidence} confidence</span>
-                <div style={{fontSize:10,color:C.t4,marginTop:10,lineHeight:1.55}}>{SCORE_DISCLAIMER}</div>
-              </div>
-            </div>
-          ):(
-            <div>
-              <div style={{fontSize:13,color:C.t2,lineHeight:1.6,maxWidth:520}}>
-                We do not have enough SAT practice data to estimate a score yet. Guessing one from your science quizzes — which is what this card used to do — would not tell you anything real.
-              </div>
-              <button onClick={()=>goSat('diagnostic')} style={{...btnSm(C.greenDim,{color:C.greenL,border:`1px solid ${C.green}30`}),marginTop:12}}>
-                Take the SAT diagnostic <ChevronRight size={12}/>
-              </button>
-            </div>
-          )}
-        </div>
-
         {/* Charts row */}
         <div data-tour="progress-deep-performance" style={G(2,14,{},isMobile)}>
           {/* Radar chart */}
@@ -9164,7 +9019,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         <div data-tour="settings-deep-goals" style={glass()}>
           <div style={R({justifyContent:'space-between',marginBottom:8})}>
             <SL extra={{marginBottom:0}}>Your Goals</SL>
-            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSStudyHours(user.studyHours||null);setSTargetScore(user.onboardingTargetScore||'');setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
+            {!sGoalsEditing&&<button style={{...btnG({fontSize:11,padding:'6px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>{setSGoal(user.goal||null);setSObstacles(user.obstacles||[]);setSStudyMethod(user.studyMethod||null);setSAccomplish(user.accomplish||[]);setSStudyHours(user.studyHours||null);setSGoalsEditing(true);}}><Pencil size={12}/>Edit</button>}
           </div>
           {!sGoalsEditing?(
             onboardingRecap.length>0?(
@@ -9236,12 +9091,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                   ))}
                 </div>
               </div>
-              <div id="settings-field-onboardingTargetScore" style={focusStyle('onboardingTargetScore')}>
-                <SL>Target {user?.testTrack||'SAT'} score</SL>
-                <input type="number" style={inp({width:'auto'})} placeholder={user?.testTrack==='ACT'?'e.g. 32':'e.g. 1400'} value={sTargetScore} onChange={e=>setSTargetScore(e.target.value)}/>
-              </div>
               <div style={R({gap:10})}>
-                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours,onboardingTargetScore:sTargetScore?Number(sTargetScore):null});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
+                <button style={btn()} onClick={()=>{saveUser({...user,goal:sGoal,obstacles:sObstacles,studyMethod:sStudyMethod,accomplish:sAccomplish,studyHours:sStudyHours});setSGoalsEditing(false);toast.success('Goals updated — Medabrain will use this right away.');}}>Save Goals</button>
                 <button style={btnG()} onClick={()=>setSGoalsEditing(false)}>Cancel</button>
               </div>
             </div>
@@ -9282,30 +9133,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             first" on the Plans tab with a button to Settings that led to no way of answering it.
             That is a dead end, not a gate. Saving here also feeds the Medabrain system prompt,
             the admissions calculator's comparable GPA, and the plan's pacing. */}
-        <div style={{...glass({padding:18}),...focusStyle('gpaBand'),...(settingsFocus==='testTimeline'?focusStyle('testTimeline'):{})}} id="settings-field-gpaBand">
-          <SL>Grades & Test Timing</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Two facts Medabrain's Oracle needs before it will build your full plan — roughly where your grades sit, and when you're planning to take the test. Rough is fine; it paces the plan, it isn't a transcript.</p>
-          <div style={{marginBottom:18}}>
+        <div style={{...glass({padding:18}),...focusStyle('gpaBand')}} id="settings-field-gpaBand">
+          <SL>Your Grades</SL>
+          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>The one academic fact Medabrain's Oracle needs before it will build your full plan — roughly where your grades sit. Rough is fine; it paces the plan, it isn't a transcript.</p>
+          <div>
             <SL>Your grades right now</SL>
             <div style={R({gap:7,flexWrap:'wrap'})}>
               {GPA_OPTIONS.map(o=>{
                 const on=(user?.gpaBand||null)===o.value;
                 return(
                   <button key={o.value} onClick={()=>{saveUser({...user,gpaBand:o.value});toast.success('Grades updated');}} style={{
-                    ...glass2({padding:'9px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
-                    fontSize:12.5,fontWeight:on?700:500,color:on?accentText(accent):C.t2,textAlign:'left',
-                  }}>{o.label}</button>
-                );
-              })}
-            </div>
-          </div>
-          <div id="settings-field-testTimeline" style={{scrollMarginTop:90}}>
-            <SL>When you're taking the {user?.testTrack||'SAT'}</SL>
-            <div style={R({gap:7,flexWrap:'wrap'})}>
-              {TEST_TIMELINE_OPTIONS.map(o=>{
-                const on=(user?.testTimeline||null)===o.value;
-                return(
-                  <button key={o.value} onClick={()=>{saveUser({...user,testTimeline:o.value});toast.success('Test timing updated');}} style={{
                     ...glass2({padding:'9px 14px',cursor:'pointer',border:on?`1px solid ${tint(accent,0.55)}`:undefined,background:on?tint(accent,0.12):undefined}),
                     fontSize:12.5,fontWeight:on?700:500,color:on?accentText(accent):C.t2,textAlign:'left',
                   }}>{o.label}</button>
@@ -9354,16 +9191,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                 );
               })}
             </div>
-          </div>
-        </div>
-
-        <div data-tour="settings-deep-examdate" style={glass({padding:18})}>
-          <SL>Test Day</SL>
-          <p style={{fontSize:12,color:C.t2,marginBottom:14,lineHeight:1.6}}>Set your test date to see a countdown and pacing guidance on your Home page.</p>
-          <div style={R({gap:10,flexWrap:'wrap'})}>
-            <input type="date" style={inp({width:'auto'})} value={sExamDate||user?.examDate||''} onChange={e=>setSExamDate(e.target.value)}/>
-            <button style={btn(accentGrad(accent))} onClick={()=>{if(!sExamDate)return;saveUser({...user,examDate:sExamDate});toast.success('Test date saved');}}>Save Date</button>
-            {user?.examDate&&<button style={btnG()} onClick={()=>{saveUser({...user,examDate:null});setSExamDate('');toast('Test date cleared');}}>Clear</button>}
           </div>
         </div>
 
@@ -9952,7 +9779,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
       pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
       pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} user={user} studentSAT={user?.onboardingCurrentScore||null} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+    colleges:()=><CollegeListPanel accent={portC.colleges} user={user} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
     essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
     aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
     // Activities & Résumé reasons over the student's own academic history: it reads
@@ -10110,66 +9937,38 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       </div>
     );
   }
-  // ── SAT: the test-prep pillar (src/components/sat/) ──
+  // ── SAT: the test-prep pillar (src/components/sat/), sealed for v1 ──
+  //
+  // The pillar renders in full, then SatBetaCover blurs it and makes it inert
+  // (see src/lib/betaFlags.js for why it ships this way rather than deleted).
+  // Everything that used to cross the boundary in either direction is gone
+  // while the seal is on:
+  //
+  //   • no onSessionComplete — no SAT work can happen, so nothing to credit,
+  //     and the streak/plan writes it used to make no longer exist.
+  //   • no planStrip — the plan, daily-quest and quest rails are for surfaces a
+  //     student can act on. Behind a seal they would just be XP shown through
+  //     frosted glass.
+  //   • the sub-nav is passed but unreachable, and its unlock gating is moot.
   function tSatWrap(){
-    return(
+    const pillar=(
       <SatTab
         view={satView}
         onViewChange={(v,p)=>{ setSatView(v); setSatParams(p||null); }}
         params={satParams}
         onConsumeParams={()=>setSatParams(null)}
-        onSessionComplete={(taskType,meta)=>{
-          const satWrite=saveUser(applyPlanAutoComplete(user,typeMatch(taskType)));
-          // SAT work earns streak credit by VOLUME, not by "a session happened":
-          // a 22-question timed module and a 5-question smart set are not the same
-          // day's work, and paying them the same would make the cheapest possible
-          // session the rational way to keep a streak alive.
-          const answered=meta?.questions||0;
-          if(taskType==='sat_test'){satWrite.then(()=>creditStreak('sat_full_test')).catch(console.error);return;}
-          const batches=Math.floor(answered/10);
-          if(batches>0)satWrite.then(()=>creditStreak('sat_practice_set',{times:batches})).catch(console.error);
-        }}
         subnavItems={satSubnav}
-        subnavLocked={unlocks.locked('sat')[0]}
         subnavHrefFor={satHref}
         accent={satAccent}
         user={user}
         gradeLabel={gradeLabel}
         isMobile={isMobile}
-        medabrainOpen={satBrainOpen}
-        onMedabrainOpenChange={setSatBrainOpen}
-        medabrainMessages={satBrainMessages}
-        onMedabrainMessagesChange={setSatBrainMessages}
+        medabrainOpen={false}
+        medabrainMessages={[]}
         recentActivitySummary={recentActivitySummary}
-        // The SAT tab renders its own chrome, so both strips arrive through one slot. The quest
-        // line sits under the plan line for the same reason it does everywhere else: today's
-        // tasks before this month's commitment.
-        planStrip={(user.masterPlan||questBoard.length||dailyDay?.rows?.length)?(
-          <div style={{padding:isMobile?'0 0 12px':'0 0 14px',...CC({gap:10})}}>
-            {user.masterPlan&&<PlanTaskStrip user={user} pillar="sat" accent={satAccent} onOpenTask={openPlanResource} currentView={satView} isMobile={isMobile}/>}
-            {dailyDay?.rows?.length>0&&(
-              <DailyQuestRail
-                compact day={dailyDay} surface="sat"
-                onClaim={claimDailyQuest}
-                onClaimSet={claimDailySetBonus}
-                onGo={goQuestDestination}
-                busyKey={dailyBusyKey}
-                m={isMobile}
-              />
-            )}
-            {questBoard.length>0&&(
-              <QuestStrip
-                rows={questBoard} surface="sat"
-                onOpen={()=>goProgress('quests')}
-                onClaim={claimQuestXP}
-                busyId={questBusyId}
-                m={isMobile}
-              />
-            )}
-          </div>
-        ):null}
       />
     );
+    return SAT_ENABLED ? pillar : <SatBetaCover isMobile={isMobile}>{pillar}</SatBetaCover>;
   }
   const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 

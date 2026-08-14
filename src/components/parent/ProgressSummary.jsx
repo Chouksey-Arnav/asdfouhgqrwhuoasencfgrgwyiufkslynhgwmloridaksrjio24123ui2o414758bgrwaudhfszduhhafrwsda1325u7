@@ -132,7 +132,7 @@ function Digest({ summary }) {
 
 export default function ProgressSummary({ summary }) {
   if (!summary) return null;
-  const { student, effort, coursework, testing, milestones } = summary;
+  const { student, effort, coursework, milestones } = summary;
 
   // A brand-new account is not an error state and must not look like one. Everything below renders
   // zeros perfectly well; this just replaces a wall of noughts with the one sentence that is
@@ -222,41 +222,6 @@ export default function ProgressSummary({ summary }) {
         </div>
       )}
 
-      {testing && (
-        <div style={glass({ padding: 20 })}>
-          <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 10 }}>
-            {testing.kind === 'baseline' ? 'Placement test' : 'Latest practice test'}
-          </div>
-          <div style={R({ gap: 14, flexWrap: 'wrap' })}>
-            <div style={{ fontSize: 30, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1 }}>
-              {testing.total}
-            </div>
-            {/*
-              A score change is shown with an arrow, a colour, AND the word — never colour alone.
-              Roughly one in twelve boys and one in two hundred girls cannot reliably separate the
-              green from the amber, and this is the single number on the page a parent is most
-              likely to read wrong.
-            */}
-            <Delta value={testing.change} />
-            <span style={{ fontSize: 12, color: C.t3 }}>
-              {testing.takenAt ? `Taken ${fmtDate(testing.takenAt)}` : ''}
-              {testing.testsTaken > 1 ? ` · ${testing.testsTaken} tests total` : ''}
-            </span>
-          </div>
-          {(testing.sections?.reading || testing.sections?.math) && (
-            <div style={{ display: 'flex', gap: 18, marginTop: 12 }}>
-              {testing.sections.reading && (
-                <div><div style={{ fontSize: 11, color: C.t3 }}>Reading & Writing</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.t1 }}>{testing.sections.reading}</div></div>
-              )}
-              {testing.sections.math && (
-                <div><div style={{ fontSize: 11, color: C.t3 }}>Math</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: C.t1 }}>{testing.sections.math}</div></div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
 
       {milestones?.length > 0 && (
         <div style={glass({ padding: 20 })}>

@@ -55,11 +55,6 @@ function signalsFrom(summary) {
     lessonsVerified: summary.coursework?.lessonsVerified,
     quizzesTaken: q.taken,
     averageScore: q.averageScore,
-    satTestsTaken: summary.testing?.testsTaken,
-    // The summary reports full tests, not raw question volume — so a student with tests behind
-    // them is treated as having real volume, and one with none is treated as starting cold. It is
-    // a coarse proxy and the recommender's copy never claims otherwise.
-    satQuestions: (summary.testing?.testsTaken || 0) * 98,
   };
 }
 

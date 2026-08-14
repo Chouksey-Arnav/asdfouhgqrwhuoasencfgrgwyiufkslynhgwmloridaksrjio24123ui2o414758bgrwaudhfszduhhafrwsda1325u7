@@ -150,17 +150,9 @@ export function useMilestoneFeed(user, refreshKey = 0) {
   useEffect(() => {
     let alive = true;
     (async () => {
-      const [snapshot, testScores] = await Promise.all([
-        buildPortfolioSnapshot().catch(() => ({})),
-        listItems('test_scores').catch(() => []),
-      ]);
+      const snapshot = await buildPortfolioSnapshot().catch(() => ({}));
       if (!alive) return;
-      const build = (snap) => buildTimeline({
-        user,
-        snapshot: snap,
-        testScores: testScores || [],
-        sat: { projection: user?.satProjection || null, diagnosticDone: !!user?.satDiagnostic },
-      });
+      const build = (snap) => buildTimeline({ user, snapshot: snap });
       let timeline;
       try { timeline = build(snapshot); } catch { timeline = build({}); }
       setState({ timeline, snapshot, loading: false });
@@ -169,7 +161,7 @@ export function useMilestoneFeed(user, refreshKey = 0) {
     // Rebuilt when the identity inputs change or a write asks for it; portfolio
     // rows are re-fetched on mount, which is when this panel is opened.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.gradeStage, user?.gradeStageYear, user?.examDate, user?.apIb, user?.testTrack, user?.onboardingTargetScore, refreshKey]);
+  }, [user?.gradeStage, user?.gradeStageYear, user?.apIb, refreshKey]);
 
   return state;
 }

@@ -1,23 +1,23 @@
-// "Where you're starting from" — grade, test score and birthdate on ONE screen.
+// "Where you're starting from" — grade and birthdate on ONE screen.
 //
-// These were three separate steps (grade+score, then birthdate) with a Next
-// between them, which is three page transitions to collect what is, to the
-// student, a single idea: who I am right now. They're grouped here, and the
-// grade question swapped from a scroll wheel to a row of tap targets — a wheel
-// is the right control for 121 SAT scores and the wrong one for five grades.
+// These were separate steps with a Next between them, which is a page
+// transition to collect what is, to the student, a single idea: who I am right
+// now. The grade question is a row of tap targets rather than a scroll wheel.
+//
+// There used to be a third question here — an SAT/ACT track and current score
+// on a 121-stop wheel. It went with the SAT pillar (src/lib/betaFlags.js):
+// nothing in v1 reads a test score, so asking for one was collecting an answer
+// to show back and never use.
 //
 // The age gate still fires on the way out; see advanceFromStartingPoint in
 // Onboarding.jsx.
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { GroupedStep } from './grouped';
-import { WheelColumn, SegmentToggle, useViewport, flowAccentColor, C, tint } from '../primitives';
+import { useViewport, flowAccentColor, C, tint } from '../primitives';
 import { BirthdateWheels } from './BirthdateStep';
 import { play } from '../../../lib/sounds';
 import { GRADE_STAGES } from '../../../data/constants';
-
-const SAT_SCORES = Array.from({ length: 121 }, (_, i) => 400 + i * 10); // 400..1600
-const ACT_SCORES = Array.from({ length: 36 }, (_, i) => 1 + i); // 1..36
 
 const GRADE_EMOJI = ['🌱', '📗', '📘', '🎓', '🚀'];
 
@@ -47,32 +47,6 @@ function GradeTiles({ value, onChange, accent }) {
   );
 }
 
-function ScoreField({ value, onChange, accent }) {
-  const { testTrack, currentScore } = value;
-  const scores = testTrack === 'ACT' ? ACT_SCORES : SAT_SCORES;
-  const scoreIdx = useMemo(() => Math.max(0, scores.indexOf(currentScore)), [scores, currentScore]);
-  return (
-    <div>
-      <SegmentToggle
-        options={[{ value: 'SAT', label: 'SAT' }, { value: 'ACT', label: 'ACT' }]}
-        value={testTrack}
-        onChange={track => onChange({ testTrack: track, currentScore: track === 'ACT' ? 20 : 1000 })}
-      />
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 16 }}>
-        <WheelColumn items={scores} index={scoreIdx} width={150} itemH={44} visibleRows={3} mono onChange={i => onChange({ currentScore: scores[i] })} />
-      </div>
-      <p style={{ fontSize: 12, color: C.t4, textAlign: 'center', marginTop: 12 }}>
-        Haven't taken it yet? Pick your best guess — nothing here is locked in, and you can change it later.
-      </p>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 10 }}>
-        <span style={{ fontSize: 12, fontWeight: 700, color: accent, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.22)}`, padding: '6px 13px', borderRadius: 20 }}>
-          Starting line: {currentScore} on the {testTrack}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export function StartingPointStep({ value, onChange, onNext, accent = flowAccentColor() }) {
   return (
     <GroupedStep
@@ -80,7 +54,7 @@ export function StartingPointStep({ value, onChange, onNext, accent = flowAccent
       emoji="📍"
       accent={accent}
       title="Let's mark where you're standing today."
-      subtitle="Three quick ones, all on this screen. An honest starting line is worth more than a flattering one — nothing here is a grade, and nothing is locked."
+      subtitle="Two quick ones, both on this screen. An honest starting line is worth more than a flattering one — nothing here is a grade, and nothing is locked."
       questions={[
         {
           key: 'grade',
@@ -89,15 +63,6 @@ export function StartingPointStep({ value, onChange, onNext, accent = flowAccent
           answered: (v) => v != null,
           onChange: (i) => onChange({ gradeIdx: i }),
           render: ({ accent: a }) => <GradeTiles value={value.gradeIdx} onChange={i => onChange({ gradeIdx: i })} accent={a} />,
-        },
-        {
-          key: 'score',
-          prompt: 'Where is your test score right now?',
-          hint: 'Pick the test you plan to take, then spin to roughly where you are.',
-          value: value.currentScore,
-          answered: () => true,
-          onChange: () => {},
-          render: ({ accent: a }) => <ScoreField value={value} onChange={onChange} accent={a} />,
         },
         {
           key: 'birthdate',

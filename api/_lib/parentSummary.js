@@ -77,41 +77,6 @@ function reviewsSince(reviewCountsByDate, days, now = Date.now()) {
     .reduce((sum, [, count]) => sum + clampInt(count), 0);
 }
 
-/**
- * The most recent full-length SAT/ACT result plus the one before it, so the dashboard can show a
- * direction rather than a number. Only the scores travel — never questionIds, never responses.
- */
-function testScores(satAttempts) {
-  const full = (Array.isArray(satAttempts) ? satAttempts : [])
-    .filter(a => a?.result && (a.kind === 'test' || a.kind === 'baseline'))
-    .sort((a, b) => num(b.finishedAt || b.startedAt) - num(a.finishedAt || a.startedAt));
-  if (!full.length) return null;
-
-  const scoreOf = (a) => {
-    const total = num(a.result?.total ?? a.result?.scaled ?? a.result?.score);
-    return total > 0 ? total : null;
-  };
-  const latest = full[0];
-  const latestScore = scoreOf(latest);
-  if (latestScore == null) return null;
-
-  const priorWithScore = full.slice(1).find(a => scoreOf(a) != null);
-  const priorScore = priorWithScore ? scoreOf(priorWithScore) : null;
-
-  return {
-    kind: latest.kind === 'baseline' ? 'baseline' : 'practice_test',
-    total: latestScore,
-    sections: {
-      reading: num(latest.result?.rw ?? latest.result?.reading) || null,
-      math: num(latest.result?.math) || null,
-    },
-    takenAt: num(latest.finishedAt || latest.startedAt) || null,
-    previousTotal: priorScore,
-    change: priorScore == null ? null : latestScore - priorScore,
-    testsTaken: full.length,
-  };
-}
-
 /** Quiz outcomes: how many, how well, and the direction over the last ten. */
 function quizStats(quizScores) {
   const rows = (Array.isArray(quizScores) ? quizScores : [])
@@ -147,10 +112,6 @@ function milestones(snapshot, limit = 8) {
   for (const a of (snapshot.achievements || [])) {
     if (!a?.unlockedAt) continue;
     out.push({ kind: 'achievement', label: String(a.key || 'Achievement').replace(/[-_]/g, ' '), at: num(a.unlockedAt) });
-  }
-  for (const a of (snapshot.satAttempts || [])) {
-    if (!a?.finishedAt || !a.result) continue;
-    out.push({ kind: 'test_completed', label: a.kind === 'baseline' ? 'Completed the placement test' : 'Completed a practice test', at: num(a.finishedAt) });
   }
   return out.filter(m => m.at > 0).sort((a, b) => b.at - a.at).slice(0, limit);
 }
@@ -202,7 +163,6 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
       unitsVerified: (snap.unitMastery || []).filter(u => u?.verifiedAt).length,
       quizzes: quizStats(snap.quizScores),
     },
-    testing: testScores(snap.satAttempts),
     achievements: {
       unlocked: (snap.achievements || []).length,
     },

@@ -154,7 +154,7 @@ const ev = (type, at, value = 1) => ({ type, at, value });
     'without this the daily cap and the whole anti-cramming design are decorative');
 
   // The wrong metric never counts.
-  const wrong = Q.evaluate(row, [ev('flashcard_review', noonAgo(1)), ev('sat_question', noonAgo(2))]);
+  const wrong = Q.evaluate(row, [ev('flashcard_review', noonAgo(1)), ev('lesson_verified', noonAgo(2))]);
   eq('another metric contributes nothing', wrong.progress, 0);
 
   // Work before the quest started never counts.
@@ -210,8 +210,8 @@ const ev = (type, at, value = 1) => ({ type, at, value });
 {
   // featuredFor biases to the surface being looked at, but a claimable quest wins anywhere.
   const mk = (id, questId, startedAt) => ({ id, questId, ...CAT.QUEST_BY_ID[questId], startedAt, dueAt: startedAt + CAT.QUEST_BY_ID[questId].windowDays * DAY, status: 'active', xp: CAT.questXP(CAT.QUEST_BY_ID[questId]) });
-  const rows = Q.evaluateAll([mk('1', 'sat_first_hundred', noonAgo(1)), mk('2', 'flash_fortnight', noonAgo(1))], []);
-  eq('the SAT tab is offered the SAT quest', Q.featuredFor(rows, 'sat').assignment.questId, 'sat_first_hundred');
+  const rows = Q.evaluateAll([mk('1', 'port_first_entries', noonAgo(1)), mk('2', 'flash_fortnight', noonAgo(1))], []);
+  eq('the Portfolio tab is offered the record quest', Q.featuredFor(rows, 'portfolio').assignment.questId, 'port_first_entries');
   eq('the Prep tab is offered the card quest', Q.featuredFor(rows, 'prep').assignment.questId, 'flash_fortnight');
   assert('with no rows there is nothing to feature', Q.featuredFor([], 'prep') === null);
 }
@@ -242,14 +242,17 @@ const ev = (type, at, value = 1) => ({ type, at, value });
   eq('recommendations are never duplicated', new Set(recs.map((r) => r.id)).size, recs.length);
   const withActive = Q.recommendQuests({}, ['consist_first_week']);
   assert('a running quest is never recommended again', !withActive.some((r) => r.id === 'consist_first_week'));
-  // A student close to a test date must be told about the test.
-  // An engaged student (they are showing up — otherwise "fix consistency first" correctly wins)
-  // with a real test date in front of them.
-  const examSoon = Q.recommendQuests({
-    daysToExam: 45, lessonsVerified: 30, quizzesTaken: 20, activeDaysLast7: 5, activeDaysLast28: 16,
-  }, []);
-  assert('an imminent test date drives the SAT recommendation to the top',
-    ['sat_legend', 'sat_three_tests'].includes(examSoon[0].id), examSoon[0]?.id);
+  // The recommender no longer knows about test dates: the SAT pillar is sealed
+  // for v1 (src/lib/betaFlags.js), so no quest it could recommend exists. A
+  // `daysToExam` signal must therefore change nothing rather than crash or
+  // silently resurrect an SAT quest.
+  const engaged = { lessonsVerified: 30, quizzesTaken: 20, activeDaysLast7: 5, activeDaysLast28: 16 };
+  const withExam = Q.recommendQuests({ ...engaged, daysToExam: 45 }, []);
+  const withoutExam = Q.recommendQuests(engaged, []);
+  eq('a test date signal changes nothing',
+    withExam.map((r) => r.id).join(','), withoutExam.map((r) => r.id).join(','));
+  assert('no SAT quest is ever recommended', !withExam.some((r) => r.id.startsWith('sat_')),
+    withExam.map((r) => r.id).join(','));
 }
 
 // ── 4. XP is never client-chosen ────────────────────────────────────────────
@@ -334,7 +337,11 @@ assert('the completion takeover is mounted at the app root, not inside a tab',
 for (const surface of ['prep', 'portfolio', 'plans']) {
   assert(`the ${surface} tab carries the quest strip`, new RegExp(`questStripFor\\('${surface}'`).test(app));
 }
-assert('the SAT tab carries the quest strip', /<QuestStrip\s*\n?\s*rows=\{questBoard\} surface="sat"/.test(app));
+// The SAT tab deliberately carries NO quest strip, plan strip or daily rail: it
+// renders behind SatBetaCover (src/lib/betaFlags.js), so every one of those would
+// be XP shown through frosted glass, offered for work the student cannot do.
+assert('the SAT tab carries no quest strip', !/surface="sat"/.test(app),
+  'a rail on a sealed tab advertises work nobody can do');
 assert('the strip picks the quest earned on the screen being looked at',
   /surface=\{surface\}/.test(read('src/components/quests/QuestStrip.jsx')) || /featuredFor\(rows, surface\)/.test(read('src/components/quests/QuestStrip.jsx')));
 
@@ -422,7 +429,8 @@ for (const [id, chain] of Object.entries(CAT.QUEST_CHAINS)) {
 // ── 8. The catalog is big enough to be a catalog ────────────────────────────
 section('The catalog covers the product');
 
-assert('the catalog is substantial', CAT.QUESTS.length >= 50, `${CAT.QUESTS.length} quests`);
+// Was >= 50. The nine SAT quests went with the SAT pillar (src/lib/betaFlags.js).
+assert('the catalog is substantial', CAT.QUESTS.length >= 45, `${CAT.QUESTS.length} quests`);
 for (const cat of Object.keys(CAT.QUEST_CATEGORIES)) {
   assert(`category '${cat}' has at least three quests`, CAT.questsInCategory(cat).length >= 3,
     `${CAT.questsInCategory(cat).length}`);

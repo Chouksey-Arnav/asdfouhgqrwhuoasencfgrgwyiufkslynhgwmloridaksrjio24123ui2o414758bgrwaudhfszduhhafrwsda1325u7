@@ -10,8 +10,14 @@
 import {
   GOAL_OPTIONS, OBSTACLE_OPTIONS, STUDY_METHOD_OPTIONS, ACCOMPLISH_OPTIONS,
   WHY_MEDICINE_OPTIONS, DREAM_ROLE_OPTIONS, CERTAINTY_OPTIONS, GPA_OPTIONS,
-  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS, TEST_TIMELINE_OPTIONS,
+  SCIENCE_OPTIONS, EXPERIENCE_OPTIONS,
 } from '../components/onboarding/Onboarding';
+
+// Nothing in here mentions the SAT/ACT. The test-prep pillar is sealed for v1
+// (src/lib/betaFlags.js), so onboarding no longer collects a track, a score or
+// a test date — and a starter plan that opens with "your SAT game plan" would
+// be selling a tab the student cannot open. The plan is built from what they
+// did tell us: grades, science coursework, real-world experience, and time.
 
 const GRADE_LABELS = ['Freshman', 'Sophomore', 'Junior', 'Senior', 'Applying soon'];
 const labelOf = (opts, v) => opts.find(o => o.value === v)?.label || null;
@@ -30,7 +36,6 @@ export function deriveLoad(profile) {
 // touches is present and valid here, which is what makes the merge in generateMaxOutPlan foolproof.
 export function heuristicPlan(profile) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(profile);
-  const track = profile.testTrack || 'SAT';
   const goalLabel = labelOf(GOAL_OPTIONS, profile.goal) || 'building your path into medicine';
   const obstacles = labelsOf(OBSTACLE_OPTIONS, profile.obstacles);
   const grade = GRADE_LABELS[profile.gradeIdx] || 'high school';
@@ -38,30 +43,30 @@ export function heuristicPlan(profile) {
   const hasScience = (profile.sciences || []).some(v => v !== 'none_yet');
   const hasExperience = (profile.experience || []).some(v => v !== 'none');
   return {
-    headline: `Your ${track} + pre-health game plan`,
-    summary: `A balanced plan built around ${dailyMinutes} focused minutes a day — steady ${track} practice paired with the early pre-health foundations that make a future medicine application strong. Designed for where you are now as a ${grade.toLowerCase()}, not where you'll be in four years.`,
+    headline: 'Your pre-health game plan',
+    summary: `A balanced plan built around ${dailyMinutes} focused minutes a day — steady science practice paired with the early pre-health foundations that make a future medicine application strong. Designed for where you are now as a ${grade.toLowerCase()}, not where you'll be in four years.`,
     dailyMinutes,
     weeklyQuestions,
     focusAreas: [
-      { title: `${track} core skills`, why: `Consistent daily reps are the single biggest lever on your score.` },
+      { title: 'Core science skills', why: 'Consistent daily reps are the single biggest lever on how much sticks.' },
       { title: hasScience ? 'Science depth' : 'Science foundations', why: hasScience ? "You've started the science track — now we deepen it toward pre-health strength." : 'Biology and chemistry basics now make college pre-med far less of a wall later.' },
       { title: hasExperience ? 'Build on your experience' : 'Early exposure', why: hasExperience ? "You already have real-world exposure — we'll turn it into a story colleges notice." : 'Light shadowing/volunteering helps you test whether medicine truly fits — no pressure.' },
     ],
     milestones: [
       { title: 'Find your pathway', when: 'This week', detail: 'Take the diagnostic so your prep is aimed at the health career that fits you.' },
-      { title: 'First 100 questions', when: 'Weeks 1-2', detail: `Build the habit — ${weeklyQuestions} ${track} questions a week.` },
-      { title: 'A real score bump', when: '~3 months', detail: 'Most students moving at this pace see meaningful gains by the first checkpoint.' },
+      { title: 'First 100 questions', when: 'Weeks 1-2', detail: `Build the habit — ${weeklyQuestions} practice questions a week.` },
+      { title: 'A unit under your belt', when: '~3 months', detail: 'Most students moving at this pace finish a full science unit by the first checkpoint.' },
     ],
     firstWeek: [
       'Take the Pathway Diagnostic',
-      `Do your first ${track} practice set`,
+      'Do your first practice quiz',
       'Start one flashcard deck from your notes',
       obstacles.includes('No structured plan') ? 'Set a daily study reminder' : 'Add one activity to your Portfolio',
     ],
     // ── Expanded fields — richer, but every one degrades gracefully because the
     // display treats them as optional and the validator repairs them from here. ──
     weeklyRhythm: [
-      `${track} practice — 3 short sessions`,
+      'Practice quizzes — 3 short sessions',
       'Science reading or a Crash Course video — 2 days',
       'Flashcard review — daily, 5 minutes',
       'One weekend catch-up + reflection block',
@@ -72,9 +77,9 @@ export function heuristicPlan(profile) {
     ],
     watchOut: [
       obstacles[0] ? `Your biggest hurdle right now: ${obstacles[0].toLowerCase()} — the plan is built to work around it.` : 'Consistency beats intensity — small daily reps win.',
-      'Don\'t let test prep crowd out exploring whether medicine actually fits you.',
+      'Don\'t let coursework crowd out exploring whether medicine actually fits you.',
     ],
-    ninetyDayGoal: `In 90 days: a steady daily study habit, a measurable ${track} score bump, and at least one real-world taste of a health career (shadowing, volunteering, or a health club).`,
+    ninetyDayGoal: 'In 90 days: a steady daily study habit, a real dent in your science foundation, and at least one real-world taste of a health career (shadowing, volunteering, or a health club).',
     encouragement: roleLabel
       ? `Every ${roleLabel.toLowerCase().replace(/ \/.*$/, '')} started exactly where you are — a student with a goal and a plan. Small, steady days compound. We've got you.`
       : `You're starting earlier than most — that's a real advantage. Small, steady days compound. We've got you.`,
@@ -92,8 +97,8 @@ export function heuristicPlan(profile) {
 }
 
 // Build the model prompt from the full profile. Deliberately rich and emotionally aware (this is a
-// teenager, not a client), Med-focused but honest that SAT/ACT still matters, and pinned to a strict
-// JSON schema so the output renders reliably.
+// teenager, not a client), Med-focused, and pinned to a strict JSON schema so the output renders
+// reliably.
 function buildPlanPrompt(profile) {
   const { dailyMinutes, weeklyQuestions } = deriveLoad(profile);
   const facts = [
@@ -102,8 +107,6 @@ function buildPlanPrompt(profile) {
     `Why they're drawn to medicine: ${labelOf(WHY_MEDICINE_OPTIONS, profile.whyMedicine) || 'not shared'}`,
     `Dream health role: ${labelOf(DREAM_ROLE_OPTIONS, profile.dreamRole) || 'undecided'}`,
     `How certain they are about medicine: ${labelOf(CERTAINTY_OPTIONS, profile.certainty) || 'not shared'}`,
-    `Test track: ${profile.testTrack || 'SAT'} (current ~${profile.currentScore}, target ~${profile.targetScore})`,
-    `Planned test timing: ${labelOf(TEST_TIMELINE_OPTIONS, profile.testTimeline) || 'not scheduled yet'}`,
     `Self-reported grades: ${labelOf(GPA_OPTIONS, profile.gpa) || 'not shared'}`,
     `Science courses taken/taking: ${labelsOf(SCIENCE_OPTIONS, profile.sciences).join(', ') || 'not shared'}`,
     `Hands-on health experience: ${labelsOf(EXPERIENCE_OPTIONS, profile.experience).join(', ') || 'none yet'}`,
@@ -119,18 +122,17 @@ function buildPlanPrompt(profile) {
 
 Rules:
 - They are years away from medical school. NEVER mention the MCAT, medical-school applications, residency, clinical rotations, MMI, or CASPer. Frame everything as high-school and undergraduate-admissions prep with an eye toward a future health career.
-- SAT/ACT prep matters and belongs in the plan, but it is NOT the whole story — balance it with early science foundations, exploration of whether medicine fits, and low-pressure activities. Do not make the plan feel like a test-prep bootcamp.
+- NEVER mention the SAT, the ACT, standardized-test prep, test dates, or score goals. This product does not offer test prep, so a plan that includes it is a plan the student cannot follow. Build the plan out of science foundations, exploration of whether medicine fits, and low-pressure real-world activities.
 - Be emotionally attuned: acknowledge their stated obstacles supportively, and keep the tone encouraging and age-appropriate — this is a teenager building confidence.
 - Use their "why medicine" and dream role to make the plan feel like it's aimed at THEIR future, not a generic student's. If they said they're still exploring or undecided, keep the medicine framing honest and pressure-free — exploration is part of the plan, not a foregone conclusion.
 - Match science recommendations to the courses they've actually taken (true beginner if none), and if they already have hands-on health experience, build on it instead of suggesting they start from zero.
-- Respect their planned test timing: a test within 3 months means front-loading highest-impact prep; an unscheduled test means the plan should include choosing a date.
 - Keep the study load consistent with the pace they chose (≈${dailyMinutes} min/day, ${weeklyQuestions} questions/week).
 - Reference their ACTUAL goal, grade, and obstacle in the copy so it feels personal, not templated.
 
 Confidence & calibration — this matters as much as tone:
 - Every fact below is SELF-REPORTED at signup, before this student has done a single quiz, lesson, or diagnostic inside the app. Treat that as a floor of confidence, not a ceiling: this is a first-draft, day-one plan, not a data-rich verdict on their level.
-- Only state something as settled fact if it is directly grounded in a field below. Never invent a specific weakness, strength, or score trajectory that isn't implied by an actual answer — when a field says "not shared" or "unsure," acknowledge the gap honestly (e.g. "once you've tried a few questions we'll know exactly where to focus") rather than papering over it with generic confidence.
-- Calibrate certainty language to how much they told you: a student who filled in every field (clear goal, specific target score, named obstacle) earns more specific, assertive language ("your plan targets X"); a student with several "not shared" answers earns more provisional, inviting language ("let's find out together") — the plan should never sound more certain about this student than the data supports.
+- Only state something as settled fact if it is directly grounded in a field below. Never invent a specific weakness, strength, or trajectory that isn't implied by an actual answer — when a field says "not shared" or "unsure," acknowledge the gap honestly (e.g. "once you've tried a few questions we'll know exactly where to focus") rather than papering over it with generic confidence.
+- Calibrate certainty language to how much they told you: a student who filled in every field (clear goal, named obstacle, science coursework) earns more specific, assertive language ("your plan targets X"); a student with several "not shared" answers earns more provisional, inviting language ("let's find out together") — the plan should never sound more certain about this student than the data supports.
 - This starter plan is intentionally NOT the full day-by-day roadmap — that only unlocks once the student has given the app real signal beyond onboarding answers (taking the Pathway Diagnostic, trying one quiz, logging one Portfolio item). Frame this plan as the confident first step that leads there, not as the finished product — but don't undersell it either; it should stand on its own as genuinely useful today.
 
 Respond with ONLY a valid JSON object (no markdown, no code fences, no prose before or after) matching exactly this schema:
@@ -139,7 +141,7 @@ Respond with ONLY a valid JSON object (no markdown, no code fences, no prose bef
   "summary": "2-3 warm sentences describing their plan, referencing their actual goal/situation",
   "dailyMinutes": ${dailyMinutes},
   "weeklyQuestions": ${weeklyQuestions},
-  "focusAreas": [ {"title": "short", "why": "one sentence"} ],  // exactly 3, balanced across test prep, science foundations, and exploration
+  "focusAreas": [ {"title": "short", "why": "one sentence"} ],  // exactly 3, balanced across science foundations, exploration, and real-world experience
   "milestones": [ {"title": "short", "when": "timeframe like 'This week' or '~3 months'", "detail": "one sentence"} ],  // exactly 3, in time order
   "firstWeek": [ "concrete action", "..." ],  // exactly 4 short first-week actions
   "weeklyRhythm": [ "short line describing a typical week's split", "..." ],  // 3 to 4 items
