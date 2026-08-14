@@ -3534,6 +3534,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the chest animation is just the payment.
   const checkinTriggeredRef = useRef(false);
 
+  // `lastRepairAt` backs the comeback-offer calculation further down (see `streakRepair`), but
+  // has to be declared here, ahead of `refreshStreakState`, which writes to it.
+  const [lastRepairAt, setLastRepairAt] = useState(null);
+
+  /** Re-reads the whole streak ledger. Called after anything writes to it. Declared ahead of
+   *  claimTodayCheckin below, which closes over it in its own useCallback deps — as a `const`,
+   *  referencing it from an earlier callback would throw before this line ever ran. */
+  const refreshStreakState = useCallback(async()=>{
+    const [rows,bridged,claimed,str,freezes,history,live,repairedAt] = await Promise.all([
+      DB.getAllDayActivity(), DB.getBridgedDates(), DB.getClaimedStreakRewards(),
+      DB.getStreak(), DB.getStreakFreezeCount(),
+      DB.getStreakFreezes(), DB.getActiveBoosts(), DB.getLastRepairAt(),
+    ]);
+    setDayRows(rows||[]);
+    setBridgedDates(bridged||new Set());
+    setClaimedStreakRewards(claimed||new Set());
+    setStreak(str||0);
+    setStreakFreezes(freezes||0);
+    setFreezeHistory(history||[]);
+    setBoosts(live||[]);
+    setLastRepairAt(repairedAt||null);
+    return { rows, bridged, claimed, streak: str||0 };
+  },[]);
+
   /** Re-reads the whole cycle. Called on load and after every claim. */
   const refreshCheckin = useCallback(async()=>{
     try{
@@ -3659,9 +3683,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
    * The comeback offer. Recomputed from the ledger rather than stored, so it appears the moment
    * a streak is actually broken and disappears the moment one is rebuilt, with nothing to clean
    * up either way. `lastRepairAt` comes off the permanent claim ledger, so the once-a-month
-   * cooldown is per ACCOUNT rather than per device.
+   * cooldown is per ACCOUNT rather than per device. (State declared earlier, alongside
+   * refreshStreakState — see the check-in section above.)
    */
-  const [lastRepairAt, setLastRepairAt] = useState(null);
   const streakRepair = useMemo(()=>repairOffer(metDates,{
     bridged: bridgedDates, lastRepairAt, xp: user?.xp||0,
   }),[metDates,bridgedDates,lastRepairAt,user?.xp]);
@@ -3679,24 +3703,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     target:streakTarget,
     freezes:streakFreezes,
   }),[user?.streakGoalId,todayStatus,weekInfo,streakTarget,streakFreezes]);
-
-  /** Re-reads the whole streak ledger. Called after anything writes to it. */
-  const refreshStreakState = useCallback(async()=>{
-    const [rows,bridged,claimed,str,freezes,history,live,repairedAt] = await Promise.all([
-      DB.getAllDayActivity(), DB.getBridgedDates(), DB.getClaimedStreakRewards(),
-      DB.getStreak(), DB.getStreakFreezeCount(),
-      DB.getStreakFreezes(), DB.getActiveBoosts(), DB.getLastRepairAt(),
-    ]);
-    setDayRows(rows||[]);
-    setBridgedDates(bridged||new Set());
-    setClaimedStreakRewards(claimed||new Set());
-    setStreak(str||0);
-    setStreakFreezes(freezes||0);
-    setFreezeHistory(history||[]);
-    setBoosts(live||[]);
-    setLastRepairAt(repairedAt||null);
-    return { rows, bridged, claimed, streak: str||0 };
-  },[]);
 
   /**
    * THE one place a streak day is earned.
