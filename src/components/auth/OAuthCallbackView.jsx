@@ -4,7 +4,8 @@
 // that, then hand the resulting Supabase access token to /api/auth/google to mint this
 // app's own session token, exactly like every other sign-in path does.
 import React, { useEffect, useRef, useState } from 'react';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { BrandJourney } from '../BrandJourney';
+import { AlertTriangle } from 'lucide-react';
 import { C, btn } from '../../lib/theme';
 import { supabase } from '../../lib/supabaseClient';
 import * as AuthAPI from '../../lib/authApi';
@@ -67,7 +68,7 @@ export default function OAuthCallbackView({ onAuthed, onBack }) {
 
   return (
     <div style={{ textAlign: 'center', padding: '28px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-      <Loader2 className="spin" size={22} color={C.blueL} />
+      <BrandJourney size={150} />
       <div style={{ fontSize: 13, color: C.t2 }}>Finishing sign-in with Google…</div>
     </div>
   );

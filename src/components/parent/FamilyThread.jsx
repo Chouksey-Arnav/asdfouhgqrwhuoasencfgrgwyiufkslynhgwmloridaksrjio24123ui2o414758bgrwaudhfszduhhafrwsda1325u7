@@ -16,6 +16,7 @@
 // message here is a line next to a study plan, not a chat window, and every affordance that makes
 // it feel like a chat window makes it likelier to become the place an argument happens.
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { BrandLoader } from '../BrandJourney';
 import toast from 'react-hot-toast';
 import {
   Loader2, Send, MessageSquare, ClipboardList, HelpCircle, Check, X, CornerDownRight, Clock,
@@ -221,7 +222,7 @@ export default function FamilyThread({ linkId, role, counterparty, onUnreadChang
   );
 
   if (messages === null) {
-    return <div style={{ display: 'flex', justifyContent: 'center', padding: 18 }}><Loader2 className="spin" size={16} color={C.blueL} /></div>;
+    return <div style={{ padding: 18 }}><BrandLoader size={112} progress={false} /></div>;
   }
 
   if (!available) {
