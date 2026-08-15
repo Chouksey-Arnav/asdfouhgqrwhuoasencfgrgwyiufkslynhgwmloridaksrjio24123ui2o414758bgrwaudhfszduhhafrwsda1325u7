@@ -22,12 +22,12 @@ const SOURCES = [
  * so it no longer costs a dedicated step in the middle of the journey — it
  * rides along on the final save screen, laid out as a compact grid.
  */
-export function SourceGrid({ value, onChange, accent }) {
+export function SourceGrid({ value, onChange, h, accent }) {
   const { isMobile } = useViewport();
   return (
     <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, minmax(0,1fr))', gap: 9 }}>
       {SOURCES.map(s => (
-        <IconOptionRow key={s.value} selected={value === s.value} onClick={() => onChange(s.value)} iconBg={s.bg} icon={s.icon} label={s.label} accent={accent} />
+        <IconOptionRow key={s.value} selected={value === s.value} onClick={() => onChange(s.value)} iconBg={s.bg} icon={s.icon} label={s.label} h={h} accent={accent} />
       ))}
     </div>
   );

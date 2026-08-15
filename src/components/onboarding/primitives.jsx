@@ -1,12 +1,52 @@
-// Shared building blocks for the onboarding flow — every step screen is built
-// from these so the ~30 screens read as one consistent, polished system
-// instead of 30 bespoke layouts. Visual language matches the rest of the app
-// (src/lib/theme.js): dark glass surfaces, blue gradient accents.
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared building blocks for the onboarding flow.
+//
+// Every screen composes from these, so the flow reads as one system rather than
+// thirty layouts that happen to share a font. The visual language they
+// implement is written down in design.js; this file is where it becomes pixels.
+//
+// ── What changed in the redesign, and why ────────────────────────────────────
+//  • Emoji are gone. Every mark is an icon from icons.jsx drawn on one grid at
+//    one stroke weight, sitting in an "icon plate" that takes the chapter's
+//    color when idle and inverts to white when the answer is chosen. An emoji
+//    can do neither, which is why a screen of them never looks selected — it
+//    looks like stickers on a form.
+//  • A chapter is a HUE PAIR, not a color, and it is ambient rather than
+//    threaded: the shell publishes it once per render and every primitive reads
+//    it. Selection, focus, the button, the plate, the wheel band and the
+//    progress bar are all the same two hues, so a screen is visibly one thing.
+//  • Data is set in mono and tracked out. Counters, minutes, chapter numerals
+//    and every "n of m" read as instrument output, which is most of the
+//    difference between a form and an interface.
+//  • Single-select fills; multi-select tints. That is a deliberate grammar: a
+//    filled row means "this is the answer", a tinted row means "this is one of
+//    the answers", and the student learns it on screen one without being told.
+// ─────────────────────────────────────────────────────────────────────────────
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Check, ChevronLeft } from 'lucide-react';
+import { Check, ChevronLeft, ArrowRight } from 'lucide-react';
 import { C, glass, tint, shade, accentGrad, btn as themeBtn } from '../../lib/theme';
 import { play } from '../../lib/sounds';
+import { Icon } from './icons';
+import {
+  hue, chapterHue, R, EASE, GLIDE, GLIDE_FAST, POP, SETTLE, step,
+  meta, display, body, numeral, panel, lit, focusRing,
+} from './design';
+
+// ── The chapter hue, as ambient state ────────────────────────────────────────
+// Threading two colors through a dozen step components and every primitive they
+// use would be a lot of plumbing for one value that is constant for the whole
+// screen — so the shell sets it once per render and the primitives read it,
+// exactly the way the app already treats the palette itself (see the `C` note
+// in src/lib/theme.js). It is a render-time default, not state: any component
+// can still pass an explicit `hue` and win.
+let flowHueValue = null;
+export const setFlowHue = (h) => { flowHueValue = h || null; };
+export const flowHue = () => flowHueValue || hue(['blue', 'indigo']);
+
+// Back-compat for the handful of call sites that only ever wanted one color.
+export const setFlowAccent = (color) => { flowHueValue = color ? hue(color) : null; };
+export const flowAccentColor = () => flowHue().base;
 
 /**
  * One live measurement of the window, shared by the shell and the steps.
@@ -16,19 +56,6 @@ import { play } from '../../lib/sounds';
  * where the two-pane layout turns on; below it the flow is a single column that
  * runs edge to edge instead of a 460px letterbox.
  */
-// ── The chapter accent, as ambient state ─────────────────────────────────────
-// Every screen in a chapter is tinted with that chapter's color: the header
-// badge, the selected answers, the Continue button. Threading an `accent` prop
-// through a dozen step components and every primitive they use would be a lot
-// of plumbing for one value that is constant for the whole screen — so the
-// shell sets it once per render and the primitives read it, exactly the way the
-// app already treats the palette itself (see the `C` note in src/lib/theme.js).
-// It is a render-time default, not state: any component can still pass an
-// explicit `accent` and win.
-let flowAccent = null;
-export const setFlowAccent = (color) => { flowAccent = color || null; };
-export const flowAccentColor = () => flowAccent || C.blue;
-
 export function useViewport() {
   const read = () => (typeof window === 'undefined' ? 1024 : window.innerWidth);
   const [w, setW] = useState(read);
@@ -56,64 +83,232 @@ export function useIsMobile() {
   return m;
 }
 
-/**
- * A question's headline. `emoji` is not decoration — the target user is
- * fifteen, and a screen of plain 14px prose is the thing they close. Every
- * question now leads with a mark that says at a glance what it's about.
- */
-export function StepHeader({ eyebrow, title, subtitle, emoji, accent = flowAccentColor(), compact = false }) {
-  const { isMobile } = useViewport();
+/** True when the visitor has asked the OS to cut animation. Respected by the
+ *  flow's ambient motion — the looping traces and drifting orbs, not the
+ *  functional transitions, which stay so the UI never appears frozen. */
+export function useReducedMotion() {
+  const [r, setR] = useState(false);
+  useEffect(() => {
+    try {
+      const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const on = () => setR(mq.matches);
+      on();
+      mq.addEventListener('change', on);
+      return () => mq.removeEventListener('change', on);
+    } catch { return undefined; }
+  }, []);
+  return r;
+}
+
+// ── Keyboard-only focus ──────────────────────────────────────────────────────
+// `:focus-visible` is the right tool and it is unavailable here: this codebase
+// has no stylesheet to put a pseudo-class in (see the header of
+// src/lib/theme.js), and every style is an inline object. Reacting to plain
+// `onFocus` instead puts a 4px ring around every answer the moment it is
+// CLICKED, which is noise for the mouse user the ring was never for.
+//
+// So the modality is tracked once, globally: a Tab/arrow keypress means we are
+// in keyboard mode, any pointer press means we are not. Components ask
+// `useKeyboardMode()` and only paint the ring when both it and their own focus
+// state are true.
+let keyboardMode = false;
+const modeListeners = new Set();
+const setMode = (v) => { if (v !== keyboardMode) { keyboardMode = v; modeListeners.forEach(fn => fn(v)); } };
+if (typeof window !== 'undefined') {
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab' || e.key.startsWith('Arrow') || e.key === 'Home' || e.key === 'End') setMode(true);
+  }, true);
+  window.addEventListener('pointerdown', () => setMode(false), true);
+}
+
+export function useKeyboardMode() {
+  const [on, setOn] = useState(keyboardMode);
+  useEffect(() => {
+    modeListeners.add(setOn);
+    setOn(keyboardMode);
+    return () => { modeListeners.delete(setOn); };
+  }, []);
+  return on;
+}
+
+/** `focused && keyboard` → the ring style, otherwise nothing. */
+function useRing(focused, g) {
+  const kb = useKeyboardMode();
+  return focused && kb ? focusRing(g) : null;
+}
+
+// ── Small type pieces ────────────────────────────────────────────────────────
+
+/** The tracked-out label above a heading, with the chapter's rule in front. */
+export function Kicker({ children, h = null, style }) {
+  const g = h || flowHue();
   return (
-    <div style={{ marginBottom: compact ? 18 : isMobile ? 22 : 28 }}>
-      {emoji && (
-        <motion.div initial={{ scale: 0.5, opacity: 0, rotate: -10 }} animate={{ scale: 1, opacity: 1, rotate: 0 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-          style={{
-            width: 52, height: 52, borderRadius: 16, marginBottom: 14, fontSize: 26, lineHeight: 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: tint(accent, 0.13), border: `1px solid ${tint(accent, 0.24)}`,
-          }}>{emoji}</motion.div>
-      )}
-      {eyebrow && <div style={{ fontSize: 11, fontWeight: 800, color: accent, letterSpacing: '.12em', textTransform: 'uppercase', marginBottom: 10 }}>{eyebrow}</div>}
-      <h1 style={{ fontSize: isMobile ? 25 : 30, fontWeight: 800, color: C.t1, margin: '0 0 10px', letterSpacing: '-.03em', fontFamily: C.FD, lineHeight: 1.2 }}>{title}</h1>
-      {subtitle && <p style={{ fontSize: isMobile ? 14 : 15, color: C.t2, lineHeight: 1.6, margin: 0, maxWidth: 560 }}>{subtitle}</p>}
-    </div>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, ...style }}>
+      <span style={{ width: 18, height: 2, borderRadius: 2, background: g.bar, flexShrink: 0 }} />
+      <span style={meta(10, { color: g.ink })}>{children}</span>
+    </span>
+  );
+}
+
+/** A hairline that fades out — used to close a block without drawing a box. */
+export function Rule({ h = null, width = '100%', style }) {
+  const g = h || flowHue();
+  return <div style={{ height: 1, width, background: `linear-gradient(90deg, ${g.edge}, transparent)`, ...style }} />;
+}
+
+/** A small mono readout: `Q3 / 10`, `40 MIN`, `02`. */
+export function DataChip({ children, h = null, tone: t = 'soft', style }) {
+  const g = h || flowHue();
+  const solid = t === 'solid';
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 9px', borderRadius: R.xs,
+      background: solid ? g.grad : g.soft,
+      border: `1px solid ${solid ? 'transparent' : g.edgeSoft}`,
+      boxShadow: solid ? lit(0.18) : 'none',
+      ...meta(9.5, { color: solid ? g.onFill : g.ink, letterSpacing: '.12em' }),
+      ...style,
+    }}>{children}</span>
+  );
+}
+
+// ── The icon plate ───────────────────────────────────────────────────────────
+
+/**
+ * The square an option's mark sits in.
+ *
+ * Idle it is a soft wash of the chapter hue with a hairline; selected it
+ * inverts to translucent white on the filled row. That inversion is the single
+ * most important detail in the flow's selection design — it is what makes a
+ * chosen answer read as *lit up* rather than merely recolored, and it is only
+ * possible because the marks are strokes that inherit `currentColor`.
+ */
+export function IconPlate({ name, meter, selected, h = null, size = 40, radius = R.sm }) {
+  const g = h || flowHue();
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: radius, flexShrink: 0,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: selected ? 'rgba(255,255,255,0.18)' : g.soft,
+      border: `1px solid ${selected ? 'rgba(255,255,255,0.26)' : g.edgeSoft}`,
+      color: selected ? g.onFill : g.ink,
+      transition: 'background .18s, border-color .18s, color .18s',
+    }}>
+      {meter != null
+        ? <MeterBars level={meter} of={4} tone={selected ? 'onFill' : 'hue'} h={g} />
+        : <Icon name={name} size={Math.round(size * 0.5)} stroke={1.6} />}
+    </span>
   );
 }
 
 /**
- * The primary CTA. It sticks to the bottom of the scroll area rather than
- * sitting at the end of the content: on a grouped screen the answers can run
- * past the fold, and a "Continue" you have to go looking for is a drop-off.
+ * A four-bar level, used where the options are a ranked scale rather than a set
+ * of alternatives (today: the GPA question). Five differently-worded sublabels
+ * cannot be compared at a glance; four bars can.
  */
-export function ContinueButton({ children = 'Continue', onClick, disabled, variant = 'primary', icon: Icon, hint, accent = flowAccentColor() }) {
+export function MeterBars({ level = 0, of = 4, h = null, tone: t = 'hue', height = 18 }) {
+  const g = h || flowHue();
+  const on = t === 'onFill' ? g.onFill : g.ink;
+  const off = t === 'onFill' ? 'rgba(255,255,255,0.30)' : tint(g.from, 0.28);
+  return (
+    <span style={{ display: 'flex', alignItems: 'flex-end', gap: 2.5, height }} aria-hidden="true">
+      {Array.from({ length: of }, (_, i) => (
+        <span key={i} style={{
+          width: 3, borderRadius: 2,
+          height: `${38 + (i / (of - 1)) * 62}%`,
+          background: i < level ? on : off,
+          transition: 'background .18s',
+        }} />
+      ))}
+    </span>
+  );
+}
+
+// ── Headings ─────────────────────────────────────────────────────────────────
+
+/**
+ * A question's headline.
+ *
+ * `icon` is a name from icons.jsx and replaces the emoji tile this component
+ * used to render. It sits inline with the kicker rather than stacked above it:
+ * the flow's screens are tall and the old 52px block above every heading was
+ * pushing the first answer under the fold on a phone for no informational gain.
+ */
+export function StepHeader({ eyebrow, title, subtitle, icon, h = null, compact = false }) {
   const { isMobile } = useViewport();
+  const g = h || flowHue();
+  return (
+    <div style={{ marginBottom: compact ? 18 : isMobile ? 22 : 26 }}>
+      {(icon || eyebrow) && (
+        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
+          style={{ display: 'flex', alignItems: 'center', gap: 11, marginBottom: 13 }}>
+          {icon && (
+            <span style={{
+              width: 34, height: 34, borderRadius: R.sm, flexShrink: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: g.soft, border: `1px solid ${g.edgeSoft}`, color: g.ink,
+            }}>
+              <Icon name={icon} size={18} />
+            </span>
+          )}
+          {eyebrow && <Kicker h={g}>{eyebrow}</Kicker>}
+        </motion.div>
+      )}
+      <motion.h1 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.04 }}
+        style={display(isMobile ? 25 : 30, { color: C.t1, margin: '0 0 10px' })}>
+        {title}
+      </motion.h1>
+      {subtitle && (
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ ...GLIDE, delay: 0.1 }}
+          style={body(isMobile ? 13.5 : 14.5, { margin: 0, maxWidth: 540 })}>
+          {subtitle}
+        </motion.p>
+      )}
+    </div>
+  );
+}
+
+// ── The primary action ───────────────────────────────────────────────────────
+
+/**
+ * The CTA. It sticks to the bottom of the scroll area rather than sitting at
+ * the end of the content: on a grouped screen the answers can run past the
+ * fold, and a "Continue" you have to go looking for is a drop-off.
+ */
+export function ContinueButton({ children = 'Continue', onClick, disabled, variant = 'primary', icon: IconCmp, hint, h = null, accent }) {
+  const { isMobile } = useViewport();
+  const g = h || (accent ? hue(accent) : flowHue());
   const styles = {
-    // accentGrad guarantees the fill is dark enough to carry C.onAccent, which
-    // a raw amber or rose chapter accent is not.
-    primary: { background: accentGrad(accent), color: C.onAccent, border: 'none', shadow: `0 10px 30px ${tint(accent, 0.35)}` },
+    primary: { background: g.grad, color: g.onFill, border: 'none', shadow: `${g.glow}, ${lit(0.18)}` },
     ghost: { background: 'transparent', color: C.t2, border: `1px solid ${C.b2}`, shadow: 'none' },
     dark: { background: C.s2, color: C.t1, border: `1px solid ${C.b1}`, shadow: 'none' },
   }[variant];
   return (
     <div style={{
-      position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 16,
+      position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 18,
       paddingBottom: isMobile ? 16 : 24,
-      background: `linear-gradient(to top, ${C.bg} 0%, ${C.bg} 68%, transparent 100%)`,
+      background: `linear-gradient(to top, ${C.bg} 0%, ${C.bg} 66%, transparent 100%)`,
     }}>
       <motion.button
         data-testid="onboarding-cta"
-        whileHover={!disabled ? { scale: 1.012 } : {}}
-        whileTap={!disabled ? { scale: 0.97 } : {}}
+        whileHover={!disabled ? { y: -1.5 } : {}}
+        whileTap={!disabled ? { scale: 0.985 } : {}}
+        transition={POP}
         disabled={disabled}
         onClick={() => { if (disabled) return; play('click'); onClick?.(); }}
         style={{
-          width: '100%', padding: '17px 20px', borderRadius: 15, cursor: disabled ? 'not-allowed' : 'pointer',
+          position: 'relative', overflow: 'hidden',
+          width: '100%', padding: '16px 20px', borderRadius: R.md, cursor: disabled ? 'not-allowed' : 'pointer',
           background: disabled ? C.s3 : styles.background, color: disabled ? C.t3 : styles.color, border: styles.border,
-          fontWeight: 700, fontSize: 15.5, fontFamily: C.FB, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          boxShadow: disabled ? 'none' : styles.shadow, transition: 'box-shadow .2s,background .2s', letterSpacing: '.01em',
+          fontWeight: 700, fontSize: 15, fontFamily: C.FB, letterSpacing: '.005em',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9,
+          boxShadow: disabled ? 'none' : styles.shadow,
+          transition: 'box-shadow .2s, background .25s, color .2s',
         }}>
-        {children}{Icon && <Icon size={16} />}
+        <span>{children}</span>
+        {IconCmp
+          ? <IconCmp size={16} />
+          : (variant === 'primary' && !disabled && <ArrowRight size={16} strokeWidth={2.4} style={{ opacity: 0.9 }} />)}
       </motion.button>
       {hint && <p style={{ textAlign: 'center', fontSize: 11.5, color: C.t4, margin: '10px 0 0' }}>{hint}</p>}
     </div>
@@ -122,133 +317,214 @@ export function ContinueButton({ children = 'Continue', onClick, disabled, varia
 
 export function TextLink({ children, onClick }) {
   return (
-    <button onClick={onClick} style={{ background: 'none', border: 'none', color: C.t3, fontSize: 13, cursor: 'pointer', fontFamily: C.FB, textAlign: 'center', width: '100%', padding: '14px 0 0' }}>
+    <button onClick={onClick} style={{
+      background: 'none', border: 'none', color: C.t3, fontSize: 13, cursor: 'pointer',
+      fontFamily: C.FB, textAlign: 'center', width: '100%', padding: '14px 0 0',
+      textDecoration: 'underline', textUnderlineOffset: 4, textDecorationColor: C.b3,
+    }}>
       {children}
     </button>
   );
 }
 
+// ── Answers ──────────────────────────────────────────────────────────────────
+
+/** Shared hover/press behaviour so every answer in the flow feels identical. */
+const answerMotion = (selected) => ({
+  whileHover: selected ? {} : { y: -2 },
+  whileTap: { scale: 0.985 },
+  transition: POP,
+});
+
 /**
- * A single-select answer.
- *
- * The emoji tile on the left is the cheapest, most reliable way to give a
- * question visual interest: it renders from the system font, needs no network
- * (this is an offline-capable PWA), and reads instantly at any size. Options
- * without an emoji fall back to the old icon slot and look exactly as before.
+ * A single-select answer. Chosen answers FILL with the chapter gradient — see
+ * the grammar note at the top of this file.
  */
-export function OptionRow({ selected, onClick, icon, emoji, label, sublabel, dots, accent = flowAccentColor() }) {
-  const onAcc = C.onAccent || '#fff';
+export function OptionRow({ selected, onClick, icon, meter, label, sublabel, dots, h = null, accent }) {
+  const g = h || (accent ? hue(accent) : flowHue());
+  const [focused, setFocused] = useState(false);
+  const ring = useRing(focused, g);
   return (
-    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.97 }} whileHover={selected ? {} : { x: 3 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }}
+    <motion.button data-testid="onboarding-option" {...answerMotion(selected)}
       onClick={() => { play('select'); onClick(); }}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      aria-pressed={!!selected}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 13, padding: '14px 16px',
-        borderRadius: 15, cursor: 'pointer',
-        background: selected ? accentGrad(accent) : C.surf,
+        position: 'relative', width: '100%', textAlign: 'left',
+        display: 'flex', alignItems: 'center', gap: 13, padding: '12px 14px',
+        borderRadius: R.md, cursor: 'pointer', fontFamily: C.FB,
+        background: selected ? g.grad : C.surf,
         border: `1px solid ${selected ? 'transparent' : C.b1}`,
-        boxShadow: selected ? `0 10px 26px ${tint(accent, 0.32)}` : C.shadowSm,
-        transition: 'background .18s,box-shadow .18s,border-color .18s',
+        boxShadow: selected ? `${g.glowSm}, ${lit(0.16)}` : C.shadowSm,
+        transition: 'background .2s, box-shadow .2s, border-color .2s',
+        ...ring,
       }}>
-      {emoji && (
-        <span style={{
-          width: 42, height: 42, borderRadius: 13, flexShrink: 0, fontSize: 21, lineHeight: 1,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: selected ? 'rgba(255,255,255,0.18)' : tint(accent, 0.12),
-          border: `1px solid ${selected ? 'rgba(255,255,255,0.22)' : tint(accent, 0.16)}`,
-        }}>{emoji}</span>
-      )}
+      {(icon || meter != null) && <IconPlate name={icon} meter={meter} selected={selected} h={g} />}
+
       {dots != null && (
         <div style={{ display: 'flex', gap: 3, flexShrink: 0 }}>
-          {[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: i < dots ? (selected ? onAcc : accent) : (selected ? 'rgba(255,255,255,0.35)' : C.t4) }} />)}
+          {[0, 1, 2].map(i => (
+            <span key={i} style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: i < dots ? (selected ? g.onFill : g.ink) : (selected ? 'rgba(255,255,255,0.35)' : C.t4),
+            }} />
+          ))}
         </div>
       )}
-      {icon && !emoji && <span style={{ display: 'flex', flexShrink: 0, color: selected ? onAcc : C.t2 }}>{icon}</span>}
+
       <span style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14.5, fontWeight: 700, color: selected ? onAcc : C.t1, fontFamily: C.FB, lineHeight: 1.3 }}>{label}</div>
-        {sublabel && <div style={{ fontSize: 12, color: selected ? 'rgba(255,255,255,0.82)' : C.t3, marginTop: 3, lineHeight: 1.4 }}>{sublabel}</div>}
+        <span style={{ display: 'block', fontSize: 14.5, fontWeight: 700, color: selected ? g.onFill : C.t1, lineHeight: 1.3 }}>{label}</span>
+        {sublabel && (
+          <span style={{ display: 'block', fontSize: 12, color: selected ? 'rgba(255,255,255,0.84)' : C.t3, marginTop: 3, lineHeight: 1.45 }}>{sublabel}</span>
+        )}
       </span>
+
       <span style={{
-        width: 20, height: 20, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        border: `1.5px solid ${selected ? 'rgba(255,255,255,0.85)' : C.b3}`, background: selected ? 'rgba(255,255,255,0.9)' : 'transparent',
+        width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        border: `1.5px solid ${selected ? 'rgba(255,255,255,0.9)' : C.b3}`,
+        background: selected ? 'rgba(255,255,255,0.94)' : 'transparent',
+        transition: 'background .18s, border-color .18s',
       }}>
-        {selected && <Check size={12} color={shade(accent, 0.3)} strokeWidth={3.5} />}
+        {selected && (
+          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={POP} style={{ display: 'flex' }}>
+            <Check size={12} color={shade(g.from, 0.34)} strokeWidth={3.5} />
+          </motion.span>
+        )}
       </span>
     </motion.button>
   );
 }
 
-export function IconOptionRow({ selected, onClick, iconBg, icon, label, accent = flowAccentColor() }) {
+/**
+ * A multi-select answer. Chosen answers TINT rather than fill, so a screen with
+ * four of six picked stays readable instead of becoming a wall of color.
+ */
+export function CheckRow({ checked, onClick, label, sublabel, icon, h = null, accent }) {
+  const g = h || (accent ? hue(accent) : flowHue());
+  const [focused, setFocused] = useState(false);
+  const ring = useRing(focused, g);
   return (
-    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.96 }} whileHover={selected ? {} : { y: -2 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} onClick={() => { play('select'); onClick(); }}
+    <motion.button data-testid="onboarding-option" {...answerMotion(checked)}
+      onClick={() => { play('select'); onClick(); }}
+      onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+      aria-pressed={!!checked}
       style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
-        borderRadius: 13, cursor: 'pointer',
-        background: selected ? tint(accent, 0.12) : C.surf,
-        border: `1px solid ${selected ? accent : C.b1}`,
+        position: 'relative', width: '100%', textAlign: 'left',
+        display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+        borderRadius: R.md, cursor: 'pointer', fontFamily: C.FB,
+        background: checked ? `linear-gradient(135deg, ${g.soft}, ${g.softer})` : C.surf,
+        border: `1px solid ${checked ? g.edge : C.b1}`,
+        boxShadow: checked ? g.glowSm : C.shadowSm,
+        transition: 'background .2s, border-color .2s, box-shadow .2s',
+        ...ring,
       }}>
-      <span style={{ width: 32, height: 32, borderRadius: 9, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</span>
+      {icon && (
+        <span style={{
+          width: 34, height: 34, borderRadius: R.xs, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: checked ? g.grad : C.s2,
+          border: `1px solid ${checked ? 'transparent' : C.b1}`,
+          color: checked ? g.onFill : C.t3,
+          boxShadow: checked ? lit(0.2) : 'none',
+          transition: 'background .18s, color .18s, border-color .18s',
+        }}>
+          <Icon name={icon} size={17} />
+        </span>
+      )}
+      <span style={{ flex: 1, minWidth: 0 }}>
+        <span style={{ display: 'block', fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.3 }}>{label}</span>
+        {sublabel && <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{sublabel}</span>}
+      </span>
+      <span style={{
+        width: 20, height: 20, borderRadius: 6, flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: checked ? g.grad : 'transparent',
+        border: `1.5px solid ${checked ? 'transparent' : C.b3}`,
+        boxShadow: checked ? lit(0.24) : 'none',
+        transition: 'background .18s, border-color .18s',
+      }}>
+        {checked && (
+          <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={POP} style={{ display: 'flex' }}>
+            <Check size={13} color={g.onFill} strokeWidth={3.2} />
+          </motion.span>
+        )}
+      </span>
+    </motion.button>
+  );
+}
+
+/** A compact answer carrying somebody else's mark (the "where did you hear
+ *  about us" brand tiles), so the tile keeps its own colors. */
+export function IconOptionRow({ selected, onClick, iconBg, icon, label, h = null, accent }) {
+  const g = h || (accent ? hue(accent) : flowHue());
+  return (
+    <motion.button data-testid="onboarding-option" {...answerMotion(selected)} onClick={() => { play('select'); onClick(); }}
+      aria-pressed={!!selected}
+      style={{
+        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 12px',
+        borderRadius: R.sm, cursor: 'pointer', fontFamily: C.FB,
+        background: selected ? `linear-gradient(135deg, ${g.soft}, ${g.softer})` : C.surf,
+        border: `1px solid ${selected ? g.edge : C.b1}`,
+        boxShadow: selected ? g.glowSm : C.shadowSm,
+        transition: 'background .18s, border-color .18s',
+      }}>
+      <span style={{ width: 30, height: 30, borderRadius: 8, background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${C.b1}` }}>{icon}</span>
       <span style={{ fontSize: 13.5, fontWeight: 600, color: C.t1, flex: 1, minWidth: 0 }}>{label}</span>
-      {selected && <Check size={16} color={accent} />}
+      {selected && <Check size={16} color={g.ink} strokeWidth={2.6} />}
     </motion.button>
   );
 }
 
-/** A multi-select answer. Same emoji treatment as OptionRow, with a checkbox. */
-export function CheckRow({ checked, onClick, label, sublabel, emoji, accent = flowAccentColor() }) {
-  return (
-    <motion.button data-testid="onboarding-option" whileTap={{ scale: 0.97 }} whileHover={checked ? {} : { x: 3 }} transition={{ type: 'spring', stiffness: 500, damping: 18 }} onClick={() => { play('select'); onClick(); }}
-      style={{
-        width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px',
-        borderRadius: 15, cursor: 'pointer',
-        background: checked ? tint(accent, 0.13) : C.surf,
-        border: `1px solid ${checked ? accent : C.b1}`,
-        boxShadow: checked ? `0 6px 18px ${tint(accent, 0.18)}` : C.shadowSm,
-        transition: 'background .18s,border-color .18s,box-shadow .18s',
-      }}>
-      <span style={{
-        width: 22, height: 22, borderRadius: 7, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: checked ? accentGrad(accent) : 'transparent', border: `1.5px solid ${checked ? 'transparent' : C.b3}`,
-      }}>{checked && <Check size={13} color={C.onAccent || '#fff'} strokeWidth={3} />}</span>
-      {emoji && <span style={{ fontSize: 19, lineHeight: 1, flexShrink: 0 }}>{emoji}</span>}
-      <span style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.3 }}>{label}</div>
-        {sublabel && <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.4 }}>{sublabel}</div>}
-      </span>
-    </motion.button>
-  );
-}
+// ── Controls ─────────────────────────────────────────────────────────────────
 
-export function ToggleSwitch({ checked, onChange }) {
+export function ToggleSwitch({ checked, onChange, h = null }) {
+  const g = h || flowHue();
   return (
     <button onClick={() => { play('click'); onChange(!checked); }}
+      role="switch" aria-checked={!!checked}
       style={{
-        width: 46, height: 27, borderRadius: 14, border: 'none', cursor: 'pointer', flexShrink: 0,
-        background: checked ? C.blueGrad : C.s3, position: 'relative', transition: 'background .2s', padding: 0,
+        width: 46, height: 27, borderRadius: R.pill, border: 'none', cursor: 'pointer', flexShrink: 0,
+        background: checked ? g.grad : C.s3, position: 'relative', transition: 'background .22s', padding: 0,
+        boxShadow: checked ? `${g.glowSm}, ${lit(0.2)}` : 'inset 0 1px 2px rgba(0,0,0,0.18)',
       }}>
-      <motion.span animate={{ x: checked ? 20 : 3 }} transition={{ type: 'spring', stiffness: 500, damping: 32 }}
-        style={{ position: 'absolute', top: 3, left: 0, width: 21, height: 21, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
+      <motion.span animate={{ x: checked ? 20 : 3 }} transition={{ type: 'spring', stiffness: 520, damping: 34 }}
+        style={{ position: 'absolute', top: 3, left: 0, width: 21, height: 21, borderRadius: '50%', background: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.32)' }} />
     </button>
   );
 }
 
-export function SegmentToggle({ options, value, onChange }) {
+export function SegmentToggle({ options, value, onChange, h = null }) {
+  const g = h || flowHue();
   return (
-    <div style={{ display: 'flex', background: C.s1, borderRadius: 11, padding: 3, border: `1px solid ${C.b1}` }}>
-      {options.map(opt => (
-        <button key={opt.value} onClick={() => { play('click'); onChange(opt.value); }}
-          style={{
-            flex: 1, padding: '9px 0', borderRadius: 8, border: 'none', cursor: 'pointer',
-            background: value === opt.value ? C.s3 : 'transparent', color: value === opt.value ? C.t1 : C.t3,
-            fontWeight: 700, fontSize: 13, fontFamily: C.FB, transition: 'background .15s,color .15s',
-          }}>{opt.label}</button>
-      ))}
+    <div style={{ display: 'flex', background: C.s1, borderRadius: R.sm, padding: 3, border: `1px solid ${C.b1}` }}>
+      {options.map(opt => {
+        const on = value === opt.value;
+        return (
+          <button key={opt.value} onClick={() => { play('click'); onChange(opt.value); }}
+            style={{
+              flex: 1, padding: '9px 0', borderRadius: R.xs, border: 'none', cursor: 'pointer',
+              background: on ? g.grad : 'transparent', color: on ? g.onFill : C.t3,
+              boxShadow: on ? lit(0.18) : 'none',
+              fontWeight: 700, fontSize: 13, fontFamily: C.FB, transition: 'background .16s, color .16s',
+            }}>{opt.label}</button>
+        );
+      })}
     </div>
   );
 }
 
-// Scroll-snap "wheel" picker — approximates a native iOS picker wheel using a
-// single vertical scroll list; the center row is the selected value.
-export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, visibleRows = 5, mono }) {
+/**
+ * Scroll-snap "wheel" picker — approximates a native iOS picker wheel using a
+ * single vertical scroll list; the center row is the selected value.
+ *
+ * The selection used to be a filled rounded box, which fought with every other
+ * selected thing on the screen. It is now a pair of hairlines in the chapter
+ * hue with a faint wash between them — a caliper rather than a button, which is
+ * what a value being *read off* a scale should look like.
+ */
+export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, visibleRows = 5, mono, h = null }) {
+  const g = h || flowHue();
   const ref = useRef(null);
   const pad = Math.floor(visibleRows / 2);
   const isInternalScroll = useRef(false);
@@ -277,21 +553,24 @@ export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, v
     <div style={{ position: 'relative', width, height: itemH * visibleRows }}>
       <div style={{
         position: 'absolute', top: itemH * pad, left: 0, right: 0, height: itemH,
-        background: C.blueDim, border: `1px solid ${C.b2}`, borderRadius: 10, pointerEvents: 'none', zIndex: 0,
+        background: g.softer, borderTop: `1px solid ${g.edge}`, borderBottom: `1px solid ${g.edge}`,
+        pointerEvents: 'none', zIndex: 0,
       }} />
       <div ref={ref} onScroll={handleScroll}
         style={{
           position: 'relative', zIndex: 1, height: '100%', overflowY: 'scroll', scrollSnapType: 'y mandatory',
           WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
-          maskImage: `linear-gradient(to bottom, transparent 0, black ${itemH * 0.6}px, black calc(100% - ${itemH * 0.6}px), transparent 100%)`,
-          WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${itemH * 0.6}px, black calc(100% - ${itemH * 0.6}px), transparent 100%)`,
+          maskImage: `linear-gradient(to bottom, transparent 0, black ${itemH * 0.62}px, black calc(100% - ${itemH * 0.62}px), transparent 100%)`,
+          WebkitMaskImage: `linear-gradient(to bottom, transparent 0, black ${itemH * 0.62}px, black calc(100% - ${itemH * 0.62}px), transparent 100%)`,
         }}>
         <div style={{ height: itemH * pad }} />
         {items.map((it, i) => (
           <div key={i} style={{
             height: itemH, display: 'flex', alignItems: 'center', justifyContent: 'center', scrollSnapAlign: 'center',
             fontSize: i === index ? 17 : 14.5, fontWeight: i === index ? 800 : 500,
-            color: i === index ? C.t1 : C.t4, fontFamily: mono ? C.FM : C.FB, transition: 'color .15s,font-size .15s',
+            color: i === index ? C.t1 : C.t4,
+            fontFamily: mono ? C.FM : C.FB, fontVariantNumeric: 'tabular-nums',
+            transition: 'color .15s, font-size .15s',
           }}>{it}</div>
         ))}
         <div style={{ height: itemH * pad }} />
@@ -299,6 +578,8 @@ export function WheelColumn({ items, index, onChange, width = 108, itemH = 42, v
     </div>
   );
 }
+
+// ── Data display ─────────────────────────────────────────────────────────────
 
 // Animated count-up for headline numbers — the moment a stat "lands" is what
 // makes the proof screens feel alive instead of static marketing copy.
@@ -320,11 +601,9 @@ export function useCountUp(target, { duration = 1200, delay = 300 } = {}) {
 }
 
 // Hand-rolled animated line chart for the proof/projection screens —
-// deliberately lightweight (no chart.js). Upgraded from a bare polyline to a
-// full "moment": glow-filtered gradient strokes, a slow area sweep, labeled
-// milestone checkpoints, endpoint value badges with the student's REAL scores,
-// and a pulsing end dot. All new props are optional so old call sites render
-// unchanged.
+// deliberately lightweight (no chart.js): glow-filtered gradient strokes, a
+// slow area sweep, labeled milestone checkpoints, endpoint value badges, and a
+// pulsing end dot. All props are optional so old call sites render unchanged.
 //   lines: [{ points:[0..1], color, width, fill, dashed, endDot, glow }]
 //   milestones: [{ f: 0..1 along line 0, score, label }]
 //   startLabel/endLabel: value badges anchored to line 0's endpoints
@@ -333,7 +612,6 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
   const w = width - pad * 2, h = height - padTop - padBottom;
   const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
   const ptsOf = (ln) => ln.points.map((p, i) => [pad + (w * i) / (ln.points.length - 1), padTop + h * (1 - p)]);
-  // Interpolate a point at fraction f along a line's polyline for milestones.
   const at = (pts, f) => {
     const x = pad + w * f;
     for (let i = 1; i < pts.length; i++) {
@@ -378,11 +656,11 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
             {ln.fill && <motion.path d={area} fill={`url(#msp-${uid}-grad-${li})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5, duration: 0.8 }} />}
             <motion.path d={d} fill="none" stroke={`url(#msp-${uid}-stroke-${li})`} strokeWidth={ln.width || 2.5} strokeLinecap="round" strokeDasharray={ln.dashed ? '5 5' : undefined}
               filter={ln.glow !== false && !ln.dashed ? `url(#msp-${uid}-glow)` : undefined}
-              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.3, ease: [0.16, 1, 0.3, 1], delay: 0.15 + li * 0.2 }} />
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.3, ease: EASE, delay: 0.15 + li * 0.2 }} />
             {ln.endDot && (
               <g>
                 <motion.circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5.5} fill={ln.color}
-                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.3 + li * 0.2, type: 'spring', stiffness: 400 }} />
+                  initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 1.3 + li * 0.2, ...POP }} />
                 <motion.circle cx={pts[pts.length - 1][0]} cy={pts[pts.length - 1][1]} r={5.5} fill="none" stroke={ln.color} strokeWidth={1.5}
                   initial={{ opacity: 0 }} animate={{ opacity: [0, 0.7, 0], scale: [1, 2.4] }}
                   transition={{ delay: 1.5, duration: 1.8, repeat: Infinity, ease: 'easeOut' }} style={{ transformOrigin: `${pts[pts.length - 1][0]}px ${pts[pts.length - 1][1]}px` }} />
@@ -395,7 +673,7 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
         const [mx, my] = at(main, m.f);
         return (
           <motion.g key={i} initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.9 + i * 0.25, type: 'spring', stiffness: 320 }} style={{ transformOrigin: `${mx}px ${my}px` }}>
+            transition={{ delay: 0.9 + i * 0.25, ...POP }} style={{ transformOrigin: `${mx}px ${my}px` }}>
             <circle cx={mx} cy={my} r={4} fill={C.bg} stroke={lines[0].color} strokeWidth={2} />
             {m.score != null && <text x={mx} y={my - 11} fontSize="10.5" fontWeight="800" fill={C.t1} fontFamily={C.FM} textAnchor="middle">{m.score}</text>}
             {m.label && <text x={mx} y={padTop + h + 14} fontSize="9" fill={C.t3} fontFamily={C.FB} textAnchor="middle">{m.label}</text>}
@@ -408,7 +686,7 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
         </motion.g>
       )}
       {main && endLabel && (
-        <motion.g initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.45, type: 'spring', stiffness: 300 }}
+        <motion.g initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.45, ...POP }}
           style={{ transformOrigin: `${main[main.length - 1][0]}px ${main[main.length - 1][1]}px` }}>
           <rect x={main[main.length - 1][0] - 46} y={main[main.length - 1][1] - 30} width={46} height={20} rx={10} fill={lines[0].color} />
           <text x={main[main.length - 1][0] - 23} y={main[main.length - 1][1] - 16} fontSize="11.5" fontWeight="800" fill="#fff" fontFamily={C.FM} textAnchor="middle">{endLabel}</text>
@@ -423,26 +701,27 @@ export function MiniLineChart({ width = 380, height = 150, lines, xLabels, miles
 
 // Horizontal comparison bars ("you vs. typical student") with animated grow-in
 // and a shine sweep on the highlighted bar — used by the insight screens.
-export function CompareBars({ bars }) {
+export function CompareBars({ bars, h = null }) {
+  const g = h || flowHue();
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
       {bars.map((b, i) => (
         <div key={i}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: b.highlight ? C.t1 : C.t3 }}>{b.label}</span>
-            <span style={{ fontSize: 12, fontWeight: 800, color: b.highlight ? C.blueL : C.t3, fontFamily: C.FM }}>{Math.round(b.pct * 100)}%</span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 7 }}>
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: b.highlight ? C.t1 : C.t3 }}>{b.label}</span>
+            <span style={numeral(12.5, { color: b.highlight ? g.ink : C.t3 })}>{Math.round(b.pct * 100)}%</span>
           </div>
-          <div style={{ height: 12, borderRadius: 6, background: C.s2, overflow: 'hidden', position: 'relative' }}>
+          <div style={{ height: 10, borderRadius: 5, background: C.s2, overflow: 'hidden', position: 'relative', border: `1px solid ${C.b0}` }}>
             <motion.div initial={{ width: 0 }} animate={{ width: `${b.pct * 100}%` }}
-              transition={{ delay: 0.35 + i * 0.2, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 0.35 + i * 0.18, duration: 0.9, ease: EASE }}
               style={{
-                height: '100%', borderRadius: 6, position: 'relative', overflow: 'hidden',
-                background: b.highlight ? C.blueGrad : C.s4,
-                boxShadow: b.highlight ? `0 0 14px ${C.blue}60` : 'none',
+                height: '100%', borderRadius: 5, position: 'relative', overflow: 'hidden',
+                background: b.highlight ? g.bar : C.s4,
+                boxShadow: b.highlight ? g.glowSm : 'none',
               }}>
               {b.highlight && (
                 <motion.span initial={{ x: '-110%' }} animate={{ x: '240%' }} transition={{ delay: 1.3, duration: 1, ease: 'easeInOut' }}
-                  style={{ position: 'absolute', top: 0, bottom: 0, width: '45%', background: 'linear-gradient(105deg,transparent,rgba(255,255,255,0.35),transparent)' }} />
+                  style={{ position: 'absolute', top: 0, bottom: 0, width: '45%', background: 'linear-gradient(105deg,transparent,rgba(255,255,255,0.38),transparent)' }} />
               )}
             </motion.div>
           </div>
@@ -452,15 +731,17 @@ export function CompareBars({ bars }) {
   );
 }
 
-export function RadialRing({ pct, size = 92, stroke = 9, color = C.blue, children }) {
+export function RadialRing({ pct, size = 92, stroke = 9, color = null, children }) {
+  const g = flowHue();
+  const c0 = color || g.from;
   const r = (size - stroke) / 2, c = 2 * Math.PI * r;
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={C.s3} strokeWidth={stroke} />
-        <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round"
+        <motion.circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={c0} strokeWidth={stroke} strokeLinecap="round"
           strokeDasharray={c} initial={{ strokeDashoffset: c }} animate={{ strokeDashoffset: c * (1 - pct) }}
-          transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }} style={{ filter: `drop-shadow(0 0 6px ${color}80)` }} />
+          transition={{ duration: 1.1, ease: EASE }} style={{ filter: `drop-shadow(0 0 6px ${tint(c0, 0.6)})` }} />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</div>
     </div>
@@ -468,7 +749,7 @@ export function RadialRing({ pct, size = 92, stroke = 9, color = C.blue, childre
 }
 
 export function Card({ children, style }) {
-  return <div style={glass({ padding: 20, ...style })}>{children}</div>;
+  return <div style={panel({ padding: 20, ...style })}>{children}</div>;
 }
 
-export { C, glass, tint, shade, accentGrad, ChevronLeft };
+export { C, glass, tint, shade, accentGrad, ChevronLeft, Icon, hue, chapterHue, R, meta, display, body, numeral, panel, lit };

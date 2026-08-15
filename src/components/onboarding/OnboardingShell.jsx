@@ -1,20 +1,23 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Chrome shared by every onboarding screen.
 //
-// This used to be a 460px column pinned to the middle of the viewport with a
-// hairline progress bar on top — which on a laptop meant roughly a quarter of
-// the screen in use and three quarters of empty gray, and on any screen meant a
-// progress signal you could not read a number off. Both were in the reviewer's
-// notes, and both are the same underlying problem: the flow never told the
-// student where they were.
-//
-// The layout now has two modes off one measurement of the window:
+// Two modes off one measurement of the window:
 //
 //   Wide (≥ 1040px): two panes. The left is the story rail (scenes.jsx) — the
-//     chapter, its scene, its chips, the chapter checklist. The right holds the
-//     question at a comfortable reading width. Together they fill the screen.
+//     chapter, and the live chart of everything the student has told us so far.
+//     The right holds the question at a comfortable reading width.
 //   Narrow: one column, full-bleed, with the rail's information compressed into
-//     the header strip (chapter badge, name, "3 more to go").
+//     the header strip (chapter mark, name, segmented progress, and the
+//     recorded answers as chips).
+//
+// ── The colour system, and why it lives here ─────────────────────────────────
+// A chapter owns a HUE PAIR (see design.js). The shell resolves it once per
+// render and publishes it to every primitive on the screen, so the ambient
+// wash, the progress fill, the chapter mark, every selected answer, the focus
+// ring and the Continue button are all the same two colors — and crossing into
+// a new chapter visibly repaints the whole interface rather than swapping one
+// badge. That is the "propelled" part: the flow doesn't just advance, it
+// travels somewhere, and the screen says so.
 //
 // Progress is segmented by chapter rather than continuous, because five
 // segments with names is something a student can count and a 6px bar creeping
@@ -22,21 +25,22 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { C, tint } from '../../lib/theme';
-import { ChevronLeft, useViewport, setFlowAccent } from './primitives';
+import { C } from '../../lib/theme';
+import { ChevronLeft, useViewport, setFlowHue } from './primitives';
+import { chapterHue, hue, R, meta, numeral, pad2, GLIDE, GLIDE_FAST, SETTLE, EASE } from './design';
 import { CHAPTERS, flowMeta } from './chapters';
-import { StoryRail, ChapterOrb } from './scenes';
+import { StoryRail, ChapterMark, ChartStrip } from './scenes';
 
-export default function OnboardingShell({ stepKey, steps = [], onBack, showBack = true, showProgress = true, footer, children }) {
+export default function OnboardingShell({ stepKey, steps = [], answers = {}, onBack, showBack = true, showProgress = true, footer, children }) {
   const { isWide, isMobile } = useViewport();
-  const meta = flowMeta(steps, stepKey);
-  const chapter = meta.chapter;
-  const accent = C[chapter?.accent] || C.blue;
+  const meta_ = flowMeta(steps, stepKey);
+  const chapter = meta_.chapter;
+  const g = chapter ? chapterHue(chapter.key) : hue(['blue', 'indigo']);
   // Published before the children render, so every primitive on this screen
-  // picks up the chapter's color without a prop being threaded to it.
-  setFlowAccent(accent);
+  // picks up the chapter's colors without a prop being threaded to it.
+  setFlowHue(g);
   // The rail needs a chapter to talk about, so intro/outro screens (splash,
-  // welcome, generating) keep the old single-column presentation.
+  // welcome, generating) keep the single-column presentation.
   const showRail = isWide && showProgress && !!chapter;
 
   return (
@@ -44,23 +48,28 @@ export default function OnboardingShell({ stepKey, steps = [], onBack, showBack 
       position: 'fixed', inset: 0, background: C.bg, display: 'flex', flexDirection: 'row',
       fontFamily: C.FB, overflow: 'clip', zIndex: 50,
     }}>
-      {/* Ambient wash. Anchored to the viewport, so it scales with the window
-          rather than sitting in the corners of a 460px column. */}
-      <div style={{ position: 'absolute', top: '-18%', right: '-8%', width: '52vw', height: '52vw', maxWidth: 720, maxHeight: 720, borderRadius: '50%', background: `radial-gradient(circle,${tint(accent, 0.12)},transparent 65%)`, pointerEvents: 'none', transition: 'background .6s' }} />
-      <div style={{ position: 'absolute', bottom: '-20%', left: '-8%', width: '46vw', height: '46vw', maxWidth: 620, maxHeight: 620, borderRadius: '50%', background: `radial-gradient(circle,${tint(C.cyan, 0.07)},transparent 65%)`, pointerEvents: 'none' }} />
+      {/* Ambient wash, in the chapter's own hues. Cross-fades on a chapter
+          change, which is what makes the transition read as travel. */}
+      <AnimatePresence>
+        <motion.div key={chapter?.key || 'none'}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: EASE }}
+          style={{ position: 'absolute', inset: 0, background: g.wash, pointerEvents: 'none' }} />
+      </AnimatePresence>
 
       {showRail && (
         <div style={{
-          position: 'relative', zIndex: 1, flex: '0 0 42%', maxWidth: 560, minWidth: 380,
+          position: 'relative', zIndex: 1, flex: '0 0 40%', maxWidth: 520, minWidth: 380,
           borderRight: `1px solid ${C.b1}`, background: C.surf2,
         }}>
           <StoryRail
             chapter={chapter}
             chapters={CHAPTERS}
-            chapterIndex={meta.chapterIndex}
+            chapterIndex={meta_.chapterIndex}
             stepKey={stepKey}
-            questionsLeft={meta.questionsLeft}
-            isQuestion={meta.isQuestion}
+            questionsLeft={meta_.questionsLeft}
+            isQuestion={meta_.isQuestion}
+            answers={answers}
           />
         </div>
       )}
@@ -68,58 +77,86 @@ export default function OnboardingShell({ stepKey, steps = [], onBack, showBack 
       <div style={{ position: 'relative', zIndex: 1, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         {(showBack || showProgress) && (
           <div style={{
-            position: 'relative', zIndex: 2, padding: isMobile ? '14px 18px 6px' : '20px 28px 8px',
+            position: 'relative', zIndex: 2, padding: isMobile ? '14px 18px 8px' : '20px 28px 10px',
             maxWidth: showRail ? 720 : 640, margin: '0 auto', width: '100%', boxSizing: 'border-box',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               {showBack ? (
-                <motion.button whileTap={{ scale: 0.92 }} onClick={onBack} aria-label="Back"
-                  style={{ background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 11, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
-                  <ChevronLeft size={18} color={C.t2} />
+                <motion.button whileTap={{ scale: 0.92 }} whileHover={{ x: -1 }} onClick={onBack} aria-label="Back"
+                  style={{
+                    background: C.surf, border: `1px solid ${C.b1}`, borderRadius: R.sm,
+                    width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', flexShrink: 0, padding: 0, color: C.t2,
+                  }}>
+                  <ChevronLeft size={18} />
                 </motion.button>
               ) : <div style={{ width: showProgress ? 36 : 0, flexShrink: 0 }} />}
 
               {showProgress && (
                 <div style={{ flex: 1, display: 'flex', gap: 5, alignItems: 'center' }}>
-                  {(chapter ? meta.segments : [{ key: 'all', fill: 0 }]).map(seg => (
-                    <div key={seg.key} style={{ flex: 1, height: 7, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
-                      <motion.div
-                        animate={{ width: `${Math.round(seg.fill * 100)}%` }}
-                        transition={{ type: 'spring', stiffness: 240, damping: 30 }}
-                        style={{ height: '100%', borderRadius: 4, background: accent, boxShadow: seg.fill > 0 ? `0 0 10px ${tint(accent, 0.6)}` : 'none' }}
-                      />
-                    </div>
-                  ))}
+                  {(chapter ? meta_.segments : [{ key: 'all', fill: 0 }]).map(seg => {
+                    const sg = chapterHue(seg.key);
+                    return (
+                      <div key={seg.key} style={{ flex: 1, height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
+                        <motion.div
+                          animate={{ width: `${Math.round(seg.fill * 100)}%` }}
+                          transition={SETTLE}
+                          style={{
+                            height: '100%', borderRadius: 3, background: sg.bar,
+                            boxShadow: seg.fill > 0 ? `0 0 8px ${sg.edge}` : 'none',
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
+              )}
+
+              {/* The counter, as an instrument readout rather than a sentence. */}
+              {showProgress && chapter && meta_.isQuestion && (
+                <span style={{ ...numeral(11, { color: C.t3 }), flexShrink: 0, letterSpacing: '.04em' }}>
+                  {pad2(meta_.questionNumber)}<span style={{ color: C.t4 }}>/{pad2(meta_.questionTotal)}</span>
+                </span>
               )}
             </div>
 
-            {/* The literal answer to "when is this going to end". */}
+            {/* The literal answer to "when is this going to end", plus — on a
+                phone, where there is no rail — proof that the answers are being
+                kept. */}
             {showProgress && chapter && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, paddingLeft: showBack ? 48 : 0 }}>
-                {!showRail && (
-                  <ChapterOrb emoji={chapter.emoji} accent={accent} size={30} pulse={false} />
-                )}
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '2px 8px' }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: C.t2, whiteSpace: 'nowrap' }}>
-                    {showRail || isMobile ? '' : `Chapter ${meta.chapterIndex + 1} of ${meta.chapterCount} · `}{chapter.label}
-                  </span>
-                  {meta.isQuestion && (
-                    <span style={{ fontSize: 11.5, color: C.t4, fontFamily: C.FM }}>
-                      Q{meta.questionNumber}/{meta.questionTotal}
-                    </span>
-                  )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 11, paddingLeft: showBack ? 48 : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  {!showRail && <ChapterMark mark={chapter.mark} chapterKey={chapter.key} size={28} pulse={false} />}
+                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexWrap: 'wrap', alignItems: 'baseline', gap: '2px 8px' }}>
+                    {!showRail && !isMobile && (
+                      <span style={meta(9.5, { color: g.ink })}>Chapter {pad2(meta_.chapterIndex + 1)}</span>
+                    )}
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, whiteSpace: 'nowrap' }}>{chapter.label}</span>
+                  </div>
+                  <motion.span key={meta_.encouragement} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
+                    style={{
+                      fontSize: 11.5, fontWeight: 700, color: g.ink, background: g.soft,
+                      border: `1px solid ${g.edgeSoft}`, padding: '4px 10px', borderRadius: R.pill,
+                      whiteSpace: 'nowrap', flexShrink: 0,
+                    }}>
+                    {meta_.encouragement}
+                  </motion.span>
                 </div>
-                <motion.span key={meta.encouragement} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    fontSize: 11.5, fontWeight: 700, color: accent, background: tint(accent, 0.12),
-                    border: `1px solid ${tint(accent, 0.22)}`, padding: '4px 10px', borderRadius: 20, whiteSpace: 'nowrap', flexShrink: 0,
-                  }}>
-                  {meta.encouragement}
-                </motion.span>
+                {!showRail && <ChartStrip answers={answers} chapterKey={chapter.key} />}
               </div>
             )}
           </div>
+        )}
+
+        {/* A short fade at the top of the scroll area. Without it a row that
+            happens to be mid-scroll is sliced off square against the header,
+            which is the single most common way a nicely-built screen still
+            manages to look unfinished. */}
+        {showProgress && (
+          <div aria-hidden="true" style={{
+            position: 'relative', zIndex: 3, height: 14, marginBottom: -14, flexShrink: 0,
+            background: `linear-gradient(to bottom, ${C.bg}, transparent)`, pointerEvents: 'none',
+          }} />
         )}
 
         <div style={{
@@ -129,12 +166,12 @@ export default function OnboardingShell({ stepKey, steps = [], onBack, showBack 
           // generation screens lay themselves out and are given the room to do
           // it, since those are the two moments the app is selling itself.
           maxWidth: showRail ? 720 : chapter ? 640 : 1120, margin: '0 auto', width: '100%',
-          padding: isMobile ? '12px 18px 0' : '18px 28px 0', boxSizing: 'border-box',
+          padding: isMobile ? '10px 18px 0' : '16px 28px 0', boxSizing: 'border-box',
         }}>
           <AnimatePresence mode="wait">
             <motion.div key={stepKey}
-              initial={{ opacity: 0, x: 22, scale: 0.97 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: -22, scale: 0.97 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 28, opacity: { duration: 0.2 } }}
+              initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }}
+              transition={{ duration: 0.32, ease: EASE }}
               style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {children}
             </motion.div>

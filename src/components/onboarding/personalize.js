@@ -19,7 +19,19 @@ const GRADE_INFO = [
   { label: 'senior', runway: 'Senior year moves fast — a focused plan makes every week count.', urgency: 'high' },
   { label: 'rising undergrad', runway: 'You are at the launch point — the work you do now carries straight into college.', urgency: 'high' },
 ];
-export const gradeInfo = (gradeIdx) => GRADE_INFO[gradeIdx] || GRADE_INFO[2];
+// What to say before we know. The identity beat runs BEFORE the grade question
+// (see buildSteps in Onboarding.jsx), so falling back to the junior entry meant
+// every student was told "Junior year is exactly when this push matters most"
+// on a screen that had no idea what year they were in — a personalized line
+// that was personalized to nobody, which is precisely the tell this redesign
+// exists to remove. When the year is unknown we say something that is true for
+// everyone instead of guessing.
+const GRADE_UNKNOWN = {
+  label: 'week',
+  runway: 'Whatever year you are in, the next few answers set the pace.',
+  urgency: 'mid',
+};
+export const gradeInfo = (gradeIdx) => (gradeIdx == null ? GRADE_UNKNOWN : (GRADE_INFO[gradeIdx] || GRADE_INFO[2]));
 
 // ── Runway ───────────────────────────────────────────────────────────────────
 // How many months of runway the student's own timeline answer implies. `null`

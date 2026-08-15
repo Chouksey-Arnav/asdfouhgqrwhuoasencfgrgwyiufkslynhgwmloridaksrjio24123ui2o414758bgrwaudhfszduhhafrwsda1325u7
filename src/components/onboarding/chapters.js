@@ -21,46 +21,61 @@
 // Accents are stored as TOKEN NAMES, not colors: src/lib/theme.js mutates `C`
 // in place on a theme switch, so a color captured at module load would be
 // frozen to whichever palette happened to be active at import time.
+//
+// Each chapter carries a HUE PAIR rather than one accent (see design.js): the
+// pair is what lets a chapter own a gradient with direction in it, and what
+// makes the whole screen — wash, rail, progress, selection, button — move as
+// one when the student crosses into the next chapter. `accent` is kept as the
+// first token of the pair so any caller that only wants one color still works.
+//
+// `mark` is a NAME from icons.jsx. Chapters used to be identified by an emoji
+// (🩺 📍 ⏱️ 🎯 🚀); those are gone for the reasons written at the top of
+// icons.jsx.
 export const CHAPTERS = [
   {
     key: 'why',
     label: 'Your why',
     rail: 'Why medicine?',
     line: 'Before any schedules or checklists — the reason you clicked into this at all.',
+    hues: ['rose', 'pink'],
     accent: 'rose',
-    emoji: '🩺',
+    mark: 'pulse-heart',
   },
   {
     key: 'you',
     label: 'Where you are',
     rail: 'Where you are today',
     line: 'An honest starting line. Every doctor had one, and none of them started at the finish.',
-    accent: 'blue',
-    emoji: '📍',
+    hues: ['sky', 'cyan'],
+    accent: 'sky',
+    mark: 'pin',
   },
   {
     key: 'rhythm',
     label: 'Your rhythm',
     rail: 'How you actually work',
     line: 'Your plan gets built around your real week, not an imaginary one.',
+    hues: ['amber', 'orange'],
     accent: 'amber',
-    emoji: '⏱️',
+    mark: 'clock',
   },
   {
     key: 'aim',
     label: 'Where you’re going',
     rail: 'What you’re aiming at',
     line: 'What you want most out of this, and the time you can honestly give it.',
+    hues: ['violet', 'indigo'],
     accent: 'violet',
-    emoji: '🎯',
+    mark: 'target',
   },
   {
     key: 'plan',
     label: 'Your plan',
     rail: 'Building your plan',
     line: 'What’s in the way, what you want out of this, and then it’s yours.',
-    accent: 'green',
-    emoji: '🚀',
+    hues: ['emerald', 'teal'],
+    accent: 'emerald',
+    mark: 'route',
   },
 ];
 

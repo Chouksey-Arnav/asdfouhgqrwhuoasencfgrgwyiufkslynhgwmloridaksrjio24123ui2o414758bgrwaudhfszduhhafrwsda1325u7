@@ -5,8 +5,6 @@
 // The old flow asked ten related things across ten screens: "why medicine?"
 // [Next] "who do you want to be?" [Next] "how sure are you?" [Next]. Three taps
 // on three screens for one topic, and the student counts screens, not topics.
-// The reviewer's complaint ("when is this going to end") is what that counting
-// feels like from the inside.
 //
 // A GroupedStep puts one TOPIC on one screen and reveals its questions in
 // immediate sequence: answer the first and the second animates in beneath it,
@@ -15,16 +13,22 @@
 // became three or four, and the rhythm inside a screen is "and one more thing"
 // rather than a page transition.
 //
-// Progressive reveal, rather than showing all three at once, is deliberate: a
-// wall of thirty options is its own kind of intimidating, and revealing keeps
-// the "one question at a time" clarity while spending a third of the taps.
 // A question the student has already answered stays visible and editable —
 // this is a screen, not a stack.
+//
+// ── The numbering, in the redesign ───────────────────────────────────────────
+// Each question is introduced by a mono numeral on a hairline plate that fills
+// with the chapter gradient once it's answered, and a rule runs from it to the
+// edge of the column. That gives a grouped screen a visible spine, so three
+// questions read as three steps of one thing rather than as three stacked
+// forms — which is the layout problem the old bullet-and-heading version never
+// solved.
 // ─────────────────────────────────────────────────────────────────────────────
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { StepHeader, ContinueButton, OptionRow, CheckRow, flowAccentColor, C, tint } from '../primitives';
+import { StepHeader, ContinueButton, OptionRow, CheckRow, flowHue, C } from '../primitives';
+import { R, meta, numeral, GLIDE, GLIDE_FAST, POP, lit } from '../design';
 import { AnswerGrid } from './generic';
 
 const isAnswered = (q) => {
@@ -33,7 +37,7 @@ const isAnswered = (q) => {
   return q.value != null && q.value !== '';
 };
 
-function QuestionBlock({ q, index, accent, revealed, isLast }) {
+function QuestionBlock({ q, index, g, revealed, isLast }) {
   const ref = useRef(null);
   const answered = isAnswered(q);
 
@@ -47,31 +51,40 @@ function QuestionBlock({ q, index, accent, revealed, isLast }) {
 
   return (
     <motion.div ref={ref}
-      initial={index === 0 ? false : { opacity: 0, y: 18 }}
+      initial={index === 0 ? false : { opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-      style={{ paddingBottom: isLast ? 0 : 22 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <span style={{
-          width: 24, height: 24, borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 11.5, fontWeight: 800, fontFamily: C.FM,
-          background: answered ? accent : tint(accent, 0.14),
-          color: answered ? (C.onAccent || '#fff') : accent,
-          border: answered ? 'none' : `1px solid ${tint(accent, 0.28)}`,
-        }}>{answered ? <Check size={13} strokeWidth={3.5} /> : index + 1}</span>
-        <span style={{ fontSize: 16.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', lineHeight: 1.3 }}>{q.prompt}</span>
-      </div>
-      {q.hint && <p style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, margin: '-4px 0 12px', paddingLeft: 34 }}>{q.hint}</p>}
+      transition={GLIDE}
+      style={{ paddingBottom: isLast ? 0 : 24 }}>
 
-      {q.render ? q.render({ accent }) : (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 11 }}>
+        <span style={{
+          width: 22, height: 22, borderRadius: 7, flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: answered ? g.grad : 'transparent',
+          border: answered ? 'none' : `1px solid ${g.edge}`,
+          boxShadow: answered ? lit(0.22) : 'none',
+          transition: 'background .2s, border-color .2s',
+          ...numeral(10.5, { color: answered ? g.onFill : g.ink }),
+        }}>
+          {answered
+            ? <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={POP} style={{ display: 'flex' }}><Check size={12} strokeWidth={3.5} /></motion.span>
+            : index + 1}
+        </span>
+        <span style={{ fontSize: 16, fontWeight: 700, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', lineHeight: 1.3 }}>{q.prompt}</span>
+        <span style={{ flex: 1, height: 1, minWidth: 10, background: `linear-gradient(90deg, ${answered ? g.edge : C.b1}, transparent)` }} />
+      </div>
+
+      {q.hint && <p style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, margin: '-2px 0 12px', paddingLeft: 32 }}>{q.hint}</p>}
+
+      {q.render ? q.render({ h: g, accent: g.base }) : (
         <AnswerGrid columns={q.columns} count={q.options?.length || 0}>
           {(q.options || []).map(opt => (
             q.type === 'multi' ? (
               <CheckRow key={opt.value} checked={(q.value || []).includes(opt.value)} onClick={() => q.onChange(opt.value)}
-                accent={accent} label={opt.label} sublabel={opt.sublabel} emoji={opt.emoji} />
+                h={g} label={opt.label} sublabel={opt.sublabel} icon={opt.icon} />
             ) : (
               <OptionRow key={opt.value} selected={q.value === opt.value} onClick={() => q.onChange(opt.value)}
-                accent={accent} label={opt.label} sublabel={opt.sublabel} emoji={opt.emoji} icon={opt.icon} dots={opt.dots} />
+                h={g} label={opt.label} sublabel={opt.sublabel} icon={opt.icon} meter={opt.meter} dots={opt.dots} />
             )
           ))}
         </AnswerGrid>
@@ -87,7 +100,9 @@ function QuestionBlock({ q, index, accent, revealed, isLast }) {
  *   (wheel pickers, sliders, text inputs) while keeping the numbering, the
  *   reveal and the shared Continue.
  */
-export function GroupedStep({ eyebrow, title, subtitle, emoji, accent = flowAccentColor(), questions, onNext, ctaLabel = 'Continue', footerNote, showCounter = true }) {
+export function GroupedStep({ eyebrow, title, subtitle, icon, h, questions, onNext, ctaLabel = 'Continue', footerNote, showCounter = true }) {
+  const g = h || flowHue();
+
   // How far down the list the student has got. A question is visible once every
   // required question before it has an answer.
   const revealCount = useMemo(() => {
@@ -104,34 +119,34 @@ export function GroupedStep({ eyebrow, title, subtitle, emoji, accent = flowAcce
 
   return (
     <>
-      <StepHeader eyebrow={eyebrow} title={title} subtitle={subtitle} emoji={emoji} accent={accent} compact />
+      <StepHeader eyebrow={eyebrow} title={title} subtitle={subtitle} icon={icon} h={g} compact />
 
-      {/* "2 of 3 answered" — the in-screen twin of the chapter bar up top. A
-          grouped screen must never feel open-ended. */}
+      {/* The in-screen twin of the chapter bar up top. A grouped screen must
+          never feel open-ended. */}
       {showCounter && questions.length > 1 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 20 }}>
           <div style={{ display: 'flex', gap: 4 }}>
             {questions.map((q, i) => (
-              <motion.span key={q.key} animate={{ width: isAnswered(q) ? 22 : 12, opacity: i < revealCount ? 1 : 0.35 }}
-                style={{ height: 4, borderRadius: 2, background: isAnswered(q) ? accent : C.b3, display: 'block' }} />
+              <motion.span key={q.key}
+                animate={{ width: isAnswered(q) ? 22 : 11, opacity: i < revealCount ? 1 : 0.3 }}
+                transition={GLIDE_FAST}
+                style={{ height: 4, borderRadius: 2, background: isAnswered(q) ? g.bar : C.b3, display: 'block' }} />
             ))}
           </div>
-          <span style={{ fontSize: 11.5, color: C.t3, fontWeight: 600 }}>
-            {answeredCount} of {questions.length} answered
-          </span>
+          <span style={meta(9.5, { color: C.t3 })}>{answeredCount} of {questions.length} answered</span>
         </div>
       )}
 
       <div style={{ flex: 1 }}>
         <AnimatePresence initial={false}>
           {questions.slice(0, revealCount).map((q, i) => (
-            <QuestionBlock key={q.key} q={q} index={i} accent={accent} revealed={i < revealCount} isLast={i === revealCount - 1} />
+            <QuestionBlock key={q.key} q={q} index={i} g={g} revealed={i < revealCount} isLast={i === revealCount - 1} />
           ))}
         </AnimatePresence>
         {footerNote && <p style={{ fontSize: 12, color: C.t4, lineHeight: 1.6, marginTop: 18 }}>{footerNote}</p>}
       </div>
 
-      <ContinueButton disabled={!allAnswered} onClick={onNext}>
+      <ContinueButton disabled={!allAnswered} onClick={onNext} h={g}>
         {allAnswered ? ctaLabel : `Answer ${questions.length - answeredCount} more to continue`}
       </ContinueButton>
     </>
