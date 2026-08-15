@@ -51,7 +51,8 @@
     "verify:streak": "node scripts/verifyStreak.mjs",
     "verify:quests": "node scripts/verifyQuests.mjs",
     "verify:parallel-pathways-e2e": "node scripts/verifyParallelPathwaysE2E.mjs",
-    "verify:roadmap": "node scripts/verifyRoadmap.mjs"
+    "verify:roadmap": "node scripts/verifyRoadmap.mjs",
+    "verify:roadmap-e2e": "node scripts/verifyRoadmapE2E.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.1",
