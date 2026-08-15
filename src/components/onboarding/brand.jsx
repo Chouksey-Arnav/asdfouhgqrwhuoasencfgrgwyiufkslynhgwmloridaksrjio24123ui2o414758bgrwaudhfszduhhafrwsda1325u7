@@ -126,19 +126,32 @@ export function LogoMark({ size = 76, radius = size * 0.29, pulse = false, float
 }
 
 // Animated EKG heartbeat line — the flow's signature medical flourish. Draws
-// itself once (or loops), with a glowing tracer dot riding the beat.
-export function EKGLine({ width = 220, height = 40, color = C.blueL, loop = true, delay = 0.4 }) {
-  const d = `M0 ${height / 2} H${width * 0.24} l${width * 0.035} -8 l${width * 0.045} 16 l${width * 0.03} -8 H${width * 0.46} l${width * 0.025} 4 l${width * 0.035} -${height * 0.72} l${width * 0.045} ${height * 0.95} l${width * 0.03} -${height * 0.35} l${width * 0.02} ${height * 0.12} H${width * 0.78} l${width * 0.03} -7 l${width * 0.04} 14 l${width * 0.03} -7 H${width}`;
+// itself once (or loops), with a glowing tracer riding the beat.
+//
+// `energy` (0..1) scales every vertical excursion. It is wired to the student's
+// declared daily commitment on the story rail, which turns the trace from
+// decoration into a readout: pick twenty minutes a day and the heart beats
+// calmly, pick ninety and it doesn't. It is the cheapest possible way to make
+// one slider feel consequential, and it costs one multiplier.
+export function EKGLine({ width = 220, height = 40, color = C.blueL, loop = true, delay = 0.4, energy = 1 }) {
+  const e = Math.max(0.25, Math.min(1.4, energy));
+  const mid = height / 2;
+  const v = (f) => (height * f * e).toFixed(2);
+  const d = `M0 ${mid} H${width * 0.24} l${width * 0.035} -${v(0.2)} l${width * 0.045} ${v(0.4)} l${width * 0.03} -${v(0.2)}`
+    + ` H${width * 0.46} l${width * 0.025} ${v(0.1)} l${width * 0.035} -${v(0.72)} l${width * 0.045} ${v(0.95)} l${width * 0.03} -${v(0.35)} l${width * 0.02} ${v(0.12)}`
+    + ` H${width * 0.78} l${width * 0.03} -${v(0.175)} l${width * 0.04} ${v(0.35)} l${width * 0.03} -${v(0.175)} H${width}`;
+  const uid = React.useId().replace(/[^a-zA-Z0-9]/g, '');
   return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', overflow: 'visible' }}>
+    <svg width="100%" height={height} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet"
+      style={{ display: 'block', overflow: 'visible' }} aria-hidden="true">
       <defs>
-        <filter id="msp-ekg-glow" x="-40%" y="-120%" width="180%" height="340%">
+        <filter id={`msp-ekg-${uid}`} x="-40%" y="-120%" width="180%" height="340%">
           <feGaussianBlur stdDeviation="2.2" result="b" />
           <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
       </defs>
       <path d={d} fill="none" stroke={color} strokeOpacity="0.16" strokeWidth="2" />
-      <motion.path d={d} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" filter="url(#msp-ekg-glow)"
+      <motion.path d={d} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" filter={`url(#msp-ekg-${uid})`}
         initial={{ pathLength: 0, pathOffset: 0 }}
         animate={loop ? { pathLength: [0, 0.28, 0.28, 0], pathOffset: [0, 0, 0.72, 1] } : { pathLength: 1 }}
         transition={loop ? { duration: 2.4, delay, repeat: Infinity, ease: 'linear', times: [0, 0.3, 0.85, 1] } : { duration: 1.4, delay, ease: 'easeInOut' }}

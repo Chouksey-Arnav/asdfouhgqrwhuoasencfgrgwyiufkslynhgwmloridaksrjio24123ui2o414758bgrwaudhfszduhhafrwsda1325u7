@@ -1,6 +1,6 @@
 import React from 'react';
 import { GroupedStep } from './grouped';
-import { flowAccentColor } from '../primitives';
+import { flowHue } from '../primitives';
 import { GOAL_OPTIONS } from '../options';
 
 // "Where you're going" — what the student wants most out of this.
@@ -14,12 +14,13 @@ import { GOAL_OPTIONS } from '../options';
 // What's left is the question that actually steers the plan: what the student
 // wants this to be for. planGenerator.js and masterPlanGenerator.js both lead
 // with it.
-export function GoalStep({ value, onChange, onNext, accent = flowAccentColor() }) {
+export function GoalStep({ value, onChange, onNext, h }) {
+  const g = h || flowHue();
   return (
     <GroupedStep
       eyebrow="Where you're going"
-      emoji="🎯"
-      accent={accent}
+      icon="target"
+      h={g}
       title="Now the part you get to decide."
       subtitle="One question, and it's the one your whole plan is built around."
       questions={[

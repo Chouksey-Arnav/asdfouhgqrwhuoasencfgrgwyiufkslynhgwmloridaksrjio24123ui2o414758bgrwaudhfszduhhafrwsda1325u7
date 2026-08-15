@@ -42,7 +42,6 @@
 // data the app actually uses (see completeOnboarding in App.jsx,
 // studentProfile.js, and planGenerator.js).
 import React, { useMemo, useState } from 'react';
-import { ThumbsDown, ThumbsUp } from 'lucide-react';
 import OnboardingShell from './OnboardingShell';
 import { SplashStep, WelcomeStep } from './steps/Intro';
 import { ChecklistStep, ProofGraphStep, PlanPreferencesStep } from './steps/generic';
@@ -61,6 +60,7 @@ import { SaveProgressStep } from './steps/SaveProgressStep';
 import { FamilyStep } from './steps/FamilyStep';
 import { obstacleEmpathy } from './personalize';
 import { C } from './primitives';
+import { chapterHue } from './design';
 import { CHAPTERS, STEP_CHAPTER } from './chapters';
 import { isUnderMinAge, isAgeBlocked, recordAgeBlocked } from '../../lib/ageGate';
 import {
@@ -151,11 +151,8 @@ function clearDraft(account, preview) {
   try { localStorage.removeItem(draftKey(account, preview)); } catch { /* ignore */ }
 }
 
-/** The chapter's accent, resolved live so it follows a theme switch. */
-const accentFor = (stepKey) => {
-  const ch = CHAPTERS.find(c => c.key === STEP_CHAPTER[stepKey]);
-  return C[ch?.accent] || C.blue;
-};
+/** The chapter's hue pair, resolved live so it follows a theme switch. */
+const hueFor = (stepKey) => chapterHue(STEP_CHAPTER[stepKey]);
 
 export default function Onboarding({ account, onComplete, preview = false }) {
   const draft = useMemo(() => loadDraft(account, preview), [account, preview]);
@@ -222,7 +219,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
 
   const showBack = !NO_CHROME.has(stepKey) && stepIdx > 0;
   const showProgress = !NO_CHROME.has(stepKey);
-  const accent = accentFor(stepKey);
+  const h = hueFor(stepKey);
 
   let content = null;
   switch (stepKey) {
@@ -237,7 +234,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'why':
       content = (
         <GroupedStep
-          eyebrow="Your why" emoji="🩺" accent={accent}
+          eyebrow="Your why" icon="pulse-heart" h={h}
           title="Let's start with the part that isn't on any transcript."
           subtitle="Three quick questions, right here on this screen. There are no wrong answers — your reasons shape the plan we build."
           questions={[
@@ -263,11 +260,11 @@ export default function Onboarding({ account, onComplete, preview = false }) {
 
     // ── Chapter 2: where they are now ────────────────────────────────────
     case 'startingPoint':
-      content = <StartingPointStep value={answers} onChange={patch => update(patch)} onNext={advanceFromStartingPoint} accent={accent} />; break;
+      content = <StartingPointStep value={answers} onChange={patch => update(patch)} onNext={advanceFromStartingPoint} h={h} />; break;
     case 'academics':
       content = (
         <GroupedStep
-          eyebrow="Your foundation" emoji="📚" accent={accent}
+          eyebrow="Your foundation" icon="books" h={h}
           title="Now the school side of it."
           subtitle="GPA and science coursework are the two things pre-health admissions look at first. We'll factor both in honestly — no judgment attached to either."
           questions={[
@@ -284,7 +281,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
           onNext={next} />
       ); break;
     case 'experience':
-      content = <ChecklistStep eyebrow="Real-world exposure" emoji="🏥" accent={accent} title="Any hands-on health experience yet?" subtitle="Be honest — 'nothing yet' is where most future doctors start, and it's the easiest thing on this list to change." options={EXPERIENCE_OPTIONS} value={answers.experience} onToggle={v => toggleInList('experience', v)} onNext={next} />; break;
+      content = <ChecklistStep eyebrow="Real-world exposure" icon="hospital" h={h} title="Any hands-on health experience yet?" subtitle="Be honest — 'nothing yet' is where most future doctors start, and it's the easiest thing on this list to change." options={EXPERIENCE_OPTIONS} value={answers.experience} onToggle={v => toggleInList('experience', v)} onNext={next} />; break;
     case 'expInsight':
       content = <ExperienceInsightStep answers={answers} onNext={next} />; break;
 
@@ -292,7 +289,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'rhythm':
       content = (
         <GroupedStep
-          eyebrow="Your rhythm" emoji="⏱️" accent={accent}
+          eyebrow="Your rhythm" icon="clock" h={h}
           title="How does your week actually look?"
           subtitle="We build from your real life, not an ideal one. Three fast ones and this chapter's done."
           questions={[
@@ -310,8 +307,8 @@ export default function Onboarding({ account, onComplete, preview = false }) {
               key: 'triedApps', prompt: 'Have you tried other prep apps?',
               hint: 'Most of them stop at test questions. Medicine asks for more — and so do we.', type: 'single',
               options: [
-                { value: 'no', label: 'No, this is my first', emoji: '🆕', icon: <ThumbsDown size={17} /> },
-                { value: 'yes', label: "Yes, I've tried others", emoji: '🔁', icon: <ThumbsUp size={17} /> },
+                { value: 'no', label: 'No, this is my first', icon: 'spark-new' },
+                { value: 'yes', label: "Yes, I've tried others", icon: 'repeat' },
               ],
               columns: 2,
               value: answers.triedApps, onChange: v => update({ triedApps: v }),
@@ -324,15 +321,15 @@ export default function Onboarding({ account, onComplete, preview = false }) {
 
     // ── Chapter 4: where they're going ───────────────────────────────────
     case 'goal':
-      content = <GoalStep value={answers.goal} onChange={v => update({ goal: v })} onNext={next} accent={accent} />; break;
+      content = <GoalStep value={answers.goal} onChange={v => update({ goal: v })} onNext={next} h={h} />; break;
     case 'speed':
-      content = <SpeedStep value={answers.speedLevel} answers={answers} onChange={v => update({ speedLevel: v })} onNext={next} />; break;
+      content = <SpeedStep value={answers.speedLevel} answers={answers} onChange={v => update({ speedLevel: v })} onNext={next} h={h} />; break;
 
     // ── Chapter 5: what's in the way, and the plan ───────────────────────
     case 'challenges':
       content = (
         <GroupedStep
-          eyebrow="The real talk" emoji="🧱" accent={accent}
+          eyebrow="The real talk" icon="puzzle" h={h}
           title="What's in the way — and what you want out of this."
           subtitle="Naming an obstacle is how we plan around it. Then tell us what a win looks like, and your plan will carry every one you pick."
           questions={[
@@ -352,16 +349,16 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'obstacleEmpathy':
       content = <ObstacleEmpathyStep answers={answers} onNext={next} />; break;
     case 'potential':
-      content = <ProofGraphStep eyebrow="The road ahead" emoji="🥼" accent={accent} title="Your road to the white coat starts exactly here."
+      content = <ProofGraphStep eyebrow="The road ahead" icon="white-coat" h={h} title="Your road to the white coat starts exactly here."
         subtitle="Every physician's path runs through the same early ground you're standing on — foundation, experiences, application. Yours now has a map."
-        lines={[{ points: [0.08, 0.15, 0.28, 0.42, 0.6, 0.8, 0.98], color: C.green, width: 3, fill: true, endDot: true }]}
+        lines={[{ points: [0.08, 0.15, 0.28, 0.42, 0.6, 0.8, 0.98], color: h.base, width: 3, fill: true, endDot: true }]}
         xLabels={['Today', 'Application day']}
         milestones={[{ f: 0.32, label: 'Foundation' }, { f: 0.66, label: 'Experiences' }]}
         statLine="Students who follow a structured pre-med plan through high school apply with stronger scores, real clinical exposure, and a story that stands out — the three things admissions actually weighs." onNext={next} />; break;
     case 'prefs':
-      content = <PlanPreferencesStep prefs={answers} onChange={patch => update(patch)} onNext={next} accent={accent} />; break;
+      content = <PlanPreferencesStep prefs={answers} onChange={patch => update(patch)} onNext={next} h={h} />; break;
     case 'family':
-      content = <FamilyStep value={answers} onChange={patch => update(patch)} onNext={next} accent={accent} />; break;
+      content = <FamilyStep value={answers} onChange={patch => update(patch)} onNext={next} h={h} />; break;
     case 'commitment':
       content = <CommitmentStep answers={answers} onNext={next} />; break;
     case 'generating':
@@ -373,7 +370,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
     case 'saveProgress':
       content = (
         <SaveProgressStep account={account} value={answers.name} onChange={v => update({ name: v })}
-          source={answers.source} onSource={v => update({ source: v })} accent={accent} onNext={() => finish()} />
+          source={answers.source} onSource={v => update({ source: v })} h={h} onNext={() => finish()} />
       ); break;
     default:
       content = null;
@@ -393,7 +390,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
   }
 
   return (
-    <OnboardingShell stepKey={stepKey} steps={steps} onBack={back} showBack={showBack} showProgress={showProgress}>
+    <OnboardingShell stepKey={stepKey} steps={steps} answers={answers} onBack={back} showBack={showBack} showProgress={showProgress}>
       {content}
     </OnboardingShell>
   );

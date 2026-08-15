@@ -33,14 +33,17 @@ const YEARS = Array.from(
  * now), one Continue instead of two. The age gate still runs on the way out of
  * that screen; see advanceFromStartingPoint in Onboarding.jsx.
  */
-export function BirthdateWheels({ value, onChange }) {
+export function BirthdateWheels({ value, onChange, h }) {
   const { monthIdx, dayIdx, yearIdx } = value;
   return (
     <div>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-        <WheelColumn items={MONTHS} index={monthIdx} width={92} itemH={40} visibleRows={3} onChange={i => onChange({ monthIdx: i, dobTouched: true })} />
-        <WheelColumn items={DAYS} index={dayIdx} width={68} itemH={40} visibleRows={3} mono onChange={i => onChange({ dayIdx: i, dobTouched: true })} />
-        <WheelColumn items={YEARS} index={yearIdx} width={92} itemH={40} visibleRows={3} mono onChange={i => onChange({ yearIdx: i, dobTouched: true })} />
+      <div style={{
+        display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 0',
+        borderRadius: 14, background: C.surf, border: `1px solid ${C.b1}`, boxShadow: C.shadowSm,
+      }}>
+        <WheelColumn items={MONTHS} index={monthIdx} width={92} itemH={40} visibleRows={3} h={h} onChange={i => onChange({ monthIdx: i, dobTouched: true })} />
+        <WheelColumn items={DAYS} index={dayIdx} width={68} itemH={40} visibleRows={3} mono h={h} onChange={i => onChange({ dayIdx: i, dobTouched: true })} />
+        <WheelColumn items={YEARS} index={yearIdx} width={92} itemH={40} visibleRows={3} mono h={h} onChange={i => onChange({ yearIdx: i, dobTouched: true })} />
       </div>
       {/*
         Neutral, and placed after the control rather than before it. The FTC's
