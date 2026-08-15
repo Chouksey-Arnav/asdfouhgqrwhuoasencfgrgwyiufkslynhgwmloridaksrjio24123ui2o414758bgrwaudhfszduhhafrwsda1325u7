@@ -16,8 +16,19 @@ const db = new Dexie('MedSchoolPrep');
 db.on('blocked', () => {
   console.warn('MedSchoolPrep DB upgrade blocked by another open tab');
 });
+// Fires when ANOTHER tab (a newer deploy, opened while this one was idle) is trying to upgrade
+// the schema — Dexie requires every other connection to close first. Nothing in this codebase
+// ever reopened the connection afterward, so every `db.<table>.*` call in THIS tab would throw
+// DatabaseClosedError forever after this fired, with no visible error (most call sites just log
+// and move on) — the tab would look alive but every read/write silently failed until the student
+// happened to hit reload. This tab is also now running JS built against the OLD schema while the
+// DB has moved on, so patching the connection back open isn't enough on its own — a reload is
+// what actually gets this tab back to a working, matching state, same as any other stale-deploy
+// recovery in this app.
 db.on('versionchange', () => {
   db.close();
+  console.warn('MedSchoolPrep DB schema changed in another tab — reloading to stay in sync.');
+  window.location.reload();
 });
 
 db.version(1).stores({

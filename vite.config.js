@@ -6,7 +6,20 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'autoUpdate' (the old setting here) forces an UNCONDITIONAL `window.location.reload()`
+      // the instant a new deploy's service worker activates in any open tab — see
+      // node_modules/vite-plugin-pwa/dist/client/build/register.js's `auto` branch, which fires
+      // that reload with zero regard for what the student is doing. If it lands while the tab is
+      // backgrounded, browsers throttle/defer a hidden tab's reload, which can leave the page
+      // half-reloaded and blank until the student notices and reloads it themselves — "the whole
+      // screen blanks out, and I have to reload to get it working again," correlated with
+      // deploys rather than anything the student did. 'prompt' + src/components/PwaUpdatePrompt.jsx
+      // replaces the forced reload with a dismissable banner the student acts on when ready.
+      registerType: 'prompt',
+      // The auto-injected <script> only knows how to do the same forced-reload dance above.
+      // Registration now happens explicitly through the `useRegisterSW` hook (PwaUpdatePrompt),
+      // which is the supported way to get a controllable, non-disruptive update flow.
+      injectRegister: false,
       includeAssets: ['icon.svg', 'favicon.png'],
       manifest: {
         name: 'MedSchoolPrep',
@@ -40,8 +53,11 @@ export default defineConfig({
         // this, a browser that cached index.html under an old revision can keep
         // serving it after a deploy.
         cleanupOutdatedCaches: true,
-        clientsClaim: true,
-        skipWaiting: true,
+        // Deliberately NOT clientsClaim/skipWaiting any more — those made every open tab hand its
+        // network requests to a brand-new service worker the moment one installed, which is what
+        // registerType:'prompt' above is now built to defer until the student actually asks for
+        // it (see PwaUpdatePrompt.jsx). A new service worker installs in the background and simply
+        // waits; nothing about an open session changes until "Refresh" is pressed.
         // Quiz library data is precached offline-first, so it easily exceeds
         // Workbox's 2 MiB default as the library grows — raise the ceiling
         // rather than excluding it from the offline cache.

@@ -618,10 +618,22 @@ function MathText({ text, style }) {
 }
 
 // ── Error Boundary ────────────────────────────────────────────────────────────
+// `resetKey` lets a caller declare "this boundary's crash is scoped to this value" — e.g. the
+// active tab. Without it, a boundary that trips once stays tripped forever (this.state is never
+// otherwise cleared), so switching away from whatever crashed and back does nothing: the same
+// stale fallback screen sits there until a full page reload remounts the tree from scratch. That
+// mismatch — "reload fixes it, nothing else does" — is exactly what a crash on tab switch looks
+// like from outside, whatever the underlying throw turns out to be. Passing `tab` as resetKey
+// means navigating to a different section (which the fallback screen itself doesn't block, since
+// this boundary no longer wraps the sidebar/nav — see its call site) clears the error and gives
+// the newly-selected tab's content a fresh render instead of inheriting the old crash.
 class ErrorBoundary extends React.Component {
   constructor(p){super(p);this.state={err:false,msg:''};}
   static getDerivedStateFromError(e){return{err:true,msg:e?.message||'Unexpected error'};}
   componentDidCatch(e,i){console.error('MSP:',e,i);}
+  componentDidUpdate(prevProps){
+    if(this.state.err && prevProps.resetKey!==this.props.resetKey) this.setState({err:false,msg:''});
+  }
   render(){
     if(this.state.err) return(
       <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
@@ -3904,11 +3916,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // four strips, and the board structurally incapable of showing different numbers.
 
   const loadQuests = useCallback(async ()=>{
-    const { quests, available } = await QuestAPI.list();
-    setQuestRows(quests);
-    setQuestsAvailable(available);
-    setQuestsLoading(false);
-    return quests;
+    // A failed request here used to leave `questsLoading` stuck true forever — nothing set it
+    // back to false on the throw path, so every quest surface stayed on its loading state until
+    // a full reload re-ran this from scratch. try/finally guarantees the flag always resolves,
+    // and the catch surfaces the failure through the existing questError state instead of an
+    // unhandled promise rejection.
+    try{
+      const { quests, available } = await QuestAPI.list();
+      setQuestRows(quests);
+      setQuestsAvailable(available);
+      setQuestError(null);
+      return quests;
+    }catch(e){
+      console.error('QuestAPI.list failed:',e);
+      setQuestError(e?.message||'Could not load quests.');
+      return [];
+    }finally{
+      setQuestsLoading(false);
+    }
   },[]);
 
   /**
@@ -10051,7 +10076,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const tRenders={ home:tHome, sat:tSatWrap, prep:tPrep, portfolio:tPortWrap, roadmap:tRoadmap, plans:tPlans, progress:tAnalytics, settings:tSettings };
 
   return(
-    <ErrorBoundary>
+    <ErrorBoundary resetKey={tab}>
       <Toaster position="bottom-right" toastOptions={{style:{background:C.s1,color:C.t1,border:`1px solid ${C.b2}`,fontFamily:C.FB,fontSize:13,boxShadow:`0 8px 32px rgba(0,0,0,0.6)`},success:{iconTheme:{primary:C.green,secondary:C.s1}},error:{iconTheme:{primary:C.rose,secondary:C.s1}}}}/>
       <AnimatePresence>
         {vidM&&<VideoModal key="vidmodal" ytId={vidM.ytId} title={vidM.title} url={vidM.url} onClose={()=>setVM(null)} m={isMobile}/>}
@@ -10335,7 +10360,16 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
             <AnimatePresence mode="wait">
               <motion.div key={tab} initial={reducedMotion?false:{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={reducedMotion?{opacity:1}:{opacity:0,y:-6}} transition={{duration:reducedMotion?0:.22}}>
-                {(tRenders[tab]||tHome)()}
+                {/* Scoped to this tab's content only — a throw while rendering one tab (a piece of
+                    async state that hasn't landed yet, an edge case in one panel) used to bubble to
+                    the single boundary wrapping the ENTIRE shell below, replacing the sidebar and
+                    nav along with it and leaving no way back except a full reload. This boundary
+                    resets itself the moment `tab` changes (see ErrorBoundary's resetKey), so
+                    switching to another section — which the student can still do, since the nav
+                    survives outside this boundary — recovers on its own instead of staying stuck. */}
+                <ErrorBoundary resetKey={tab}>
+                  {(tRenders[tab]||tHome)()}
+                </ErrorBoundary>
               </motion.div>
             </AnimatePresence>
           </div>
