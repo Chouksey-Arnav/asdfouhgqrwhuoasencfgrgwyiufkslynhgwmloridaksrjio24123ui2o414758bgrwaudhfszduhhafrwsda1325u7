@@ -10040,7 +10040,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         {questStripFor('roadmap')}
         <RoadmapTab
           user={user} saveUser={saveUser} liveSignals={planLiveSignals}
-          accent={roadmapAccent} isMobile={isMobile}
+          accent={roadmapAccent} isMobile={isMobile} reducedMotion={reducedMotion}
           view={roadmapView} onViewChange={setRoadmapView}
           subnavItems={roadmapSubnav} hrefFor={roadmapHref} lockedItem={unlocks.locked('roadmap')[0]}
           goPortfolio={goPortfolio} goPlans={()=>setTab('plans')}

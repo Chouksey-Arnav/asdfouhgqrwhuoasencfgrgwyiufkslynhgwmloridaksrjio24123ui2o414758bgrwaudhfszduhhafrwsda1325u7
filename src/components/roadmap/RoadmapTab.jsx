@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
   Map as MapIcon, Sparkles, RefreshCw, CalendarDays, Compass, ListChecks, Target,
-  AlertTriangle, ShieldQuestion, Lightbulb, Plus, Download, History, Trash2,
-  ChevronRight, Layers, Scale, Quote, X, Info, CheckCircle2,
+  AlertTriangle, ShieldQuestion, Lightbulb, Plus, Download,
+  Layers, Scale, Quote, X, Info, CheckCircle2,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill, accentFill, onTint, autoGrid, inp } from '../../lib/theme';
 import SubNav from '../ui/SubNav';
@@ -25,13 +25,14 @@ import {
   allItems, itemsInSeason, currentSeason, nextActions, roadmapStats, roadmapToCalendarEvents,
   toggleItemDone, setItemStatus, setItemDate, moveItemToSeason, toggleItemStep,
   addStudentItem, removeItem, itemUrgency, effectiveDue, roadmapIsStale, roadmapIsExpired,
-  roadmapFingerprint, validateSlate, OPEN_STATUSES, URGENCY_ORDER,
+  crunchMonths, validateSlate, OPEN_STATUSES, URGENCY_ORDER,
 } from '../../lib/roadmap/model';
 import RoadmapIntake from './RoadmapIntake';
 import RoadmapItem from './RoadmapItem';
 import RoadmapSpine from './RoadmapSpine';
-import { DegradedNotice, TrackChip, UrgencyChip, Chip, trackColor, fmtDate, URGENCY_META } from './roadmapUi';
-import { dayKey } from '../../lib/timeline';
+import RoadmapTimeline from './RoadmapTimeline';
+import { DegradedNotice, trackColor, fmtDate } from './roadmapUi';
+import { dayKey, daysBetween } from '../../lib/timeline';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The Roadmap tab.
@@ -71,10 +72,28 @@ export const ROADMAP_SUBNAV = [
   { id: 'intake', ic: Target, label: 'Your Answers', color: C.fuchsia },
 ];
 
-// Stage labels while a build runs. Written to describe what is genuinely
-// happening at each point rather than to imply it is nearly finished — the same
-// discipline PlansTab's LOADING_STAGES adopted after the fast-and-generic
-// failure mode it documents.
+// ── The build, as the student sees it ────────────────────────────────────────
+// createRoadmap() narrates itself through onStage, and every label it emits is
+// one of these five passes. They are listed here so the loading screen can show
+// the SHAPE of the work — five named steps on a line, the same line the finished
+// roadmap is drawn on — instead of a spinner and a lie about how long it will
+// take. Written to describe what is genuinely happening rather than to imply it
+// is nearly finished, the same discipline PlansTab's LOADING_STAGES adopted
+// after the fast-and-generic failure mode it documents.
+//
+// `match` is how a stage string coming back from the generator is mapped onto a
+// step. Deliberately a loose test on the distinctive words rather than an
+// equality check on the whole sentence: pass 3 emits a per-season label ("…for
+// October – January…") that cannot be predicted here, and a screen that silently
+// stopped advancing because a label was reworded would be worse than no screen.
+const BUILD_PASSES = [
+  { id: 'read', label: 'Reading you', match: /reading your answers|portfolio/i, blurb: 'Your answers, your Portfolio, your grade, your colleges — everything we know, in one place.' },
+  { id: 'strategy', label: 'The strategy', match: /what this year/i, blurb: 'What these twelve months are actually for, and what you are deliberately not doing with them.' },
+  { id: 'choose', label: 'Choosing', match: /choosing/i, blurb: 'Which competitions, programs, scholarships and deadlines belong in your year — and which do not.' },
+  { id: 'detail', label: 'The detail', match: /working detail/i, blurb: 'Turning each choice into real preparation: what to do, in what order, and what to have ready.' },
+  { id: 'review', label: 'Read back', match: /reading it back|honest/i, blurb: 'Reading the whole year back and being straight about what it does and does not do for you.' },
+];
+
 const BUILD_FALLBACK_STAGES = [
   'Reading your answers and your whole Portfolio…',
   'Working out what this year should actually be about…',
@@ -82,6 +101,12 @@ const BUILD_FALLBACK_STAGES = [
   'Writing the working detail, season by season…',
   'Reading it back and being honest about it…',
 ];
+
+/** Which pass a generator stage label belongs to. Never regresses past the furthest reached. */
+export function passIndexForStage(stage, floor = 0) {
+  const i = BUILD_PASSES.findIndex((p) => p.match.test(String(stage || '')));
+  return Math.max(floor, i === -1 ? floor : i);
+}
 
 /**
  * The student's whole Portfolio, and the digest built from it.
@@ -136,6 +161,18 @@ function usePortfolioFacts(user, liveSignals) {
 export default function RoadmapTab({
   user, saveUser, liveSignals = null, accent = ACCENT, isMobile = false,
   view = 'overview', onViewChange, goPortfolio, goPlans,
+  // The student's motion preference, threaded down from App.jsx exactly as it is
+  // for Plans. Every animated surface in this tab reads it: the build screen,
+  // the spine's markers, the timeline's reveal, the drag glide.
+  //
+  // This prop is why the tab exists in its current form at all. It used to be
+  // READ WITHOUT BEING DECLARED — <BuildingScreen … reducedMotion={reducedMotion}/>
+  // with no `reducedMotion` in scope — which is a ReferenceError, thrown at
+  // render, on the exact line that runs the instant a build starts. So every
+  // build died at click time, before a single generator pass, and the root
+  // error boundary swallowed the tab. It looked like "the roadmap will not
+  // generate"; it was a one-word scope bug on the loading screen.
+  reducedMotion = false,
   // The sub-nav is filtered for feature unlocks by App.jsx (visibleItems +
   // unlocks.locked) and rendered here, the same split every other pillar uses.
   // Defaults keep this component usable on its own — in a test, or if a caller
@@ -346,7 +383,7 @@ export default function RoadmapTab({
 
         {activeView === 'year' && (
           <YearView
-            roadmap={roadmap} today={today} isMobile={isMobile} accent={C.sky}
+            roadmap={roadmap} today={today} isMobile={isMobile} accent={C.sky} reducedMotion={reducedMotion}
             onSelectItem={(id) => { setExpandedId(id); onViewChange?.('list'); }}
             onSelectSeason={() => onViewChange?.('seasons')}
             onExport={exportCalendar}
@@ -435,27 +472,196 @@ function Promise({ icon: Icon, color, title, body }) {
   );
 }
 
+/**
+ * The build screen.
+ *
+ * A minute or two of waiting is the most fragile moment this feature has: it is
+ * the only point where a student has committed and has nothing yet, and a bare
+ * spinner there reads as "something is stuck" long before it reads as "something
+ * is being made". So this screen does three things a spinner cannot.
+ *
+ *   1. It shows the SHAPE OF THE WORK — five named passes on a connected line,
+ *      the same line their finished year is drawn on. The wait stops being
+ *      formless the moment it has parts.
+ *   2. It shows GENUINE PROGRESS. The passes light as the generator reports
+ *      them, and the step counter and the elapsed clock are both real. Nothing
+ *      here is a fake progress bar filling on a timer, because the one thing
+ *      worse than an honest two-minute wait is a bar that reaches 90% in ten
+ *      seconds and sits there.
+ *   3. It shows WHAT IS COMING. The skeleton underneath is the timeline being
+ *      built, in its real proportions, so the finished roadmap arrives into a
+ *      shape the student has already been looking at rather than replacing a
+ *      spinner with a wall.
+ */
 function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
+  const [elapsed, setElapsed] = useState(0);
+  const [pass, setPass] = useState(0);
+
+  useEffect(() => {
+    const t0 = Date.now();
+    const id = setInterval(() => setElapsed(Math.floor((Date.now() - t0) / 1000)), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Monotonic: a later pass never falls back to an earlier one just because a
+  // label was ambiguous.
+  useEffect(() => { setPass((cur) => passIndexForStage(stage, cur)); }, [stage]);
+
+  const current = BUILD_PASSES[pass] || BUILD_PASSES[0];
+  const clock = `${Math.floor(elapsed / 60)}:${String(elapsed % 60).padStart(2, '0')}`;
+
   return (
-    <div style={{ ...glass({ padding: isMobile ? 30 : 56, textAlign: 'center' }) }}>
-      {/* The brand journey animation, looping — this is an open-ended wait, and
-          it already honours prefers-reduced-motion internally. */}
-      <BrandJourney size={isMobile ? 120 : 170} />
-      <div style={{ fontSize: isMobile ? 17 : 21, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 22, letterSpacing: '-.02em' }}>
-        Building your year
+    <div style={{ ...glass({ padding: isMobile ? 20 : 34, overflow: 'hidden' }) }}>
+      <div style={{
+        display: 'flex', gap: isMobile ? 16 : 30, alignItems: 'center',
+        flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left',
+      }}>
+        {/* The brand journey animation, looping — this is an open-ended wait,
+            and it already honours prefers-reduced-motion internally. */}
+        <div style={{ flexShrink: 0 }}><BrandJourney size={isMobile ? 104 : 148} /></div>
+
+        <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            Pass {pass + 1} of {BUILD_PASSES.length} · {clock}
+          </div>
+          <div style={{ fontSize: isMobile ? 19 : 25, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 7, letterSpacing: '-.02em', lineHeight: 1.2 }}>
+            Building your year
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={stage}
+              initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
+              transition={{ duration: reducedMotion ? 0 : 0.28 }}
+              style={{ fontSize: isMobile ? 13 : 14, color: C.t2, marginTop: 10, lineHeight: 1.7, fontWeight: 600 }}
+            >
+              {stage}
+            </motion.div>
+          </AnimatePresence>
+          <div style={{ fontSize: 11.5, color: C.t4, marginTop: 6, lineHeight: 1.65, maxWidth: 460, marginInline: isMobile ? 'auto' : 0 }}>
+            {current.blurb}
+          </div>
+        </div>
       </div>
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={stage}
-          initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-          style={{ fontSize: 13, color: C.t3, marginTop: 12, lineHeight: 1.7, maxWidth: 460, marginInline: 'auto' }}
-        >
-          {stage}
-        </motion.div>
-      </AnimatePresence>
-      <div style={{ fontSize: 11, color: C.t4, marginTop: 22, maxWidth: 420, marginInline: 'auto', lineHeight: 1.6 }}>
-        This takes a minute or two. It is four separate passes — the strategy, the choices, the
-        working detail, and an honest read-back — and it is worth the wait.
+
+      {/* ── The five passes, on the same kind of line the finished roadmap uses ── */}
+      <div style={{ marginTop: isMobile ? 22 : 28 }}>
+        <PassRail pass={pass} accent={accent} isMobile={isMobile} reducedMotion={reducedMotion} />
+      </div>
+
+      {/* ── What is being drawn, in its real proportions ── */}
+      <SpineSkeleton isMobile={isMobile} reducedMotion={reducedMotion} />
+
+      <div style={{ fontSize: 11, color: C.t4, marginTop: 18, lineHeight: 1.7, maxWidth: 560 }}>
+        This takes a minute or two, and the time is going somewhere: five separate passes over your
+        year rather than one hurried one. Every date it will show you comes from a hand-checked
+        catalog — Medabrain is choosing and sequencing, never inventing a deadline. Leaving this
+        screen cancels the build, so give it the two minutes.
+      </div>
+    </div>
+  );
+}
+
+function PassRail({ pass, accent, isMobile, reducedMotion }) {
+  return (
+    <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
+      {/* The rail behind the nodes: travelled up to the current pass, ahead after
+          it. Inset to the FIRST and LAST node centres rather than to the edges of
+          the row — the nodes sit in the middle of equal flex cells, so a rail
+          drawn edge to edge overshoots both ends and the line visibly fails to
+          pass through the dots it is supposed to connect. */}
+      <span aria-hidden="true" style={{
+        position: 'absolute', top: 8, height: 3, borderRadius: 2, background: C.s4,
+        left: `${100 / (2 * BUILD_PASSES.length)}%`, right: `${100 / (2 * BUILD_PASSES.length)}%`,
+      }}>
+        <motion.span
+          initial={false}
+          animate={{ width: `${(pass / Math.max(1, BUILD_PASSES.length - 1)) * 100}%` }}
+          transition={{ duration: reducedMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 2,
+            background: `linear-gradient(90deg,${tint(C.green, 0.7)},${accent})`,
+          }}
+        />
+      </span>
+      {BUILD_PASSES.map((p, i) => {
+        const done = i < pass;
+        const now = i === pass;
+        const color = done ? C.green : now ? accent : C.t4;
+        return (
+          <div key={p.id} style={{
+            flex: 1, position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center',
+            minWidth: 0,
+          }}>
+            <span style={{
+              width: now ? 19 : 15, height: now ? 19 : 15, borderRadius: '50%', marginTop: now ? -1 : 1,
+              background: done || now ? color : C.bg,
+              border: done || now ? `2px solid ${C.bg}` : `2px solid ${C.s5}`,
+              boxShadow: now ? `0 0 0 5px ${tint(accent, 0.18)}` : 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: reducedMotion ? 'none' : 'all .3s ease',
+              zIndex: 1,
+            }}>
+              {now && !reducedMotion && (
+                <motion.span
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
+                  style={{ width: 7, height: 7, borderRadius: '50%', background: C.bg }}
+                />
+              )}
+            </span>
+            <span style={{
+              fontSize: isMobile ? 9 : 10.5, fontWeight: now ? 800 : 600, marginTop: 8,
+              color: done ? C.t3 : now ? C.t1 : C.t4, textAlign: 'center', lineHeight: 1.3,
+              // On a phone the five labels do not fit side by side; only the
+              // live one is named, and the rest are the dots you can count.
+              opacity: isMobile && !now ? 0 : 1,
+              whiteSpace: 'nowrap',
+            }}>{p.label}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** The timeline being drawn — real proportions, no content, gently shimmering. */
+function SpineSkeleton({ isMobile, reducedMotion }) {
+  const bars = [34, 58, 22, 76, 44, 62, 30, 52, 68, 26, 46, 38];
+  const marks = [0.06, 0.13, 0.14, 0.25, 0.33, 0.41, 0.42, 0.55, 0.63, 0.71, 0.79, 0.86, 0.93];
+  return (
+    <div aria-hidden="true" style={{
+      marginTop: isMobile ? 20 : 26, padding: isMobile ? '16px 14px' : '20px 18px',
+      background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 12, overflow: 'hidden',
+      position: 'relative',
+    }}>
+      <div className={reducedMotion ? undefined : 'rm-shimmer'} style={{ position: 'relative', height: isMobile ? 92 : 108 }}>
+        {/* markers */}
+        {marks.map((m, i) => (
+          <span key={m} style={{
+            position: 'absolute', left: `${m * 100}%`, top: (i % 3) * 14 + 6,
+            width: 9, height: 9, borderRadius: '50%', background: C.s5, transform: 'translateX(-50%)',
+          }} />
+        ))}
+        {/* stems */}
+        {marks.map((m, i) => (
+          <span key={`s${m}`} style={{
+            position: 'absolute', left: `${m * 100}%`, top: (i % 3) * 14 + 14,
+            width: 1, height: (isMobile ? 48 : 56) - (i % 3) * 14, background: C.b2, transform: 'translateX(-50%)',
+          }} />
+        ))}
+        {/* the line */}
+        <span style={{
+          position: 'absolute', left: 0, right: 0, top: isMobile ? 62 : 70, height: 3, borderRadius: 2, background: C.s5,
+        }} />
+        {/* load */}
+        <div style={{ position: 'absolute', left: 0, right: 0, top: isMobile ? 72 : 80, display: 'flex', gap: 4, alignItems: 'flex-start' }}>
+          {bars.map((b, i) => (
+            <span key={i} style={{ flex: 1, height: Math.round(b * (isMobile ? 0.22 : 0.3)), borderRadius: 3, background: C.s4 }} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -632,76 +838,56 @@ function Callout({ icon: Icon, color, label, children }) {
 
 // ── Year ─────────────────────────────────────────────────────────────────────
 
-function YearView({ roadmap, today, isMobile, accent, onSelectItem, onSelectSeason, onExport }) {
+function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectItem, onSelectSeason, onExport }) {
+  const stats = useMemo(() => roadmapStats(roadmap, today), [roadmap, today]);
+  const crunch = useMemo(() => crunchMonths(roadmap), [roadmap]);
+  const elapsed = daysBetween(roadmap.startDate, today);
+  const pctThrough = Math.max(0, Math.min(100, Math.round((elapsed / 365) * 100)));
+
   return (
     <>
-      <div style={{ ...glass({ padding: isMobile ? 16 : 22 }) }}>
+      {/* ── The line. Everything else on this screen is commentary on it. ── */}
+      <div style={{ ...glass({ padding: isMobile ? 14 : 22 }) }}>
         <SectionTitle icon={CalendarDays} color={accent}>Your next twelve months</SectionTitle>
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, marginBottom: 18, maxWidth: 640 }}>
-          Taller months are busier ones — and the height counts the <b style={{ color: C.t2 }}>preparation</b>,
-          not the deadlines, so a wall in March shows up here in January when you can still do something
-          about it. Tap any marker to open it.
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, marginBottom: 16, maxWidth: 660 }}>
+          One line, end to end — every dated thing in your year hanging off the month it lands in.
+          The band under the line is <b style={{ color: C.t2 }}>how heavy each stretch is</b>, counting
+          the preparation rather than the deadlines, so a wall in March shows up here in January while
+          you can still do something about it. {isMobile ? 'Swipe' : 'Drag'} the line to move through
+          the year; tap a marker to see what it is.
         </div>
-        <RoadmapSpine roadmap={roadmap} today={today} isMobile={isMobile} onSelectItem={onSelectItem} onSelectSeason={onSelectSeason} />
+        <RoadmapSpine
+          roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
+          onSelectItem={onSelectItem} onSelectSeason={onSelectSeason}
+        />
       </div>
 
-      <div style={{ ...glass2({ padding: 16 }) }}>
-        <SectionTitle icon={Layers} color={accent}>Month by month</SectionTitle>
-        <MonthBreakdown roadmap={roadmap} today={today} onSelectItem={onSelectItem} />
+      {/* Where they are in the year, in words — the one thing the drawing
+          cannot state outright. */}
+      <div style={autoGrid(180, 12)}>
+        <StatTile icon={Compass} value={`${pctThrough}%`} label="through this roadmap" sub={`${Math.max(0, 365 - elapsed)} days left in it`} color={accent} />
+        <StatTile icon={Target} value={stats.startNow} label="need starting now" color={stats.startNow ? C.amber : C.t3} />
+        <StatTile icon={AlertTriangle} value={crunch.length} label="crunch months ahead" sub={crunch.length ? crunch.map(fmtMonthLabel).join(', ') : 'your year is evenly loaded'} color={crunch.length ? C.rose : C.green} />
+        <StatTile icon={CalendarDays} value={stats.awaitingDate} label="dates to look up" color={stats.awaitingDate ? C.violet : C.t3} />
+      </div>
+
+      {/* ── The same year, read as a list of events in order. ── */}
+      <div style={{ ...glass({ padding: isMobile ? 16 : 22 }) }}>
+        <SectionTitle icon={Layers} color={accent}>Everything, in the order it happens</SectionTitle>
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, marginBottom: 18, maxWidth: 640 }}>
+          The whole year as a running timeline. Where you are standing is marked; everything below that
+          mark is still ahead of you. Tap any event to open its working detail.
+        </div>
+        <RoadmapTimeline
+          roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
+          onSelectItem={onSelectItem}
+        />
       </div>
 
       <button onClick={onExport} style={btnG({ fontSize: 12, alignSelf: 'flex-start' })}>
         <Download size={13} /> Add these dates to my calendar
       </button>
     </>
-  );
-}
-
-function MonthBreakdown({ roadmap, today, onSelectItem }) {
-  const byMonth = useMemo(() => {
-    const map = new Map();
-    allItems(roadmap).filter((i) => i.status !== 'skipped').forEach((i) => {
-      const due = effectiveDue(i);
-      if (!due) return;
-      const k = due.slice(0, 7);
-      map.set(k, [...(map.get(k) || []), i]);
-    });
-    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [roadmap]);
-
-  if (!byMonth.length) return <div style={{ fontSize: 12, color: C.t4 }}>Nothing dated yet.</div>;
-
-  return (
-    <div style={CC({ gap: 14 })}>
-      {byMonth.map(([month, items]) => (
-        <div key={month}>
-          <div style={{ ...R({ gap: 9, marginBottom: 8 }) }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: C.t1, fontFamily: C.FM }}>{fmtMonthLabel(month)}</span>
-            <span style={{ flex: 1, height: 1, background: C.b1 }} />
-            <span style={{ fontSize: 10.5, color: C.t4 }}>{items.length} item{items.length === 1 ? '' : 's'}</span>
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-            {items.map((i) => {
-              const u = itemUrgency(i, today);
-              const color = i.status === 'done' ? C.green : (URGENCY_META[u]?.color || trackColor(i.track));
-              return (
-                <button key={i.id} onClick={() => onSelectItem?.(i.id)} style={{
-                  ...pill(tint(color, 0.1), C.t1, {
-                    fontSize: 11.5, fontWeight: 600, padding: '6px 11px', gap: 6,
-                    border: `1px solid ${tint(color, 0.24)}`, cursor: 'pointer', fontFamily: C.FB,
-                    textDecoration: i.status === 'done' ? 'line-through' : 'none',
-                    opacity: i.status === 'done' ? 0.6 : 1,
-                  }),
-                }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: color, flexShrink: 0 }} />
-                  {i.title}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 

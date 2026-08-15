@@ -91,6 +91,16 @@ assert('a typical entry renders as a caveated window, never a bare date',
   /confirm/i.test(CAT.dateCaption({ confidence: 'typical', due: '2027-03-04' })));
 assert('a varies entry renders as its season string',
   CAT.dateCaption({ confidence: 'varies', season: 'Spring, by chapter' }) === 'Spring, by chapter');
+// `season` is prose on a catalog entry and a season ID ('s1'…'s4') on a roadmap item, and the
+// caption is the one place both shapes arrive. Reading the id straight out put "s3" on a
+// student's timeline where a date window belongs — visible, unreadable, and completely silent to
+// every other check in this file.
+eq('a roadmap item prefers its carried-across season prose',
+  CAT.dateCaption({ confidence: 'varies', season: 's3', seasonHint: 'Late winter, by hospital' }),
+  'Late winter, by hospital');
+assert('and a bare season id is never printed as if it were a date window',
+  !/^s\d+$/i.test(CAT.dateCaption({ confidence: 'varies', season: 's3' })),
+  CAT.dateCaption({ confidence: 'varies', season: 's3' }));
 
 // Cross-links must resolve, or a roadmap card offers a "read more" that opens nothing.
 const oppIds = new Set(OPPORTUNITIES.map((o) => o.id));
@@ -498,6 +508,59 @@ assert('App.jsx declares ROADMAP_SUBNAV', !!appSubnav);
 assert('RoadmapTab exports ROADMAP_SUBNAV', !!tabSubnav);
 assert("the two ROADMAP_SUBNAV copies agree", appSubnav?.join() === tabSubnav?.join(),
   `App.jsx ${JSON.stringify(appSubnav)} vs RoadmapTab ${JSON.stringify(tabSubnav)}`);
+
+// ── Every prop the tab READS, it must also DECLARE ───────────────────────────
+// The bug this check exists because of: RoadmapTab passed `reducedMotion={reducedMotion}` to its
+// build screen with no `reducedMotion` in scope. A ReferenceError at render, on the one line that
+// runs the instant a build starts — so every build died at click time and the error boundary
+// swallowed the tab. It looked exactly like "the roadmap will not generate", and nothing static
+// caught it: the identifier is legal, the bundler resolves it, and the line only runs mid-build.
+//
+// So: pull the identifiers RoadmapTab forwards as props (`foo={foo}`, the shorthand that makes
+// this mistake invisible on the page) and require each to be a declaration in the file — a prop,
+// an import, a const, a function. File-scoped rather than scope-aware, so it is a net rather
+// than a proof — the targeted assertions below close the specific hole, and
+// scripts/verifyRoadmapE2E.mjs proves the screen itself renders in a real browser.
+const tabSrc = read('src/components/roadmap/RoadmapTab.jsx');
+const forwarded = new Set([...tabSrc.matchAll(/\s([a-zA-Z_$][\w$]*)=\{\1\}/g)].map((m) => m[1]));
+for (const name of forwarded) {
+  const declared = new RegExp(
+    [
+      // a prop in a destructured parameter list, or a destructured local
+      `(?:^|[\\s,{])${name}\\s*(?:=|,|\\}|:)`,
+      // a top-level binding
+      `\\b(?:const|let|var|function)\\s+${name}\\b`,
+      // an import
+      `import[^;]*\\b${name}\\b`,
+      // an arrow or function parameter — `.map((item) => …)` is where most of
+      // these legitimately come from
+      `\\([^)]*\\b${name}\\b[^)]*\\)\\s*(?:=>|\\{)`,
+    ].join('|'),
+    'm',
+  );
+  // Strip the forwarding sites themselves, so a prop that is ONLY ever forwarded cannot look
+  // declared by virtue of being forwarded.
+  const withoutForwards = tabSrc.replace(new RegExp(`\\s${name}=\\{${name}\\}`, 'g'), ' ');
+  assert(`RoadmapTab declares "${name}" before forwarding it`, declared.test(withoutForwards),
+    `"${name}" is passed as a prop but never declared — this is the shape of the reducedMotion crash`);
+}
+assert('RoadmapTab takes the motion preference as a prop', /reducedMotion\s*=\s*false/.test(tabSrc));
+assert('App.jsx passes the motion preference into the Roadmap tab',
+  /<RoadmapTab[\s\S]{0,600}reducedMotion=\{reducedMotion\}/.test(app));
+
+// ── The year is a document you move through, on both kinds of device ─────────
+const spine = read('src/components/roadmap/RoadmapSpine.jsx');
+assert('the spine can be dragged with a mouse', /useDragScroll/.test(spine));
+assert('and leaves touch panning to the platform', /touchAction:\s*'pan-x'/.test(spine));
+assert('the rail is reachable from the keyboard', /onKeyDown/.test(spine) && /tabIndex=\{0\}/.test(spine));
+assert('the whole year stays scrubbable', /data-roadmap-scrubber/.test(spine));
+assert('drag panning never re-implements touch momentum',
+  /pointerType === 'touch'/.test(read('src/components/roadmap/useDragScroll.js')));
+assert('the Year view carries the full timeline of events',
+  /RoadmapTimeline/.test(tabSrc) && /export default function RoadmapTimeline/.test(read('src/components/roadmap/RoadmapTimeline.jsx')));
+assert('the build screen reports which pass is running', /BUILD_PASSES/.test(tabSrc));
+assert('there is an end-to-end suite for the parts a browser alone can prove',
+  /verify:roadmap-e2e/.test(read('package.json')));
 
 // The Groq purpose and its dedicated TWO-key pool.
 assert("api/groq.js knows the 'roadmap' purpose", /VALID_PURPOSES[\s\S]{0,240}'roadmap'/.test(groq));

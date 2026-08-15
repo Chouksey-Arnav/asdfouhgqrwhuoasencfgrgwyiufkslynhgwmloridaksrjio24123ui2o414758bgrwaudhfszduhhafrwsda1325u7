@@ -260,7 +260,21 @@ export function displaysExactDate(item) {
 export function dateCaption(item, fmt = (d) => d) {
   if (!item) return '';
   if (displaysExactDate(item)) return fmt(item.studentDate || item.due || item.on || item.anchor);
-  if (item.confidence === 'varies') return item.season || item.seasonHint || 'Date varies — look yours up';
+  if (item.confidence === 'varies') {
+    // `season` means two different things either side of the generator, and this
+    // one line is where that bites. On a CATALOG ENTRY it is the prose window —
+    // "Late winter, by hospital". On a ROADMAP ITEM it is the id of the season
+    // the item was placed in — 's1'…'s4' — and the prose has been carried across
+    // as `seasonHint` (see pickToItem in generator.js). Reading `season` first
+    // therefore printed a raw internal id where a date window belongs: a
+    // student's timeline read "s3" against their hospital volunteering.
+    //
+    // So: prefer the hint, and refuse outright to print anything shaped like an
+    // id. A vaguer caption is recoverable; an id is not something a student can
+    // read, act on, or even report sensibly.
+    const window = item.seasonHint || (/^s\d+$/i.test(String(item.season || '')) ? null : item.season);
+    return window || 'Date varies — look yours up';
+  }
   const due = item.due || item.on || item.anchor;
   return due ? `around ${fmt(due)} — confirm on the official site` : 'Date not confirmed';
 }

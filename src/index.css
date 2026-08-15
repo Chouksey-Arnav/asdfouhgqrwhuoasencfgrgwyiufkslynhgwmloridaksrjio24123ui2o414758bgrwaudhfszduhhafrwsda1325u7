@@ -879,3 +879,31 @@ body::before {
 }
 .msp-parents-split { display: grid; gap: clamp(16px, 2vw, 24px); grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 940px) { .msp-parents-split { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ══ Roadmap — the year on a line (src/components/roadmap/) ═════════════════
+   The timeline rail is a scroll container the student is meant to DRAG, not
+   aim a scrollbar at: on desktop useDragScroll.js gives it press-and-glide
+   panning, on touch it uses native scrolling, and underneath it the scrubber
+   shows the whole year with the current frame drawn on it. That scrubber is a
+   better position indicator than a scrollbar in every way, so the scrollbar
+   itself is hidden — it would be a second, worse copy of the same information
+   sitting under the first. Keyboard and screen-reader access do not depend on
+   it: the rail is focusable and answers the arrow keys (see RoadmapSpine). */
+.roadmap-rail { scrollbar-width: none; -ms-overflow-style: none; }
+.roadmap-rail::-webkit-scrollbar { height: 0; width: 0; display: none; }
+/* Focus has to stay obvious precisely BECAUSE the scrollbar is gone — this is
+   the only affordance telling a keyboard user the rail is theirs to move. */
+.roadmap-rail:focus-visible { outline: 2px solid var(--c-violet, #8b5cf6); outline-offset: 3px; }
+/* Text selection during a drag turns a pan into a highlight halfway through it. */
+.roadmap-rail * { -webkit-user-select: none; user-select: none; }
+
+/* The build screen's skeleton timeline. Compositor-only (opacity), so it stays
+   smooth while the main thread is busy assembling a twelve-month roadmap. */
+.rm-shimmer { animation: rm-shimmer 2.1s ease-in-out infinite; }
+@keyframes rm-shimmer {
+  0%, 100% { opacity: 0.45; }
+  50%      { opacity: 0.85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rm-shimmer { animation: none; opacity: 0.6; }
+}
