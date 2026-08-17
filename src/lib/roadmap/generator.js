@@ -57,6 +57,7 @@ import { dayKey, daysBetween, shiftDays, effectiveGradeStage, GRADE_LABELS } fro
 import { buildCandidateSlate, shortlistForPrompt, catalogEntry } from './catalog.js';
 import { answersToGates, intakeToPromptText, targetSchools } from './intake.js';
 import { ROADMAP_VERSION, SEASON_COUNT, roadmapFingerprint, validateSlate, monthlyLoad } from './model.js';
+import { measure, rung, rungForOverage, squeeze, LAST_RUNG } from './promptBudget.js';
 import { TRACK_BY_ID } from '../../data/roadmap/index.js';
 
 // ── Wire plumbing ────────────────────────────────────────────────────────────
@@ -76,7 +77,16 @@ const TIMEOUT_MS = 58000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function createTrace() {
-  return { calls: 0, aiCalls: 0, fallbacks: 0, attempts: 0, errors: [], stages: {}, startedAt: Date.now() };
+  return {
+    calls: 0, aiCalls: 0, fallbacks: 0, attempts: 0, errors: [], stages: {},
+    // Which vendor actually answered, and how small the payload had to get.
+    // Both are things a student may be told: a build served entirely by the
+    // relief provider is still a real build and should not carry the degraded
+    // banner, and a build that had to drop to rung 2 is a legitimate reason a
+    // roadmap looks thinner than the same student's last one.
+    providers: {}, rungs: {}, truncations: 0,
+    startedAt: Date.now(),
+  };
 }
 function noteError(trace, stage, detail) {
   if (!trace) return;
@@ -127,12 +137,30 @@ async function callOnce({ system, user, maxTokens, reasoningEffort, lane }) {
         if (Number.isFinite(Number(body?.retryAfterMs))) waitMs = Number(body.retryAfterMs);
         if (body?.error) detail = `HTTP ${r.status} — ${String(body.error).slice(0, 140)}`;
       } catch { /* a non-JSON error body is still an error */ }
-      return { retryable: r.status === 429 || r.status >= 500, detail, waitMs };
+      // A 413 is the one status where retrying the same payload is provably
+      // pointless, and it is the status a payload-too-large guard returns.
+      return { retryable: r.status === 429 || r.status >= 500, shrink: r.status === 413, detail, waitMs };
     }
     const d = await r.json();
     const parsed = parseLooseJSON(d && d.content);
-    if (!parsed) return { retryable: true, detail: 'response was not parseable JSON (likely truncated)', waitMs: 0 };
-    return { parsed };
+    if (!parsed) {
+      // The server tells us when it had to cut the request (api/groq.js's
+      // `truncated`). A truncated request that then failed to parse is not a
+      // flaky model, it is a prompt that did not fit — so this asks the caller
+      // to send LESS rather than to send the same thing again, which is the loop
+      // that used to end in the deterministic slate.
+      const cut = Number(d?.truncatedChars) || 0;
+      return {
+        retryable: true,
+        shrink: cut > 0,
+        truncatedChars: cut,
+        detail: cut
+          ? `the request was ${cut} characters over the server's limit and was cut, so the reply did not parse`
+          : 'response was not parseable JSON (likely truncated)',
+        waitMs: 0,
+      };
+    }
+    return { parsed, provider: d?.provider || 'groq', providerLabel: d?.providerLabel || 'Groq', truncatedChars: Number(d?.truncatedChars) || 0 };
   } catch (err) {
     const aborted = err?.name === 'AbortError';
     return { retryable: true, detail: aborted ? 'client timeout' : `network error (${err?.message || 'unknown'})`, waitMs: aborted ? 0 : 1000 };
@@ -141,17 +169,55 @@ async function callOnce({ system, user, maxTokens, reasoningEffort, lane }) {
   }
 }
 
-async function call(args, trace, stage) {
+/**
+ * One pass, with retries that get SMALLER rather than identical.
+ *
+ * `spec` is either a plain args object (a pass whose size never varies) or a
+ * function (rungIndex) => args, which is what lets a retry rebuild the prompt at
+ * a genuinely smaller size. See src/lib/roadmap/promptBudget.js for the rungs
+ * and for the failure this exists to end.
+ *
+ * The rung is chosen before the first call, not only after a failure: a payload
+ * measured as twice the budget steps straight to the rung that can fit rather
+ * than spending three real API calls discovering that.
+ */
+async function call(spec, trace, stage) {
   if (trace) trace.calls += 1;
+  const build = typeof spec === 'function' ? spec : () => spec;
+  let rungIdx = 0;
+
+  // Pre-flight: if the full-size payload cannot fit, start where it can.
+  {
+    const first = build(0);
+    const m = measure({ system: first.system || '', user: first.user || '' });
+    if (!m.fits) {
+      rungIdx = rungForOverage(m);
+      noteError(trace, stage, `payload was ${m.over} characters over budget — starting at rung ${rung(rungIdx).name}`);
+    }
+  }
+
   for (let attempt = 0; attempt < ATTEMPTS; attempt += 1) {
     if (trace) trace.attempts += 1;
+    const args = build(rungIdx);
     const result = await callOnce(args);
     if (result.parsed) {
-      if (trace) { trace.aiCalls += 1; trace.stages[stage] = 'ai'; }
+      if (trace) {
+        trace.aiCalls += 1;
+        trace.stages[stage] = 'ai';
+        trace.providers[result.provider] = (trace.providers[result.provider] || 0) + 1;
+        if (rungIdx > 0) trace.rungs[stage] = rung(rungIdx).name;
+      }
       return result.parsed;
     }
     noteError(trace, stage, `attempt ${attempt + 1} ${result.detail}`);
     if (!result.retryable || attempt === ATTEMPTS - 1) break;
+    // Step the payload down whenever size was implicated, and once more after a
+    // second failure of any kind — a pass that has failed twice at one size has
+    // earned the doubt, and a smaller real roadmap beats a deterministic one.
+    if (result.shrink || attempt >= 1) {
+      if (result.shrink && trace) trace.truncations += 1;
+      rungIdx = Math.min(rungIdx + 1, LAST_RUNG);
+    }
     await sleep(Math.max(BACKOFF_MS[Math.min(attempt, BACKOFF_MS.length - 1)], result.waitMs || 0));
   }
   if (trace) { trace.fallbacks += 1; trace.stages[stage] = 'fallback'; }
@@ -626,31 +692,52 @@ export async function createRoadmap({
   onStage('Reading your answers and your whole Portfolio…');
   const slate = buildCandidateSlate({ user, answers: gates, now, horizonMonths: 12 });
   const seasons = buildSeasons(today);
-  const shortlist = shortlistForPrompt(slate, { perTrack: 6, total: 48 });
+
+  // ── Everything the model is shown, sized per rung ──────────────────────────
+  // The shortlist and the student digest are the only two parts of these prompts
+  // that scale with a student, so they are the only two that shrink. The stance,
+  // the date rule and the JSON contract are fixed-size and never trimmed — they
+  // are the instructions, and a prompt that loses its instructions to make room
+  // for its data is how this broke in the first place.
+  const shortlistAt = (i) => shortlistForPrompt(slate, { perTrack: rung(i).perTrack, total: rung(i).total });
+  const studentAt = (i) => studentText({
+    user, answers, gradeStage, today,
+    portfolioFacts: portfolioFacts
+      ? squeeze(portfolioFacts, Math.round(28000 * rung(i).digest))
+      : null,
+  });
+
+  // The full shortlist is what resolveSelection() whitelists against, so it is
+  // built once at rung 0 regardless of which rung a prompt ended up using: an id
+  // the model returned from a smaller list is still in the bigger one, and a
+  // student who retries should not have a pick rejected for having been chosen
+  // from a shorter menu.
+  const shortlist = shortlistAt(0);
   const slateById = Object.fromEntries(shortlist.map((i) => [i.catalogId, i]));
-  const student = studentText({ user, answers, portfolioFacts, gradeStage, today });
+  const student = studentAt(0);
   const fallback = heuristicRoadmap({ slate, seasons, answers, gradeStage });
 
   // Pass 1 — strategy.
   onStage('Working out what this year should actually be about…');
-  const strategyRaw = await call({
+  const strategyRaw = await call((i) => ({
     system: strategySystem(seasons, gradeStage),
-    user: student,
+    user: studentAt(i),
     maxTokens: 3000,
     reasoningEffort: 'high',
     lane,
-  }, trace, 'strategy');
+  }), trace, 'strategy');
   const strategy = repairStrategy(strategyRaw, seasons, fallback);
 
-  // Pass 2 — which items, in which season.
+  // Pass 2 — which items, in which season. The heaviest prompt in the app, and
+  // the one the rungs were built for.
   onStage('Choosing the competitions, programs and deadlines that fit you…');
-  const selectionRaw = await call({
-    system: selectSystem({ seasons: strategy.seasons, strategy, shortlist: shortlistText(shortlist), gradeStage, answers }),
-    user: student,
+  const selectionRaw = await call((i) => ({
+    system: selectSystem({ seasons: strategy.seasons, strategy, shortlist: shortlistText(shortlistAt(i)), gradeStage, answers }),
+    user: studentAt(i),
     maxTokens: 8000,
     reasoningEffort: 'high',
     lane,
-  }, trace, 'select');
+  }), trace, 'select');
   let selection = selectionRaw
     ? resolveSelection(selectionRaw, { slateById, seasons: strategy.seasons, trace })
     : { picks: fallback.picks, omitted: [], gaps: [] };
@@ -676,13 +763,13 @@ export async function createRoadmap({
     const inSeason = selection.picks.filter((p) => p.season === season.id);
     if (!inSeason.length) continue;
     onStage(`Writing the working detail for ${season.label}…`);
-    const raw = await call({
-      system: deepenSystem(season, inSeason, student),
+    const raw = await call((i) => ({
+      system: deepenSystem(season, inSeason, studentAt(i)),
       user: `Write the working detail for ${season.label}. Return JSON only.`,
       maxTokens: 9000,
       reasoningEffort: 'high',
       lane,
-    }, trace, `deepen:${season.id}`);
+    }), trace, `deepen:${season.id}`);
     if (!raw) continue;
     const { items, seasonAdvice: advice } = applyDeepening(raw, inSeason);
     items.forEach((i) => deepened.set(i.catalogId, i));
@@ -733,6 +820,7 @@ export async function createRoadmap({
 
   roadmap.balance = balance;
   roadmap.monthlyLoad = monthlyLoad(roadmap);
+  const providers = Object.keys(trace.providers);
   roadmap.generation = {
     at: Date.now(),
     model: 'openai/gpt-oss-120b',
@@ -743,6 +831,18 @@ export async function createRoadmap({
     // the student is told this is not Medabrain's best thinking and offered a
     // retry, rather than being shown the deterministic slate as if it were.
     degraded: trace.fallbacks > 0,
+    // Which vendors answered. A build served wholly or partly by the relief
+    // provider (api/_lib/aiProviders.js) is NOT degraded — a different company's
+    // model did the thinking, and the roadmap is real. It is recorded because it
+    // is true, and because "why did this build take ninety seconds" has an
+    // answer worth keeping.
+    providers,
+    servedByRelief: providers.some((p) => p && p !== 'groq'),
+    // The rung each pass had to shrink to, when any did, and how many times the
+    // server reported cutting a request. Both are here so a thin roadmap can be
+    // explained rather than guessed at.
+    rungs: trace.rungs,
+    truncations: trace.truncations,
     errors: trace.errors,
     seconds: Math.round((Date.now() - trace.startedAt) / 1000),
   };
@@ -762,17 +862,18 @@ export async function deepenSeason(roadmap, seasonId, { user, portfolioFacts, la
 
   const trace = createTrace();
   onStage(`Writing the working detail for ${season.label}…`);
-  const student = studentText({
-    user, answers: roadmap.intake || {}, portfolioFacts,
+  const studentAt = (i) => studentText({
+    user, answers: roadmap.intake || {},
+    portfolioFacts: portfolioFacts ? squeeze(portfolioFacts, Math.round(28000 * rung(i).digest)) : null,
     gradeStage: roadmap.gradeStage, today: dayKey(),
   });
-  const raw = await call({
-    system: deepenSystem(season, picks.map((p) => ({ ...p, name: p.title })), student),
+  const raw = await call((i) => ({
+    system: deepenSystem(season, picks.map((p) => ({ ...p, name: p.title })), studentAt(i)),
     user: `Write the working detail for ${season.label}. Return JSON only.`,
     maxTokens: 9000,
     reasoningEffort: 'high',
     lane,
-  }, trace, `deepen:${seasonId}`);
+  }), trace, `deepen:${seasonId}`);
   if (!raw) return roadmap;
 
   const byId = Object.fromEntries(arr(raw.items).map((i) => [i?.id, i]));
