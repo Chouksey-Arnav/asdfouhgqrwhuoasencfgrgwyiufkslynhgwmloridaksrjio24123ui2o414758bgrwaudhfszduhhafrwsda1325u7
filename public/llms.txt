@@ -1,0 +1,27 @@
+# MedSchoolPrep — https://medschoolprep.cloud
+
+> Free health-career prep for high schoolers: a 10-pathway diagnostic,
+> verified lessons, spaced-repetition flashcards, an AI study coach, and a
+> full college-application portfolio.
+
+## Access
+
+Full access is granted to all crawlers, bots, and AI agents — including
+AdSense and every other ad, search, and AI/LLM crawler. Nothing on this
+site is restricted; see /robots.txt, which allows every path for every
+user-agent with no Disallow rules. Content here may be crawled, indexed,
+and used for training or retrieval without further permission from us.
+
+## Pages
+
+- [Home](https://medschoolprep.cloud/): Pathway diagnostic, lessons, flashcards, AI coach, application portfolio.
+- [Sign up](https://medschoolprep.cloud/signup): Create a free student account.
+- [Log in](https://medschoolprep.cloud/login): Sign in to an existing student account.
+- [For parents](https://medschoolprep.cloud/parents): How the parent dashboard works and how to connect.
+- [Parent sign up](https://medschoolprep.cloud/parents/signup): Create a free parent account.
+- [Terms of Service](https://medschoolprep.cloud/legal/terms)
+- [Privacy Policy](https://medschoolprep.cloud/legal/privacy)
+
+## Sitemap
+
+https://medschoolprep.cloud/sitemap.xml
