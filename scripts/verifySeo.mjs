@@ -151,7 +151,7 @@ if (!existsSync(path.join(ROOT, 'public/ads.txt'))) {
 // ── IndexNow key file ────────────────────────────────────────────────────
 // scripts/indexNow.mjs hard-codes this key; keep the two in sync if it's ever rotated.
 
-const INDEXNOW_KEY = 'e5d1eff59164094929c0a14e5b0cb0b';
+const INDEXNOW_KEY = '00d297fcab004d5db3c72b90fe977416';
 const indexNowKeyFile = `public/${INDEXNOW_KEY}.txt`;
 if (!existsSync(path.join(ROOT, indexNowKeyFile))) {
   fail(`${indexNowKeyFile} is missing — IndexNow submissions will be rejected (no key file at the site root to prove ownership)`);

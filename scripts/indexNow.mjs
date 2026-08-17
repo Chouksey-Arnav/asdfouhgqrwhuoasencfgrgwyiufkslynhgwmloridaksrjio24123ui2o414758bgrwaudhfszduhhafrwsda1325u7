@@ -10,7 +10,7 @@
  * build has to succeed offline and stay reproducible. Run it by hand after
  * a content change, or wire it into a deploy hook, via `npm run indexnow`.
  *
- * Key file: public/e5d1eff59164094929c0a14e5b0cb0b.txt, containing just the
+ * Key file: public/00d297fcab004d5db3c72b90fe977416.txt, containing just the
  * key. Generated at https://www.bing.com/indexnow/getstarted — hosting it at
  * the site root is IndexNow's ownership proof, so the file must stay in
  * sync with INDEXNOW_KEY below if the key is ever rotated.
@@ -24,7 +24,7 @@ import { PUBLIC_ROUTES, ORIGIN, absoluteUrl } from '../src/lib/seoRoutes.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-const INDEXNOW_KEY = 'e5d1eff59164094929c0a14e5b0cb0b';
+const INDEXNOW_KEY = '00d297fcab004d5db3c72b90fe977416';
 const HOST = new URL(ORIGIN).hostname;
 const KEY_LOCATION = `${ORIGIN}/${INDEXNOW_KEY}.txt`;
 const KEY_FILE = path.join(ROOT, 'public', `${INDEXNOW_KEY}.txt`);
