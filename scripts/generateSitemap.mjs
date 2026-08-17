@@ -38,7 +38,7 @@ import { writeFileSync, existsSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
-import { PUBLIC_ROUTES, DISALLOW, ORIGIN, absoluteUrl } from '../src/lib/seoRoutes.js';
+import { PUBLIC_ROUTES, DISALLOW, AI_CRAWLERS, ORIGIN, absoluteUrl } from '../src/lib/seoRoutes.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -119,12 +119,18 @@ function buildRobots(routes) {
     '# route: it renders the landing page to a crawler because there is no',
     '# session, so indexing it would just create duplicates of the URL we',
     '# actually want ranked.',
+    '#',
+    '# The AI-crawler blocks below repeat the same Allow/Disallow rules under',
+    '# their own user-agent so it is unambiguous that they are welcome — see',
+    '# AI_CRAWLERS in src/lib/seoRoutes.js.',
     '',
-    'User-agent: *',
-    'Allow: /$',
-    ...routes.filter((r) => r.path !== '/').map((r) => `Allow: ${r.path}`),
-    ...DISALLOW.map((prefix) => `Disallow: ${prefix}`),
-    '',
+    ...['*', ...AI_CRAWLERS].flatMap((agent) => [
+      `User-agent: ${agent}`,
+      'Allow: /$',
+      ...routes.filter((r) => r.path !== '/').map((r) => `Allow: ${r.path}`),
+      ...DISALLOW.map((prefix) => `Disallow: ${prefix}`),
+      '',
+    ]),
     `Sitemap: ${ORIGIN}/sitemap.xml`,
     '',
   ].join('\n');

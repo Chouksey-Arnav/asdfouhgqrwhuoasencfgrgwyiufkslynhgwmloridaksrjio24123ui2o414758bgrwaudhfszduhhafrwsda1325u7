@@ -11,8 +11,150 @@
 # route: it renders the landing page to a crawler because there is no
 # session, so indexing it would just create duplicates of the URL we
 # actually want ranked.
+#
+# The AI-crawler blocks below repeat the same Allow/Disallow rules under
+# their own user-agent so it is unambiguous that they are welcome — see
+# AI_CRAWLERS in src/lib/seoRoutes.js.
 
 User-agent: *
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: GPTBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: ChatGPT-User
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: ClaudeBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: Claude-User
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: PerplexityBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Disallow: /api/
+Disallow: /home
+Disallow: /sat
+Disallow: /prep
+Disallow: /portfolio
+Disallow: /roadmap
+Disallow: /plans
+Disallow: /progress
+Disallow: /settings
+Disallow: /family
+Disallow: /forgot-password
+Disallow: /auth/
+Disallow: /parent-invite
+Disallow: /parents/login
+
+User-agent: Google-Extended
 Allow: /$
 Allow: /signup
 Allow: /login

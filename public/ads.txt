@@ -1,0 +1,7 @@
+# ads.txt — Authorized Digital Sellers for medschoolprep.cloud
+# https://iabtechlab.com/ads-txt/
+#
+# Declares Google AdSense (client ID from the adsbygoogle.js tag in
+# index.html) as a direct seller of ad inventory on this site. Required for
+# AdSense to serve ads without an ads.txt warning in the account dashboard.
+google.com, pub-4110886931308197, DIRECT, f08c47fec0942fa0
