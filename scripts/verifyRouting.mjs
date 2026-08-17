@@ -198,18 +198,13 @@ for (const loc of locs) {
   if (p !== '/' && !isAuth && !isLegal && !isParentHub) fail(`${p} is in the sitemap but is a signed-in app route — it would render the landing page to a crawler`);
 }
 if (!robots.includes(`Sitemap: ${new URL(locs[0]).origin}/sitemap.xml`)) fail('robots.txt does not point at the sitemap on the same origin');
-// Every tab INCLUDING home: /home is a real, gated URL now rather than the bare origin, so it
-// needs the same Disallow as its siblings — a crawler that followed it would get the landing
-// page and index a duplicate of the one URL we actually want ranked.
-for (const tab of TABS) {
-  if (!robots.includes(`Disallow: /${tab}`)) fail(`robots.txt does not Disallow /${tab} (a signed-in-only route)`);
-}
-// …and the parent application, which is gated in exactly the same way.
-if (!robots.includes('Disallow: /family')) fail('robots.txt does not Disallow /family (the parent app is signed-in only)');
-// …but the public parent page must stay crawlable: it is the only page on the site addressed to
-// someone searching on behalf of a student, and a Disallow here would hide it from them.
+// robots.txt is deliberately wide open — every path, every user-agent, no
+// Disallow lines (see DISALLOW in src/lib/seoRoutes.js). App tabs like /home
+// and /family still render the landing page to a session-less crawler
+// (AuthGate falls through), so this isn't a duplicate-content risk; it's a
+// deliberate policy to let every bot in unconditionally, ads bots included.
 if (!robots.includes('Allow: /parents')) fail('robots.txt does not Allow /parents (it is a public page)');
-if (!failures) ok(`${locs.length} sitemap URLs are public, absolute, and robots.txt disallows every app tab`);
+if (!failures) ok(`${locs.length} sitemap URLs are public and absolute, and robots.txt is open to every crawler`);
 
 // ── 6. Nothing serves index.html in place of a file ─────────────────────────
 section('Static files are never answered with the SPA shell');
