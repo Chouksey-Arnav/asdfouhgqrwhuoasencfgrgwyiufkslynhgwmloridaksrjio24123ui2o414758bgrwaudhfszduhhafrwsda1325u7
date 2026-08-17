@@ -31,6 +31,7 @@ import RoadmapIntake from './RoadmapIntake';
 import RoadmapItem from './RoadmapItem';
 import RoadmapSpine from './RoadmapSpine';
 import RoadmapTimeline from './RoadmapTimeline';
+import RoadmapPath from './RoadmapPath';
 import { DegradedNotice, trackColor, fmtDate } from './roadmapUi';
 import { dayKey, daysBetween } from '../../lib/timeline';
 
@@ -838,28 +839,113 @@ function Callout({ icon: Icon, color, label, children }) {
 
 // ── Year ─────────────────────────────────────────────────────────────────────
 
+// ── The three drawings of one year, and why the tab offers a choice ─────────
+// They are not three styles of the same picture. Each answers a question the
+// other two structurally cannot, and a student arrives with a different one on
+// different days:
+//
+//   Path  — "Where am I, and what is next?" A route you walk up, your position
+//           marked on it. The default, because it is the question people
+//           actually open this tab with.
+//   Line  — "When does my year get hard?" The year drawn to scale, with load
+//           taken from preparation windows rather than deadlines, so a wall in
+//           March is visible in January.
+//   List  — "What happens, in order?" Every event, in sequence, with its
+//           working detail one tap away.
+//
+// The choice is remembered for the session but not persisted: a student who
+// went looking for the load chart last Tuesday is still, today, most likely
+// asking where they are.
+const YEAR_DRAWINGS = [
+  { id: 'path', label: 'Path', ic: MapIcon, blurb: 'Your year as a road you walk up' },
+  { id: 'line', label: 'Line', ic: CalendarDays, blurb: 'The year to scale, with its heavy stretches' },
+  { id: 'list', label: 'In order', ic: ListChecks, blurb: 'Every event, in sequence' },
+];
+
 function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectItem, onSelectSeason, onExport }) {
   const stats = useMemo(() => roadmapStats(roadmap, today), [roadmap, today]);
   const crunch = useMemo(() => crunchMonths(roadmap), [roadmap]);
   const elapsed = daysBetween(roadmap.startDate, today);
   const pctThrough = Math.max(0, Math.min(100, Math.round((elapsed / 365) * 100)));
+  const [drawing, setDrawing] = useState('path');
 
   return (
     <>
-      {/* ── The line. Everything else on this screen is commentary on it. ── */}
+      {/* ── The year, drawn. Everything else on this screen is commentary. ── */}
       <div style={{ ...glass({ padding: isMobile ? 14 : 22 }) }}>
-        <SectionTitle icon={CalendarDays} color={accent}>Your next twelve months</SectionTitle>
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, marginBottom: 16, maxWidth: 660 }}>
-          One line, end to end — every dated thing in your year hanging off the month it lands in.
-          The band under the line is <b style={{ color: C.t2 }}>how heavy each stretch is</b>, counting
-          the preparation rather than the deadlines, so a wall in March shows up here in January while
-          you can still do something about it. {isMobile ? 'Swipe' : 'Drag'} the line to move through
-          the year; tap a marker to see what it is.
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+          <SectionTitle icon={CalendarDays} color={accent}>Your next twelve months</SectionTitle>
+          <div role="tablist" aria-label="How to draw your year" style={{
+            display: 'inline-flex', gap: 2, padding: 3, borderRadius: 10,
+            background: C.surf2, border: `1px solid ${C.b1}`,
+          }}>
+            {YEAR_DRAWINGS.map((d) => {
+              const on = drawing === d.id;
+              return (
+                <button
+                  key={d.id} type="button" role="tab" aria-selected={on} title={d.blurb}
+                  onClick={() => setDrawing(d.id)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
+                    padding: '6px 12px', borderRadius: 8, border: 0, cursor: 'pointer',
+                    background: on ? tint(accent, 0.2) : 'transparent',
+                    color: on ? accentFill(accent) : C.t3,
+                    fontSize: 11.5, fontWeight: on ? 800 : 600, fontFamily: C.FB,
+                    transition: 'background .15s, color .15s',
+                  }}
+                >
+                  <d.ic size={13} /> {d.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <RoadmapSpine
-          roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
-          onSelectItem={onSelectItem} onSelectSeason={onSelectSeason}
-        />
+
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, margin: '10px 0 16px', maxWidth: 660 }}>
+          {drawing === 'path' && (
+            <>
+              Your year as one road, starting at the bottom and climbing. Every stop is something
+              real with a real date; the green stretch behind{' '}
+              <b style={{ color: C.t2 }}>you are here</b> is the part you have already walked.{' '}
+              {isMobile ? 'Swipe up' : 'Drag the path, or use the arrow keys,'} to travel it, and tap
+              any stop to open what it actually takes.
+            </>
+          )}
+          {drawing === 'line' && (
+            <>
+              One line, end to end — every dated thing in your year hanging off the month it lands in.
+              The band under the line is <b style={{ color: C.t2 }}>how heavy each stretch is</b>, counting
+              the preparation rather than the deadlines, so a wall in March shows up here in January while
+              you can still do something about it. {isMobile ? 'Swipe' : 'Drag'} the line to move through
+              the year; tap a marker to see what it is.
+            </>
+          )}
+          {drawing === 'list' && (
+            <>
+              The whole year as a running timeline. Where you are standing is marked; everything below
+              that mark is still ahead of you. Tap any event to open its working detail.
+            </>
+          )}
+        </div>
+
+        {drawing === 'path' && (
+          <RoadmapPath
+            roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
+            onSelectItem={onSelectItem} onSelectSeason={onSelectSeason}
+          />
+        )}
+        {drawing === 'line' && (
+          <RoadmapSpine
+            roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
+            onSelectItem={onSelectItem} onSelectSeason={onSelectSeason}
+          />
+        )}
+        {drawing === 'list' && (
+          <RoadmapTimeline
+            roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
+            onSelectItem={onSelectItem}
+          />
+        )}
       </div>
 
       {/* Where they are in the year, in words — the one thing the drawing
@@ -871,18 +957,11 @@ function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectIte
         <StatTile icon={CalendarDays} value={stats.awaitingDate} label="dates to look up" color={stats.awaitingDate ? C.violet : C.t3} />
       </div>
 
-      {/* ── The same year, read as a list of events in order. ── */}
-      <div style={{ ...glass({ padding: isMobile ? 16 : 22 }) }}>
-        <SectionTitle icon={Layers} color={accent}>Everything, in the order it happens</SectionTitle>
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, marginBottom: 18, maxWidth: 640 }}>
-          The whole year as a running timeline. Where you are standing is marked; everything below that
-          mark is still ahead of you. Tap any event to open its working detail.
-        </div>
-        <RoadmapTimeline
-          roadmap={roadmap} today={today} isMobile={isMobile} reducedMotion={reducedMotion}
-          onSelectItem={onSelectItem}
-        />
-      </div>
+      {/* The ordered list used to live down here as a second, permanent
+          section. It is now the third drawing above, alongside the path and the
+          line, because three stacked drawings of one year is a page a student
+          scrolls past rather than three answers they can choose between — and
+          the choice is the point. */}
 
       <button onClick={onExport} style={btnG({ fontSize: 12, alignSelf: 'flex-start' })}>
         <Download size={13} /> Add these dates to my calendar
