@@ -51,6 +51,10 @@ import * as ProgressSync from './lib/progressSync';
 import * as PlanStore from './lib/masterPlanStore';
 import { loadViewState, saveViewState, clearViewState } from './lib/viewState';
 import { SUBVIEWS, bootRoute, routeFromState, resolveView, formatPath, LEGAL_VIEWS, AUTH_VIEWS, PARENT_HUB_PATH } from './lib/routes';
+// What every screen is CALLED by the person looking for it, plus the scorer the
+// quick-jump palette ranks with — see the header of src/lib/navMap.js for the
+// searches that returned nothing before it existed.
+import { keywordsFor, searchNav, readRecents, pushRecent } from './lib/navMap';
 import { LEGAL, TRADEMARK_NOTICE } from './legal/legalConfig';
 import useAppRouter, { isPlainLeftClick } from './lib/useAppRouter';
 import * as AuthAPI from './lib/authApi';
@@ -1712,6 +1716,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   const [allLessonNotes, setAllLessonNotes] = useState({});
   const [cmdOpen, setCmdOpen] = useState(false); // Cmd/Ctrl+K quick switcher
   const [cmdQ,    setCmdQ]    = useState('');
+  // The last handful of screens this student was on, newest first, so an empty
+  // palette leads with where they have been instead of with a fixed list of
+  // thirty destinations. Read once at mount and kept in step by the effect
+  // beside the router below. See src/lib/navMap.js.
+  const [cmdRecents, setCmdRecents] = useState(readRecents);
 
   // True for the rest of this session once completeOnboarding() runs — lets Home greet a
   // genuinely first-time user with "Welcome" instead of the default "Welcome back".
@@ -1841,8 +1850,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(tabId==='progress')return goProgress(view);
     if(tabId==='plans')return goPlans();
     if(tabId==='settings')return goSettings(null,view);
+    // Roadmap was missing here, which meant a data-driven deep link naming it —
+    // a milestone action, a Home tile — silently landed on Home instead.
+    if(tabId==='roadmap')return goRoadmap(view);
     setTab('home');
-  }, [goPrep,goSat,goPortfolio,goProgress,goPlans,goSettings]);
+  }, [goPrep,goSat,goPortfolio,goProgress,goPlans,goSettings,goRoadmap]);
+
+  /**
+   * The same jump, taking one destination id instead of two arguments.
+   *
+   * The unlock ladder, the router and the nav keyword map all speak in ids —
+   * 'plans', 'portfolio/essays', 'portfolio/resume:clinical' — so anything
+   * driven by those needs a way to act on one without first taking it apart.
+   * The three-part form is the sections of Activities & Résumé, which are a
+   * level below a sub-view; goPortfolio already understands a section name and
+   * resolves it to the tab that now holds it.
+   */
+  const goDest = useCallback((dest)=>{
+    const [tabId, rest] = String(dest||'').split('/');
+    if(!tabId) return;
+    if(!rest) return goAnywhere(tabId, null);
+    const [view, section] = rest.split(':');
+    if(tabId==='portfolio') return goPortfolio(section||view);
+    return goAnywhere(tabId, view);
+  }, [goAnywhere,goPortfolio]);
 
   // Persist the current tab/sub-view on every change so a reload (a stuck PWA, the phone
   // locking, a flaky connection) resumes on the same screen instead of resetting to Home.
@@ -1926,6 +1957,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   ),[activeLesson,aQuiz]);
   const route = useMemo(()=>routeFromState({ tab, satView, prepView, portfolioView, roadmapView, progressView, settingsView, overlay:overlayRoute }),
     [tab,satView,prepView,portfolioView,roadmapView,progressView,settingsView,overlayRoute]);
+
+  // ── Where they have been ────────────────────────────────────────────────────
+  // Recorded off the SAME route object the address bar is driven from, rather
+  // than inside the palette's own click handler. That is the difference between
+  // "screens you reached through the palette" — a small and rather circular
+  // list — and "screens you have been on", which is what somebody reopening the
+  // palette is actually looking for. Every route into a screen counts: the nav,
+  // a deep link, the back button, a card on Home.
+  useEffect(()=>{
+    if(!route?.tab) return;
+    const dest = route.view ? `${route.tab}/${route.view}` : route.tab;
+    setCmdRecents(pushRecent(dest));
+  },[route?.tab,route?.view]);
 
   // Flat [{lesson,unit}] for the active pathway, so a lesson URL can be resolved back
   // to the lesson it names. A ref (filled by an effect further down) rather than a
@@ -3317,30 +3361,63 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     ...(activePathways.length<MAX_ACTIVE_PATHWAYS?[{
       id:'path-add', label:'Add another pathway', group:'Pathways', ic:Plus, action:goManagePathways,
     }]:[]),
-    ...navItems.map(n=>({ id:`nav-${n.id}`, label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
-    ...prepSubnav.map(n=>({ id:`prep-${n.id}`, label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
-    ...portfolioSubnav.map(n=>({ id:`port-${n.id}`, label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
+    ...navItems.map(n=>({ id:`nav-${n.id}`, dest:n.id, keywords:keywordsFor(n.id), label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
+    ...prepSubnav.map(n=>({ id:`prep-${n.id}`, dest:`prep/${n.id}`, keywords:keywordsFor(`prep/${n.id}`), label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
+    ...portfolioSubnav.map(n=>({ id:`port-${n.id}`, dest:`portfolio/${n.id}`, keywords:keywordsFor(`portfolio/${n.id}`), label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
     // The three sections of Activities & Résumé that used to be tabs of their own. Without
     // these, merging them would have made "clinical hours" un-findable in the one place a fast
     // typist looks for anything — the sections still exist, so they still get a command. They
     // ride on the Activities & Résumé unlock, since that's the tab that actually holds them.
     ...(unlocks.isOpen('portfolio','resume')?[
-      { id:'port-clinical', label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
-      { id:'port-research', label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
-      { id:'port-skills', label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
+      { id:'port-clinical', dest:'portfolio/resume:clinical', keywords:keywordsFor('portfolio/resume:clinical'), label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
+      { id:'port-research', dest:'portfolio/resume:research', keywords:keywordsFor('portfolio/resume:research'), label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
+      { id:'port-skills', dest:'portfolio/resume:credentials', keywords:keywordsFor('portfolio/resume:credentials'), label:'Skills & Certs', group:'Portfolio', ic:BadgeCheck, action:()=>goPortfolio('skills') },
     ]:[]),
-    ...roadmapSubnav.map(n=>({ id:`road-${n.id}`, label:n.label, group:'Roadmap', ic:n.ic, action:()=>goRoadmap(n.id) })),
-    ...progressSubnav.map(n=>({ id:`prog-${n.id}`, label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
+    ...roadmapSubnav.map(n=>({ id:`road-${n.id}`, dest:`roadmap/${n.id}`, keywords:keywordsFor(`roadmap/${n.id}`), label:n.label, group:'Roadmap', ic:n.ic, action:()=>goRoadmap(n.id) })),
+    ...progressSubnav.map(n=>({ id:`prog-${n.id}`, dest:`progress/${n.id}`, keywords:keywordsFor(`progress/${n.id}`), label:n.label, group:'Progress', ic:n.ic, action:()=>goProgress(n.id) })),
     // Settings has sub-tabs now, so it gets the same treatment as every other pillar. Family
     // Access earns its place here more than most: it is the one settings screen another person
     // is waiting on, and "⌘K, fam" is a great deal faster than remembering which tab it is under.
-    ...settingsSubnav.map(n=>({ id:`set-${n.id}`, label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
+    ...settingsSubnav.map(n=>({ id:`set-${n.id}`, dest:`settings/${n.id}`, keywords:keywordsFor(`settings/${n.id}`), label:n.label, group:'Settings', ic:n.ic, action:()=>goSettings(null,n.id) })),
   ],[navItems,prepSubnav,portfolioSubnav,roadmapSubnav,progressSubnav,satSubnav,settingsSubnav,unlocks,goPrep,goPortfolio,goRoadmap,goProgress,goSat,goSettings,activePathways,pathwayRows,focusedPathway,switchPath,goManagePathways]);
+  // ── What the palette shows ──────────────────────────────────────────────────
+  // Two different jobs, and they used to be one:
+  //
+  //   TYPING   → rank every destination by how well it answers the words the
+  //              student used, including the words that are not its label
+  //              (searchNav, src/lib/navMap.js). Substring-matching labels meant
+  //              "deadlines", "gpa", "fafsa" and "dark mode" all returned
+  //              nothing at all, for screens that exist and are finished.
+  //   NOT YET  → an empty palette was a fixed list of thirty-odd destinations,
+  //              which is a scan. It leads with the handful of screens this
+  //              student was actually just on, because that is overwhelmingly
+  //              where they are going back to.
+  const recentCmds = useMemo(()=>{
+    if(cmdQ.trim()) return [];
+    const byDest=new Map(COMMANDS.filter(c=>c.dest).map(c=>[c.dest,c]));
+    return cmdRecents.map(d=>byDest.get(d)).filter(Boolean).map(c=>({...c,group:'Recent'}));
+  },[COMMANDS,cmdQ,cmdRecents]);
+  // ── The screens the ladder has not shown them yet ──────────────────────────
+  // A guided-mode student searching for something that is still gated used to
+  // get "No matches — try a different word", which is false: the screen exists,
+  // it is finished, and this app's own rule is that a lock means "we have not
+  // put this in front of you yet", never "you may not have this". Landing on a
+  // gated surface by any route — a link, a bookmark, the back button — already
+  // opens it for good (see Guarantee #2 above), so a search that finds one and
+  // a tap that opens it is exactly the behaviour that already exists, reached
+  // by the one route that was refusing to offer it.
+  //
+  // They are offered only when something has been typed, and they sort last, so
+  // the palette still opens as the short list of what this student is doing now.
+  const lockedCmds = useMemo(()=>unlocks.locked().map(l=>({
+    id:`locked-${l.id}`, dest:l.id, keywords:keywordsFor(l.id), label:l.label,
+    group:'Not shown yet', ic:Lock, hint:l.hint, locked:true, action:()=>goDest(l.id),
+  })),[unlocks,goDest]);
   const filteredCmds = useMemo(()=>{
-    const q=cmdQ.trim().toLowerCase();
-    if(!q) return COMMANDS;
-    return COMMANDS.filter(c=>c.label.toLowerCase().includes(q)||c.group.toLowerCase().includes(q));
-  },[COMMANDS,cmdQ]);
+    const q=cmdQ.trim();
+    if(!q) return [...recentCmds, ...COMMANDS.filter(c=>!recentCmds.some(r=>r.id===c.id))];
+    return searchNav(q, [...COMMANDS, ...lockedCmds]);
+  },[COMMANDS,cmdQ,recentCmds,lockedCmds]);
   const runCommand=useCallback((cmd)=>{ cmd.action(); setCmdOpen(false); play('click'); },[]);
   const onCmdInputKeyDown=useCallback((e)=>{
     if(e.key==='ArrowDown'){ e.preventDefault(); setCmdActiveIdx(i=>Math.min(i+1,filteredCmds.length-1)); }
@@ -10445,7 +10522,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                       is the single most-repeated action in the app. ('Settings' is listed here
                       too because those commands were already being built and matched by the
                       filter — including by Enter on the keyboard — but never rendered.) */}
-                  {['Pathways','Jump to','SAT','Prep','Portfolio','Progress','Settings'].map(group=>{
+                  {['Recent','Pathways','Jump to','SAT','Prep','Portfolio','Roadmap','Progress','Settings','Not shown yet'].map(group=>{
                     const items=filteredCmds.filter(c=>c.group===group);
                     if(!items.length)return null;
                     return(
@@ -10456,7 +10533,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                           const active=idx===cmdActiveIdx;
                           return(
                             <motion.div key={cmd.id} onMouseEnter={()=>setCmdActiveIdx(idx)} whileHover={{background:'rgba(255,255,255,0.05)'}} onClick={()=>runCommand(cmd)} style={{display:'flex',alignItems:'center',gap:10,padding:'9px 10px',borderRadius:9,cursor:'pointer',color:C.t1,fontSize:13,background:active?`${accent}16`:undefined,border:active?`1px solid ${accent}30`:'1px solid transparent'}}>
-                              <cmd.ic size={15} color={accent}/><span style={{flex:1}}>{cmd.label}</span>{active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
+                              <cmd.ic size={15} color={cmd.locked?C.t4:accent}/>
+                              <span style={{flex:1,minWidth:0}}>
+                                <span style={{color:cmd.locked?C.t2:C.t1}}>{cmd.label}</span>
+                                {/* A locked row says what opens it. "Not shown yet" with no
+                                    "yet what?" is a closed door with no handle. */}
+                                {cmd.hint&&<span style={{display:'block',fontSize:10.5,color:C.t4,marginTop:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{cmd.hint}</span>}
+                              </span>
+                              {active?<span style={{...pill(C.s3,C.t3,{fontSize:9,fontFamily:C.FM,padding:'2px 6px'})}}>↵</span>:<ChevronRight size={13} color={C.t4}/>}
                             </motion.div>
                           );
                         })}
