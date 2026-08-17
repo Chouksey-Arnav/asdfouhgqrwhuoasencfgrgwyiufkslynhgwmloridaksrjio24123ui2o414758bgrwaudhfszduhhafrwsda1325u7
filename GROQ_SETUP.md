@@ -165,17 +165,24 @@ tier just answered, purely for transparency.
 
 | Tier     | Model                     | Used for                                                          |
 |----------|---------------------------|--------------------------------------------------------------------|
-| `scout`  | `llama-3.1-8b-instant`    | Fastest — quick turns, lightweight generation                      |
-| `guide`  | `openai/gpt-oss-20b`      | Balanced default — structured reasoning without 70B-model cost      |
-| `sage`   | `llama-3.3-70b-versatile` | Deepest chat-facing reasoning — essay feedback, complex questions   |
+| `scout`  | `openai/gpt-oss-20b`      | Fastest — quick turns, lightweight generation                      |
+| `guide`  | `openai/gpt-oss-20b`      | Balanced default — structured reasoning without 120B-model cost     |
+| `sage`   | `qwen/qwen3.6-27b`        | Deepest chat-facing reasoning — essay feedback, complex questions   |
 | `oracle` | `openai/gpt-oss-120b`     | Server-side only — the Plans tab's full day-by-day roadmap          |
 
 (`fast`/`deep` are still accepted as aliases for `scout`/`guide` for backwards compatibility.)
 
-Scout and Guide are both cheap on Groq's pay-as-you-go pricing (`llama-3.1-8b-instant` ≈
-$0.05/$0.08 per million input/output tokens; `openai/gpt-oss-20b` ≈ $0.075/$0.30) and get much
-higher tokens-per-minute headroom than Sage's `llama-3.3-70b-versatile` (≈$0.59/$0.79) — which is
-exactly why the classifier only routes to Sage for messages that actually look like they need it:
+> Groq decommissioned `llama-3.1-8b-instant` and `llama-3.3-70b-versatile` on 2026-08-16
+> (https://console.groq.com/docs/deprecations). Scout now shares Guide's `openai/gpt-oss-20b` —
+> Groq's own recommended replacement, and the smallest model left in its production catalog — and
+> Sage moved to `qwen/qwen3.6-27b` rather than Oracle's `openai/gpt-oss-120b`, so the SAT tab's
+> independent verification pass (src/lib/sat/aiPractice.js) keeps checking the author model's work
+> with a genuinely different model family.
+
+Scout and Guide are both cheap on Groq's pay-as-you-go pricing (`openai/gpt-oss-20b` ≈
+$0.075/$0.30 per million input/output tokens) and get much higher tokens-per-minute headroom than
+Sage's `qwen/qwen3.6-27b` — which is exactly why the classifier only routes to Sage for messages
+that actually look like they need it:
 it's the most capable tier, but the priciest and most likely to hit Groq's TPM limits if it were
 the default for every chat turn.
 

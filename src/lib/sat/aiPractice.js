@@ -29,7 +29,7 @@
 //                 with silently wrong keys. Temperature is well below the app
 //                 default of 0.7 — we want variety in scenario, not in
 //                 arithmetic.
-//      verify   → Sage (llama-3.3-70b-versatile) at temperature 0. Deliberately
+//      verify   → Sage (qwen/qwen3.6-27b) at temperature 0. Deliberately
 //                 a DIFFERENT MODEL FAMILY from the author. A verifier that
 //                 shares the author's weights shares the author's blind spots
 //                 and will confidently confirm its own mistakes; an independent

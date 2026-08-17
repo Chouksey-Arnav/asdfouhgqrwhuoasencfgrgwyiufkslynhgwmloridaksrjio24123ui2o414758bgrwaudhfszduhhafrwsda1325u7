@@ -72,9 +72,9 @@ Customizes UI configuration, account profile settings, dark/light theme options,
 
 ### Medabrain AI Coaching & Intelligence Pool
 Medabrain operates on a purpose-scoped API key pool to maximize rate limit headroom on the free tier. When a call to `/api/groq.js` is triggered, it specifies a `purpose` and falls back gracefully to a shared key pool if no dedicated API key is configured.
-- **Scout** (`llama-3.1-8b-instant`): Ultralight, blisteringly fast for simple conversational turns.
+- **Scout** (`openai/gpt-oss-20b`): Fastest tier for simple conversational turns.
 - **Guide** (`openai/gpt-oss-20b`): Balanced default model tier, powering primary conversations.
-- **Sage** (`llama-3.3-70b-versatile`): Highly capable model for complex reasoning, essay critiques, and deep SAT tutor guidance.
+- **Sage** (`qwen/qwen3.6-27b`): Highly capable model for complex reasoning, essay critiques, and deep SAT tutor guidance.
 - **Oracle** (`openai/gpt-oss-120b`): Server-side model with 131K context window, 32k completion window, and `high` reasoning effort. Powering `masterplan` generation.
 
 ### Gamification Engine (`src/lib/gamification.js` & `rewards.js`)

@@ -88,14 +88,29 @@ function setCachedResponse(key, content, model) {
 // ── Model tiers ────────────────────────────────────────────────────────────
 // Medabrain offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
 // — each maps to a real Groq-hosted model:
-//   Scout — llama-3.1-8b-instant, fastest, for quick turns and lightweight generation. Used as
-//           the default for the main chat coach, the highest-volume call in the app.
+//   Scout — openai/gpt-oss-20b, fastest tier still on Groq's production catalog, for quick turns
+//           and lightweight generation. Used as the default for the main chat coach, the
+//           highest-volume call in the app.
 //   Guide — openai/gpt-oss-20b, the balanced tier for tasks that benefit from more structure/
-//           reasoning without the cost and TPM pressure of a 70B model.
-//   Sage  — llama-3.3-70b-versatile, the most capable tier, for when a student explicitly wants
-//           the deepest feedback available (e.g. a full essay critique) and is fine trading
+//           reasoning without the cost and TPM pressure of the 120B model.
+//   Sage  — qwen/qwen3.6-27b, the most capable chat-facing tier, for when a student explicitly
+//           wants the deepest feedback available (e.g. a full essay critique) and is fine trading
 //           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
 // 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
+//
+// ── Why Scout/Sage no longer point at Llama ──────────────────────────────────
+// Groq decommissioned llama-3.1-8b-instant and llama-3.3-70b-versatile on
+// 2026-08-16 (see https://console.groq.com/docs/deprecations), which is what
+// produced "the model 'llama-3.3-70b-versatile' does not exist or you do not
+// have access to it" on every tab that resolved to the Sage tier (Portfolio,
+// essay critique, the SAT verifier). Scout moves to openai/gpt-oss-20b — the
+// same id Guide already uses successfully, and Groq's own migration guidance
+// for the retired 8B model, since gpt-oss-20b is now the smallest model left
+// in Groq's production catalog. Sage moves to qwen/qwen3.6-27b rather than
+// collapsing onto Oracle's gpt-oss-120b: src/lib/sat/aiPractice.js pins the
+// SAT verifier to 'sage' *because* it needs a different model family from the
+// 'oracle' author model (see that file's header) — Sage sharing Oracle's
+// weights would quietly break that independence check.
 //   Oracle — openai/gpt-oss-120b, never offered in the student-facing Scout/Guide/Sage picker;
 //            selected by code, for two generation jobs where the output has to be *correct*
 //            rather than merely fluent: the Plans tab's "master plan" and the SAT tab's practice
@@ -106,9 +121,9 @@ function setCachedResponse(key, content, model) {
 //            the model must actually solve the problem it just wrote in order to key it, which
 //            is a reasoning task, not a writing task.
 const MODELS = {
-  scout: 'llama-3.1-8b-instant',
+  scout: 'openai/gpt-oss-20b',
   guide: 'openai/gpt-oss-20b',
-  sage: 'llama-3.3-70b-versatile',
+  sage: 'qwen/qwen3.6-27b',
   oracle: 'openai/gpt-oss-120b',
 };
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };

@@ -4482,7 +4482,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Ordering matters here, and it used to be wrong in a way that produced the
   // single worst Medabrain failure in the app. `quickSignals` matched anything
   // starting "when is"/"who is", and any message under 42 characters, and sent
-  // it to Scout — llama-3.1-8b-instant, the smallest model available. So
+  // it to Scout — the smallest model available. So
   // "When do I apply to Duke?" (24 chars) and "Who was president in 1954?"
   // (26 chars) were routed to the model least able to recall a real-world fact,
   // and the answer came back as a shrug or a redirect. Those are exactly the
