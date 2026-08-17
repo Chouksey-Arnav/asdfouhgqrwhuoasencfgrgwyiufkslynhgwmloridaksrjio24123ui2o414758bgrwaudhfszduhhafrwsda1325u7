@@ -9,6 +9,7 @@
     "sitemap": "node scripts/generateSitemap.mjs",
     "prerender": "node scripts/prerenderSeo.mjs",
     "verify:seo": "node scripts/verifySeo.mjs",
+    "indexnow": "node scripts/indexNow.mjs",
     "icons": "node scripts/renderIcons.mjs",
     "brand:layers": "node scripts/extractBrandLayers.mjs",
     "preview": "vite preview",

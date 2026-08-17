@@ -29,7 +29,7 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import {
-  PUBLIC_ROUTES, DISALLOW, MAX_TITLE, MAX_DESCRIPTION, absoluteUrl,
+  PUBLIC_ROUTES, DISALLOW, AI_CRAWLERS, MAX_TITLE, MAX_DESCRIPTION, absoluteUrl,
 } from '../src/lib/seoRoutes.js';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -127,6 +127,36 @@ if (locCount !== PUBLIC_ROUTES.length) {
 }
 for (const prefix of DISALLOW) {
   if (!robots.includes(`Disallow: ${prefix}`)) fail(`robots.txt: missing "Disallow: ${prefix}"`);
+}
+for (const agent of AI_CRAWLERS) {
+  if (!robots.includes(`User-agent: ${agent}`)) {
+    fail(`robots.txt: missing "User-agent: ${agent}" block — see AI_CRAWLERS in seoRoutes.js`);
+  }
+}
+
+// ── ads.txt ──────────────────────────────────────────────────────────────
+
+if (!existsSync(path.join(ROOT, 'public/ads.txt'))) {
+  fail('public/ads.txt is missing — AdSense will show an "ads.txt not found" warning');
+} else {
+  const adsTxt = read('public/ads.txt');
+  const clientMatch = indexHtml.match(/adsbygoogle\.js\?client=ca-(pub-\d+)/);
+  if (!clientMatch) {
+    fail('index.html: no adsbygoogle.js client id found — cannot verify ads.txt matches it');
+  } else if (!adsTxt.includes(`google.com, ${clientMatch[1]}, DIRECT`)) {
+    fail(`public/ads.txt: does not declare "google.com, ${clientMatch[1]}, DIRECT, ..." — does not match the AdSense client id in index.html`);
+  }
+}
+
+// ── IndexNow key file ────────────────────────────────────────────────────
+// scripts/indexNow.mjs hard-codes this key; keep the two in sync if it's ever rotated.
+
+const INDEXNOW_KEY = 'e5d1eff59164094929c0a14e5b0cb0b';
+const indexNowKeyFile = `public/${INDEXNOW_KEY}.txt`;
+if (!existsSync(path.join(ROOT, indexNowKeyFile))) {
+  fail(`${indexNowKeyFile} is missing — IndexNow submissions will be rejected (no key file at the site root to prove ownership)`);
+} else if (read(indexNowKeyFile).trim() !== INDEXNOW_KEY) {
+  fail(`${indexNowKeyFile}: contents do not match its own filename`);
 }
 
 // ── 4. The prerendered output ───────────────────────────────────────────────
