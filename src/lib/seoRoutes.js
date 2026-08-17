@@ -455,42 +455,14 @@ export const PUBLIC_ROUTES = [
 ];
 
 /**
- * Path prefixes that exist, work, and must not be indexed.
+ * Path prefixes withheld from crawlers via robots.txt.
  *
- * Two groups, and both are here for the same reason: a crawler that follows one
- * gets the landing page back, because there is no session and AuthGate falls
- * through to it. Indexing them would create duplicates competing with the one
- * URL we want ranked.
- *
- *   1. The signed-in surfaces — /home and every app tab, plus /family, which is
- *      the parent application. Kept as prefixes rather than a full route list so
- *      that a new sub-tab is covered the day it ships.
- *   2. The transient auth surfaces — a password-reset form, an OAuth callback
- *      and a single-use invitation link are not pages anyone should arrive at
- *      from a search result, and /parents/login is the parent sign-in rather
- *      than anything a parent would search for.
- *
- * /parents itself is deliberately absent: it is a real public page, listed
- * above, and none of these prefixes is a prefix of it. /parents/login is more
- * specific than the `Allow: /parents` line the generator emits, and longest-match
- * wins in the robots.txt spec, so the two rules do not fight.
+ * Deliberately empty: every crawler, including every AI crawler in
+ * AI_CRAWLERS below, is allowed across the entire site. See buildRobots() in
+ * scripts/generateSitemap.mjs, which turns this into a blanket `Allow: /`
+ * for `User-agent: *` and for each of AI_CRAWLERS.
  */
-export const DISALLOW = [
-  '/api/',
-  '/home',
-  '/sat',
-  '/prep',
-  '/portfolio',
-  '/roadmap',
-  '/plans',
-  '/progress',
-  '/settings',
-  '/family',
-  '/forgot-password',
-  '/auth/',
-  '/parent-invite',
-  '/parents/login',
-];
+export const DISALLOW = [];
 
 /**
  * AI crawlers to explicitly welcome onto the public surface, over and above
