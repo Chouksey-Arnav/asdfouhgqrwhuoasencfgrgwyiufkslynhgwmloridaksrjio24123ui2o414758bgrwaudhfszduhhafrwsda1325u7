@@ -257,9 +257,28 @@ export function displaysExactDate(item) {
  * The counterpart to displaysExactDate: callers use that to decide whether to
  * render a date widget, and this for the words beside it.
  */
-export function dateCaption(item, fmt = (d) => d) {
+export function dateCaption(item, fmt = (d) => d, { compact = false } = {}) {
   if (!item) return '';
   if (displaysExactDate(item)) return fmt(item.studentDate || item.due || item.on || item.anchor);
+  // ── The compact form ───────────────────────────────────────────────────────
+  // For surfaces where the item is a MARK rather than a card — a node on the
+  // path, a dot on the spine — the full caption ("around May 20, 2027 — confirm
+  // on the official site") is three wrapped lines under a 40px circle, and it
+  // collides with its neighbours.
+  //
+  // The compact form is allowed to say LESS and is never allowed to say more.
+  // A 'typical' date drops to its month, which is strictly vaguer than the
+  // caption it replaces and therefore cannot mislead anyone the long form would
+  // not have. The caveat itself is not lost: the mark is drawn hollow and
+  // dashed wherever this is used, the legend says what that means, and the item
+  // card it opens carries the full sentence and the link.
+  if (compact) {
+    if (item.confidence === 'varies') return 'date varies';
+    const d = item.due || item.on || item.anchor;
+    if (!d) return 'not confirmed';
+    const month = fmt(`${String(d).slice(0, 8)}01`, { monthOnly: true });
+    return `around ${month}`;
+  }
   if (item.confidence === 'varies') {
     // `season` means two different things either side of the generator, and this
     // one line is where that bites. On a CATALOG ENTRY it is the prose window —
@@ -272,7 +291,14 @@ export function dateCaption(item, fmt = (d) => d) {
     // So: prefer the hint, and refuse outright to print anything shaped like an
     // id. A vaguer caption is recoverable; an id is not something a student can
     // read, act on, or even report sensibly.
-    const window = item.seasonHint || (/^s\d+$/i.test(String(item.season || '')) ? null : item.season);
+    //
+    // The id guard applies to BOTH fields, not just to `season`. `seasonHint`
+    // is filled from the catalog entry's prose in the normal path, but it is
+    // copied through several layers to get here and anything that hands it a
+    // season id instead would put "s3" where a date window belongs — the exact
+    // bug this guard was written for, one field further along.
+    const notAnId = (v) => (typeof v === 'string' && v.trim() && !/^s\d+$/i.test(v.trim()) ? v.trim() : null);
+    const window = notAnId(item.seasonHint) || notAnId(item.season);
     return window || 'Date varies — look yours up';
   }
   const due = item.due || item.on || item.anchor;

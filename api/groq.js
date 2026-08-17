@@ -9,6 +9,16 @@
 // Plus a short in-memory response cache (see responseCache below) so repeated prompt shapes
 // (e.g. the daily quiz-recommendation narration) don't re-hit Groq at all.
 
+//
+// ── Two layers, two vendors ─────────────────────────────────────────────────
+// Everything below is LAYER 1: Groq, its per-purpose key pools, and failover
+// between those keys. LAYER 2 lives in ./_lib/aiProviders.js — a second,
+// independent vendor that is reached only when every Groq key in the pool has
+// failed, and never as part of normal traffic. Read that file's header for why
+// a deeper Groq pool could not solve the problem it solves: every key in this
+// file is behind one company's rate limits and one company's uptime.
+import { callWithRelief, hasRelief } from './_lib/aiProviders.js';
+
 const dailyMap = new Map(); // bucket -> { count, resetAt }
 const minuteMap = new Map(); // bucket -> { count, resetAt }
 // Lowered from 1200/day and 20/min — the free-tier Groq key is shared across every user of the
@@ -371,7 +381,25 @@ function minuteLimitRetryMs(ip, purpose) {
 // fill, and the same full Portfolio digest masterplan carries. Truncating any of it produces a
 // roadmap that silently omits whole categories of the student's year — the failure that is
 // impossible to notice by reading the output, because what is missing looks like nothing at all.
-const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000, roadmap: 26000 };
+//
+// ── Why 'roadmap' was raised from 26,000 ────────────────────────────────────
+// 26,000 chars is roughly 6,500 tokens. Oracle's context window is 131,072. The
+// cap was therefore not protecting the model from anything — it was protecting
+// us from a runaway client, which is a real job, but it was set two orders of
+// magnitude below the only limit that physically exists. What it actually did
+// was cut the tail off a full catalog shortlist on the select pass, which is the
+// one pass where the tail is the point: the last entries in that list are real
+// programs the student is eligible for, and losing them is invisible in the
+// output because a missing option looks like nothing at all. Worse, the loss was
+// silent, so the client retried the same oversized payload until it gave up and
+// shipped the deterministic slate — the "context is too big" failure, in full.
+//
+// 90,000 chars (~22k tokens) leaves Oracle five times that in headroom for its
+// reasoning and its 32k of output, and still stops a broken loop from posting a
+// megabyte. The client does its own prioritised budgeting well under this
+// ceiling (src/lib/roadmap/promptBudget.js), so this stays what it always should
+// have been: a backstop, not the working limit.
+const MAX_INPUT_CHARS_BY_PURPOSE = { prep: 8000, masterplan: 20000, sat: 9000, essay: 14000, roadmap: 90000 };
 const DEFAULT_MAX_INPUT_CHARS = 2500;
 function inputCharsFor(purpose) { return MAX_INPUT_CHARS_BY_PURPOSE[purpose] || DEFAULT_MAX_INPUT_CHARS; }
 
@@ -488,19 +516,56 @@ export default async function handler(req, res) {
   // plus the academic block plus the shared stance/knowledge-policy blocks runs past 12k, and
   // truncation there cuts the behavioral rules at the end while leaving the data intact — the
   // exact inversion of what a cap is for.
-  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 20000, essay: 12000, roadmap: 16000 };
+  // 'roadmap' carries its catalog shortlist in the SYSTEM prompt (the model is
+  // selecting from a fixed list, so the list is part of its instructions rather
+  // than part of the conversation). At 16,000 that list was the thing being cut:
+  // stance + date rule + season table + the JSON contract is ~4,000 chars before
+  // a single catalog entry, and 48 entries with their dates, eligibility and
+  // lead times is ~14,000 more. See the MAX_INPUT_CHARS note above — same
+  // reasoning, same arithmetic, same 131K window this is nowhere near.
+  const MAX_SYSTEM_CHARS_BY_PURPOSE = { masterplan: 12000, sat: 12000, portfolio: 20000, essay: 12000, roadmap: 60000 };
   const systemCap = MAX_SYSTEM_CHARS_BY_PURPOSE[purpose] || 9000;
+
+  // ── Truncation is reported, not swallowed ─────────────────────────────────
+  // These caps have always been backstops, and a backstop that fires silently is
+  // indistinguishable from one that never fires. When a roadmap's catalog
+  // shortlist ran past the input cap, the tail — the last dozen real programs a
+  // student could have been given — was cut off mid-entry, and the only visible
+  // symptom was a build that came back thin or would not parse at all. Nothing
+  // in the response said the request had been cut, so the client retried the
+  // identical oversized payload three more times and then fell back to the
+  // deterministic slate.
+  //
+  // So the handler now measures what it removed and says so in the response.
+  // The roadmap generator reads it and rebuilds the same pass at a smaller size
+  // (see fitToBudget in src/lib/roadmap/promptBudget.js) instead of retrying a
+  // request that cannot fit. Callers that do not read it are unaffected.
+  const truncated = { system: 0, input: 0 };
   const systemPrompt = system
     ? String(system).slice(0, systemCap)
     : 'You are Medabrain, an AI coach for high school students (grades 9-12) preparing for undergraduate admissions and a future health career — not graduate or professional school. Be concise, accurate, and encouraging.';
+  if (system && String(system).length > systemCap) truncated.system = String(system).length - systemCap;
   groqMessages.push({ role: 'system', content: systemPrompt });
 
   if (rawMessages) {
     const cleaned = sanitizeMessages(rawMessages, purpose);
     if (cleaned) groqMessages.push(...cleaned);
+    // Measured against the messages that were KEPT, so the ordinary "only the
+    // last ten turns travel" trim of a long chat is not reported as truncation.
+    // What is reported is a single message that did not fit its cap — the case
+    // that silently changes what the model was asked.
+    const kept = (Array.isArray(rawMessages) ? rawMessages : [])
+      .filter((m) => m && typeof m.role === 'string' && typeof m.content === 'string')
+      .slice(-10);
+    const before = kept.reduce((n, m) => n + m.content.length, 0);
+    const after = (cleaned || []).reduce((n, m) => n + m.content.length, 0);
+    if (before > after) truncated.input = before - after;
   } else if (message) {
-    groqMessages.push({ role: 'user', content: String(message).slice(0, inputCharsFor(purpose)) });
+    const cap = inputCharsFor(purpose);
+    groqMessages.push({ role: 'user', content: String(message).slice(0, cap) });
+    if (String(message).length > cap) truncated.input = String(message).length - cap;
   }
+  const wasTruncated = truncated.system > 0 || truncated.input > 0;
 
   if (groqMessages.length <= 1) {
     return res.status(400).json({ error: 'No valid messages to send.' });
@@ -702,12 +767,68 @@ export default async function handler(req, res) {
     return '';
   }
 
+  // ── Layer 2: the relief hop ────────────────────────────────────────────────
+  // Reached only when Groq has genuinely run out of ways to answer — every key
+  // in the pool tried, plus the transient-failure retry. It is not part of the
+  // rotation and it never sees a request Groq could have served.
+  //
+  // The whole-invocation budget governs it, so a relief attempt is skipped
+  // rather than started when there is no longer room to finish one: a request
+  // killed halfway leaves the caller with an opaque dropped connection, which is
+  // strictly worse than the honest error we already have in hand.
+  const timeLeft = () => FUNCTION_BUDGET_MS - (Date.now() - handlerStartedAt);
+  async function tryRelief(reason) {
+    if (!hasRelief()) return null;
+    const budget = Math.min(retryTimeoutMs, timeLeft());
+    if (budget < 6000) return null;
+    const attempts = [];
+    const relief = await callWithRelief({
+      tier,
+      messages: groqMessages,
+      opts: { maxTokens: clampedTokens, temperature, jsonMode: !!jsonMode, reasoningEffort },
+      timeoutMs: budget,
+      extract: extractText,
+      onAttempt: (id, detail) => attempts.push(`${id}: ${detail}`),
+    });
+    if (!relief) {
+      if (attempts.length) console.error(`relief providers all failed after ${reason}:`, attempts.join(' | '));
+      return null;
+    }
+    console.warn(`served by relief provider ${relief.providerId} after ${reason}`);
+    return relief;
+  }
+
+  function respond({ content, modelUsed, provider = 'groq', providerLabel = 'Groq' }) {
+    addRequestToday(ip, purpose);
+    if (cacheable) setCachedResponse(cacheKey, content, modelUsed);
+    const requestsUsedToday = getRequestsUsedToday(ip, purpose);
+    return res.status(200).json({
+      content,
+      model_used: modelUsed,
+      tier,
+      purpose,
+      tierLabel: TIER_LABELS[tier] || tier,
+      // Which vendor actually answered. The roadmap generator records it so a
+      // build served during a Groq outage can say "written on the reserve model"
+      // rather than claiming, or denying, more than is true.
+      provider,
+      providerLabel,
+      relief: provider !== 'groq',
+      // Non-zero when the request did not fit its caps — see the `truncated`
+      // block above. Callers that can shrink a payload retry smaller instead of
+      // retrying identical.
+      ...(wasTruncated ? { truncated, truncatedChars: truncated.system + truncated.input } : {}),
+      requestsUsedToday,
+      requestsRemaining: Math.max(0, dailyLimitFor(purpose) - requestsUsedToday),
+      dailyLimit: dailyLimitFor(purpose),
+    });
+  }
+
   try {
     let { response, data } = await callGroqWithFailover(model, primaryTimeoutMs);
 
     // One more pass through the key rotation on a transient failure (5xx, network hiccup) so a
     // single blip doesn't dead-end the chat.
-    const timeLeft = () => FUNCTION_BUDGET_MS - (Date.now() - handlerStartedAt);
     if (!response.ok && response.status >= 500 && timeLeft() > retryTimeoutMs) {
       ({ response, data } = await callGroqWithFailover(model, Math.min(retryTimeoutMs, timeLeft())));
     }
@@ -715,6 +836,9 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const errMsg = data?.error?.message || `Medabrain error (${response.status})`;
       console.error('Groq API error:', errMsg);
+
+      const relief = await tryRelief(`Groq ${response.status}`);
+      if (relief) return respond({ content: relief.content, modelUsed: relief.model, provider: relief.providerId, providerLabel: relief.providerLabel });
 
       if (response.status === 429 || errMsg.toLowerCase().includes('rate limit')) {
         // Groq tells us how long its own bucket needs; pass that straight through so a retrying
@@ -730,27 +854,28 @@ export default async function handler(req, res) {
 
     const content = extractText(data?.choices?.[0]?.message);
     if (!content) {
+      // A 200 carrying nothing usable is a failure with a friendly status code,
+      // and before the relief layer existed it was the single most common way a
+      // roadmap pass silently became the deterministic slate.
+      const relief = await tryRelief('an empty Groq response');
+      if (relief) return respond({ content: relief.content, modelUsed: relief.model, provider: relief.providerId, providerLabel: relief.providerLabel });
       return res.status(502).json({ error: 'Medabrain had trouble forming a response. Please try again.' });
     }
 
-    addRequestToday(ip, purpose);
-    if (cacheable) setCachedResponse(cacheKey, content, data?.model || model);
-    const requestsUsedToday = getRequestsUsedToday(ip, purpose);
-    const requestsRemaining = Math.max(0, dailyLimitFor(purpose) - requestsUsedToday);
-
-    return res.status(200).json({
-      content,
-      model_used: data?.model || model,
-      tier,
-      purpose,
-      tierLabel: TIER_LABELS[tier] || tier,
-      requestsUsedToday,
-      requestsRemaining,
-      dailyLimit: dailyLimitFor(purpose),
-    });
+    return respond({ content, modelUsed: data?.model || model });
 
   } catch (err) {
     console.error('API handler error:', err);
+    // A Groq timeout or a network fault is exactly the shape of failure the
+    // relief layer exists for, so it gets the same hop the error paths above do
+    // — subject to the same budget check, which is what stops a timeout being
+    // followed by a second timeout.
+    try {
+      const relief = await tryRelief(err?.name === 'AbortError' ? 'a Groq timeout' : 'a Groq network fault');
+      if (relief) return respond({ content: relief.content, modelUsed: relief.model, provider: relief.providerId, providerLabel: relief.providerLabel });
+    } catch (reliefErr) {
+      console.error('relief hop failed:', reliefErr?.message || reliefErr);
+    }
     if (err?.name === 'AbortError') {
       return res.status(504).json({ error: 'Medabrain took too long to respond. Please try again.' });
     }

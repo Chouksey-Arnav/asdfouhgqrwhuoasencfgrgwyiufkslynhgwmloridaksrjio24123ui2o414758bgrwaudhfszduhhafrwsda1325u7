@@ -276,3 +276,60 @@ described as such (not as AI-generated).
 `api/groq.js` applies its own conservative in-memory limits (8 requests/minute, 300
 requests/day per IP) to stay comfortably inside Groq's free-tier caps regardless of traffic —
 per-account headroom that grows with each additional key configured (see above).
+
+
+---
+
+## The second provider — what happens when Groq cannot be reached
+
+Everything above is **layer 1**. Every key in it, every failover hop and every retry lives inside
+one company, so one rate limit or one outage takes all of them at once. That is what produced the
+Roadmap's *"Medabrain could not be reached for part of this build"* — a real plan, assembled from
+the deadline catalog by rule rather than by judgment, with no way to do better.
+
+**Layer 2** is a second, independent vendor behind the whole pool (`api/_lib/aiProviders.js`). It
+is reached only when every Groq key has already failed, it is never mixed into the normal rotation,
+and it never sees a request Groq could have served — so a free tier lasts, and a paid one bills as
+a function of Groq's downtime rather than of your volume.
+
+Set **any one** of these and it switches itself on:
+
+```bash
+CEREBRAS_API_KEY=csk_...     # Cerebras — same open-weight models (gpt-oss-120b, Llama 3.3 70B) at
+                             # comparable speed, so a relief answer is not a worse answer
+OPENROUTER_API_KEY=sk-or-... # OpenRouter — the broadest catalogue and the best single choice if
+                             # you do not want to think about it: one key reaches every model below
+TOGETHER_API_KEY=...         # Together AI — the same open-weight family again
+GEMINI_API_KEY=...           # Google Gemini, through its OpenAI-compatible endpoint. The most
+                             # different of the four, which is what you want in a backup: a Gemini
+                             # outage and a Groq outage have no common cause
+```
+
+Or point it at anything else that speaks the OpenAI chat-completions shape, including a private or
+self-hosted endpoint:
+
+```bash
+FALLBACK_AI_KEY=...
+FALLBACK_AI_BASE_URL=https://your-endpoint/v1
+FALLBACK_AI_MODEL=your-model-id
+# optional, per tier:
+FALLBACK_AI_MODEL_ORACLE=...   FALLBACK_AI_MODEL_SAGE=...
+FALLBACK_AI_MODEL_GUIDE=...    FALLBACK_AI_MODEL_SCOUT=...
+FALLBACK_AI_LABEL=Reserve      # what it is called in the response
+FALLBACK_AI_JSON_MODE=false    # if the endpoint rejects response_format
+```
+
+**With none of them set, nothing changes.** The relief layer is an upgrade, never a dependency —
+the same contract `api/roadmap.js` holds itself to for durable storage.
+
+### What it does not change
+
+A relief provider widens **who can be asked**. It does not widen **what may be believed**. A
+roadmap built on the second vendor is subject to the identical catalog whitelist as one built on
+Groq: the model is handed real catalog ids and anything it returns that is not one of them is
+discarded before rendering (see `docs/ROADMAP.md` §1). No model, on any provider, is ever asked for
+a date.
+
+Responses say which vendor answered (`provider`, `providerLabel`, `relief: true`), and the Roadmap
+records it in `generation.providers`. A build served by the relief provider is **not** marked
+degraded: a different company's model did the thinking, and the plan is real.

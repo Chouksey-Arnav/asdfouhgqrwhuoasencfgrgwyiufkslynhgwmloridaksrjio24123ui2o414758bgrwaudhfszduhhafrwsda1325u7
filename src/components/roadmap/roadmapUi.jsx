@@ -82,11 +82,17 @@ export const EFFORT_LABEL = {
 
 const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-/** '2027-03-25' → 'Mar 25, 2027'. Never parses as UTC (see src/lib/dateUtils.js). */
-export function fmtDate(key, { withYear = true } = {}) {
+/**
+ * '2027-03-25' → 'Mar 25, 2027'. Never parses as UTC (see src/lib/dateUtils.js).
+ *
+ * `monthOnly` drops the day, which is what dateCaption's compact form asks for
+ * when it deliberately renders a 'typical' date vaguer than it knows it.
+ */
+export function fmtDate(key, { withYear = true, monthOnly = false } = {}) {
   if (!key) return '';
   const [y, m, d] = String(key).split('-').map(Number);
-  if (!y || !m || !d) return String(key);
+  if (!y || !m || (!d && !monthOnly)) return String(key);
+  if (monthOnly) return `${MONTHS_SHORT[m - 1]}${withYear ? ` ${y}` : ''}`;
   return `${MONTHS_SHORT[m - 1]} ${d}${withYear ? `, ${y}` : ''}`;
 }
 
@@ -102,14 +108,26 @@ export function fmtMonth(key) {
  * A confirmed date renders as a date. An unconfirmed one renders as a window
  * with the caveat attached and a marker the student can tap to enter the real
  * one. There is no prop that turns the caveat off, on purpose.
+ *
+ * `compact` is not that prop. It asks for a SHORTER caption, and dateCaption's
+ * compact form answers by being vaguer — a 'typical' date drops to its month —
+ * so the caveat is not removed, it is made unnecessary. It exists for surfaces
+ * where the item is a mark on a drawing rather than a card, and where the long
+ * caption is three wrapped lines colliding with the next item. The full text
+ * still travels in the tooltip, and the card behind the mark still carries it
+ * in full. See the note in dateCaption().
  */
-export function ItemDate({ item, size = 12, showIcon = true, onFindDate = null }) {
+export function ItemDate({ item, size = 12, showIcon = true, onFindDate = null, compact = false }) {
   const exact = displaysExactDate(item);
-  const caption = dateCaption(item, (d) => fmtDate(d));
+  const full = dateCaption(item, (d, opts) => fmtDate(d, opts));
+  const caption = compact ? dateCaption(item, (d, opts) => fmtDate(d, opts), { compact: true }) : full;
   const color = exact ? C.t2 : C.violetL || C.violet;
   const Icon = exact ? Clock : CalendarSearch;
   const body = (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: size, color, fontFamily: C.FM }}>
+    <span
+      title={compact && !exact ? full : undefined}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: size, color, fontFamily: C.FM, whiteSpace: compact ? 'nowrap' : undefined }}
+    >
       {showIcon && <Icon size={size} color={color} />}
       {caption}
     </span>

@@ -30,6 +30,7 @@ import {
   ROADMAP_CATALOG, CATALOG_BY_ID, TRACK_BY_ID, SELECTIVITY, EFFORT, PRIORITY,
 } from '../../data/roadmap/index.js';
 import { dayKey, daysBetween, shiftDays, classFallYears, effectiveGradeStage, gradeIdxOf, GRADE_KEYS } from '../timeline.js';
+import { auditSlate } from './dateAudit.js';
 
 /** Grade stage key → the '9'..'12' string the catalog gates on. 'gap' reads as senior. */
 export const GRADE_NUMBER = { freshman: '9', sophomore: '10', junior: '11', senior: '12', gap: '12' };
@@ -80,9 +81,33 @@ export function resolveWindow(entry, years, gradeStage, yearOffset = 0) {
   const base = fallYearForSlot(w.yearSlot || 'current', years, gradeStage);
   if (base == null) return null;
   const fall = base + yearOffset;
-  const opens = dateFor(w.opensMonthDay, fall);
   const due = dateFor(w.dueMonthDay, fall);
   const on = dateFor(w.onMonthDay, fall);
+
+  // ── The summer-opening correction ──────────────────────────────────────────
+  // dateFor maps August–December onto the fall calendar year and January–July
+  // onto the next one, which is right for everything a school year contains and
+  // wrong for exactly one shape: an application that OPENS in the summer and
+  // CLOSES in the following autumn. Regeneron STS opens June 1 and closes
+  // November 10; the Gates Scholarship opens July 15 and closes September 15.
+  // Read through the academic-year rule, June and July land in the summer AFTER
+  // the autumn deadline, so the roadmap said these opened eight months after
+  // they closed.
+  //
+  // Nothing downstream noticed, because `opens` is never the anchor and is never
+  // the date a student is shown — it only fed the prompt and the "already open"
+  // reasoning, which is precisely why this survived. CHECK 2 in ./dateAudit.js
+  // is what found it, and it is the reason that gate compares an item's dates
+  // against each other rather than each one against the calendar.
+  //
+  // The rule: an opening date cannot follow the thing it opens. When the
+  // academic-year mapping puts it there, it belongs to the previous calendar
+  // year — the summer before the autumn, which is what the catalog meant.
+  let opens = dateFor(w.opensMonthDay, fall);
+  const closes = due || on;
+  if (opens && closes && opens > closes) {
+    opens = dateFor(w.opensMonthDay, fall - 1);
+  }
   // `anchor` is the ONE date everything else sorts and schedules by: the
   // deadline if there is one, otherwise the event day. An opening date is
   // never the anchor — "the application opened" is not a thing that can be
@@ -265,8 +290,27 @@ export function buildCandidateSlate({ user = null, answers = {}, now = new Date(
     }
   }
 
-  items.sort((a, b) => (b.score - a.score) || String(a.anchor).localeCompare(String(b.anchor)));
-  return { items, years, gradeStage, today, horizonEnd };
+  // ── The four checks, at resolve time ───────────────────────────────────────
+  // Everything above this line is arithmetic over a hand-written catalog, and
+  // this is where the results of that arithmetic are checked before they can
+  // reach a student — see the header of ./dateAudit.js for the four gates and
+  // for why an item that fails one is withheld rather than shown with a caveat.
+  //
+  // This runs on every build, for every student, against the real clock. The
+  // build-time pass (scripts/verifyRoadmapDates.mjs) cannot replace it: half of
+  // what it catches depends on today's date, on this student's class years, or
+  // on a leap year no fixture happened to cross.
+  const audited = auditSlate(items, { today, horizonEnd });
+  if (audited.report.withheld.length && typeof console !== 'undefined') {
+    // A withheld item is a catalog bug, and the person who can fix it is reading
+    // a console. The student is not told: from their side the entry simply is
+    // not offered, which is the correct outcome and not an error they can act on.
+    console.warn('[roadmap] withheld items failing date checks:',
+      audited.report.withheld.map((w) => `${w.id} (${w.problems.map((p) => p.check).join(', ')})`).join('; '));
+  }
+
+  audited.items.sort((a, b) => (b.score - a.score) || String(a.anchor).localeCompare(String(b.anchor)));
+  return { items: audited.items, years, gradeStage, today, horizonEnd, dateAudit: audited.report };
 }
 
 function makeItem(entry, window, ctxBase, extra = {}) {

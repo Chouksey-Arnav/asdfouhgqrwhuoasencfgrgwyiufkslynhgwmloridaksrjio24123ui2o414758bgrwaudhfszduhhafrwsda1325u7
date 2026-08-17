@@ -250,8 +250,19 @@ assert('...and are suppressed while typing in a field',
   /el\.tagName==='INPUT'\|\|el\.tagName==='TEXTAREA'\|\|el\.isContentEditable/.test(app));
 assert('every enrolled pathway is reachable from the ⌘K palette',
   /id:`path-\$\{r\.key\}`/.test(app) && /group:'Pathways'/.test(app));
-assert('...and the palette actually renders that group',
-  /\['Pathways','Jump to'/.test(app));
+// The group must be rendered, and rendered AHEAD of the destinations — for a
+// student running three tracks, "switch to Nursing" is the most-repeated action
+// in the app. Matched as an ordering rather than as one exact array literal,
+// because the palette has since grown a 'Recent' group in front of both and
+// pinning the literal made a true property fail for a reason unrelated to it.
+{
+  const groups = (app.match(/\[('[^']+',?)+\]\.map\(group=>/) || [''])[0];
+  const order = [...groups.matchAll(/'([^']+)'/g)].map((m) => m[1]);
+  assert('...and the palette actually renders that group',
+    order.includes('Pathways'), `palette groups: ${order.join(', ') || 'none found'}`);
+  assert('...ahead of the list of destinations',
+    order.indexOf('Pathways') < order.indexOf('Jump to'), `palette groups: ${order.join(', ')}`);
+}
 
 assert('the rail is a real tablist with roving arrow-key navigation',
   /role="tablist"/.test(switcher) && /ArrowRight/.test(switcher) && /tabIndex=\{active \? 0 : -1\}/.test(switcher));

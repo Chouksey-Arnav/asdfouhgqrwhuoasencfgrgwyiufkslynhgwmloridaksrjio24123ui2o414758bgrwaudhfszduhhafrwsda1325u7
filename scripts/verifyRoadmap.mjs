@@ -634,6 +634,74 @@ assert('the item card renders dates through ItemDate',
   /ItemDate/.test(read('src/components/roadmap/RoadmapItem.jsx')));
 assert('the home card renders dates through ItemDate',
   /ItemDate/.test(read('src/components/roadmap/RoadmapHomeCard.jsx')));
+assert('the path renders dates through ItemDate',
+  /ItemDate/.test(read('src/components/roadmap/RoadmapPath.jsx')));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('7. Generation can survive one vendor, and one prompt that does not fit');
+// Three mechanisms, all of which fail silently when they break — which is the
+// whole reason they are asserted here rather than left to a code review. Each
+// of these was, in some form, a cause of the roadmap arriving stamped
+// `degraded` while Medabrain was in fact reachable the whole time.
+const groqApi = read('api/groq.js');
+const budget = await import('../src/lib/roadmap/promptBudget.js');
+
+// 1. The client budgets against the number the server actually enforces. A
+//    drift between these two is silent truncation with more code in the way.
+const inputCap = Number((groqApi.match(/MAX_INPUT_CHARS_BY_PURPOSE = \{[^}]*roadmap:\s*(\d+)/) || [])[1]);
+const systemCap = Number((groqApi.match(/MAX_SYSTEM_CHARS_BY_PURPOSE = \{[^}]*roadmap:\s*(\d+)/) || [])[1]);
+eq('the client knows the server’s roadmap input cap', budget.SERVER_CAPS.user, inputCap);
+eq('the client knows the server’s roadmap system cap', budget.SERVER_CAPS.system, systemCap);
+assert('and aims comfortably under both', budget.TARGET.user < inputCap && budget.TARGET.system < systemCap,
+  `targets ${budget.TARGET.system}/${budget.TARGET.user} against caps ${systemCap}/${inputCap}`);
+
+// 2. The select pass — the biggest prompt in the app — fits at the top rung for
+//    the grade with the most eligible items. This is the assertion that would
+//    have caught the original bug: a senior's shortlist was 17,635 characters
+//    against a 16,000-character cap.
+const seniorSlate = ENGINE.buildCandidateSlate({ user: { gradeStage: 'senior' }, answers: {}, now: NOW });
+for (const level of budget.RUNGS) {
+  const list = ENGINE.shortlistForPrompt(seniorSlate, { perTrack: level.perTrack, total: level.total });
+  // The rendered form is ~1.35× the raw field content once the labels, the
+  // flags and the line breaks are counted; measured against the real renderer
+  // in generator.js, this is the conservative side of it.
+  const rendered = list.reduce((n, i) => n + 120 + (i.name || '').length + (i.why || '').length + (i.org || '').length, 0);
+  assert(`the shortlist at rung "${level.name}" fits the system budget with the prompt around it`,
+    rendered + 6000 < budget.TARGET.system,
+    `${rendered} chars of catalog + ~6000 of instructions against a ${budget.TARGET.system} budget`);
+}
+assert('the smallest rung is still a real menu, not a token gesture',
+  budget.RUNGS[budget.RUNGS.length - 1].total >= 15,
+  `${budget.RUNGS[budget.RUNGS.length - 1].total} entries`);
+assert('the rungs genuinely shrink at every step',
+  budget.RUNGS.every((r, i) => i === 0 || r.total < budget.RUNGS[i - 1].total));
+
+// 3. The second vendor is wired in, and is reached only after the first has
+//    genuinely run out. A relief provider mixed into the normal rotation is a
+//    bill nobody agreed to; one that is never called is a file nobody reads.
+assert('the relief provider module exists', /export async function callWithRelief/.test(read('api/_lib/aiProviders.js')));
+assert('groq.js imports it', /from '\.\/_lib\/aiProviders\.js'/.test(groqApi));
+assert('and only reaches for it on a failure path', /tryRelief\(/.test(groqApi)
+  && /if \(!response\.ok\)[\s\S]{0,400}tryRelief/.test(groqApi),
+  'the relief hop must sit behind a failed Groq response, never in the normal path');
+assert('a relief answer is reported as one rather than passed off as Groq',
+  /relief: provider !== 'groq'/.test(groqApi));
+assert('truncation is reported to the caller instead of being swallowed',
+  /truncatedChars/.test(groqApi) && /truncatedChars/.test(read('src/lib/roadmap/generator.js')));
+assert('a truncated pass retries smaller rather than identical',
+  /shrink/.test(read('src/lib/roadmap/generator.js')));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('8. The four date checks are wired in everywhere they claim to be');
+const audit = await import('../src/lib/roadmap/dateAudit.js');
+eq('there are exactly four checks', audit.CHECKS.length, 4);
+assert('the resolver runs them', /auditSlate\(/.test(read('src/lib/roadmap/catalog.js')));
+assert('and reports what it withheld', /dateAudit/.test(read('src/lib/roadmap/catalog.js')));
+assert('the build runs them over the whole catalog',
+  /verify:roadmap-dates/.test(read('package.json')) && /verifyRoadmapDates/.test(read('package.json')));
+assert('a slate arrives with nothing withheld',
+  (seniorSlate.dateAudit?.withheld || []).length === 0,
+  (seniorSlate.dateAudit?.withheld || []).map((w) => w.id).join(', '));
 
 // ─────────────────────────────────────────────────────────────────────────────
 console.log('');
