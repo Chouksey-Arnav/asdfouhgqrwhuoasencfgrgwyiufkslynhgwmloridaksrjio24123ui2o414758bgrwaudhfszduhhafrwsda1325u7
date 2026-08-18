@@ -497,7 +497,10 @@ const PORTFOLIO_SUBNAV = [
 // The three retired Portfolio tabs → the section of Activities & Résumé each of them became.
 // Every caller in the app (and every old URL) still names them by their tab id; this is the
 // one place that translation happens.
-const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials' };
+// 'credentials' is an alias for 'skills' so goDest('portfolio/resume:credentials') — the id
+// NAV_KEYWORDS and the deep-link protocol both use, since "credentials" is the section's actual
+// label — resolves the same as the palette's own 'skills' command instead of landing on nothing.
+const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials', credentials:'credentials' };
 // The section an old-style URL names, if any: /portfolio/clinical → 'clinical'. routes.js
 // already forwards those paths to the `resume` view; this recovers the part it cannot carry,
 // since an alias by design never round-trips back out of formatPath().
@@ -4735,7 +4738,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
       const tier=coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref;
       setCoachTier(tier);
-      const r=await callGroqAI(sysPrompt,lastUser?.content||'',700,history.filter(m=>m.role!=='error'),tier);
+      // 1600 (up from 700): a full breakdown or plan-style reply routinely ran past 700 tokens and
+      // got cut off mid-sentence. api/groq.js's per-purpose ceiling for 'coach' was raised to match.
+      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier);
       setCoachTierCounts(c=>({...c,[tier]:(c[tier]||0)+1}));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
@@ -9983,6 +9988,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           gradeLabel={gradeLabel}
           isMobile={isMobile}
           recentActivitySummary={recentActivitySummary}
+          goDest={goDest}
         />
       </div>
     );
