@@ -163,21 +163,42 @@ and routes it automatically — short/simple asks get Scout, essay feedback/deep
 Sage, everything else gets Guide. The AI Coach header shows a small "Auto" badge with whichever
 tier just answered, purely for transparency.
 
-| Tier     | Model                     | Used for                                                          |
-|----------|---------------------------|--------------------------------------------------------------------|
-| `scout`  | `llama-3.1-8b-instant`    | Fastest — quick turns, lightweight generation                      |
-| `guide`  | `openai/gpt-oss-20b`      | Balanced default — structured reasoning without 70B-model cost      |
-| `sage`   | `llama-3.3-70b-versatile` | Deepest chat-facing reasoning — essay feedback, complex questions   |
-| `oracle` | `openai/gpt-oss-120b`     | Server-side only — the Plans tab's full day-by-day roadmap          |
+| Tier     | Model                 | reasoning_effort | Used for                                                    |
+|----------|-----------------------|-------------------|--------------------------------------------------------------|
+| `scout`  | `openai/gpt-oss-20b`  | `low`             | Fastest — quick turns, lightweight generation                |
+| `guide`  | `openai/gpt-oss-20b`  | `medium`          | Balanced default — structured reasoning at Scout's model cost |
+| `sage`   | `openai/gpt-oss-20b`  | `medium`          | Deepest chat-facing reasoning — essay feedback, complex questions |
+| `oracle` | `openai/gpt-oss-120b` | `high`            | Server-side only — the Plans tab's full day-by-day roadmap    |
 
 (`fast`/`deep` are still accepted as aliases for `scout`/`guide` for backwards compatibility.)
 
-Scout and Guide are both cheap on Groq's pay-as-you-go pricing (`llama-3.1-8b-instant` ≈
-$0.05/$0.08 per million input/output tokens; `openai/gpt-oss-20b` ≈ $0.075/$0.30) and get much
-higher tokens-per-minute headroom than Sage's `llama-3.3-70b-versatile` (≈$0.59/$0.79) — which is
-exactly why the classifier only routes to Sage for messages that actually look like they need it:
-it's the most capable tier, but the priciest and most likely to hit Groq's TPM limits if it were
-the default for every chat turn.
+### Why every tier is a gpt-oss model now
+
+Groq deprecated `llama-3.1-8b-instant` (the old Scout model) and `llama-3.3-70b-versatile` (the
+old Sage model) on **August 16, 2026** — see
+[Groq's deprecations page](https://console.groq.com/docs/deprecations). Both stopped being served
+entirely. Groq's own migration guidance points `llama-3.1-8b-instant` callers at
+`openai/gpt-oss-20b` and `llama-3.3-70b-versatile` callers at `openai/gpt-oss-120b` (its only other
+recommendation, `qwen/qwen3.6-27b`, is a **preview** model on Groq — not safe to depend on in
+production, since preview models can be pulled with little notice).
+
+As of this migration, Groq's production text-model catalog is just two models:
+`openai/gpt-oss-20b` and `openai/gpt-oss-120b`. Rather than pin Sage to the larger, pricier
+120B model, it stayed on `openai/gpt-oss-20b` (Scout/Guide's model) at a higher
+`reasoning_effort` — noticeably cheaper per call than 120B while still supporting the same large
+(32,768-token) max completion, so a Sage-tier essay critique isn't cut short. `reasoning_effort` is
+what actually separates Scout from Guide from Sage now that they share a model id: `low` for
+Scout's quick turns, `medium` for Guide and Sage. This also means the SAT tab's answer-key
+verifier (`src/lib/sat/aiPractice.js`) no longer runs on a different *model family* than the item
+author (Oracle) — Groq no longer hosts a second production family to put it on — so its
+independence now comes from a lower reasoning_effort and temperature 0 rather than different
+weights.
+
+Scout and Guide are both cheap on Groq's pay-as-you-go pricing (`openai/gpt-oss-20b` ≈
+$0.075/$0.30 per million input/output tokens) and get much higher tokens-per-minute headroom than
+Oracle's `openai/gpt-oss-120b` (≈$0.15/$0.75) — which is exactly why the classifier only routes to
+Sage (and code only routes to Oracle) for messages/jobs that actually look like they need the
+deeper reasoning effort.
 
 Oracle (`openai/gpt-oss-120b`) is never offered in the student-facing Scout/Guide/Sage picker —
 it's reserved entirely for `purpose:'masterplan'`. It was chosen deliberately over Groq's other

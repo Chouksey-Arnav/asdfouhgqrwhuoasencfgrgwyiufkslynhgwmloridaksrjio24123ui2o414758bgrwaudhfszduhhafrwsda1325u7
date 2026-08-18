@@ -100,27 +100,48 @@ function setCachedResponse(key, content, model) {
 // ── Model tiers ────────────────────────────────────────────────────────────
 // Medabrain offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
 // — each maps to a real Groq-hosted model:
-//   Scout — llama-3.1-8b-instant, fastest, for quick turns and lightweight generation. Used as
-//           the default for the main chat coach, the highest-volume call in the app.
-//   Guide — openai/gpt-oss-20b, the balanced tier for tasks that benefit from more structure/
-//           reasoning without the cost and TPM pressure of a 70B model.
-//   Sage  — llama-3.3-70b-versatile, the most capable tier, for when a student explicitly wants
-//           the deepest feedback available (e.g. a full essay critique) and is fine trading
-//           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
+//
+// ── Why Scout and Sage moved off Llama, August 2026 ─────────────────────────
+// Groq deprecated llama-3.1-8b-instant and llama-3.3-70b-versatile on August 16, 2026 (see
+// https://console.groq.com/docs/deprecations) — both stopped being served entirely, which is what
+// this whole rework was for. Groq's own migration guidance points llama-3.1-8b-instant callers at
+// openai/gpt-oss-20b and llama-3.3-70b-versatile callers at openai/gpt-oss-120b or the (preview-
+// only, not production-safe) qwen/qwen3.6-27b. Every text tier below is now one of the two models
+// Groq actually lists as PRODUCTION: openai/gpt-oss-20b and openai/gpt-oss-120b. Nothing in this
+// app calls a preview-tier or deprecated Groq model — a preview model can be pulled "at short
+// notice with limited advance warning" per Groq's own docs, which is the exact failure this file
+// exists to not repeat.
+//
+//   Scout — openai/gpt-oss-20b at low reasoning_effort, fastest/cheapest tier for quick turns and
+//           lightweight generation. Used as the default for the main chat coach, the highest-
+//           volume call in the app.
+//   Guide — openai/gpt-oss-20b at medium reasoning_effort, the balanced tier for tasks that
+//           benefit from more structure/reasoning than Scout without Sage's cost.
+//   Sage  — openai/gpt-oss-20b at medium reasoning_effort, for when a student explicitly wants
+//           deeper feedback (e.g. a full essay critique) and full-length answers, at Scout/Guide's
+//           lighter token cost rather than Oracle's 120B one. Was the app-wide default once; kept
+//           as the opt-in top tier for chat-facing surfaces.
 // 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
-//   Oracle — openai/gpt-oss-120b, never offered in the student-facing Scout/Guide/Sage picker;
-//            selected by code, for two generation jobs where the output has to be *correct*
-//            rather than merely fluent: the Plans tab's "master plan" and the SAT tab's practice
-//            item generation. It is a 128K-context, 32,768-max-output reasoning model with
-//            native Structured Outputs and a tunable reasoning_effort — the deepest,
-//            largest-output model Groq hosts, worth the extra latency for a generation that
+//   Oracle — openai/gpt-oss-120b at high reasoning_effort, never offered in the student-facing
+//            Scout/Guide/Sage picker; selected by code, for generation jobs where the output has
+//            to be *correct* rather than merely fluent (the Plans tab's "master plan", the Roadmap
+//            tab, and the SAT tab's practice item authoring). It is a 128K-context, 32,768-max-
+//            output reasoning model with native Structured Outputs — the deepest, largest-output
+//            model Groq hosts, worth the extra latency and token cost for a generation that
 //            happens rarely and matters a lot. Authoring an SAT question is exactly that shape:
 //            the model must actually solve the problem it just wrote in order to key it, which
 //            is a reasoning task, not a writing task.
+//
+// The SAT answer-key verifier (src/lib/sat/aiPractice.js) used to run Sage on a different model
+// family (Llama) than Oracle authors items on (gpt-oss), deliberately, so the verifier didn't
+// share the author's blind spots. With Llama gone from Groq's production catalog, that
+// cross-family independence isn't available from Groq alone anymore; the verifier still runs at a
+// different reasoning_effort and temperature 0, which catches a real class of authoring mistakes,
+// just not ones baked into the gpt-oss family's weights specifically.
 const MODELS = {
-  scout: 'llama-3.1-8b-instant',
+  scout: 'openai/gpt-oss-20b',
   guide: 'openai/gpt-oss-20b',
-  sage: 'llama-3.3-70b-versatile',
+  sage: 'openai/gpt-oss-20b',
   oracle: 'openai/gpt-oss-120b',
 };
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
@@ -129,6 +150,10 @@ const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage', oracle: 'Ora
 // for deeper chain-of-thought — only meaningful for that model family, so gate on the model id
 // rather than trusting every caller to know which models support it.
 const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss-20b']);
+// Every tier is now a gpt-oss model, so reasoning_effort is what actually separates Scout from
+// Guide from Sage rather than the model id — a caller that pins its own effort (e.g. the SAT
+// verifier's temperature-0 pass) always wins; this is only the floor for callers that don't.
+const TIER_DEFAULT_REASONING_EFFORT = { scout: 'low', guide: 'medium', sage: 'medium', oracle: 'high' };
 
 // ── The Medabrain "brain" architecture — purpose-scoped key pools ───────────
 // Medabrain is the head/meta brain of the app. Underneath it, distinct subsystems each get their
@@ -235,18 +260,19 @@ function keysForPurpose(purpose) {
 const ALL_KEYS = [...new Set([...SHARED_KEYS, ...Object.values(PURPOSE_KEYS).flat()])];
 
 // Default model tier per purpose when the caller doesn't pin one — keeps each subsystem on the
-// cheapest model that's still good enough for its job (the whole point of splitting keys is to run
-// high-volume surfaces cheap while reserving the 70B tier for the rare, high-value plan generation).
+// cheapest tier that's still good enough for its job (the whole point of splitting keys is to run
+// high-volume surfaces cheap while reserving Sage's higher reasoning_effort for the rare,
+// high-value plan generation).
 const PURPOSE_DEFAULT_TIER = {
   coach: 'guide',
-  // Prep was on Scout (8B) purely for cost. But this surface is a tutor: a
+  // Prep was on Scout (low reasoning_effort) purely for cost. But this surface is a tutor: a
   // student asking "why does the loop of Henle work like that" gets an answer
-  // that is either right or quietly wrong, and 8B is where quietly wrong lives.
+  // that is either right or quietly wrong, and low effort is where quietly wrong lives.
   // Guide is the cheapest tier that reliably teaches rather than paraphrases.
   prep: 'guide',
   // Portfolio answers admissions questions with real-world specifics —
   // deadlines, ED/EA mechanics, what particular schools want. That is factual
-  // recall under a reasoning task, which is exactly where the 70B tier earns
+  // recall under a reasoning task, which is exactly where Sage's higher reasoning_effort earns
   // its latency. This surface is also low-volume compared to the head coach.
   portfolio: 'sage',
   interview: 'guide',  // conversational, low-latency for spoken turns
@@ -700,10 +726,13 @@ export default async function handler(req, res) {
   // when the caller actually asked for it, since OpenAI-compatible APIs require the word "JSON" to
   // appear somewhere in the prompt when this is set (masterPlanGenerator.js's prompts always do).
   const responseFormat = jsonMode ? { type: 'json_object' } : undefined;
-  // reasoning_effort only applies to the gpt-oss model family (Guide/Oracle) — silently ignored
-  // for other tiers so a stray value on a non-reasoning model can't cause a 400.
-  const reasoningEffort = (['low', 'medium', 'high'].includes(rawReasoningEffort) && REASONING_CAPABLE_MODELS.has(model))
-    ? rawReasoningEffort : undefined;
+  // reasoning_effort only applies to the gpt-oss model family — silently ignored for a non-
+  // reasoning model so a stray value can't cause a 400. Every tier is gpt-oss now, so a caller
+  // that doesn't pin a value still gets one: TIER_DEFAULT_REASONING_EFFORT, which is what actually
+  // separates Scout/Guide/Sage now that they share a model id.
+  const reasoningEffort = REASONING_CAPABLE_MODELS.has(model)
+    ? (['low', 'medium', 'high'].includes(rawReasoningEffort) ? rawReasoningEffort : TIER_DEFAULT_REASONING_EFFORT[tier])
+    : undefined;
 
   // Temperature is a per-task choice, not an app-wide constant. 0.7 is right for
   // a coach that should sound human; it is wrong for authoring a question whose

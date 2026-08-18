@@ -99,9 +99,9 @@ The platform integrates advanced generative intelligence powered by the **Groq C
     *   Distributes AI requests dynamically depending on the active feature's cognitive complexity.
     *   Features a purpose-scoped rotation of API keys (`GROQ_API_KEY_PREP`, `GROQ_API_KEY_SAT`, `GROQ_API_KEY_PORTFOLIO`, etc.) to maximize rate-limiting headroom.
 *   **AI Model Tiering Matrix:**
-    *   **Scout Tier (`llama-3.1-8b-instant`):** Ultralight, blisteringly fast for lightweight interactive prompts and chat widgets.
-    *   **Guide Tier (`openai/gpt-oss-20b`):** Balanced default model tier, powering lesson explanations and pathway guidance.
-    *   **Sage Tier (`llama-3.3-70b-versatile`):** Highly capable model for complex reasoning, detailed essay critiques, and deep SAT tutor guidance.
+    *   **Scout Tier (`openai/gpt-oss-20b`, low reasoning effort):** Ultralight, blisteringly fast for lightweight interactive prompts and chat widgets.
+    *   **Guide Tier (`openai/gpt-oss-20b`, medium reasoning effort):** Balanced default model tier, powering lesson explanations and pathway guidance.
+    *   **Sage Tier (`openai/gpt-oss-20b`, medium reasoning effort):** Highly capable tier for complex reasoning, detailed essay critiques, and deep SAT tutor guidance. (Migrated off Groq's now-deprecated `llama-3.3-70b-versatile` in August 2026 — see `GROQ_SETUP.md`.)
     *   **Oracle Tier (`openai/gpt-oss-120b`):** Super-scale server-side model with a massive context window and high reasoning effort. Powers the generation of customized, day-by-day academic study master plans.
 *   **Academic Integrity Boundary:**
     *   AI prompt instructions strictly prevent the AI from drafting, writing, or completing graded essays or homework assignments, focusing instead on coaching, advising, and structural critiquing.

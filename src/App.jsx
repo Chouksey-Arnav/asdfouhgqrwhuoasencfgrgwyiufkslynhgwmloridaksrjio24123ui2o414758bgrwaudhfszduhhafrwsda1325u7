@@ -4485,7 +4485,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Ordering matters here, and it used to be wrong in a way that produced the
   // single worst Medabrain failure in the app. `quickSignals` matched anything
   // starting "when is"/"who is", and any message under 42 characters, and sent
-  // it to Scout — llama-3.1-8b-instant, the smallest model available. So
+  // it to Scout — the lightest-effort tier Medabrain has. So
   // "When do I apply to Duke?" (24 chars) and "Who was president in 1954?"
   // (26 chars) were routed to the model least able to recall a real-world fact,
   // and the answer came back as a shrug or a redirect. Those are exactly the
@@ -4494,7 +4494,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // So knowledge-recall is now checked BEFORE brevity, and it wins: a question
   // whose answer is a fact about the world (a named university, a deadline, a
   // date, a historical figure, a policy, a required score) goes to Sage, the
-  // 70B tier, regardless of how short it is. Scout is left with what it is
+  // deeper tier, regardless of how short it is. Scout is left with what it is
   // genuinely good at — restating, defining a term, quick arithmetic, chit-chat
   // — and only when nothing in the message suggests a fact needs to be right.
   function classifyCoachTier(message) {

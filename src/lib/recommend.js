@@ -4,7 +4,7 @@
 // (category averages, enrolled courses, pathway) and returns a ranked list:
 // #1 pick first, #2 next, etc. No network call required — this runs instantly
 // client-side so the "Recommended For You" panel never waits on an API. The
-// Medabrain AI coach (Groq/Llama) can optionally narrate the #1 pick — see
+// Medabrain AI coach (Groq/gpt-oss) can optionally narrate the #1 pick — see
 // getMedabrainPickPrompt() below — but ranking itself never depends on it.
 // ─────────────────────────────────────────────────────────────────────────────
 
