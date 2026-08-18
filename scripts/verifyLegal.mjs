@@ -238,7 +238,12 @@ function stripComments(source) {
 
 if (adsenseLoaded) {
   for (const [file, source] of [
+    // Every landing page version, not just the live one: a retired version is
+    // one constant away from being live again (docs/LANDING_VERSIONS.md), and a
+    // false advertising claim that only surfaces after a revert is exactly the
+    // kind this check exists to make impossible.
     ['src/components/LandingPage.jsx', read('src/components/LandingPage.jsx')],
+    ['src/components/landing/v2/LandingPageV2.jsx', read('src/components/landing/v2/LandingPageV2.jsx')],
     ['src/components/auth/AuthShell.jsx', read('src/components/auth/AuthShell.jsx')],
     ['src/App.jsx', app],
   ]) {
