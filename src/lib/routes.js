@@ -76,7 +76,10 @@ export const SUBVIEWS = {
   roadmap: {
     state: 'roadmapView',
     default: 'overview',
-    ids: ['overview', 'year', 'seasons', 'list', 'intake'],
+    // 'climb' is the projection view — what finishing the year is worth,
+    // measured against the app's own application-strength score. Addressable
+    // like the rest because it is the screen a student sends to a parent.
+    ids: ['overview', 'year', 'climb', 'seasons', 'list', 'intake'],
   },
   progress: {
     state: 'progressView',

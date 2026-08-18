@@ -106,6 +106,7 @@ export const NAV_KEYWORDS = {
   // ── Roadmap ───────────────────────────────────────────────────────────────
   'roadmap/overview': ['what now', 'next thing', 'my thesis'],
   'roadmap/year': ['the path', 'the road', 'my whole year', 'when does it get busy', 'crunch'],
+  'roadmap/climb': ['what do i get', 'is this worth it', 'my dream schools', 'application strength', 'progress toward college', 'trajectory', 'the payoff'],
   'roadmap/seasons': ['quarters', 'terms', 'chapters'],
   'roadmap/list': ['all items', 'full list', 'every deadline', 'filter'],
   'roadmap/intake': ['my answers', 'change my answers', 'redo the questions'],

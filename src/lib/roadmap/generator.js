@@ -76,9 +76,100 @@ const BACKOFF_MS = [1500, 4000, 9000];
 const TIMEOUT_MS = 58000;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ── Failures that no amount of retrying will fix ─────────────────────────────
+//
+// THE BUG THIS EXISTS BECAUSE OF, stated plainly, because it is the one a
+// student actually reported: the roadmap arrived stamped `degraded`, the banner
+// offered "Rebuild it properly", and pressing it appeared to do nothing at all.
+//
+// It was not doing nothing. It was doing the identical thing that had just
+// failed. `call()` treats any 5xx and any 429 as retryable, so a build against a
+// server with no API key configured — or a revoked key, or a model the account
+// cannot reach — spends FOUR attempts per pass across FIVE passes: twenty
+// upstream calls, about ninety seconds of backoff sleeps, and then the
+// deterministic slate. The retry button then repeats all twenty. From the
+// outside that is a button that hangs for a minute and a half and changes
+// nothing, which is exactly what it was reported as.
+//
+// The classification below is the fix. A failure carrying one of these codes is
+// TERMINAL: it is a fact about the deployment or the account, identical on every
+// subsequent call, so the first one aborts the whole build rather than being
+// re-proven nineteen more times. What the student gets instead is the
+// deterministic roadmap in a couple of seconds, a banner that names the real
+// cause, and a retry button that is honest about whether retrying can help.
+//
+// Codes come from api/groq.js, which returns them alongside every error body.
+// A response with no code at all is treated as transient — the conservative
+// direction, since the cost of retrying a terminal failure is a slow build and
+// the cost of NOT retrying a transient one is a degraded roadmap.
+export const TERMINAL_CODES = new Set([
+  // No key configured on the server at all. Every call, every pass, forever.
+  'not_configured',
+  // Every key in the pool was rejected: missing, revoked, mistyped, or barred.
+  'auth_failed',
+  // The pinned model is not reachable for this account.
+  'model_unavailable',
+  // The daily budget is spent. It does not come back before tomorrow, so the
+  // remaining passes cannot succeed and neither can an immediate retry.
+  'daily_limit',
+]);
+
+/**
+ * What a student should be told, and whether the retry button can honestly be
+ * offered. One entry per terminal code plus the two non-terminal outcomes that
+ * still end in a degraded roadmap.
+ *
+ * `retryable` is the field the UI hangs the button off. Offering "rebuild it
+ * properly" against a cause a rebuild cannot touch is how a working button comes
+ * to be reported as broken, and it is the whole reason this table exists rather
+ * than one generic sentence.
+ */
+export const DEGRADED_REASONS = {
+  not_configured: {
+    title: 'Medabrain is not switched on for this app yet.',
+    detail: 'Your roadmap was assembled straight from the verified deadline catalog instead. Every date on it is real and the sequencing is sound — what is missing is the part written for you personally. This is something we have to fix on our end, not something you can retry into working.',
+    retryable: false,
+  },
+  auth_failed: {
+    title: 'We could not sign in to Medabrain.',
+    detail: 'Your roadmap was assembled from the verified deadline catalog instead. Every date on it is real. This is a problem on our side and retrying will hit the same wall — it will build properly once we have fixed it.',
+    retryable: false,
+  },
+  model_unavailable: {
+    title: 'The model that writes roadmaps is unavailable right now.',
+    detail: 'Your roadmap was assembled from the verified deadline catalog instead, so every date on it is still real. This one is worth trying again later today.',
+    retryable: true,
+  },
+  daily_limit: {
+    title: 'You have used up today\'s roadmap builds.',
+    detail: 'Building a year is the most expensive thing this app does, so there is a daily ceiling on it. This roadmap was assembled from the verified deadline catalog — real programs, real dates — and you can rebuild it properly tomorrow.',
+    retryable: false,
+  },
+  unreachable: {
+    title: 'Medabrain could not be reached while this was being built.',
+    detail: 'Some of your roadmap was assembled from the deadline catalog by rule rather than by judgment. Every date on it is still real — the reasoning is what is missing. This usually works on a second try.',
+    retryable: true,
+  },
+  thin_selection: {
+    title: 'Medabrain answered, but did not choose enough for a real year.',
+    detail: 'Rather than show you a four-item year, the rest was filled from the verified deadline catalog. Every date is real. Trying again usually produces a fuller answer.',
+    retryable: true,
+  },
+};
+
+/** The student-facing explanation for a code, with a safe default. */
+export function degradedReasonFor(code) {
+  return { code: code || 'unreachable', ...(DEGRADED_REASONS[code] || DEGRADED_REASONS.unreachable) };
+}
+
 export function createTrace() {
   return {
     calls: 0, aiCalls: 0, fallbacks: 0, attempts: 0, errors: [], stages: {},
+    // Set the first time a pass fails with a TERMINAL_CODES code. Every later
+    // call() in the same build short-circuits on it without touching the network,
+    // which is what turns a ninety-second twenty-call failure into a two-second
+    // one-call failure that can say why.
+    terminal: null,
     // Which vendor actually answered, and how small the payload had to get.
     // Both are things a student may be told: a build served entirely by the
     // relief provider is still a real build and should not carry the degraded
@@ -131,15 +222,29 @@ async function callOnce({ system, user, maxTokens, reasoningEffort, lane }) {
     });
     if (!r.ok) {
       let waitMs = null;
+      let code = null;
       let detail = `HTTP ${r.status}`;
       try {
         const body = await r.json();
         if (Number.isFinite(Number(body?.retryAfterMs))) waitMs = Number(body.retryAfterMs);
+        if (typeof body?.code === 'string') code = body.code;
         if (body?.error) detail = `HTTP ${r.status} — ${String(body.error).slice(0, 140)}`;
       } catch { /* a non-JSON error body is still an error */ }
+      // A terminal code is a fact about the deployment or the account rather
+      // than about this request, so it is never retryable no matter what the
+      // status number says — a 429 that means "your daily budget is spent" and a
+      // 429 that means "wait four seconds" are the same status and opposite
+      // instructions. See TERMINAL_CODES above for the failure this distinction
+      // was added to end.
+      const terminal = !!code && TERMINAL_CODES.has(code);
       // A 413 is the one status where retrying the same payload is provably
       // pointless, and it is the status a payload-too-large guard returns.
-      return { retryable: r.status === 429 || r.status >= 500, shrink: r.status === 413, detail, waitMs };
+      return {
+        code, terminal,
+        retryable: !terminal && (r.status === 429 || r.status >= 500),
+        shrink: r.status === 413,
+        detail, waitMs,
+      };
     }
     const d = await r.json();
     const parsed = parseLooseJSON(d && d.content);
@@ -182,6 +287,17 @@ async function callOnce({ system, user, maxTokens, reasoningEffort, lane }) {
  * than spending three real API calls discovering that.
  */
 async function call(spec, trace, stage) {
+  // ── The short circuit ──────────────────────────────────────────────────────
+  // A terminal failure earlier in this build has already established that no
+  // call can succeed. Every later pass returns immediately, without a request:
+  // five passes × four attempts against a wall is ninety seconds of the
+  // student's life spent re-learning something the first call already proved.
+  if (trace?.terminal) {
+    trace.calls += 1;
+    trace.fallbacks += 1;
+    trace.stages[stage] = 'skipped';
+    return null;
+  }
   if (trace) trace.calls += 1;
   const build = typeof spec === 'function' ? spec : () => spec;
   let rungIdx = 0;
@@ -210,6 +326,10 @@ async function call(spec, trace, stage) {
       return result.parsed;
     }
     noteError(trace, stage, `attempt ${attempt + 1} ${result.detail}`);
+    // Record the terminal cause on the trace so every later pass short-circuits
+    // and so the finished roadmap can name it to the student. First one wins:
+    // the cause that stopped the build is the one worth reporting.
+    if (result.terminal && trace && !trace.terminal) trace.terminal = result.code;
     if (!result.retryable || attempt === ATTEMPTS - 1) break;
     // Step the payload down whenever size was implicated, and once more after a
     // second failure of any kind — a pass that has failed twice at one size has
@@ -745,7 +865,15 @@ export async function createRoadmap({
   // not a minimal roadmap. Four is the floor below which this is not a year.
   if (selection.picks.length < 4) {
     noteError(trace, 'select', `only ${selection.picks.length} usable pick(s) — falling back to the catalog slate`);
-    if (trace) { trace.fallbacks += 1; trace.stages.select = 'fallback'; }
+    if (trace) {
+      trace.fallbacks += 1;
+      trace.stages.select = 'fallback';
+      // Distinct from "could not be reached": Medabrain answered, it just did not
+      // choose enough to be a year. The student is told which, because the two
+      // have different odds on a retry and pretending otherwise is how a retry
+      // button loses its credibility.
+      if (!trace.thinSelection) trace.thinSelection = true;
+    }
     selection = { picks: fallback.picks, omitted: [], gaps: selection.gaps };
   }
 
@@ -831,6 +959,18 @@ export async function createRoadmap({
     // the student is told this is not Medabrain's best thinking and offered a
     // retry, rather than being shown the deterministic slate as if it were.
     degraded: trace.fallbacks > 0,
+    // WHY it degraded, in the student's language, plus whether a retry can
+    // honestly be offered. Before this the banner said "Medabrain could not be
+    // reached" for every cause — a missing API key, a spent daily budget and a
+    // genuine outage all produced the same sentence and the same button, and for
+    // two of those three the button could not possibly work. See
+    // DEGRADED_REASONS at the top of this file.
+    ...(trace.fallbacks > 0
+      ? { degradedReason: degradedReasonFor(trace.terminal || (trace.thinSelection ? 'thin_selection' : 'unreachable')) }
+      : {}),
+    // Which passes fell back, so a repair can re-run exactly those rather than
+    // rebuilding a year that was mostly fine. See repairRoadmap below.
+    failedStages: Object.entries(trace.stages).filter(([, v]) => v !== 'ai').map(([k]) => k),
     // Which vendors answered. A build served wholly or partly by the relief
     // provider (api/_lib/aiProviders.js) is NOT degraded — a different company's
     // model did the thinking, and the roadmap is real. It is recorded because it
@@ -906,6 +1046,136 @@ export async function deepenSeason(roadmap, seasonId, { user, portfolioFacts, la
  */
 export function seasonNeedingDepth(roadmap, today = dayKey()) {
   return (roadmap?.seasons || []).find((s) => !s.deepened && daysBetween(today, s.startDate) <= 56) || null;
+}
+
+// ── Repairing a degraded roadmap, instead of rebuilding a good one ───────────
+//
+// "Rebuild it properly" used to mean one thing: throw the whole year away and
+// run all five passes again. That is the right answer when the year's THINKING
+// failed — a strategy or a slate assembled by rule is not worth patching around
+// — and it is a bad answer when it did not. A roadmap whose strategy and slate
+// came back beautifully and whose second season's working detail timed out is a
+// roadmap that is ninety percent Medabrain's own work, and rebuilding it spends
+// five calls to re-derive four things that were already right, re-rolls the
+// student's whole item list under them, and can perfectly well come back worse.
+//
+// So the retry is split by what actually failed:
+//
+//   · strategy or select fell back  → the year's argument is not real. Full
+//     rebuild; there is nothing here worth keeping.
+//   · only deepen and/or review fell back → repair. Re-run exactly those passes
+//     against the roadmap that already exists, keep every item, every pinned
+//     date and every ticked step, and change nothing that worked.
+//
+// `roadmapNeedsFullRebuild` is the predicate, exported so the UI can label the
+// button honestly rather than guessing.
+
+/** The two passes whose failure makes the year itself untrustworthy. */
+const STRUCTURAL_STAGES = new Set(['strategy', 'select']);
+
+/**
+ * True when a degraded roadmap's failure was structural, and a repair would be
+ * patching detail onto an argument that was never written.
+ */
+export function roadmapNeedsFullRebuild(roadmap) {
+  const failed = roadmap?.generation?.failedStages;
+  // No record of which passes failed — an older roadmap, built before this was
+  // tracked. Rebuild: it is the answer that is never wrong, only sometimes
+  // wasteful, and guessing the other way would silently leave a bad year in place.
+  if (!Array.isArray(failed) || !failed.length) return true;
+  return failed.some((s) => STRUCTURAL_STAGES.has(s));
+}
+
+/**
+ * Re-run only the passes that fell back, onto the roadmap already on screen.
+ *
+ * Always resolves to a roadmap — the existing one, unchanged, if nothing could
+ * be repaired. The returned `generation` is restamped so the student can see
+ * that an attempt genuinely happened and what it achieved, which is the whole
+ * difference between a retry button that works and a retry button that is
+ * reported as doing nothing.
+ *
+ * @returns {{ roadmap: object, repaired: string[], stillDegraded: boolean }}
+ */
+export async function repairRoadmap(roadmap, {
+  user, portfolioFacts = null, lane = null, onStage = () => {},
+} = {}) {
+  const failed = (roadmap?.generation?.failedStages || []).filter((s) => !STRUCTURAL_STAGES.has(s));
+  if (!roadmap || !failed.length) {
+    return { roadmap, repaired: [], stillDegraded: !!roadmap?.generation?.degraded };
+  }
+
+  const trace = createTrace();
+  let out = roadmap;
+  const repaired = [];
+
+  // The seasons whose working detail never got written.
+  for (const stage of failed) {
+    if (!stage.startsWith('deepen:')) continue;
+    const seasonId = stage.slice('deepen:'.length);
+    const season = (out.seasons || []).find((s) => s.id === seasonId);
+    if (!season) continue;
+    onStage(`Writing the working detail for ${season.label}…`);
+    const next = await deepenSeason(out, seasonId, { user, portfolioFacts, lane });
+    // deepenSeason returns the SAME object on failure, which is what makes this
+    // identity check a truthful test of whether anything was actually repaired.
+    if (next !== out) { out = next; repaired.push(stage); }
+  }
+
+  // The honest read-back. Cheap, and the most distinctive thing the tab
+  // produces, so it is worth one call of its own to recover.
+  if (failed.includes('review') && out.items?.length) {
+    onStage('Reading it back and being honest about it…');
+    const balance = out.balance || validateSlate(out);
+    const raw = await call({
+      system: reviewSystem(out, balance),
+      user: 'Review this roadmap. Return JSON only.',
+      maxTokens: 2000,
+      reasoningEffort: 'medium',
+      lane,
+    }, trace, 'review');
+    if (raw) {
+      out = {
+        ...out,
+        review: {
+          verdict: str(raw.verdict, 700),
+          bet: str(raw.bet, 300),
+          ifOnlyOneThing: str(raw.ifOnlyOneThing, 300),
+          notCovered: arr(raw.notCovered).slice(0, 4).map((n) => str(n, 300)).filter(Boolean),
+        },
+      };
+      repaired.push('review');
+    }
+  }
+
+  const stillFailed = failed.filter((s) => !repaired.includes(s));
+  const stillDegraded = stillFailed.length > 0;
+  const gen = roadmap.generation || {};
+  const providers = [...new Set([...(gen.providers || []), ...Object.keys(trace.providers)])];
+
+  return {
+    roadmap: {
+      ...out,
+      updatedAt: Date.now(),
+      generation: {
+        ...gen,
+        // `at` is deliberately NOT restamped — the roadmap was built when it was
+        // built, and a repair is not a rebuild. `repairedAt` is its own fact.
+        repairedAt: Date.now(),
+        repairs: (gen.repairs || 0) + 1,
+        aiCalls: (gen.aiCalls || 0) + trace.aiCalls,
+        providers,
+        degraded: stillDegraded,
+        failedStages: stillFailed,
+        ...(stillDegraded
+          ? { degradedReason: degradedReasonFor(trace.terminal || 'unreachable') }
+          : { degradedReason: null }),
+        errors: [...(gen.errors || []), ...trace.errors].slice(-16),
+      },
+    },
+    repaired,
+    stillDegraded,
+  };
 }
 
 export { buildCandidateSlate, shortlistForPrompt };

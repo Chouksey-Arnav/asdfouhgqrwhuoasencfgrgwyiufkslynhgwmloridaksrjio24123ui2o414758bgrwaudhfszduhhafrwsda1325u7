@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import {
   Map as MapIcon, Sparkles, RefreshCw, CalendarDays, Compass, ListChecks, Target,
   AlertTriangle, ShieldQuestion, Lightbulb, Plus, Download,
-  Layers, Scale, Quote, X, Info, CheckCircle2,
+  Layers, Scale, Quote, X, Info, CheckCircle2, TrendingUp, ArrowRight, Circle, Lock,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnSm, btnG, R, CC, G, tint, pill, accentFill, onTint, autoGrid, inp } from '../../lib/theme';
 import SubNav from '../ui/SubNav';
@@ -19,7 +19,7 @@ import { fetchPortfolio } from '../PlansTab';
 import { buildProfileFactsText } from '../../lib/masterPlanGenerator';
 import { intakeProgress } from '../../lib/roadmap/intake';
 import {
-  createRoadmap, deepenSeason, seasonNeedingDepth,
+  createRoadmap, deepenSeason, seasonNeedingDepth, repairRoadmap, roadmapNeedsFullRebuild,
 } from '../../lib/roadmap/generator';
 import {
   allItems, itemsInSeason, currentSeason, nextActions, roadmapStats, roadmapToCalendarEvents,
@@ -32,7 +32,9 @@ import RoadmapItem from './RoadmapItem';
 import RoadmapSpine from './RoadmapSpine';
 import RoadmapTimeline from './RoadmapTimeline';
 import RoadmapPath from './RoadmapPath';
-import { DegradedNotice, trackColor, fmtDate } from './roadmapUi';
+import RoadmapAscent from './RoadmapAscent';
+import { computeRoadmapReadiness, readinessContext } from '../../lib/roadmap/readiness';
+import { DegradedNotice, trackColor, fmtDate, URGENCY_META } from './roadmapUi';
 import { dayKey, daysBetween } from '../../lib/timeline';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,9 +67,26 @@ import { dayKey, daysBetween } from '../../lib/timeline';
 
 const ACCENT = C.violet;
 
+// ── The six screens, ordered by the question a student arrives with ──────────
+// Not by importance and not by how much work each took to build. A sub-nav is
+// read left to right by someone who does not yet know what any of it means, so
+// the order is the order the questions occur to a person:
+//
+//   Overview    what do I do now?
+//   Your Year   when does all of it happen?
+//   The Climb   what do I get out of doing it?          ← the "why bother" screen
+//   Seasons     what is this stretch of my life for?
+//   Everything  where is that one thing I saw?
+//   Your Answers what is this even built from?
+//
+// The Climb sits third rather than last because it is the answer to the
+// question that decides whether the other five get opened again next week, and
+// burying the payoff behind four reference screens is how a plan becomes a
+// chore list. See the header of RoadmapAscent.jsx.
 export const ROADMAP_SUBNAV = [
   { id: 'overview', ic: Compass, label: 'Overview', color: C.violet },
   { id: 'year', ic: CalendarDays, label: 'Your Year', color: C.sky },
+  { id: 'climb', ic: TrendingUp, label: 'The Climb', color: C.green },
   { id: 'seasons', ic: Layers, label: 'Seasons', color: C.teal },
   { id: 'list', ic: ListChecks, label: 'Everything', color: C.amber },
   { id: 'intake', ic: Target, label: 'Your Answers', color: C.fuchsia },
@@ -162,6 +181,11 @@ function usePortfolioFacts(user, liveSignals) {
 export default function RoadmapTab({
   user, saveUser, liveSignals = null, accent = ACCENT, isMobile = false,
   view = 'overview', onViewChange, goPortfolio, goPlans,
+  // One generic (tab, view) jump. The readiness gate's rows are data — each gate
+  // in src/lib/roadmap/readiness.js declares where it is satisfied — so the gate
+  // screen cannot use a fixed set of callbacks the way the rest of this tab
+  // does. Defaults to a no-op so the component still renders standalone.
+  onNavigate = null,
   // The student's motion preference, threaded down from App.jsx exactly as it is
   // for Plans. Every animated surface in this tab reads it: the build screen,
   // the spine's markers, the timeline's reveal, the drag glide.
@@ -184,6 +208,15 @@ export default function RoadmapTab({
   const [building, setBuilding] = useState(false);
   const [stage, setStage] = useState(BUILD_FALLBACK_STAGES[0]);
   const [showIntake, setShowIntake] = useState(false);
+  // A repair runs in place rather than behind the build screen — it is one or
+  // two calls, not five passes, and replacing the whole roadmap with a loading
+  // screen for ten seconds would hide the thing being repaired.
+  const [repairing, setRepairing] = useState(false);
+  // What the last press of the degraded banner's button achieved, so the banner
+  // can say so. Session state on purpose: it is about this visit, not about the
+  // roadmap, and persisting it would have a student meeting yesterday's failure
+  // message on a screen that is now fine.
+  const [lastAttempt, setLastAttempt] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const [trackFilter, setTrackFilter] = useState('all');
   const [showDone, setShowDone] = useState(false);
@@ -198,6 +231,22 @@ export default function RoadmapTab({
   const stale = useMemo(() => roadmapIsStale(roadmap, { user, answers: roadmap?.intake || {}, portfolio }), [roadmap, user, portfolio]);
   const expired = useMemo(() => roadmapIsExpired(roadmap, today), [roadmap, today]);
   const balance = useMemo(() => (roadmap ? (roadmap.balance || validateSlate(roadmap)) : null), [roadmap]);
+
+  // ── Can a roadmap usefully be built for this student yet? ──────────────────
+  // Checked before the intake rather than after it: asking thirteen questions
+  // and THEN saying "actually we cannot build this" would be the worst possible
+  // ordering, and it is the ordering you get by default if the gate lives next
+  // to the generator. See src/lib/roadmap/readiness.js for why each gate is
+  // there and why there are only five of them.
+  const readiness = useMemo(
+    () => computeRoadmapReadiness(user, readinessContext({ portfolio, liveSignals })),
+    [user, portfolio, liveSignals],
+  );
+  // The measured application strength this tab draws the climb from. Computed by
+  // App.jsx from the whole Portfolio and threaded down with the rest of the live
+  // signals, so the chart and the Progress tab can never disagree about a number
+  // they both put on screen.
+  const strength = liveSignals?.applicationStrength || null;
 
   // ── Persistence ────────────────────────────────────────────────────────────
   // Same "local copy is the working copy" contract the master plan uses: every
@@ -239,11 +288,29 @@ export default function RoadmapTab({
   // createRoadmap) because the back half of a year gets rewritten by life. This
   // is what fills the rest in as it becomes near, so the roadmap keeps writing
   // itself forward instead of thinning out in month seven.
+  //
+  // ── Why this is attempted at most ONCE per season per mount ────────────────
+  // deepenSeason returns the roadmap UNCHANGED when its call fails, which is the
+  // right contract — a failed deepen must never damage a working roadmap — and
+  // it means `roadmap` does not change, `seasonNeedingDepth` still names the same
+  // season, and the effect is primed to fire again. It then does, because
+  // `commit` is rebuilt whenever the user record's identity changes, which
+  // happens on every single mutation anywhere in the tab: tick a step, pin a
+  // date, mark something done, and each one fires another four-attempt Oracle
+  // call for a season that is not going to deepen today. That is a quota leak
+  // with no visible symptom until the daily budget is gone and the next real
+  // build degrades — which is exactly the failure this tab was reported for.
+  //
+  // `attemptedRef` remembers the seasons already tried in this session, so a
+  // failure costs one attempt rather than one per keystroke. A page reload is a
+  // legitimate retry, which is why it is a ref and not persisted state.
+  const attemptedDeepenRef = useRef(new Set());
   useEffect(() => {
     if (!roadmap || building || deepenRef.current) return;
     const needs = seasonNeedingDepth(roadmap, today);
-    if (!needs) return;
+    if (!needs || attemptedDeepenRef.current.has(needs.id)) return;
     deepenRef.current = true;
+    attemptedDeepenRef.current.add(needs.id);
     (async () => {
       try {
         const next = await deepenSeason(roadmap, needs.id, { user, portfolioFacts, lane: user?.id || null });
@@ -280,6 +347,11 @@ export default function RoadmapTab({
       saveUser({ ...(current || user), roadmap: next });
       await RoadmapStore.flushRoadmapNow(next, 'generated');
       onViewChange?.('overview');
+      // A rebuild that comes back degraded AGAIN is recorded, because the banner
+      // has to be able to say "we tried, it failed the same way". Without this
+      // the student sees an identical screen and concludes, reasonably, that the
+      // button did nothing — see the header of DegradedNotice.
+      setLastAttempt(next.generation?.degraded ? { at: Date.now(), outcome: 'failed' } : null);
       toast.success(next.generation?.degraded ? 'Roadmap built — but not fully personalised.' : 'Your year is mapped.');
     } catch (err) {
       // createRoadmap is contractually total, so reaching here means something
@@ -291,10 +363,59 @@ export default function RoadmapTab({
     }
   }, [user, ensureFacts, saveUser, onViewChange]);
 
+  // ── "Rebuild it properly" ──────────────────────────────────────────────────
+  //
+  // Two different actions behind one affordance, chosen by what actually broke
+  // (roadmapNeedsFullRebuild — see the header above it in generator.js):
+  //
+  //   · The year's ARGUMENT failed — strategy or slate selection fell back to the
+  //     catalog. There is nothing here worth keeping, so this is a full rebuild.
+  //   · Only the DETAIL failed — a season's working steps, or the read-back. The
+  //     strategy and the item list are genuinely Medabrain's, and throwing them
+  //     away to recover a paragraph would also throw away every date the student
+  //     has pinned and every step they have ticked. So this repairs in place.
+  //
+  // Both paths end by recording what happened, so the banner can report it.
+  const repair = useCallback(async () => {
+    setRepairing(true);
+    try {
+      const { facts } = await ensureFacts();
+      const { roadmap: next, repaired, stillDegraded } = await repairRoadmap(roadmap, {
+        user, portfolioFacts: facts, lane: user?.id || user?.email || null, onStage: setStage,
+      });
+      if (next !== roadmap) {
+        const current = await DB.getUser();
+        saveUser({ ...(current || user), roadmap: next });
+        await RoadmapStore.flushRoadmapNow(next, 'repaired');
+      }
+      if (!stillDegraded) {
+        setLastAttempt(null);
+        toast.success('Finished — the rest of your roadmap is written now.');
+      } else {
+        setLastAttempt({ at: Date.now(), outcome: repaired.length ? 'partial' : 'failed' });
+        toast(repaired.length ? 'Recovered part of it.' : 'Still could not reach Medabrain.');
+      }
+    } catch (err) {
+      console.error('roadmap repair failed:', err);
+      setLastAttempt({ at: Date.now(), outcome: 'failed' });
+      toast.error('Could not finish your roadmap. Try again in a moment.');
+    } finally {
+      setRepairing(false);
+    }
+  }, [roadmap, user, ensureFacts, saveUser]);
+
+  const needsFullRebuild = useMemo(() => roadmapNeedsFullRebuild(roadmap), [roadmap]);
+
   const rebuild = useCallback(() => {
     if (!roadmap?.intake) { setShowIntake(true); return; }
     build(roadmap.intake);
   }, [roadmap, build]);
+
+  /** What the degraded banner's button does — repair when that is the honest answer. */
+  const fixGeneration = useCallback(() => {
+    if (needsFullRebuild) rebuild();
+    else repair();
+  }, [needsFullRebuild, rebuild, repair]);
 
   // ── Item mutations ─────────────────────────────────────────────────────────
   const mutate = (fn, reason) => (...args) => commit(fn(roadmap, ...args), reason);
@@ -316,6 +437,27 @@ export default function RoadmapTab({
 
   if (building) return <BuildingScreen stage={stage} accent={accent} isMobile={isMobile} reducedMotion={reducedMotion} />;
 
+  // ── The gate stands in front of the FIRST build, and nothing else ─────────
+  // In front, not behind: a student who has not told us their grade cannot be
+  // given a year, and finding that out after thirteen questions would be the app
+  // wasting their time and then blaming them for it.
+  //
+  // And only the first build. Once a roadmap exists the gate never appears
+  // again, even if a gate has since gone unsatisfied — a student who cleared
+  // their college list must still be able to open "Your Answers", change
+  // something and rebuild. Blocking that would take a working feature away from
+  // somebody as a punishment for editing their own record, which is not what a
+  // readiness check is for.
+  if (!roadmap && (showIntake || view === 'intake') && !readiness.ready) {
+    return (
+      <ReadinessGate
+        readiness={readiness} accent={accent} isMobile={isMobile} user={user}
+        onGo={(tab, v) => onNavigate?.(tab, v)}
+        onBack={() => setShowIntake(false)}
+      />
+    );
+  }
+
   if (showIntake || (!roadmap && view === 'intake')) {
     return (
       <div>
@@ -336,7 +478,15 @@ export default function RoadmapTab({
     );
   }
 
-  if (!roadmap) return <IntroScreen accent={accent} isMobile={isMobile} onStart={() => setShowIntake(true)} user={user} />;
+  if (!roadmap) {
+    return (
+      <IntroScreen
+        accent={accent} isMobile={isMobile} user={user} readiness={readiness}
+        onStart={() => setShowIntake(true)}
+        onGo={(tab, v) => onNavigate?.(tab, v)}
+      />
+    );
+  }
 
   const activeView = ROADMAP_SUBNAV.some((n) => n.id === view) ? view : 'overview';
   const viewAccent = ROADMAP_SUBNAV.find((n) => n.id === activeView)?.color || accent;
@@ -365,7 +515,13 @@ export default function RoadmapTab({
       </div>
 
       <div style={CC({ gap: 20 })}>
-        <DegradedNotice generation={roadmap.generation} onRetry={rebuild} busy={building} />
+        <DegradedNotice
+          generation={roadmap.generation}
+          onRetry={fixGeneration}
+          busy={repairing}
+          fullRebuild={needsFullRebuild}
+          lastAttempt={lastAttempt}
+        />
         {(stale || expired) && (
           <StaleNotice stale={stale} expired={expired} onRebuild={rebuild} onEditAnswers={() => setShowIntake(true)} />
         )}
@@ -375,10 +531,21 @@ export default function RoadmapTab({
             roadmap={roadmap} stats={stats} upNext={upNext} season={season} balance={balance}
             accent={accent} isMobile={isMobile} itemProps={itemProps}
             expandedId={expandedId} setExpandedId={setExpandedId}
+            strength={strength} today={today} reducedMotion={reducedMotion}
             onGoYear={() => onViewChange?.('year')}
             onGoSeasons={() => onViewChange?.('seasons')}
+            onGoClimb={() => onViewChange?.('climb')}
             onExport={exportCalendar}
             onRebuild={rebuild}
+          />
+        )}
+
+        {activeView === 'climb' && (
+          <ClimbView
+            roadmap={roadmap} strength={strength} today={today}
+            isMobile={isMobile} reducedMotion={reducedMotion} accent={C.green}
+            onGoList={() => onViewChange?.('list')}
+            onGoPortfolio={goPortfolio}
           />
         )}
 
@@ -420,7 +587,7 @@ export default function RoadmapTab({
 
 // ── The first screen a student ever sees ─────────────────────────────────────
 
-function IntroScreen({ accent, isMobile, onStart, user }) {
+function IntroScreen({ accent, isMobile, onStart, user, readiness, onGo }) {
   return (
     <div>
       <PanelHero icon={MapIcon} color={accent} color2={C.fuchsia} eyebrow="Roadmap" m={isMobile}
@@ -450,13 +617,183 @@ function IntroScreen({ accent, isMobile, onStart, user }) {
             body="It will tell you what your year is betting on and what it does not cover. No flattery — you are going to be judged by strangers on paper." />
         </div>
 
-        <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 26, fontSize: 15, padding: '13px 26px' }}>
-          <Sparkles size={16} /> Start the thirteen questions
-        </button>
-        <div style={{ fontSize: 11, color: C.t4, marginTop: 12 }}>
-          About four minutes{user?.name ? `, ${user.name}` : ''} — most of it is confirming what we already know.
+        {readiness?.ready === false ? (
+          // Not a lock screen. The button still works and still starts the
+          // questions — it just lands on the gate, which is one screen listing
+          // what is missing with a link beside each. Refusing outright here
+          // would make the first thing this feature ever does a refusal.
+          <>
+            <ChecklistStrip readiness={readiness} accent={accent} onGo={onGo} isMobile={isMobile} />
+            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 18, fontSize: 15, padding: '13px 26px' }}>
+              <Sparkles size={16} /> See what is left
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 26, fontSize: 15, padding: '13px 26px' }}>
+              <Sparkles size={16} /> Start the thirteen questions
+            </button>
+            <div style={{ fontSize: 11, color: C.t4, marginTop: 12 }}>
+              About four minutes{user?.name ? `, ${user.name}` : ''} — most of it is confirming what we already know.
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** The five gates as a compact progress strip, for the intro screen. */
+function ChecklistStrip({ readiness, accent, onGo, isMobile }) {
+  return (
+    <div style={{
+      marginTop: 24, padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 12,
+      background: tint(accent, 0.06), border: `1px solid ${tint(accent, 0.2)}`,
+    }}>
+      <div style={{ ...R({ gap: 10, marginBottom: 12, flexWrap: 'wrap' }) }}>
+        <span style={{ fontSize: 11.5, fontWeight: 800, color: C.t1 }}>
+          {readiness.done} of {readiness.total} ready
+        </span>
+        <div style={{ flex: 1, minWidth: 90, height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
+          <motion.div
+            initial={{ width: 0 }} animate={{ width: `${readiness.pct}%` }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            style={{ height: '100%', background: accentFill(accent) }}
+          />
         </div>
       </div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+        {readiness.checklist.map((c) => {
+          const done = c.state === 'done';
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => !done && onGo?.(c.goTab, c.goView)}
+              disabled={done}
+              title={c.gains}
+              style={{
+                ...pill(done ? tint(C.green, 0.12) : C.surfHi, done ? C.green : C.t2, {
+                  fontSize: 11, fontWeight: done ? 700 : 600, padding: '5px 11px', gap: 5,
+                  border: `1px solid ${done ? tint(C.green, 0.3) : C.b2}`,
+                  cursor: done ? 'default' : 'pointer', fontFamily: C.FB,
+                }),
+              }}
+            >
+              {done ? <CheckCircle2 size={11} /> : <Circle size={11} />}
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The gate screen.
+ *
+ * Reached when a student asks to build a roadmap the app does not yet know
+ * enough to build well. Three rules govern how it reads, and all three exist
+ * because the obvious version of this screen is a refusal with a list attached:
+ *
+ *   1. IT SAYS WHAT EACH THING BUYS THEM, not what it costs them. Every row
+ *      carries the gate's own `gains` sentence — "grade decides the entire
+ *      year", not "grade is required". A checklist standing between someone and
+ *      the thing they came for has to justify every line of itself.
+ *   2. EVERY ROW IS A DOOR. The action button lands exactly where the thing is
+ *      done, because a list of requirements with no route to satisfying them is
+ *      a dead end wearing a checklist's clothes.
+ *   3. WHAT IS ALREADY DONE IS SHOWN DONE. A student who finished onboarding
+ *      properly arrives at four ticks and one task, which reads as "you are
+ *      nearly there". The same screen showing only the one missing item reads as
+ *      "here is another hoop", and those are different screens.
+ */
+function ReadinessGate({ readiness, accent, isMobile, user, onGo, onBack }) {
+  const next = readiness.missing[0] || null;
+  return (
+    <div>
+      <PanelHero
+        icon={Lock} color={accent} color2={C.sky} eyebrow="Roadmap" m={isMobile}
+        title={`Almost — ${readiness.missing.length} thing${readiness.missing.length === 1 ? '' : 's'} left`}
+        sub="Building a year is the most expensive thing this app does, and it is worth doing once, properly. These are the facts that change what comes out of it — not paperwork."
+        stats={[{ value: `${readiness.done}/${readiness.total}`, label: 'ready', color: C.green }]}
+      />
+
+      <div style={{ ...glass({ padding: isMobile ? 18 : 24, marginTop: 20 }) }}>
+        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.8, maxWidth: 660 }}>
+          A roadmap built from a blank record is a list of national deadlines that could have been
+          written for anybody — and you would only ever look at it once. Each of these changes what
+          the roadmap actually says. Most take a minute.
+        </div>
+
+        <div style={{ ...CC({ gap: 10, marginTop: 20 }) }}>
+          {readiness.checklist.map((c) => (
+            <GateRow
+              key={c.id} gate={c} isMobile={isMobile}
+              highlight={c.id === next?.id}
+              onGo={() => onGo?.(c.goTab, c.goView)}
+            />
+          ))}
+        </div>
+
+        <div style={{ ...R({ gap: 9, marginTop: 22, flexWrap: 'wrap' }) }}>
+          {next && (
+            <button onClick={() => onGo?.(next.goTab, next.goView)}
+              style={{ ...btn(accentFill(accent)), color: onTint(accent), fontSize: 14 }}>
+              {next.action} <ArrowRight size={14} />
+            </button>
+          )}
+          <button onClick={onBack} style={btnG({ fontSize: 13 })}>Not now</button>
+        </div>
+
+        <div style={{ fontSize: 11, color: C.t4, marginTop: 14, lineHeight: 1.7, maxWidth: 620 }}>
+          Nothing here is a wait — every one of them is something you can do this afternoon, from
+          inside the app. Come back when they are ticked{user?.name ? `, ${user.name}` : ''} and the
+          whole year takes about four minutes to build.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GateRow({ gate, highlight, onGo, isMobile }) {
+  const done = gate.state === 'done';
+  const loading = gate.state === 'loading';
+  const color = done ? C.green : highlight ? C.amber : C.t3;
+  return (
+    <div style={{
+      display: 'flex', gap: 12, alignItems: 'flex-start',
+      padding: isMobile ? '13px 14px' : '15px 17px', borderRadius: 12,
+      background: highlight ? tint(C.amber, 0.07) : C.surf2,
+      border: `1px solid ${highlight ? tint(C.amber, 0.26) : C.b1}`,
+      opacity: done ? 0.72 : 1,
+    }}>
+      <div style={{ flexShrink: 0, marginTop: 1 }}>
+        {done ? <CheckCircle2 size={18} color={C.green} />
+          : loading ? <Circle size={18} color={C.t4} />
+            : <Circle size={18} color={color} />}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 13.5, fontWeight: 700, color: C.t1, lineHeight: 1.4,
+          textDecoration: done ? 'line-through' : 'none',
+        }}>
+          {gate.label}
+        </div>
+        {/* The reason, always. This is the row's whole justification for existing
+            and hiding it behind a tooltip would be hiding the argument. */}
+        {!done && (
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65, marginTop: 5 }}>
+            {gate.gains}
+          </div>
+        )}
+      </div>
+      {!done && !loading && (
+        <button onClick={onGo} style={{ ...btnSm(C.surfHi, { flexShrink: 0, whiteSpace: 'nowrap' }) }}>
+          {gate.action} <ArrowRight size={11} />
+        </button>
+      )}
     </div>
   );
 }
@@ -694,22 +1031,45 @@ function StaleNotice({ stale, expired, onRebuild, onEditAnswers }) {
 
 function OverviewView({
   roadmap, stats, upNext, season, balance, accent, isMobile, itemProps,
-  expandedId, setExpandedId, onGoYear, onGoSeasons, onExport, onRebuild,
+  expandedId, setExpandedId, strength, today, reducedMotion,
+  onGoYear, onGoSeasons, onGoClimb, onExport, onRebuild,
 }) {
+  const first = upNext[0] || null;
   return (
     <>
-      {/* What to do now. First, always, above everything — including above the
-          year's strategy. A student opening this tab on a Tuesday needs an
-          action, not a thesis. */}
+      {/* ── THE ONE THING ────────────────────────────────────────────────────
+          Above everything, including the rest of "do this now". A student
+          opening this tab on a Tuesday between classes has about eight seconds
+          of attention, and a list of five is a decision they will defer. One
+          named thing, with the reason it is that one, is an action they can
+          take standing up. The other four are still right underneath. */}
+      {first && (
+        <TheOneThing
+          item={first} accent={accent} isMobile={isMobile}
+          expanded={expandedId === first.id}
+          onToggleExpand={() => setExpandedId(expandedId === first.id ? null : first.id)}
+          itemProps={itemProps}
+        />
+      )}
+
+      {/* What to do now — the rest of it. */}
       <div>
-        <SectionTitle icon={Sparkles} color={C.amber}>Do this now</SectionTitle>
+        <SectionTitle icon={Sparkles} color={C.amber}>
+          {first ? 'Then these' : 'Do this now'}
+        </SectionTitle>
         {upNext.length ? (
           <div style={CC({ gap: 9 })}>
-            {upNext.map((item) => (
+            {upNext.slice(first ? 1 : 0).map((item) => (
               <RoadmapItem key={item.id} item={item} {...itemProps}
                 expanded={expandedId === item.id}
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)} />
             ))}
+            {upNext.length === 1 && (
+              <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.6 }}>
+                Nothing else needs starting in the next three weeks —{' '}
+                <button onClick={onGoYear} style={linkish}>see what is coming after that</button>.
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ ...glass2({ padding: 18 }), ...R({ gap: 11 }) }}>
@@ -720,6 +1080,24 @@ function OverviewView({
             </span>
           </div>
         )}
+      </div>
+
+      {/* ── What all of it is for ────────────────────────────────────────────
+          The compact climb, sitting directly under the actions rather than at
+          the bottom of the page. This is the answer to "why should I do any of
+          this", and a screen that lists the work before ever naming the payoff
+          is a screen that gets closed. Full version on its own tab. */}
+      <div style={{
+        ...glass({ padding: isMobile ? 16 : 22 }),
+        background: `linear-gradient(135deg,${tint(C.green, 0.07)},transparent 65%)`,
+        border: `1px solid ${tint(C.green, 0.2)}`,
+      }}>
+        <SectionTitle icon={TrendingUp} color={C.green}>What finishing this is worth</SectionTitle>
+        <RoadmapAscent
+          roadmap={roadmap} strength={strength} today={today}
+          isMobile={isMobile} reducedMotion={reducedMotion}
+          compact onExplore={onGoClimb}
+        />
       </div>
 
       {/* Progress */}
@@ -820,6 +1198,121 @@ function OverviewView({
         <button onClick={onExport} style={btnG({ fontSize: 12 })}><Download size={13} /> Add to my calendar</button>
         <button onClick={onGoYear} style={btnG({ fontSize: 12 })}><CalendarDays size={13} /> See the whole year</button>
         <button onClick={onRebuild} style={btnG({ fontSize: 12 })}><RefreshCw size={13} /> Rebuild</button>
+      </div>
+    </>
+  );
+}
+
+/**
+ * The single most urgent thing on the roadmap, given its own frame.
+ *
+ * The urgency it is nearly always showing is `start-now`: an item whose
+ * DEADLINE is comfortably far away and whose preparation has to begin today.
+ * That state is the one this whole product exists to surface — every other
+ * calendar in a student's life renders it as "in 70 days" and it is, in fact,
+ * the most urgent thing on the screen — so it gets the loudest treatment in the
+ * tab, once, at the top, rather than being the third row of a list of five.
+ *
+ * The card underneath is a normal <RoadmapItem>, unmodified. The frame supplies
+ * the emphasis and the sentence naming why this one; the item supplies every
+ * behaviour it has everywhere else, so expanding it here does exactly what
+ * expanding it anywhere else does.
+ */
+function TheOneThing({ item, accent, isMobile, expanded, onToggleExpand, itemProps }) {
+  const urgency = itemUrgency(item, itemProps.today);
+  const meta = URGENCY_META[urgency] || URGENCY_META.later;
+  const line = {
+    'start-now': 'The deadline is not the problem — the preparation is, and it has to start about now.',
+    critical: 'This one closes this week. Everything else on your year can wait until it is done.',
+    missed: 'This one has passed. Worth deciding, deliberately, whether to chase next year\'s cycle or let it go.',
+    soon: 'The nearest real thing on your year.',
+    undated: 'Find the real date for this one and pin it — everything after it re-plans around it.',
+    later: 'The nearest real thing on your year.',
+    settled: 'Done.',
+  }[urgency] || 'The nearest real thing on your year.';
+
+  return (
+    <div style={{
+      ...glass({ padding: isMobile ? 14 : 18, overflow: 'hidden' }),
+      background: `linear-gradient(135deg,${tint(meta.color, 0.12)},transparent 62%)`,
+      border: `1px solid ${tint(meta.color, 0.3)}`,
+      position: 'relative',
+    }}>
+      {/* A single accent edge rather than a full tint, so a loud card does not
+          make the four quieter ones under it look broken. */}
+      <div aria-hidden style={{
+        position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
+        background: `linear-gradient(180deg,${meta.color},${tint(meta.color, 0.1)})`,
+      }} />
+      <div style={{ ...R({ gap: 8, marginBottom: 10, flexWrap: 'wrap' }) }}>
+        <meta.icon size={14} color={meta.color} />
+        <span style={{
+          fontSize: 10, fontWeight: 800, color: meta.color,
+          letterSpacing: '.12em', textTransform: 'uppercase',
+        }}>
+          If you do one thing today
+        </span>
+      </div>
+      <div style={{ fontSize: isMobile ? 12 : 12.5, color: C.t2, lineHeight: 1.65, marginBottom: 12, maxWidth: 620 }}>
+        {line}
+      </div>
+      <RoadmapItem item={item} {...itemProps} expanded={expanded} onToggleExpand={onToggleExpand} />
+    </div>
+  );
+}
+
+// ── The Climb ────────────────────────────────────────────────────────────────
+
+function ClimbView({ roadmap, strength, today, isMobile, reducedMotion, accent, onGoList, onGoPortfolio }) {
+  const schools = (roadmap?.targetSchools || []).slice(0, 6);
+  return (
+    <>
+      <div style={{ ...glass({ padding: isMobile ? 16 : 24 }) }}>
+        <SectionTitle icon={TrendingUp} color={accent}>
+          {schools.length ? 'Your climb toward these schools' : 'Your climb'}
+        </SectionTitle>
+        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.75, margin: '0 0 18px', maxWidth: 680 }}>
+          Every other screen in this tab tells you <b style={{ color: C.t2 }}>when</b> things happen.
+          This one tells you <b style={{ color: C.t2 }}>what happens to you</b> if you do them —
+          where the four halves of an application stand today, which months of your year build
+          which, and where the whole thing lands next August if the work gets done.
+        </div>
+
+        <RoadmapAscent
+          roadmap={roadmap} strength={strength} today={today}
+          isMobile={isMobile} reducedMotion={reducedMotion}
+        />
+      </div>
+
+      {!!schools.length && (
+        <div style={{ ...glass2({ padding: 16 }) }}>
+          <SectionTitle icon={Target} color={C.fuchsia}>What you told us you are aiming at</SectionTitle>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12 }}>
+            {schools.map((s) => (
+              <span key={s} style={{
+                ...pill(tint(C.fuchsia, 0.12), C.fuchsia, {
+                  fontSize: 11.5, fontWeight: 700, padding: '5px 12px',
+                  border: `1px solid ${tint(C.fuchsia, 0.26)}`,
+                }),
+              }}>{s}</span>
+            ))}
+          </div>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7 }}>
+            Every application deadline on your roadmap was back-planned from these. Change the list
+            in your Portfolio and rebuild, and the whole year re-sequences around the new one.
+          </div>
+        </div>
+      )}
+
+      <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+        <button onClick={onGoList} style={btnG({ fontSize: 12 })}>
+          <ListChecks size={13} /> See everything that builds it
+        </button>
+        {onGoPortfolio && (
+          <button onClick={() => onGoPortfolio()} style={btnG({ fontSize: 12 })}>
+            <Target size={13} /> Update what I have logged
+          </button>
+        )}
       </div>
     </>
   );
