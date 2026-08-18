@@ -513,6 +513,9 @@ function resumeSectionFromPath(pathname=''){
 const ROADMAP_SUBNAV = [
   {id:'overview',ic:Compass,label:'Overview',color:C.violet},
   {id:'year',ic:CalendarDays,label:'Your Year',color:C.sky},
+  // The payoff screen — see the header above ROADMAP_SUBNAV in
+  // src/components/roadmap/RoadmapTab.jsx for why it sits third rather than last.
+  {id:'climb',ic:TrendingUp,label:'The Climb',color:C.green},
   {id:'seasons',ic:Layers,label:'Seasons',color:C.teal},
   {id:'list',ic:ListChecks,label:'Everything',color:C.amber},
   {id:'intake',ic:Target,label:'Your Answers',color:C.fuchsia},
@@ -10146,6 +10149,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           view={roadmapView} onViewChange={setRoadmapView}
           subnavItems={roadmapSubnav} hrefFor={roadmapHref} lockedItem={unlocks.locked('roadmap')[0]}
           goPortfolio={goPortfolio} goPlans={()=>setTab('plans')}
+          // The readiness gate's rows carry their own destinations as data (see
+          // ROADMAP_GATES in src/lib/roadmap/readiness.js), so the tab needs the
+          // generic jump rather than a fixed pair of callbacks.
+          onNavigate={goAnywhere}
         />
       </div>
     );

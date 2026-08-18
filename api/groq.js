@@ -47,9 +47,21 @@ const MINUTE_MS = 60 * 1000;
 // tight minute bucket would 429 a student halfway through their own generation — the exact failure
 // this per-purpose split was created to prevent. But a roadmap is a twelve-month artifact: a
 // student has a legitimate reason to build one, rebuild it after a big change, and regenerate a
-// season or two. Twenty-five a day is far past honest use and well short of a runaway client loop.
+// season or two.
+//
+// ── Why the daily allowance moved from 25 ────────────────────────────────────
+// A successful build spends five calls, and only successes are counted (see
+// addRequestToday, which fires from respond()). Twenty-five therefore sounded
+// like four builds and change. It is not, once the rest of the feature is
+// counted: a student who edits their intake answers and rebuilds twice, whose
+// third and fourth seasons each deepen as they come near, and who then asks for
+// a repair after a bad night for the vendor, is at the cap having done nothing
+// unreasonable — and the cap presents as the roadmap silently degrading, which
+// is the one failure this whole subsystem is built to avoid. Forty is roughly
+// eight honest builds and still nowhere near a runaway client loop, which would
+// reach it inside a minute rather than across a day.
 const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20, roadmap: 40 };
-const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 25 };
+const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 40 };
 function minuteLimitFor(purpose) { return MINUTE_LIMIT_BY_PURPOSE[purpose] || MINUTE_LIMIT; }
 function dailyLimitFor(purpose) { return DAILY_LIMIT_BY_PURPOSE[purpose] || DAILY_LIMIT; }
 
@@ -436,8 +448,23 @@ export default async function handler(req, res) {
   // spending any of the budget is deliberate: a cached answer costs Groq nothing.
 
   // ── API key check ──────────────────────────────────────────────────────────
+  // `code` is the machine-readable half of every error this handler returns, and
+  // it exists because of a real failure the roadmap generator could not tell
+  // apart from a flaky one. A multi-pass generation retries a "retryable" error
+  // four times per pass; with no key configured, every one of those twenty calls
+  // fails identically, the build takes ninety seconds to arrive at the
+  // deterministic slate, and the student's "rebuild it properly" button does the
+  // exact same twenty calls again. A caller that can read `code` knows on the
+  // first failure that no amount of retrying will help, and can say so out loud
+  // instead of spending the student's afternoon proving it.
+  //
+  // The codes are a closed vocabulary — see TERMINAL_CODES in
+  // src/lib/roadmap/generator.js, which is the consumer that acts on them.
   if (!ALL_KEYS.length) {
-    return res.status(500).json({ error: 'Medabrain is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.' });
+    return res.status(500).json({
+      code: 'not_configured',
+      error: 'Medabrain is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.',
+    });
   }
 
   // ── Parse and validate body ────────────────────────────────────────────────
@@ -611,10 +638,17 @@ export default async function handler(req, res) {
   // `retryAfterMs` travels in the body as well as the standard Retry-After header, because the
   // one caller that genuinely needs to wait and retry (plan generation) is a fetch() in the
   // browser reading JSON, not an HTTP client that honours headers on its own.
+  //
+  // The two 429s below are different animals and the `code` says which. A minute
+  // limit clears on its own inside a minute and waiting is the correct response;
+  // a daily limit does not clear until tomorrow, and retrying it — which the
+  // roadmap generator did, four times a pass, five passes deep — is a minute and
+  // a half of the student's time spent proving something already known.
   const retryAfterMs = minuteLimitRetryMs(ip, purpose);
   if (retryAfterMs) {
     res.setHeader('Retry-After', String(Math.ceil(retryAfterMs / 1000)));
     return res.status(429).json({
+      code: 'minute_limit',
       error: 'Too many requests. Please wait a moment before sending more messages.',
       retryAfterMs,
     });
@@ -623,6 +657,7 @@ export default async function handler(req, res) {
   // ── Check daily request limit ──────────────────────────────────────────────
   if (isDailyLimited(ip, purpose)) {
     return res.status(429).json({
+      code: 'daily_limit',
       error: `Daily coaching limit reached (${dailyLimitFor(purpose)} requests). Try again tomorrow.`,
       requestsRemaining: 0,
       dailyLimit: dailyLimitFor(purpose),
@@ -846,10 +881,22 @@ export default async function handler(req, res) {
         const headerWait = Number(response.headers?.get?.('retry-after'));
         const upstreamWaitMs = Number.isFinite(headerWait) && headerWait > 0 ? Math.min(30000, headerWait * 1000) : 5000;
         res.setHeader('Retry-After', String(Math.ceil(upstreamWaitMs / 1000)));
-        return res.status(429).json({ error: 'Medabrain is busy right now. Please wait a moment and try again.', retryAfterMs: upstreamWaitMs });
+        return res.status(429).json({ code: 'upstream_busy', error: 'Medabrain is busy right now. Please wait a moment and try again.', retryAfterMs: upstreamWaitMs });
       }
 
-      return res.status(502).json({ error: errMsg });
+      // ── A 401/403 from every key in the pool is not a blip ──────────────────
+      // It is a key that is missing, revoked, mistyped, or barred from this
+      // model, and it will fail exactly this way on the next attempt and the one
+      // after. Reported as its own code so a multi-pass caller stops rather than
+      // spending nineteen more calls confirming it. Same for a 404 model id.
+      if (response.status === 401 || response.status === 403) {
+        return res.status(502).json({ code: 'auth_failed', error: errMsg });
+      }
+      if (response.status === 404) {
+        return res.status(502).json({ code: 'model_unavailable', error: errMsg });
+      }
+
+      return res.status(502).json({ code: 'upstream_error', error: errMsg });
     }
 
     const content = extractText(data?.choices?.[0]?.message);

@@ -220,28 +220,74 @@ export function ConfirmNotice({ item, compact = false }) {
  * roadmap is genuinely useful and it is NOT what the student was promised, and
  * quietly presenting one as the other is the failure mode
  * masterPlanGenerator.js's header documents at length.
+ *
+ * ── Why this banner was rewritten ───────────────────────────────────────────
+ * It used to say one sentence — "Medabrain could not be reached" — under every
+ * possible cause, and offer one button under every possible cause. For a
+ * misconfigured deployment and for a spent daily budget, that button could not
+ * work, and a student pressing it got ninety seconds of waiting and the same
+ * screen back. That is the bug this component is half the fix for: the other
+ * half is TERMINAL_CODES in src/lib/roadmap/generator.js, which is what lets a
+ * roadmap arrive knowing WHY it degraded.
+ *
+ * Three rules now hold here:
+ *   1. The banner names the real cause, in the student's language.
+ *   2. The retry is offered only when a retry can genuinely help. When it
+ *      cannot, the space is used to say what will happen instead.
+ *   3. A retry that has already been tried and failed SAYS SO. A button whose
+ *      only visible effect is to redraw the identical screen is a button
+ *      students correctly report as broken, even when it ran perfectly.
+ *
+ * `lastAttempt` is { at, outcome } for a retry made in this session:
+ * 'failed' when the roadmap came back degraded again, 'partial' when a repair
+ * fixed some passes but not all.
  */
-export function DegradedNotice({ generation, onRetry, busy = false }) {
+export function DegradedNotice({ generation, onRetry, busy = false, fullRebuild = true, lastAttempt = null }) {
   if (!generation?.degraded) return null;
+  const reason = generation.degradedReason || null;
+  const canRetry = !reason || reason.retryable !== false;
+  const title = reason?.title || 'This roadmap was not fully written for you.';
+  const detail = reason?.detail
+    || 'Medabrain could not be reached for part of the build, so some of it was assembled from the deadline catalog by rule rather than by judgment. Every date on it is still real — the reasoning is what is missing.';
+
   return (
     <div style={{
-      display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
       background: tint(C.amber, 0.1), border: `1px solid ${tint(C.amber, 0.28)}`,
-      borderRadius: 12, padding: '12px 16px',
+      borderRadius: 12, padding: '13px 16px',
     }}>
-      <AlertTriangle size={16} color={C.amber} style={{ flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.6 }}>
-        <b style={{ color: C.t1 }}>This roadmap was not fully written for you.</b>{' '}
-        Medabrain could not be reached for part of the build, so some of it was assembled from the
-        deadline catalog by rule rather than by judgment. Every date on it is still real — the
-        reasoning is what is missing.
+      <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <AlertTriangle size={16} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }} />
+        <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.65 }}>
+          <b style={{ color: C.t1 }}>{title}</b>{' '}{detail}
+        </div>
+        {onRetry && canRetry && (
+          <button onClick={onRetry} disabled={busy} style={{
+            background: tint(C.amber, 0.18), border: `1px solid ${tint(C.amber, 0.4)}`,
+            color: C.amberL || C.amber, borderRadius: 8, padding: '8px 14px',
+            fontSize: 12, fontWeight: 700, fontFamily: C.FB, cursor: busy ? 'wait' : 'pointer',
+            flexShrink: 0, whiteSpace: 'nowrap',
+          }}>
+            {busy
+              ? (fullRebuild ? 'Rebuilding…' : 'Finishing it…')
+              // The label states which of the two things will actually happen, because
+              // "rebuild" and "fill in the missing parts" take very different amounts of
+              // time and only one of them replaces a year the student may have already
+              // ticked things off in. See roadmapNeedsFullRebuild().
+              : (fullRebuild ? 'Rebuild it properly' : 'Finish writing it')}
+          </button>
+        )}
       </div>
-      {onRetry && (
-        <button onClick={onRetry} disabled={busy} style={{
-          background: tint(C.amber, 0.18), border: `1px solid ${tint(C.amber, 0.4)}`,
-          color: C.amberL || C.amber, borderRadius: 8, padding: '7px 14px',
-          fontSize: 12, fontWeight: 700, fontFamily: C.FB, cursor: busy ? 'wait' : 'pointer',
-        }}>{busy ? 'Rebuilding…' : 'Rebuild it properly'}</button>
+
+      {/* What the last press of that button actually did. */}
+      {lastAttempt && !busy && (
+        <div style={{
+          marginTop: 10, paddingTop: 10, borderTop: `1px solid ${tint(C.amber, 0.22)}`,
+          fontSize: 11, color: C.t3, lineHeight: 1.6,
+        }}>
+          {lastAttempt.outcome === 'partial'
+            ? 'We just tried again and recovered part of it — the rest still would not come back. Everything you had ticked off has been kept.'
+            : 'We tried again just now and it failed the same way. This is not you doing something wrong, and nothing on your roadmap was lost — the dates on it are real either way.'}
+        </div>
       )}
     </div>
   );

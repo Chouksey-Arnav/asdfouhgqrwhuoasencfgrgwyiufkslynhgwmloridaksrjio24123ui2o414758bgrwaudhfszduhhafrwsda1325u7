@@ -102,15 +102,27 @@ careless `{item.due}` away from failing silently.
    preparation steps, the risks specific to *them*, and an honest read-back naming what the plan
    is betting on and what it does not cover.
 
-### The five views
+### The six views
+
+Ordered by the order the questions occur to a person, not by importance and not
+by how much work each took to build.
 
 | View | The question only it answers |
 |---|---|
-| **Overview** | What do I do *now* — plus the year's thesis and the straight-talk read-back |
+| **Overview** | What do I do *now* — one named thing first, then the rest, then the payoff |
 | **Your Year** | Three drawings of the same twelve months, one control apart — see below |
+| **The Climb** | *What do I get out of doing any of this* — see §2.5 |
 | **Seasons** | What is this stretch of my life *for* |
 | **Everything** | Filterable reference, plus adding items of your own |
 | **Your Answers** | The inputs, editable — a roadmap is only as good as what it knows |
+
+**Overview leads with one thing, not five.** A student opening this tab on a
+Tuesday between classes has about eight seconds, and a list of five is a
+decision they defer. The most urgent item gets its own frame, with the sentence
+naming why it is that one; the other four sit directly underneath. The urgency
+it is nearly always showing is `start-now` — a deadline comfortably far away
+whose preparation has to begin today — which is the state this whole product
+exists to surface.
 
 ### The three drawings of the year
 
@@ -134,6 +146,108 @@ is chosen first and the edge padding follows from it, because a label is centred
 the outermost one hangs half its width into that margin. Getting that order backwards is what put
 labels off the edge of the frame, and it was caught by measuring real bounding boxes in a headless
 browser rather than by looking at it.
+
+---
+
+## 2.5 The Climb — what the year is *worth*
+
+Every other surface in this tab answers a **when** question. The path answers
+"where am I"; the line answers "when does it get hard"; the seasons answer "what
+is this stretch for". All three take for granted the thing a student has never
+actually been told: that doing any of it adds up to something. That gap is where
+roadmaps get abandoned — twelve months of deadlines with no visible destination
+is a chore list, and a chore list is a thing you close.
+
+`RoadmapAscent.jsx` + `src/lib/roadmap/projection.js` answer the question left
+over, using the whole student rather than the roadmap alone: their Portfolio,
+their pathway mastery, their logged hours, their colleges, their essays.
+
+> **It does not predict admission.** Not to a named college, not as a
+> percentage, not as a "chance" of any kind. Nobody outside an admissions office
+> can compute that number, every product claiming to is guessing dressed as
+> arithmetic, and a seventeen-year-old shown "68% chance at Duke" will believe it
+> and make real decisions with it. Same line the catalog draws about dates, same
+> reason. `verifyRoadmap.mjs` greps the projection module for any hint of one.
+
+What is drawn instead is `computeApplicationStrength` — the app's own published,
+transparent 0–100 score, the same one on the Progress tab — measured today and
+projected across the twelve months on the stated assumption that the roadmap
+gets finished. The model, so it can be argued with:
+
+1. Every roadmap item feeds exactly **one** of the four subscores, by its track.
+2. An item is worth `POINTS_PER_EFFORT_UNIT` (3.2) points in its component,
+   scaled by the same effort weights `monthlyLoad` uses.
+3. Contributions apply against **remaining headroom**, so a student at 90 on
+   academics is not projected to 140 and the chart stops rewarding more of what
+   they already have.
+4. The gain lands across the item's **preparation window**, not on its deadline.
+   The work moves the number, and the work happens first.
+5. Items already done are folded into *today's* score, not the projection. They
+   are why the line starts where it starts.
+
+The past is drawn **flat at the measured value** — back-filling history from a
+model would be inventing a past we never recorded. The four stacked bands are
+each component's *weighted* contribution, so they sum to exactly the total line:
+the height of the teal band literally is how much of the score is experience.
+`COMPONENT_WEIGHTS` is asserted against `applicationStrength.js` on every build,
+because the two put the same number on screen in two different tabs.
+
+The dream schools sit at the **summit**, at the end of the line, as the thing the
+year is pointed at — deliberately not as altitude thresholds. A horizontal line
+labelled "Duke: 82" would be a fabrication with a ruler on it, and it would be
+believed.
+
+---
+
+## 2.6 The readiness gate — why the build button sometimes will not fire
+
+`featureUnlock.js` decides whether the **tab** is visible. `readiness.js` decides
+whether the **build** should run, and the two answer different questions: the
+unlock rule is about attention, this is about information.
+
+The roadmap is the most expensive generation in the product — five Oracle
+passes, a verified catalog shortlist, and ninety seconds of a student's trust.
+Spend all of that on a record that does not say what grade they are in and the
+year that comes back is a generic list of national deadlines, which is precisely
+what this feature exists to not be. Worse, it is a one-shot impression: a student
+who builds one on day one, sees something that could have been written for
+anybody, and closes the tab does not come back in March when their Portfolio
+would finally have made it good.
+
+Five gates, each of which materially changes the output:
+
+| Gate | What the roadmap gains |
+|---|---|
+| **Grade** | Decides the entire slate — a freshman and a senior share almost no deadlines |
+| **Pathway** | Nursing, pre-med and public health lead to different programs and summers |
+| **One college** | There is nothing to back-plan application deadlines *from* without one |
+| **One thing done** | The year builds on what they have rather than starting from zero |
+| **One lesson or quiz** | Measured work tells it how hard to push — and it is the same bar that opened the tab |
+
+Three rules keep it from being a refusal with a list attached, and the verify
+script enforces the first two mechanically:
+
+1. **Every gate says what it buys them**, verbatim, in its own `gains` sentence —
+   a checklist standing between someone and the thing they came for has to
+   justify every line of itself.
+2. **Every row is a door.** The action button lands exactly where the thing is
+   done; a requirement with no route to satisfying it is a dead end wearing a
+   checklist's clothes. Destinations are asserted against `routes.js`.
+3. **What is already done is shown done.** A student who finished onboarding
+   properly meets four ticks and one task, which reads as "you are nearly
+   there". The same screen showing only the missing item reads as "another
+   hoop".
+
+Nothing here is a wait: no gate is on time elapsed, streak or level. A lock that
+cannot be opened today is indistinguishable from a feature that does not exist.
+The gate is also checked **before** the thirteen questions, never after —
+finding out a roadmap cannot be built after an intake is the app wasting a
+student's time and then blaming them for it.
+
+A portfolio gate whose data has not loaded reads as `loading`, never as missing,
+and does **not** block: flashing a lock screen at somebody who has done
+everything, then unlocking half a second later, is worse than a moment of
+nothing.
 
 ---
 
@@ -222,6 +336,59 @@ fallback as Medabrain's best thinking. That failure mode — a plan that arrives
 and says the same generic things every time — is documented at length in
 `src/lib/masterPlanGenerator.js` and is the reason this contract exists.
 
+### "Rebuild it properly" — the button that did nothing
+
+The bug as reported: a roadmap arrived stamped `degraded`, the banner offered
+**Rebuild it properly**, and pressing it appeared to change nothing at all.
+
+It was not doing nothing. It was doing the identical thing that had just failed.
+`call()` treated every 5xx and every 429 as retryable, so a build against a
+server with no key configured — or a revoked key, or a spent daily budget — spent
+**four attempts per pass across five passes**: twenty upstream calls, ninety
+seconds of backoff sleeps, and then the deterministic slate. The retry repeated
+all twenty. From the outside: a button that hangs for a minute and a half and
+returns the same screen.
+
+Four changes, together:
+
+1. **`api/groq.js` returns a machine-readable `code`** on every error —
+   `not_configured`, `auth_failed`, `model_unavailable`, `daily_limit`,
+   `minute_limit`, `upstream_busy`. The two 429s were the sharpest case: "wait
+   four seconds" and "come back tomorrow" were the same status number and
+   opposite instructions.
+2. **`TERMINAL_CODES` aborts the whole build on the first one.** A failure that
+   is a fact about the deployment or the account is identical on every
+   subsequent call, so it is proven once rather than nineteen more times. Twenty
+   calls and ninety seconds became one call and two seconds.
+3. **`DEGRADED_REASONS` gives every cause a sentence and a verdict.** The banner
+   names the real cause, and `retryable` decides whether the button is offered
+   at all — offering one against a cause it cannot touch is how a working button
+   comes to be reported as broken.
+4. **The retry is split by what actually failed** (`roadmapNeedsFullRebuild`).
+   Strategy or slate fell back → the year's argument is not real, full rebuild.
+   Only a season's detail or the read-back fell back → `repairRoadmap()` re-runs
+   exactly those passes in place, keeping every item, every pinned date and
+   every ticked step. Rebuilding a ninety-percent-good year to recover a
+   paragraph also discards all of that, and can come back worse.
+
+And the part that closes the loop: **a retry that fails says so.** "We tried
+again just now and it failed the same way" is the difference between a button
+that ran perfectly and a button students correctly report as broken.
+
+Two supporting fixes found on the way:
+
+- **The deepen effect was leaking quota.** `deepenSeason` returns the roadmap
+  unchanged on failure — the right contract — which left the effect primed to
+  fire again, and its `commit` dependency is rebuilt on every mutation anywhere
+  in the tab. Ticking a step, pinning a date or marking something done each
+  launched another four-attempt Oracle call for a season that was not going to
+  deepen today. Now attempted once per season per session.
+- **The daily allowance moved 25 → 40.** Only successes are counted, so 25
+  sounded like four builds. It is not, once two answer edits, two seasons
+  deepening as they come near and one repair are counted — and the cap presents
+  as the roadmap silently degrading, which is the one failure this subsystem
+  exists to avoid.
+
 ### Two vendors, not one deep pool
 
 Every key, every failover hop and every retry used to live inside Groq, so one rate limit or one
@@ -294,13 +461,16 @@ src/lib/roadmap/
   catalog.js         Resolve → gate → score → roll → AUDIT. Dates and eligibility for one student
   dateAudit.js       The four checks every date passes before a student sees it
   intake.js          The thirteen questions, prefill, gates, prompt rendering
-  generator.js       Four-pass generation, repair, deterministic fallback
+  readiness.js       The five gates that decide whether a build is worth running
+  projection.js      The climb: what finishing the year is worth, month by month
+  generator.js       Four-pass generation, failure classification, targeted repair, fallback
   promptBudget.js    The four-rung ladder that keeps a prompt inside the caps it will meet
   model.js           The document: shape, invariants, urgency, mutations, export, summaries
   store.js           Durable persistence (upgrade over local, never a dependency)
 
 src/components/roadmap/
-  RoadmapTab.jsx      The five views
+  RoadmapTab.jsx      The six views, the readiness gate, the build + repair flow
+  RoadmapAscent.jsx   The Climb — what finishing the year is worth, drawn
   RoadmapIntake.jsx   Question-per-screen flow + review
   RoadmapItem.jsx     Collapsed row + expanded working detail
   RoadmapPath.jsx     The year as a road you walk up — the default drawing
