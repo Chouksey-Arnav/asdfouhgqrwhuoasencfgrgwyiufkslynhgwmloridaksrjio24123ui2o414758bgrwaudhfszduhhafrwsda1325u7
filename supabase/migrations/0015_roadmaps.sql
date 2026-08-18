@@ -162,6 +162,33 @@ $$;
 -- Same lockdown as migration 0008 applies to every other RPC in this schema: these run with
 -- security definer, so they must not be callable by the anon or authenticated roles. Only the
 -- service role (which is what /api/* uses) may execute them.
+--
+-- REVOKE FROM PUBLIC is the load-bearing line — revoking from anon and authenticated individually
+-- would leave the default PUBLIC grant standing behind them, and they would still execute.
 revoke all on function save_roadmap(uuid, jsonb, bigint, text, boolean) from public;
-revoke all on function save_roadmap(uuid, jsonb, bigint, text, boolean) from anon;
-revoke all on function save_roadmap(uuid, jsonb, bigint, text, boolean) from authenticated;
+
+-- ── Why the per-role statements are guarded ────────────────────────────────
+-- `anon` and `authenticated` are SUPABASE's roles, not PostgreSQL's. This same file is applied to
+-- a stock PostgreSQL by scripts/verifyMigrations.mjs, where they do not exist, and a bare
+-- `revoke ... from anon` there is a hard ERROR that aborts the migration mid-file.
+--
+-- That is exactly what happened: 0015 shipped without these guards, so the migrations job failed
+-- on every push for days — and because the harness stops the chain at the first failure, it also
+-- stopped running the schema manifest, the RPC exposure audit and the concurrency tests for the
+-- fourteen migrations that come after it. One missing `if exists` did not break one check, it
+-- switched the whole suite off.
+--
+-- Migrations 0008, 0010 and 0013 all guard the same way, and each says so. This one now matches
+-- them. On Supabase, where both roles exist, the behaviour is identical to the unguarded form.
+do $$
+declare role_name text;
+begin
+  foreach role_name in array array['anon', 'authenticated'] loop
+    if exists (select 1 from pg_roles where rolname = role_name) then
+      execute format(
+        'revoke all on function save_roadmap(uuid, jsonb, bigint, text, boolean) from %I',
+        role_name
+      );
+    end if;
+  end loop;
+end $$;

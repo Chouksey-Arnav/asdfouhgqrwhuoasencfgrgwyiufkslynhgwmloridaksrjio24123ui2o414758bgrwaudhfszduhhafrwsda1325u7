@@ -79,15 +79,19 @@ const EXPECTED_TABLES = [
   'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',
   'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
-  'research_experience', 'reward_claims', 'scholarships', 'sessions', 'skills_certifications',
+  'research_experience', 'reward_claims',
+  'roadmap_revisions', 'roadmaps',
+  'scholarships', 'sessions', 'skills_certifications',
   'student_quests',
   'test_scores',
 ];
 
 /** Every function the API calls by name via supabase.rpc(). */
 const EXPECTED_FUNCTIONS = [
-  'accept_parent_link', 'bump_progress_counters', 'find_or_create_parent_for_claim',
-  'revoke_links_on_user_delete', 'save_master_plan', 'touch_parent_profile_updated_at',
+  'accept_parent_link', 'bump_progress_counters', 'claim_reward',
+  'find_or_create_parent_for_claim',
+  'revoke_links_on_user_delete', 'save_master_plan', 'save_roadmap',
+  'touch_parent_profile_updated_at',
 ];
 
 // ── Cluster management ──────────────────────────────────────────────────────
@@ -308,29 +312,66 @@ function checkManifest(conn, db) {
  * search_path, which decides whether the unqualified table names inside a definer function resolve
  * to the real tables or to something the caller planted.
  */
+/**
+ * ── Why this asks the database instead of consulting a list ─────────────────
+ *
+ * Both checks below used to run against a hardcoded array of the four functions that existed when
+ * 0008 was written. That is a list of the functions somebody remembered, which is a different
+ * thing from the functions that exist, and the gap between the two is where the next one lands.
+ *
+ * It duly did. 0015 added save_roadmap — SECURITY DEFINER, trusting a user-id argument, revoking
+ * from PUBLIC without granting to service_role, and the only definer function in the schema with
+ * no search_path pin at all. Every property these checks exist to enforce was violated by it, and
+ * both checks passed, because save_roadmap was not in the array. A gate that has to be edited by
+ * hand every time it acquires something to guard is a gate that protects the past.
+ *
+ * So the set is now derived: pg_proc is asked which functions are SECURITY DEFINER (prosecdef),
+ * and every one of them is held to both rules. A migration cannot add a function this misses.
+ */
+function securityDefinerFunctions(conn, db) {
+  return query(conn, db,
+    `select p.proname
+       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+      where n.nspname = 'public' and p.prosecdef
+      order by 1`).split('\n').filter(Boolean);
+}
+
 function checkFunctionExposure(conn, db) {
   section('SECURITY DEFINER functions are not publicly executable');
+
+  const definers = securityDefinerFunctions(conn, db);
+  // A schema with no definer functions would pass both loops vacuously, which would be a silent
+  // way for this whole section to stop meaning anything.
+  assert('the schema has SECURITY DEFINER functions to audit', definers.length > 0,
+    'nothing matched prosecdef — has the query drifted from the schema?');
+  console.log(`    auditing ${definers.length}: ${definers.join(', ')}`);
 
   // Roles are Supabase's, not Postgres'. On a bare cluster they do not exist, so the grant to
   // examine is the PUBLIC one — which is the one that mattered anyway, since anon and authenticated
   // inherit through it.
-  for (const fn of ['accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'find_or_create_parent_for_claim']) {
+  for (const fn of definers) {
     const publicExec = query(conn, db,
       `select has_function_privilege('public', p.oid, 'execute')
          from pg_proc p join pg_namespace n on n.oid = p.pronamespace
         where n.nspname = 'public' and p.proname = '${fn}'`);
     assert(`${fn} is not executable by PUBLIC`, publicExec === 'f',
-      publicExec === 't' ? 'anon holds this grant through PUBLIC — /rest/v1/rpc is open' : `got "${publicExec}"`);
+      publicExec === 't'
+        ? 'anon holds this grant through PUBLIC — /rest/v1/rpc is open. Add a `revoke all on function … from public` to the migration that creates it.'
+        : `got "${publicExec}"`);
   }
 
+  // The pin is checked over the same derived set, plus the trigger functions, which are not
+  // definer but do run under the table owner's privileges on every write.
   const unpinned = query(conn, db,
     `select p.proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname = 'public'
-        and p.proname in ('accept_parent_link', 'save_master_plan', 'bump_progress_counters', 'revoke_links_on_user_delete', 'touch_parent_profile_updated_at', 'find_or_create_parent_for_claim')
+        and (p.prosecdef or p.proname in ('revoke_links_on_user_delete', 'touch_parent_profile_updated_at'))
         and coalesce(array_to_string(p.proconfig, ','), '') not like '%search_path%'
       order by 1`).split('\n').filter(Boolean);
   assert('every function pins its search_path', unpinned.length === 0,
-    unpinned.length ? `unpinned: ${unpinned.join(', ')} — a definer function with a caller-controlled search_path runs the caller's tables as its owner` : '');
+    unpinned.length
+      ? `unpinned: ${unpinned.join(', ')} — a definer function with a caller-controlled search_path runs the caller's tables as its owner. Add \`set search_path = public, pg_temp\` to it.`
+      : '');
 }
 
 // ── Concurrency ─────────────────────────────────────────────────────────────
@@ -432,6 +473,66 @@ async function checkConcurrency(conn, db) {
     const rows = Number(query(conn, db, `select count(*) from master_plans where user_id='${raceUser}'::uuid`));
     assert(`exactly one master_plans row survives (trial ${trial + 1})`, rows === 1, `got ${rows}`);
   }
+
+  // ── save_roadmap: the same lock, on the artifact that can least afford to lose one ──────────
+  //
+  // 0015 declared its concurrency design "deliberately identical to 0005_master_plans.sql", and it
+  // was — including the defect 0013 had already fixed three migrations earlier. It copied the
+  // broken version and not the fix, and nothing here noticed, because the concurrency section
+  // tested save_master_plan by name and knew nothing about a second function with the same shape.
+  //
+  // The shape is the shape above: session A saves inside a transaction it holds open, and while it
+  // is still uncommitted session B saves the same user. B must end at revision 2 with A's roadmap
+  // archived.
+  //   with the advisory lock:  B waits for A to commit, reads A's row, increments from it.
+  //   without it:              B's `for update` returns no COMMITTED row, so it locks nothing,
+  //                            takes the not-found path, computes revision 1, blocks on the
+  //                            primary key instead, and on A's commit overwrites A's roadmap via
+  //                            ON CONFLICT — never running the archive branch at all.
+  //
+  // What that costs is worse here than for a plan, and 0015's own header says so: a roadmap is a
+  // thirteen-question intake plus four Oracle generations plus the record of which deadlines the
+  // student had already decided to skip. The student is not shown an error. They are shown a
+  // roadmap that is not theirs.
+  const roadmapUser = query(conn, db,
+    `insert into app_users (email, name) values ('mig-roadmap-lock@example.test','Roadmap') returning id`);
+  const roadmapHeld = backgroundQuery(conn, db,
+    `begin;
+     select save_roadmap('${roadmapUser}'::uuid, '{"headline":"held","startDate":"2026-01-01","endDate":"2026-12-31","items":[],"updatedAt":1000}'::jsonb, 1000, 'held', true);
+     select pg_sleep(3);
+     commit;`);
+  await wait(1000); // A has saved and is sitting in its transaction
+  const roadmapSecond = await backgroundQuery(conn, db,
+    `select save_roadmap('${roadmapUser}'::uuid, '{"headline":"second","startDate":"2026-01-01","endDate":"2026-12-31","items":[],"updatedAt":1001}'::jsonb, 1001, 'second', true)`);
+  await roadmapHeld;
+  assert('a roadmap save that overlaps an open one still succeeds', roadmapSecond.ok,
+    roadmapSecond.out.split('\n')[0]);
+  const roadmapRevision = Number(query(conn, db,
+    `select revision from roadmaps where user_id='${roadmapUser}'::uuid`));
+  assert('an overlapping roadmap save increments from the committed row, not from an empty read',
+    roadmapRevision === 2,
+    `expected revision 2, got ${roadmapRevision} — save_roadmap is not serializing before its read (see migration 0016)`);
+  const roadmapArchived = Number(query(conn, db,
+    `select count(*) from roadmap_revisions where user_id='${roadmapUser}'::uuid`));
+  assert('…and it archives the roadmap it replaced', roadmapArchived === 1,
+    `expected 1 archived revision, got ${roadmapArchived} — a whole generated roadmap was overwritten with no way back`);
+
+  // The stale guard is the other half of save_roadmap's contract, and it is the one the client
+  // depends on to adopt a newer roadmap from another device rather than clobbering it
+  // (isRemoteNewer in src/lib/roadmap/store.js). An older push must be refused and handed the
+  // stored roadmap back.
+  const staleResult = query(conn, db,
+    `select save_roadmap('${roadmapUser}'::uuid, '{"headline":"ancient","items":[],"updatedAt":1}'::jsonb, 1, 'stale', false)::text`);
+  assert('a roadmap push older than the stored one is refused', /"stale"\s*:\s*true/.test(staleResult),
+    staleResult.slice(0, 160));
+  const survived = query(conn, db,
+    `select headline from roadmaps where user_id='${roadmapUser}'::uuid`);
+  assert('…and the newer roadmap is what survives', survived === 'second', `got "${survived}"`);
+  // p_force is what an explicit student-driven restore uses, where "older" is exactly the intent.
+  const forced = query(conn, db,
+    `select save_roadmap('${roadmapUser}'::uuid, '{"headline":"restored","items":[],"updatedAt":2}'::jsonb, 2, 'restore', true)::text`);
+  assert('…unless the caller forces it, which is how a restore works',
+    /"stale"\s*:\s*false/.test(forced), forced.slice(0, 160));
 
   // accept_parent_link: the same invite token redeemed by several requests at once. Exactly one
   // must win; the rest must be told the token is already consumed. This is the race that would
