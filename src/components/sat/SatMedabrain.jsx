@@ -169,7 +169,7 @@ export default function SatMedabrain({
           // actually work", where the answer is real-world recall and the 70B
           // tier is measurably better at getting it right.
           tier: question ? 'guide' : 'sage',
-          maxTokens: 650,
+          maxTokens: 1300,
         }),
       });
       const data = await res.json().catch(() => ({}));

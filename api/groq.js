@@ -716,7 +716,12 @@ export default async function handler(req, res) {
   // gpt-oss family (which is the whole reason masterplan had to be raised from 8,000). A truncated
   // response does not parse, and an unparseable response silently becomes the deterministic
   // fallback roadmap, so the headroom is what stands between "a real plan" and "a plausible one".
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
+  // 'coach' and 'portfolio' raised from the 1500 default: both are chat surfaces whose replies
+  // can legitimately run long (a ranked deadline breakdown, a full "what's most urgent" answer
+  // with a proposed edit's JSON riding along at the end — see MEDABRAIN_ACTION_PROTOCOL in
+  // src/lib/studentProfile.js). A cap tighter than what the caller actually asks for (see
+  // clampedTokens below) silently cuts the reply off mid-sentence with no signal to the client.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { coach: 2200, portfolio: 2400, prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 

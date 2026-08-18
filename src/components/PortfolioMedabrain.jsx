@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { Brain, X, Send, Loader2, RotateCcw } from 'lucide-react';
+import { Brain, X, Send, Loader2, RotateCcw, Check, MapPin } from 'lucide-react';
 import { C, glass, tint } from '../lib/theme';
 import { listItems } from '../lib/dataApi';
 import { buildPortfolioSystemPrompt } from '../lib/studentProfile';
 import { buildTimeline, summarizeTimelineForPrompt } from '../lib/timeline';
 import { summarizeRoadmapForPrompt } from '../lib/roadmap/model';
 import { renderMarkdown } from '../lib/renderMarkdown';
+import { parseAssistantDirective, describeAction, executeAction, labelForDestination } from '../lib/medabrainActions';
 import MedabrainLauncher from './MedabrainLauncher';
 
 // The first two are the questions this panel can now answer with real evidence rather than
@@ -31,13 +32,17 @@ const RESOURCES = ['colleges', 'essays', 'deadlines', 'scholarships', 'activitie
 // head-coach chat state: it fetches the full Portfolio resource lists itself so it always
 // reasons over live, complete data, and its API traffic never competes with or gets mixed
 // into the main Medabrain coach's key pool/rate limits.
-export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile, recentActivitySummary = null }) {
+export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, accent = C.violet, isMobile, recentActivitySummary = null, goDest = null }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
   const [portfolioData, setPortfolioData] = useState(null);
+  // Per-message action status, keyed by `${messageIndex}:${actionIndex}` → 'pending' | 'working' |
+  // 'done' | 'denied' | 'error'. Lives outside `messages` so approving one action in a reply that
+  // proposed several doesn't require rewriting message content to track state.
+  const [actionStatus, setActionStatus] = useState({});
   const listRef = useRef(null);
   const lastSendRef = useRef(0);
 
@@ -107,18 +112,43 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
       const res = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 800 }),
+        // 1600 (up from 800): a fully cited "most urgent thing" or a ranked deadline breakdown
+        // routinely runs past 800 tokens once formatting is included, and a reply cut mid-sentence
+        // reads as broken rather than as a length limit. See api/groq.js's per-purpose ceiling,
+        // which was also raised so this isn't silently reclamped server-side.
+        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'portfolio', maxTokens: 1600 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);
       if (!data?.content) throw new Error("Medabrain didn't return a usable answer. Try again.");
-      setMessages(m => [...m, { role: 'assistant', content: data.content }]);
+      const { text, directive } = parseAssistantDirective(data.content);
+      setMessages(m => [...m, { role: 'assistant', content: text, directive }]);
     } catch (err) {
       setMessages(m => [...m, { role: 'error', content: err.message }]);
       toast.error(err.message.slice(0, 100));
     } finally {
       setLoading(false);
     }
+  }
+
+  const statusKey = (msgIdx, actIdx) => `${msgIdx}:${actIdx}`;
+
+  async function approveAction(msgIdx, actIdx, action) {
+    const key = statusKey(msgIdx, actIdx);
+    setActionStatus(s => ({ ...s, [key]: 'working' }));
+    try {
+      await executeAction(action);
+      setActionStatus(s => ({ ...s, [key]: 'done' }));
+      toast.success('Medabrain updated your portfolio.');
+      loadPortfolioData(); // reflect the write in the "grounded in" counts and future answers
+    } catch (err) {
+      setActionStatus(s => ({ ...s, [key]: 'error' }));
+      toast.error(err.message?.slice(0, 100) || 'Could not make that change.');
+    }
+  }
+
+  function denyAction(msgIdx, actIdx) {
+    setActionStatus(s => ({ ...s, [statusKey(msgIdx, actIdx)]: 'denied' }));
   }
 
   const counts = portfolioData ? [
@@ -172,7 +202,7 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                     <div style={{ fontSize: 10.5, color: C.t3 }}>Portfolio Intelligence · sees your full tracker</div>
                   </div>
                   {messages.length > 0 && (
-                    <button onClick={() => setMessages([])} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                    <button onClick={() => { setMessages([]); setActionStatus({}); }} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
                       <RotateCcw size={15} />
                     </button>
                   )}
@@ -203,14 +233,67 @@ export default function PortfolioMedabrain({ user, pathwayLabel, gradeLabel, acc
                   </div>
                 )}
                 {messages.map((m, i) => (
-                  <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%' }}>
+                  <div key={i} style={{ alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start', maxWidth: '90%', width: m.role === 'assistant' ? '90%' : undefined }}>
                     {m.role === 'user' ? (
                       <div style={{ background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.32)}`, borderRadius: '12px 12px 2px 12px', padding: '9px 13px', fontSize: 13, color: C.t1 }}>{m.content}</div>
                     ) : m.role === 'error' ? (
                       <div style={{ background: C.roseDim, border: `1px solid ${tint(C.rose, 0.3)}`, borderRadius: 12, padding: '9px 13px', fontSize: 12.5, color: C.roseL }}>{m.content}</div>
                     ) : (
-                      <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '9px 13px' }}>
-                        <div style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
+                      <div>
+                        <div style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`, borderRadius: '12px 12px 12px 2px', padding: '9px 13px' }}>
+                          <div style={{ fontSize: 13 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(m.content) }} />
+                        </div>
+
+                        {/* "Take me there" — the exact screen the reply named, one tap away. */}
+                        {m.directive?.navigate && goDest && (
+                          <button
+                            onClick={() => { goDest(m.directive.navigate); setOpen(false); }}
+                            style={{
+                              marginTop: 6, display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700,
+                              color: C.violet, background: tint(C.violet, 0.1), border: `1px solid ${tint(C.violet, 0.3)}`,
+                              borderRadius: 8, padding: '7px 11px', cursor: 'pointer', fontFamily: C.FB,
+                            }}
+                          >
+                            <MapPin size={13} /> Take me to {labelForDestination(m.directive.navigate)}
+                          </button>
+                        )}
+
+                        {/* Proposed edits — nothing here has been written yet; Allow is the only thing
+                            that calls the API (see approveAction). */}
+                        {(m.directive?.actions || []).map((action, ai) => {
+                          const key = statusKey(i, ai);
+                          const status = actionStatus[key] || 'pending';
+                          return (
+                            <div key={ai} style={{
+                              marginTop: 6, background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.3)}`,
+                              borderRadius: 9, padding: '9px 11px',
+                            }}>
+                              <div style={{ fontSize: 12, color: C.t1, lineHeight: 1.5, marginBottom: status === 'pending' ? 8 : 0 }}>
+                                {status === 'done' ? <><Check size={12} style={{ verticalAlign: -1 }} /> Done — </> : null}
+                                {describeAction(action)}
+                                {status === 'denied' && ' — not made.'}
+                                {status === 'error' && ' — that change failed. Try again from the panel directly.'}
+                              </div>
+                              {status === 'pending' && (
+                                <div style={{ display: 'flex', gap: 8 }}>
+                                  <button onClick={() => approveAction(i, ai, action)} style={{
+                                    fontSize: 11.5, fontWeight: 800, color: '#fff', background: C.violet, border: 'none',
+                                    borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontFamily: C.FB,
+                                  }}>Allow</button>
+                                  <button onClick={() => denyAction(i, ai)} style={{
+                                    fontSize: 11.5, fontWeight: 700, color: C.t3, background: 'transparent',
+                                    border: `1px solid ${C.b2}`, borderRadius: 7, padding: '6px 12px', cursor: 'pointer', fontFamily: C.FB,
+                                  }}>Deny</button>
+                                </div>
+                              )}
+                              {status === 'working' && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.t3 }}>
+                                  <Loader2 size={11} className="spin" /> Making the change…
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
