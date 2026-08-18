@@ -8,7 +8,11 @@ import {
   isParentHubPath, isParentPath, PARENT_HUB_PATH,
 } from '../lib/routes';
 import { applySeoMeta } from '../lib/seo';
-import LandingPage from './LandingPage';
+// Which landing page a signed-out visitor gets is one constant, in one file:
+// src/components/landing/landingVersions.js. v1 (./LandingPage) is still in the
+// tree and still compiles; it is simply not the active version. Nothing in this
+// component knows or cares which one it rendered.
+import { ActiveLandingPage } from './landing/landingVersions';
 import LegalPage from './legal/LegalPage';
 import { BrandLoaderScreen } from './BrandJourney';
 import AuthShell from './auth/AuthShell';
@@ -390,7 +394,7 @@ export default function AuthGate({ children }) {
 
   if (view === 'landing') {
     return (
-      <LandingPage
+      <ActiveLandingPage
         key={themeEpoch}
         onGetStarted={() => goTo('signup')}
         onLogin={() => goTo('login')}

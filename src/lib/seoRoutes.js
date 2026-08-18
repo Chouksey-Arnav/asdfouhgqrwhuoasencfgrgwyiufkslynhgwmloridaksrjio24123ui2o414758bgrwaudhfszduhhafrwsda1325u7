@@ -120,7 +120,17 @@ export const PUBLIC_ROUTES = [
     navLabel: 'Home',
     changefreq: 'weekly',
     priority: '1.0',
-    sources: ['index.html', 'src/components/LandingPage.jsx', 'src/components/AuthGate.jsx'],
+    // <lastmod> for "/" tracks whichever landing page is live plus the two files
+    // that decide that — see docs/LANDING_VERSIONS.md. The retired versions stay
+    // listed: this is a "when did this URL last change" signal, and a revert to
+    // an older version is a change to this URL.
+    sources: [
+      'index.html',
+      'src/components/landing/landingVersions.js',
+      'src/components/landing/v2/LandingPageV2.jsx',
+      'src/components/LandingPage.jsx',
+      'src/components/AuthGate.jsx',
+    ],
     content: {
       h1: 'Find your path into medicine. Then actually walk it.',
       lead:
