@@ -110,6 +110,13 @@ export const SUBPROCESSORS = [
     link: 'https://groq.com/privacy-policy/',
   },
   {
+    name: 'Your browser\'s speech-recognition service (Google, Apple, or Microsoft, depending on your browser)',
+    role: 'Transcribing spoken answers in the interview simulator, if you turn voice answers on',
+    data: 'Audio captured from your microphone while you are answering an interview question out loud, sent by your browser — not by us — to its own speech service to be turned into text. We never receive or store the audio; we receive only the transcript, and only when you send your answer. Voice answers are off by default and the simulator works fully by typing. Recent Safari versions transcribe on the device and send nothing.',
+    location: 'Depends on your browser vendor; United States for Chrome and Edge',
+    link: 'https://policies.google.com/privacy',
+  },
+  {
     name: 'Brevo',
     role: 'Transactional email delivery',
     data: 'Your email address and the contents of the sign-in code, verification, or password-reset message being sent to you.',

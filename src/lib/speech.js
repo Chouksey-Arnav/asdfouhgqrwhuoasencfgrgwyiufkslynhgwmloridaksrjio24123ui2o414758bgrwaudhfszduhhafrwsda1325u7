@@ -1,18 +1,27 @@
-// Web Speech API helpers for the live voice interview simulator.
+// Speech I/O for the live voice interview — the layer that actually talks to the browser.
 //
-// Two halves, both built on the browser-native Web Speech API (no network, no key):
-//   • Text-to-speech (speechSynthesis) — the interviewer's *voice*. Rather than exposing the
-//     device's raw voice catalog (which on macOS/iOS is mostly novelty junk — Zarvox, Deranged,
-//     Bahh, Whisper — and on every platform is a long random list), we publish a fixed roster of
-//     five interviewer personas, Apple-Voices style: a short named lineup, each resolved to the
-//     best real voice that device actually ships, and tuned to a natural, professional cadence.
-//     See INTERVIEWER_PERSONAS below.
-//   • Speech-to-text (SpeechRecognition) — the student answering out loud. Support is patchy
-//     (great in Chrome/Edge, absent in Firefox and some mobile browsers), so every entry point
-//     degrades to typing when it's missing — the interview still works end to end without a mic.
+// Two halves, both built on the browser-native Web Speech API (no network, no key, no vendor):
+//   • Text-to-speech (speechSynthesis) — the interviewer's voice. This module does NOT decide how a
+//     line should sound; that is voicePipeline.js (normalisation, clause segmentation, real pauses,
+//     per-segment prosody) and interviewPanel.js (who is speaking, and in what register). What
+//     happens here is the mechanical part: resolve each panellist to the closest real voice this
+//     device ships, then walk the prosody plan segment by segment, inserting genuine silence at the
+//     boundaries — Web Speech has no SSML, so a "pause" has to be a scheduled gap between two
+//     utterances, which is exactly what speakPlan() does.
+//   • Speech-to-text (SpeechRecognition) — the student answering out loud. Support is patchy (good
+//     in Chrome/Edge, absent in Firefox and some mobile browsers), so every entry point degrades to
+//     typing when it's missing — the interview works end to end without a mic.
+//
+// PRIVACY: SpeechRecognition in Chrome and Edge streams microphone audio to a cloud service. Our
+// users are minors. Nothing in this module starts a recogniser on its own — the caller must gate it
+// behind explicit consent (see components/VoiceConsentGate.jsx and docs/INTERVIEW_VOICE_PRIVACY.md).
+// TTS is local on every platform we support and carries no such exposure.
 //
 // Everything here is defensive: unsupported APIs return no-ops/false instead of throwing, so the
 // panel can feature-detect and adapt its UI.
+
+import { planUtterance, addFilledPauses } from './voicePipeline';
+import { PANEL, DEFAULT_PANEL_ID, FIRST_TIMER_PANEL_ID } from './interviewPanel';
 
 // ── Text-to-speech ───────────────────────────────────────────────────────────
 
@@ -22,9 +31,9 @@ export function isTTSSupported() {
 
 let voicesCache = [];
 
-// Voices load asynchronously in most browsers — getVoices() is often empty on first call and
-// fills in after a 'voiceschanged' event. Resolve as soon as we have any, with a timeout so a
-// browser that never fires the event (or has no voices) doesn't hang the caller forever.
+// Voices load asynchronously in most browsers — getVoices() is often empty on first call and fills
+// in after a 'voiceschanged' event. Resolve as soon as we have any, with a timeout so a browser
+// that never fires the event (or has no voices) doesn't hang the caller forever.
 export function loadVoices() {
   return new Promise((resolve) => {
     if (!isTTSSupported()) return resolve([]);
@@ -39,75 +48,19 @@ export function loadVoices() {
       resolve(voicesCache);
     };
     synth.addEventListener?.('voiceschanged', done, { once: true });
-    // Fallbacks: some engines populate lazily without ever firing the event.
+    // Fallback: some engines populate lazily without ever firing the event.
     setTimeout(done, 1200);
   });
 }
 
-// ── The interviewer voice roster ─────────────────────────────────────────────
-// Five personas, fixed, in this order — the whole point is that the student sees a short,
-// human, professional lineup instead of forty raw system voices with names like "Zarvox" and
-// "Bahh". Each persona is a *slot*: `prefer` is an ordered list of real voice-name patterns,
-// best first, and the slot resolves to the first one the device actually has. Personas claim
-// voices in roster order and never share one, so on a device with only a handful of usable
-// voices you get fewer personas rather than five labels reading the same voice.
-//
-// rate/pitch are deliberately close to neutral. The old defaults (rate 0.94, pitch 1.02) were
-// the "unrealistic and scary" part as much as the voice list was: slowed-down, pitched-up
-// speech synthesis lands uncanny, not warm. Real assistant voices speak at roughly natural
-// conversational tempo, so these sit in a narrow 0.96–1.02 band and differ only enough to give
-// each persona its own character.
-export const INTERVIEWER_PERSONAS = [
-  {
-    id: 'ava',
-    label: 'Ava',
-    role: 'Warm & measured',
-    blurb: 'Even, unhurried, puts you at ease. The default.',
-    rate: 0.99, pitch: 1.0,
-    prefer: [/^ava\b/i, /^samantha\b/i, /^allison\b/i, /^joanna\b/i, /aria/i, /jenny/i, /google us english$/i, /^zira\b/i],
-  },
-  {
-    id: 'evan',
-    label: 'Evan',
-    role: 'Calm & professional',
-    blurb: 'Steady and matter-of-fact, like a faculty interviewer.',
-    rate: 0.98, pitch: 0.98,
-    prefer: [/^evan\b/i, /^tom\b/i, /^nathan\b/i, /^aaron\b/i, /^alex\b/i, /^matthew\b/i, /\bguy\b/i, /andrew/i, /christopher/i, /^david\b/i, /^mark\b/i],
-  },
-  {
-    id: 'serena',
-    label: 'Serena',
-    role: 'Crisp & polished',
-    blurb: 'Precise British delivery — formal without being cold.',
-    rate: 1.0, pitch: 1.0,
-    prefer: [/^serena\b/i, /^stephanie\b/i, /^kate\b/i, /google uk english female/i, /sonia/i, /libby/i, /^hazel\b/i, /^fiona\b/i, /^moira\b/i, /^tessa\b/i],
-  },
-  {
-    id: 'daniel',
-    label: 'Daniel',
-    role: 'Composed & formal',
-    blurb: 'Lower, deliberate, a touch more senior in the room.',
-    rate: 0.96, pitch: 0.96,
-    prefer: [/^daniel\b/i, /^oliver\b/i, /^arthur\b/i, /google uk english male/i, /^ryan\b/i, /^george\b/i, /^brian\b/i],
-  },
-  {
-    id: 'nicky',
-    label: 'Nicky',
-    role: 'Bright & conversational',
-    blurb: 'Lighter and quicker — feels like a friendly alum.',
-    rate: 1.02, pitch: 1.02,
-    prefer: [/^nicky\b/i, /^susan\b/i, /^zoe\b/i, /^joelle\b/i, /^karen\b/i, /^victoria\b/i, /michelle/i, /^ana\b/i, /natasha/i],
-  },
-];
-
 // macOS/iOS ships a pile of novelty and legacy-synth voices in the same getVoices() list as the
-// real ones. These are exactly the "extremely unrealistic and scary" voices — they must never
-// reach a persona slot, not even as a last-resort fallback.
+// real ones. These are exactly the "extremely unrealistic and scary" voices — they must never reach
+// a panellist slot, not even as a last-resort fallback.
 const EXCLUDED_VOICE = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|junior|organ|pipe|ralph|superstar|trinoids|whisper|wobble|zarvox|bruce|^fred\b|kathy|princess|grandma|grandpa|rocko|sandy|shelley|eddy|^flo\b|reed|novelty|eloquence|rishi|sangeeta|^agnes\b|^vicki\b|^victoria \(/i;
 
-// Within a persona's preference list, a device may expose several variants of the same voice
-// ("Ava", "Ava (Enhanced)", "Ava (Premium)"). Always take the highest-fidelity one — the
-// premium/enhanced/neural variants are the ones that actually sound human.
+// A device may expose several variants of the same voice ("Ava", "Ava (Enhanced)", "Ava (Premium)").
+// Always take the highest-fidelity one — the premium/enhanced/neural variants are the ones that
+// actually sound like a person, and a low-fidelity variant is where the artifacts live.
 function fidelityRank(v) {
   if (/premium/i.test(v.name)) return 0;
   if (/enhanced|neural|natural/i.test(v.name)) return 1;
@@ -119,11 +72,11 @@ function usableVoices(list) {
   return (list || []).filter(v => /^en/i.test(v.lang || '') && !EXCLUDED_VOICE.test(v.name || ''));
 }
 
-// ── Voice selection (persisted student preference) ──────────────────────────
-// We persist the persona id, not a voiceURI: the persona is the stable, human-meaningful choice
-// ("Ava") and it re-resolves to whatever that device offers today, so a student who picks Ava on
-// their laptop still gets the Ava slot on their phone even though the underlying system voice
-// differs.
+// ── Panellist selection (persisted student preference) ──────────────────────
+// We persist the panellist id, not a voiceURI: "Dr. Reyes, mid-career faculty" is the stable,
+// human-meaningful choice and it re-resolves to whatever voice that device offers today, so a
+// student who picks the dean on their laptop still gets the dean on their phone even though the
+// underlying system voice differs.
 const VOICE_PREF_KEY = 'msp_interviewer_voice_id';
 
 export function getSavedVoiceId() {
@@ -136,15 +89,16 @@ export function setSavedVoiceId(id) {
   } catch { /* private browsing / storage disabled — preference just won't persist */ }
 }
 
-// Resolve the roster against this device: returns at most five options, each a persona with a
-// real `voice` attached. Personas whose preferred voices aren't present fall back to any unused
-// usable English voice; personas with nothing left are dropped entirely.
+// Resolve the panel against this device: each panellist claims the best unclaimed voice matching
+// its preference list, so five labels never read the same voice. Panellists with nothing left fall
+// back to any unused usable English voice; if even that runs out they are dropped, because a
+// panellist with no voice is just a label.
 export function getInterviewerVoices(voices) {
   const pool = usableVoices(voices && voices.length ? voices : voicesCache);
   if (!pool.length) return [];
   const claimed = new Set();
 
-  const resolved = INTERVIEWER_PERSONAS.map(p => {
+  const resolved = PANEL.map(p => {
     for (const pattern of p.prefer) {
       const matches = pool
         .filter(v => !claimed.has(v.voiceURI) && pattern.test(v.name))
@@ -157,8 +111,6 @@ export function getInterviewerVoices(voices) {
     return { ...p, voice: null };
   });
 
-  // Second pass: hand unresolved personas whatever good voices are left over, best first, so a
-  // device with generic voice names ("English United States") still offers a few real choices.
   const leftovers = pool
     .filter(v => !claimed.has(v.voiceURI))
     .sort((a, b) => fidelityRank(a) - fidelityRank(b));
@@ -171,71 +123,143 @@ export function getInterviewerVoices(voices) {
   return resolved.filter(r => r.voice);
 }
 
-// The persona to use when the student hasn't chosen: their saved pick if it still resolves,
-// otherwise the top of the roster.
-export function pickInterviewerVoice(voices) {
+/**
+ * Who speaks when the student hasn't chosen.
+ *
+ * A first-timer gets the medical student: closest to their age, least formal, the gentlest room to
+ * be in for someone who has never done this before. Anyone who has practised before gets the
+ * mid-career faculty member, which is the realistic default. A saved explicit pick always wins.
+ */
+export function pickInterviewerVoice(voices, { firstTimer = false } = {}) {
   const options = getInterviewerVoices(voices);
   if (!options.length) return null;
   const savedId = getSavedVoiceId();
-  return options.find(o => o.id === savedId) || options[0];
-}
-
-// Group sentences into utterances of up to ~180 characters. Chunking is still necessary (Chrome
-// truncates long utterances, and it lets a cancel land quickly), but the old one-utterance-per-
-// sentence split inserted an audible gap after every single sentence, which is a big part of why
-// the interviewer sounded stilted. Grouping keeps the natural prosody inside a thought.
-function chunkText(text) {
-  const clean = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!clean) return [];
-  const sentences = clean.match(/[^.!?]+[.!?]*/g) || [clean];
-  const chunks = [];
-  let current = '';
-  for (const s of sentences) {
-    const piece = s.trim();
-    if (!piece) continue;
-    if (current && current.length + piece.length + 1 > 180) { chunks.push(current); current = piece; }
-    else current = current ? `${current} ${piece}` : piece;
+  if (savedId) {
+    const saved = options.find(o => o.id === savedId);
+    if (saved) return saved;
   }
-  if (current) chunks.push(current);
-  return chunks;
+  const wantedId = firstTimer ? FIRST_TIMER_PANEL_ID : DEFAULT_PANEL_ID;
+  return options.find(o => o.id === wantedId) || options[0];
 }
 
-// Speak `text` in the interviewer voice. Returns a cancel() function. `onStart`/`onEnd` fire once
-// for the whole passage (not per chunk). Pass `persona` (a resolved option from
-// getInterviewerVoices) and its voice + tuning are used; explicit voice/rate/pitch still win.
-export function speak(text, { persona, voice, rate, pitch, volume = 1, onStart, onEnd, onError } = {}) {
+// ── Speaking a prosody plan ──────────────────────────────────────────────────
+
+// One in-flight utterance chain at a time. Tracked at module scope so a barge-in can kill audio
+// synchronously from anywhere without needing the cancel handle.
+let activeChain = null;
+
+/**
+ * Speak `text` as the given panellist. Returns a cancel() function that silences the voice
+ * immediately (the student's barge-in budget is 150ms; this is synchronous).
+ *
+ * Options:
+ *   persona     – a resolved panellist from getInterviewerVoices(); supplies voice + prosody
+ *   intent      – 'greeting' | 'question' | 'probe' | 'acknowledge' | 'closing' | 'feedback';
+ *                 inferred from the text when omitted
+ *   isFirstTurn – forces the greeting intent
+ *   onStart / onEnd / onError – fire once for the whole passage, not per segment
+ *   onSegment(i, segment)     – optional, for UI that wants to follow along
+ */
+export function speak(text, { persona, voice, rate, pitch, volume = 1, intent, isFirstTurn = false, onStart, onEnd, onError, onSegment } = {}) {
   if (!isTTSSupported() || !String(text || '').trim()) { onEnd?.(); return () => {}; }
   const synth = window.speechSynthesis;
   synth.cancel(); // never overlap with a previous line
 
-  const chunks = chunkText(text);
   const p = persona || pickInterviewerVoice();
+  // Filled pauses are a persona-level permission and are off for every panellist — see
+  // interviewPanel.js. addFilledPauses() is a no-op unless a role-play actor is speaking.
+  const source = addFilledPauses(String(text), { persona: p || {}, seedSalt: intent || '' });
+  const plan = planUtterance(source, { persona: p || {}, intent, isFirstTurn });
+
   const chosen = voice || p?.voice || null;
-  const finalRate = rate ?? p?.rate ?? 1;
-  const finalPitch = pitch ?? p?.pitch ?? 1;
-  let cancelled = false;
+  const chain = { cancelled: false, timers: [] };
+  activeChain = chain;
   let started = false;
 
-  chunks.forEach((chunk, i) => {
-    const u = new window.SpeechSynthesisUtterance(chunk);
-    if (chosen) { u.voice = chosen; u.lang = chosen.lang || 'en-US'; }
-    u.rate = finalRate; u.pitch = finalPitch; u.volume = volume;
-    u.onstart = () => { if (!started) { started = true; onStart?.(); } };
-    u.onerror = (e) => { if (!cancelled) onError?.(e); };
-    if (i === chunks.length - 1) u.onend = () => { if (!cancelled) onEnd?.(); };
-    synth.speak(u);
-  });
+  const finish = () => {
+    if (chain.cancelled) return;
+    if (activeChain === chain) activeChain = null;
+    onEnd?.();
+  };
 
-  if (!chunks.length) onEnd?.();
+  function speakSegment(i) {
+    if (chain.cancelled) return;
+    const seg = plan.segments[i];
+    if (!seg) { finish(); return; }
+    onSegment?.(i, seg);
+
+    const u = new window.SpeechSynthesisUtterance(seg.text);
+    if (chosen) { u.voice = chosen; u.lang = chosen.lang || 'en-US'; }
+    // Explicit overrides win over the plan; otherwise each segment carries its own rate and pitch,
+    // which is what stops the delivery from being metronomic.
+    u.rate = rate ?? seg.rate;
+    u.pitch = pitch ?? seg.pitch;
+    u.volume = volume;
+    u.onstart = () => { if (!started) { started = true; onStart?.(); } };
+    u.onerror = (e) => {
+      if (chain.cancelled) return;
+      // 'interrupted'/'canceled' are what a barge-in looks like from the engine's side — not errors.
+      if (e?.error && /interrupt|cancel/i.test(e.error)) return;
+      onError?.(e);
+      finish();
+    };
+    u.onend = () => {
+      if (chain.cancelled) return;
+      const gap = seg.pauseAfter;
+      if (!gap) { speakSegment(i + 1); return; }
+      chain.timers.push(setTimeout(() => speakSegment(i + 1), gap));
+    };
+    try { synth.speak(u); } catch { finish(); }
+  }
+
+  if (!plan.segments.length) { onEnd?.(); return () => {}; }
+
+  // The intent's lead-in: a probe sits for a moment before it lands, a greeting doesn't. This is
+  // the beat that stops a hard question from arriving like a slap.
+  if (plan.leadMs > 0) chain.timers.push(setTimeout(() => speakSegment(0), plan.leadMs));
+  else speakSegment(0);
 
   return function cancel() {
-    cancelled = true;
-    synth.cancel();
+    chain.cancelled = true;
+    chain.timers.forEach(clearTimeout);
+    chain.timers = [];
+    if (activeChain === chain) activeChain = null;
+    try { synth.cancel(); } catch { /* engine already torn down */ }
   };
 }
 
+/**
+ * Silence the interviewer immediately, from anywhere. This is the barge-in path: the student
+ * started talking, so the interviewer stops, synchronously, mid-word if necessary.
+ */
 export function cancelSpeech() {
-  if (isTTSSupported()) window.speechSynthesis.cancel();
+  if (activeChain) {
+    activeChain.cancelled = true;
+    activeChain.timers.forEach(clearTimeout);
+    activeChain = null;
+  }
+  if (isTTSSupported()) {
+    try { window.speechSynthesis.cancel(); } catch { /* nothing playing */ }
+  }
+}
+
+/**
+ * A backchannel — "mm-hm" — spoken quietly WHILE the student is still talking. Deliberately not
+ * routed through the prosody pipeline: it is one token, it should be quiet and quick, and it must
+ * never cancel anything. Station-gated by backchannelPolicy() in interviewPanel.js, so the empathic
+ * nurse educator does this and the dean chairing an ethics station never does.
+ */
+export function speakBackchannel(token, { persona, volume = 0.35 } = {}) {
+  if (!isTTSSupported() || !token) return;
+  try {
+    const u = new window.SpeechSynthesisUtterance(token);
+    const v = persona?.voice;
+    if (v) { u.voice = v; u.lang = v.lang || 'en-US'; }
+    u.rate = (persona?.rate ?? 1) * 1.05;
+    u.pitch = (persona?.pitch ?? 1) * 1.02;
+    u.volume = volume;
+    window.speechSynthesis.speak(u); // no cancel() — this layers over nothing and interrupts nothing
+  } catch { /* backchannels are a nicety; never let one break a turn */ }
 }
 
 // ── Speech-to-text ───────────────────────────────────────────────────────────
@@ -250,13 +274,52 @@ export function isSTTSupported() {
   return !!getSpeechRecognition();
 }
 
-// Create a dictation recognizer for one answer. Continuous + interim results so the student sees
-// their words appear live and can speak in full paragraphs. Returns { start, stop, abort } or null
-// if unsupported.
-//   onResult(fullTranscript, isFinal) — called on every update with the best-guess transcript
-//   onEnd()   — recognition stopped (naturally or via stop())
-//   onError(err) — recoverable errors are surfaced; 'no-speech'/'aborted' are passed through too
-export function createRecognizer({ onResult, onEnd, onError, lang = 'en-US' } = {}) {
+/**
+ * Whether this browser's recogniser ships the student's audio off-device. Chrome and Edge stream to
+ * a cloud service; Safari does it on-device on recent versions. We cannot detect this reliably, so
+ * we assume the privacy-worst case for any Chromium browser and tell the student so plainly rather
+ * than guessing in our own favour. See docs/INTERVIEW_VOICE_PRIVACY.md.
+ */
+export function recognitionSendsAudioOffDevice() {
+  if (typeof navigator === 'undefined') return true;
+  const ua = navigator.userAgent || '';
+  const isSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg\//.test(ua);
+  return !isSafari;
+}
+
+// ── Microphone consent ───────────────────────────────────────────────────────
+// Voice answers are off until the student turns them on, and the ask happens before the browser's
+// own permission prompt so they are deciding with the facts in front of them rather than deciding
+// what a padlock icon means. This is not decoration: our users are minors, the audio is their
+// voice, and on Chromium it goes to a third party. The simulator works end to end by typing, so
+// "no" costs them nothing — which is what makes the consent real rather than coerced.
+const CONSENT_KEY = 'msp_voice_input_consent';
+
+export function getVoiceConsent() {
+  try { return localStorage.getItem(CONSENT_KEY) || null; } catch { return null; } // 'granted' | 'declined' | null
+}
+export function setVoiceConsent(value) {
+  try {
+    if (value) localStorage.setItem(CONSENT_KEY, value);
+    else localStorage.removeItem(CONSENT_KEY);
+  } catch { /* storage disabled — the student is simply asked again next session, which is the safe way to fail */ }
+}
+export function hasVoiceConsent() {
+  return getVoiceConsent() === 'granted';
+}
+
+/**
+ * Create a dictation recogniser for one answer. Continuous + interim results so the student sees
+ * their words appear live and can speak in full paragraphs.
+ *
+ * `onSpeechStart` is what makes barge-in work: it fires the moment the engine detects speech, which
+ * is the caller's cue to silence the interviewer. Endpointing is NOT done here — the recogniser's
+ * own idea of when someone has finished is far too aggressive for a nervous teenager. The caller
+ * drives createEndpointer() from turnTaking.js instead, and this recogniser just keeps listening.
+ *
+ * Returns { start, stop, abort } or null if unsupported.
+ */
+export function createRecognizer({ onResult, onSpeechStart, onEnd, onError, lang = 'en-US' } = {}) {
   const SR = getSpeechRecognition();
   if (!SR) return null;
   const rec = new SR();
@@ -266,7 +329,12 @@ export function createRecognizer({ onResult, onEnd, onError, lang = 'en-US' } = 
   rec.maxAlternatives = 1;
 
   let finalText = '';
+  let announcedSpeech = false;
+
+  rec.onspeechstart = () => { if (!announcedSpeech) { announcedSpeech = true; onSpeechStart?.(); } };
   rec.onresult = (e) => {
+    // Some engines never fire onspeechstart; a first result is equally good proof of a barge-in.
+    if (!announcedSpeech) { announcedSpeech = true; onSpeechStart?.(); }
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const t = e.results[i][0].transcript;
@@ -279,7 +347,7 @@ export function createRecognizer({ onResult, onEnd, onError, lang = 'en-US' } = 
   rec.onend = () => onEnd?.();
 
   return {
-    start() { finalText = ''; try { rec.start(); } catch { /* already started */ } },
+    start() { finalText = ''; announcedSpeech = false; try { rec.start(); } catch { /* already started */ } },
     stop() { try { rec.stop(); } catch { /* not running */ } },
     abort() { try { rec.abort(); } catch { /* not running */ } },
   };
