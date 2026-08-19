@@ -39,9 +39,10 @@ export default class RootErrorBoundary extends React.Component {
           justifyContent: 'center', gap: 18, padding: 40, textAlign: 'center',
           background: '#0b0f19', color: '#e6e9f0', fontFamily: 'system-ui, sans-serif',
         }}>
-          <div style={{ fontSize: 22, fontWeight: 700 }}>Something went wrong</div>
+          <div style={{ fontSize: 22, fontWeight: 700 }}>Oops! Loading issue.</div>
           <div style={{ maxWidth: 420, lineHeight: 1.6, color: '#a3acc2', fontSize: 14 }}>
-            {this.state.error?.message || 'An unexpected error occurred.'}
+            Try reloading — if it keeps happening, contact our support team at{' '}
+            <a href="mailto:medschoolprepsupport@gmail.com" style={{ color: '#8ab4ff' }}>medschoolprepsupport@gmail.com</a>.
           </div>
           <button
             type="button"

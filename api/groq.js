@@ -47,9 +47,21 @@ const MINUTE_MS = 60 * 1000;
 // tight minute bucket would 429 a student halfway through their own generation — the exact failure
 // this per-purpose split was created to prevent. But a roadmap is a twelve-month artifact: a
 // student has a legitimate reason to build one, rebuild it after a big change, and regenerate a
-// season or two. Twenty-five a day is far past honest use and well short of a runaway client loop.
+// season or two.
+//
+// ── Why the daily allowance moved from 25 ────────────────────────────────────
+// A successful build spends five calls, and only successes are counted (see
+// addRequestToday, which fires from respond()). Twenty-five therefore sounded
+// like four builds and change. It is not, once the rest of the feature is
+// counted: a student who edits their intake answers and rebuilds twice, whose
+// third and fourth seasons each deepen as they come near, and who then asks for
+// a repair after a bad night for the vendor, is at the cap having done nothing
+// unreasonable — and the cap presents as the roadmap silently degrading, which
+// is the one failure this whole subsystem is built to avoid. Forty is roughly
+// eight honest builds and still nowhere near a runaway client loop, which would
+// reach it inside a minute rather than across a day.
 const MINUTE_LIMIT_BY_PURPOSE = { masterplan: 40, plan: 20, sat: 20, roadmap: 40 };
-const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 25 };
+const DAILY_LIMIT_BY_PURPOSE = { masterplan: 150, plan: 60, sat: 200, roadmap: 40 };
 function minuteLimitFor(purpose) { return MINUTE_LIMIT_BY_PURPOSE[purpose] || MINUTE_LIMIT; }
 function dailyLimitFor(purpose) { return DAILY_LIMIT_BY_PURPOSE[purpose] || DAILY_LIMIT; }
 
@@ -88,42 +100,48 @@ function setCachedResponse(key, content, model) {
 // ── Model tiers ────────────────────────────────────────────────────────────
 // Medabrain offers three named tiers, the same idea as picking between Claude's Haiku/Sonnet/Opus
 // — each maps to a real Groq-hosted model:
-//   Scout — openai/gpt-oss-20b, fastest tier still on Groq's production catalog, for quick turns
-//           and lightweight generation. Used as the default for the main chat coach, the
-//           highest-volume call in the app.
-//   Guide — openai/gpt-oss-20b, the balanced tier for tasks that benefit from more structure/
-//           reasoning without the cost and TPM pressure of the 120B model.
-//   Sage  — qwen/qwen3.6-27b, the most capable chat-facing tier, for when a student explicitly
-//           wants the deepest feedback available (e.g. a full essay critique) and is fine trading
-//           speed/cost for it. Was the app-wide default once; kept as the opt-in top tier.
-// 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
 //
-// ── Why Scout/Sage no longer point at Llama ──────────────────────────────────
-// Groq decommissioned llama-3.1-8b-instant and llama-3.3-70b-versatile on
-// 2026-08-16 (see https://console.groq.com/docs/deprecations), which is what
-// produced "the model 'llama-3.3-70b-versatile' does not exist or you do not
-// have access to it" on every tab that resolved to the Sage tier (Portfolio,
-// essay critique, the SAT verifier). Scout moves to openai/gpt-oss-20b — the
-// same id Guide already uses successfully, and Groq's own migration guidance
-// for the retired 8B model, since gpt-oss-20b is now the smallest model left
-// in Groq's production catalog. Sage moves to qwen/qwen3.6-27b rather than
-// collapsing onto Oracle's gpt-oss-120b: src/lib/sat/aiPractice.js pins the
-// SAT verifier to 'sage' *because* it needs a different model family from the
-// 'oracle' author model (see that file's header) — Sage sharing Oracle's
-// weights would quietly break that independence check.
-//   Oracle — openai/gpt-oss-120b, never offered in the student-facing Scout/Guide/Sage picker;
-//            selected by code, for two generation jobs where the output has to be *correct*
-//            rather than merely fluent: the Plans tab's "master plan" and the SAT tab's practice
-//            item generation. It is a 128K-context, 32,768-max-output reasoning model with
-//            native Structured Outputs and a tunable reasoning_effort — the deepest,
-//            largest-output model Groq hosts, worth the extra latency for a generation that
+// ── Why Scout and Sage moved off Llama, August 2026 ─────────────────────────
+// Groq deprecated llama-3.1-8b-instant and llama-3.3-70b-versatile on August 16, 2026 (see
+// https://console.groq.com/docs/deprecations) — both stopped being served entirely, which is what
+// this whole rework was for. Groq's own migration guidance points llama-3.1-8b-instant callers at
+// openai/gpt-oss-20b and llama-3.3-70b-versatile callers at openai/gpt-oss-120b or the (preview-
+// only, not production-safe) qwen/qwen3.6-27b. Every text tier below is now one of the two models
+// Groq actually lists as PRODUCTION: openai/gpt-oss-20b and openai/gpt-oss-120b. Nothing in this
+// app calls a preview-tier or deprecated Groq model — a preview model can be pulled "at short
+// notice with limited advance warning" per Groq's own docs, which is the exact failure this file
+// exists to not repeat.
+//
+//   Scout — openai/gpt-oss-20b at low reasoning_effort, fastest/cheapest tier for quick turns and
+//           lightweight generation. Used as the default for the main chat coach, the highest-
+//           volume call in the app.
+//   Guide — openai/gpt-oss-20b at medium reasoning_effort, the balanced tier for tasks that
+//           benefit from more structure/reasoning than Scout without Sage's cost.
+//   Sage  — openai/gpt-oss-20b at medium reasoning_effort, for when a student explicitly wants
+//           deeper feedback (e.g. a full essay critique) and full-length answers, at Scout/Guide's
+//           lighter token cost rather than Oracle's 120B one. Was the app-wide default once; kept
+//           as the opt-in top tier for chat-facing surfaces.
+// 'fast'/'deep' aliases are kept so any older cached client build still resolves to something.
+//   Oracle — openai/gpt-oss-120b at high reasoning_effort, never offered in the student-facing
+//            Scout/Guide/Sage picker; selected by code, for generation jobs where the output has
+//            to be *correct* rather than merely fluent (the Plans tab's "master plan", the Roadmap
+//            tab, and the SAT tab's practice item authoring). It is a 128K-context, 32,768-max-
+//            output reasoning model with native Structured Outputs — the deepest, largest-output
+//            model Groq hosts, worth the extra latency and token cost for a generation that
 //            happens rarely and matters a lot. Authoring an SAT question is exactly that shape:
 //            the model must actually solve the problem it just wrote in order to key it, which
 //            is a reasoning task, not a writing task.
+//
+// The SAT answer-key verifier (src/lib/sat/aiPractice.js) used to run Sage on a different model
+// family (Llama) than Oracle authors items on (gpt-oss), deliberately, so the verifier didn't
+// share the author's blind spots. With Llama gone from Groq's production catalog, that
+// cross-family independence isn't available from Groq alone anymore; the verifier still runs at a
+// different reasoning_effort and temperature 0, which catches a real class of authoring mistakes,
+// just not ones baked into the gpt-oss family's weights specifically.
 const MODELS = {
   scout: 'openai/gpt-oss-20b',
   guide: 'openai/gpt-oss-20b',
-  sage: 'qwen/qwen3.6-27b',
+  sage: 'openai/gpt-oss-20b',
   oracle: 'openai/gpt-oss-120b',
 };
 const TIER_ALIASES = { fast: 'scout', deep: 'guide' };
@@ -132,6 +150,10 @@ const TIER_LABELS = { scout: 'Scout', guide: 'Guide', sage: 'Sage', oracle: 'Ora
 // for deeper chain-of-thought — only meaningful for that model family, so gate on the model id
 // rather than trusting every caller to know which models support it.
 const REASONING_CAPABLE_MODELS = new Set(['openai/gpt-oss-120b', 'openai/gpt-oss-20b']);
+// Every tier is now a gpt-oss model, so reasoning_effort is what actually separates Scout from
+// Guide from Sage rather than the model id — a caller that pins its own effort (e.g. the SAT
+// verifier's temperature-0 pass) always wins; this is only the floor for callers that don't.
+const TIER_DEFAULT_REASONING_EFFORT = { scout: 'low', guide: 'medium', sage: 'medium', oracle: 'high' };
 
 // ── The Medabrain "brain" architecture — purpose-scoped key pools ───────────
 // Medabrain is the head/meta brain of the app. Underneath it, distinct subsystems each get their
@@ -238,18 +260,19 @@ function keysForPurpose(purpose) {
 const ALL_KEYS = [...new Set([...SHARED_KEYS, ...Object.values(PURPOSE_KEYS).flat()])];
 
 // Default model tier per purpose when the caller doesn't pin one — keeps each subsystem on the
-// cheapest model that's still good enough for its job (the whole point of splitting keys is to run
-// high-volume surfaces cheap while reserving the 70B tier for the rare, high-value plan generation).
+// cheapest tier that's still good enough for its job (the whole point of splitting keys is to run
+// high-volume surfaces cheap while reserving Sage's higher reasoning_effort for the rare,
+// high-value plan generation).
 const PURPOSE_DEFAULT_TIER = {
   coach: 'guide',
-  // Prep was on Scout (8B) purely for cost. But this surface is a tutor: a
+  // Prep was on Scout (low reasoning_effort) purely for cost. But this surface is a tutor: a
   // student asking "why does the loop of Henle work like that" gets an answer
-  // that is either right or quietly wrong, and 8B is where quietly wrong lives.
+  // that is either right or quietly wrong, and low effort is where quietly wrong lives.
   // Guide is the cheapest tier that reliably teaches rather than paraphrases.
   prep: 'guide',
   // Portfolio answers admissions questions with real-world specifics —
   // deadlines, ED/EA mechanics, what particular schools want. That is factual
-  // recall under a reasoning task, which is exactly where the 70B tier earns
+  // recall under a reasoning task, which is exactly where Sage's higher reasoning_effort earns
   // its latency. This surface is also low-volume compared to the head coach.
   portfolio: 'sage',
   interview: 'guide',  // conversational, low-latency for spoken turns
@@ -451,8 +474,23 @@ export default async function handler(req, res) {
   // spending any of the budget is deliberate: a cached answer costs Groq nothing.
 
   // ── API key check ──────────────────────────────────────────────────────────
+  // `code` is the machine-readable half of every error this handler returns, and
+  // it exists because of a real failure the roadmap generator could not tell
+  // apart from a flaky one. A multi-pass generation retries a "retryable" error
+  // four times per pass; with no key configured, every one of those twenty calls
+  // fails identically, the build takes ninety seconds to arrive at the
+  // deterministic slate, and the student's "rebuild it properly" button does the
+  // exact same twenty calls again. A caller that can read `code` knows on the
+  // first failure that no amount of retrying will help, and can say so out loud
+  // instead of spending the student's afternoon proving it.
+  //
+  // The codes are a closed vocabulary — see TERMINAL_CODES in
+  // src/lib/roadmap/generator.js, which is the consumer that acts on them.
   if (!ALL_KEYS.length) {
-    return res.status(500).json({ error: 'Medabrain is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.' });
+    return res.status(500).json({
+      code: 'not_configured',
+      error: 'Medabrain is not configured. Set GROQ_API_KEY (and optionally GROQ_API_KEY_2 / GROQ_API_KEY_3) in your environment variables.',
+    });
   }
 
   // ── Parse and validate body ────────────────────────────────────────────────
@@ -626,10 +664,17 @@ export default async function handler(req, res) {
   // `retryAfterMs` travels in the body as well as the standard Retry-After header, because the
   // one caller that genuinely needs to wait and retry (plan generation) is a fetch() in the
   // browser reading JSON, not an HTTP client that honours headers on its own.
+  //
+  // The two 429s below are different animals and the `code` says which. A minute
+  // limit clears on its own inside a minute and waiting is the correct response;
+  // a daily limit does not clear until tomorrow, and retrying it — which the
+  // roadmap generator did, four times a pass, five passes deep — is a minute and
+  // a half of the student's time spent proving something already known.
   const retryAfterMs = minuteLimitRetryMs(ip, purpose);
   if (retryAfterMs) {
     res.setHeader('Retry-After', String(Math.ceil(retryAfterMs / 1000)));
     return res.status(429).json({
+      code: 'minute_limit',
       error: 'Too many requests. Please wait a moment before sending more messages.',
       retryAfterMs,
     });
@@ -638,6 +683,7 @@ export default async function handler(req, res) {
   // ── Check daily request limit ──────────────────────────────────────────────
   if (isDailyLimited(ip, purpose)) {
     return res.status(429).json({
+      code: 'daily_limit',
       error: `Daily coaching limit reached (${dailyLimitFor(purpose)} requests). Try again tomorrow.`,
       requestsRemaining: 0,
       dailyLimit: dailyLimitFor(purpose),
@@ -670,7 +716,12 @@ export default async function handler(req, res) {
   // gpt-oss family (which is the whole reason masterplan had to be raised from 8,000). A truncated
   // response does not parse, and an unparseable response silently becomes the deterministic
   // fallback roadmap, so the headroom is what stands between "a real plan" and "a plausible one".
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
+  // 'coach' and 'portfolio' raised from the 1500 default: both are chat surfaces whose replies
+  // can legitimately run long (a ranked deadline breakdown, a full "what's most urgent" answer
+  // with a proposed edit's JSON riding along at the end — see MEDABRAIN_ACTION_PROTOCOL in
+  // src/lib/studentProfile.js). A cap tighter than what the caller actually asks for (see
+  // clampedTokens below) silently cuts the reply off mid-sentence with no signal to the client.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { coach: 2200, portfolio: 2400, prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -680,10 +731,13 @@ export default async function handler(req, res) {
   // when the caller actually asked for it, since OpenAI-compatible APIs require the word "JSON" to
   // appear somewhere in the prompt when this is set (masterPlanGenerator.js's prompts always do).
   const responseFormat = jsonMode ? { type: 'json_object' } : undefined;
-  // reasoning_effort only applies to the gpt-oss model family (Guide/Oracle) — silently ignored
-  // for other tiers so a stray value on a non-reasoning model can't cause a 400.
-  const reasoningEffort = (['low', 'medium', 'high'].includes(rawReasoningEffort) && REASONING_CAPABLE_MODELS.has(model))
-    ? rawReasoningEffort : undefined;
+  // reasoning_effort only applies to the gpt-oss model family — silently ignored for a non-
+  // reasoning model so a stray value can't cause a 400. Every tier is gpt-oss now, so a caller
+  // that doesn't pin a value still gets one: TIER_DEFAULT_REASONING_EFFORT, which is what actually
+  // separates Scout/Guide/Sage now that they share a model id.
+  const reasoningEffort = REASONING_CAPABLE_MODELS.has(model)
+    ? (['low', 'medium', 'high'].includes(rawReasoningEffort) ? rawReasoningEffort : TIER_DEFAULT_REASONING_EFFORT[tier])
+    : undefined;
 
   // Temperature is a per-task choice, not an app-wide constant. 0.7 is right for
   // a coach that should sound human; it is wrong for authoring a question whose
@@ -861,10 +915,22 @@ export default async function handler(req, res) {
         const headerWait = Number(response.headers?.get?.('retry-after'));
         const upstreamWaitMs = Number.isFinite(headerWait) && headerWait > 0 ? Math.min(30000, headerWait * 1000) : 5000;
         res.setHeader('Retry-After', String(Math.ceil(upstreamWaitMs / 1000)));
-        return res.status(429).json({ error: 'Medabrain is busy right now. Please wait a moment and try again.', retryAfterMs: upstreamWaitMs });
+        return res.status(429).json({ code: 'upstream_busy', error: 'Medabrain is busy right now. Please wait a moment and try again.', retryAfterMs: upstreamWaitMs });
       }
 
-      return res.status(502).json({ error: errMsg });
+      // ── A 401/403 from every key in the pool is not a blip ──────────────────
+      // It is a key that is missing, revoked, mistyped, or barred from this
+      // model, and it will fail exactly this way on the next attempt and the one
+      // after. Reported as its own code so a multi-pass caller stops rather than
+      // spending nineteen more calls confirming it. Same for a 404 model id.
+      if (response.status === 401 || response.status === 403) {
+        return res.status(502).json({ code: 'auth_failed', error: errMsg });
+      }
+      if (response.status === 404) {
+        return res.status(502).json({ code: 'model_unavailable', error: errMsg });
+      }
+
+      return res.status(502).json({ code: 'upstream_error', error: errMsg });
     }
 
     const content = extractText(data?.choices?.[0]?.message);

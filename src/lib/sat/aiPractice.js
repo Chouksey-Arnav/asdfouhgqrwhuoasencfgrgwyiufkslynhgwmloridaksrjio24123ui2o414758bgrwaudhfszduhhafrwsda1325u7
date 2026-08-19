@@ -29,11 +29,16 @@
 //                 with silently wrong keys. Temperature is well below the app
 //                 default of 0.7 — we want variety in scenario, not in
 //                 arithmetic.
-//      verify   → Sage (qwen/qwen3.6-27b) at temperature 0. Deliberately
-//                 a DIFFERENT MODEL FAMILY from the author. A verifier that
-//                 shares the author's weights shares the author's blind spots
-//                 and will confidently confirm its own mistakes; an independent
-//                 family makes agreement mean something.
+//      verify   → Sage (openai/gpt-oss-20b) at temperature 0. Was deliberately a
+//                 DIFFERENT MODEL FAMILY from the author (Llama vs. gpt-oss) —
+//                 a verifier that shares the author's weights shares the
+//                 author's blind spots and will confidently confirm its own
+//                 mistakes. Groq retired its Llama tiers in August 2026, so the
+//                 cross-family split isn't available from Groq alone anymore;
+//                 the verifier still runs a smaller model at a different
+//                 reasoning_effort and temperature 0 than the author, which
+//                 catches independent-pass mistakes even though it no longer
+//                 catches ones baked into the gpt-oss family's weights itself.
 //      hint /   → Guide (openai/gpt-oss-20b). Short, cheap, high volume, and
 //      explain    grounded in text it is given rather than reasoning from
 //                 scratch, so the deep tier would be spending money on latency.

@@ -87,7 +87,7 @@ export default function PrepMedabrain({
       const res = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 700 }),
+        body: JSON.stringify({ system: sys, messages: nextMsgs.slice(-10), purpose: 'prep', maxTokens: 1400 }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Medabrain error (${res.status})`);

@@ -530,6 +530,12 @@ for (const name of forwarded) {
       `(?:^|[\\s,{])${name}\\s*(?:=|,|\\}|:)`,
       // a top-level binding
       `\\b(?:const|let|var|function)\\s+${name}\\b`,
+      // an array destructuring, which is what every useState in this file is:
+      // `const [lastAttempt, setLastAttempt] = useState(null)`. Without this the
+      // net flags the single most common way a React component declares a value,
+      // which would push authors to work around the check rather than satisfy it
+      // — and a check people route around stops catching the bug it exists for.
+      `\\b(?:const|let|var)\\s*\\[[^\\]]*\\b${name}\\b[^\\]]*\\]`,
       // an import
       `import[^;]*\\b${name}\\b`,
       // an arrow or function parameter — `.map((item) => …)` is where most of
@@ -702,6 +708,220 @@ assert('the build runs them over the whole catalog',
 assert('a slate arrives with nothing withheld',
   (seniorSlate.dateAudit?.withheld || []).length === 0,
   (seniorSlate.dateAudit?.withheld || []).map((w) => w.id).join(', '));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('9. A failed build says why, and the retry button can be believed');
+// The reported bug: a degraded roadmap offered "Rebuild it properly", pressing it
+// spent ninety seconds re-running the identical twenty calls that had just
+// failed, and returned the identical screen. Three mechanisms end that, and all
+// three fail silently when they break — which is exactly why they are asserted
+// rather than left to a code review.
+
+// 1. The vocabulary of terminal failures exists, and the server actually emits it.
+assert('the generator classifies failures that retrying cannot fix', GEN.TERMINAL_CODES instanceof Set);
+assert('and there is more than one of them', GEN.TERMINAL_CODES.size >= 3);
+for (const code of GEN.TERMINAL_CODES) {
+  assert(`api/groq.js emits the "${code}" code the generator acts on`,
+    new RegExp(`code:\\s*'${code}'`).test(groq),
+    `the client treats "${code}" as terminal but nothing on the server ever sends it`);
+  assert(`"${code}" has something to say to a student`,
+    (GEN.DEGRADED_REASONS[code]?.title || '').length > 10
+    && (GEN.DEGRADED_REASONS[code]?.detail || '').length > 60,
+    'a terminal code with no explanation is the generic banner again, wearing a code');
+}
+// The two 429s are opposite instructions carrying the same status number, so the
+// distinction has to survive in the code rather than in a comment.
+assert('a daily limit and a minute limit are told apart',
+  /code:\s*'daily_limit'/.test(groq) && /code:\s*'minute_limit'/.test(groq));
+assert('a daily limit is terminal and a minute limit is not',
+  GEN.TERMINAL_CODES.has('daily_limit') && !GEN.TERMINAL_CODES.has('minute_limit'));
+
+// 2. Every reason is honest about whether the retry button can help. This is the
+//    field the UI hangs the button off, so a reason with no verdict on it would
+//    silently fall back to "offer the button" — the original bug.
+for (const [code, r] of Object.entries(GEN.DEGRADED_REASONS)) {
+  assert(`"${code}" says whether a retry can help`, typeof r.retryable === 'boolean');
+}
+assert('a missing API key never offers a retry that cannot work',
+  GEN.DEGRADED_REASONS.not_configured.retryable === false);
+assert('a spent daily budget never offers a retry that cannot work',
+  GEN.DEGRADED_REASONS.daily_limit.retryable === false);
+assert('a genuine outage does offer one', GEN.DEGRADED_REASONS.unreachable.retryable === true);
+assert('an unknown code degrades to the retryable outage wording, not to a crash',
+  GEN.degradedReasonFor('something-nobody-has-written-yet').retryable === true);
+assert('and the reason always carries its own code back', GEN.degradedReasonFor('daily_limit').code === 'daily_limit');
+
+// 3. A build short-circuits on a terminal failure instead of re-proving it.
+assert('a terminal failure aborts the remaining passes', /trace\?\.terminal/.test(read('src/lib/roadmap/generator.js')));
+assert('the roadmap records which passes fell back, so a repair can target them',
+  /failedStages/.test(read('src/lib/roadmap/generator.js')));
+
+// The repair path: a year whose ARGUMENT is sound must not be thrown away to
+// recover a paragraph, because rebuilding also discards every date the student
+// pinned and every step they ticked.
+assert('a roadmap that never recorded its failures is rebuilt rather than guessed at',
+  GEN.roadmapNeedsFullRebuild({ generation: { degraded: true } }) === true);
+assert('a failed strategy pass means the year itself is not worth patching',
+  GEN.roadmapNeedsFullRebuild({ generation: { degraded: true, failedStages: ['strategy'] } }) === true);
+assert('a failed slate selection means the same',
+  GEN.roadmapNeedsFullRebuild({ generation: { degraded: true, failedStages: ['select'] } }) === true);
+assert('but a missing read-back is repaired in place, not rebuilt',
+  GEN.roadmapNeedsFullRebuild({ generation: { degraded: true, failedStages: ['review'] } }) === false);
+assert('and so is one season of missing working detail',
+  GEN.roadmapNeedsFullRebuild({ generation: { degraded: true, failedStages: ['deepen:s2', 'review'] } }) === false);
+{
+  // A repair with nothing repairable must resolve, unchanged, without a call.
+  const nothingToDo = await GEN.repairRoadmap({ generation: { degraded: true, failedStages: ['select'] }, items: [] }, {});
+  assert('a repair with nothing it can fix is a no-op rather than an error', nothingToDo.repaired.length === 0);
+  assert('and a null roadmap does not throw', (await GEN.repairRoadmap(null, {})).roadmap === null);
+}
+
+// The UI half: the banner must read the reason rather than printing one sentence
+// under every cause, and must be able to say a retry already failed.
+const uiSrc = read('src/components/roadmap/roadmapUi.jsx');
+assert('the degraded banner reads the recorded reason', /degradedReason/.test(uiSrc));
+assert('and withholds the retry button when a retry cannot help', /retryable !== false/.test(uiSrc));
+assert('and can report that a retry was already made and failed', /lastAttempt/.test(uiSrc));
+assert('the tab wires the repair path to that button', /fixGeneration/.test(tabSrc) && /repairRoadmap/.test(tabSrc));
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('10. The roadmap only builds once it is worth building');
+const READY = await import('../src/lib/roadmap/readiness.js');
+
+assert('a blank account cannot build a roadmap yet', !READY.computeRoadmapReadiness(null, {}).ready);
+{
+  const blank = READY.computeRoadmapReadiness(null, {});
+  assert('and is told about every gate rather than only the first',
+    blank.checklist.length === READY.ROADMAP_GATES.length);
+}
+// Every gate has to justify itself to the student, in the student's language,
+// because it is standing between them and the thing they came for.
+for (const g of READY.ROADMAP_GATES) {
+  assert(`gate "${g.id}" says what the roadmap GAINS from it`, (g.gains || '').length > 60,
+    'a gate that cannot say what it buys the student does not belong in the way');
+  assert(`gate "${g.id}" names the thing to do`, (g.action || '').length > 4);
+  assert(`gate "${g.id}" is a door, not a dead end`, !!g.goTab,
+    'a requirement with no route to satisfying it is a dead end wearing a checklist');
+  assert(`gate "${g.id}" is answerable today`, typeof g.ok === 'function');
+}
+assert('the gate list stays short enough to be read', READY.ROADMAP_GATES.length <= 6,
+  `${READY.ROADMAP_GATES.length} gates — onboarding already asks thirty questions and the intake thirteen`);
+{
+  // A gate pointing at a tab that does not exist sends the student to Home,
+  // which reads as the app losing track of what it just asked them to do.
+  const { TABS, SUBVIEWS } = await import('../src/lib/routes.js');
+  for (const g of READY.ROADMAP_GATES) {
+    assert(`gate "${g.id}" points at a real tab`, TABS.includes(g.goTab), g.goTab);
+    if (g.goView) {
+      const ids = SUBVIEWS[g.goTab]?.ids || [];
+      assert(`gate "${g.id}" points at a real view inside ${g.goTab}`,
+        !ids.length || ids.includes(g.goView), `${g.goTab}/${g.goView}`);
+    }
+  }
+}
+
+// A fully-set-up student sails through. If this ever fails, the gate has grown
+// past the point where a normal account satisfies it without noticing.
+{
+  const readyUser = { gradeStage: 'junior', pathway: 'physician' };
+  const readyCtx = {
+    portfolio: { colleges: [{ id: 1 }], activities: [{ id: 1 }], clinicalHours: [], awards: [], research: [], skills: [] },
+    quizzesTaken: 2, lessons: 1,
+  };
+  const verdict = READY.computeRoadmapReadiness(readyUser, readyCtx);
+  assert('a normally-set-up student passes every gate', verdict.ready, verdict.missing.map((m) => m.id).join(', '));
+  assert('and is shown as complete', verdict.pct === 100);
+}
+{
+  // The third state. A portfolio that has not loaded must not be reported as
+  // empty — flashing a lock screen at somebody who has done everything, and
+  // then unlocking half a second later, is worse than a moment of nothing.
+  const loading = READY.computeRoadmapReadiness({ gradeStage: 'junior', pathway: 'physician' }, { portfolio: null });
+  assert('an unloaded portfolio reads as loading, never as missing',
+    loading.checklist.filter((c) => c.kind === 'portfolio').every((c) => c.state === 'loading'));
+  assert('and a loading gate does not block the build', loading.ready);
+}
+assert('the tab checks readiness before asking thirteen questions, not after',
+  tabSrc.indexOf('computeRoadmapReadiness') !== -1
+  && tabSrc.indexOf('readiness.ready') < tabSrc.indexOf('<RoadmapIntake'),
+  'finding out a roadmap cannot be built AFTER the intake is the app wasting a student\'s time and then blaming them for it');
+assert('and the gate only ever stands in front of the FIRST build',
+  /if \(!roadmap && \(showIntake \|\| view === 'intake'\) && !readiness\.ready\)/.test(tabSrc),
+  'a student with a roadmap must always be able to open their answers and rebuild — locking that would take a working feature away as a punishment for editing their own record');
+
+// ─────────────────────────────────────────────────────────────────────────────
+section('11. The climb is a projection, and never a prediction');
+const PROJ = await import('../src/lib/roadmap/projection.js');
+const STRENGTH = await import('../src/lib/applicationStrength.js');
+
+{
+  const climb = PROJ.projectClimb(base, { subscores: { academic: 40, clinical: 20, application: 10, activities: 30 } }, TODAY);
+  assert('the climb spans about a year', climb.months.length >= 11 && climb.months.length <= 14,
+    `${climb.months.length} months`);
+  assert('it is chronological', climb.months.every((m, i) => i === 0 || climb.months[i - 1].month <= m.month));
+  assert('no month ever exceeds the top of the scale', climb.months.every((m) => m.total <= 100));
+  assert('nor drops below the bottom', climb.months.every((m) => m.total >= 0));
+  assert('the line never goes backwards — a roadmap cannot cost you progress',
+    climb.months.every((m, i) => i === 0 || m.total >= climb.months[i - 1].total));
+  assert('the past is flat at what was actually measured, not back-filled from a model',
+    climb.months.filter((m) => m.isPast).every((m) => m.total === climb.today.score));
+  assert('exactly one month is marked as now', climb.months.filter((m) => m.isNow).length <= 1);
+  assert('finishing the year is worth something', climb.gain > 0);
+  assert('and the projection ends where the last month does', climb.projected.score === climb.months[climb.months.length - 1].total);
+  assert('every component is accounted for', climb.contributions.length === PROJ.COMPONENTS.length);
+  assert('no component is projected past the ceiling', climb.contributions.every((c) => c.to <= 100));
+  assert('and none is projected backwards', climb.contributions.every((c) => c.to >= c.from));
+}
+{
+  // A student already at the top has nothing left to gain, and the chart must
+  // say so rather than inventing headroom that does not exist.
+  const maxed = PROJ.projectClimb(base, { subscores: { academic: 100, clinical: 100, application: 100, activities: 100 } }, TODAY);
+  assert('a student already at 100 is not projected past it', maxed.projected.score <= 100);
+  assert('and is honestly told the year adds nothing to the score', maxed.gain === 0);
+}
+assert('an empty roadmap does not throw', !!PROJ.projectClimb(null, null, TODAY));
+assert('and refuses to draw a curve through too few points', !PROJ.projectClimb(null, null, TODAY).ok);
+
+// Every track must feed exactly one component, or an item silently contributes
+// nothing and the chart quietly under-reports what the year is worth.
+for (const t of CAT.TRACK_IDS || Object.keys(CAT.TRACK_BY_ID)) {
+  assert(`track "${t}" builds a named part of the application`, !!PROJ.TRACK_TO_COMPONENT[t],
+    'an unmapped track contributes nothing to the climb and nobody would ever notice');
+  assert(`and "${t}" maps to a real component`, PROJ.COMPONENT_IDS.includes(PROJ.TRACK_TO_COMPONENT[t]));
+}
+
+// The weights here and in applicationStrength.js MUST agree — the two put the
+// same number on screen in two different tabs, and drift would show a student
+// one score on Progress and a different one here.
+{
+  const measured = STRENGTH.computeApplicationStrength({
+    mastery: 80, avgQuizScore: 80, clinicalHours: 80, shadowingHours: 0,
+    volunteerHours: 60, leadershipHours: 40, recommendersConfirmed: 2,
+    collegeCount: 6, essayCount: 6,
+  });
+  const rebuilt = Math.round(
+    measured.subscores.academic * PROJ.COMPONENT_WEIGHTS.academic
+    + measured.subscores.clinical * PROJ.COMPONENT_WEIGHTS.clinical
+    + measured.subscores.application * PROJ.COMPONENT_WEIGHTS.application
+    + measured.subscores.activities * PROJ.COMPONENT_WEIGHTS.activities,
+  );
+  assert('the climb recombines the subscores exactly as applicationStrength does',
+    Math.abs(rebuilt - measured.score) <= 1,
+    `climb says ${rebuilt}, applicationStrength says ${measured.score} — the same student would see two different numbers in two tabs`);
+  assert('and the band names match too', PROJ.bandFor(measured.score) === measured.label);
+}
+
+// THE LINE THAT IS NEVER CROSSED. A rising green line beside a college name will
+// be read as a prediction about that college unless the screen says otherwise in
+// plain words, and the person reading it is fifteen.
+const ascentSrc = read('src/components/roadmap/RoadmapAscent.jsx');
+assert('the climb screen states outright that it is not an admissions chance',
+  /not a chance of getting in/i.test(ascentSrc));
+assert('and carries its assumption in the sentence rather than in a footnote',
+  /if you finish it/i.test(ascentSrc));
+assert('the projection never computes an admission probability',
+  !/admitChance|admissionChance|chanceOf|oddsOf|probabilityOf/i.test(read('src/lib/roadmap/projection.js')),
+  'see the header of src/lib/roadmap/projection.js — this number is never computed here');
 
 // ─────────────────────────────────────────────────────────────────────────────
 console.log('');

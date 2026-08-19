@@ -155,24 +155,96 @@ try {
     return page;
   };
 
-  const dismissChest = async (page) => {
-    for (let i = 0; i < 4; i += 1) {
-      const chest = page.locator('button:has-text("Open Chest"), button:has-text("Nice!")');
-      if (!(await chest.count())) return;
-      await chest.first().click().catch(() => {});
-      await page.waitForTimeout(1200);
+  // ── Getting the daily-chest modal out of the way, properly ────────────────
+  // This used to click once and return the moment no chest button was on screen,
+  // which is wrong in both directions: the modal is mounted a beat AFTER first
+  // paint (so an early check finds nothing and returns), and dismissing it
+  // reveals a second card behind it. Either way the full-screen scrim was still
+  // up when the assertions started, and every click after that landed on the
+  // scrim instead of on the thing being tested — reported by Playwright as
+  // "<div>…</div> intercepts pointer events" and by a reader as a mystery.
+  //
+  // So the loop is driven by the SCRIM rather than by the buttons: keep
+  // dismissing until nothing is covering the page any more.
+  const scrimUp = (page) => page.evaluate(() => {
+    const covering = [...document.querySelectorAll('div')].some((el) => {
+      const s = getComputedStyle(el);
+      if (s.position !== 'fixed' || s.pointerEvents === 'none') return false;
+      const r = el.getBoundingClientRect();
+      return r.width >= window.innerWidth * 0.9 && r.height >= window.innerHeight * 0.9;
+    });
+    return covering;
+  });
+
+  // The other half of the same problem: the chest is mounted several seconds
+  // after first paint, once the account's daily check-in has resolved. A dismiss
+  // that runs before then finds nothing, returns happily, and the modal appears
+  // immediately afterwards — on top of the assertions. So this WAITS for the
+  // scrim to show up before concluding there is not one, and only then clears
+  // it, re-checking until two consecutive passes are clean.
+  const dismissChest = async (page, { tries = 6 } = {}) => {
+    for (let i = 0; i < tries; i += 1) {
+      if (!(await scrimUp(page))) return true;
+      const dismiss = page.locator(
+        '[aria-label="Close"], button:has-text("Nice!"), button:has-text("Got it"), button:has-text("Open Chest")',
+      );
+      if (await dismiss.count()) await dismiss.first().click().catch(() => {});
+      else await page.keyboard.press('Escape').catch(() => {});
+      await page.waitForTimeout(700);
     }
+    return !(await scrimUp(page));
+  };
+
+  // ── Clicking something with a modal in the way ────────────────────────────
+  // The chest is mounted a few seconds after first paint, once the daily
+  // check-in resolves, and exactly WHEN is a race against however long this
+  // machine takes to boot the app. Dismissing once up front therefore cannot be
+  // relied on: the modal can appear after the dismissal and before the click.
+  //
+  // So a click that matters clears any scrim IMMEDIATELY BEFORE IT, and retries
+  // if one arrived in between. That is also just a better test — it asserts the
+  // student can reach the control, rather than asserting it in a lab where
+  // nothing else in the app is allowed to happen.
+  const clickThrough = async (page, locator, what) => {
+    let last = null;
+    for (let i = 0; i < 5; i += 1) {
+      await dismissChest(page);
+      try {
+        await locator.click({ timeout: 4000 });
+        return true;
+      } catch (e) { last = e; await page.waitForTimeout(600); }
+    }
+    fail(`could not click ${what}: ${String(last?.message || last).slice(0, 120)}`);
+    return false;
   };
 
   // ═══════════════════════════════════════════════════════════════════════════
   const desktop = await newContext({ width: 1440, height: 1000 });
   const page = await openPage(desktop);
 
+  // ── Picking one of the three drawings of the year ─────────────────────────
+  // The Year view offers Path / Line / In order, and the DEFAULT IS PATH — it is
+  // the answer to "where am I", which is the question people open the tab with.
+  // The rail this section tests belongs to the Line drawing, so it has to be
+  // asked for. This script used to wait for `.roadmap-rail` on arrival and time
+  // out after forty seconds, because it was written when Line was the default
+  // and never updated when Path took over; the whole suite has been failing on
+  // its first assertion ever since, which is a verification that verifies
+  // nothing.
+  const selectDrawing = async (target, label) => {
+    const tab = target.locator(`[role="tab"]:has-text("${label}")`).first();
+    await tab.waitFor({ timeout: 40000 });
+    await clickThrough(target, tab, `the "${label}" drawing tab`);
+    await target.waitForTimeout(700);
+  };
+
   await page.goto(`${BASE}/roadmap/year`, { waitUntil: 'domcontentloaded' });
-  const rail = page.locator('.roadmap-rail').first();
-  await rail.waitFor({ timeout: 40000 });
   await page.waitForTimeout(1500);
   await dismissChest(page);
+  await selectDrawing(page, 'Line');
+  const rail = page.locator('.roadmap-rail').first();
+  await rail.waitFor({ timeout: 40000 });
+  await page.waitForTimeout(800);
 
   section('The year is drawn as one connected, movable line');
   const body = async () => (await page.locator('body').innerText()).replace(/\n/g, ' ');
@@ -224,15 +296,44 @@ try {
   } else fail('the scrubber did not render beneath the rail');
 
   section('A marker explains itself without printing a date it cannot stand behind');
-  await markers.first().click();
+  await clickThrough(page, markers.first(), 'a marker on the line');
   await page.waitForTimeout(400);
   const card = await body();
   check(/Open this/.test(card), 'selecting a marker fills the detail card');
   check(!/undefined|NaN|Invalid Date/.test(card), 'and nothing on the screen renders as a broken value');
 
   section('The same year again, in order, on one unbroken vertical line');
-  check(/everything, in the order it happens/i.test(text), 'the full timeline of events is on the Year view');
-  check(/you are here/i.test(text), 'with today marked in its true place in the sequence');
+  await selectDrawing(page, 'In order');
+  const ordered = await body();
+  check(/you are here/i.test(ordered), 'the ordered drawing marks today in its true place in the sequence');
+  check(!/Something went wrong/i.test(ordered), 'and switching drawings does not take the tab down');
+
+  section('And as a road you walk up — the drawing the tab opens with');
+  await selectDrawing(page, 'Path');
+  const pathText = await body();
+  check(/you are here/i.test(pathText), 'the path marks where the student is standing');
+  check(/jump to today/i.test(pathText), 'and getting back to it is always one tap away');
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // THE CLIMB. The screen that answers "what do I get out of doing any of this",
+  // and the one screen in the tab that puts a projection on-screen — so the
+  // thing asserted here is not that it renders a curve but that it renders the
+  // sentence keeping that curve honest.
+  section('The Climb says what the year is worth, and refuses to say what it is not');
+  await page.goto(`${BASE}/roadmap/climb`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2000);
+  await dismissChest(page);
+  const climb = await body();
+  check(!/Something went wrong/i.test(climb), 'the Climb view renders rather than boundary-erroring');
+  check(/what finishing this is worth|your climb/i.test(climb), 'and names what it is showing');
+  check(/if you finish it/i.test(climb),
+    'the projection carries its assumption in the sentence, not in a footnote');
+  // Non-negotiable. A rising green line with a college name beside it reads as a
+  // prediction about that college unless it says otherwise in plain words, and
+  // the person reading it is fifteen. See HonestyNote in RoadmapAscent.jsx.
+  check(/not a chance of getting in/i.test(climb),
+    'and states outright that it is not an admissions chance');
+  check(!/undefined|NaN|Invalid Date/.test(climb), 'with nothing rendering as a broken value');
 
   // ═══════════════════════════════════════════════════════════════════════════
   // THE REGRESSION. Rebuild runs the whole generator with the intake already on the roadmap, so
@@ -244,7 +345,7 @@ try {
   const errorsBefore = errors.length;
   const rebuild = page.locator('button:has-text("Rebuild")').first();
   check(await rebuild.count() > 0, 'the overview offers a rebuild');
-  await rebuild.click();
+  await clickThrough(page, rebuild, 'the rebuild button');
   // Poll rather than sleep a fixed beat: the point is to catch the screen while it is up, and how
   // long that is depends on how fast the five stubbed passes resolve on the machine running this.
   let building = '';
@@ -271,8 +372,37 @@ try {
     if (!/Building your year/.test(done)) break;
   }
   check(!/Building your year/.test(done), 'the build finishes rather than hanging on the loading screen');
-  check(/12-month roadmap|not fully written for you/.test(done), 'and lands back on a roadmap');
+  check(/12-month roadmap/i.test(done), 'and lands back on a roadmap');
   check(errors.length === errorsBefore, 'with no uncaught error anywhere in the build');
+
+  // ── THE OTHER REGRESSION: a retry that appears to do nothing ──────────────
+  // Every pass was stubbed to fail, so this build is degraded, and the banner is
+  // the only thing standing between "your roadmap is not what we promised" and a
+  // student never finding out. It has to name a cause and it has to report that
+  // the retry it just ran came back the same way — a button whose only visible
+  // effect is redrawing the identical screen is a button students correctly
+  // report as broken, which is exactly how this arrived.
+  section('A degraded build says why, and a failed retry says it failed');
+  check(/could not be reached|not switched on|could not sign in|used up today/i.test(done),
+    'the banner names a cause rather than one sentence for every failure');
+  const retry = page.locator('button:has-text("Rebuild it properly"), button:has-text("Finish writing it")').first();
+  if (await retry.count()) {
+    await clickThrough(page, retry, 'the degraded banner\'s retry button');
+    let retried = '';
+    for (let i = 0; i < 60; i += 1) {
+      await page.waitForTimeout(750);
+      retried = await body();
+      if (/tried again just now|recovered part of it/i.test(retried)) break;
+      if (/Building your year/.test(retried)) continue;
+    }
+    check(/tried again just now|recovered part of it/i.test(retried),
+      'and pressing it reports what actually happened instead of redrawing the same screen');
+  } else {
+    // The other correct outcome: the cause was one a retry cannot fix, so no
+    // button was offered at all. Either is right; silently offering a button
+    // that cannot work is the thing that is not.
+    ok('no retry was offered, because the recorded cause is one a retry cannot fix');
+  }
 
   await desktop.close();
 
@@ -284,10 +414,12 @@ try {
   );
   const phone = await openPage(mobile);
   await phone.goto(`${BASE}/roadmap/year`, { waitUntil: 'domcontentloaded' });
-  const mRail = phone.locator('.roadmap-rail').first();
-  await mRail.waitFor({ timeout: 40000 });
   await phone.waitForTimeout(1800);
   await dismissChest(phone);
+  await selectDrawing(phone, 'Line');
+  const mRail = phone.locator('.roadmap-rail').first();
+  await mRail.waitFor({ timeout: 40000 });
+  await phone.waitForTimeout(600);
 
   const mMetrics = await mRail.evaluate((el) => ({
     scrollWidth: el.scrollWidth,
@@ -316,6 +448,27 @@ try {
   await phone.waitForTimeout(400);
   const mAfter = await mRail.evaluate((el) => el.scrollLeft);
   check(mAfter > mBefore, 'and the year moves under a touch scroll');
+
+  // ── Every screen in the tab, on a phone, without sideways scroll ──────────
+  // Checked screen by screen rather than once, because horizontal overflow is
+  // produced by ONE element on ONE view and a single spot-check on the view
+  // that happens to be fine proves nothing about the other five. The Climb is
+  // the newest and the likeliest offender: it is a chart, and a chart is a
+  // fixed-width drawing until somebody makes it not be.
+  section('And no screen in the tab pushes the page sideways on a phone');
+  for (const v of ['overview', 'year', 'climb', 'seasons', 'list', 'intake']) {
+    await phone.goto(`${BASE}/roadmap/${v}`, { waitUntil: 'domcontentloaded' });
+    await phone.waitForTimeout(1400);
+    await dismissChest(phone);
+    const overflow = await phone.evaluate(() => ({
+      doc: document.documentElement.scrollWidth,
+      win: window.innerWidth,
+    }));
+    check(overflow.doc <= overflow.win + 1,
+      `roadmap/${v} fits the screen (${overflow.doc}px of page in a ${overflow.win}px window)`);
+    const crashed = (await phone.locator('body').innerText()).includes('Something went wrong');
+    check(!crashed, `roadmap/${v} renders on a phone`);
+  }
 
   await mobile.close();
 } catch (err) {

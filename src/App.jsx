@@ -497,7 +497,10 @@ const PORTFOLIO_SUBNAV = [
 // The three retired Portfolio tabs → the section of Activities & Résumé each of them became.
 // Every caller in the app (and every old URL) still names them by their tab id; this is the
 // one place that translation happens.
-const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials' };
+// 'credentials' is an alias for 'skills' so goDest('portfolio/resume:credentials') — the id
+// NAV_KEYWORDS and the deep-link protocol both use, since "credentials" is the section's actual
+// label — resolves the same as the palette's own 'skills' command instead of landing on nothing.
+const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials', credentials:'credentials' };
 // The section an old-style URL names, if any: /portfolio/clinical → 'clinical'. routes.js
 // already forwards those paths to the `resume` view; this recovers the part it cannot carry,
 // since an alias by design never round-trips back out of formatPath().
@@ -513,6 +516,9 @@ function resumeSectionFromPath(pathname=''){
 const ROADMAP_SUBNAV = [
   {id:'overview',ic:Compass,label:'Overview',color:C.violet},
   {id:'year',ic:CalendarDays,label:'Your Year',color:C.sky},
+  // The payoff screen — see the header above ROADMAP_SUBNAV in
+  // src/components/roadmap/RoadmapTab.jsx for why it sits third rather than last.
+  {id:'climb',ic:TrendingUp,label:'The Climb',color:C.green},
   {id:'seasons',ic:Layers,label:'Seasons',color:C.teal},
   {id:'list',ic:ListChecks,label:'Everything',color:C.amber},
   {id:'intake',ic:Target,label:'Your Answers',color:C.fuchsia},
@@ -642,9 +648,12 @@ class ErrorBoundary extends React.Component {
     if(this.state.err) return(
       <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
         <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
-        <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Something went wrong</h2>
-        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>{this.state.msg}</p>
-        <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
+        <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Oops! Loading issue.</h2>
+        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>Try reloading — if it keeps happening, contact our support team at <a href="mailto:medschoolprepsupport@gmail.com" style={{color:C.blueL}}>medschoolprepsupport@gmail.com</a>.</p>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+          <a href="/prep" style={{...btnG(),textDecoration:'none'}} onClick={e=>{e.preventDefault();this.setState({err:false});this.props.onEscapeToPrep?.();}}>Go to Prep</a>
+          <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
+        </div>
       </div>
     );
     return this.props.children;
@@ -4482,7 +4491,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // Ordering matters here, and it used to be wrong in a way that produced the
   // single worst Medabrain failure in the app. `quickSignals` matched anything
   // starting "when is"/"who is", and any message under 42 characters, and sent
-  // it to Scout — the smallest model available. So
+  // it to Scout — the lightest-effort tier Medabrain has. So
   // "When do I apply to Duke?" (24 chars) and "Who was president in 1954?"
   // (26 chars) were routed to the model least able to recall a real-world fact,
   // and the answer came back as a shrug or a redirect. Those are exactly the
@@ -4491,7 +4500,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // So knowledge-recall is now checked BEFORE brevity, and it wins: a question
   // whose answer is a fact about the world (a named university, a deadline, a
   // date, a historical figure, a policy, a required score) goes to Sage, the
-  // 70B tier, regardless of how short it is. Scout is left with what it is
+  // deeper tier, regardless of how short it is. Scout is left with what it is
   // genuinely good at — restating, defining a term, quick arithmetic, chit-chat
   // — and only when nothing in the message suggests a fact needs to be right.
   function classifyCoachTier(message) {
@@ -4732,7 +4741,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       // Honor a pinned model; otherwise let Medabrain auto-route this message.
       const tier=coachModelPref==='auto'?classifyCoachTier(lastUser?.content||''):coachModelPref;
       setCoachTier(tier);
-      const r=await callGroqAI(sysPrompt,lastUser?.content||'',700,history.filter(m=>m.role!=='error'),tier);
+      // 1600 (up from 700): a full breakdown or plan-style reply routinely ran past 700 tokens and
+      // got cut off mid-sentence. api/groq.js's per-purpose ceiling for 'coach' was raised to match.
+      const r=await callGroqAI(sysPrompt,lastUser?.content||'',1600,history.filter(m=>m.role!=='error'),tier);
       setCoachTierCounts(c=>({...c,[tier]:(c[tier]||0)+1}));
       setMsgs(m=>[...m,{role:'assistant',content:r}]);
       if(threadId){ DB.addCoachMessage(threadId,'assistant',r).catch(console.error); bumpThreadLocally(threadId); }
@@ -9980,6 +9991,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           gradeLabel={gradeLabel}
           isMobile={isMobile}
           recentActivitySummary={recentActivitySummary}
+          goDest={goDest}
         />
       </div>
     );
@@ -10146,6 +10158,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
           view={roadmapView} onViewChange={setRoadmapView}
           subnavItems={roadmapSubnav} hrefFor={roadmapHref} lockedItem={unlocks.locked('roadmap')[0]}
           goPortfolio={goPortfolio} goPlans={()=>setTab('plans')}
+          // The readiness gate's rows carry their own destinations as data (see
+          // ROADMAP_GATES in src/lib/roadmap/readiness.js), so the tab needs the
+          // generic jump rather than a fixed pair of callbacks.
+          onNavigate={goAnywhere}
         />
       </div>
     );
@@ -10444,7 +10460,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     resets itself the moment `tab` changes (see ErrorBoundary's resetKey), so
                     switching to another section — which the student can still do, since the nav
                     survives outside this boundary — recovers on its own instead of staying stuck. */}
-                <ErrorBoundary resetKey={tab}>
+                <ErrorBoundary resetKey={tab} onEscapeToPrep={()=>setTab('prep')}>
                   {(tRenders[tab]||tHome)()}
                 </ErrorBoundary>
               </motion.div>
