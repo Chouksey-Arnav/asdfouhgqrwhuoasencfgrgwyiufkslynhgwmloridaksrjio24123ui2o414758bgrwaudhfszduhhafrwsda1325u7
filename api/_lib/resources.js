@@ -28,6 +28,10 @@ export const RESOURCES = [
   'clinical_hours',
   'recommenders',
   'portfolio_evidence',
+  // One row per user — the Admissions Calculator's intake (see
+  // supabase/migrations/0017_admission_intake.sql). Listed here like every other
+  // resource so it is exportable and deletable the moment it is writable.
+  'admission_intake',
 ];
 
 /** Membership test for the CRUD endpoint's `[resource]` path segment. */

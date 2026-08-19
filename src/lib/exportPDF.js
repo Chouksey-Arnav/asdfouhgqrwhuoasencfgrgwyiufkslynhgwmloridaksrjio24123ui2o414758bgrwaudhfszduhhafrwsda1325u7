@@ -96,66 +96,97 @@ export function exportQuizResult(quiz, answers, score, total) {
   doc.save(`quiz-${quiz.id}-${pct}pct-${Date.now()}.pdf`);
 }
 
-export function exportSchoolList(schools, profile={}) {
-  const doc   = new jsPDF({ unit:'mm', format:'a4' });
-  const tiers = ['Likely','Target','Reach','Stretch'];
-  const tc    = { Likely:GREEN, Target:BLUE, Reach:AMBER, Stretch:RED };
+/**
+ * Exports the Admissions Calculator's estimates.
+ *
+ * Replaces an earlier exportSchoolList() that printed a Likely / Target / Reach
+ * / Stretch tier per school. That export outlived the model behind it — the
+ * calculator no longer produces tiers, because "Likely" at a school admitting
+ * 3.4% of applicants was a word with nothing behind it. What goes on paper now
+ * is what goes on screen: a range, a confidence label, and — for a programme
+ * the student is not eligible for — no number at all, only what would have to
+ * change. A PDF that is more confident than the screen it came from is the
+ * version of this document that gets shown to a parent and believed.
+ */
+export function exportAdmissionEstimates(results, meta = {}) {
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const conf = { high: GREEN, moderate: BLUE, low: AMBER, 'very-low': RED };
 
-  let y = header(doc, 'College List', `GPA ${profile.gpa||'—'} · SAT ${profile.sat||'—'} · Generated ${new Date().toLocaleDateString()}`);
-
-  // Profile summary
-  doc.setFillColor(15, 24, 40);
-  doc.roundedRect(14, y, 182, 16, 2, 2, 'F');
-  doc.setTextColor(...LIGHT);
-  doc.setFontSize(8);
-  ['Likely','Target','Reach','Stretch'].forEach((t,i) => {
-    const n = schools.filter(s=>s.tier===t).length;
-    const col = tc[t];
-    doc.setTextColor(...col);
-    doc.setFont('helvetica','bold');
-    doc.text(`${t}: ${n}`, 20 + i*46, y+7);
-  });
-  doc.setTextColor(...LIGHT);
-  doc.setFont('helvetica','normal');
-  doc.text(`Total: ${schools.length} schools`, 20, y+13);
-  y += 24;
-
+  let y = header(doc, 'Admission Estimates',
+    `${meta.completeness ? `${meta.completeness.have} of ${meta.completeness.total} intake fields answered · ` : ''}Generated ${new Date().toLocaleDateString()}`);
   let page = 1;
-  tiers.forEach(tier => {
-    const list = schools.filter(s=>s.tier===tier);
-    if (!list.length) return;
 
-    // Tier header
-    if (y > 260) { footer(doc, page, 1); doc.addPage(); page++; y = header(doc, 'School List (continued)'); }
-    doc.setFillColor(...tc[tier]);
-    doc.roundedRect(14, y, 182, 7, 1, 1, 'F');
-    doc.setTextColor(...WHITE);
+  const ensureRoom = (needed) => {
+    if (y + needed > 268) { footer(doc, page, page); doc.addPage(); page++; y = header(doc, 'Admission Estimates (continued)'); }
+  };
+
+  // The standing caveat, first — before any number, so it is not a footnote
+  // somebody scrolls past on the way to the encouraging part.
+  doc.setFillColor(15, 24, 40);
+  doc.roundedRect(14, y, 182, 20, 2, 2, 'F');
+  doc.setTextColor(...LIGHT);
+  doc.setFontSize(7.5);
+  doc.text(doc.splitTextToSize(
+    'Every figure below is a range, not a prediction. Estimates are benchmarked against the median admitted student rather than the 25th percentile, weighted by what each programme publishes, and adjusted for the fact that published admit rates include recruited athletes, legacies and development admits. Where a programme does not publish its admit rate, the estimate is built on a stated assumption and says so.',
+    176), 18, y + 5);
+  y += 26;
+
+  (results || []).forEach((r) => {
+    if (!r || r.error) return;
+    ensureRoom(r.blocked ? 34 : 30);
+
+    const color = r.blocked ? RED : (conf[r.confidence?.level] || BLUE);
+    doc.setFillColor(248, 250, 252);
+    doc.rect(14, y, 182, r.blocked ? 30 : 26, 'F');
+    doc.setFillColor(...color);
+    doc.rect(14, y, 1.6, r.blocked ? 30 : 26, 'F');
+
+    doc.setTextColor(20, 30, 50);
     doc.setFontSize(10);
-    doc.setFont('helvetica','bold');
-    doc.text(`${tier.toUpperCase()} (${list.length})`, 18, y+5);
-    y += 11;
+    doc.setFont('helvetica', 'bold');
+    doc.text(r.program.name, 19, y + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(...LIGHT);
+    doc.text(r.program.institution, 19, y + 10.5);
 
-    list.forEach(s => {
-      if (y > 270) { footer(doc, page, 1); doc.addPage(); page++; y = header(doc, 'School List (continued)'); }
-      doc.setFillColor(248,250,252);
-      doc.rect(14, y, 182, 9, 'F');
-      doc.setDrawColor(230,234,240);
-      doc.line(14, y+9, 196, y+9);
-      doc.setTextColor(20,30,50);
-      doc.setFontSize(9);
-      doc.setFont('helvetica','bold');
-      doc.text(s.name, 17, y+4);
-      doc.setTextColor(...LIGHT);
-      doc.setFont('helvetica','normal');
+    if (r.blocked) {
+      doc.setTextColor(...RED);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.text('Not eligible on published requirements — no estimate shown', 19, y + 16);
+      doc.setFont('helvetica', 'normal');
       doc.setFontSize(7);
-      doc.text(`GPA ${s.gpa} · SAT ${s.sat} · ${s.accept}% acceptance · ${s.type} · ${s.state}`, 17, y+8);
-      y += 11;
-    });
-    y += 4;
+      doc.setTextColor(60, 70, 90);
+      doc.text(doc.splitTextToSize(
+        r.whatWouldChange.map(w => `• ${w.label}`).join('   '), 172), 19, y + 21);
+      y += 34;
+      return;
+    }
+
+    doc.setTextColor(...color);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(r.display.range, 150, y + 8);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    doc.text(r.confidence.label, 150, y + 13);
+
+    doc.setTextColor(60, 70, 90);
+    doc.setFontSize(7);
+    const baseline = r.baseRate.published ?? r.baseRate.assumed;
+    doc.text(`Everyone who applies: ${(baseline * 100).toFixed(1)}%${r.baseRate.isEstimate ? ' (estimated — not published by the programme)' : ''}`, 19, y + 16);
+    const top = (r.drivers || []).slice(0, 2).map(d => d.label).join(' · ');
+    if (top) doc.text(doc.splitTextToSize(`Would move it most: ${top}`, 172), 19, y + 20.5);
+    if (r.lottery) {
+      doc.setTextColor(...AMBER);
+      doc.text('Selection at this programme is partly by random draw — preparation cannot remove that.', 19, y + 24);
+    }
+    y += 30;
   });
 
   footer(doc, page, page);
-  doc.save(`school-list-${Date.now()}.pdf`);
+  doc.save(`admission-estimates-${Date.now()}.pdf`);
 }
 
 // `extras` carries the three sections that used to be their own Portfolio tabs and were, until

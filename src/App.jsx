@@ -92,9 +92,11 @@ import { academicFallYear, buildTimeline, summarizeTimelineForPrompt } from './l
 import { summarizeRoadmapForPrompt } from './lib/roadmap/model';
 import { rollCosmetic } from './lib/cosmetics';
 import { renderMarkdown } from './lib/renderMarkdown';
-import { exportQuizResult, exportSchoolList, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
+import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './lib/exportPDF';
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
+import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
+import { resetIntakeCache } from './lib/admissions';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
@@ -279,125 +281,15 @@ function scrambleQuiz(quiz){
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtT   = s => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
 const scCol  = p => p>=80?C.green:p>=60?C.blue:C.amber;
-const tierC  = t => ({Likely:C.green,Target:C.blue,Reach:C.amber,Stretch:C.rose}[t]||C.t2);
 const AI_MSG = 'AI features require an OpenAI API key. Set OPENAI_KEY in your Vercel environment variables.';
 
 // NOTE: a `scoreToSection` helper used to live here, mapping a science-quiz
 
-function scoreSchool(s, gpa, sat, lead, ec, vol, st, specialty = 'exploring', rigor = '2', clinicalHours = 0) {
-  let sc = 100;
-  const gN = parseFloat(gpa) || 0;
-  const sN = parseInt(sat) || 0;
-  const gd = gN - (s.gpa || 3.5);
-  const sd = sN - (s.sat || 1200);
-
-  // GPA Weighting
-  if (gd >= 0) sc += 15;
-  else if (gd >= -0.1) sc -= 5;
-  else if (gd >= -0.2) sc -= 15;
-  else if (gd >= -0.3) sc -= 25;
-  else sc -= 40;
-
-  // SAT Weighting
-  if (sd >= 0) sc += 15;
-  else if (sd >= -40) sc -= 5;
-  else if (sd >= -80) sc -= 15;
-  else if (sd >= -120) sc -= 25;
-  else sc -= 40;
-
-  // Rigor Weighting (Science Course Rigor)
-  const rN = parseInt(rigor) || 0;
-  if (rN >= 8) sc += 10;
-  else if (rN >= 5) sc += 6;
-  else if (rN >= 3) sc += 3;
-
-  // Leadership Experience Score
-  sc += Math.min((parseInt(lead) || 0) * 4, 12);
-
-  // Extracurricular Hours Score
-  const cHours = parseInt(ec) || 0;
-  sc += cHours >= 400 ? 10 : cHours >= 200 ? 6 : cHours >= 100 ? 3 : 0;
-
-  // Volunteer Hours Score
-  const v = parseInt(vol) || 0;
-  sc += v >= 200 ? 8 : v >= 100 ? 5 : v >= 50 ? 2 : 0;
-
-  // Clinical Hours Score (Highly valued in pre-health pathways)
-  const clin = parseInt(clinicalHours) || 0;
-  if (clin >= 150) sc += 12;
-  else if (clin >= 80) sc += 8;
-  else if (clin >= 40) sc += 4;
-  else if (clin >= 20) sc += 2;
-
-  // In-state Public Tuition Advantage & Admissions Preference
-  if (s.type === 'Public' && st && s.state === st) sc += 15;
-
-  // Pre-Med Committee Boost
-  if (s.hasPreMedCommittee) sc += 5;
-
-  // BS/MD Direct Medical Track Interest
-  if (s.bsmd) sc += 5;
-
-  // Specialty Match Bonuses
-  if (s.specialtyStrong === 'Pre-Med' && (specialty === 'physician' || specialty === 'physicianAssistant')) {
-    sc += 10;
-  } else if (s.specialtyStrong === 'Nursing' && specialty === 'nursing') {
-    sc += 10;
-  } else if (s.specialtyStrong === 'Pharmacy' && specialty === 'pharmacy') {
-    sc += 10;
-  } else if (s.specialtyStrong === 'Dentistry' && specialty === 'dentistry') {
-    sc += 10;
-  } else if (s.specialtyStrong === 'Research' && specialty === 'biomedResearch') {
-    sc += 10;
-  }
-
-  // Determine Tier
-  const tier = sc >= 115 ? 'Likely' : sc >= 95 ? 'Target' : sc >= 75 ? 'Reach' : 'Stretch';
-
-  // Customized reasons for why this fits the student
-  let reasons = [];
-  if (gN >= s.gpa) {
-    reasons.push(`Your GPA is above the average admitted GPA of ${s.gpa}.`);
-  }
-  if (sN >= s.sat) {
-    reasons.push(`Your test score meets or exceeds their mid-50% SAT threshold.`);
-  }
-  if (s.type === 'Public' && st === s.state) {
-    reasons.push(`You have the in-state tuition and admission rate advantage.`);
-  }
-  if (s.bsmd) {
-    reasons.push(`Offers an exceptional direct BS/MD or BS/DO pathway for high schoolers.`);
-  }
-  if (s.hasPreMedCommittee) {
-    reasons.push(`An active Pre-Med Committee is available to write composite LORs.`);
-  }
-  if (s.specialtyStrong === 'Pre-Med' && (specialty === 'physician' || specialty === 'physicianAssistant')) {
-    reasons.push(`Renowned for world-class pre-med advising and med school placements.`);
-  }
-  if (s.specialtyStrong && s.specialtyStrong.toLowerCase() === specialty.toLowerCase()) {
-    reasons.push(`Provides elite, top-tier clinical and professional training specifically in ${specialty}.`);
-  }
-  if (s.clinicalProximity === 'Excellent') {
-    reasons.push(`Excellent proximity to medical centers, offering superior shadowing/volunteer access.`);
-  }
-  if (clin >= 80) {
-    reasons.push(`Your extensive clinical exposure (${clin} hrs) stands out strongly.`);
-  }
-  if (rN >= 5) {
-    reasons.push(`Your rigorous curriculum (${rN} advanced classes) demonstrates academic strength.`);
-  }
-
-  const whyMatch = reasons.length > 0 ? reasons.slice(0, 3).join(' ') : `A solid choice with a pre-health program rank of ${s.preHealthRank || 3}/5.`;
-
-  return {
-    ...s,
-    tier,
-    score: sc,
-    whyMatch,
-    academicIndex: Math.min(100, Math.round(((gN / 4.0) * 50) + ((sN / 1600) * 40) + ((rN / 10) * 10))),
-    experienceIndex: Math.min(100, Math.round((Math.min(100, clin) * 0.4) + (Math.min(200, v) / 200 * 30) + (Math.min(500, cHours) / 500 * 20) + (Math.min(5, parseInt(lead) || 0) / 5 * 10)))
-  };
-}
+// NOTE: a scoreSchool() helper used to live here — an additive 100-point-plus-bonuses
+// score per school that produced Likely/Target/Reach/Stretch tiers. It was replaced
+// wholesale by the layered model in src/lib/admissions/, which works in probability
+// against each programme's real base rate rather than in points. See the header of
+// src/components/portfolio/admissions/AdmissionCalculatorPanel.jsx.
 
 // Boiled down from 17 flat destinations to 4: Home + three pillars. Prep and
 // Portfolio each absorb several formerly-top-level tabs via their own SubNav
@@ -491,7 +383,8 @@ const PORTFOLIO_SUBNAV = [
   // No 'scores' tab here on purpose. Test-score tracking lives in the SAT tab (/sat/scores),
   // which owns the score report, the section breakdown, and the projection — a second, thinner
   // copy of it inside Portfolio only ever split the same numbers across two places. The
-  // Admissions Calculator still reads the student's real test_scores rows (syncWithPortfolio).
+  // Admissions Calculator still reads the student's real test_scores rows — every sitting and
+  // every section score — straight out of the shared Portfolio snapshot.
   {id:'calc',ic:Calculator,label:'Admissions Calc',color:C.gold},
 ];
 // The three retired Portfolio tabs → the section of Activities & Résumé each of them became.
@@ -2195,79 +2088,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // ── Portfolio ───────────────────────────────────────────────────────────────
 
 
-  // ── Calc ────────────────────────────────────────────────────────────────────
-  const [cGPA,setCGPA]=useState('');const [cSAT,setCSAT]=useState('');const [cLead,setCLead]=useState('0');const [cEC,setCEC]=useState('0');const [cVol,setCV]=useState('0');const [cSt,setCST]=useState('');const [sType,setST]=useState('All');
-  const [cRigor,setCRigor]=useState('2'); // Rigor state: count of AP/IB science & math classes
-  const [selRegion,setSelRegion]=useState('All');
-  const [selBsmd,setSelBsmd]=useState('All');
-  const [selCommittee,setSelCommittee]=useState('All');
-  const [selClinicalProx,setSelClinicalProx]=useState('All');
-  const [selStateFilter,setSelStateFilter]=useState('All');
-  const [calcSort,setCalcSort]=useState('score'); // 'score' | 'accept' | 'name'
-
-  const [customSchools,setCustomSchools]=useState([]);
-  const [showAddSchool,setShowAddSchool]=useState(false);
-  const [csName,setCsName]=useState('');const [csGPA,setCsGPA]=useState('');const [csSAT,setCsSAT]=useState('');const [csAccept,setCsAccept]=useState('');const [csState,setCsState]=useState('');const [csType,setCsType]=useState('Public');
-
-  // ACT to SAT Conversion
-  const actToSat = (act) => {
-    const map = {
-      36: 1600, 35: 1540, 34: 1500, 33: 1460, 32: 1430, 31: 1400, 30: 1370,
-      29: 1340, 28: 1310, 27: 1280, 26: 1240, 25: 1210, 24: 1180, 23: 1140,
-      22: 1110, 21: 1080, 20: 1040, 19: 1010, 18: 970, 17: 930, 16: 890,
-      15: 850, 14: 810, 13: 770, 12: 710, 11: 630, 10: 560, 9: 480
-    };
-    return map[act] || (act < 9 ? 400 : 1000);
-  };
-
-  const syncWithPortfolio = async () => {
-    try {
-      const tid = toast.loading('Syncing with your Portfolio...');
-      // Fetch latest test scores
-      const scores = await listItems('test_scores');
-      const actualScores = (scores || []).filter(s => !s.is_target);
-      if (actualScores.length > 0) {
-        const sorted = actualScores.sort((a,b) => b.test_date.localeCompare(a.test_date));
-        const latestScore = sorted[0];
-        if (latestScore.test_type === 'SAT') {
-          setCSAT(String(latestScore.composite));
-        } else if (latestScore.test_type === 'ACT') {
-          const satEquiv = actToSat(latestScore.composite);
-          setCSAT(String(satEquiv));
-          toast.success(`Converted ACT composite ${latestScore.composite} to SAT equivalent ${satEquiv}!`);
-        }
-      }
-
-      // Sync cumulative GPA
-      if (portGpa && portGpa.length > 0) {
-        const sortedGpas = [...portGpa].sort((a,b) => new Date(b.created_at || b.addedAt || 0) - new Date(a.created_at || a.addedAt || 0));
-        setCGPA(String(sortedGpas[0].gpa));
-      }
-
-      // Sync hours from activities
-      const volH = Math.round(portActivities.filter(a => a.activity_type === 'Volunteering').reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0) * (parseFloat(a.weeks_per_year) || 0), 0));
-      setCV(String(volH));
-
-      // EC hours (excluding Volunteering, Leadership, Clinical)
-      const ecH = Math.round(portActivities.filter(a => !['Volunteering', 'Clinical/Shadowing', 'Patient Care (paid)', 'Leadership'].includes(a.activity_type)).reduce((s, a) => s + (parseFloat(a.hours_per_week) || 0) * (parseFloat(a.weeks_per_year) || 0), 0));
-      setCEC(String(ecH));
-
-      // Leadership positions count
-      const leadCount = portActivities.filter(a => a.activity_type === 'Leadership').length;
-      setCLead(String(leadCount));
-
-      // Rigor (count AP/IB courses selected in settings)
-      const apCount = (user?.courses || []).filter(c => c.toLowerCase().includes('ap') || c.toLowerCase().includes('ib')).length;
-      setCRigor(String(Math.max(apCount, 2)));
-
-      toast.dismiss(tid);
-      toast.success('Successfully synced profile from your Portfolio!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Sync failed: ' + err.message);
-    }
-  };
-
   // ── Settings ────────────────────────────────────────────────────────────────
   const [sName,setSN]=useState('');const [sAge,setSAge]=useState('');const [sSpec,setSS]=useState('');const [sfxOn,setSfxOn]=useState(isSFXEnabled);const [confettiOn,setConfettiOn]=useState(isConfettiEnabled);
   // Settings > "Your Goals" — lets a student revisit/update what onboarding collected (goal,
@@ -3561,6 +3381,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     DB.setSyncEnabled(false);
     ProgressSync.resetSyncStatus();
     PlanStore.resetPlanStore(); // drop the previous account's plan-push state with everything else
+    resetIntakeCache();         // …and the Admissions Calculator's cached intake row, so a second
+                                // account on this browser never sees the first one's answers
     await DB.clearAllData();
     clearViewState();
     setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setPortSnapshot(null);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
@@ -5475,80 +5297,6 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
 
     return result;
   }, [libFuse, lSrch, lCat, lType, lDiff, lFreeOnly, lSubTab, lSort, user]);
-  const hasCalc = cGPA&&cSAT;
-  const calcR   = useMemo(()=>{
-    if (!hasCalc) return [];
-
-    // 1. Get raw schools and map scoreSchool with all personalized parameters
-    let processed = [...SCHOOL_DATA, ...customSchools]
-      .map(s => scoreSchool(s, cGPA, cSAT, cLead, cEC, cVol, cSt, eSpec, cRigor, clinicalHoursTotal));
-
-    // 2. Filter
-    processed = processed.filter(s => {
-      const matchType = sType === 'All' || s.type === sType;
-      const matchRegion = selRegion === 'All' || s.region === selRegion;
-      const matchBsmd = selBsmd === 'All' || (selBsmd === 'Yes' && s.bsmd) || (selBsmd === 'No' && !s.bsmd);
-      const matchCommittee = selCommittee === 'All' || (selCommittee === 'Yes' && s.hasPreMedCommittee) || (selCommittee === 'No' && !s.hasPreMedCommittee);
-      const matchClinicalProx = selClinicalProx === 'All' || s.clinicalProximity === selClinicalProx;
-      const matchState = selStateFilter === 'All' || s.state === selStateFilter;
-      return matchType && matchRegion && matchBsmd && matchCommittee && matchClinicalProx && matchState;
-    });
-
-    // 3. Sort
-    if (calcSort === 'score') {
-      processed.sort((a, b) => b.score - a.score);
-    } else if (calcSort === 'accept') {
-      processed.sort((a, b) => (a.accept || 100) - (b.accept || 100));
-    } else if (calcSort === 'name') {
-      processed.sort((a, b) => a.name.localeCompare(b.name));
-    }
-
-    return processed;
-  }, [cGPA, cSAT, cLead, cEC, cVol, cSt, sType, hasCalc, customSchools, eSpec, cRigor, clinicalHoursTotal, selRegion, selBsmd, selCommittee, selClinicalProx, selStateFilter, calcSort]);
-
-  // Compute overall summary stats for matches
-  const calculatedStats = useMemo(() => {
-    if (calcR.length === 0) return null;
-    let sumAcademic = 0, sumExperience = 0;
-    calcR.forEach(s => {
-      sumAcademic += s.academicIndex || 0;
-      sumExperience += s.experienceIndex || 0;
-    });
-    const avgAcademic = Math.round(sumAcademic / calcR.length);
-    const avgExperience = Math.round(sumExperience / calcR.length);
-
-    let pathwayAdvice = '';
-    if (curPath?.label) {
-      pathwayAdvice = `Focused on your ${curPath.label} track. `;
-    }
-    if (parseInt(cVol) || 0 < 60) {
-      pathwayAdvice += "Consider taking on more volunteer hours to strengthen your experience index. ";
-    }
-    if (clinicalHoursTotal < 40) {
-      pathwayAdvice += "Adding hospital/clinical shadowing hours will heavily boost your chancing at selective health programs. ";
-    }
-    if (parseFloat(cGPA) < 3.7) {
-      pathwayAdvice += "Aim to take more advanced math & science classes (AP/IB) to show curriculum rigor and offset a lower GPA. ";
-    } else {
-      pathwayAdvice += "Your outstanding academic parameters align excellently with premium target schools! ";
-    }
-
-    return { avgAcademic, avgExperience, pathwayAdvice };
-  }, [calcR, cVol, clinicalHoursTotal, cGPA, curPath]);
-
-  // Unique states found in SCHOOL_DATA for filtering
-  const distinctStates = useMemo(() => {
-    const states = new Set(SCHOOL_DATA.map(s => s.state).filter(Boolean));
-    return Array.from(states).sort();
-  }, []);
-
-  function addCustomSchool(){
-    if(!csName.trim())return;
-    setCustomSchools(prev=>[...prev,{name:csName.trim(),gpa:parseFloat(csGPA)||0,sat:parseInt(csSAT)||0,accept:parseFloat(csAccept)||0,state:csState,type:csType,custom:true}]);
-    setCsName('');setCsGPA('');setCsSAT('');setCsAccept('');setCsState('');setCsType('Public');setShowAddSchool(false);
-    toast.success('School added to your list');
-  }
-
   // All decks: custom decks first (newest created on top), then built-in decks —
   // so a deck you just generated or created is always the first thing you see.
   const allDecksList = useMemo(()=>{
@@ -8239,269 +7987,25 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   }
 
   // ── ADMISSIONS CALC ───────────────────────────────────────────────────────────
+  // The panel itself lives in src/components/portfolio/admissions/. What used to be
+  // here was ~260 lines of JSX over a scoreSchool() that started every school at
+  // 100 points and handed out bonuses — see the header of
+  // AdmissionCalculatorPanel.jsx for why that had to be replaced rather than
+  // retuned, and src/lib/admissions/ for the five-layer model that replaced it.
   function tCalc(){
-    const accent=portfolioAccent; // shadows the pathway accent — Portfolio has its own fixed color identity
-    return(
-      <div style={CC({gap:22})}>
-        <PanelHero tourTag="portfolio-deep-calc" icon={Calculator} color={C.gold} color2={C.orange} m={isMobile}
-          eyebrow="Admissions Calculator" title="Personalized College List & Match Index"
-          sub="Your odds at real schools — or sync it from your Portfolio."
-          right={
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={syncWithPortfolio}
-              style={{ ...btn(`linear-gradient(135deg, ${C.amber}, ${C.orange})`, { fontSize: 12.5 }), display: 'inline-flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px ${C.orange}35` }}
-            >
-              <Sparkles size={14}/> Sync with Portfolio
-            </motion.button>
-          }/>
-
-        {/* Profile Card */}
-        <div style={glass()}>
-          <div style={R({ justifyContent: 'space-between', marginBottom: 16 })}>
-            <SL extra={{ margin: 0 }}>Your Academic & Pre-Health Profile</SL>
-            <span style={pill(C.blueDim, C.blueL, { fontSize: 10 })}>Calculates dynamic admission index</span>
-          </div>
-          <div style={G(2,14,{},isMobile)}>
-            <div style={CC({gap:4})}>
-              <span style={lbl()}>Cumulative GPA</span>
-              <input type="number" step="0.01" min="2" max="4" style={inp()} placeholder="3.75" value={cGPA} onChange={e=>setCGPA(e.target.value)}/>
-            </div>
-            <div style={CC({gap:4})}>
-              <div style={R({justifyContent:'space-between',alignItems:'flex-end'})}>
-                <span style={lbl({marginBottom:0})}>SAT Score (or ACT converted)</span>
-                {/* Pulls the score Prep already predicted from real quiz performance instead of
-                    making the student re-derive/retype a number the app can already estimate. */}
-                {/* Only offers a real, measured estimate — the old version prefilled a
-                    number derived from science-quiz averages, which then propagated
-                    into admissions-chance calculations as if it were a test score. */}
-              </div>
-              <input type="number" min="400" max="1600" style={inp()} placeholder="1350" value={cSAT} onChange={e=>setCSAT(e.target.value)}/>
-            </div>
-            {[
-              {l:'Science Course Rigor (AP/IB)',p:'2',t:'number',min:'0',v:cRigor,s:setCRigor},
-              {l:'Leadership Experience (years)',p:'1',t:'number',min:'0',v:cLead,s:setCLead},
-              {l:'Extracurricular Hours',p:'200',t:'number',min:'0',v:cEC,s:setCEC},
-              {l:'Volunteer Hours',p:'100',t:'number',min:'0',v:cVol,s:setCV},
-            ].map(f=>(
-              <div key={f.l} style={CC({gap:4})}>
-                <span style={lbl()}>{f.l}</span>
-                <input type={f.t} step={f.step} min={f.min} max={f.max} maxLength={f.maxLength} style={inp()} placeholder={f.p} value={f.v} onChange={e=>f.s(e.target.value)}/>
-              </div>
-            ))}
-            <div style={CC({gap:4})}>
-              <span style={lbl()}>Home State (optional)</span>
-              <select style={inp()} value={cSt} onChange={e=>setCST(e.target.value)}>
-                <option value="">— Not sure / prefer not to say —</option>
-                {US_STATES.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
-              </select>
-            </div>
-            <div style={CC({gap:4})}>
-              <span style={lbl()}>Logged Clinical Hours (View Only)</span>
-              <div style={inp({ background: 'rgba(255,255,255,0.02)', color: C.t3, border: `1px dashed ${C.b1}`, display: 'flex', alignItems: 'center' })}>
-                {clinicalHoursTotal} hrs total
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Insights Panel */}
-        {calculatedStats && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={glass({ background: `linear-gradient(135deg, ${C.s1}, ${C.s0})`, border: `1px solid ${C.b2}`, padding: 22 })}>
-            <SL>Personalized Admissions Insights</SL>
-            <div style={G(3, 14, { marginBottom: 14 }, isMobile)}>
-              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: C.blueL, fontFamily: C.FM }}>{calculatedStats.avgAcademic}%</div>
-                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Academic Match Index</div>
-              </div>
-              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: C.greenL, fontFamily: C.FM }}>{calculatedStats.avgExperience}%</div>
-                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Experience Fit Index</div>
-              </div>
-              <div style={glass2({ textAlign: 'center', background: 'rgba(255,255,255,0.015)' })}>
-                <div style={{ fontSize: 24, fontWeight: 800, color: C.amberL, fontFamily: C.FM }}>{curPath?.label ? curPath.label.split(' ')[0] : 'Pre-Health'}</div>
-                <div style={{ fontSize: 10, color: C.t3, marginTop: 4, textTransform: 'uppercase', letterSpacing: '.06em' }}>Matching Pathway</div>
-              </div>
-            </div>
-            <div style={R({ gap: 10, alignItems: 'flex-start' })}>
-              <Brain size={16} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }}/>
-              <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{calculatedStats.pathwayAdvice}</span>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Filters and Sorting Panel */}
-        {hasCalc && (
-          <div style={glass({ padding: 18 })}>
-            <SL>Advanced Matching Filters & Sorting</SL>
-            <div style={G(isMobile ? 2 : 3, 12, { marginBottom: 14 }, false)}>
-              <div>
-                <span style={lbl()}>Geographic Region</span>
-                <select style={inp()} value={selRegion} onChange={e=>setSelRegion(e.target.value)}>
-                  <option value="All">All Regions</option>
-                  <option value="Northeast">Northeast</option>
-                  <option value="South">South</option>
-                  <option value="Midwest">Midwest</option>
-                  <option value="West">West</option>
-                </select>
-              </div>
-              <div>
-                <span style={lbl()}>Direct BS/MD Path</span>
-                <select style={inp()} value={selBsmd} onChange={e=>setSelBsmd(e.target.value)}>
-                  <option value="All">Show All Schools</option>
-                  <option value="Yes">Offers BS/MD Direct</option>
-                  <option value="No">No BS/MD Direct</option>
-                </select>
-              </div>
-              <div>
-                <span style={lbl()}>Pre-Med Committee Advisory</span>
-                <select style={inp()} value={selCommittee} onChange={e=>setSelCommittee(e.target.value)}>
-                  <option value="All">Show All Schools</option>
-                  <option value="Yes">Has Pre-Med Committee</option>
-                  <option value="No">No Pre-Med Committee</option>
-                </select>
-              </div>
-              <div>
-                <span style={lbl()}>Clinical Proximity</span>
-                <select style={inp()} value={selClinicalProx} onChange={e=>setSelClinicalProx(e.target.value)}>
-                  <option value="All">Show All Proximities</option>
-                  <option value="Excellent">Excellent Access</option>
-                  <option value="Good">Good Access</option>
-                  <option value="Fair">Fair Access</option>
-                </select>
-              </div>
-              <div>
-                <span style={lbl()}>State Location</span>
-                <select style={inp()} value={selStateFilter} onChange={e=>setSelStateFilter(e.target.value)}>
-                  <option value="All">All States</option>
-                  {distinctStates.map(stCode => (
-                    <option key={stCode} value={stCode}>{stCode}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <span style={lbl()}>School Type</span>
-                <select style={inp()} value={sType} onChange={e=>setST(e.target.value)}>
-                  <option value="All">All Types</option>
-                  <option value="Public">Public Universities</option>
-                  <option value="Private">Private Universities</option>
-                </select>
-              </div>
-            </div>
-            <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 })}>
-              <div style={R({ gap: 6 })}>
-                <span style={{ fontSize: 11, color: C.t3 }}>Sort by:</span>
-                {[['score', 'Match Score'], ['accept', 'Acceptance Rate'], ['name', 'Alphabetical']].map(([key, label]) => (
-                  <button key={key} style={btnSm(calcSort===key ? C.blueGrad : C.s4, { fontSize: 11 })} onClick={()=>setCalcSort(key)}>{label}</button>
-                ))}
-              </div>
-              <button style={btnG({ fontSize: 11, padding: '5px 12px' })} onClick={()=>{setST('All');setSelRegion('All');setSelBsmd('All');setSelCommittee('All');setSelClinicalProx('All');setSelStateFilter('All');setCalcSort('score');}}>Reset Filters</button>
-            </div>
-          </div>
-        )}
-
-        {/* Add a custom school not in the built-in list */}
-        <div style={glass({padding:18})}>
-          <div style={R({justifyContent:'space-between'})}>
-            <SL extra={{marginBottom:showAddSchool?14:0}}>Don't see a school you're considering?</SL>
-            <button style={{...btnG({fontSize:12,padding:'7px 14px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>setShowAddSchool(v=>!v)}><Plus size={13}/>{showAddSchool?'Cancel':'Add a school not listed'}</button>
-          </div>
-          {showAddSchool&&<div style={CC({gap:12})}>
-            <div style={G(2,12,{},isMobile)}>
-              <div style={CC({gap:4})}><span style={lbl()}>School Name</span><input style={inp()} placeholder="e.g. My State University" value={csName} onChange={e=>setCsName(e.target.value)}/></div>
-              <div style={CC({gap:4})}><span style={lbl()}>Type</span>
-                <select style={inp()} value={csType} onChange={e=>setCsType(e.target.value)}><option>Public</option><option>Private</option></select>
-              </div>
-              <div style={CC({gap:4})}><span style={lbl()}>Avg. Admitted GPA (optional)</span><input type="number" step="0.01" style={inp()} placeholder="3.5" value={csGPA} onChange={e=>setCsGPA(e.target.value)}/></div>
-              <div style={CC({gap:4})}><span style={lbl()}>Avg. Admitted SAT (optional)</span><input type="number" style={inp()} placeholder="1200" value={csSAT} onChange={e=>setCsSAT(e.target.value)}/></div>
-              <div style={CC({gap:4})}><span style={lbl()}>Acceptance Rate % (optional)</span><input type="number" style={inp()} placeholder="50" value={csAccept} onChange={e=>setCsAccept(e.target.value)}/></div>
-              <div style={CC({gap:4})}><span style={lbl()}>State (optional)</span>
-                <select style={inp()} value={csState} onChange={e=>setCsState(e.target.value)}>
-                  <option value="">—</option>
-                  {US_STATES.map(s=><option key={s.code} value={s.code}>{s.name}</option>)}
-                </select>
-              </div>
-            </div>
-            <button style={{...btn(C.blueGrad,{fontSize:12,alignSelf:'flex-start'})}} onClick={addCustomSchool}>Add to My List</button>
-          </div>}
-          {customSchools.length>0&&<div style={{marginTop:14,...R({gap:6,flexWrap:'wrap'})}}>
-            {customSchools.map((s,i)=><span key={i} style={pill(C.violetDim,C.violetL,{fontSize:11})}>{s.name}</span>)}
-          </div>}
-        </div>
-
-        {!hasCalc&&<div style={{textAlign:'center',color:C.t3,padding:60,fontSize:14}}>Enter your GPA and SAT score above to see your personalized college list.</div>}
-
-        {/* Summary strip */}
-        {calcR.length>0&&<div style={G(4,10,{},isMobile)}>
-          {['Likely','Target','Reach','Stretch'].map(tier=>{const n=calcR.filter(s=>s.tier===tier).length;const col=tierC(tier);return<div key={tier} style={{...glass2({textAlign:'center',padding:14})}}>
-            <div style={{fontSize:22,fontWeight:800,fontFamily:C.FM,color:col,marginBottom:3}}>{n}</div>
-            <div style={{fontSize:11,color:C.t3,fontWeight:600}}>{tier}</div>
-          </div>;})}
-        </div>}
-
-        {/* Export button */}
-        {calcR.length>0&&<div style={R({gap:10})}>
-          <button style={{...btnG({fontSize:12,padding:'9px 18px'}),display:'inline-flex',alignItems:'center',gap:6}} onClick={()=>exportSchoolList(calcR,{gpa:cGPA,sat:cSAT})}><FileDown size={14}/>Export College List PDF</button>
-        </div>}
-
-        {/* School tiers */}
-        {calcR.length>0&&['Likely','Target','Reach','Stretch'].map(tier=>{
-          const schools=calcR.filter(s=>s.tier===tier);if(!schools.length)return null;
-          const col=tierC(tier);
-          return(
-            <div key={tier}>
-              <div style={R({marginBottom:12})}>
-                <div style={{width:10,height:10,borderRadius:'50%',background:col,boxShadow:`0 0 8px ${col}70`}}/>
-                <span style={{fontSize:13,fontWeight:700,color:col,fontFamily:C.FD}}>{tier}</span>
-                <span style={{fontSize:12,color:C.t3}}>({schools.length} schools matched)</span>
-              </div>
-              <div style={CC({gap:10})}>
-                {schools.map((s,i)=>(
-                  <motion.div key={i} initial={{opacity:0,x:-5}} animate={{opacity:1,x:0}} transition={{delay:i*.015}} whileHover={{ y: -2, borderColor: `${col}40` }} style={{...glass({padding:18, transition: 'all .15s'}), borderLeft:`4px solid ${col}`}}>
-                    <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', justifyContent: 'space-between', gap: 12 }}>
-                      <div style={{flex:1,minWidth:0}}>
-                        <div style={R({gap:8, flexWrap: 'wrap'})}>
-                          <div style={{fontSize:15,fontWeight:800,color:C.t1,fontFamily:C.FD}}>{s.name}</div>
-                          {s.bsmd && <span style={pill(C.violetDim, C.violetL, { fontSize: 9 })}>Direct BS/MD</span>}
-                          {s.hasPreMedCommittee && <span style={pill(C.cyanDim, C.cyan, { fontSize: 9 })}>Pre-Med Comm.</span>}
-                          <span style={pill(`${col}18`,col,{fontSize:10})}>{s.tier}</span>
-                        </div>
-                        <div style={{fontSize:11.5,color:C.t2,marginTop:6,fontFamily:C.FB}}>
-                          GPA req: <strong style={{color:C.t1}}>{s.gpa}</strong> &nbsp;·&nbsp; SAT req: <strong style={{color:C.t1}}>{s.sat}</strong> &nbsp;·&nbsp; Acceptance: <strong style={{color:C.t1}}>{s.accept}%</strong> &nbsp;·&nbsp; {s.type} ({s.state}) &nbsp;·&nbsp; Region: <strong style={{color:C.t1}}>{s.region || 'N/A'}</strong>
-                        </div>
-                        {s.whyMatch && (
-                          <div style={{...R({gap:6, alignItems: 'flex-start'}), marginTop:10, background: 'rgba(255,255,255,0.015)', padding: '8px 12px', borderRadius: 8, border: `1px solid ${C.b1}` }}>
-                            <Brain size={12} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }}/>
-                            <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{s.whyMatch}</span>
-                          </div>
-                        )}
-                        <div style={{...R({gap: 6, flexWrap: 'wrap'}), marginTop: 8}}>
-                          <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>Pre-Health Advising: {s.preHealthRank || 3}/5</span>
-                          <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>Clinical Proximity: {s.clinicalProximity || 'Good'}</span>
-                          {s.specialtyStrong && <span style={pill(`${C.blue}12`, C.blueL, { fontSize: 9.5 })}>Strongest in: {s.specialtyStrong}</span>}
-                        </div>
-                      </div>
-                      <div style={{ ...R({gap:12}), alignSelf: isMobile ? 'flex-end' : 'center', flexShrink: 0 }}>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: C.blueL, fontFamily: C.FM }}>{s.academicIndex}%</div>
-                          <div style={{ fontSize: 8, color: C.t3, textTransform: 'uppercase' }}>Academic</div>
-                        </div>
-                        <div style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: C.greenL, fontFamily: C.FM }}>{s.experienceIndex}%</div>
-                          <div style={{ fontSize: 8, color: C.t3, textTransform: 'uppercase' }}>Experience</div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+    return (
+      <AdmissionCalculatorPanel
+        user={user}
+        snapshot={portSnapshot}
+        colleges={portSnapshot?.colleges||[]}
+        isMobile={isMobile}
+        onGoTo={goPortfolio}
+        onReload={refreshPortSnapshot}
+      />
     );
   }
+
+
   // ── ANALYTICS ─────────────────────────────────────────────────────────────────
   function tAnalytics(){
     const accent=progressAccent; // shadows the pathway accent — Progress has its own fixed color identity

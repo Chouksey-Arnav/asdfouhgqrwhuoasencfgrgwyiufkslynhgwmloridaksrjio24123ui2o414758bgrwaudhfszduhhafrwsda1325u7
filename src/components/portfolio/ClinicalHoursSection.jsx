@@ -13,6 +13,18 @@ export const SITE_TYPES = [
 ];
 // Site types each get a color so the per-site hour tiles and entry rows read
 // as distinct kinds of clinical exposure at a glance.
+// What KIND of exposure an entry was. Programmes weight observation and hands-on patient contact
+// very differently — a physician-scientist track and a six-year clinical programme read the same
+// 200 hours completely differently depending on which they are — and the Admissions Calculator
+// used to have to guess the split, which meant a guess was silently deciding part of a student's
+// estimate. Asked here, at the point of logging, where the student actually knows the answer.
+export const EXPERIENCE_KINDS = [
+  { value: 'hands-on', label: 'Hands-on' },
+  { value: 'shadowing', label: 'Shadowing' },
+  { value: 'scribing', label: 'Scribing' },
+  { value: 'other', label: 'Other' },
+];
+
 const SITE_COLORS = {
   Hospital: C.rose, 'Outpatient Clinic': C.sky, 'Physician Office': C.blue, 'Dental Office': C.cyan,
   Pharmacy: C.green, 'PT/Rehab Clinic': C.orange, 'Research Lab': C.violet,
@@ -29,6 +41,7 @@ export const clinicalTotalHours = (entries = []) => entries.reduce((s, e) => s +
 export default function ClinicalHoursSection({ accent = C.pink, entries = [], setEntries, loading = false, onLogged, isMobile = false }) {
   const [siteName, setSiteName] = useState('');
   const [siteType, setSiteType] = useState(SITE_TYPES[0]);
+  const [experienceKind, setExperienceKind] = useState('hands-on');
   const [supervisorName, setSupervisorName] = useState('');
   const [supervisorEmail, setSupervisorEmail] = useState('');
   const [hours, setHours] = useState('');
@@ -44,6 +57,7 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
         site_name: siteName.trim(), site_type: siteType,
         supervisor_name: supervisorName.trim() || null, supervisor_email: supervisorEmail.trim() || null,
         hours: h, entry_date: entryDate, notes: notes.trim() || null,
+        experience_kind: experienceKind,
       });
       setEntries(prev => [row, ...prev].sort((a, b) => b.entry_date.localeCompare(a.entry_date)));
       setSiteName(''); setSupervisorName(''); setSupervisorEmail(''); setHours(''); setEntryDate(''); setNotes('');
@@ -80,6 +94,9 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
             <input style={inp({ flex: 1, minWidth: 160 })} placeholder="Site name (e.g. St. Mary's ER)" value={siteName} onChange={e => setSiteName(e.target.value)} />
             <select style={inp({ width: 'auto' })} value={siteType} onChange={e => setSiteType(e.target.value)}>
               {SITE_TYPES.map(t => <option key={t}>{t}</option>)}
+            </select>
+            <select style={inp({ width: 'auto' })} value={experienceKind} onChange={e => setExperienceKind(e.target.value)} aria-label="Kind of experience">
+              {EXPERIENCE_KINDS.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}
             </select>
           </div>
           <div style={R({ gap: 10, flexWrap: 'wrap' })}>
@@ -121,7 +138,7 @@ export default function ClinicalHoursSection({ accent = C.pink, entries = [], se
               <div style={{ width: 4, height: 44, borderRadius: 2, background: `linear-gradient(180deg,${sc},${tint(sc, 0.35)})`, flexShrink: 0, boxShadow: `0 0 8px ${tint(sc, 0.4)}` }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{e.site_name}{e.supervisor_name ? ` · ${e.supervisor_name}` : ''}</div>
-                <div style={{ fontSize: 11, marginTop: 2, fontFamily: C.FM }}><span style={{ color: sc, fontWeight: 700 }}>{e.site_type}</span><span style={{ color: C.t3 }}> · {new Date(e.entry_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>
+                <div style={{ fontSize: 11, marginTop: 2, fontFamily: C.FM }}><span style={{ color: sc, fontWeight: 700 }}>{e.site_type}</span>{e.experience_kind && e.experience_kind !== 'hands-on' && <span style={{ color: C.t3 }}> · {e.experience_kind}</span>}<span style={{ color: C.t3 }}> · {new Date(e.entry_date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span></div>
                 {e.notes && <div style={{ fontSize: 11, color: C.t2, marginTop: 4 }}>{e.notes}</div>}
               </div>
               <div style={{ ...R({ gap: 6 }), flexShrink: 0 }}>

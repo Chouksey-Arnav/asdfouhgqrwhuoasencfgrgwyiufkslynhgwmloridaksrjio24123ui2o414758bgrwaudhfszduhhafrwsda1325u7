@@ -29,6 +29,13 @@ const RESOURCE_MAP = {
   clinical_hours: 'clinicalHours',
   recommenders: 'recommenders',
   gpa_entries: 'gpaEntries',
+  // The Admissions Calculator reads every logged sitting (composite AND section scores) and the
+  // saved intake straight out of this snapshot rather than fetching them itself — see
+  // src/lib/admissions/intake.js. Before this, `test_scores` was fetched separately by three
+  // surfaces and `admission_intake` did not exist, which is exactly the duplication this module
+  // was created to end.
+  test_scores: 'testScores',
+  admission_intake: 'admissionIntake',
 };
 
 export const EMPTY_SNAPSHOT = Object.freeze({

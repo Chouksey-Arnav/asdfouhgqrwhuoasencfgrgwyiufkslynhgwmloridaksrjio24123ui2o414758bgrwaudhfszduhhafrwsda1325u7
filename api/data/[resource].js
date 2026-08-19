@@ -21,7 +21,8 @@ const WRITABLE = {
   gpa_entries: ['term', 'gpa', 'weighted', 'course_rigor'],
   research_experience: ['title', 'mentor_name', 'institution', 'description', 'publication_url', 'hours', 'status', 'sort_order'],
   skills_certifications: ['name', 'issuing_body', 'earned_date', 'expiry_date', 'certificate_url'],
-  clinical_hours: ['site_name', 'site_type', 'supervisor_name', 'supervisor_email', 'hours', 'entry_date', 'notes', 'verification_status', 'verified_at'],
+  clinical_hours: ['site_name', 'site_type', 'supervisor_name', 'supervisor_email', 'hours', 'entry_date', 'notes', 'verification_status', 'verified_at', 'experience_kind'],
+  admission_intake: ['citizenship', 'state_residency', 'grade_level', 'answers', 'program_rounds'],
   recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status'],
   portfolio_evidence: ['entity_type', 'entity_id', 'url', 'label'],
 };
@@ -30,6 +31,7 @@ const WRITABLE = {
 // column — see the migration file for which ones do).
 const TOUCHES_UPDATED_AT = new Set([
   'colleges', 'essays', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders',
+  'admission_intake',
 ]);
 
 // entity_type -> table, for validating portfolio_evidence's polymorphic entity_id ownership.
