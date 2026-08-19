@@ -648,9 +648,12 @@ class ErrorBoundary extends React.Component {
     if(this.state.err) return(
       <div style={{minHeight:'var(--msp-vh)',display:'flex',alignItems:'center',justifyContent:'center',background:C.bg,fontFamily:C.FB,flexDirection:'column',gap:20,padding:40}}>
         <div style={{width:60,height:60,borderRadius:'50%',background:C.roseDim,border:`1px solid ${C.rose}40`,display:'flex',alignItems:'center',justifyContent:'center'}}><AlertTriangle size={26} color={C.rose}/></div>
-        <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Something went wrong</h2>
-        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>{this.state.msg}</p>
-        <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
+        <h2 style={{fontSize:20,fontWeight:700,color:C.t1,fontFamily:C.FD}}>Oops! Loading issue.</h2>
+        <p style={{color:C.t2,textAlign:'center',maxWidth:400,lineHeight:1.7,fontSize:14}}>Try reloading — if it keeps happening, contact our support team at <a href="mailto:medschoolprepsupport@gmail.com" style={{color:C.blueL}}>medschoolprepsupport@gmail.com</a>.</p>
+        <div style={{display:'flex',gap:10,flexWrap:'wrap',justifyContent:'center'}}>
+          <a href="/prep" style={{...btnG(),textDecoration:'none'}} onClick={e=>{e.preventDefault();this.setState({err:false});this.props.onEscapeToPrep?.();}}>Go to Prep</a>
+          <button style={btn()} onClick={()=>this.setState({err:false})}>Try Again</button>
+        </div>
       </div>
     );
     return this.props.children;
@@ -10457,7 +10460,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                     resets itself the moment `tab` changes (see ErrorBoundary's resetKey), so
                     switching to another section — which the student can still do, since the nav
                     survives outside this boundary — recovers on its own instead of staying stuck. */}
-                <ErrorBoundary resetKey={tab}>
+                <ErrorBoundary resetKey={tab} onEscapeToPrep={()=>setTab('prep')}>
                   {(tRenders[tab]||tHome)()}
                 </ErrorBoundary>
               </motion.div>
