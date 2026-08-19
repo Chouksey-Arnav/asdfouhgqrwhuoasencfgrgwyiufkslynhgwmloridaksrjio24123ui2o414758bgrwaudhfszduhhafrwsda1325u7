@@ -209,7 +209,7 @@ const PROFILE_FACTS_BUDGET = 14000;
 const DEFAULT_PORTFOLIO = {
   colleges: [], essays: [], deadlines: [], scholarships: [], activities: [], research: [],
   skills: [], clinicalHours: [], recommenders: [], testScores: [], awards: [], gpaEntries: [],
-  collegeChecklist: [],
+  collegeChecklist: [], admissionIntake: [],
 };
 const daysSince = (ts) => {
   if (!ts) return null;
@@ -226,6 +226,7 @@ function buildPortfolioFactsText(portfolio) {
   const {
     colleges, essays, deadlines, scholarships, activities,
     research, skills, clinicalHours, recommenders, testScores, awards, gpaEntries, collegeChecklist,
+    admissionIntake,
   } = p;
   const today = todayStr();
   const lines = [];
@@ -348,6 +349,20 @@ function buildPortfolioFactsText(portfolio) {
   } else {
     lines.push('No GPA terms logged yet.');
   }
+
+  // The Admissions Calculator's intake. Reported as a COUNT of answered fields rather than as the
+  // answers themselves: the plan needs to know whether the student's eligibility can be checked
+  // at all, and the individual answers (citizenship, residency) are neither the planner's business
+  // nor worth the tokens.
+  const intake = (admissionIntake || [])[0];
+  if (intake) {
+    const answered = Object.keys(intake.answers && typeof intake.answers === 'object' ? intake.answers : {}).length
+      + ['citizenship', 'state_residency', 'grade_level'].filter(k => intake[k]).length;
+    lines.push(`Admissions Calculator intake: ${answered} field(s) answered${intake.citizenship ? '' : ', citizenship not answered (so eligibility for combined-degree programmes cannot be checked)'}.`);
+  } else {
+    lines.push('Admissions Calculator intake not started, so no programme eligibility has been checked.');
+  }
+
   return lines.filter(Boolean).join('\n');
 }
 
@@ -378,6 +393,8 @@ function buildPortfolioGapText(portfolio, user) {
   if (!p.skills.length) add(4, 'No skills/certifications logged (CPR, first aid, lab techniques all count)', 'Portfolio → Skills & Certifications');
   if (!p.scholarships.length && isUpperclass) add(4, 'No scholarships tracked', 'Portfolio → Financial Aid');
   if (!p.deadlines.length && isUpperclass) add(3, 'No application deadlines tracked', 'Portfolio → Milestones');
+  if (!(p.admissionIntake || []).length) add(isUpperclass ? 2 : 4, 'Admissions Calculator intake not started — until it is, no programme\'s published eligibility requirements have been checked against this student at all', 'Portfolio → Admissions Calc');
+  else if (!(p.admissionIntake[0] || {}).citizenship) add(3, 'Citizenship/residency unanswered in the Admissions Calculator, which is a hard eligibility gate at several combined-degree programmes', 'Portfolio → Admissions Calc');
 
   if (!gaps.length) return 'Their Portfolio has at least something in every major category — the plan should deepen and polish what is there rather than fill blanks.';
   return gaps
