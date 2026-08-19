@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import AuthGate from './components/AuthGate.jsx';
 import RootErrorBoundary from './components/RootErrorBoundary.jsx';
+import GlobalCrashGuard from './components/GlobalCrashGuard.jsx';
 import PwaUpdatePrompt from './components/PwaUpdatePrompt.jsx';
 import './index.css';
 
@@ -18,13 +19,15 @@ container?.querySelector('#seo-shell')?.remove();
 
 ReactDOM.createRoot(container).render(
   <React.StrictMode>
-    <RootErrorBoundary>
-      <PwaUpdatePrompt />
-      <AuthGate>
-        {({ user, setUser, openLegal }) => (
-          <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
-        )}
-      </AuthGate>
-    </RootErrorBoundary>
+    <GlobalCrashGuard>
+      <RootErrorBoundary>
+        <PwaUpdatePrompt />
+        <AuthGate>
+          {({ user, setUser, openLegal }) => (
+            <App account={user} onAccountChange={setUser} onOpenLegal={openLegal} />
+          )}
+        </AuthGate>
+      </RootErrorBoundary>
+    </GlobalCrashGuard>
   </React.StrictMode>
 );

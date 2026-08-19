@@ -28,7 +28,7 @@
 // Pure prompt-building + one fetch, same shape as src/lib/planGenerator.js —
 // no persistence, no component state.
 // ─────────────────────────────────────────────────────────────────────────────
-import { HONEST_MENTOR_STANCE, getWhyMedicineLabel, getDreamRoleLabel } from './studentProfile';
+import { HONEST_MENTOR_STANCE, PROMPT_SECURITY_GUARDRAIL, getWhyMedicineLabel, getDreamRoleLabel } from './studentProfile';
 
 export function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
@@ -162,7 +162,7 @@ Use this as raw material, under two hard rules. First: never state as fact anyth
 ══ WHAT THIS STUDENT HAS ACTUALLY DONE ══
 Their Portfolio has nothing logged yet, so you have only the draft itself to work from. Do not invent experiences for them, and do not assume any. If the essay needs specifics they have not given you, say what kind of specific it needs and let them supply it.`;
 
-  return base + assignment + recordBlock + HONEST_MENTOR_STANCE + CALIBRATION + OUTPUT_CONTRACT;
+  return base + assignment + recordBlock + HONEST_MENTOR_STANCE + CALIBRATION + OUTPUT_CONTRACT + PROMPT_SECURITY_GUARDRAIL;
 }
 
 // ── Parsing ──────────────────────────────────────────────────────────────────
