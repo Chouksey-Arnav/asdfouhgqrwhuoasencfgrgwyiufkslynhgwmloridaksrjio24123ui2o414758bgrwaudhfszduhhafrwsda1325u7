@@ -907,3 +907,31 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   .rm-shimmer { animation: none; opacity: 0.6; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PRINT — "print the whole portfolio"
+
+   The merged Portfolio tabs are one long scrolling document rather than a set
+   of sub-tabs (see SectionScroller.jsx), which means printing one is just
+   printing the page: expand every section and hand it to the printer. That is
+   a real thing families ask for — a counselor meeting, a program application,
+   a parent who wants the record on paper — and it comes free from building the
+   page as a page.
+
+   Everything here is chrome-removal. `[data-print-hide]` marks controls that
+   mean nothing on paper (expand/collapse, jumper chips, action buttons); the
+   app's own nav rail and bottom bar go with them.
+   ══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  [data-print-hide], nav, aside { display: none !important; }
+  html, body { background: #fff !important; }
+  [data-app-content] { overflow: visible !important; height: auto !important; }
+  * {
+    color: #111 !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  section[data-section] { break-inside: avoid-page; page-break-inside: avoid; }
+  a[href]::after { content: ""; }
+}

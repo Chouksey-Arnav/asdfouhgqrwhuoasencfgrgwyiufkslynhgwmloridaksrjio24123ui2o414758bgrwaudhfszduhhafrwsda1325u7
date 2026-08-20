@@ -4,7 +4,7 @@ import {
   Plus, Trash2, Award, ClipboardList, FileDown, TrendingUp, TrendingDown, Minus,
   ShieldCheck, ShieldQuestion, Layers, Clock, GraduationCap, Sparkles, Target,
   AlertTriangle, Info, CheckCircle2, ChevronDown, School, Crown, Gauge, Loader2,
-  Stethoscope, FlaskConical, BadgeCheck, ArrowRight, Lock,
+  Stethoscope, FlaskConical, BadgeCheck, ArrowRight,
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint, accentFill } from '../lib/theme';
@@ -27,6 +27,7 @@ import SectionIntro from './portfolio/SectionIntro';
 import ClinicalHoursSection, { clinicalTotalHours } from './portfolio/ClinicalHoursSection';
 import ResearchSection, { researchTotalHours } from './portfolio/ResearchSection';
 import CredentialsSection, { isCertExpired, isCertExpiringSoon } from './portfolio/CredentialsSection';
+import SectionScroller from './portfolio/SectionScroller';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Activities & Résumé.
@@ -83,12 +84,18 @@ const CATEGORY_COLOR = { reach: C.rose, target: C.blue, safety: C.green };
 // retired /portfolio/clinical, /portfolio/research and /portfolio/skills URLs
 // (and every in-app link that still names them) onto them.
 export const RESUME_SECTIONS = [
-  { id: 'activities',  ic: Layers,       label: 'Activities & Honors', color: C.amber, blurb: 'Your Common App slate' },
-  { id: 'academics',   ic: GraduationCap,label: 'Academics',           color: C.green, blurb: 'GPA history & college matches' },
-  { id: 'clinical',    ic: Stethoscope,  label: 'Clinical Hours',      color: C.pink,  blurb: 'Shadowing & patient care' },
-  { id: 'research',    ic: FlaskConical, label: 'Research',            color: C.cyan,  blurb: 'Projects & publications' },
-  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & Certs',      color: C.teal,  blurb: 'Dated, verifiable credentials' },
+  { id: 'activities',  ic: Layers,       label: 'Activities & Honors', color: C.amber, blurb: 'Your ten Common App slots, scored and read back' },
+  { id: 'academics',   ic: GraduationCap,label: 'Grades',              color: C.green, blurb: 'GPA term by term, and the colleges it matches' },
+  // "Shadowing" is the word students use. The database calls this table
+  // clinical_hours and the Admissions Calculator calls it clinical exposure;
+  // neither is a phrase a fifteen-year-old has ever said out loud.
+  { id: 'clinical',    ic: Stethoscope,  label: 'Shadowing & Hours',   color: C.pink,  blurb: 'Shadowing, volunteering and patient-care hours, by site' },
+  { id: 'research',    ic: FlaskConical, label: 'Research',            color: C.cyan,  blurb: 'Projects, mentors and publications' },
+  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & Certs',      color: C.teal,  blurb: 'Dated credentials, with their expiry dates tracked' },
 ];
+// The section a caller that names no section should land on, and the one the
+// unlock ladder must keep open on day one (see verifyNavUnlocks.mjs). It is NOT
+// what the page opens to — the page opens to its summary.
 export const DEFAULT_RESUME_SECTION = 'activities';
 
 function emptyActivity() {
@@ -142,82 +149,26 @@ function CharCap({ value, limit, note = null }) {
   );
 }
 
-// The section switcher. Deliberately not a second SubNav: this row sits inside
-// a tab that already has one, so it reads as five parts of one page — each pill
-// carrying its section's color, its live count, and (on desktop) the one line
-// that says what lives in it.
+// The five sections are NOT sub-tabs. They are five parts of one scrolling
+// page, with a summary on top and a sticky jumper under it — see
+// SectionScroller.jsx for why, and for the rule that keeps this honest: every
+// action a collapsed section offers is also reachable from the summary.
 //
-// `locks` (from unlockState().locked('portfolio/resume') — see featureUnlock.js)
-// is what keeps the row from being five simultaneous asks on day one. Merging
-// the four old tabs into five tiles fixed where these live; it did nothing about
-// when a fourteen-year-old should first be shown a publications form. A locked
-// section renders in place, dimmed, carrying the sentence that opens it — same
+// Locks (from unlockState().locked('portfolio/resume') — see featureUnlock.js)
+// are what keep the page from being five simultaneous asks on day one. Merging
+// the four old tabs fixed where these live; it did nothing about when a
+// fourteen-year-old should first be shown a publications form. A locked section
+// still renders its header, dimmed, carrying the sentence that opens it — same
 // contract as the nav: visible, never silent, never a dead end (a direct
 // /portfolio/clinical link still opens it and unlocks it for good).
-function SectionRow({ section, onChange, counts, isMobile, locks = [] }) {
-  const lockBy = Object.fromEntries(locks.map(l => [l.id.split(':').pop(), l]));
-  return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : `repeat(${RESUME_SECTIONS.length},1fr)`,
-      gap: 8,
-    }}>
-      {RESUME_SECTIONS.map(s => {
-        const on = section === s.id;
-        const count = counts[s.id];
-        const lock = !on && lockBy[s.id];
-        if (lock) return <LockedSectionTile key={s.id} s={s} lock={lock} isMobile={isMobile} />;
-        return (
-          <button key={s.id} type="button" onClick={() => onChange(s.id)}
-            aria-current={on ? 'true' : undefined}
-            style={{
-              boxSizing: 'border-box', textAlign: 'left', font: 'inherit', cursor: 'pointer',
-              padding: isMobile ? '10px 11px' : '11px 13px', borderRadius: 12,
-              background: on ? `linear-gradient(135deg,${tint(s.color, 0.20)},${tint(s.color, 0.07)})` : C.surf2,
-              border: `1px solid ${on ? tint(s.color, 0.45) : C.b1}`,
-              boxShadow: on ? `0 6px 18px ${tint(s.color, 0.22)}` : 'none',
-              transition: 'background .18s, border-color .18s, box-shadow .18s',
-            }}>
-            <div style={R({ gap: 7, justifyContent: 'space-between' })}>
-              <span style={R({ gap: 6, minWidth: 0 })}>
-                <s.ic size={13} color={on ? s.color : C.t3} style={{ flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, fontWeight: 800, color: on ? C.t1 : C.t2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
-              </span>
-              {count ? <span style={pill(tint(s.color, on ? 0.2 : 0.12), s.color, { fontSize: 9.5, fontFamily: C.FM, flexShrink: 0 })}>{count}</span> : null}
-            </div>
-            {!isMobile && <div style={{ fontSize: 10, color: C.t4, marginTop: 4, lineHeight: 1.4 }}>{s.blurb}</div>}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+const lockFor = (locks, id) => locks.find(l => l.id.split(':').pop() === id) || null;
 
-// A section this student hasn't reached yet: same tile, same footprint, dimmed,
-// with its unlock condition where the blurb goes. Non-interactive on purpose —
-// it is a signpost, not a door that says no — and it carries the same "2 of 3"
-// counter the rest of the ladder uses, so the condition reads as progress
-// rather than as a refusal.
-function LockedSectionTile({ s, lock, isMobile }) {
-  const [have, need] = lock.progress || [];
-  return (
-    <div
-      title={lock.hint}
-      aria-label={`${s.label} — locked. ${lock.hint}`}
-      style={{
-        boxSizing: 'border-box', padding: isMobile ? '10px 11px' : '11px 13px', borderRadius: 12,
-        background: 'transparent', border: `1px dashed ${C.b2}`, cursor: 'default',
-      }}>
-      <div style={R({ gap: 6, minWidth: 0 })}>
-        <Lock size={12} color={C.t4} style={{ flexShrink: 0 }} />
-        <span style={{ fontSize: 11.5, fontWeight: 800, color: C.t3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.label}</span>
-      </div>
-      {!isMobile && <div style={{ fontSize: 10, color: C.t4, marginTop: 4, lineHeight: 1.4 }}>{lock.hint}</div>}
-      {need > 0 && have < need && (
-        <div style={{ fontSize: 9.5, color: C.t4, fontFamily: C.FM, marginTop: 5 }}>{have} of {need}</div>
-      )}
-    </div>
-  );
+// A section's state in one word, for the summary and the section header.
+function sectionStatus(count, { partialAt = 1, doneAt = 3 } = {}) {
+  const n = Number(count) || 0;
+  if (!n) return { tone: 'empty', label: 'Nothing yet' };
+  if (n < doneAt) return { tone: 'partial', label: n < partialAt ? 'Just started' : 'In progress' };
+  return { tone: 'done', label: 'Looking good' };
 }
 
 // One logged activity: how much of it actually made it into the record, what is
@@ -307,10 +258,11 @@ function ActivityCard({ a, accent, user, gradeLabel, analysis, onRemove }) {
 
 export default function ActivitiesResumePanel({
   accent = C.blue, user = null, gradeLabel = null, isMobile = false,
-  // Which section is open. Owned by App.jsx so a deep link (or an old
-  // /portfolio/clinical URL, or a Home tile) can land on the right one — see
+  // Which section a deep link named, or null for the ordinary case: land on the
+  // summary. Owned by App.jsx so an old /portfolio/clinical URL, a Home tile or
+  // a Medabrain deep link can still open the exact form it used to — see
   // resumeSection there.
-  section = DEFAULT_RESUME_SECTION, onSectionChange = null,
+  section = null, onSectionChange = null,
   // Sections this student hasn't unlocked yet, from featureUnlock's ladder.
   // Empty (the default) means every section is open, which is what a standalone
   // render of this panel — and any account past the ladder — sees.
@@ -334,14 +286,17 @@ export default function ActivitiesResumePanel({
   const [gpaReaction, setGpaReaction] = useState(null);
   const [addingCollege, setAddingCollege] = useState(null);
   const [dismissedPicks, setDismissedPicks] = useState([]);
-  // Uncontrolled fallback: the panel still works standalone if no owner passes a
-  // section down. App.jsx always does.
-  const [localSection, setLocalSection] = useState(section);
-  const activeSection = onSectionChange ? section : localSection;
+  // The section the page should jump to, and a nonce so jumping to the same
+  // section twice (a cross-link tapped again, a Home tile re-opened) still
+  // moves the page. Nothing here *switches* the page — every section is on it.
+  const [focus, setFocus] = useState(() => ({ id: section || null, n: 0 }));
   const setSection = useCallback((id) => {
-    setLocalSection(id);
+    setFocus(f => ({ id, n: f.n + 1 }));
     onSectionChange?.(id);
   }, [onSectionChange]);
+  useEffect(() => {
+    if (section) setFocus(f => (f.id === section ? f : { id: section, n: f.n + 1 }));
+  }, [section]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -541,6 +496,30 @@ export default function ActivitiesResumePanel({
   const hasAnything = activities.length > 0 || awards.length > 0 || gpaEntries.length > 0 || clinical.length > 0 || research.length > 0 || certs.length > 0;
   const canExport = activities.length > 0 || awards.length > 0 || clinical.length > 0 || research.length > 0 || certs.length > 0;
 
+  // ── The summary layer ──────────────────────────────────────────────────────
+  // What is complete, what is missing, and what to do next — computed from the
+  // same numbers the sections themselves show, so the summary can never tell a
+  // student something the section below it contradicts.
+  const S = useMemo(() => Object.fromEntries(RESUME_SECTIONS.map(s => [s.id, s])), []);
+  const statuses = {
+    activities: sectionStatus(activities.length + awards.length, { doneAt: 4 }),
+    academics: sectionStatus(academics.count, { doneAt: 2 }),
+    clinical: sectionStatus(clinical.length, { doneAt: 2 }),
+    research: sectionStatus(research.length, { doneAt: 1 }),
+    credentials: sectionStatus(certs.length, { doneAt: 2 }),
+  };
+  const nextSteps = useMemo(() => {
+    const out = [];
+    if (certsToRenew) out.push({ tone: 'urgent', text: `${certsToRenew} credential${certsToRenew === 1 ? ' has' : 's have'} expired or expire within 60 days. An expired CPR card on an application is worse than no card.`, actionLabel: 'Renew', onAction: () => setSection('credentials') });
+    if (!activities.length) out.push({ tone: 'warn', text: 'Nothing in your activities list yet. This is the part of the record a reader actually sees — ten slots, and they are read in the order you rank them.', actionLabel: 'Add one', onAction: () => setSection('activities') });
+    if (!clinical.length) out.push({ tone: 'warn', text: 'No shadowing, volunteering or patient-care hours logged. Dated hours with a site and a supervisor are the one thing that turns "I want to do medicine" into something checkable.', actionLabel: 'Log hours', onAction: () => setSection('clinical') });
+    if (!academics.hasData) out.push({ tone: 'info', text: 'No GPA on record, so nothing here can match you to colleges yet. One term is enough to start.', actionLabel: 'Add GPA', onAction: () => setSection('academics') });
+    if (activities.length && !certs.length) out.push({ tone: 'info', text: 'No certifications logged. CPR/BLS is the cheapest real credential on this list and most students can get it in a weekend.', actionLabel: 'Add one', onAction: () => setSection('credentials') });
+    if (activities.length && !research.length) out.push({ tone: 'info', text: 'No research logged. It is not required — but if you have ever helped on a project, science fair included, it belongs here rather than buried in an activity line.', actionLabel: 'Add a project', onAction: () => setSection('research') });
+    if (canExport) out.push({ tone: 'good', text: 'Everything on this page — activities, honors, GPA, hours, research and credentials — exports as one résumé PDF, or straight into Common App format.', actionLabel: 'Export', onAction: () => setExportOpen(true) });
+    return out;
+  }, [certsToRenew, activities.length, clinical.length, academics.hasData, certs.length, research.length, canExport, setSection]);
+
   return (
     <div style={CC({ gap: 22 })}>
       <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange} m={isMobile}
@@ -553,21 +532,35 @@ export default function ActivitiesResumePanel({
           </div>
         ) : undefined} />
 
-      <SectionRow section={activeSection} onChange={setSection} counts={sectionCounts} isMobile={isMobile} locks={sectionLocks} />
-
-      {/* The whole tab in four numbers, on every section — so switching between
-          Clinical and Activities never feels like switching products. */}
-      {hasAnything && (
-        <div style={G(4, 12, {}, isMobile)}>
-          <StatTile icon={Layers} value={`${analysis.slotsUsed}/10`} label="Common App activity slots" sub={analysis.slotsFree > 0 ? `${analysis.slotsFree} still free` : 'full — ranked by weight'} color={C.blue} />
-          <StatTile icon={Clock} value={`${hoursOnRecord.toLocaleString()}h`} label="Hours on record" sub={`${Math.round(totalHours)}h activities · ${clinicalHours}h clinical · ${researchHours}h research`} color={C.violet} />
-          <StatTile icon={GraduationCap} value={academics.hasData ? academics.latestGpa : '—'} label={academics.hasData ? `GPA · ${band.label}` : 'No GPA yet'} sub={academics.hasData && academics.count > 1 ? `${academics.trend}${academics.delta ? ` (${academics.delta > 0 ? '+' : ''}${academics.delta})` : ''}` : undefined} color={C.green} />
-          <StatTile icon={BadgeCheck} value={`${analysis.awardCount}/5`} label="Honors slots" sub={certs.length ? `${activeCerts} active credential${activeCerts === 1 ? '' : 's'}${certsToRenew ? ` · ${certsToRenew} to renew` : ''}` : analysis.unleveled ? `${analysis.unleveled} missing a level` : undefined} color={C.gold} />
-        </div>
-      )}
-
-      {/* ═══ ACTIVITIES & HONORS ═════════════════════════════════════════════ */}
-      {activeSection === 'activities' && (
+      <SectionScroller
+        accent={accent} isMobile={isMobile}
+        focusId={focus.id} focusNonce={focus.n}
+        onSectionOpen={onSectionChange || undefined}
+        printLabel="Print the whole record"
+        summary={{
+          eyebrow: 'Your record',
+          title: hasAnything ? 'Everything you have actually done, in one page' : 'Nothing on record yet — start anywhere',
+          sub: 'Activities, grades, hours, research and credentials are five parts of one answer, so they live on one page. Scroll it, jump around it, print it. Anything you can do inside a section you can also do from right here.',
+          tiles: hasAnything ? (
+            <div style={G(4, 12, {}, isMobile)}>
+              <StatTile icon={Layers} value={`${analysis.slotsUsed}/10`} label="Common App activity slots" sub={analysis.slotsFree > 0 ? `${analysis.slotsFree} still free` : 'full — ranked by weight'} color={C.blue} />
+              <StatTile icon={Clock} value={`${hoursOnRecord.toLocaleString()}h`} label="Hours on record" sub={`${Math.round(totalHours)}h activities · ${clinicalHours}h shadowing · ${researchHours}h research`} color={C.violet} />
+              <StatTile icon={GraduationCap} value={academics.hasData ? academics.latestGpa : '—'} label={academics.hasData ? `GPA · ${band.label}` : 'No GPA yet'} sub={academics.hasData && academics.count > 1 ? `${academics.trend}${academics.delta ? ` (${academics.delta > 0 ? '+' : ''}${academics.delta})` : ''}` : undefined} color={C.green} />
+              <StatTile icon={BadgeCheck} value={`${analysis.awardCount}/5`} label="Honors slots" sub={certs.length ? `${activeCerts} active credential${activeCerts === 1 ? '' : 's'}${certsToRenew ? ` · ${certsToRenew} to renew` : ''}` : analysis.unleveled ? `${analysis.unleveled} missing a level` : undefined} color={C.gold} />
+            </div>
+          ) : null,
+          nextSteps,
+        }}
+        sections={[
+          {
+            ...S.activities, count: sectionCounts.activities, status: statuses.activities,
+            locked: lockFor(sectionLocks, 'activities'),
+            actions: [
+              { label: 'Add activity', icon: Plus, primary: true, onClick: () => setSection('activities') },
+              { label: 'Add honor', icon: Award, onClick: () => setSection('activities') },
+              ...(canExport ? [{ label: 'Common App', icon: ClipboardList, onClick: () => setExportOpen(true) }] : []),
+            ],
+            render: () => (
         <>
           <SectionIntro icon={Layers} color={accent} color2={C.orange} m={isMobile}
             title="Activities & Honors"
@@ -792,10 +785,13 @@ export default function ActivitiesResumePanel({
             </div>
           )}
         </>
-      )}
-
-      {/* ═══ ACADEMICS ═══════════════════════════════════════════════════════ */}
-      {activeSection === 'academics' && (
+            ),
+          },
+          {
+            ...S.academics, count: sectionCounts.academics, status: statuses.academics,
+            locked: lockFor(sectionLocks, 'academics'),
+            actions: [{ label: 'Add a term GPA', icon: Plus, primary: true, onClick: () => setSection('academics') }],
+            render: () => (
         <>
           <SectionIntro icon={GraduationCap} color={C.green} color2={C.blue} m={isMobile}
             title="Academic History"
@@ -993,26 +989,38 @@ export default function ActivitiesResumePanel({
             )}
           </div>
         </>
-      )}
-
-      {/* ═══ CLINICAL HOURS ══════════════════════════════════════════════════ */}
-      {activeSection === 'clinical' && (
-        <ClinicalHoursSection accent={C.pink} entries={clinical} setEntries={setClinical}
-          loading={loading} isMobile={isMobile} onLogged={onClinicalLogged} />
-      )}
-
-      {/* ═══ RESEARCH ════════════════════════════════════════════════════════ */}
-      {activeSection === 'research' && (
-        <ResearchSection accent={C.cyan} entries={research} setEntries={setResearch}
-          loading={loading} isMobile={isMobile} onLogged={onResearchLogged} />
-      )}
-
-      {/* ═══ SKILLS & CERTIFICATIONS ═════════════════════════════════════════ */}
-      {activeSection === 'credentials' && (
-        <CredentialsSection accent={C.teal} entries={certs} setEntries={setCerts}
-          loading={loading} isMobile={isMobile} onChanged={onCredentialChanged}
-          gradeStage={user?.gradeStage} />
-      )}
+            ),
+          },
+          {
+            ...S.clinical, count: sectionCounts.clinical, status: statuses.clinical,
+            locked: lockFor(sectionLocks, 'clinical'),
+            actions: [{ label: 'Log hours', icon: Plus, primary: true, onClick: () => setSection('clinical') }],
+            render: () => (
+              <ClinicalHoursSection accent={C.pink} entries={clinical} setEntries={setClinical}
+                loading={loading} isMobile={isMobile} onLogged={onClinicalLogged} />
+            ),
+          },
+          {
+            ...S.research, count: sectionCounts.research, status: statuses.research,
+            locked: lockFor(sectionLocks, 'research'),
+            actions: [{ label: 'Add a project', icon: Plus, primary: true, onClick: () => setSection('research') }],
+            render: () => (
+              <ResearchSection accent={C.cyan} entries={research} setEntries={setResearch}
+                loading={loading} isMobile={isMobile} onLogged={onResearchLogged} />
+            ),
+          },
+          {
+            ...S.credentials, count: sectionCounts.credentials, status: statuses.credentials,
+            locked: lockFor(sectionLocks, 'credentials'),
+            actions: [{ label: 'Add a credential', icon: Plus, primary: true, onClick: () => setSection('credentials') }],
+            render: () => (
+              <CredentialsSection accent={C.teal} entries={certs} setEntries={setCerts}
+                loading={loading} isMobile={isMobile} onChanged={onCredentialChanged}
+                gradeStage={user?.gradeStage} />
+            ),
+          },
+        ]}
+      />
 
       <CommonAppExport
         open={exportOpen} onClose={() => setExportOpen(false)}

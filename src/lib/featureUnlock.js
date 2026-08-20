@@ -300,13 +300,13 @@ export const UNLOCK_RULES = [
   // section's unlock condition points.
   {
     id: 'portfolio/resume:academics',
-    label: 'Academics',
+    label: 'Grades',
     hint: 'Add one college — your GPA is read against the schools you\'re aiming at.',
     at: (s) => s.colleges >= 1 || s.applicationUrgent,
   },
   {
     id: 'portfolio/resume:clinical',
-    label: 'Clinical Hours',
+    label: 'Shadowing & Hours',
     // The example the review gave, and the clearest case in the app: the
     // pathway's first lesson is what tells a student what shadowing IS and why
     // hours are counted. Handing them the log first is handing them a form for

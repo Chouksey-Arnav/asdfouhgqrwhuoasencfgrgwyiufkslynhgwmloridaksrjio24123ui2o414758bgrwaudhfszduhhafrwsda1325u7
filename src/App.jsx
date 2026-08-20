@@ -132,7 +132,7 @@ import {
   tomorrowSet as tomorrowDailySet, streakOverlap as dailyStreakOverlap,
   DAILY_SET_BONUS,
 } from './lib/dailyQuests';
-import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
+import ActivitiesResumePanel, { RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
 // Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
@@ -1681,8 +1681,11 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // roadmap, and every old /portfolio/clinical URL in a student's history. Those callers should
   // not have to know the merge happened: goPortfolio('clinical') still means "open the clinical
   // hours form", it just opens it as a section instead of a tab.
+  // null is the ordinary case and the point of the merge: Activities & Résumé is ONE scrolling
+  // page, so the default is its summary, not one of its five parts. A value here means some
+  // caller named a section and the page should jump to it.
   const [resumeSection, setResumeSection] = useState(
-    ()=>resumeSectionFromPath(typeof window!=='undefined' ? window.location.pathname : '') || DEFAULT_RESUME_SECTION
+    ()=>resumeSectionFromPath(typeof window!=='undefined' ? window.location.pathname : '') || null
   );
   const goPortfolio = useCallback((view)=>{
     setTab('portfolio');
@@ -3026,6 +3029,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   useEffect(()=>{
     if(!user||!dbReady) return;
     if(tab!=='portfolio'||portfolioView!=='resume') return;
+    // No section named (the ordinary landing-on-the-summary case) — nothing to unlock yet;
+    // opening one from the page itself calls setResumeSection and lands back here.
+    if(!resumeSection) return;
     if(unlocks.isOpen('portfolio','resume',resumeSection)) return;
     const recorded=recordUnlocks(user,[sectionKey('portfolio','resume',resumeSection)]);
     if(recorded) saveUser(recorded);
