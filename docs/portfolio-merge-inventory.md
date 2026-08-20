@@ -81,12 +81,51 @@ Two merges are covered here:
 
 ---
 
-## 3. The tab-count rule
+## 3. The tab-count rule — 11 → 5
 
 The brief caps the Portfolio strip at 3–4 tabs, 5 absolutely maximum, because a
 horizontal strip on a 390 px phone fits about four 90 px pills before it becomes
-a carousel. See `PORTFOLIO_SUBNAV` in `src/App.jsx` for the current strip and
-the reasoning behind each grouping.
+a carousel. The strip had **eleven**, mitigated with fade edges and chevrons —
+which is treating the symptom.
+
+| Before (11) | After (5) |
+|---|---|
+| Overview | **Overview** |
+| Activities & Résumé | **Activities** |
+| Tracked | → section of Opportunities |
+| Opportunities | **Opportunities** |
+| Milestones | **Milestones** |
+| College List | → section of Applying |
+| Essays | → section of Applying |
+| Financial Aid | → section of Applying |
+| Recommenders | → section of Applying |
+| Interview Prep | → section of Applying |
+| Admissions Calc | → section of Applying (as "Chances") |
+|  | **Applying** |
+
+Every label is now one plain word, icon paired with text, one row, no caps, no
+invented names. Nothing was removed:
+
+- **Applying** is the same SectionScroller page as Activities & Résumé — summary
+  first, sticky jumper, six stacked sections, every section's actions hoisted
+  onto the summary. Each section renders the exact panel it was as a tab, with
+  the same callbacks.
+- **Tracked** joined Opportunities because it is the follow-through for the
+  Track button that lives on the Opportunities cards — "what should I go do"
+  and "what did I say I would do" are one question.
+- Every retired id still resolves: `/portfolio/essays`, `/portfolio/calc`,
+  `/portfolio/tracked`, `/portfolio/clinical` and the rest are permanent
+  aliases (`SUBVIEWS.portfolio.aliases` in `routes.js`) and land on the exact
+  **section**, not just the right tab (`PORTFOLIO_GROUP_FOR_VIEW` in `App.jsx`).
+- The unlock ladder moved with them: `portfolio/essays` → `portfolio/applying:essays`,
+  `portfolio/tracked` → `portfolio/opportunities:tracked`, and so on. Same
+  surfaces, same conditions, same order — a locked one now renders as a dimmed
+  section header instead of a missing pill.
+- The ⌘K palette and the keyword search point at the new section ids, so
+  "essays", "letters of rec", "will i get in" and "fafsa" all still land first
+  time (`verify:nav-search`, 483 assertions).
+- The Overview's twelve-tile section map is unchanged and still names every
+  surface individually, so nothing gained a click from the merge.
 
 ## 4. Usage numbers
 

@@ -813,9 +813,15 @@ assert('the gate list stays short enough to be read', READY.ROADMAP_GATES.length
   for (const g of READY.ROADMAP_GATES) {
     assert(`gate "${g.id}" points at a real tab`, TABS.includes(g.goTab), g.goTab);
     if (g.goView) {
-      const ids = SUBVIEWS[g.goTab]?.ids || [];
+      const cfg = SUBVIEWS[g.goTab];
+      const ids = cfg?.ids || [];
+      // A retired id that the router still resolves counts: aliases are how a
+      // merged tab keeps every link that names its old self working forever
+      // (see SUBVIEWS[...].aliases in routes.js), and a gate pointing at one
+      // lands on the exact section it always did.
+      const aliases = Object.keys(cfg?.aliases || {});
       assert(`gate "${g.id}" points at a real view inside ${g.goTab}`,
-        !ids.length || ids.includes(g.goView), `${g.goTab}/${g.goView}`);
+        !ids.length || ids.includes(g.goView) || aliases.includes(g.goView), `${g.goTab}/${g.goView}`);
     }
   }
 }

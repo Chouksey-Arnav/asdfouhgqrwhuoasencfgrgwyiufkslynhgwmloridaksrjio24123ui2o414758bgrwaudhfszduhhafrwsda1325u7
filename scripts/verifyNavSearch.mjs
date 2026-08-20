@@ -47,22 +47,35 @@ const section = (name) => console.log(`\n${name}`);
 section('1. Every keyword points at a screen that exists');
 
 const app = read('src/App.jsx');
-const resumePanel = read('src/components/ActivitiesResumePanel.jsx');
-const RESUME_SECTIONS = [...resumePanel.slice(
-  resumePanel.indexOf('export const RESUME_SECTIONS = ['),
-  resumePanel.indexOf('\n];', resumePanel.indexOf('export const RESUME_SECTIONS = [')),
-).matchAll(/\{ id: '([^']+)'/g)].map((m) => m[1]);
+// The merged Portfolio pages each render a sections array; a section is a real
+// destination ('portfolio/applying:essays') and therefore a real search result.
+function sectionsOf(file, exportName) {
+  const src = read(file);
+  const start = src.indexOf(`export const ${exportName} = [`);
+  return [...src.slice(start, src.indexOf('\n];', start)).matchAll(/\{ id: '([^']+)',\s*ic: \w+,\s*label: '([^']+)'/g)]
+    .map((m) => ({ id: m[1], label: m[2] }));
+}
+const RESUME_SECTIONS = sectionsOf('src/components/ActivitiesResumePanel.jsx', 'RESUME_SECTIONS');
+const APPLYING_SECTIONS = sectionsOf('src/components/portfolio/ApplyingPanel.jsx', 'APPLYING_SECTIONS');
+// Opportunities' two sections are declared inline in App.jsx's renderer.
+const OPPORTUNITY_SECTIONS = [{ id: 'find', label: 'Find something' }, { id: 'tracked', label: 'What you\u2019re tracking' }];
+const PAGE_SECTIONS = [
+  ['portfolio/resume', RESUME_SECTIONS],
+  ['portfolio/applying', APPLYING_SECTIONS],
+  ['portfolio/opportunities', OPPORTUNITY_SECTIONS],
+];
 assert('the résumé sections were found', RESUME_SECTIONS.length >= 4, `${RESUME_SECTIONS.length}`);
+assert('the applying sections were found', APPLYING_SECTIONS.length >= 5, `${APPLYING_SECTIONS.length}`);
 
 const validIds = new Set(TABS);
 for (const [tab, cfg] of Object.entries(SUBVIEWS)) {
   for (const id of cfg.ids) validIds.add(`${tab}/${id}`);
 }
-for (const s of RESUME_SECTIONS) validIds.add(`portfolio/resume:${s}`);
+for (const [view, sections] of PAGE_SECTIONS) for (const sec of sections) validIds.add(`${view}:${sec.id}`);
 
 for (const id of KEYWORD_IDS) {
   assert(`"${id}" is a real destination`, validIds.has(id),
-    'not in routes.js TABS/SUBVIEWS or RESUME_SECTIONS — a keyword pointing at a screen that does not exist is a search result that goes nowhere');
+    'not in routes.js TABS/SUBVIEWS or a merged page\'s sections — a keyword pointing at a screen that does not exist is a search result that goes nowhere');
 }
 
 // Keywords must not simply restate the label, which the scorer already matches.
@@ -114,7 +127,9 @@ const commands = [
   ...Object.entries(SUBVIEWS).flatMap(([tab, cfg]) => cfg.ids
     .filter((v) => LABELS[`${tab}/${v}`])
     .map((v) => ({ dest: `${tab}/${v}`, label: LABELS[`${tab}/${v}`], group: tab, keywords: NAV_KEYWORDS[`${tab}/${v}`] || [] }))),
-  ...RESUME_SECTIONS.map((s) => ({ dest: `portfolio/resume:${s}`, label: s, group: 'portfolio', keywords: NAV_KEYWORDS[`portfolio/resume:${s}`] || [] })),
+  ...PAGE_SECTIONS.flatMap(([view, sections]) => sections.map((sec) => ({
+    dest: `${view}:${sec.id}`, label: sec.label, group: 'portfolio', keywords: NAV_KEYWORDS[`${view}:${sec.id}`] || [],
+  }))),
 ];
 
 /**
@@ -127,24 +142,26 @@ const SEARCHES = [
   ['due dates', 'portfolio/milestones'],
   ['when is it due', 'portfolio/milestones'],
   // Money
-  ['fafsa', 'portfolio/aid'],
-  ['paying for college', 'portfolio/aid'],
-  ['scholarships', 'portfolio/aid'],
+  ['fafsa', 'portfolio/applying:aid'],
+  ['paying for college', 'portfolio/applying:aid'],
+  ['scholarships', 'portfolio/applying:aid'],
   // The record of what they have done
   ['gpa', 'portfolio/resume'],
-  ['grades', 'portfolio/resume'],
+  // The Grades section owns this word now that it is called Grades — landing on the
+  // section beats landing on the page that contains it.
+  ['grades', 'portfolio/resume:academics'],
   ['extracurriculars', 'portfolio/resume'],
   ['shadowing', 'portfolio/resume:clinical'],
   ['hospital hours', 'portfolio/resume:clinical'],
   ['science fair', 'portfolio/resume:research'],
   ['cpr', 'portfolio/resume:credentials'],
   // Applications
-  ['personal statement', 'portfolio/essays'],
-  ['common app essay', 'portfolio/essays'],
-  ['universities', 'portfolio/colleges'],
-  ['where to apply', 'portfolio/colleges'],
-  ['letters of rec', 'portfolio/recommenders'],
-  ['will i get in', 'portfolio/calc'],
+  ['personal statement', 'portfolio/applying:essays'],
+  ['common app essay', 'portfolio/applying:essays'],
+  ['universities', 'portfolio/applying:colleges'],
+  ['where to apply', 'portfolio/applying:colleges'],
+  ['letters of rec', 'portfolio/applying:recommenders'],
+  ['will i get in', 'portfolio/applying:calc'],
   // Study
   ['anki', 'prep/flashcards'],
   ['spaced repetition', 'prep/flashcards'],
@@ -163,7 +180,7 @@ const SEARCHES = [
   ['my whole year', 'roadmap/year'],
   ['badges', 'progress/achievements'],
   // And the plain ones, which must not have been broken by any of the above
-  ['essays', 'portfolio/essays'],
+  ['essays', 'portfolio/applying:essays'],
   ['flashcards', 'prep/flashcards'],
   ['roadmap', 'roadmap'],
   ['settings', 'settings'],
@@ -178,7 +195,7 @@ for (const [query, want] of SEARCHES) {
 
 // A typo still finds it. Fuzzy matching is the lowest tier on purpose, so this
 // is a small claim deliberately: letters in order, nothing cleverer.
-for (const [query, want] of [['flshcards', 'prep/flashcards'], ['recomenders', 'portfolio/recommenders']]) {
+for (const [query, want] of [['flshcards', 'prep/flashcards'], ['recomenders', 'portfolio/applying:recommenders']]) {
   const top = searchNav(query, commands)[0]?.dest;
   assert(`the typo "${query}" still finds ${want}`, top === want, `got ${top || 'nothing'}`);
 }

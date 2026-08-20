@@ -262,7 +262,7 @@ export default function ActivitiesResumePanel({
   // summary. Owned by App.jsx so an old /portfolio/clinical URL, a Home tile or
   // a Medabrain deep link can still open the exact form it used to — see
   // resumeSection there.
-  section = null, onSectionChange = null,
+  section = null, sectionNonce = 0, onSectionChange = null,
   // Sections this student hasn't unlocked yet, from featureUnlock's ladder.
   // Empty (the default) means every section is open, which is what a standalone
   // render of this panel — and any account past the ladder — sees.
@@ -289,14 +289,14 @@ export default function ActivitiesResumePanel({
   // The section the page should jump to, and a nonce so jumping to the same
   // section twice (a cross-link tapped again, a Home tile re-opened) still
   // moves the page. Nothing here *switches* the page — every section is on it.
-  const [focus, setFocus] = useState(() => ({ id: section || null, n: 0 }));
+  // Owned by App.jsx when it is mounted there (it knows about deep links and the
+  // back button); owned locally otherwise, so the panel still works standalone.
+  const [localFocus, setLocalFocus] = useState(() => ({ id: section || null, n: 0 }));
+  const focus = onSectionChange ? { id: section, n: sectionNonce } : localFocus;
   const setSection = useCallback((id) => {
-    setFocus(f => ({ id, n: f.n + 1 }));
+    setLocalFocus(f => ({ id, n: f.n + 1 }));
     onSectionChange?.(id);
   }, [onSectionChange]);
-  useEffect(() => {
-    if (section) setFocus(f => (f.id === section ? f : { id: section, n: f.n + 1 }));
-  }, [section]);
 
   const load = useCallback(async () => {
     setLoading(true);

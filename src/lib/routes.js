@@ -46,22 +46,31 @@ export const SUBVIEWS = {
   portfolio: {
     state: 'portfolioView',
     default: 'overview',
-    ids: ['overview', 'tracked', 'opportunities', 'milestones', 'colleges', 'essays', 'aid', 'resume', 'recommenders', 'interview', 'calc'],
-    // 'timeline' and 'deadlines' were two sibling tabs showing two halves of the
-    // same calendar; they are now one tab, 'milestones'. 'research', 'skills'
-    // and 'clinical' were three sibling tabs holding three parts of one record —
-    // what the student has actually done — and are now sections of 'resume'
-    // (Activities & Résumé). Every old id stays parseable forever: they are in
+    ids: ['overview', 'resume', 'opportunities', 'applying', 'milestones'],
+    // Eleven sub-tabs became five (see PORTFOLIO_SUBNAV in src/App.jsx for the
+    // grouping and why). 'timeline' and 'deadlines' were two sibling tabs
+    // showing two halves of the same calendar and are now 'milestones';
+    // 'research', 'skills' and 'clinical' are sections of 'resume'; the six
+    // application tabs — college list, essays, aid, recommenders, interview
+    // prep and the admissions calculator — are sections of 'applying'; and
+    // 'tracked' is a section of 'opportunities', which is where the Track
+    // button that fills it lives. Every old id stays parseable forever: they are in
     // shared links, bookmarks, PWA start URLs, and every history entry a
     // returning student already has. They resolve to the merged view and the
     // router rewrites the address bar in place, so an old link works and stops
     // being an old link. Aliases never round-trip out of formatPath(), which is
     // what keeps exactly one canonical URL per screen.
     //
-    // App.jsx additionally maps these three onto the section of Activities &
-    // Résumé they became (see RESUME_SECTION_FOR_VIEW there), so an old link
-    // lands on the exact form it used to open, not just the right tab.
-    aliases: { timeline: 'milestones', deadlines: 'milestones', research: 'resume', skills: 'resume', clinical: 'resume' },
+    // App.jsx additionally maps every one of these onto the SECTION it became
+    // (see PORTFOLIO_GROUP_FOR_VIEW there), so an old link lands on the exact
+    // form it used to open, not just the right tab.
+    aliases: {
+      timeline: 'milestones', deadlines: 'milestones',
+      research: 'resume', skills: 'resume', clinical: 'resume', activities: 'resume', academics: 'resume',
+      colleges: 'applying', essays: 'applying', aid: 'applying',
+      recommenders: 'applying', interview: 'applying', calc: 'applying',
+      tracked: 'opportunities',
+    },
   },
   // The twelve-month admissions roadmap. Sits between Portfolio and Plans in
   // TABS for the same reason it does in the nav: Portfolio is the record of what

@@ -172,9 +172,12 @@ function SectionBlock({ s, open, onToggle, accent, isMobile, registerRef }) {
 export default function SectionScroller({
   sections = [], summary = null, accent = C.blue, isMobile = false,
   focusId = null, focusNonce = 0, onFocusHandled = null, onSectionOpen = null,
-  onPrint = null, printLabel = 'Print everything',
+  defaultOpenIds = null, onPrint = null, printLabel = 'Print everything',
 }) {
-  const open0 = useMemo(() => new Set(focusId ? [focusId] : []), []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Sections open on arrival. Normally none — the point of the page is that it
+  // opens on its summary — but a two-section page whose first section IS the
+  // main event (Opportunities) passes the one that should already be open.
+  const open0 = useMemo(() => new Set([...(defaultOpenIds || []), ...(focusId ? [focusId] : [])]), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [open, setOpen] = useState(open0);
   const [activeId, setActiveId] = useState(sections[0]?.id || null);
   const refs = useRef({});
