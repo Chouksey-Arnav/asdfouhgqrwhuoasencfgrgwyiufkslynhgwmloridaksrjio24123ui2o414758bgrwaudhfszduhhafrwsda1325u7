@@ -127,6 +127,14 @@ export const TERMS_SECTIONS = [
       },
       'When you use these features, the text you enter and the relevant part of your profile are sent to our AI provider to generate a response. What that means for your data is described in the Privacy Policy. Do not enter information into the coach that you would not want processed this way — in particular, do not enter health information, government identifiers, financial account numbers, or another person\'s personal information.',
       {
+        heading: 'Voice answers in the interview simulator',
+      },
+      'The interview simulator can speak its questions aloud using your device\'s own built-in speech synthesis, which never involves your microphone or any network transmission of audio. It can also let you answer out loud instead of typing, and that half of the feature is different: your browser, not us, sends the audio it captures from your microphone to its own speech-recognition service to produce a transcript. We are never a party to that transmission and never receive, see, or store the audio itself. The Privacy Policy, Sections 4, 6, and 7, describes this in full, including which browsers are affected and how it is disclosed to you.',
+      {
+        emphasis:
+          'Voice answers are off until you turn them on, we ask before your microphone is ever opened, and declining or later turning them off costs you nothing — the interview simulator works fully by typing, with no feature gated behind speaking aloud. If you are under 18, a parent or guardian should be comfortable with this before you turn it on.',
+      },
+      {
         heading: 'Essay feedback and academic integrity',
       },
       'The essay tools are for feedback and revision on work you wrote. You are responsible for making sure your use of them complies with the academic-integrity and authorship rules of your school and of every college, scholarship, and programme you apply to. Many application platforms require that submitted work be substantially your own. We do not warrant that any AI-assisted text is acceptable under any particular institution\'s rules, and we are not responsible for the consequences if it is not.',
