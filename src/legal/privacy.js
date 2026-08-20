@@ -135,7 +135,7 @@ export const PRIVACY_SECTIONS = [
           'We do not ask for health or medical information, and you should not enter any. Despite the name, this is a study product, not a health product.',
           'We do not collect precise geolocation.',
           'We do not use analytics, tracking pixels, session recording, or advertising cookies of our own.',
-          'We do not access your camera, contacts, or files. The interview simulator can use your microphone, but only if you switch voice answers on and grant your browser\'s permission prompt, and only while you are answering a question. We never receive, store, or transmit that audio ourselves — but on most browsers your browser does send it to its own speech service to turn it into text. See "Voice answers in the interview simulator" in Section 6.',
+          'We do not access your camera, contacts, or files. The interview simulator can use your microphone, but only if you switch voice answers on and grant your browser\'s permission prompt, and only while you are answering a question. We never receive, see, store, or transmit that audio ourselves — but on most browsers, your browser sends it directly to its own speech service to turn it into text, which is a third-party disclosure we do not control. See "Voice answers in the interview simulator" in Section 6, and the corresponding entry in the Section 7 provider table.',
         ],
       },
     ],
@@ -200,14 +200,17 @@ export const PRIVACY_SECTIONS = [
       {
         heading: 'Voice answers in the interview simulator',
       },
-      'The interview simulator can speak its questions aloud and can let you answer out loud instead of typing. These are two different things, and only one of them involves your microphone.',
+      'The interview simulator can speak its questions aloud, and can let you answer out loud instead of typing. Those are two different features with opposite privacy profiles, and it matters that you can tell them apart.',
       {
         list: [
-          'The interviewer\'s voice is produced by your device\'s own built-in speech synthesis. Nothing leaves your device for this, and it works with the microphone switched off.',
-          'Answering out loud uses your browser\'s speech-recognition feature. On Chrome, Edge, and most Chromium-based browsers, that feature sends the audio from your microphone to your browser vendor\'s speech service — usually Google\'s — to be transcribed. That is your browser doing it, under your browser vendor\'s own privacy policy, not us: we never receive the audio, and we do not store any recording. What we receive is the text your browser transcribed, and only once you send your answer.',
-          'Because the audio is a minor\'s voice going to a third party, voice answers are off until you turn them on. We ask once, in plain language, before the microphone is ever opened, and the whole simulator works end to end by typing if you say no or change your mind. Nothing in the product is locked behind speaking aloud.',
-          'On recent versions of Safari the transcription happens on the device itself and no audio leaves it. We cannot reliably detect which behaviour your browser uses, so we tell you the worse case rather than guess in our own favour.',
+          'The interviewer\'s voice is produced entirely by your own device\'s built-in speech synthesis. Nothing about it leaves your device, no network request is made to produce it, and it works exactly the same with your microphone switched off. This half of the feature never involves us or anyone else.',
+          'Answering out loud is different: it uses your browser\'s own speech-recognition feature, not ours. On Chrome, Edge, and most other Chromium-based browsers, your browser sends the audio captured from your microphone to its vendor\'s speech service — in practice, Google\'s — to be turned into text, under that vendor\'s own privacy policy, not this one. We are not a party to that transmission: we do not receive the audio, we do not see it in transit, and we do not store a recording of it, ever. What reaches us is the written transcript your browser hands back, and only once — when you press send on your answer.',
+          'On recent versions of Safari, the transcription happens on your device and no audio is sent anywhere. We have no reliable way to detect which behaviour a given browser actually uses, so we describe the more exposed case rather than assume the safer one in our own favour.',
         ],
+      },
+      {
+        emphasis:
+          'Because this can mean a minor\'s voice reaching a third party we do not control, voice answers are off until you turn them on. Before your microphone is ever opened, we ask — once, in plain language, in the app itself, not buried in a permission dialog — and you can say no. Declining costs you nothing: the interview simulator works identically by typing, start to finish, with every feature available either way. You can turn voice answers back off at any time from the same screen where you turned them on, and doing so takes effect immediately for every future answer.',
       },
       'AI output can be wrong. Section 5 of the Terms of Service explains what that means for how you should use it.',
     ],
@@ -372,6 +375,7 @@ export const PRIVACY_SECTIONS = [
         heading: 'How to exercise them',
       },
       `Most of this you can do yourself in the app's settings, including account deletion. For anything else, email ${LEGAL.privacyEmail} from the address on your account, or tell us the address on the account if you are writing from somewhere else. We will respond within 30 days, and within 45 days where a US state law sets that period, and we will tell you if we need a permitted extension. Using your rights costs nothing and we will not treat you differently for it.`,
+      'One consent lives entirely in the app rather than needing an email: voice answers in the interview simulator, described in Section 6. Turn them on or off from the same screen the interview simulator shows you, at any time — the change applies immediately and no request to us is needed.',
       'We will ask for enough information to be confident you are who you say you are, and no more. A parent or guardian may make a request on behalf of a user under 18, and an authorised agent may make a request where state law allows it.',
       {
         heading: 'If you are in California',

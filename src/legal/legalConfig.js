@@ -59,10 +59,21 @@ export const LEGAL = {
   // ── Document versions ───────────────────────────────────────────────────
   // Bumped whenever a change is material enough that users should be told.
   // `effectiveDate` is what renders at the top of each document.
-  termsVersion: '1.0.0',
-  privacyVersion: '1.0.0',
-  effectiveDate: '2026-08-08',
-  lastUpdated: '2026-08-08',
+  //
+  // 1.1.0 (2026-08-20): the interview simulator's voice-answer feature sends
+  // microphone audio to the browser vendor's own speech-recognition service on
+  // Chromium browsers — a fact this policy previously stated incorrectly (it
+  // said no audio was transmitted). That is a new disclosed recipient under
+  // Section 7 and a corrected description under Section 4/6, both of which
+  // Section 15 calls material on their own. It does not change what the
+  // feature already did — it corrects the document to describe it accurately
+  // — so it takes effect immediately rather than after the 30-day delay
+  // Section 22 of the Terms reserves for changes that alter the deal. The
+  // Terms gained the matching cross-reference in Section 5.
+  termsVersion: '1.1.0',
+  privacyVersion: '1.1.0',
+  effectiveDate: '2026-08-20',
+  lastUpdated: '2026-08-20',
 };
 
 /** "August 8, 2026" from "2026-08-08", without dragging in a date library. */
@@ -110,10 +121,10 @@ export const SUBPROCESSORS = [
     link: 'https://groq.com/privacy-policy/',
   },
   {
-    name: 'Your browser\'s speech-recognition service (Google, Apple, or Microsoft, depending on your browser)',
-    role: 'Transcribing spoken answers in the interview simulator, if you turn voice answers on',
-    data: 'Audio captured from your microphone while you are answering an interview question out loud, sent by your browser — not by us — to its own speech service to be turned into text. We never receive or store the audio; we receive only the transcript, and only when you send your answer. Voice answers are off by default and the simulator works fully by typing. Recent Safari versions transcribe on the device and send nothing.',
-    location: 'Depends on your browser vendor; United States for Chrome and Edge',
+    name: 'Your browser\'s built-in speech-recognition service',
+    role: 'Transcribing spoken answers in the interview simulator — only if you turn voice answers on. On Chrome, Edge, and most Chromium browsers this is Google\'s speech service; other browsers use their own vendor\'s.',
+    data: 'Audio captured from your microphone while you are answering an interview question out loud. Your browser sends it directly to its own speech service — we are not in that path and never receive, see, or store the audio. We receive only the text transcript your browser returns, and only once, when you send your answer. Voice answers are off by default; declining or turning them off costs you nothing, since the simulator works fully by typing.',
+    location: 'United States for Chrome and Edge (Google). Recent Safari transcribes on your device and sends nothing anywhere.',
     link: 'https://policies.google.com/privacy',
   },
   {

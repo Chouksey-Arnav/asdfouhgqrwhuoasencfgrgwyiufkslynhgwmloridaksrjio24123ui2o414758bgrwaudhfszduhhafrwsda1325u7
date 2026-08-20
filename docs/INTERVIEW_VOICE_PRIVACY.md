@@ -1,8 +1,10 @@
 # Running a minor's voice through a third-party API
 
-**Status:** reviewed, disclosure corrected, consent gate shipped.
+**Status:** reviewed, disclosure corrected in both legal documents, consent gate shipped, document
+versions bumped (Terms and Privacy Policy both to 1.1.0, effective 2026-08-20).
 **Scope:** the Live Voice Interview and any other feature that opens the microphone.
-**Owner of the claim:** `src/legal/privacy.js` §4 and §6, `src/legal/legalConfig.js` (`SUBPROCESSORS`).
+**Owner of the claim:** `src/legal/privacy.js` §4, §6, and §12; `src/legal/terms.js` §5;
+`src/legal/legalConfig.js` (`SUBPROCESSORS`, `termsVersion`/`privacyVersion`).
 
 ## What we found
 
@@ -61,13 +63,31 @@ source tree.
    and says it is worth showing an adult first. We do not attempt to verify that; over-13 teenage
    users are outside COPPA's verifiable-parental-consent regime and the honest thing is a clear
    prompt rather than a checkbox that pretends to be verification.
-4. **The policy now says what actually happens.** §4's "what we do not collect" bullet was rewritten,
-   and §6 gained a "Voice answers in the interview simulator" subsection covering the split between
-   synthesis and recognition, what we receive, and what the browser does.
-5. **The sub-processor table names it.** `SUBPROCESSORS` in `src/legal/legalConfig.js` now carries an
-   entry for the browser's speech-recognition service, its role, the data, and the location. The
-   policy calls that list complete, so an undisclosed recipient made the list itself a false
+4. **The Privacy Policy now says what actually happens.** §4's "what we do not collect" bullet was
+   rewritten to stop claiming audio is never transmitted, and §6 gained a "Voice answers in the
+   interview simulator" subsection covering the split between synthesis and recognition, what we
+   receive, and what the browser does — with the consent commitment itself pulled into an emphasis
+   block rather than left as one sentence in a bullet list, since it is the part a parent needs to
+   actually see. §12 ("Your rights and choices") now names the in-app toggle explicitly, since
+   withdrawing this particular consent doesn't need an email to us the way most rights do.
+5. **The Terms of Service say it too, not just the Privacy Policy.** §5 ("The AI coach and other AI
+   features") gained a matching "Voice answers in the interview simulator" subsection: what the two
+   halves of the feature are, which one involves the browser vendor, and a plain-language line aimed
+   at a parent of a user under 18. A promise this specific belongs in both documents, not filed only
+   under the one a student is statistically less likely to open.
+6. **The sub-processor table names it.** `SUBPROCESSORS` in `src/legal/legalConfig.js` now carries an
+   entry for the browser's built-in speech-recognition service — role, what it receives, and where,
+   split by browser (Chrome/Edge send to Google in the United States; recent Safari sends nothing).
+   The policy calls that list complete, so an undisclosed recipient made the list itself a false
    statement.
+7. **The document versions were bumped.** Adding a new disclosed recipient is exactly what Privacy
+   Policy §15 defines as material, and §15 promises notice before it takes effect. `privacyVersion`
+   and `termsVersion` moved from 1.0.0 to 1.1.0 and `effectiveDate`/`lastUpdated` moved to
+   2026-08-20 — the first time either changed since the documents were established at 1.0.0 for
+   2026-08-08. Because this bump corrects an inaccurate description of behaviour the feature already
+   had, rather than expanding what the feature does, it takes effect immediately instead of after the
+   Terms' 30-day delay for changes that alter the deal (Terms §22) — that delay is for changes that
+   move the goalposts, not for a document catching up to what was already true.
 
 ## What we deliberately did not do
 
@@ -83,6 +103,9 @@ source tree.
 ## If you change any of this
 
 Anything that opens the microphone, changes which service transcribes it, or adds audio upload
-requires all four of: the consent gate, the §4 bullet, the §6 subsection, and a `SUBPROCESSORS`
-entry. `npm run verify:legal` guards the pairing between the code and the document; it cannot guard
-a claim nobody wrote down.
+requires all of: the consent gate, the Privacy Policy §4 bullet, the Privacy Policy §6 subsection,
+the matching Terms §5 subsection, a `SUBPROCESSORS` entry, and — because a new or changed recipient
+is a material change under Privacy Policy §15 — a version bump on `termsVersion`/`privacyVersion`
+and an updated `effectiveDate`/`lastUpdated`. `npm run verify:legal` guards the pairing between the
+code and the document; it cannot guard a claim nobody wrote down, and it does not know when a change
+is material enough to need a new version number — that judgment call is on whoever makes the change.
