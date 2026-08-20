@@ -221,7 +221,13 @@ assert('every appetite/cost/format option has an id and label',
 const prompt = buildMatchPrompt(neuroProfile, neuroPicks);
 assert('the prompt names every shortlisted program', neuroPicks.every((m) => prompt.includes(m.item.name)));
 assert('the prompt forbids inventing programs', /never invent/i.test(prompt) && /only ever name programs from the numbered list/i.test(prompt));
-assert('the prompt forbids invented deadlines and fees', /do not invent deadlines/i.test(prompt));
+// Dates, ages, citizenship rules and money may only come from the structured
+// facts block — a model asked about SIMR will otherwise produce a February date
+// from memory, and a confidently wrong deadline is worse than no deadline.
+assert('the prompt forbids invented deadlines and fees',
+  /never state a deadline, fee, age minimum or acceptance rate that is not in the VERIFIED FACTS block/i.test(prompt));
+assert('the prompt requires honesty about reaches and cheaper options',
+  /say the word "reach"/i.test(prompt) && /cheaper or free option/i.test(prompt));
 assert('the prompt describes the student', describeProfile(neuroProfile).every((line) => prompt.includes(line)));
 const inferredProfile = buildMatchProfile({ user: { dreamRole: 'research' }, snapshot: null, pathwayKey: 'physician', prefs: {} });
 assert('a student who picked nothing is matched on inferred interests', inferredProfile.activeThemeIds.length > 0 && inferredProfile.usingInferredThemes);

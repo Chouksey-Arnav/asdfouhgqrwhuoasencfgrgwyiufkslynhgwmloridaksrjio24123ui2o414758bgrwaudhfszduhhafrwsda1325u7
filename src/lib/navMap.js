@@ -82,12 +82,12 @@ export const NAV_KEYWORDS = {
   'prep/library': ['videos', 'reading', 'resources', 'watch'],
 
   // ── Portfolio ─────────────────────────────────────────────────────────────
-  'portfolio/tracked': ['saved', 'bookmarks', 'watching', 'shortlist'],
+  'portfolio/opportunities:tracked': ['saved', 'bookmarks', 'watching', 'shortlist'],
   'portfolio/opportunities': ['programs', 'summer programs', 'internships', 'competitions', 'volunteering'],
   'portfolio/milestones': ['deadlines', 'due dates', 'calendar', 'important dates', 'timeline', 'when is it due'],
-  'portfolio/colleges': ['universities', 'schools', 'where to apply', 'reach safety', 'my list'],
-  'portfolio/essays': ['personal statement', 'writing', 'supplementals', 'common app essay', 'drafts'],
-  'portfolio/aid': ['fafsa', 'money', 'cost', 'paying for college', 'css profile', 'scholarships', 'grants'],
+  'portfolio/applying:colleges': ['universities', 'schools', 'where to apply', 'reach safety', 'my list'],
+  'portfolio/applying:essays': ['personal statement', 'writing', 'supplementals', 'common app essay', 'drafts'],
+  'portfolio/applying:aid': ['fafsa', 'money', 'cost', 'paying for college', 'css profile', 'scholarships', 'grants'],
   // Activities & Résumé holds five sections. Three of them are destinations the
   // palette offers in their own right; the other two are reached by opening the
   // tab, so THEIR words live here, on the tab. A keyword pointing at a screen
@@ -96,9 +96,9 @@ export const NAV_KEYWORDS = {
     'cv', 'resume', 'activities list', 'extracurriculars', 'what i have done',
     'gpa', 'grades', 'transcript', 'class rank', 'honors', 'clubs', 'leadership',
   ],
-  'portfolio/recommenders': ['recommendation letters', 'letters of rec', 'teachers', 'who will write'],
-  'portfolio/interview': ['mock interview', 'practice talking', 'questions they ask'],
-  'portfolio/calc': ['my chances', 'will i get in', 'odds', 'admissions calculator'],
+  'portfolio/applying:recommenders': ['recommendation letters', 'letters of rec', 'teachers', 'who will write'],
+  'portfolio/applying:interview': ['mock interview', 'practice talking', 'questions they ask'],
+  'portfolio/applying:calc': ['my chances', 'will i get in', 'odds', 'admissions calculator'],
   'portfolio/resume:clinical': ['shadowing', 'hospital hours', 'patient care', 'volunteering hours', 'cna'],
   'portfolio/resume:research': ['lab', 'publications', 'science fair', 'projects'],
   'portfolio/resume:credentials': ['certifications', 'cpr', 'first aid', 'licences', 'licenses'],

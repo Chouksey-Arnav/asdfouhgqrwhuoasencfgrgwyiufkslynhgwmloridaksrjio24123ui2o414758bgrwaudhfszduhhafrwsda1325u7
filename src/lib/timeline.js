@@ -756,6 +756,12 @@ const DEADLINE_KIND_MAP = {
   common_app_open: 'application', early_action: 'application', early_decision: 'application',
   regular_decision: 'application', fafsa: 'aid', css_profile: 'aid', scholarship: 'aid',
   ap_exam: 'academics', ib_exam: 'academics', custom: 'application',
+  // Saved opportunities and their 60/30/7-day alerts (see
+  // milestoneRowsFor in src/lib/opportunityEligibility.js). They belong in the
+  // Experience lane: a summer research deadline is not an application to a
+  // college, and filing it as one would put it in the lane a senior reads for
+  // college dates.
+  opportunity: 'experience',
 };
 
 /**

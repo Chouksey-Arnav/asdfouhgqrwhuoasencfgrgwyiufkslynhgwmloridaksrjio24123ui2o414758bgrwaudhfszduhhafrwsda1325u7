@@ -18,6 +18,12 @@ import {
   buildMatchProfile, matchOpportunities, buildMatchPrompt, readPrefs, writePrefs, themeReach,
 } from '../../lib/opportunityMatch';
 import { trackTargetForOpportunity, resourceForOpportunity, catalogDedupeKey } from '../../lib/trackingCatalog';
+import { ProgramTiersSection, DeadlineBoard, HosaTracker } from './ProgramTiers';
+import {
+  studentEligibilityFacts, milestoneRowsFor,
+} from '../../lib/opportunityEligibility';
+import { PROGRAMS } from '../../data/opportunityPrograms';
+import { listItems, createItem } from '../../lib/dataApi';
 import { showMedabrainToast } from '../../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../../lib/aiCache';
 import { renderMarkdown } from '../../lib/renderMarkdown';
@@ -84,6 +90,10 @@ export default function OpportunitiesPanel({
   const [busyId, setBusyId] = useState(null);
   const [brief, setBrief] = useState(null); // { loading, content, error }
   const [briefNonce, setBriefNonce] = useState(0); // bumped by "Regenerate" to bypass the cache
+  // Programs whose deadline is already in the student's Milestones, so the
+  // button reads "In your Milestones" instead of offering to write it twice.
+  const [savedProgramIds, setSavedProgramIds] = useState(() => new Set());
+  const [savingProgramId, setSavingProgramId] = useState(null);
 
   const profile = useMemo(
     () => buildMatchProfile({ user, snapshot, pathwayKey, prefs }),
@@ -171,6 +181,56 @@ export default function OpportunitiesPanel({
     } catch (err) { toast.error(err.message); }
     finally { setBusyId(null); }
   }
+
+  // ── Eligibility + deadlines ───────────────────────────────────────────────
+  const eligibilityFacts = useMemo(
+    () => studentEligibilityFacts({ user, grade: profile.grade }),
+    [user, profile.grade],
+  );
+
+  // Which structured programs already have a deadline row. Matched on the
+  // program name at the head of the title, which is how milestoneRowsFor writes
+  // them — a dedicated column would be better and is not worth a migration for
+  // a string prefix.
+  useEffect(() => {
+    let cancelled = false;
+    listItems('deadlines').then((rows) => {
+      if (cancelled) return;
+      const titles = (rows || []).map(r => String(r.title || ''));
+      setSavedProgramIds(new Set(PROGRAMS.filter(p => titles.some(t => t.startsWith(p.name))).map(p => p.id)));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
+
+  // Saving an opportunity is the feature that most justifies this tab existing:
+  // it turns "I should look at this" into a dated row plus three alerts, which
+  // is the difference between applying and discovering in April that February
+  // has already happened.
+  const saveDeadline = useCallback(async (program, dl) => {
+    if (!program || !dl?.iso || savedProgramIds.has(program.id)) return;
+    setSavingProgramId(program.id);
+    try {
+      const rows = milestoneRowsFor(program, dl.iso);
+      for (const row of rows) await createItem('deadlines', row);
+      setSavedProgramIds(prev => new Set([...prev, program.id]));
+      const alerts = rows.length - 1;
+      showMedabrainToast('opportunity_added', { name: program.name, type: program.type });
+      toast.success(
+        alerts
+          ? `${program.name.slice(0, 36)} is in your Milestones, with ${alerts} reminder${alerts === 1 ? '' : 's'} before the date.`
+          : `${program.name.slice(0, 36)} is in your Milestones. That date is close — start now.`,
+        { duration: 5200 },
+      );
+    } catch (err) { toast.error(err.message); }
+    finally { setSavingProgramId(null); }
+  }, [savedProgramIds]);
+
+  const freeOnly = prefs.costStance === 'free_only';
+  const toggleFreeOnly = useCallback(() => {
+    savePrefs({ costStance: freeOnly ? 'any' : 'free_only' });
+  }, [freeOnly, savePrefs]);
+
+  const setHosa = useCallback((next) => { savePrefs({ hosa: next }); }, [savePrefs]);
 
   const stateOf = (o) => {
     const resource = resourceForOpportunity(o);
@@ -314,6 +374,46 @@ export default function OpportunitiesPanel({
         )}
       </AnimatePresence>
 
+      {/* ── The one filter that is not a filter ───────────────────────────────
+          Cost is the binding constraint for most students here, so "free and
+          funded only" is a switch on the page rather than a radio button three
+          taps into a tuning panel. It governs the matches, the tiers and the
+          browse catalog at once — it writes the same costStance the Tune panel
+          reads, so the two can never disagree. */}
+      <div style={{
+        ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap', padding: isMobile ? '12px 14px' : '13px 18px' }),
+        borderRadius: 14,
+        background: freeOnly ? `linear-gradient(120deg,${tint(C.green, 0.16)},rgba(255,255,255,0.02) 62%)` : C.surf2,
+        border: `1px solid ${freeOnly ? tint(C.green, 0.36) : C.b1}`,
+      }}>
+        <span style={R({ gap: 10, minWidth: 0 })}>
+          <Wallet size={15} color={freeOnly ? C.greenL : C.t3} style={{ flexShrink: 0 }} />
+          <span style={{ minWidth: 0 }}>
+            <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, color: C.t1 }}>Free and funded only</span>
+            <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>
+              Free to enter, or it pays you. {freeOnly ? 'On — nothing below costs you money.' : 'Off — everything is shown, including programs that cost thousands.'}
+            </span>
+          </span>
+        </span>
+        <button type="button" role="switch" aria-checked={freeOnly} onClick={toggleFreeOnly}
+          aria-label="Show only free and funded opportunities"
+          style={{
+            flexShrink: 0, width: 50, height: 28, borderRadius: 999, cursor: 'pointer', padding: 3,
+            background: freeOnly ? C.green : C.s3, border: `1px solid ${freeOnly ? tint(C.green, 0.5) : C.b1}`,
+            display: 'flex', justifyContent: freeOnly ? 'flex-end' : 'flex-start', alignItems: 'center',
+            transition: 'background .18s',
+          }}>
+          <span style={{ width: 20, height: 20, borderRadius: 999, background: freeOnly ? '#fff' : C.t3, display: 'block', transition: 'all .18s' }} />
+        </button>
+      </div>
+
+      {/* ── The deadline board ───────────────────────────────────────────────
+          Above the matches on purpose. A date that has already passed is not a
+          recommendation, and the students who lose the most are the ones who
+          never learn that the good summer programs close in winter. */}
+      <DeadlineBoard facts={eligibilityFacts} isMobile={isMobile}
+        savedIds={savedProgramIds} savingId={savingProgramId} onSaveDeadline={saveDeadline} />
+
       <TrackQueueNotice entries={pendingEntries.filter((e) => e.resource === 'activities' || e.resource === 'scholarships')} status={trackStatus} />
 
       {/* ── 2 + 3. Match and narrate ─────────────────────────────────────── */}
@@ -412,6 +512,31 @@ export default function OpportunitiesPanel({
           </div>
         )}
       </section>
+
+      {/* ── 3b. The tiers ────────────────────────────────────────────────────
+          A ranked catalog answers "what fits me". It does not answer "which of
+          these has an admissions officer actually heard of", and students
+          currently cannot tell — which is how a family ends up paying four
+          thousand dollars for an open-enrollment summer program in the belief
+          that it is a selective one. Three honest tiers, including the one that
+          says so. */}
+      <section aria-label="Programs by tier" style={CC({ gap: 14 })}>
+        <SectionIntro icon={Trophy} color={C.gold} color2={C.orange} m={isMobile}
+          title="What's actually worth your time"
+          blurb="The programs where the specifics matter, with their real eligibility, real deadlines and an honest read on what each one is worth. Eligibility is on the card, before you spend any attention on it."
+          stats={[{ value: PROGRAMS.length, label: 'with full details', color: C.goldL }]} />
+        <ProgramTiersSection facts={eligibilityFacts} freeOnly={freeOnly} isMobile={isMobile}
+          savedIds={savedProgramIds} savingId={savingProgramId} onSaveDeadline={saveDeadline} />
+      </section>
+
+      {/* ── 3c. HOSA ────────────────────────────────────────────────────────
+          A chapter member's question is "which event do I enter", and the
+          answer lives in a PDF nobody opens. */}
+      <Disclosure id="opportunities-hosa" icon={Trophy} color={C.teal} m={isMobile}
+        title="HOSA competitive events — and which ones you've qualified for"
+        sub="Every event, in HOSA's own categories, with a place to track how far you have got.">
+        <HosaTracker value={prefs.hosa} onChange={setHosa} isMobile={isMobile} />
+      </Disclosure>
 
       {/* ── 4. Browse ──────────────────────────────────────────────────────
           The full catalog is the biggest thing on this page by an order of magnitude — a search

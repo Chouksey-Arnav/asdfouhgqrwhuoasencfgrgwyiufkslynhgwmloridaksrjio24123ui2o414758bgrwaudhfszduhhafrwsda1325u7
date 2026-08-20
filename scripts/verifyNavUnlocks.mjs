@@ -67,20 +67,31 @@ for (const [tab, name] of Object.entries(SUBNAV_CONST)) {
   for (const m of block.matchAll(/\{id:'([^']+)',ic:\w+,label:'([^']+)'/g)) LABELS[`${tab}/${m[1]}`] = m[2];
 }
 for (const m of (app.slice(app.indexOf('const NAV = ['), app.indexOf('\n];', app.indexOf('const NAV = [')))).matchAll(/\{id:'([^']+)',ic:\w+,label:'([^']+)'/g)) LABELS[m[1]] = m[2];
-// The five sections of Activities & Résumé are gated one level below a sub-view
-// ('portfolio/resume:clinical'). They render from RESUME_SECTIONS in the panel
-// itself, so that array — not App.jsx — is what a section rule has to name.
-const resumePanel = read('src/components/ActivitiesResumePanel.jsx');
-const RESUME_SECTION_IDS = [];
-{
-  const start = resumePanel.indexOf('export const RESUME_SECTIONS = [');
-  const block = resumePanel.slice(start, resumePanel.indexOf('\n];', start));
+// The merged Portfolio tabs gate one level below a sub-view
+// ('portfolio/resume:clinical', 'portfolio/applying:essays'). Each page renders
+// its own sections array, so those arrays — not App.jsx — are what a section
+// rule has to name.
+const SECTION_IDS = { 'portfolio/opportunities': ['find', 'tracked'] };
+function readSections(file, exportName, viewKey) {
+  const src = read(file);
+  const ids = [];
+  const start = src.indexOf(`export const ${exportName} = [`);
+  const block = src.slice(start, src.indexOf('\n];', start));
   for (const m of block.matchAll(/\{ id: '([^']+)',\s*ic: \w+,\s*label: '([^']+)'/g)) {
-    RESUME_SECTION_IDS.push(m[1]);
-    LABELS[`portfolio/resume:${m[1]}`] = m[2];
+    ids.push(m[1]);
+    LABELS[`${viewKey}:${m[1]}`] = m[2];
   }
-  if (!RESUME_SECTION_IDS.length) fail('could not read RESUME_SECTIONS out of ActivitiesResumePanel.jsx');
+  if (!ids.length) fail(`could not read ${exportName} out of ${file}`);
+  SECTION_IDS[viewKey] = ids;
+  return ids;
 }
+const RESUME_SECTION_IDS = readSections('src/components/ActivitiesResumePanel.jsx', 'RESUME_SECTIONS', 'portfolio/resume');
+readSections('src/components/portfolio/ApplyingPanel.jsx', 'APPLYING_SECTIONS', 'portfolio/applying');
+// Opportunities' two sections are declared inline in App.jsx's renderer rather
+// than in an exported array (there are two of them and one is the panel that
+// gives the tab its name), so their labels come from there.
+LABELS['portfolio/opportunities:find'] = 'Find something';
+LABELS['portfolio/opportunities:tracked'] = 'What you\u2019re tracking';
 
 if (new Set(GATED_IDS).size !== GATED_IDS.length) fail('UNLOCK_RULES contains a duplicate id');
 for (const rule of UNLOCK_RULES) {
@@ -88,8 +99,10 @@ for (const rule of UNLOCK_RULES) {
   const [view, section] = (rest || '').split(':');
   if (!TABS.includes(tab)) { fail(`${rule.id}: '${tab}' is not a top-level tab`); continue; }
   if (view && !SUBVIEWS[tab]?.ids.includes(view)) { fail(`${rule.id}: '${view}' is not a sub-view of ${tab}`); continue; }
-  if (section && !RESUME_SECTION_IDS.includes(section)) { fail(`${rule.id}: '${section}' is not a section of ${tab}/${view}`); continue; }
-  if (section && rule.id.split('/')[1].split(':')[0] !== 'resume') { fail(`${rule.id}: only Activities & Résumé has gated sections`); continue; }
+  if (section && !(SECTION_IDS[`${tab}/${view}`] || []).includes(section)) { fail(`${rule.id}: '${section}' is not a section of ${tab}/${view}`); continue; }
+  // Sections are gated only inside the merged Portfolio pages. Anywhere else a
+  // ':' in a rule id means someone invented a level the nav cannot render.
+  if (section && !['resume', 'applying', 'opportunities'].includes(view)) { fail(`${rule.id}: '${view}' has no gated sections`); continue; }
   const expected = LABELS[rule.id];
   // The label is student-facing copy in the "unlocks next" list; if it drifts
   // from the nav the same screen is advertised under two different names.
@@ -141,8 +154,8 @@ const STEPS = [
   ['after 1 quiz', { ...FRESH, quizzes: 1 }, ['portfolio', 'prep/quizzes', 'prep/flashcards', 'prep/coach']],
   ['after 5 sessions', { ...FRESH, quizzes: 3, lessons: 2 }, ['portfolio', 'progress', 'prep/library']],
   ['onboarded + first lesson + ready to plan', { ...FRESH, onboarded: true, lessons: 1, planReady: true }, ['plans', 'portfolio/resume:clinical']],
-  ['with a college list', { ...FRESH, quizzes: 1, colleges: 2 }, ['portfolio/essays', 'portfolio/resume', 'portfolio/aid', 'portfolio/resume:academics']],
-  ['with logged activities', { ...FRESH, quizzes: 1, activities: 3 }, ['portfolio/opportunities', 'portfolio/tracked', 'portfolio/recommenders', 'portfolio/interview', 'portfolio/resume:research', 'portfolio/resume:credentials']],
+  ['with a college list', { ...FRESH, quizzes: 1, colleges: 2 }, ['portfolio/applying:essays', 'portfolio/resume', 'portfolio/applying:aid', 'portfolio/resume:academics']],
+  ['with logged activities', { ...FRESH, quizzes: 1, activities: 3 }, ['portfolio/opportunities', 'portfolio/opportunities:tracked', 'portfolio/applying:recommenders', 'portfolio/applying:interview', 'portfolio/resume:research', 'portfolio/resume:credentials']],
 ];
 const openById = (st, id) => {
   const [t, rest] = id.split('/');
@@ -189,7 +202,7 @@ section('Résumé sections ladder');
   else ok(`résumé opens with: ${openSections.join(', ')} (${RESUME_SECTION_IDS.length - openSections.length} unlock later)`);
   // The panel's own default must never be one of the gated ones, or a student
   // arriving at /portfolio/resume lands on a section the row says they can't have.
-  const def = /DEFAULT_RESUME_SECTION = '([^']+)'/.exec(resumePanel)?.[1];
+  const def = /DEFAULT_RESUME_SECTION = '([^']+)'/.exec(read('src/components/ActivitiesResumePanel.jsx'))?.[1];
   if (!def || !fresh.isOpen('portfolio', 'resume', def)) fail(`default résumé section '${def}' is locked on day one`);
   // Scoping: the Portfolio SubNav must not advertise a section as if it were a tab.
   if (fresh.locked('portfolio').some((r) => r.id.includes(':'))) fail("locked('portfolio') leaked a résumé section into the sub-tab list");

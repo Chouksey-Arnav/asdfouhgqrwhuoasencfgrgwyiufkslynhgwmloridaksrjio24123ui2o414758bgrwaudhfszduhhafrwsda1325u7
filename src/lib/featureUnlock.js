@@ -227,17 +227,25 @@ export const UNLOCK_RULES = [
   },
 
   // ── Portfolio ────────────────────────────────────────────────────────────
-  // Overview, Milestones and College List stay open: "where am I applying and
-  // when is it due" is the question a student actually arrives with.
+  // Overview and Milestones stay open, and so does the College List section of
+  // Applying: "where am I applying and when is it due" is the question a
+  // student actually arrives with.
+  //
+  // Note the shape of these ids. Eleven Portfolio tabs became five, so most of
+  // what used to be a sub-tab gate is now a SECTION gate — 'portfolio/applying:essays'
+  // rather than 'portfolio/essays'. The ladder is unchanged in substance: the
+  // same surfaces open on the same conditions, in the same order. What changed
+  // is that a locked one now renders as a dimmed section header inside a page
+  // the student is already on, rather than as a missing pill on a nav row.
   {
-    id: 'portfolio/essays',
+    id: 'portfolio/applying:essays',
     label: 'Essays',
     hint: 'Add a college to your list — essay prompts come from your schools.',
     at: (s) => s.colleges >= 1,
   },
   {
     id: 'portfolio/resume',
-    label: 'Activities & Résumé',
+    label: 'Activities',
     hint: 'Add a college to your list, then log what you\'ve actually done.',
     at: (s) => s.colleges >= 1 || s.activities >= 1,
   },
@@ -248,26 +256,26 @@ export const UNLOCK_RULES = [
     at: (s) => s.activities >= 1,
   },
   {
-    id: 'portfolio/tracked',
-    label: 'Tracked',
+    id: 'portfolio/opportunities:tracked',
+    label: 'What you\u2019re tracking',
     hint: 'Track a program or scholarship and it shows up here with its deadline.',
     at: (s) => s.trackedItems >= 1 || s.activities >= 1,
   },
   {
-    id: 'portfolio/calc',
-    label: 'Admissions Calc',
+    id: 'portfolio/applying:calc',
+    label: 'Chances',
     hint: 'Add a college to your list — the calculator compares you against real schools.',
     at: (s) => s.colleges >= 1,
   },
   {
-    id: 'portfolio/aid',
+    id: 'portfolio/applying:aid',
     label: 'Financial Aid',
     hint: 'Add 2 colleges — aid is a comparison between schools, not a single number.',
     at: (s) => s.colleges >= 2,
     progress: (s) => [Math.min(s.colleges, 2), 2],
   },
   {
-    id: 'portfolio/recommenders',
+    id: 'portfolio/applying:recommenders',
     label: 'Recommenders',
     // Named in the review as a day-one tab that made no sense: you cannot ask
     // for a letter about work you have not logged yet.
@@ -276,8 +284,8 @@ export const UNLOCK_RULES = [
     progress: (s) => [Math.min(s.activities, 2), 2],
   },
   {
-    id: 'portfolio/interview',
-    label: 'Interview Prep',
+    id: 'portfolio/applying:interview',
+    label: 'Interviews',
     hint: 'Log 2 activities — interview answers are built from your own experiences.',
     at: (s) => s.activities >= 2 || s.applicationUrgent,
     progress: (s) => [Math.min(s.activities, 2), 2],
@@ -300,13 +308,13 @@ export const UNLOCK_RULES = [
   // section's unlock condition points.
   {
     id: 'portfolio/resume:academics',
-    label: 'Academics',
+    label: 'Grades',
     hint: 'Add one college — your GPA is read against the schools you\'re aiming at.',
     at: (s) => s.colleges >= 1 || s.applicationUrgent,
   },
   {
     id: 'portfolio/resume:clinical',
-    label: 'Clinical Hours',
+    label: 'Shadowing & Hours',
     // The example the review gave, and the clearest case in the app: the
     // pathway's first lesson is what tells a student what shadowing IS and why
     // hours are counted. Handing them the log first is handing them a form for

@@ -39,6 +39,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { PATHS, GRADE_STAGES } from '../data/constants.js';
+import { PROGRAM_BY_ID } from '../data/opportunityPrograms.js';
 
 // ── Interest themes ──────────────────────────────────────────────────────────
 // The vocabulary the student picks from ("let them choose") AND the vocabulary
@@ -547,6 +548,25 @@ export function buildMatchPrompt(profile, matches) {
   const list = matches.map((m, i) => (
     `${i + 1}. ${m.item.name} — ${m.item.type}, ${m.item.level}, ${m.item.effort}${m.item.cost ? `, ${m.item.cost}` : ''}. Ranked ${m.match}% match because: ${m.reason}`
   )).join('\n');
+  // The structured facts, where we have them. This is the ONLY source of dates,
+  // ages and money the model is allowed to use: without it, a model asked about
+  // SIMR will happily produce a deadline from memory, and a confidently wrong
+  // February date is worse than no date at all.
+  const factLines = matches
+    .map((m) => ({ m, f: PROGRAM_BY_ID[m.item.id] }))
+    .filter((x) => x.f)
+    .map(({ m, f }) => {
+      const bits = [];
+      if (f.deadline?.note) bits.push(`deadline: ${f.deadline.note}`);
+      if (f.minAge != null) bits.push(`minimum age ${f.minAge}`);
+      if (f.minGrade != null) bits.push(`grade ${f.minGrade}${f.maxGrade && f.maxGrade !== f.minGrade ? `-${f.maxGrade}` : ''} only`);
+      if (f.citizenship) bits.push(f.citizenship === 'us' ? 'US citizenship required' : 'US citizenship or green card required');
+      if (f.cost?.note) bits.push(`cost: ${f.cost.note}`);
+      if (f.selectivity) bits.push(`selectivity: ${f.selectivity}`);
+      if (f.tier === 'pay_to_play') bits.push('OPEN ENROLLMENT — anyone who pays attends, so it is not a selective credential');
+      return `- ${m.item.name}: ${bits.join('; ')}`;
+    });
+
   return [
     'You are Meta Brain, advising one high-school pre-health student on which opportunities and competitions to pursue.',
     '',
@@ -555,14 +575,20 @@ export function buildMatchPrompt(profile, matches) {
     '',
     'THE SHORTLIST (already ranked deterministically against their real portfolio — this is your entire universe of programs):',
     list,
+    ...(factLines.length ? ['', 'VERIFIED FACTS for some of those programs (the only dates, ages, citizenship rules and costs you may state):', ...factLines] : []),
     '',
     'Write 3-5 short sentences, addressed to them as "you":',
     '1. Name the through-line you see in their interests and what they have already done.',
-    '2. Say which ONE of the numbered programs above to start with, and why it specifically fits them.',
+    '2. Say which ONE of the numbered programs above to start with, and why it specifically fits them — the reason has to be about THEM, not about the program being good.',
     '3. Name one other program from the list worth lining up after it.',
     '4. If their portfolio has an obvious hole (no clinical hours, no research, nothing logged at all), say so plainly and kindly.',
     '',
-    'Hard rules: only ever name programs from the numbered list above — never invent, substitute, or recall a program from elsewhere. Do not invent deadlines, fees, or acceptance rates. No headings, no bullet points, no preamble — just the paragraph.',
+    'Be honest rather than encouraging where the two conflict:',
+    '- If something you name is a genuine reach for where they are right now, say the word "reach" and say what would make it less of one.',
+    '- If a cheaper or free option on the list would serve them just as well as a costly one, say so and name it. Cost is the binding constraint for most students here.',
+    '- If a program has an age, grade or citizenship gate they may not clear, name the gate rather than the disappointment.',
+    '',
+    'Hard rules: only ever name programs from the numbered list above — never invent, substitute, or recall a program from elsewhere. Never state a deadline, fee, age minimum or acceptance rate that is not in the VERIFIED FACTS block, and when you do state one, add that they should confirm it on the official page. No headings, no bullet points, no preamble — just the paragraph.',
   ].join('\n');
 }
 
@@ -574,6 +600,12 @@ export const PREFS_KEY = 'opportunityPrefs';
 
 export const DEFAULT_PREFS = Object.freeze({
   themeIds: [], effortAppetite: 'balanced', costStance: 'any', formatPref: 'any', gradeStage: null,
+  // eventId -> level id, for the HOSA competitive events a student is chasing
+  // (see HOSA_EVENTS in src/data/opportunityPrograms.js). Lives here rather
+  // than in its own resource because it is a preference — "I intend to compete
+  // in Medical Terminology" — until it becomes a placement, at which point it
+  // belongs in Activities & Honors as an award.
+  hosa: {},
 });
 
 /** Saved prefs merged over the defaults, with anything unrecognized dropped. */
@@ -587,6 +619,7 @@ export function readPrefs(user) {
     costStance: COST_STANCES.some((c) => c.id === raw.costStance) ? raw.costStance : DEFAULT_PREFS.costStance,
     formatPref: FORMAT_PREFS.some((f) => f.id === raw.formatPref) ? raw.formatPref : DEFAULT_PREFS.formatPref,
     gradeStage: GRADE_KEYS.includes(raw.gradeStage) ? raw.gradeStage : DEFAULT_PREFS.gradeStage,
+    hosa: (raw.hosa && typeof raw.hosa === 'object' && !Array.isArray(raw.hosa)) ? raw.hosa : {},
   };
 }
 

@@ -132,7 +132,9 @@ import {
   tomorrowSet as tomorrowDailySet, streakOverlap as dailyStreakOverlap,
   DAILY_SET_BONUS,
 } from './lib/dailyQuests';
-import ActivitiesResumePanel, { DEFAULT_RESUME_SECTION, RESUME_SECTIONS } from './components/ActivitiesResumePanel';
+import ActivitiesResumePanel, { RESUME_SECTIONS } from './components/ActivitiesResumePanel';
+import ApplyingPanel, { APPLYING_SECTIONS } from './components/portfolio/ApplyingPanel';
+import SectionScroller from './components/portfolio/SectionScroller';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
 // Milestones is the merge of the old Deadlines and Timeline tabs — one dated surface that both
@@ -347,59 +349,70 @@ const PREP_SUBNAV = [
   {id:'coach',ic:MessageCircle,label:'AI Coach',color:C.violet},
   {id:'library',ic:BookOpen,label:'E-Library',color:C.pink},
 ];
+// Five tabs. Not eleven.
+//
+// A horizontal strip on a 390px phone fits about four 90px pills before it
+// becomes a carousel, and a carousel is not navigation — it hides destinations
+// behind a gesture nobody performs. Portfolio had eleven, mitigated with fade
+// edges and chevrons, which is treating the symptom.
+//
+// So the eleven became five, by merging along the questions a student actually
+// asks rather than along our table names:
+//
+//   Overview      — how am I doing
+//   Activities    — what have I done            (was: Activities & Resume,
+//                                                Research, Skills & Certs,
+//                                                Clinical Hours)
+//   Opportunities — what should I go do next    (+ Tracked, which is the
+//                                                follow-through for exactly
+//                                                that question)
+//   Applying      — where am I applying and     (was: College List, Essays,
+//                   what do they still need      Financial Aid, Recommenders,
+//                                                Interview Prep, Admissions
+//                                                Calculator)
+//   Milestones    — when is everything due
+//
+// Every merged surface still exists in full, as a section of a single scrolling
+// page with a summary on top and a sticky in-page jumper (see
+// SectionScroller.jsx). Every old URL and every in-app link that names a
+// retired tab still resolves and now lands on the exact section — see
+// PORTFOLIO_GROUP_FOR_VIEW below and the aliases in src/lib/routes.js.
+//
+// Labels are one plain word each, icon always paired with text, one row.
 const PORTFOLIO_SUBNAV = [
   {id:'overview',ic:Building2,label:'Overview',color:C.blue},
-  // Tracked sits second, right after Overview, because it is the follow-through surface for
-  // every Track button in the app — the place a tracked program stops being a bookmark and
-  // starts having a deadline, a status, and a daily Meta Brain report (see TrackedPanel.jsx).
-  {id:'tracked',ic:RadarIcon,label:'Tracked',color:C.violet},
-  // Opportunities & Competitions was the LAST block of the Overview — under the weekly goals, the
-  // strength gauge, the insights, the section navigator, the summary stats, the benchmark bars and
-  // the whole activity list. A 220-program catalog with a personalized matcher on it was, in
-  // practice, unreachable: nothing on the Overview asks you to scroll that far, and the students
-  // who most need "what should I actually go do" are exactly the ones who never got there. It is
-  // its own tab now (see OpportunitiesPanel.jsx + src/lib/opportunityMatch.js), and the Overview
-  // keeps a card pointing at it rather than the surface itself.
+  {id:'resume',ic:Award,label:'Activities',color:C.amber},
   {id:'opportunities',ic:Trophy,label:'Opportunities',color:C.gold},
+  {id:'applying',ic:GraduationCap,label:'Applying',color:C.sky},
   // One tab, not two. 'Deadlines' (the dates you type) and 'Timeline' (the dates we generate)
   // were the write half and the read half of the same calendar; splitting them meant a date added
   // on one showed up on the other only after a reload, and the two could disagree about what was
   // next. /portfolio/timeline and /portfolio/deadlines still resolve here — see routes.js aliases.
   {id:'milestones',ic:Milestone,label:'Milestones',color:C.indigo},
-  {id:'colleges',ic:GraduationCap,label:'College List',color:C.sky},
-  {id:'essays',ic:ScrollText,label:'Essays',color:C.violet},
-  {id:'aid',ic:Handshake,label:'Financial Aid',color:C.green},
-  // One tab, not four. 'Activities & Resume', 'Research', 'Skills & Certs' and 'Clinical Hours'
-  // were four pills holding four parts of the same answer to one question — what has this
-  // student actually done — and none of them could see the others: the activities list would
-  // report no clinical exposure while a hundred logged shadowing hours sat one pill away, and
-  // the résumé it exported contained neither those hours nor any certification. They are now
-  // five sections inside Activities & Résumé (see RESUME_SECTIONS in ActivitiesResumePanel).
-  // /portfolio/research, /portfolio/skills and /portfolio/clinical still resolve here and open
-  // the exact section they used to be — see routes.js aliases + RESUME_SECTION_FOR_VIEW below.
-  {id:'resume',ic:Award,label:'Activities & Résumé',color:C.amber},
-  {id:'recommenders',ic:UserCheck,label:'Recommenders',color:C.fuchsia},
-  {id:'interview',ic:Mic,label:'Interview Prep',color:C.orange},
-  // No 'scores' tab here on purpose. Test-score tracking lives in the SAT tab (/sat/scores),
-  // which owns the score report, the section breakdown, and the projection — a second, thinner
-  // copy of it inside Portfolio only ever split the same numbers across two places. The
-  // Admissions Calculator still reads the student's real test_scores rows — every sitting and
-  // every section score — straight out of the shared Portfolio snapshot.
-  {id:'calc',ic:Calculator,label:'Admissions Calc',color:C.gold},
 ];
-// The three retired Portfolio tabs → the section of Activities & Résumé each of them became.
-// Every caller in the app (and every old URL) still names them by their tab id; this is the
-// one place that translation happens.
+// Every retired Portfolio tab → [the tab that now holds it, the section it became].
+// Every caller in the app (and every old URL) still names them by their old tab id; this is the
+// one place that translation happens, so goPortfolio('essays') still means "open the essay
+// workspace" — it just opens it as a section of Applying instead of as a tab.
+//
 // 'credentials' is an alias for 'skills' so goDest('portfolio/resume:credentials') — the id
 // NAV_KEYWORDS and the deep-link protocol both use, since "credentials" is the section's actual
 // label — resolves the same as the palette's own 'skills' command instead of landing on nothing.
-const RESUME_SECTION_FOR_VIEW = { clinical:'clinical', research:'research', skills:'credentials', credentials:'credentials' };
-// The section an old-style URL names, if any: /portfolio/clinical → 'clinical'. routes.js
-// already forwards those paths to the `resume` view; this recovers the part it cannot carry,
-// since an alias by design never round-trips back out of formatPath().
-function resumeSectionFromPath(pathname=''){
+const PORTFOLIO_GROUP_FOR_VIEW = {
+  activities:['resume','activities'], academics:['resume','academics'],
+  clinical:['resume','clinical'], research:['resume','research'],
+  skills:['resume','credentials'], credentials:['resume','credentials'],
+  colleges:['applying','colleges'], essays:['applying','essays'], aid:['applying','aid'],
+  recommenders:['applying','recommenders'], interview:['applying','interview'], calc:['applying','calc'],
+  tracked:['opportunities','tracked'],
+};
+// The [view, section] an old-style URL names, if any: /portfolio/clinical → ['resume','clinical'],
+// /portfolio/essays → ['applying','essays']. routes.js already forwards those paths to the merged
+// view; this recovers the part it cannot carry, since an alias by design never round-trips back
+// out of formatPath().
+function portfolioSectionFromPath(pathname=''){
   const parts = String(pathname).split('/').filter(Boolean);
-  return (parts[0]==='portfolio' && RESUME_SECTION_FOR_VIEW[parts[1]]) || null;
+  return (parts[0]==='portfolio' && PORTFOLIO_GROUP_FOR_VIEW[parts[1]]) || null;
 }
 // The Roadmap pillar. Defined here, in the same shape and the same place as every other
 // sub-nav, so scripts/verifyRouting.mjs can pin it to SUBVIEWS.roadmap in routes.js the way it
@@ -464,10 +477,12 @@ const UNLOCK_LABELS = Object.fromEntries([
   ...ROADMAP_SUBNAV.map(n=>[`roadmap/${n.id}`,n.label]),
   ...PROGRESS_SUBNAV.map(n=>[`progress/${n.id}`,n.label]),
   ...SETTINGS_SUBNAV.map(n=>[`settings/${n.id}`,n.label]),
-  // The five parts of Activities & Résumé are gated one level deeper than a
+  // The parts of the merged Portfolio pages are gated one level deeper than a
   // sub-tab (see sectionKey in featureUnlock.js), and they get announced the
   // same way, so their names come from the same single source.
   ...RESUME_SECTIONS.map(s=>[`portfolio/resume:${s.id}`,s.label]),
+  ...APPLYING_SECTIONS.map(s=>[`portfolio/applying:${s.id}`,s.label]),
+  ['portfolio/opportunities:tracked','What you\u2019re tracking'],
 ]);
 const QUICK_P_GROUPS = [
   { label:'Content Help', icon:'FlaskConical', prompts:[
@@ -1681,16 +1696,30 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // roadmap, and every old /portfolio/clinical URL in a student's history. Those callers should
   // not have to know the merge happened: goPortfolio('clinical') still means "open the clinical
   // hours form", it just opens it as a section instead of a tab.
-  const [resumeSection, setResumeSection] = useState(
-    ()=>resumeSectionFromPath(typeof window!=='undefined' ? window.location.pathname : '') || DEFAULT_RESUME_SECTION
-  );
+  // null is the ordinary case and the point of the merge: Activities & Résumé is ONE scrolling
+  // page, so the default is its summary, not one of its five parts. A value here means some
+  // caller named a section and the page should jump to it.
+  // { view, id, n } — the section of a merged Portfolio tab a caller named, and a nonce so
+  // naming the same section twice still moves the page. null is the ordinary case and the point
+  // of the merge: a merged tab is ONE scrolling page, so the default is its summary, not one of
+  // its parts.
+  const [portfolioSection, setPortfolioSection] = useState(()=>{
+    const hit = portfolioSectionFromPath(typeof window!=='undefined' ? window.location.pathname : '');
+    return hit ? { view:hit[0], id:hit[1], n:0 } : null;
+  });
+  const focusPortfolioSection = useCallback((view, id)=>{
+    setPortfolioSection(prev => (prev && prev.view===view && prev.id===id ? prev : { view, id, n:(prev?.n||0)+1 }));
+  }, []);
   const goPortfolio = useCallback((view)=>{
     setTab('portfolio');
     if(!view) return;
-    const section = RESUME_SECTION_FOR_VIEW[view];
-    if(section) setResumeSection(section);
-    setPortfolioView(section ? 'resume' : view);
-  }, []);
+    const mapped = PORTFOLIO_GROUP_FOR_VIEW[view];
+    if(mapped){ setPortfolioView(mapped[0]); focusPortfolioSection(mapped[0], mapped[1]); return; }
+    setPortfolioView(view);
+  }, [focusPortfolioSection]);
+  // Which section each merged tab should jump to, or null when the student simply opened the tab.
+  const sectionFor = useCallback((view)=>(portfolioSection?.view===view ? portfolioSection.id : null), [portfolioSection]);
+  const sectionNonce = portfolioSection?.n || 0;
   const goProgress = useCallback((view)=>{ setTab('progress'); if(view) setProgressView(view); }, []);
   // Settings deep link. `field` names one editable profile field (see PLAN_READINESS_TARGETS in
   // src/lib/studentProfile.js) — passing it opens whichever editor owns that field, scrolls it
@@ -1894,8 +1923,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
         // A back/forward press onto an old /portfolio/clinical-style URL: the route already
         // resolved to `resume`, so recover the section from the address bar itself (history has
         // already updated window.location by the time this runs).
-        const section = resumeSectionFromPath(window.location.pathname);
-        if (section) setResumeSection(section);
+        const hit = portfolioSectionFromPath(window.location.pathname);
+        if (hit) focusPortfolioSection(hit[0], hit[1]);
       }
       else if (next.tab === 'roadmap') setRoadmapView(next.view);
       else if (next.tab === 'progress') setProgressView(next.view);
@@ -3017,19 +3046,24 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     if(recorded) saveUser(recorded);
   },[tab,satView,prepView,portfolioView,roadmapView,progressView,unlocks,user,dbReady,saveUser]);
 
-  // The same guarantee, one level deeper: the five sections of Activities & Résumé are
-  // gated too (a publications form is not a day-one ask), and /portfolio/clinical is a
-  // URL a student may already have in their history. Landing on a locked section — by
-  // link, by back button, or from a Home tile that names it — opens it for good rather
-  // than bouncing them to Activities.
+  // The same guarantee, one level deeper: the sections of the merged tabs are gated too
+  // (a publications form is not a day-one ask, and neither is the aid comparison), and
+  // /portfolio/clinical is a URL a student may already have in their history. Landing on a
+  // locked section — by link, by back button, or from a Home tile that names it — opens it
+  // for good rather than bouncing them somewhere else.
   const resumeSectionLocks = useMemo(()=>unlocks.locked('portfolio/resume'),[unlocks]);
+  const applyingSectionLocks = useMemo(()=>unlocks.locked('portfolio/applying'),[unlocks]);
   useEffect(()=>{
     if(!user||!dbReady) return;
-    if(tab!=='portfolio'||portfolioView!=='resume') return;
-    if(unlocks.isOpen('portfolio','resume',resumeSection)) return;
-    const recorded=recordUnlocks(user,[sectionKey('portfolio','resume',resumeSection)]);
+    if(tab!=='portfolio') return;
+    // No section named (the ordinary landing-on-the-summary case) — nothing to unlock yet;
+    // opening one from the page itself calls focusPortfolioSection and lands back here.
+    const sec=portfolioSection;
+    if(!sec||sec.view!==portfolioView) return;
+    if(unlocks.isOpen('portfolio',sec.view,sec.id)) return;
+    const recorded=recordUnlocks(user,[sectionKey('portfolio',sec.view,sec.id)]);
     if(recorded) saveUser(recorded);
-  },[tab,portfolioView,resumeSection,unlocks,user,dbReady,saveUser]);
+  },[tab,portfolioView,portfolioSection,unlocks,user,dbReady,saveUser]);
 
   // completeOnboarding() calls startTour() directly, right after the onboarding
   // handoff — the tour's own first step (`nav-home`) already forces the tab back
@@ -3193,10 +3227,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     ...navItems.map(n=>({ id:`nav-${n.id}`, dest:n.id, keywords:keywordsFor(n.id), label:n.label, group:'Jump to', ic:n.ic, action:()=>setTab(n.id) })),
     ...prepSubnav.map(n=>({ id:`prep-${n.id}`, dest:`prep/${n.id}`, keywords:keywordsFor(`prep/${n.id}`), label:n.label, group:'Prep', ic:n.ic, action:()=>goPrep(n.id) })),
     ...portfolioSubnav.map(n=>({ id:`port-${n.id}`, dest:`portfolio/${n.id}`, keywords:keywordsFor(`portfolio/${n.id}`), label:n.label, group:'Portfolio', ic:n.ic, action:()=>goPortfolio(n.id) })),
-    // The three sections of Activities & Résumé that used to be tabs of their own. Without
-    // these, merging them would have made "clinical hours" un-findable in the one place a fast
-    // typist looks for anything — the sections still exist, so they still get a command. They
-    // ride on the Activities & Résumé unlock, since that's the tab that actually holds them.
+    // Every section of a merged Portfolio page that used to be a tab of its own. Without these,
+    // merging them would have made "clinical hours" or "essays" un-findable in the one place a
+    // fast typist looks for anything — the surfaces still exist, so they still get a command.
+    // Each rides on its page's unlock, since that's the tab that actually holds it, and on its
+    // own section gate where it has one.
+    ...(unlocks.isOpen('portfolio','applying')?APPLYING_SECTIONS.filter(sec=>unlocks.isOpen('portfolio','applying',sec.id)).map(sec=>({
+      id:`port-${sec.id}`, dest:`portfolio/applying:${sec.id}`, keywords:keywordsFor(`portfolio/applying:${sec.id}`),
+      label:sec.label, group:'Portfolio', ic:sec.ic, action:()=>goPortfolio(sec.id),
+    })):[]),
+    ...(unlocks.isOpen('portfolio','opportunities','tracked')?[{
+      id:'port-tracked', dest:'portfolio/opportunities:tracked', keywords:keywordsFor('portfolio/opportunities:tracked'),
+      label:'What you\u2019re tracking', group:'Portfolio', ic:RadarIcon, action:()=>goPortfolio('tracked'),
+    }]:[]),
     ...(unlocks.isOpen('portfolio','resume')?[
       { id:'port-clinical', dest:'portfolio/resume:clinical', keywords:keywordsFor('portfolio/resume:clinical'), label:'Clinical Hours', group:'Portfolio', ic:Stethoscope, action:()=>goPortfolio('clinical') },
       { id:'port-research', dest:'portfolio/resume:research', keywords:keywordsFor('portfolio/resume:research'), label:'Research', group:'Portfolio', ic:FlaskConical, action:()=>goPortfolio('research') },
@@ -7681,7 +7724,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // else", and the tap is remembered, so a student who wants all twelve keeps all twelve.
     const primarySections=[
       // Activities & Résumé is one tab with five sections; the Clinical/Research/Skills tiles are
-      // doors into it, each landing on the section it names (see RESUME_SECTION_FOR_VIEW +
+      // doors into it, each landing on the section it names (see PORTFOLIO_GROUP_FOR_VIEW +
       // goPortfolio) — merging those tabs must not put clinical hours one extra click away.
       {view:'resume',ic:Award,label:'Activities & Résumé',value:portActivities.length,sub:'what you’ve done',col:C.amber},
       {view:'clinical',ic:Stethoscope,label:'Clinical Hours',value:clinicalHoursTotal,sub:'hours logged',col:C.pink},
@@ -7702,10 +7745,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // back door around it: twelve tiles here would hand a day-one student the Financial
     // Aid comparison, the interview trainer and the clinical-hours log the SubNav was
     // careful not to. A tile whose destination is a résumé section ('clinical', 'research',
-    // 'skills' — see RESUME_SECTION_FOR_VIEW) is judged on that section's own gate.
+    // 'skills' — see PORTFOLIO_GROUP_FOR_VIEW) is judged on that section's own gate.
     const tileOpen=view=>{
-      const sec=RESUME_SECTION_FOR_VIEW[view];
-      return sec ? unlocks.isOpen('portfolio','resume',sec) : unlocks.isOpen('portfolio',view);
+      const mapped=PORTFOLIO_GROUP_FOR_VIEW[view];
+      return mapped ? unlocks.isOpen('portfolio',mapped[0],mapped[1]) : unlocks.isOpen('portfolio',view);
     };
     const sectionTile=s=>(
       <button key={s.view} onClick={()=>{goPortfolio(s.view);play('click');}} aria-label={`Open ${s.label}`}
@@ -9434,30 +9477,58 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // the pill it was opened from) rather than one flat green everywhere.
   const portC=Object.fromEntries(PORTFOLIO_SUBNAV.map(n=>[n.id,n.color]));
   const portfolioRenders={
-    overview:tPort, calc:tCalc,
+    overview:tPort,
     milestones:()=><PortfolioMilestones accent={portC.milestones} user={user} apIb={!!user?.apIb} askMedabrain={askPortfolioMedabrain}
       onNavigate={goAnywhere} isMobile={isMobile}
       onAdded={()=>{logEvent('portfolio_item_added','deadline');saveUser(applyPlanAutoComplete(user,typeMatch('deadline')));}}/>,
-    // The follow-through board for every Track button in the app. Reads the same shared snapshot
-    // the Overview dashboards do (portSnapshot), so the two can never disagree, and files a
-    // deterministic daily report with an AI voice layered on top — see TrackedPanel.jsx.
-    tracked:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.tracked}
-      askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
-      pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/>,
-    // Reads the SAME shared snapshot the Overview dashboards and the Tracked tab do, so the
-    // matcher reasons over exactly the activities/research/hours/awards the rest of Portfolio is
-    // showing — one fetch, one truth (see src/lib/portfolioData.js). Its tuning panel writes back
-    // through saveUser, so a student's interests live on their account, not on one device.
-    opportunities:()=><OpportunitiesPanel accent={portC.opportunities} user={user} onSaveUser={saveUser}
-      snapshot={portSnapshot} loading={portSnapLoading} pathwayKey={eSpec} pathwayLabel={curPath?.label}
-      askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onOpen={goPortfolio}
-      onTrack={trackOpportunity}
-      trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
-      pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
-      pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/>,
-    colleges:()=><CollegeListPanel accent={portC.colleges} user={user} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
-    essays:()=><EssayWorkspacePanel accent={portC.essays} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
-    aid:()=><FinancialAidPanel accent={portC.aid} askMedabrain={askPortfolioMedabrain}/>,
+    // Opportunities and Tracked are one page: "what should I go do" and "what did I say I
+    // would do" are the two halves of one question, and Tracked was only ever the follow-through
+    // for a Track button that lives on the Opportunities cards. Two sections, the finder open on
+    // arrival and the tracker one jump away with its count on the chip — no sub-tabs.
+    //
+    // The panel reads the SAME shared snapshot the Overview dashboards do, so the matcher reasons
+    // over exactly the activities/research/hours/awards the rest of Portfolio is showing — one
+    // fetch, one truth (see src/lib/portfolioData.js). Its tuning panel writes back through
+    // saveUser, so a student's interests live on their account, not on one device.
+    opportunities:()=>(
+      <SectionScroller accent={portC.opportunities} isMobile={isMobile}
+        focusId={sectionFor('opportunities')} focusNonce={sectionNonce}
+        defaultOpenIds={['find']} printLabel="Print this page"
+        sections={[
+          { id:'find', ic:Trophy, label:'Find something', color:C.gold,
+            blurb:'Matched to your interests, your grade and what you can afford',
+            render:()=><OpportunitiesPanel accent={portC.opportunities} user={user} onSaveUser={saveUser}
+              snapshot={portSnapshot} loading={portSnapLoading} pathwayKey={eSpec} pathwayLabel={curPath?.label}
+              askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onOpen={goPortfolio}
+              onTrack={trackOpportunity}
+              trackedKeys={{activities:trackedActivityKeys,scholarships:trackedScholarshipKeys}}
+              pendingKeys={{activities:pendingTracks.byResource.activities,scholarships:pendingTracks.byResource.scholarships}}
+              pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status}/> },
+          { id:'tracked', ic:RadarIcon, label:'What you\u2019re tracking', color:C.violet,
+            blurb:'Every program you saved, with its deadline, its status and a daily read',
+            render:()=><TrackedPanel snapshot={portSnapshot} loading={portSnapLoading} accent={portC.opportunities}
+              askMedabrain={askPortfolioMedabrain} onOpen={goPortfolio} onRefresh={refreshPortSnapshot}
+              pendingEntries={pendingTracks.entries} trackStatus={pendingTracks.status} isMobile={isMobile} user={user}/> },
+        ]}/>
+    ),
+    // ── Applying ─────────────────────────────────────────────────────────────
+    // Six former tabs, one scrolling page (see ApplyingPanel.jsx). The panels are unchanged —
+    // each is handed to the page as a section renderer with exactly the callbacks it had when it
+    // was a tab, so adding a college still moves the counters, a finished interview still credits
+    // the streak, and every old /portfolio/essays URL still lands on the essay workspace.
+    applying:()=><ApplyingPanel accent={portC.applying} isMobile={isMobile}
+      focusId={sectionFor('applying')} focusNonce={sectionNonce}
+      onSectionOpen={(id)=>focusPortfolioSection('applying',id)}
+      sectionLocks={applyingSectionLocks}
+      counts={{colleges:appCounts.colleges,essays:appCounts.essays,recommenders:recommendersCount,interviews:interviewCount}}
+      renders={{
+      colleges:()=><CollegeListPanel accent={C.sky} user={user} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+      essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
+      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain}/>,
+      recommenders:()=><RecommendersPanel accent={C.fuchsia} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
+      interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
+      calc:tCalc,
+      }}/>,
     // Activities & Résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,
     // score and the career they named at signup — so `user` and the grade label are load-bearing
@@ -9469,15 +9540,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // hours still moves the readiness gauge and the achievement counters exactly as it did when
     // it was its own tab.
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
-      section={resumeSection} onSectionChange={setResumeSection} sectionLocks={resumeSectionLocks}
+      section={sectionFor('resume')} sectionNonce={sectionNonce}
+      onSectionChange={(id)=>focusPortfolioSection('resume',id)} sectionLocks={resumeSectionLocks}
       onCollegeAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}
       onResumeExported={()=>{setAppCounts(c=>({...c,resume:true}));checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{resumeBuilt:true});}}
       onActivityLogged={()=>{logEvent('portfolio_item_added','activity');saveUser(applyPlanAutoComplete(user,typeMatch('activity')));}}
       onClinicalLogged={async()=>{const hours=await listItems('clinical_hours');setClinicalHoursEntries(hours||[]);const total=(hours||[]).reduce((s,h)=>s+(h.hours||0),0);setClinicalHoursTotal(total);logEvent('portfolio_item_added','clinical');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{clinicalHours:total});saveUser(applyPlanAutoComplete(user,typeMatch('clinical')));}}
       onResearchLogged={()=>{setResearchCount(c=>c+1);logEvent('portfolio_item_added','research');saveUser(applyPlanAutoComplete(user,typeMatch('research')));}}
       onCredentialChanged={()=>{setSkillsCount(c=>c+1);}}/>,
-    recommenders:()=><RecommendersPanel accent={portC.recommenders} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
-    interview:()=><InterviewPrepPanel accent={portC.interview} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
   };
   function tPortWrap(){
     return(
