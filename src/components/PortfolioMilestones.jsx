@@ -104,6 +104,10 @@ const DEADLINE_KINDS = [
   { id: 'ap_exam', label: 'AP Exam' },
   { id: 'ib_exam', label: 'IB Exam' },
   { id: 'scholarship', label: 'Scholarship' },
+  // Written by the Opportunities tab when a student saves a program — the
+  // deadline itself plus its 60/30/7-day alerts. Selectable by hand too: a
+  // student who finds a program we do not list files it the same way.
+  { id: 'opportunity', label: 'Program / competition' },
   { id: 'custom', label: 'Other' },
 ];
 
