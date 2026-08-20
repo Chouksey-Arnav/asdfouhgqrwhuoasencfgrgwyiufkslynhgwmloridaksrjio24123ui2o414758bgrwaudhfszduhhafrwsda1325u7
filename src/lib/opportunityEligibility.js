@@ -80,11 +80,17 @@ export function evaluateEligibility(program, facts = {}) {
   const blockers = [];
   const notes = [];
   let waitUntil = null;
+  // Gates we cannot evaluate because the student has not told us the fact they
+  // turn on. One unresolved gate is enough to make the verdict "check this
+  // yourself" — a senior-only competition must never read "you qualify" to
+  // someone whose grade we do not know, however much else we do know.
+  let unresolved = 0;
 
   const { age, grade } = facts;
 
   if (program.minAge != null) {
     if (age == null) {
+      unresolved += 1;
       notes.push(`Minimum age ${program.minAge}${program.minAge % 1 ? '½' : ''}. Add your age in Settings and this card will tell you straight away.`);
     } else if (age < program.minAge) {
       blockers.push(`You are ${age}; this needs ${program.minAge}${program.minAge % 1 ? '½' : ''}.`);
@@ -97,6 +103,7 @@ export function evaluateEligibility(program, facts = {}) {
 
   if (program.minGrade != null) {
     if (grade == null) {
+      unresolved += 1;
       notes.push(`Open to grade${program.maxGrade && program.maxGrade !== program.minGrade ? `s ${program.minGrade}–${program.maxGrade}` : ` ${program.minGrade}`}.`);
     } else if (grade < program.minGrade) {
       blockers.push(`Opens in grade ${program.minGrade}; you are in grade ${grade}.`);
@@ -119,8 +126,8 @@ export function evaluateEligibility(program, facts = {}) {
     const ageBlocked = blockers.some(b => /needs \d/.test(b)) || waitUntil?.kind === 'age';
     const gradeBlocked = waitUntil?.kind === 'grade';
     status = ageBlocked ? 'too_young' : gradeBlocked ? 'wrong_grade' : 'too_young';
-  } else if (age == null && grade == null && (program.minAge != null || program.minGrade != null)) {
-    // Not blocked, but only because we do not know their age or grade. That is
+  } else if (unresolved > 0) {
+    // Not blocked, but only because a gate could not be evaluated. That is
     // "check this yourself", never "you qualify".
     status = 'unknown';
   } else if (program.citizenship) {

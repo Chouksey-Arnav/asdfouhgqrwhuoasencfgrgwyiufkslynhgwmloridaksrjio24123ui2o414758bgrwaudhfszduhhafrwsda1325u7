@@ -242,9 +242,17 @@ export default function SectionScroller({
     const els = sectionIds.split('|').map(id => refs.current[id]).filter(Boolean);
     if (!els.length || typeof IntersectionObserver === 'undefined') return;
     const io = new IntersectionObserver((entries) => {
-      const visible = entries.filter(e => e.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-      if (visible?.target?.dataset?.section) setActiveId(visible.target.dataset.section);
+      const visible = entries.filter(e => e.isIntersecting);
+      if (!visible.length) return;
+      // The section the reader is IN is the first one whose top has not yet
+      // passed the bar — not simply the topmost intersecting element, which is
+      // usually the tail of the section above and lights the wrong chip after a
+      // jump.
+      const below = visible.filter(e => e.boundingClientRect.top >= 0)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+      const above = visible.sort((a, b) => b.boundingClientRect.top - a.boundingClientRect.top);
+      const hit = below[0] || above[0];
+      if (hit?.target?.dataset?.section) setActiveId(hit.target.dataset.section);
     }, { rootMargin: '-70px 0px -60% 0px', threshold: 0 });
     els.forEach(el => io.observe(el));
     return () => io.disconnect();

@@ -120,9 +120,19 @@ assert('SIMR is in the structured set', !!simr);
   const unknown = evaluateEligibility(simr, { age: null, grade: null });
   assert('we never clear a student on facts we do not have', unknown.status === 'unknown');
   assert('an unknown verdict asks for the missing fact', unknown.notes.some(n => /Settings|grade/i.test(n)));
+  // One unresolved gate is enough, even when the other one passes: a
+  // senior-only competition must never read "you qualify" to a student whose
+  // grade we do not know, however much else we do know about them.
+  const sts = PROGRAMS.find(p => p.id === 'regeneron-science-talent-search');
+  assert('a known age does not clear an unknown grade gate',
+    evaluateEligibility(sts, { age: 17, grade: null }).status === 'unknown');
+  assert('a known grade does not clear an unknown age gate',
+    evaluateEligibility(simr, { age: null, grade: 11 }).status === 'unknown');
 }
 {
   const sts = PROGRAMS.find(p => p.id === 'regeneron-science-talent-search');
+  const senior = evaluateEligibility(sts, { age: 17, grade: 12 });
+  assert('a senior is cleared for a senior-only competition', senior.status === 'eligible');
   const soph = evaluateEligibility(sts, { age: 15, grade: 10 });
   assert('a sophomore is told STS is a senior-year competition', soph.status === 'wrong_grade');
   assert('the wrong-year verdict still says what to do now', !!soph.alternative);

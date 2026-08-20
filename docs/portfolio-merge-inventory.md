@@ -127,7 +127,19 @@ invented names. Nothing was removed:
 - The Overview's twelve-tile section map is unchanged and still names every
   surface individually, so nothing gained a click from the merge.
 
-## 4. Usage numbers
+## 4. How this is kept true
+
+Four scripts, run by `npm run build` except the last:
+
+| Script | What it holds |
+|---|---|
+| `verify:nav` | the unlock ladder names real sections of real pages, and day one is still one door |
+| `verify:nav-search` | "essays", "letters of rec", "will i get in", "fafsa" still land first time |
+| `verify:routing` | every sub-view id has a URL, and every retired id resolves |
+| `verify:opportunities` | the catalog **and** the structured programs: eligibility verdicts, deadline roll-forward, the 60/30/7 alert rows, tier honesty (453 assertions) |
+| `verify:portfolio-e2e` | a real browser: five tabs, one scrolling page per merged tab, and `/portfolio/clinical` and `/portfolio/essays` landing on the exact section (not run in the build — needs a build first) |
+
+## 5. Usage numbers
 
 The brief asks for per-tab usage before finalising the grouping. **We do not
 have them, and this is worth stating plainly rather than inventing a number:**
