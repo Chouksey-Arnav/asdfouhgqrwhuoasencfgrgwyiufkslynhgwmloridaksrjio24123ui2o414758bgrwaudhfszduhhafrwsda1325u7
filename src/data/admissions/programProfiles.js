@@ -213,6 +213,18 @@ export const PROGRAM_PROFILES = [
       clinical: 'A six-year clinical program selects for people who already know what the job is. Documented patient-contact hours are the strongest non-academic signal here.',
     },
     hookSensitivity: 0.35,
+
+    // ── Interview ────────────────────────────────────────────────────────────
+    // See INTERVIEW_BASES in src/lib/admissions/interviewFormats.js. A format we
+    // have not read off the program's own page is 'unpublished', never a guess
+    // dressed as a fact — sending a student to practise the wrong format is a
+    // worse outcome than telling them we do not know.
+    interview: {
+      interviews: true,
+      formats: [],
+      basis: 'unpublished',
+      note: 'UMKC interviews shortlisted applicants, but we have not confirmed the format against UMKC\'s own published description. Practise the traditional stations, and run one full circuit anyway — the circuit is the harder version of every format and nothing in it is wasted on a panel.',
+    },
     lottery: { exists: false },
   },
 
@@ -302,6 +314,13 @@ export const PROGRAM_PROFILES = [
       clinical: 'Also named as highly recommended, but second to research in a track literally named physician-scientist.',
     },
     hookSensitivity: 0.25,
+
+    interview: {
+      interviews: true,
+      formats: [],
+      basis: 'unpublished',
+      note: 'The Albany Medical College side of this track interviews candidates, and we have not confirmed whether it runs a panel or a station circuit. Practise the traditional stations first; for a physician-scientist track, the "why medicine and not research alone" question is the one to have a real answer to.',
+    },
     lottery: { exists: false },
   },
 
@@ -398,6 +417,16 @@ export const PROGRAM_PROFILES = [
       service: 'The heaviest service weighting in the catalog, and the only one anchored to a published number rather than an inference.',
     },
     hookSensitivity: 0.30,
+
+    // The one program in the catalog whose interview format is stated on its own
+    // admissions page, which is why it is the only one claiming 'published'.
+    interview: {
+      interviews: true,
+      formats: ['mmi'],
+      basis: 'published',
+      published: 'A select number of applicants are invited to a virtual MMI interview.',
+      note: 'Drexel runs a Multiple Mini Interview — a circuit of short stations rather than one long conversation. It is virtual, which changes the room and not the format: the reading time, the station clock and the "next door" pacing are all still there. Practise the circuit, not the question list.',
+    },
     lottery: { exists: false },
   },
 
@@ -475,6 +504,13 @@ export const PROGRAM_PROFILES = [
       service: 'Paired with 50 hours of non-clinical community service per year in the published retention conditions.',
     },
     hookSensitivity: 0.30,
+
+    interview: {
+      interviews: true,
+      formats: [],
+      basis: 'unpublished',
+      note: 'VCU interviews finalists for the Guaranteed Admission Program and we have not confirmed the format. Practise the traditional stations, and treat one full circuit as insurance — it costs an hour and covers both possibilities.',
+    },
     lottery: { exists: false },
   },
 
@@ -546,6 +582,13 @@ export const PROGRAM_PROFILES = [
       service: 'A mission-based program with five required letters and three essays is reading for community, not for scores.',
     },
     hookSensitivity: 0.15,
+
+    interview: {
+      interviews: true,
+      formats: [],
+      basis: 'unpublished',
+      note: 'Sophie Davis interviews shortlisted applicants and we have not confirmed the format. The community-member and "why medicine" stations are the ones worth over-preparing for a program built around serving underserved communities.',
+    },
     lottery: { exists: false },
   },
 
@@ -615,6 +658,13 @@ export const PROGRAM_PROFILES = [
     },
     hookSensitivity: 0.05,
 
+
+    interview: {
+      interviews: null,
+      formats: [],
+      basis: 'unpublished',
+      note: 'We have no confirmation either way about whether this pathway interviews. Direct-admit nursing frequently does not, but "frequently does not" is not the same as "does not", and preparing for a conversation you never have costs less than the reverse.',
+    },
     lottery: {
       exists: true,
       stage: 'cohort placement',

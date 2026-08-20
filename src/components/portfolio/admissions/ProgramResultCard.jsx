@@ -20,12 +20,14 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   ShieldAlert, TrendingUp, Target, Microscope, Stethoscope, HeartHandshake, Dices,
-  ExternalLink, Info, ArrowUpRight, Scale, CalendarClock,
+  ExternalLink, Info, ArrowUpRight, Scale, CalendarClock, Mic,
 } from 'lucide-react';
 import { C, glass, glass2, btnSm, R, CC, G, pill, tint, accentText } from '../../../lib/theme';
 import { SectionTitle } from '../../ui/PanelHero';
 import Disclosure, { HelpNote } from '../../ui/Disclosure';
 import { ROUND_LABELS } from '../../../lib/admissions';
+import { interviewPrepFor } from '../../../lib/admissions/interviewFormats';
+import { setInterviewIntent } from '../../../lib/interviewIntent';
 
 const pct = (v) => (v == null ? '—' : v < 0.1 ? `${(v * 100).toFixed(1)}%` : `${Math.round(v * 100)}%`);
 
@@ -144,7 +146,7 @@ function Blocked({ result, isMobile }) {
   );
 }
 
-export default function ProgramResultCard({ result, portfolio, onRoundChange, roundId, isMobile }) {
+export default function ProgramResultCard({ result, portfolio, onRoundChange, roundId, isMobile, onGoTo = null }) {
   if (!result || result.error) return null;
   if (result.blocked) return <Blocked result={result} isMobile={isMobile} />;
 
@@ -315,6 +317,14 @@ export default function ProgramResultCard({ result, portfolio, onRoundChange, ro
         )}
       </div>
 
+      {/* ── How this programme interviews ─────────────────────────────────── */}
+      {/* Sits directly under the round, because the round and the interview are
+          the two things about this programme that are on a calendar rather than
+          in a portfolio. The point of the block is the link: a student applying
+          somewhere that runs an MMI should not have to work out for themselves
+          that the MMI circuit in Interview Prep is the thing to run. */}
+      <InterviewBlock program={program} onGoTo={onGoTo} />
+
       {/* ── Why we are not sure ───────────────────────────────────────────── */}
       <Disclosure id={`admissions-why-${program.id}`} title="Why we're not more certain than this"
         sub={`${uncertainty.reasons.length} named reasons — the confidence label is auditable, not a vibe.`}
@@ -342,6 +352,66 @@ export default function ProgramResultCard({ result, portfolio, onRoundChange, ro
         )}
       </Disclosure>
     </motion.div>
+  );
+}
+
+/**
+ * What this programme's interview format means for the student, and where to go and practise it.
+ *
+ * The three states are deliberately distinct on screen. A published format gets the programme's
+ * own words and a specific destination. An unconfirmed one says so plainly and still recommends
+ * the circuit, because the circuit is the harder version of every format and an hour on it is
+ * never wasted whichever room turns up. Nothing here guesses a format: sending someone to rehearse
+ * role-play stations for a conversational panel is a real cost, and it would be a cost we caused.
+ */
+function InterviewBlock({ program, onGoTo }) {
+  const prep = interviewPrepFor(program);
+  if (prep.status === 'none') return null;
+
+  const known = prep.status === 'known';
+  const color = known ? C.rose : C.t3;
+  const primary = prep.formats[0] || null;
+
+  function practise() {
+    if (!prep.recommendation) return;
+    setInterviewIntent({
+      mode: prep.recommendation.mode,
+      stationFilter: prep.recommendation.stationFilter,
+      programId: program.id,
+    });
+    onGoTo?.('interview');
+  }
+
+  return (
+    <>
+      <SectionTitle icon={Mic} color={color}>How this programme interviews</SectionTitle>
+      <div style={{ ...glass2({ padding: 14 }), marginBottom: 8 }}>
+        <div style={R({ gap: 7, flexWrap: 'wrap', marginBottom: 9 })}>
+          {known
+            ? <span style={pill(tint(color, 0.16), accentText(color), { fontSize: 10.5 })}>{primary.label}</span>
+            : <span style={pill(C.s3, C.t3, { fontSize: 10.5 })}>Format not confirmed</span>}
+          <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>
+            {prep.basis === 'published' ? 'stated by the programme' : 'not published — see below'}
+          </span>
+        </div>
+
+        {known && prep.published && (
+          <div style={{ fontSize: 12, color: C.t1, lineHeight: 1.7, marginBottom: 8, fontStyle: 'italic' }}>
+            “{prep.published}”
+          </div>
+        )}
+        {known && <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7, marginBottom: 8 }}>{primary.blurb}</div>}
+        {prep.note && <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>{prep.note}</div>}
+
+        {prep.recommendation && onGoTo && (
+          <button onClick={practise}
+            style={{ ...btnSm(tint(color, 0.16), { fontSize: 12, color: accentText(color), marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 6, border: `1px solid ${tint(color, 0.4)}` }) }}>
+            <Mic size={12} />{prep.recommendation.cta}
+            <span style={{ color: C.t3, fontSize: 10.5 }}>· {prep.recommendation.stationCount} stations</span>
+          </button>
+        )}
+      </div>
+    </>
   );
 }
 
