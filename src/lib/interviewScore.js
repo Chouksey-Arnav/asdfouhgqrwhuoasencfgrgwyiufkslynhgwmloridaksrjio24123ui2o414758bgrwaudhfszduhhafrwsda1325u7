@@ -1,166 +1,322 @@
-// Scoring for interview practice feedback — parsing, and (the important half) calibration.
+// Scoring an interview station the way a real MMI rater would score it.
 //
-// PARSING: both feedback shapes end with a predictable scored line by prompt design —
-// Standard/MMI/CASPer (InterviewPrepPanel.jsx) end with "Score: X/10", the Live Voice debrief
-// (LiveVoiceInterview.jsx) ends with "Overall: X out of 10" — so one regex covers both instead of
-// duplicating slightly-different parsing per file. Sessions are stored with `score: null` when
-// nothing parseable comes back (a malformed AI reply shouldn't crash session logging), and the
-// History panel treats null as "not yet scored" rather than 0.
+// The rubric — the seven-point scale, the AAMC competencies, and the detectors that separate the
+// bands — lives in mmiRubric.js. This file is the scorer: it turns those detections into a number,
+// decides what the student is told, and refuses to let the model's own generosity through.
 //
-// CALIBRATION: prompt instructions alone do not hold a score down. However bluntly the rubric is
-// written, a chat model asked to grade a teenager drifts back toward 7-and-8 out of 10 for answers
-// a real interviewer would find vague and forgettable — and a simulator that hands out 8s teaches
-// a student that a bad answer is a good one, which is worse than no practice at all. So the model's
-// number is not trusted on its own: it is a proposal, capped by a deterministic ceiling computed
-// from objective properties of what the student actually said (length, concrete specifics, first-
-// person action, a real outcome, clichés, filler). The student sees the lower of the two, plus the
-// specific reasons it was capped. The ceiling only ever lowers a score — if the model grades
-// harder than the ceiling, the model's number stands.
+// THE CENTRAL PROBLEM. Prompt instructions do not hold a score down. However bluntly the rubric is
+// written, a chat model asked to grade a nervous teenager drifts back toward the top of whatever
+// scale you give it. A simulator that hands out 6s and 7s teaches a student that a forgettable
+// answer is an excellent one, and then the real interview is the first time anyone tells them
+// otherwise. So the model's number is a proposal only. The number the student sees is the lower of
+// (a) what the model said and (b) what the deterministic rubric found in the words themselves.
+//
+// THE TARGET DISTRIBUTION. Most students should land on 4 or 5, and the product has to make that
+// feel like the normal result it is rather than like a failure — a 5 is the modal score in a real
+// MMI and it means competent, fluent and forgettable. Reaching 6 requires the specific things that
+// actually separate the top fifth: named stakeholders, the opposing case stated at its strongest,
+// a decision AND a first concrete step AND who you'd escalate to, located uncertainty with a plan
+// to resolve it, adjustment under probing, and a deliberate ending. 7 requires nearly all of them
+// with nothing weak. If the average output of this scorer creeps above 5, it is broken —
+// scripts/verifyInterviewRealism.mjs asserts exactly that against a corpus of sample answers.
+
+import {
+  SCALE_MAX, SCALE_ANCHORS, anchorFor, COMPETENCIES, COMPETENCY_KEYS,
+  evaluateStation, WEAK_REASONS, AVERAGE_GAPS, STRONG_GAPS,
+  SINGLE_STATION_CAVEAT, reliabilityNote,
+} from './mmiRubric';
+import { getStationType, DEFAULT_STATION_TYPE } from './interviewPanel';
+
+export { SCALE_MAX, SCALE_ANCHORS, anchorFor, SINGLE_STATION_CAVEAT, reliabilityNote };
+
+// ── Parsing the model's proposal ────────────────────────────────────────────
+// Both feedback shapes end with a predictable scored line by prompt design. Legacy sessions (and
+// any model that ignores the instruction and reaches for the familiar ten-point scale) are
+// converted rather than rejected — a stored history of /10 scores still has to render.
+
+export function tenToSeven(n) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return null;
+  // 10-point anchors map onto 7-point anchors at the bands, not linearly: the old scale's "5-6 =
+  // competent and forgettable" is this scale's 5, and the old 9 is this scale's 7.
+  const x = Math.max(0, Math.min(10, Number(n)));
+  if (x <= 2) return 1;
+  if (x <= 3.5) return 2;
+  if (x <= 4.5) return 3;
+  if (x <= 5.5) return 4;
+  if (x <= 7) return 5;
+  if (x <= 8.5) return 6;
+  return 7;
+}
 
 export function parseInterviewScore(text) {
   if (!text) return null;
-  const m = String(text).match(/(?:score|overall)\s*:?\s*(\d+(?:\.\d+)?)\s*(?:\/|out of)\s*10/i);
+  const m = String(text).match(/(?:score|overall)\s*:?\s*(\d+(?:\.\d+)?)\s*(?:\/|out of)\s*(7|10)/i);
   if (!m) return null;
   const n = Number(m[1]);
-  return Number.isFinite(n) ? Math.max(0, Math.min(10, n)) : null;
+  if (!Number.isFinite(n)) return null;
+  if (m[2] === '10') return tenToSeven(n);
+  return Math.max(1, Math.min(SCALE_MAX, n));
 }
 
-// ── Objective signals in a student's answer ─────────────────────────────────
+// A stored session may predate the seven-point scale. `scale` is written on everything new; its
+// absence means the old ten-point number.
+export function normalizeStoredScore(entry) {
+  if (!entry || typeof entry.score !== 'number') return null;
+  return entry.scale === 7 ? entry.score : tenToSeven(entry.score);
+}
 
-// Stock phrases that appear in roughly every applicant answer. They aren't wrong, they're just
-// invisible — an interviewer hears them all day and remembers none of them.
-const CLICHES = [
-  /passionate about/i, /help(ing)? people/i, /make a difference/i, /hard[- ]?work(er|ing)/i,
-  /(ever )?since I was (little|young|a kid|a child)/i, /team player/i, /out of my comfort zone/i,
-  /learn and grow/i, /give back/i, /changed my life/i, /opened my eyes/i, /fast learner/i,
-  /people person/i, /(I'?ve )?always (been interested in|loved|wanted)/i, /well[- ]rounded/i,
-  /I'?m a very .{3,20} person/i,
+// ── The deterministic score ─────────────────────────────────────────────────
+
+// Weak markers that cap a station at 3 on their own. These are the ones a rater would write a
+// comment about — not stylistic slips but failures to do the thing the station asked for.
+const CRITICAL_WEAK = [
+  'noAction', 'moralizes', 'ruleWithoutAction', 'answersNearbyQuestion',
+  'talkedOverDisclosure', 'fakedLegalConfidence', 'empathyVocabularyOnly',
 ];
 
-const FILLER = /\b(um+|uh+|like,|you know|kind of|sort of|i guess|basically|literally|stuff like that|things like that|or whatever|i mean|honestly just)\b/gi;
+/**
+ * Score one station from its words alone.
+ *
+ * Returns { score, anchor, evidence, gaps, reasons } where `reasons` is the list the student reads.
+ * Never returns above 5 without strong markers, and never above 3 with a critical weakness.
+ */
+export function scoreStation(answer, ctx = {}) {
+  const stationKey = ctx.stationKey || DEFAULT_STATION_TYPE;
+  const station = getStationType(stationKey);
+  const ev = evaluateStation(answer, { ...ctx, stationKey });
 
-// First-person, past-tense, concrete action — the difference between "I care about tutoring" and
-// "I tutored." Interviewers score the second and discount the first.
-const ACTION_VERB = /\bI\s+(?:\w+ly\s+)?(organi[sz]ed|led|built|created|started|founded|taught|ran|coached|volunteered|designed|wrote|raised|recruited|managed|planned|fixed|repaired|tutored|presented|launched|coded|programmed|researched|interviewed|trained|scheduled|negotiated|persuaded|apologi[sz]ed|called|emailed|asked|decided|chose|cut|sold|delivered|shadowed|assisted|drafted|filmed|edited|rebuilt|rewrote|set up|reached out|stayed late|showed up)\b/gi;
-
-// Evidence the story actually went somewhere, rather than stopping at "and it was a good
-// experience."
-const OUTCOME = /\b(as a result|ended up|by the end|which meant|that led to|because of that|the outcome|we raised|we grew|increased|decreased|went from|turned into|since then|what I learned was|taught me that|I reali[sz]ed that|now we|now they)\b/i;
-
-const TIME_MARKER = /\b(last (summer|year|fall|spring|winter|month|semester)|sophomore|junior|freshman|senior year|in (19|20)\d{2}|this (summer|year)|(two|three|four) years ago|over the summer)\b/i;
-
-// Capitalized words that aren't sentence-openers: names of people, places, programs, teams — the
-// texture that makes an answer sound like it happened to a specific person.
-function properNounCount(text) {
-  // Split on sentence enders without lookbehind (older Safari lacks it): mark the boundary first.
-  const sentences = String(text).replace(/([.!?])\s+/g, '$1\n').split(/\n+/);
-  let n = 0;
-  for (const s of sentences) {
-    const words = s.trim().split(/\s+/).slice(1); // skip the sentence-initial word
-    for (const w of words) {
-      const clean = w.replace(/[^A-Za-z'-]/g, '');
-      if (clean.length > 2 && /^[A-Z][a-z]/.test(clean) && clean !== 'I') n++;
-    }
+  // Too short to be a station response at all. A real rater does not grade thirty seconds of
+  // silence generously because the candidate seemed nice.
+  if (ev.words < 15) {
+    return finish(1, ev, station, ['This is not yet an answer — a station response runs a minute and a half to two minutes spoken. A rater would be sitting in silence waiting for you to continue.'], ctx);
   }
-  return n;
+
+  // The average band, built literally from its definition: identifies the tension, names two
+  // perspectives, reaches a defensible position, communicates clearly. All four plus a committed
+  // action is a 5 — which is not praise, it is the modal score, and it means competent, fluent and
+  // forgettable. Three of the four with something concrete in it is also a 5; three without is a 4.
+  // The demotion work below this is done by the weak markers, because the weak band is defined by
+  // those specific failures rather than by the absence of average ones.
+  let score;
+  if (ev.averageCount >= 4) score = ev.commitments.count > 0 ? 5 : 4;
+  else if (ev.averageCount === 3) score = ev.commitments.specificCount > 0 ? 5 : 4;
+  else if (ev.averageCount === 2) score = 4;
+  else if (ev.averageCount === 1) score = 3;
+  else score = 2;
+
+  // Above the pool: only from a complete 5, and only on the strong markers.
+  if (score === 5) {
+    if (ev.strongCount >= 6 && ev.weakCount === 0) score = 7;
+    else if (ev.strongCount >= 4 && ev.weakCount <= 1) score = 6;
+  }
+
+  const criticalHits = CRITICAL_WEAK.filter(k => ev.weak[k]);
+  // empathyVocabularyOnly is only critical where empathy is actually in scope — elsewhere it is
+  // just a style note, and capping a policy station for it would be scoring the wrong thing.
+  const criticalApplicable = criticalHits.filter(k => k !== 'empathyVocabularyOnly' || station.competencies.includes('empathy'));
+  if (criticalApplicable.length) score = Math.min(score, 3);
+
+  // Everything else weak shaves half a point each — enough to move a borderline answer down a band,
+  // not enough to bury an answer the caps have already judged.
+  const nonCritical = Object.keys(ev.weak).filter(k => ev.weak[k] && !criticalApplicable.includes(k));
+  score = Math.max(1, score - nonCritical.length * 0.5);
+  score = Math.max(1, Math.min(SCALE_MAX, Math.round(score)));
+
+  // The reasons the student reads: every weakness that fired, then the average-band gaps, then —
+  // only once they are already at a 5 — what is standing between them and a 6.
+  const reasons = [
+    ...criticalApplicable.map(k => WEAK_REASONS[k]),
+    ...nonCritical.map(k => WEAK_REASONS[k]),
+    ...Object.keys(ev.average).filter(k => !ev.average[k]).map(k => AVERAGE_GAPS[k]),
+  ].filter(Boolean);
+
+  if (score >= 5) {
+    const missingStrong = Object.keys(ev.strong)
+      .filter(k => ev.strong[k] === false)
+      .map(k => STRONG_GAPS[k])
+      .filter(Boolean);
+    reasons.push(...missingStrong.slice(0, score === 5 ? 3 : 2));
+  }
+
+  return finish(score, ev, station, reasons, ctx);
 }
 
-export function analyzeAnswer(text) {
-  const raw = String(text || '').trim();
-  const words = raw ? raw.split(/\s+/).length : 0;
-  const numbers = (raw.match(/\b\d+\b/g) || []).length;
-  const nouns = properNounCount(raw);
-  const actions = (raw.match(ACTION_VERB) || []).length;
-  const cliches = CLICHES.filter(re => re.test(raw)).length;
-  const fillers = (raw.match(FILLER) || []).length;
+function finish(score, ev, station, reasons, ctx) {
   return {
-    words,
-    // "Specifics" is the single strongest predictor of whether an answer is memorable: numbers,
-    // named people/places/programs, and dated moments.
-    specifics: numbers + nouns + (TIME_MARKER.test(raw) ? 1 : 0),
-    actions,
-    hasOutcome: OUTCOME.test(raw) || numbers >= 2,
-    cliches,
-    fillerRate: words ? fillers / words : 0,
+    score,
+    scale: SCALE_MAX,
+    anchor: anchorFor(score),
+    band: scoreBand(score),
+    reasons,
+    strengths: describeStrengths(ev, score),
+    competencies: scoreCompetencies(score, ev, station),
+    signals: ev,
+    caveat: reliabilityNote(ctx.stationCount),
   };
 }
 
-// The ceiling: the highest score this answer can earn from its observable properties alone,
-// independent of how generous the model felt. Returns { ceiling, reasons } — the reasons are
-// shown to the student, because "capped at 4" with no explanation is just a worse grade.
-export function scoreCeiling(text) {
-  const a = analyzeAnswer(text);
-  const reasons = [];
-  // Caps and deductions are tracked separately and every applicable problem is reported, not just
-  // the one that happens to bind. A student whose answer is both too short AND has no specifics
-  // needs to hear both — reporting only the binding cap would let them fix the length, score the
-  // same, and have no idea why.
-  const caps = [];
-  const cap = (max, why) => { caps.push(max); reasons.push(why); };
-
-  if (a.words < 20) cap(2, `At ${a.words} words this isn't an answer yet — an interviewer would sit in silence waiting for you to keep going.`);
-  else if (a.words < 40) cap(3, `${a.words} words is far too short. A real answer to this runs 45 seconds to a minute and a half spoken.`);
-  else if (a.words < 75) cap(4.5, `${a.words} words is thin — you named a topic without ever getting inside a story.`);
-  else if (a.words < 120) cap(7, `${a.words} words leaves the interviewer wanting more detail than you gave them.`);
-
-  if (a.specifics === 0) cap(4, 'Nothing specific in here — no names, no numbers, no dates, no moment an interviewer could picture. This answer could have been given by any applicant.');
-  else if (a.specifics === 1) cap(6, 'Only one concrete detail. Interviewers remember specifics, and there is almost nothing here to remember you by.');
-
-  if (a.actions === 0) cap(5, 'You described how you feel about the topic but never said what you actually did. Interviewers score actions, not attitudes.');
-
-  if (!a.hasOutcome) cap(6.5, 'The story stops before the result. What changed because of what you did, and what did you take from it?');
-
-  // Nothing is ever a 10, and a 9 means "would stand out in a room of strong applicants" — starting
-  // at 9 keeps the top of the scale meaningful.
-  let ceiling = Math.min(9, ...caps);
-
-  let deduction = 0;
-  if (a.cliches >= 1) {
-    deduction += Math.min(1.5, a.cliches * 0.5);
-    reasons.push(`${a.cliches} stock phrase${a.cliches > 1 ? 's' : ''} an interviewer hears in most answers ("passionate about," "help people," and the like) — they read as filler, not conviction.`);
-  }
-  if (a.fillerRate > 0.035) {
-    deduction += 0.5;
-    reasons.push('Heavy hedging and filler ("kind of," "I guess," "you know") — it makes a real point sound like a guess.');
-  }
-  if (a.words > 340 && !a.hasOutcome) {
-    deduction += 0.5;
-    reasons.push('Long and unresolved — length without a landing reads as rambling, and an interviewer stops listening well before the end.');
-  }
-  // Style deductions sharpen a score; they don't bury it. An answer already capped low for being
-  // short and vague shouldn't be driven to a 1 for also saying "passionate about" — the caps have
-  // already made the point, and a 1 tells the student nothing the 3 didn't.
-  if (deduction) ceiling = Math.max(Math.min(ceiling, 3), ceiling - deduction);
-
-  ceiling = Math.max(1, Math.min(9, Math.round(ceiling * 2) / 2));
-  return { ceiling, reasons, signals: a };
+// What genuinely worked — and nothing else. An invented strength is the single most damaging thing
+// a practice tool can hand a student, so this reports only detectors that actually fired and says
+// so plainly when none did.
+function describeStrengths(ev, score) {
+  // Below a 3 there is nothing worth listing under "what worked." Something in a two-out-of-seven
+  // answer will always technically have fired a detector, and leading with it would bury the point.
+  if (score <= 2) return [];
+  const out = [];
+  if (ev.commitments.specificCount > 0) out.push(`You committed to ${ev.commitments.specificCount} specific action${ev.commitments.specificCount > 1 ? 's' : ''} rather than describing a value — that is the part raters actually score.`);
+  if (ev.strong.specificStakeholders) out.push(`You named ${ev.stakeholderCount} distinct people or roles instead of talking about "everyone involved."`);
+  if (ev.strong.steelmansOpposition) out.push('You stated the opposing case at its strongest before rejecting it. That is a genuine top-band move.');
+  if (ev.strong.escalationNamed) out.push('You named who you would escalate to, specifically.');
+  if (ev.strong.uncertaintyFlaggedPrecisely) out.push('You located what you did not know and said how you would resolve it, instead of bluffing.');
+  if (ev.strong.adjustsWhenProbed === true) out.push('You adjusted under probing rather than defending your first answer.');
+  if (ev.strong.respondsToActor === true) out.push('You responded to what the actor actually said rather than delivering a prepared answer over them.');
+  if (ev.strong.endsDeliberately) out.push('You ended deliberately instead of trailing off.');
+  return out;
 }
 
-// Plain-language band for a score, so the number lands as a judgment rather than a statistic.
+// ── Per-competency read-out ─────────────────────────────────────────────────
+// Only the competencies the station can actually assess. A station that never asked about teamwork
+// does not get a teamwork score; leaving it blank is more honest than inventing one, and it teaches
+// the student that MMI stations each probe a couple of things rather than all of them.
+
+const COMPETENCY_EVIDENCE = {
+  empathy: ev => ({
+    up: ev.commitments.approach.length > 0 && !ev.weak.talkedOverDisclosure,
+    down: ev.weak.empathyVocabularyOnly || ev.commitments.approach.length === 0 || ev.weak.talkedOverDisclosure,
+    note: ev.commitments.approach.length === 0
+      ? 'No action that moves you toward the person. Empathy is scored on what you do, not on how you describe caring.'
+      : 'Credited on the actions that moved you toward the person, not on the empathy vocabulary.',
+  }),
+  ethicalResponsibility: ev => ({
+    up: ev.strong.steelmansOpposition && ev.average.reachesPosition,
+    down: ev.weak.moralizes || ev.weak.ruleWithoutAction || ev.weak.noDisagreementAcknowledged,
+    note: ev.weak.moralizes ? 'Stating what is right is not the same as reasoning about it.' : 'Weighed against whether you reached a defensible position and engaged the other side.',
+  }),
+  interpersonalSkills: ev => ({
+    up: ev.stakeholderCount >= 2 && ev.commitments.approach.length > 0,
+    down: ev.weak.talkedOverDisclosure || ev.commitments.count === 0,
+    note: 'Read from how you said you would handle the actual people in the case.',
+  }),
+  oralCommunication: ev => ({
+    up: ev.average.communicatesClearly && ev.strong.endsDeliberately,
+    down: ev.weak.padding || ev.weak.restatesPrompt || ev.words < 60,
+    note: ev.weak.padding ? 'The answer repeated itself rather than progressing.' : 'Structure, length, and whether the answer landed.',
+  }),
+  resilience: ev => ({
+    up: ev.strong.adjustsWhenProbed === true,
+    down: ev.strong.adjustsWhenProbed === false,
+    note: ev.strong.adjustsWhenProbed === null ? 'Not probed here — run a station with follow-ups to get a read on this.' : 'Read from what happened when you were pushed.',
+  }),
+  selfAwareness: ev => ({
+    up: ev.strong.uncertaintyFlaggedPrecisely,
+    down: ev.weak.fakedLegalConfidence || ev.weak.sidePickedAndNeverRevisited,
+    note: 'Read from how you handled the limits of what you knew.',
+  }),
+  teamwork: ev => ({
+    up: ev.stakeholderCount >= 2 && ev.strong.escalationNamed,
+    down: ev.commitments.count === 0,
+    note: 'Read from who you involved and how.',
+  }),
+  understandingOthers: ev => ({
+    up: ev.average.namesTwoPerspectives && ev.strong.steelmansOpposition,
+    down: ev.weak.noDisagreementAcknowledged || !ev.average.namesTwoPerspectives,
+    note: 'Read from whether the other side appeared in its own terms.',
+  }),
+  criticalThinking: ev => ({
+    up: ev.average.identifiesTension && ev.strong.decisionPlusFirstStep,
+    down: ev.weak.moralizes || !ev.average.identifiesTension,
+    note: 'Read from whether you found the tension and did something with it.',
+  }),
+  commitmentToLearning: ev => ({
+    up: ev.strong.uncertaintyFlaggedPrecisely || ev.strong.adjustsWhenProbed === true,
+    down: ev.weak.fakedLegalConfidence,
+    note: 'Read from how you treated the things you did not know.',
+  }),
+};
+
+function scoreCompetencies(stationScore, ev, station) {
+  const inScope = (station?.competencies || []).filter(k => COMPETENCY_KEYS.includes(k));
+  return inScope.map(key => {
+    const read = COMPETENCY_EVIDENCE[key]?.(ev) || { up: false, down: false, note: '' };
+    let s = stationScore;
+    if (read.up) s += 1;
+    if (read.down) s -= 1;
+    s = Math.max(1, Math.min(SCALE_MAX, s));
+    return { key, label: COMPETENCIES[key].label, short: COMPETENCIES[key].short, score: s, note: read.note };
+  });
+}
+
+// ── Bands ────────────────────────────────────────────────────────────────────
+// The label matters as much as the number. A 5 has to read as "this is the normal result and it is
+// not a good one," which is a genuinely hard sentence to write and the whole point of the exercise.
+
 export function scoreBand(score) {
   if (score === null || score === undefined) return { label: 'Not scored', tone: 'neutral' };
-  if (score < 3) return { label: 'Well below the bar', tone: 'bad' };
-  if (score < 5) return { label: 'Needs real work', tone: 'bad' };
-  if (score < 6.5) return { label: 'Competent but forgettable', tone: 'mid' };
-  if (score < 8) return { label: 'Solid', tone: 'good' };
-  if (score < 9) return { label: 'Strong', tone: 'good' };
-  return { label: 'Exceptional', tone: 'good' };
+  const s = Math.round(score);
+  if (s <= 2) return { label: 'Unsatisfactory', tone: 'bad' };
+  if (s === 3) return { label: 'Borderline', tone: 'bad' };
+  if (s === 4) return { label: 'Below the pool median', tone: 'mid' };
+  if (s === 5) return { label: 'Satisfactory — and forgettable', tone: 'mid' };
+  if (s === 6) return { label: 'Above the interviewed pool', tone: 'good' };
+  return { label: 'Outstanding — rare', tone: 'good' };
 }
 
-// Run a piece of AI feedback through the ceiling: returns the honest score, and the feedback text
-// with its score line rewritten to match (so the prose and the number can never disagree) plus the
-// capping reasons appended as the concrete "here is what to fix" list.
-export function calibrateFeedback(feedbackText, answerText) {
+// ── The prompt the model is graded with ─────────────────────────────────────
+// Kept here rather than in the components so the instruction and the scorer can never drift apart.
+
+export function buildRubricPrompt({ stationKey = DEFAULT_STATION_TYPE, hasActor = false } = {}) {
+  const station = getStationType(stationKey);
+  const competencyList = station.competencies.map(k => COMPETENCIES[k].label).join(', ');
+  return `You are rating one MMI station the way a trained rater rates it, on a seven-point scale: 1 unsatisfactory, 3 borderline, 5 satisfactory, 7 outstanding. Score only these AAMC premed competencies, which are what this station can assess: ${competencyList}.
+
+CALIBRATION — this is the part people get wrong. In real MMIs the modal score is 5, and a 5 means competent, fluent, and completely forgettable. A 6 is genuinely above the interviewed pool, roughly the top twenty percent. A 7 is rare. A 4 is already below the median of the interviewed pool. Assume 5 until the answer earns more, and if you are about to give a 6 or 7, re-read the response and find the reason it is not one.
+
+WEAK (1-3) looks like: picking a side in the first sentence and never revisiting it; restating the prompt at length instead of engaging with it; answering a nearby question rather than the one asked; moralising instead of analysing; stating a rule without ever saying what they would actually do; faking confidence about law or policy instead of saying "I don't know, here is how I'd find out"; ${hasActor ? "talking over the actor's disclosure; " : ''}running out of content and padding; never acknowledging that a reasonable person could disagree.
+
+AVERAGE (4-5) identifies the tension, names two perspectives, reaches a defensible position, and communicates clearly — but is missing stakeholder specificity, any acknowledgement of what would change their mind, any concrete first action, and any self-implication. Fluent, structured, generic.
+
+STRONG (6-7) names stakeholders specifically rather than abstractly; states the strongest version of the opposing view before rejecting it; gives both the decision and the first concrete step, including who they would escalate to; flags uncertainty precisely and says how they would resolve it; adjusts when probed instead of defending; ${hasActor ? 'actually responds to what the actor said; ' : ''}and ends deliberately instead of trailing off.
+
+Judge committed actions, not topic or vocabulary. "I'd sit down next to her and stay" and "I'd give her space and head home" are similar in topic and opposite on empathy — score what they said they would DO, to WHOM, and WHEN. Sentiment words earn nothing on their own.
+
+Open with the single biggest weakness, quoting their own words — no warm-up, no softener. Then one concrete fix, and one sentence showing what a stronger version of THEIR answer would have sounded like. Only name a strength if it is genuinely there and you can point at it; if nothing stood out, say that. End with a line exactly like "Score: X/7". No markdown, no bullets, plain sentences, under 170 words.`;
+}
+
+// ── Putting it together ─────────────────────────────────────────────────────
+
+/**
+ * Run a piece of AI feedback through the rubric.
+ *
+ * The model's number is a proposal; the deterministic score is a ceiling. The student sees the
+ * lower of the two, the feedback's score line is rewritten to match (so the prose and the number
+ * can never disagree), and the reliability caveat is appended — because a confident verdict from a
+ * single station would be a lie about how the format works.
+ */
+export function calibrateFeedback(feedbackText, answerText, ctx = {}) {
   const proposed = parseInterviewScore(feedbackText);
-  const { ceiling, reasons, signals } = scoreCeiling(answerText);
-  const score = proposed === null ? ceiling : Math.min(proposed, ceiling);
+  const rated = scoreStation(answerText, ctx);
+  const score = proposed === null ? rated.score : Math.min(proposed, rated.score);
   const band = scoreBand(score);
+  const anchor = anchorFor(score);
 
   let text = String(feedbackText || '').trim();
-  const scoreLine = /(?:score|overall)\s*:?\s*\d+(?:\.\d+)?\s*(?:\/|out of)\s*10\.?/i;
-  const rendered = `Score: ${score}/10 — ${band.label}.`;
+  const scoreLine = /(?:score|overall)\s*:?\s*\d+(?:\.\d+)?\s*(?:\/|out of)\s*(?:7|10)\.?/i;
+  const rendered = `Score: ${score}/${SCALE_MAX} — ${anchor.label}.`;
   if (scoreLine.test(text)) text = text.replace(scoreLine, rendered);
   else text = text ? `${text}\n\n${rendered}` : rendered;
 
-  return { text, score, proposed, ceiling, reasons, band, signals };
+  return {
+    text,
+    score,
+    scale: SCALE_MAX,
+    proposed,
+    ceiling: rated.score,
+    anchor,
+    band,
+    reasons: rated.reasons,
+    strengths: rated.strengths,
+    competencies: rated.competencies,
+    signals: rated.signals,
+    caveat: rated.caveat,
+  };
 }

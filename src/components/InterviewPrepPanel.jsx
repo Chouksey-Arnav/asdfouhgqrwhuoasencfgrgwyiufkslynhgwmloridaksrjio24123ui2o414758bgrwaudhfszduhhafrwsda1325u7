@@ -6,22 +6,20 @@ import { C, glass, glass2, btn, btnG, btnSm, inp, lbl, R, CC, pill, tint } from 
 import PanelHero from './ui/PanelHero';
 import { getQuestionSet, getTips, INTERVIEW_QUESTIONS } from '../data/interviewQuestions';
 import { MMI_STATIONS, CASPER_SCENARIOS, getMmiStation, getCasperScenario } from '../data/mmiCasperQuestions';
-import LiveVoiceInterview from './LiveVoiceInterview';
+import LiveVoiceInterview, { CompetencyGrid } from './LiveVoiceInterview';
 import InterviewHistoryPanel from './InterviewHistoryPanel';
-import { calibrateFeedback } from '../lib/interviewScore';
+import { calibrateFeedback, buildRubricPrompt, SCALE_MAX } from '../lib/interviewScore';
+import { getStationType } from '../lib/interviewPanel';
 import * as DB from '../lib/db';
 
-// Shared tail on all three feedback prompts. Interview practice had the same problem the essay
-// workspace did: every answer came back "great use of a specific example!" with an 8/10 attached,
-// including the answers that were three vague sentences long. A score that never moves teaches
-// nothing, so the calibration is stated explicitly rather than left to the model's instincts —
-// and, because prompt text alone does not actually hold a score down, whatever number comes back
-// is then capped by the deterministic ceiling in lib/interviewScore.js before the student sees it.
-const HONEST_FEEDBACK_RULE = ` You are a real interviewer debriefing a candidate, not a cheerleader. Rules, in order of importance: (1) Never open with praise or a softener — the first sentence names the single worst problem with this answer, quoting their own words back. (2) Never invent a strength. If nothing in the answer was genuinely good, say "nothing here stood out yet" and move on; a manufactured compliment is the most damaging thing you can give them. (3) Assume the answer is average until it proves otherwise — the median real answer is a 4 or 5, not a 7.
-
-SCORING ANCHORS, applied strictly: 1-2 = barely an answer, or answers a different question than the one asked. 3-4 = sincere but generic; no specific example, no named detail, no result — this is where most first attempts land and you should not be shy about saying so. 5-6 = one real example, competently told, but an interviewer would forget it within an hour. 7 = specific, structured, with a genuine result. 8 = memorable; the interviewer would bring it up afterwards. 9 = would stand out in a room of strong applicants. 10 does not exist. If you find yourself about to give a 7 or higher, re-read the answer and find the reason it is not one — usually the missing result, the missing specifics, or a claim with no evidence under it.
-
-Be blunt about the work and never unkind about the person — they are a teenager and every criticism must carry its fix with it. No markdown, no headers, no bullet symbols, plain sentences.`;
+// Feedback prompts for the three written practice modes. The rubric itself — the seven-point MMI
+// scale, the AAMC competencies, the band definitions — lives in lib/interviewScore.js and is built
+// by buildRubricPrompt() so the instruction the model gets and the scorer that checks its work can
+// never drift apart. And because prompt text alone does not hold a score down, whatever number
+// comes back is capped by the deterministic rubric before the student ever sees it.
+//
+// The calibration is the real change here: 5 out of 7 is the modal score in a real MMI and it means
+// competent, fluent and forgettable. Most students land on 4 or 5, and that has to read as normal.
 
 const PATHWAY_LABELS = {
   general: 'General Admissions', exploring: 'Exploring Pre-Health', physician: 'Physician (MD/DO)',
@@ -105,31 +103,45 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
     setFeedback(null);
     try {
       const pathLabel = PATHWAY_LABELS[setKey] || pathway?.label || 'General Admissions';
-      let system, questionText;
+      // Which station this is decides two things at once: which AAMC competencies are in scope (a
+      // station that never probed teamwork does not get a teamwork score) and which band
+      // definitions the model is handed. Standard questions are not MMI stations, so they are
+      // typed as such rather than being graded against an ethics rubric they never invoked.
+      let stationKey, questionText, framing;
       if (mode === 'standard') {
+        stationKey = 'standard';
         questionText = stdQuestion;
-        system = `You are Medabrain's Interview Coach, helping a high school student (grades 9-12) practice for college admissions and scholarship/program interviews — not medical, graduate, or professional-school interviews (never reference the MMI, CASPer, or clinical vignettes). Pathway: ${pathLabel}. Question: "${questionText}". Student's answer: "${answer}". Open with the biggest weakness in this specific answer, named plainly and quoting their own words — vagueness, no concrete example, a story with no result, rambling, or answering a different question than the one asked. Then ONE concrete fix, and one sentence showing what a stronger version of their own answer would have sounded like. Only mention something they did well if it is genuinely there and you can point at it. End with "Score: X/10".${HONEST_FEEDBACK_RULE} Under 150 words.`;
+        framing = `You are rating one practice answer from a high school student (grades 9-12) preparing for college admissions and scholarship interviews — not medical, graduate, or professional-school interviews (never reference the MMI, CASPer, or clinical vignettes). Pathway: ${pathLabel}. Question: "${questionText}". Student's answer: "${answer}".`;
       } else if (mode === 'mmi') {
+        stationKey = mmiStation.station || 'ethical';
         questionText = mmiStation.prompt;
-        system = `You are Medabrain's Interview Coach, previewing the MMI (Multiple Mini Interview) format for a high school student who is years away from actually applying anywhere that uses it — this is a low-stakes preview of the FORMAT (ethical/interpersonal reasoning under time pressure), not exam prep. Scenario: "${questionText}". Student's response: "${answer}". Say first what their reasoning actually missed — a perspective they never considered, a stakeholder they ignored, a position asserted with no reasoning under it — quoting their words. Then ONE concrete fix. End with "Score: X/10". Never suggest this is something they need to master now — frame it as an interesting skill to practice.${HONEST_FEEDBACK_RULE} Under 150 words.`;
+        framing = `You are rating one MMI (Multiple Mini Interview) station for a high school student who is years away from applying anywhere that uses this format — a low-stakes preview of the FORMAT, not exam prep. Never suggest this is something they need to master now. Station: "${questionText}". Student's response: "${answer}".`;
       } else {
+        stationKey = casperScenario.station || 'ethical';
         questionText = `${casperScenario.scenario} — ${casperScenario.probes.join(' ')}`;
-        system = `You are Medabrain's Interview Coach, previewing the CASPer situational-judgment-test format for a high school student who is years away from actually taking it — this is a low-stakes preview, not exam prep. Scenario: "${casperScenario.scenario}" Probe questions: ${casperScenario.probes.map((p,i)=>`(${i+1}) ${p}`).join(' ')} Student's response: "${answer}". Say first what their judgment actually missed — a probe they never answered, an assumption they made without noticing, a lack of self-awareness — quoting their words. Then ONE concrete fix. End with "Score: X/10". Never suggest this is something they need to master now.${HONEST_FEEDBACK_RULE} Under 150 words.`;
+        framing = `You are rating one CASPer-style situational-judgment response from a high school student who is years away from taking it — a low-stakes preview, not exam prep. Never suggest this is something they need to master now. Scenario: "${casperScenario.scenario}" Probe questions: ${casperScenario.probes.map((p, i) => `(${i + 1}) ${p}`).join(' ')} Student's response: "${answer}". A probe they never answered is itself a finding.`;
       }
+      const station = getStationType(stationKey);
+      const system = `${framing}\n\n${buildRubricPrompt({ stationKey, hasActor: station.hasActor })}\n\nThey are a teenager: be blunt about the work and never unkind about the person, and make every criticism carry its fix.`;
+
       const r = await fetch('/api/groq', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ system, message: answer, maxTokens: 220, purpose: 'interview' }),
+        body: JSON.stringify({ system, message: answer, maxTokens: 260, purpose: 'interview' }),
       });
       const d = await r.json();
       if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
-      // The model proposes a score; the ceiling decides. See lib/interviewScore.js for why the
-      // raw number is never shown as-is.
-      const graded = calibrateFeedback(d.content || '', answer);
+      // The model proposes a score; the deterministic rubric caps it. See lib/interviewScore.js
+      // for why the raw number is never shown as-is.
+      const graded = calibrateFeedback(d.content || '', answer, {
+        stationKey,
+        prompt: questionText,
+        stationCount: 1,
+      });
       setFeedback(graded);
       const next = sessions + 1;
       setSessions(next);
-      DB.addInterviewSession({ mode, pathwayKey: setKey, question: questionText.slice(0, 300), score: graded.score }).catch(() => {});
+      DB.addInterviewSession({ mode, pathwayKey: setKey, question: questionText.slice(0, 300), score: graded.score, scale: SCALE_MAX }).catch(() => {});
       onSessionComplete?.(mode);
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not get feedback right now.');
@@ -141,7 +153,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
     <div style={CC({ gap: 22 })}>
       <PanelHero tourTag="portfolio-deep-interview" icon={Mic} color={accent} color2={C.rose}
         eyebrow="Interview Prep" title="Mock Interview Practice"
-        sub={`Practice real college-admissions-style questions with instant, encouraging feedback — ${Object.values(INTERVIEW_QUESTIONS).reduce((n, a) => n + a.length, 0)}+ curated prompts across every pathway, plus live voice interviews and MMI/CASPer format previews.`}
+        sub={`Practice real college-admissions-style questions and get rated the way an actual interviewer would rate you — seven-point scale, no flattery — across ${Object.values(INTERVIEW_QUESTIONS).reduce((n, a) => n + a.length, 0)}+ curated prompts, live voice interviews, and MMI/CASPer format previews.`}
         stats={sessions > 0 ? [{ value: sessions, label: 'practiced this session', color: C.roseL }] : []}/>
 
       <div style={R({ gap: 6, flexWrap: 'wrap' })}>
@@ -166,7 +178,7 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
       {(mode === 'mmi' || mode === 'casper') && (
         <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 10, alignItems: 'flex-start', background: C.violetDim, border: `1px solid ${C.violet}25` }}>
           <Info size={14} color={C.violetL} style={{ flexShrink: 0, marginTop: 1 }} />
-          <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{mode === 'mmi' ? 'MMI (Multiple Mini Interview)' : 'CASPer'} is a format some health-professional programs use — years from now, not something you need for college admissions. This is just a fun, low-stakes preview of the format: ethical judgment and communication scenarios, not clinical knowledge.</span>
+          <span style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>{mode === 'mmi' ? 'MMI (Multiple Mini Interview)' : 'CASPer'} is a format some health-professional programs use — years from now, not something you need for college admissions. This is a low-stakes preview of the format: ethical judgment and communication scenarios, not clinical knowledge. Answers are rated on the real seven-point station scale, where <strong style={{ color: C.t1 }}>5 is the most common score</strong> and means competent, fluent and forgettable — a 4 or 5 here is the normal result, not a bad one.</span>
         </div>
       )}
 
@@ -234,20 +246,25 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
 
       <AnimatePresence>
         {feedback && (() => {
-          // The card is deliberately not a congratulations panel. It leads with the number and the
-          // band ("Competent but forgettable"), and carries the objective reasons the score was
-          // capped — that list is the part a student can actually act on.
+          // Deliberately not a congratulations panel. It leads with the number and the rater's own
+          // anchor ("Satisfactory — and forgettable" is the modal result, and it has to read as the
+          // normal outcome rather than as failure), then the competencies this station could
+          // actually assess, then the specific reasons — the part a student can act on — and it
+          // always ends on the reliability caveat, because a verdict from one station would be a
+          // lie about how the format works.
           const t = toneColor(feedback.band.tone);
           return (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ ...glass({ padding: 20 }), background: `linear-gradient(135deg, ${t.dim}, transparent)`, border: `1px solid ${t.main}30` }}>
-              <div style={R({ gap: 8, marginBottom: 12, justifyContent: 'space-between', flexWrap: 'wrap' })}>
-                <div style={R({ gap: 8 })}><Sparkles size={15} color={t.main} /><span style={{ fontSize: 12, fontWeight: 700, color: t.main, textTransform: 'uppercase', letterSpacing: '.06em' }}>Interviewer Feedback</span></div>
+              <div style={R({ gap: 8, marginBottom: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8 })}><Sparkles size={15} color={t.main} /><span style={{ fontSize: 12, fontWeight: 700, color: t.main, textTransform: 'uppercase', letterSpacing: '.06em' }}>Rater Feedback</span></div>
                 <div style={R({ gap: 8 })}>
-                  <span style={{ fontSize: 20, fontWeight: 800, color: t.main, fontFamily: C.FD }}>{feedback.score}<span style={{ fontSize: 13, color: C.t3 }}>/10</span></span>
-                  <span style={pill(`${t.main}18`, t.main, { fontSize: 10.5 })}>{feedback.band.label}</span>
+                  <span style={{ fontSize: 20, fontWeight: 800, color: t.main, fontFamily: C.FD }}>{feedback.score}<span style={{ fontSize: 13, color: C.t3 }}>/{feedback.scale}</span></span>
+                  <span style={pill(`${t.main}18`, t.main, { fontSize: 10.5 })}>{feedback.anchor.label}</span>
                 </div>
               </div>
+              <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>{feedback.anchor.blurb}</div>
               <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{feedback.text}</div>
+              <CompetencyGrid competencies={feedback.competencies} max={feedback.scale} />
               {feedback.reasons.length > 0 && (
                 <div style={{ ...glass2({ padding: 14, marginTop: 14 }), background: C.s2 }}>
                   <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What held this answer back</div>
@@ -256,6 +273,15 @@ export default function InterviewPrepPanel({ accent = C.blue, pathway, pathwayKe
                   </ul>
                 </div>
               )}
+              {feedback.strengths.length > 0 && (
+                <div style={{ ...glass2({ padding: 14, marginTop: 10 }), background: C.s2 }}>
+                  <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What actually worked</div>
+                  <ul style={{ margin: 0, paddingLeft: 17, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {feedback.strengths.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{r}</li>)}
+                  </ul>
+                </div>
+              )}
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 14, lineHeight: 1.6, fontStyle: 'italic' }}>{feedback.caveat}</div>
             </motion.div>
           );
         })()}

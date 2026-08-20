@@ -10,6 +10,7 @@ import { Line } from 'react-chartjs-2';
 import { Trophy, TrendingUp, TrendingDown, Minus, Calendar, Mic, MessageSquare, Layers } from 'lucide-react';
 import { C, glass, glass2, pill, R, CC, G } from '../lib/theme';
 import * as DB from '../lib/db';
+import { normalizeStoredScore, SCALE_MAX, anchorFor } from '../lib/interviewScore';
 
 const MODE_META = {
   live: { label: 'Live Voice', color: C.rose, Icon: Mic },
@@ -31,9 +32,18 @@ export default function InterviewHistoryPanel({ accent }) {
 
   useEffect(() => { DB.getInterviewSessions().then(setSessions).catch(() => setSessions([])); }, []);
 
-  // getInterviewSessions() returns newest-first.
-  const scored = useMemo(() => (sessions || []).filter(s => typeof s.score === 'number'), [sessions]);
-  const avgScore = scored.length ? Math.round((scored.reduce((s, x) => s + x.score, 0) / scored.length) * 10) / 10 : null;
+  // getInterviewSessions() returns newest-first. Sessions saved before the switch to the real
+  // seven-point MMI scale carry a ten-point number and no `scale` field; normalizeStoredScore maps
+  // those onto the new scale at their band boundaries so a single chart doesn't silently mix two
+  // rulers. Old sessions therefore move DOWN when they are redrawn, which is correct — the old
+  // numbers were the generous ones.
+  const scored = useMemo(
+    () => (sessions || [])
+      .map(s => ({ ...s, score7: normalizeStoredScore(s) }))
+      .filter(s => typeof s.score7 === 'number'),
+    [sessions],
+  );
+  const avgScore = scored.length ? Math.round((scored.reduce((s, x) => s + x.score7, 0) / scored.length) * 10) / 10 : null;
   const byMode = useMemo(() => {
     const m = {};
     for (const s of (sessions || [])) m[s.mode] = (m[s.mode] || 0) + 1;
@@ -42,14 +52,14 @@ export default function InterviewHistoryPanel({ accent }) {
   // Oldest→newest, capped to the most recent 14 scored sessions so the chart stays legible.
   const trendPoints = useMemo(() => scored.slice(0, 14).reverse(), [scored]);
   const trendDelta = trendPoints.length >= 2
-    ? Math.round((trendPoints[trendPoints.length - 1].score - trendPoints[0].score) * 10) / 10
+    ? Math.round((trendPoints[trendPoints.length - 1].score7 - trendPoints[0].score7) * 10) / 10
     : null;
 
   const chartData = useMemo(() => ({
     labels: trendPoints.map(s => fmtDate(s.completedAt)),
     datasets: [{
       label: 'Score',
-      data: trendPoints.map(s => s.score),
+      data: trendPoints.map(s => s.score7),
       borderColor: accent,
       backgroundColor: `${accent}22`,
       pointBackgroundColor: accent,
@@ -81,8 +91,9 @@ export default function InterviewHistoryPanel({ accent }) {
           <div style={{ fontSize: 10, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Sessions practiced</div>
         </div>
         <div style={glass2({ padding: 14 })}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: C.FD }}>{avgScore !== null ? `${avgScore}/10` : '—'}</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: C.FD }}>{avgScore !== null ? `${avgScore}/${SCALE_MAX}` : '—'}</div>
           <div style={{ fontSize: 10, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Average score</div>
+          {avgScore !== null && <div style={{ fontSize: 9.5, color: C.t4, marginTop: 3, lineHeight: 1.4 }}>{anchorFor(avgScore).label}</div>}
         </div>
         <div style={glass2({ padding: 14 })}>
           <div style={{ ...R({ gap: 5 }), fontSize: 22, fontWeight: 800, color: trendDelta > 0 ? C.green : trendDelta < 0 ? C.rose : C.t3, fontFamily: C.FD }}>
@@ -103,7 +114,7 @@ export default function InterviewHistoryPanel({ accent }) {
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                  y: { min: 0, max: 10, grid: { color: C.b1 }, ticks: { color: C.t3, font: { family: C.FM }, stepSize: 2 } },
+                  y: { min: 1, max: SCALE_MAX, grid: { color: C.b1 }, ticks: { color: C.t3, font: { family: C.FM }, stepSize: 1 } },
                   x: { grid: { display: false }, ticks: { color: C.t3 } },
                 },
               }}
@@ -142,11 +153,16 @@ export default function InterviewHistoryPanel({ accent }) {
                     <Calendar size={10} />{fmtDateTime(s.completedAt)} · <span style={{ color }}>{label}</span>
                   </div>
                 </div>
-                {typeof s.score === 'number' && (
-                  <span style={pill(s.score >= 8 ? C.greenDim : s.score >= 5 ? C.amberDim : C.roseDim, s.score >= 8 ? C.greenL : s.score >= 5 ? C.amberL : C.roseL, { fontSize: 11, fontFamily: C.FM, flexShrink: 0 })}>
-                    {s.score}/10
-                  </span>
-                )}
+                {(() => {
+                  const score = normalizeStoredScore(s);
+                  if (typeof score !== 'number') return null;
+                  return (
+                    <span title={anchorFor(score).blurb}
+                      style={pill(score >= 6 ? C.greenDim : score >= 4 ? C.amberDim : C.roseDim, score >= 6 ? C.greenL : score >= 4 ? C.amberL : C.roseL, { fontSize: 11, fontFamily: C.FM, flexShrink: 0 })}>
+                      {score}/{SCALE_MAX}
+                    </span>
+                  );
+                })()}
               </motion.div>
             );
           })}
