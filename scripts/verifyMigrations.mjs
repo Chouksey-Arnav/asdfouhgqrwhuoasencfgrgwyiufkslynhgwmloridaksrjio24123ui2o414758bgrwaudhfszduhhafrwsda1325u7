@@ -74,6 +74,10 @@ const LEGACY_NON_IDEMPOTENT = new Set(['0001_portfolio_credibility_expansion.sql
 /** Every table the application reads or writes. Sorted; compared as a set. */
 const EXPECTED_TABLES = [
   'activities', 'admission_intake', 'app_users', 'awards', 'clinical_hours', 'college_checklist_items', 'colleges',
+  // Credentials a student typed that src/data/credentials/ does not know about, queued for review
+  // so the catalog improves instead of the field filling with typos — see
+  // supabase/migrations/0018_credential_catalog.sql.
+  'credential_suggestions',
   'deadlines', 'email_verifications', 'essay_versions', 'essays', 'gpa_entries', 'login_attempts',
   'lesson_feedback',
   'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',

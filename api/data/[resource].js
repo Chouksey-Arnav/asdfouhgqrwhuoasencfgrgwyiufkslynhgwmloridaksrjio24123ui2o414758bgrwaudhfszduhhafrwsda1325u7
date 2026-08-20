@@ -20,7 +20,13 @@ const WRITABLE = {
   awards: ['title', 'grade_level', 'level', 'sort_order', 'issuing_organization', 'category', 'certificate_url', 'verification_status'],
   gpa_entries: ['term', 'gpa', 'weighted', 'course_rigor'],
   research_experience: ['title', 'mentor_name', 'institution', 'description', 'publication_url', 'hours', 'status', 'sort_order'],
-  skills_certifications: ['name', 'issuing_body', 'earned_date', 'expiry_date', 'certificate_url'],
+  // credential_id / credential_type / state_code link a row back to the credential database and
+  // record which of the three legally distinct kinds of "certification" it is — see
+  // supabase/migrations/0018_credential_catalog.sql. `name` stays authoritative for display
+  // because it holds what the student's own certificate says, which in Ohio is "STNA".
+  skills_certifications: ['name', 'issuing_body', 'earned_date', 'expiry_date', 'certificate_url', 'credential_id', 'credential_type', 'state_code'],
+  // `status` is deliberately not writable: a student proposes, we review.
+  credential_suggestions: ['name', 'issuing_body', 'credential_type', 'state_code', 'note'],
   clinical_hours: ['site_name', 'site_type', 'supervisor_name', 'supervisor_email', 'hours', 'entry_date', 'notes', 'verification_status', 'verified_at', 'experience_kind'],
   admission_intake: ['citizenship', 'state_residency', 'grade_level', 'answers', 'program_rounds'],
   recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status'],
@@ -31,7 +37,7 @@ const WRITABLE = {
 // column — see the migration file for which ones do).
 const TOUCHES_UPDATED_AT = new Set([
   'colleges', 'essays', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders',
-  'admission_intake',
+  'admission_intake', 'credential_suggestions',
 ]);
 
 // entity_type -> table, for validating portfolio_evidence's polymorphic entity_id ownership.

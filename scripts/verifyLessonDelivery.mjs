@@ -20,9 +20,15 @@
  * Run by `npm run verify:lesson-delivery` (and by `npm run build`).
  */
 
+import { register } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
+
+// App modules use Vite-style extensionless imports (src/lib/speech.js reaches for
+// './voicePipeline'), which Node will not resolve on its own. This is the same hook every other
+// verify script registers; without it this script fails to load speech.js at all.
+register('./_appResolve.mjs', import.meta.url);
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => readFileSync(path.join(ROOT, p), 'utf8');

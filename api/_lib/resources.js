@@ -32,6 +32,11 @@ export const RESOURCES = [
   // supabase/migrations/0017_admission_intake.sql). Listed here like every other
   // resource so it is exportable and deletable the moment it is writable.
   'admission_intake',
+  // Credentials a student typed that the catalog does not know about, submitted for review so
+  // src/data/credentials/ improves instead of the field filling with typos. Listed here like
+  // every other resource so a student's suggestions are exportable and deletable with their
+  // account — see supabase/migrations/0018_credential_catalog.sql.
+  'credential_suggestions',
 ];
 
 /** Membership test for the CRUD endpoint's `[resource]` path segment. */

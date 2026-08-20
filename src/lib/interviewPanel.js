@@ -160,6 +160,19 @@ export const STATION_TYPES = {
     hasActor: true,
     competencies: ['teamwork', 'interpersonalSkills', 'understandingOthers', 'resilience', 'oralCommunication'],
   },
+  // The collaborative task station is a real and distinct MMI format, not a variant of the
+  // teamwork discussion above. In a teamwork station you TALK about a conflict; in a collaborative
+  // station there is an actual task, a partner who has information you do not, and a result at the
+  // end — the classic version is one candidate describing a shape while the other draws it blind.
+  // What it measures is different too: it is the only station where oral communication is being
+  // tested as a transmission channel rather than as polish, and the only one where the rater is
+  // watching what you do when the task is going badly with three minutes left.
+  collaborative: {
+    label: 'Collaborative task',
+    panelist: 'nurse',
+    hasActor: true,
+    competencies: ['teamwork', 'oralCommunication', 'interpersonalSkills', 'resilience', 'criticalThinking'],
+  },
   communication: {
     label: 'Communication / breaking news',
     panelist: 'nurse',

@@ -298,6 +298,7 @@ export default function AdmissionCalculatorPanel({
             {results.map((r, i) => (
               <ProgramResultCard key={scoredProfiles[i].id} result={r} portfolio={portfolio} isMobile={isMobile}
                 roundId={programRounds[scoredProfiles[i].id] || null}
+                onGoTo={onGoTo}
                 onRoundChange={(roundId) => onRoundChange(scoredProfiles[i].id, roundId)} />
             ))}
           </div>

@@ -1010,7 +1010,8 @@ export default function ActivitiesResumePanel({
       {/* ═══ SKILLS & CERTIFICATIONS ═════════════════════════════════════════ */}
       {activeSection === 'credentials' && (
         <CredentialsSection accent={C.teal} entries={certs} setEntries={setCerts}
-          loading={loading} isMobile={isMobile} onChanged={onCredentialChanged} />
+          loading={loading} isMobile={isMobile} onChanged={onCredentialChanged}
+          gradeStage={user?.gradeStage} />
       )}
 
       <CommonAppExport

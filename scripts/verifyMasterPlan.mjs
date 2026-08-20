@@ -291,8 +291,15 @@ assert('PlansTab declares its Portfolio resource map', !!plansMap);
 if (plansMap) {
   const fetched = [...plansMap[1].matchAll(/^\s*(\w+):/gm)].map(m => m[1]);
   // Every server-side resource that holds student-authored Portfolio content is fetched. The
-  // two exclusions are structural rather than content-bearing.
-  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence']);
+  // exclusions are structural rather than content-bearing.
+  //
+  // credential_suggestions is the odd one out and worth naming: it is student-authored, but it is
+  // not a record of anything the student has DONE. It is a proposal that our credential catalog is
+  // missing something (see supabase/migrations/0018_credential_catalog.sql), addressed to us
+  // rather than to their own portfolio. Feeding it to the planner would have the Oracle treating
+  // "asked us to add CNA II to the database" as a portfolio entry, which is the kind of quiet
+  // category error that makes a plan read as though it has not been paying attention.
+  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence', 'credential_suggestions']);
   const serverResources = [...resourcesSrc.matchAll(/^\s*'([a-z_]+)',$/gm)].map(m => m[1]);
   for (const r of serverResources) {
     if (CONTENTLESS.has(r)) continue;

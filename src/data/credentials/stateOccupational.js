@@ -1,0 +1,258 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// State occupational credentials — the ones a state health department or nurse
+// aide registry issues, and the ones whose NAME changes at the state line.
+//
+// This is the whole reason the database exists. A student in Columbus does not
+// hold a CNA; they hold an STNA, and the registry that issued it uses that word
+// on the certificate. A student in Concord holds an LNA. In Seattle it is an
+// NAC. In Raleigh there are two of them, CNA I and CNA II, and they are not the
+// same credential. Autocomplete that only knows the letters C-N-A is wrong for
+// six states' worth of students, and it is wrong in the specific way that tells
+// the student who actually earned the credential that we don't know the field.
+//
+// So every record carries `stateNames`: a map of USPS state code to what that
+// state calls it. The student picks their state once; from then on the app
+// shows them their state's name for the credential, stores the underlying
+// credential id, and exports the state name onto the résumé — because the
+// certificate in their drawer says STNA and a résumé that says CNA does not
+// match the verification the reader would run.
+//
+// `stateNames` is deliberately partial. An absent state means "this state uses
+// the base name, as far as we know", not "we checked and it does". The picker
+// says so rather than asserting a name we never verified.
+// ─────────────────────────────────────────────────────────────────────────────
+import { src } from './types.js';
+
+export const STATE_OCCUPATIONAL = [
+  {
+    id: 'cna',
+    type: 'state-occupational',
+    officialName: 'Certified Nursing Assistant',
+    abbreviation: 'CNA',
+    group: 'Direct patient care',
+    // What the credential lets you do, in the words a 16-year-old uses. Shown under the name in
+    // the picker, because "Certified Nursing Assistant" does not tell a sophomore anything.
+    summary: 'The most common paid, hands-on patient care job open to a high schooler. Bathing, feeding, transferring, vitals, and charting, usually in a nursing home or hospital.',
+    issuers: ['State nurse aide registry', 'State Department of Health'],
+    issuerNote: 'Federal law (OBRA \'87) requires every state to run a nurse aide registry and sets a 75-hour training floor; everything above that floor — the name, the hours, the age, the fee — is the state\'s call.',
+    stateNames: {
+      OH: 'State Tested Nursing Assistant (STNA)',
+      NH: 'Licensed Nursing Assistant (LNA)',
+      WA: 'Nursing Assistant-Certified (NAC)',
+      NC: 'Nurse Aide I (CNA I) — Nurse Aide II (CNA II) is a separate, higher credential',
+      OR: 'Nursing Assistant-Certified (NA-C); Nursing Assistant-Registered (NA-R) is the entry step',
+      MD: 'Geriatric Nursing Assistant (GNA); Maryland also registers a Certified Nursing Assistant (CNA)',
+      CA: 'Certified Nurse Assistant (CNA)',
+      NY: 'Certified Nurse Aide (CNA)',
+      TX: 'Certified Nurse Aide (CNA)',
+      FL: 'Certified Nursing Assistant (CNA)',
+    },
+    stateNote: 'Six states rename this credential outright. If your state is not listed we show the national name — check your own certificate before you put it on an application.',
+    minAge: { value: 16, basis: 'state-varies', note: 'Most states allow 16 with a training program; a minority require 18, and some allow 16 only for training with certification held until the birthday.' },
+    trainingHours: { value: 75, max: 180, basis: 'issuer-published', note: 'Federal floor is 75 hours including at least 16 supervised clinical hours. Several states require far more — California 160, Oregon 155, Maine 180.' },
+    cost: { low: 0, high: 1500, basis: 'state-varies', note: 'Free through a high school CTE health science program or an employer-sponsored course; $700–$1,500 at a private training provider. The state exam fee is usually $100–$150 on top.' },
+    cteCommon: true,
+    cteNote: 'One of the two most commonly offered free credentials in high school health science CTE programs, alongside BLS.',
+    renewalMonths: 24,
+    renewalNote: 'Registry listing generally has to be renewed every 24 months and usually requires documented paid work as an aide during the period — a student who stops working can lapse without doing anything wrong.',
+    registry: { ctid: null, query: 'Certified Nursing Assistant' },
+    onetSoc: '31-1131.00',
+    sources: [
+      src('CMS — Nurse Aide Training and Competency Evaluation Program requirements', 'https://www.cms.gov/medicare/provider-enrollment-and-certification/surveycertificationgeninfo'),
+    ],
+    aliases: ['cna', 'stna', 'lna', 'nac', 'na-c', 'na-r', 'gna', 'nurse aide', 'nursing assistant', 'nurses aide', 'cna i', 'cna 1', 'cna ii', 'cna 2', 'state tested'],
+  },
+  {
+    id: 'hha',
+    type: 'state-occupational',
+    officialName: 'Home Health Aide',
+    abbreviation: 'HHA',
+    group: 'Direct patient care',
+    summary: 'Care for someone in their own home rather than in a facility. Often the same tasks as a CNA, with far less supervision in the room.',
+    issuers: ['State Department of Health', 'Medicare-certified home health agency'],
+    issuerNote: 'Federal rules set a 75-hour training minimum for aides working at Medicare-certified agencies. Some states run a registry; others leave the credential with the employing agency, which is why "HHA certification" means different things in different places.',
+    stateNames: {
+      NY: 'Home Health Aide (HHA) — New York issues through approved training programs and lists aides on the Home Care Registry',
+      CA: 'Home Health Aide (HHA) — California requires CNA certification first',
+      NJ: 'Certified Homemaker-Home Health Aide (CHHA), issued by the Board of Nursing',
+      FL: 'Home Health Aide (HHA) — Florida sets agency-level training rather than a state certificate',
+    },
+    stateNote: 'In several states the HHA sits on top of the CNA rather than beside it — California is the clearest case.',
+    minAge: { value: 18, basis: 'state-varies', note: 'Commonly 18 because the work is unsupervised in a private home; a handful of states and agencies hire at 16.' },
+    trainingHours: { value: 75, max: 120, basis: 'issuer-published', note: 'Federal minimum 75 hours with 16 supervised practical hours, for aides at Medicare/Medicaid-certified agencies.' },
+    cost: { low: 0, high: 800, basis: 'state-varies', note: 'Frequently free, because agencies train the people they are about to hire.' },
+    cteCommon: false,
+    renewalMonths: 12,
+    renewalNote: 'Usually annual in-service hours through the employing agency rather than a re-test.',
+    registry: { ctid: null, query: 'Home Health Aide' },
+    onetSoc: '31-1121.00',
+    sources: [
+      src('eCFR 42 CFR 484.80 — Home health aide services', 'https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-484'),
+    ],
+    aliases: ['hha', 'home health aide', 'chha', 'caregiver', 'personal care aide', 'pca'],
+  },
+  {
+    id: 'emt',
+    type: 'state-occupational',
+    officialName: 'Emergency Medical Technician',
+    abbreviation: 'EMT',
+    group: 'Emergency & prehospital care',
+    summary: 'Prehospital emergency care on an ambulance or a fire department rig. The highest-responsibility credential a teenager can realistically hold, and the one with the hardest age wall.',
+    issuers: ['National Registry of EMTs (NREMT)', 'State EMS office'],
+    issuerNote: 'Two separate things share the name. NREMT issues the NATIONAL certification, which most states use as their exam. Your STATE EMS office issues the licence or certification that actually lets you work — and a few states will grant theirs on terms NREMT will not.',
+    stateNames: {
+      NY: 'EMT-Basic, certified by the NY State Bureau of EMS (New York runs its own written exam rather than requiring NREMT)',
+      TX: 'EMT, certified by Texas DSHS',
+      CA: 'EMT-I, certified by the local EMS agency (LEMSA), not the state directly',
+    },
+    // The single most-hit wall in this whole database. It gets its own field so the UI can put it
+    // in front of the student before they spend a summer on the course.
+    ageGate: {
+      hardMin: 18,
+      hardMinFor: 'NREMT National EMS Certification',
+      published: 'NREMT will not issue National EMS Certification to anyone under 18.',
+      underageStatus: 'Assessment-EMT',
+      underageNote: 'A candidate under 18 who completes an approved course and passes both the cognitive and psychomotor exams is granted Assessment-EMT status instead. It is not a certification and does not let you work. It converts to full National EMS Certification when you turn 18, without re-testing, as long as you convert inside the eligibility window.',
+      stateCaveat: 'Separately from NREMT, some states will issue their own state-level EMT certification below 18 — often 16 or 17, sometimes only for a junior/explorer role or only with a parent\'s consent. Check your state EMS office, not NREMT, if you are 16 or 17 and want to work now.',
+      basis: 'issuer-published',
+    },
+    minAge: { value: 18, basis: 'issuer-published', note: 'For the national certification. See the age gate above — under-18s are not shut out of the course, only out of the certificate.' },
+    trainingHours: { value: 150, max: 200, basis: 'typical', note: 'Typically 120–200 hours of classroom and clinical time over one semester or one summer.' },
+    cost: { low: 0, high: 2000, basis: 'state-varies', note: '$800–$2,000 at a community college; free in some high school CTE programs and in fire-department explorer programs. NREMT exam fee is separate.' },
+    cteCommon: true,
+    cteNote: 'Offered free in some high school CTE programs and through fire-service explorer posts, usually to juniors and seniors.',
+    renewalMonths: 24,
+    renewalNote: 'National certification recertifies on a two-year cycle through the National Continued Competency Program; state licences run on their own clock.',
+    registry: { ctid: null, query: 'Emergency Medical Technician' },
+    onetSoc: '29-2042.00',
+    sources: [
+      src('NREMT — EMT certification requirements', 'https://www.nremt.org/getcertified/emt'),
+    ],
+    aliases: ['emt', 'emt-b', 'emt basic', 'nremt', 'ambulance', 'ems', 'assessment emt', 'assessment-emt'],
+  },
+  {
+    id: 'aemt',
+    type: 'state-occupational',
+    officialName: 'Advanced Emergency Medical Technician',
+    abbreviation: 'AEMT',
+    group: 'Emergency & prehospital care',
+    summary: 'The step above EMT — IVs, more medications, more autonomy. Realistically a post-graduation credential.',
+    issuers: ['National Registry of EMTs (NREMT)', 'State EMS office'],
+    ageGate: {
+      hardMin: 18,
+      hardMinFor: 'NREMT National EMS Certification',
+      published: 'NREMT will not issue National EMS Certification to anyone under 18.',
+      underageStatus: 'Assessment-AEMT',
+      underageNote: 'Same structure as the EMT: an under-18 candidate is granted Assessment status and converts at 18.',
+      stateCaveat: 'Requires current EMT certification first, which puts this out of reach for almost every high schooler.',
+      basis: 'issuer-published',
+    },
+    minAge: { value: 18, basis: 'issuer-published', note: 'And you must already hold an EMT certification.' },
+    trainingHours: { value: 250, basis: 'typical', note: 'Roughly 150–250 hours beyond the EMT course.' },
+    cost: { low: 1000, high: 3000, basis: 'typical' },
+    cteCommon: false,
+    renewalMonths: 24,
+    registry: { ctid: null, query: 'Advanced Emergency Medical Technician' },
+    onetSoc: '29-2042.00',
+    sources: [src('NREMT — AEMT certification requirements', 'https://www.nremt.org/getcertified/aemt')],
+    aliases: ['aemt', 'advanced emt', 'emt-i', 'emt intermediate'],
+  },
+  {
+    id: 'emr',
+    type: 'state-occupational',
+    officialName: 'Emergency Medical Responder',
+    abbreviation: 'EMR',
+    group: 'Emergency & prehospital care',
+    summary: 'The entry rung below EMT — first-on-scene care with a much shorter course. The realistic option if you are 16 and cannot wait for the EMT age wall.',
+    issuers: ['National Registry of EMTs (NREMT)', 'State EMS office'],
+    ageGate: {
+      hardMin: 18,
+      hardMinFor: 'NREMT National EMS Certification',
+      published: 'NREMT applies the same 18-year minimum to EMR national certification.',
+      underageStatus: 'Assessment-EMR',
+      underageNote: 'Under-18 candidates are granted Assessment-EMR status and convert at 18.',
+      stateCaveat: 'State-level EMR certification is where under-18s most often do get through — ski patrol, lifeguard, and fire explorer programs commonly run EMR courses for 16- and 17-year-olds under state rules.',
+      basis: 'issuer-published',
+    },
+    minAge: { value: 18, basis: 'issuer-published', note: 'For national certification; state EMR certification is frequently available earlier.' },
+    trainingHours: { value: 60, basis: 'typical', note: 'Typically 48–80 hours.' },
+    cost: { low: 0, high: 600, basis: 'typical' },
+    cteCommon: true,
+    renewalMonths: 24,
+    registry: { ctid: null, query: 'Emergency Medical Responder' },
+    onetSoc: '29-2042.00',
+    sources: [src('NREMT — EMR certification requirements', 'https://www.nremt.org/getcertified/emr')],
+    aliases: ['emr', 'emergency medical responder', 'first responder', 'medical first responder'],
+  },
+  {
+    id: 'cma-medication-aide',
+    type: 'state-occupational',
+    officialName: 'Certified Medication Aide',
+    abbreviation: 'CMA / QMA / MA-C',
+    group: 'Direct patient care',
+    summary: 'A CNA who has taken an additional state course to pass medications in a long-term care facility.',
+    issuers: ['State nurse aide registry', 'State Board of Nursing'],
+    issuerNote: 'Do not confuse this with the Certified Medical Assistant, which is also abbreviated CMA and is a completely different, national credential.',
+    stateNames: {
+      IN: 'Qualified Medication Aide (QMA)',
+      OK: 'Certified Medication Aide (CMA)',
+      WA: 'Medication Assistant-Certified (MA-C)',
+      TX: 'Medication Aide',
+      NC: 'Medication Aide',
+    },
+    minAge: { value: 18, basis: 'state-varies' },
+    trainingHours: { value: 60, basis: 'state-varies', note: 'Usually 40–140 hours on top of an active CNA credential.' },
+    cost: { low: 200, high: 900, basis: 'state-varies' },
+    cteCommon: false,
+    renewalMonths: 12,
+    registry: { ctid: null, query: 'Certified Medication Aide' },
+    onetSoc: '31-1131.00',
+    sources: [],
+    aliases: ['medication aide', 'med aide', 'qma', 'cma medication', 'ma-c', 'med tech'],
+  },
+  {
+    id: 'chw',
+    type: 'state-occupational',
+    officialName: 'Community Health Worker',
+    abbreviation: 'CHW',
+    group: 'Community & public health',
+    summary: 'A trusted person from a community who connects neighbours to care — outreach, navigation, translation, follow-up. Not a clinical role, and a genuinely strong one for a portfolio.',
+    issuers: ['State Department of Health', 'State CHW certification board'],
+    issuerNote: 'Only some states certify CHWs at all, and the ones that do run very different programs. In an uncertified state this is training, not a credential.',
+    stateNames: {
+      TX: 'Certified Community Health Worker (CHW), certified by Texas DSHS',
+      MA: 'Certified Community Health Worker, certified by the Board of Certification of CHWs',
+      OR: 'Traditional Health Worker — Community Health Worker, on the THW registry',
+      NM: 'Certified Community Health Worker, certified by NMDOH',
+    },
+    stateNote: 'Spanish-speaking programs often use "promotora" or "promotor de salud" for the same role.',
+    minAge: { value: 16, basis: 'state-varies', note: 'Texas certifies at 16; most other certifying states require 18.' },
+    trainingHours: { value: 160, basis: 'state-varies', note: 'Texas requires 160 hours; other states range from 80 to 130.' },
+    cost: { low: 0, high: 400, basis: 'state-varies', note: 'Frequently free — these programs are usually grant-funded.' },
+    cteCommon: false,
+    renewalMonths: 24,
+    registry: { ctid: null, query: 'Community Health Worker' },
+    onetSoc: '21-1094.00',
+    sources: [src('Texas DSHS — Community Health Worker certification', 'https://www.dshs.texas.gov/community-health-worker')],
+    aliases: ['chw', 'community health worker', 'promotora', 'promotor', 'patient navigator', 'health navigator'],
+  },
+  {
+    id: 'lifeguard-state',
+    type: 'state-occupational',
+    officialName: 'Lifeguard (with CPR/AED for the Professional Rescuer)',
+    abbreviation: 'Lifeguard',
+    group: 'Emergency & prehospital care',
+    summary: 'The most common first paid job that involves being responsible for someone else\'s life. It counts, and admissions readers know it counts.',
+    issuers: ['American Red Cross', 'Ellis & Associates', 'YMCA', 'StarGuard ELITE'],
+    issuerNote: 'The training is private (Red Cross and friends), but many states and counties add their own pool-operator or health-department requirements on top, which is why this sits here rather than under national certifications.',
+    minAge: { value: 15, basis: 'issuer-published', note: 'American Red Cross Lifeguarding is 15 by the last day of the course. Waterfront and pool-operator add-ons are often 16 or 17.' },
+    trainingHours: { value: 26, basis: 'issuer-published', note: 'Around 25–30 hours for the standard blended course.' },
+    cost: { low: 150, high: 400, basis: 'typical', note: 'Very often reimbursed or paid outright by the employing pool.' },
+    cteCommon: false,
+    renewalMonths: 24,
+    registry: { ctid: null, query: 'Lifeguarding' },
+    onetSoc: '33-9092.00',
+    sources: [src('American Red Cross — Lifeguarding certification', 'https://www.redcross.org/take-a-class/lifeguarding')],
+    aliases: ['lifeguard', 'lifeguarding', 'pool', 'waterfront', 'guard'],
+  },
+];
