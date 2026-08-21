@@ -105,6 +105,25 @@ try {
   const applyBody = await page.locator('body').innerText();
   check(/College List/.test(applyBody) && /Recommenders/.test(applyBody) && /Chances/.test(applyBody), 'Applying carries all six former tabs');
   check(await page.locator('#section-essays [aria-expanded="true"]').count() > 0, 'the Essays section is expanded');
+  check(/Combined Degrees/.test(applyBody), 'Applying carries the combined-degree catalog');
+
+  // ── Combined degrees ───────────────────────────────────────────────────────
+  // The three things that make this section worth having, checked on the screen
+  // a student actually gets rather than in the data: the acceptance-rate
+  // warning has to be read BEFORE any number, the two corrections have to be
+  // present (a student who finds nothing here believes whoever told them
+  // wrong), and the interview link has to exist at all — the MMI circuit was
+  // built and orphaned, and this section is what un-orphans it.
+  console.log('\nCombined degrees');
+  await go('/portfolio/combined');
+  check(new URL(page.url()).pathname === '/portfolio/applying', `/portfolio/combined rewrites to /portfolio/applying (got ${new URL(page.url()).pathname})`);
+  check(await page.locator('#section-combined [aria-expanded="true"]').count() > 0, 'the Combined Degrees section is expanded');
+  const cdBody = await page.locator('body').innerText();
+  check(/Read this before you read a single acceptance rate/i.test(cdBody), 'the acceptance-rate warning sits above the programs');
+  check(/Drexel/.test(cdBody) && /66 admitted/.test(cdBody), "Drexel's official admitted/enrolled counts render as counts");
+  check(/Honors Program in Medical Education/i.test(cdBody) && /Closed/.test(cdBody), 'Northwestern HPME is shown as closed');
+  check(/Joint Admission Medical Program/i.test(cdBody), 'Texas JAMP is shown as not a high-school application');
+  check(/MMI circuit|Multiple Mini Interview/i.test(cdBody), 'programs that run an MMI link to the MMI circuit');
 
   console.log('\nOpportunities');
   await go('/portfolio/opportunities');

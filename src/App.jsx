@@ -134,6 +134,7 @@ import {
 } from './lib/dailyQuests';
 import ActivitiesResumePanel, { RESUME_SECTIONS } from './components/ActivitiesResumePanel';
 import ApplyingPanel, { APPLYING_SECTIONS } from './components/portfolio/ApplyingPanel';
+import CombinedDegreePanel from './components/portfolio/CombinedDegreePanel';
 import SectionScroller from './components/portfolio/SectionScroller';
 import RewardChest from './components/RewardChest';
 import RecommendersPanel from './components/RecommendersPanel';
@@ -404,6 +405,12 @@ const PORTFOLIO_GROUP_FOR_VIEW = {
   skills:['resume','credentials'], credentials:['resume','credentials'],
   colleges:['applying','colleges'], essays:['applying','essays'], aid:['applying','aid'],
   recommenders:['applying','recommenders'], interview:['applying','interview'], calc:['applying','calc'],
+  // The combined-degree and direct-admit catalog. Addressable in its own right
+  // (/portfolio/combined) because it is the one screen in this app a student is
+  // sent a link to by a parent or a counsellor — "look at the BS/MD list" — and
+  // because its whole audience is ninth and tenth graders who will not find it
+  // by working down the Applying page.
+  combined:['applying','combined'],
   tracked:['opportunities','tracked'],
 };
 // The [view, section] an old-style URL names, if any: /portfolio/clinical → ['resume','clinical'],
@@ -9523,6 +9530,14 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       counts={{colleges:appCounts.colleges,essays:appCounts.essays,recommenders:recommendersCount,interviews:interviewCount}}
       renders={{
       colleges:()=><CollegeListPanel accent={C.sky} user={user} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}/>,
+      // Reads the same shared Portfolio snapshot every other Applying panel does, so the
+      // requirements-gap view reasons over exactly the GPA terms, test sittings and logged hours
+      // the rest of Portfolio is showing — one fetch, one truth (src/lib/portfolioData.js).
+      // onGoTo is goPortfolio, so a shortfall on a card ("you are 110 service hours short") is one
+      // tap from the screen that fixes it, and a program that runs an MMI is one tap from the MMI
+      // circuit with the mode already selected.
+      combined:()=><CombinedDegreePanel accent={C.blue} user={user} snapshot={portSnapshot} loading={portSnapLoading}
+        pathwayKey={eSpec} onGoTo={goPortfolio} isMobile={isMobile}/>,
       essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
       aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain}/>,
       recommenders:()=><RecommendersPanel accent={C.fuchsia} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,

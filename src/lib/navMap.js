@@ -99,6 +99,15 @@ export const NAV_KEYWORDS = {
   'portfolio/applying:recommenders': ['recommendation letters', 'letters of rec', 'teachers', 'who will write'],
   'portfolio/applying:interview': ['mock interview', 'practice talking', 'questions they ask'],
   'portfolio/applying:calc': ['my chances', 'will i get in', 'odds', 'admissions calculator'],
+  // Every name students and parents actually use for this, including the wrong
+  // ones. Someone searching "hpme" is looking for a program that closed in 2020
+  // and needs to land on the screen that tells them so.
+  'portfolio/applying:combined': [
+    'bs/md', 'bsmd', 'ba/md', 'bamd', 'combined degree', 'direct admit', 'direct entry',
+    'accelerated medical program', 'guaranteed medical school', 'seven year medical',
+    'six year medical', 'plme', 'hpme', 'direct admit nursing', 'bsn direct',
+    '0-6 pharmacy', 'pharmd direct', 'seven year dental', 'direct entry pa', '3+3 dpt',
+  ],
   'portfolio/resume:clinical': ['shadowing', 'hospital hours', 'patient care', 'volunteering hours', 'cna'],
   'portfolio/resume:research': ['lab', 'publications', 'science fair', 'projects'],
   'portfolio/resume:credentials': ['certifications', 'cpr', 'first aid', 'licences', 'licenses'],
