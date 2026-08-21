@@ -158,7 +158,10 @@ export const METRICS = [
       for (const { before, during } of byEssay.values()) sum += Math.max(0, during - before);
       return sum;
     },
-    total: (d) => (d.essays || []).length,
+    // The four-year "why this pathway" working document lives in the same table but is not an
+    // application essay (see src/lib/healthEssays.js) — counting it here would inflate this
+    // metric by one the moment a ninth-grader opens their notebook.
+    total: (d) => (d.essays || []).filter(e => e?.essay_kind !== 'why_pathway').length,
     totalLabel: 'essays in your workspace',
   },
   {

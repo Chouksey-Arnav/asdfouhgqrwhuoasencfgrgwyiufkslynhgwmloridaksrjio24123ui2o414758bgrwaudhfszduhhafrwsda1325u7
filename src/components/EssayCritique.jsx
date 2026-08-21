@@ -18,7 +18,14 @@ const TONE_COLORS = {
   neutral: { fg: C.t3, bg: 'rgba(255,255,255,0.04)', border: C.b1 },
 };
 
-export default function EssayCritique({ state, onRun, runLabel = 'Get Medabrain\'s critique', emptyHint = null, disabled = false }) {
+// `title` and `footer` are overridable because this same renderer is now also used for the
+// four-year "why this pathway" working document, which is deliberately not scored and must not be
+// framed as one: telling a student their private notebook was "graded against the applicant pool"
+// is exactly the message that turns it into an essay and destroys what it is for.
+export default function EssayCritique({
+  state, onRun, runLabel = 'Get Medabrain\'s critique', emptyHint = null, disabled = false,
+  title = "Medabrain's critique", footer = null, rerunLabel = 'Re-critique',
+}) {
   const { loading = false, error = null, critique = null } = state || {};
 
   if (loading) {
@@ -75,7 +82,7 @@ export default function EssayCritique({ state, onRun, runLabel = 'Get Medabrain\
       <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 12 })}>
         <div style={R({ gap: 8 })}>
           <Gavel size={13} color={C.violetL} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>Medabrain's critique</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>{title}</span>
         </div>
         {critique.score != null && (
           <span style={pill(tone.bg, tone.fg, { border: `1px solid ${tone.border}`, fontSize: 11.5, fontWeight: 800 })}>
@@ -94,10 +101,10 @@ export default function EssayCritique({ state, onRun, runLabel = 'Get Medabrain\
 
       <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.b1}` })}>
         <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.5, flex: 1, minWidth: 200 }}>
-          Graded against the applicant pool, not against effort. If this reads harsh, that's the point — it's cheaper to hear it here than in April.
+          {footer || "Graded against the applicant pool, not against effort. If this reads harsh, that's the point — it's cheaper to hear it here than in April."}
         </span>
         <button style={btnG({ fontSize: 12, padding: '7px 14px' })} onClick={onRun} disabled={disabled}>
-          <RefreshCw size={12} />Re-critique
+          <RefreshCw size={12} />{rerunLabel}
         </button>
       </div>
     </div>

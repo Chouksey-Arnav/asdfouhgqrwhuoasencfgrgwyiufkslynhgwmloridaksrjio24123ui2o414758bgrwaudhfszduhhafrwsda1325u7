@@ -26,6 +26,10 @@ import {
   academicFallYear, classFallYears, effectiveGradeStage, resolveDate, nthWeekday,
   daysBetween, dayKey, shiftDays, groupUpcoming,
 } from '../src/lib/timeline.js';
+// The urgency layer is asserted here too rather than in a second script: it is meaningless apart
+// from the catalog it orders, and a lead time that disappears from a milestone is a bug in the
+// ordering even though the milestone itself still verifies.
+import { sortByUrgency, urgencyOf, alertRowsFor } from '../src/lib/milestoneUrgency.js';
 
 let passed = 0;
 const failures = [];
@@ -441,6 +445,111 @@ eq('shiftDays crosses a month', shiftDays('2026-10-15', -28), '2026-09-17');
       assert(`${g} (${season}) every event carries a why line`, t.events.every(e => e.source !== 'catalog' || !!e.why));
     });
   });
+}
+
+// ─── 17. The health-pathway block ─────────────────────────────────────────────
+//
+// The dates a health-track student misses entirely, and the reason they miss them: every one is
+// applied for in a season that has nothing to do with the season it happens in. These assertions
+// exist because the failure mode is silent — a milestone quietly dropped from the catalog, or
+// gated to the wrong grade, looks like nothing in review and costs a student a year in the app.
+{
+  const idsFor = (g, clock = NOW) => new Set(build(g, { now: clock }).events.map(e => e.id));
+  const anyYear = (id) => GRADE_KEYS.some(g => [NOW, SPRING].some(c => idsFor(g, c).has(id)));
+
+  const HEALTH_IDS = [
+    'hp_summer_window', 'hp_summer_window_close', 'hp_cert_fall_enrollment', 'hp_cert_spring_enrollment',
+    'hp_hosa_join', 'hp_hosa_regionals', 'hp_hosa_state', 'hp_hosa_ilc',
+    'hp_sts', 'hp_isef_find_fair', 'hp_isef_season_end',
+    'hp_combined_supplements', 'hp_combined_lookahead', 'hp_combined_requirements',
+  ];
+  HEALTH_IDS.forEach(id => {
+    assert(`the catalog still contains ${id}`, MILESTONES.some(m => m.id === id));
+  });
+
+  // Summer programs: December-to-February, for the FOLLOWING summer, at every grade.
+  ['freshman', 'sophomore', 'junior', 'senior'].forEach(g => {
+    assert(`${g} is told summer programs open in December`, idsFor(g).has('hp_summer_window'));
+    assert(`${g} is told the summer window closes in February`, idsFor(g).has('hp_summer_window_close'));
+  });
+  const summerOpen = MILESTONES.find(m => m.id === 'hp_summer_window');
+  eq('the summer-program opening sits in December', summerOpen.monthDay.slice(0, 2), '12');
+  eq('the summer-program closing sits in February',
+    MILESTONES.find(m => m.id === 'hp_summer_window_close').monthDay.slice(0, 2), '02');
+
+  // Certification enrolment windows, HOSA, and the science competitions.
+  assert('certification enrolment is offered to a freshman', idsFor('freshman').has('hp_cert_fall_enrollment'));
+  assert('HOSA membership closes in the autumn', MILESTONES.find(m => m.id === 'hp_hosa_join').monthDay.slice(0, 2) === '09');
+  assert('the HOSA ILC is in June', MILESTONES.find(m => m.id === 'hp_hosa_ilc').monthDay.slice(0, 2) === '06');
+  assert('HOSA qualifying reaches every class year', GRADE_KEYS.filter(g => g !== 'gap').every(g => idsFor(g).has('hp_hosa_regionals')));
+
+  const sts = MILESTONES.find(m => m.id === 'hp_sts');
+  eq('Regeneron STS is an early-November date', sts.monthDay.slice(0, 2), '11');
+  assert('Regeneron STS is seniors only', sts.grades.every(g => g === 'senior' || g === 'gap'));
+  const isefEnd = MILESTONES.find(m => m.id === 'hp_isef_season_end');
+  eq('ISEF regional qualifying concludes by mid-April', isefEnd.monthDay, '04-15');
+  assert('the ISEF entry milestone comes months before the fair season ends',
+    MILESTONES.find(m => m.id === 'hp_isef_find_fair').monthDay < '04-15' === false
+    || MILESTONES.find(m => m.id === 'hp_isef_find_fair').monthDay.slice(0, 2) === '11');
+
+  // Grade gating still holds for the new block: nothing here may leak a senior date to a freshman.
+  const frIds = idsFor('freshman');
+  assert('a freshman never sees the combined-degree supplemental deadline', !frIds.has('hp_combined_supplements'));
+  assert('a freshman never sees the Regeneron STS entry', !frIds.has('hp_sts'));
+  assert('a freshman IS told combined-degree requirements start now', frIds.has('hp_combined_requirements'));
+  assert('a senior is not told combined-degree requirements "start now"',
+    !idsFor('senior').has('hp_combined_requirements'));
+
+  // The combined-degree supplement only appears for a student who tracks one.
+  const withProgram = buildTimeline({
+    user: { gradeStage: 'senior', gradeStageYear: academicFallYear(NOW) }, now: NOW,
+    snapshot: { deadlines: [{ id: 'd1', title: 'Drexel — application due', due_date: '2027-11-01', kind: 'early_action', source_ref: 'combined:drexel-bams-md' }] },
+  });
+  assert('tracking a combined-degree program surfaces its supplemental milestone',
+    withProgram.events.some(e => e.id === 'hp_combined_supplements'));
+  assert('a senior tracking no combined-degree program is not shown it',
+    !idsFor('senior').has('hp_combined_supplements'));
+
+  // Lead times are what the urgency sort reads; a health milestone without one is filed as an
+  // ordinary two-week task and buried behind every form due sooner.
+  HEALTH_IDS.forEach(id => {
+    const m = MILESTONES.find(x => x.id === id);
+    assert(`${id} declares how long its work takes`, Number.isFinite(m.leadDays) && m.leadDays > 0, String(m.leadDays));
+  });
+  assert('the catalog\'s lead times survive into the built events',
+    build('senior').events.filter(e => e.id.startsWith('hp_')).every(e => e.leadDays > 0));
+}
+
+// ─── 18. Urgency is slack, not date order ─────────────────────────────────────
+{
+  const near = { id: 'a', title: 'Form due', kind: 'planning', days: 30, weight: 2, date: '2026-11-14', leadDays: 3 };
+  const far = { id: 'b', title: 'Summer research application', kind: 'experience', days: 90, weight: 3, date: '2027-01-13', leadDays: 60 };
+  const ordered = sortByUrgency([near, far]);
+  eq('a 90-day deadline with a 60-day run-up outranks a 30-day one that takes an afternoon',
+    ordered[0].id, 'b');
+  eq('...and the afternoon task still comes second, not last-forever', ordered[1].id, 'a');
+
+  eq('slack is days minus lead time', urgencyOf(far).slack, 30);
+  eq('a date already inside its run-up says start now', urgencyOf({ ...far, days: 55 }).band.id, 'start_now');
+  eq('an overdue date outranks everything', urgencyOf({ ...far, days: -2 }).band.id, 'overdue');
+  assert('a long-lead item explains itself in words', /run-up|takes/.test(urgencyOf(far).reason || ''));
+  eq('a same-week task needs no lead-time explanation', urgencyOf(near).reason, null);
+
+  // A kind with no declared lead still gets a sensible default rather than zero.
+  assert('an undeclared lead falls back to the category default',
+    urgencyOf({ kind: 'recommenders', days: 20 }).lead === 45);
+
+  // The 60/30/7 ladder.
+  const rows = alertRowsFor({ title: 'Stanford SIMR — application due', due_date: '2027-02-15', kind: 'opportunity', source_ref: 'opportunity:stanford-simr' },
+    { today: new Date(2026, 9, 15) });
+  eq('a distant deadline gets all three alerts', rows.length, 3);
+  assert('every alert points back at its parent', rows.every(r => r.source_ref === 'alert:opportunity:stanford-simr:60'
+    || r.source_ref === 'alert:opportunity:stanford-simr:30' || r.source_ref === 'alert:opportunity:stanford-simr:7'));
+  assert('alerts land before the deadline', rows.every(r => r.due_date < '2027-02-15'));
+  eq('a deadline inside a week gets no alerts at all',
+    alertRowsFor({ title: 'x', due_date: '2026-10-18', kind: 'custom' }, { today: new Date(2026, 9, 15) }).length, 0);
+  eq('an alert dated in the past is never created',
+    alertRowsFor({ title: 'x', due_date: '2026-11-01', kind: 'custom' }, { today: new Date(2026, 9, 15) }).length, 1);
 }
 
 // ─── Report ───────────────────────────────────────────────────────────────────

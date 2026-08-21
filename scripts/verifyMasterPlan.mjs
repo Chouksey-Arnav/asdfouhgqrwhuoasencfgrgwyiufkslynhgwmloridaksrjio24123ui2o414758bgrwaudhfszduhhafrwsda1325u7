@@ -299,7 +299,17 @@ if (plansMap) {
   // rather than to their own portfolio. Feeding it to the planner would have the Oracle treating
   // "asked us to add CNA II to the database" as a portfolio entry, which is the kind of quiet
   // category error that makes a plan read as though it has not been paying attention.
-  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence', 'credential_suggestions']);
+  //
+  // reflection_entries is excluded for a different and stronger reason: it is the one student-
+  // authored surface in the whole product that is deliberately OUTSIDE the task system. The
+  // reflection journal has no due dates, no overdue state and no place in any task list, because
+  // a fifteen-year-old told they are behind on reflecting stops reflecting and starts performing
+  // — and a performed answer is worthless as raw material three years later (see the header of
+  // src/lib/healthEssays.js). Feeding it to the plan generator would produce exactly the task
+  // the design exists to prevent: "write a journal entry about your summer," with a date on it.
+  // The planner sees the four-year working document, because that is an `essays` row and is
+  // legitimately part of the application; it does not see the journal behind it.
+  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence', 'credential_suggestions', 'reflection_entries']);
   const serverResources = [...resourcesSrc.matchAll(/^\s*'([a-z_]+)',$/gm)].map(m => m[1]);
   for (const r of serverResources) {
     if (CONTENTLESS.has(r)) continue;

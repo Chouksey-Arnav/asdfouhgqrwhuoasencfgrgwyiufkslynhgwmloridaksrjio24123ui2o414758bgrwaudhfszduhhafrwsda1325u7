@@ -49,7 +49,7 @@ import {
   CalendarDays, Milestone, History, Hourglass, AlertTriangle, CheckCircle2, ChevronRight,
   Sparkles, GraduationCap, Info, ArrowRight, Filter, ListChecks, FileText, Plus, Trash2,
   Stethoscope, TrendingUp, UserCheck, Wallet, ScrollText, Compass, Trophy, BookOpen,
-  CalendarX, Loader2, CalendarPlus, Layers, X, Loader,
+  CalendarX, Loader2, CalendarPlus, Layers, X, Loader, Flame, Undo2, BellRing,
   // Aliased: `Map` is a JavaScript global.
   Map as MapIcon,
 } from 'lucide-react';
@@ -61,6 +61,9 @@ import { deriveSuggestedDeadlines } from '../lib/autoDeadlines';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
 import { usePendingTrackKeys, useTrackQueueDrain } from '../lib/useTrackQueue';
 import { rowDedupeKey, needsDeadlineDate } from '../lib/trackingCatalog';
+import { sortByUrgency, urgencyOf, alertRowsFor, isAlertRow, alertParentRef as alertParentRefOf } from '../lib/milestoneUrgency';
+import { completionEffects, describeEffects, completeMilestone, reopenMilestone } from '../lib/milestoneSync';
+import { collectProgramPrompts } from '../lib/programEssayPrompts';
 import { showMedabrainToast } from '../lib/medabrainComments';
 import { getCached, setCached, dailyKey } from '../lib/aiCache';
 import { renderMarkdown } from '../lib/renderMarkdown';
@@ -134,6 +137,17 @@ const LENSES = [
 
 const MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
+// How each urgency band introduces itself. The blurb has to carry the reasoning, because the
+// whole premise of this ordering is counter-intuitive: a student looking at "start this now"
+// above something due sooner will assume the list is broken unless it explains itself.
+const BAND_LABEL = {
+  overdue: { label: 'Slipped past', blurb: 'Dated in the past and still not done. Deal with these first or decide out loud that they no longer apply.' },
+  late: { label: 'Already later than you wanted', blurb: 'The date has not arrived, but the run-up these need has. They are still doable — they are no longer comfortable.' },
+  start_now: { label: 'Start these now', blurb: 'Not the soonest dates on your list. These are the ones where the work behind them takes longer than the time left, which is what actually makes something urgent.' },
+  start_soon: { label: 'Start within two weeks', blurb: 'You have a little slack on these, and not much. Beginning inside a fortnight keeps them comfortable.' },
+  on_track: { label: 'Time in hand', blurb: 'Real dates with room before you need to begin. Worth knowing about, nothing to do today.' },
+};
+
 const fmtDate = (d, withYear = true) =>
   new Date(d + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) });
 
@@ -166,7 +180,15 @@ export function useMilestoneFeed(user, refreshKey = 0) {
       // The roadmap travels in so its open items interleave with the student's own dates and the
       // generated milestones in one true chronological feed — see roadmapEvents in lib/timeline.js
       // for why the Roadmap must not keep a second calendar of its own.
-      const build = (snap) => buildTimeline({ user, snapshot: snap, roadmap: user?.roadmap || null });
+      // The tracked combined-degree programs are matched from the college list here rather than
+      // inside timeline.js, which has to stay importable from a plain Node script and so cannot
+      // pull in the program catalog. `counts` is the escape hatch that already exists for exactly
+      // this (see buildTimelineContext).
+      const combinedPrograms = collectProgramPrompts({ colleges: snapshot?.colleges || [] }).length;
+      const build = (snap) => buildTimeline({
+        user, snapshot: snap, roadmap: user?.roadmap || null,
+        counts: combinedPrograms ? { combinedPrograms } : null,
+      });
       let timeline;
       try { timeline = build(snapshot); } catch { timeline = build({}); }
       setState({ timeline, snapshot, loading: false });
@@ -207,6 +229,13 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
   const { entries: pendingEntries, status: trackStatus } = usePendingTrackKeys();
 
   const [lens, setLens] = useState('all');
+  // ── Sort order ────────────────────────────────────────────────────────────
+  // Urgency by default, and that default is the point. A chronological feed answers "what is
+  // next" and quietly answers the wrong question: a summer research programme closing in ninety
+  // days that needs two months of run-up is more urgent than a form due in thirty that takes an
+  // afternoon, and date order puts the form on top. See src/lib/milestoneUrgency.js. The
+  // chronological view is one tap away and unchanged, because "when is it" is still a question.
+  const [sortMode, setSortMode] = useState('urgency');
   const [kindFilter, setKindFilter] = useState(null);
   const [monthFilter, setMonthFilter] = useState(null);
   const [openId, setOpenId] = useState(null);
@@ -233,7 +262,22 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
     const res = await trackItem('deadlines', row, { dedupeKey: rowDedupeKey('deadlines', row), label: row.title, existing: deadlineRows });
     if (res.status === 'duplicate') { toast('That date is already on your timeline', { icon: '✓' }); return res; }
     if (res.status === 'created') {
+      // ── The 60/30/7 ladder, on every date the student adds ────────────────
+      // Saved programs have had this since they were saved; a date typed by hand had nothing,
+      // which meant the one category of deadline the app knew least about — the one the student
+      // found themselves — was also the only one with no run-up warning at all. Skipped for dates
+      // inside a week (three reminders for something due Friday is noise) and for reminder rows
+      // themselves, which would otherwise recurse. See alertRowsFor.
+      const alerts = isAlertRow(row) ? [] : alertRowsFor(
+        { ...row, source_ref: row.source_ref || `deadline:${res.row.id}` },
+        { parentRef: row.source_ref || `deadline:${res.row.id}` },
+      );
+      let made = 0;
+      for (const a of alerts) {
+        try { await createItem('deadlines', a); made += 1; } catch { /* an alert that fails is not worth failing the date over */ }
+      }
       showMedabrainToast('deadline_added', { title: res.row.title });
+      if (made) toast(`Added ${made} reminder${made === 1 ? '' : 's'} before that date — 60, 30 and 7 days out.`, { icon: '⏳', duration: 5000 });
       onAdded?.();
       refresh();
     } else {
@@ -242,9 +286,48 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
     return res;
   }, [deadlineRows, onAdded, refresh]);
 
-  const removeDeadline = useCallback(async (ownerRef, eventId) => {
-    if (!window.confirm('Remove this date from your timeline?')) return;
+  // ── Completion — the other half of two-way ────────────────────────────────
+  // Finishing a date is not deleting it. Completing propagates to whatever the milestone came
+  // from (the program's college-list row, the tracked activity, the scholarship) and closes the
+  // row's own reminders, and the student is told what else is about to change before it does.
+  // See src/lib/milestoneSync.js.
+  const completeRow = useCallback(async (ownerRef) => {
     const row = deadlineRows.find(d => d.id === ownerRef.id);
+    if (!row) return;
+    const effects = completionEffects(row, snapshot || {});
+    const also = describeEffects(effects);
+    if (!window.confirm(`Mark “${row.title}” as done?${also ? `\n\n${also}` : ''}`)) return;
+    try {
+      const applied = await completeMilestone(row, snapshot || {});
+      toast.success(applied.length
+        ? `Done — and ${applied.length} other thing${applied.length === 1 ? '' : 's'} updated to match.`
+        : 'Marked done.');
+      onAdded?.();
+      refresh();
+    } catch (err) { toast.error(err.message); }
+  }, [deadlineRows, snapshot, onAdded, refresh]);
+
+  const reopenRow = useCallback(async (ownerRef) => {
+    const row = deadlineRows.find(d => d.id === ownerRef.id);
+    if (!row) return;
+    try {
+      await reopenMilestone(row);
+      toast('Back on your list.', { icon: '↩️' });
+      refresh();
+    } catch (err) { toast.error(err.message); }
+  }, [deadlineRows, refresh]);
+
+  const removeDeadline = useCallback(async (ownerRef, eventId) => {
+    const row = deadlineRows.find(d => d.id === ownerRef.id);
+    // The 60/30/7 reminders this row owns go with it. Leaving them behind is how a student ends
+    // up with three countdowns to a date that is no longer on their timeline — which reads as the
+    // app being broken, and is the reason nobody trusts a reminder they did not set themselves.
+    const children = row && row.source_ref && !isAlertRow(row)
+      ? deadlineRows.filter(d => alertParentRefOf(d) === row.source_ref)
+      : [];
+    if (!window.confirm(children.length
+      ? `Remove this date and its ${children.length} reminder${children.length === 1 ? '' : 's'} from your timeline?`
+      : 'Remove this date from your timeline?')) return;
     setHidden(prev => new Set(prev).add(eventId));
     if (row) await cancelQueuedTrack('deadlines', rowDedupeKey('deadlines', row));
     try { await deleteItem('deadlines', ownerRef.id); }
@@ -252,6 +335,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
       toast.error(err.message);
       setHidden(prev => { const n = new Set(prev); n.delete(eventId); return n; });
       return;
+    }
+    for (const child of children) {
+      try { await deleteItem('deadlines', child.id); } catch { /* an orphaned reminder is survivable; failing the delete is not */ }
     }
     refresh();
     setHidden(new Set());
@@ -342,6 +428,23 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
     [timeline, matchesExceptMonth]
   );
 
+  // The same visible list, ordered by slack rather than by date, and cut into bands so the
+  // ordering explains itself — an undifferentiated list sorted by an invisible number is worse
+  // than a date-sorted one, because the student cannot tell why anything is where it is.
+  const urgencyGroups = useMemo(() => {
+    if (sortMode !== 'urgency') return [];
+    const sorted = sortByUrgency(visibleUpcoming);
+    const bands = new Map();
+    sorted.forEach(e => {
+      const b = urgencyOf(e).band;
+      if (!bands.has(b.id)) bands.set(b.id, { key: b.id, band: b, items: [] });
+      bands.get(b.id).items.push(e);
+    });
+    return [...bands.values()]
+      .sort((a, b) => a.band.rank - b.band.rank)
+      .map(g => ({ ...g, label: BAND_LABEL[g.band.id].label, blurb: BAND_LABEL[g.band.id].blurb }));
+  }, [sortMode, visibleUpcoming]);
+
   // ── Meta Brain's read on the merged feed ──────────────────────────────────
   // Grounded in the actual upcoming list — the prompt embeds it and forbids
   // inventing anything outside it — and cached per-day AND per-list-shape so it
@@ -393,9 +496,9 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
       <HowItWorks
         id="milestones" color={accent} m={isMobile}
         steps={[
-          { title: 'Your dates go in', body: 'Add anything with a date, or let your college list and scholarships fill it in.' },
-          { title: 'We add the usual ones', body: 'Marked “typical” — the dates a student in your year normally has. Confirm them on the school’s site.' },
-          { title: 'Work down the list', body: 'Everything sits in date order, soonest first. Export it to your phone’s calendar when you like.' },
+          { title: 'It fills itself in', body: 'Your class year builds the calendar — including the health-track dates students miss entirely: summer programs that close in December, HOSA qualifying, science-fair entry, combined-degree supplements.' },
+          { title: 'Everything gets a countdown', body: 'Any date you add gets reminders at 60, 30 and 7 days. Saving a program or an opportunity builds its whole ladder for you.' },
+          { title: 'Worked in the right order', body: 'Sorted by how soon you have to start rather than by which date is soonest. Tick one off and whatever it came from updates too.' },
         ]}
       />
 
@@ -627,23 +730,62 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
           from the fourth group on is real, still here, and one tap down: nothing between now
           and the end of the month is ever hidden, because those are the ones with something
           to do about them. */}
-      {nearGroups.map(group => (
-        <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
-          onGo={go} onDelete={removeDeadline} isMobile={isMobile} />
-      ))}
-
-      {laterGroups.length > 0 && (
-        <Disclosure id="milestones-later" icon={CalendarDays} color={C.sky} m={isMobile}
-          title={`Further ahead (${laterCount} ${laterCount === 1 ? 'date' : 'dates'})`}
-          sub={`Everything from ${laterGroups[0].label} onwards — worth knowing about, nothing you can do today.`}>
-          <div style={CC({ gap: 14 })}>
-            {laterGroups.map(group => (
-              <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
-                onGo={go} onDelete={removeDeadline} isMobile={isMobile} />
-            ))}
+      {/* ── How the list is ordered ──────────────────────────────────────────
+          Two honest orderings of the same dates, and the default is the one a student cannot
+          produce for themselves: how long the work takes is knowledge about programs they have
+          never applied to. "When is it" remains one tap away. */}
+      {visibleUpcoming.length > 1 && (
+        <div style={{ ...glass2({ padding: '10px 13px' }), display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Flame size={12} color={sortMode === 'urgency' ? C.amberL : C.t3} style={{ flexShrink: 0 }} />
+          <span style={{ flex: 1, minWidth: 180, fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
+            {sortMode === 'urgency'
+              ? 'Ordered by how soon you have to start, not by which date is soonest — a deadline in 90 days that needs two months of work outranks one in 30 that takes an afternoon.'
+              : 'Ordered by date, soonest first.'}
+          </span>
+          <div style={R({ gap: 6, flexShrink: 0 })}>
+            {[{ id: 'urgency', label: 'By urgency' }, { id: 'date', label: 'By date' }].map(o => {
+              const on = sortMode === o.id;
+              return (
+                <button key={o.id} onClick={() => setSortMode(o.id)} aria-pressed={on} style={{
+                  ...pill(on ? tint(accent, 0.18) : C.s3, on ? accent : C.t3, {
+                    fontSize: 11, fontWeight: 700, padding: '5px 12px',
+                    border: `1px solid ${on ? tint(accent, 0.4) : C.b1}`,
+                  }),
+                  cursor: 'pointer',
+                }}>{o.label}</button>
+              );
+            })}
           </div>
-        </Disclosure>
+        </div>
       )}
+
+      {sortMode === 'urgency'
+        ? urgencyGroups.map(group => (
+          <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
+            onGo={go} onDelete={removeDeadline} onComplete={completeRow} isMobile={isMobile}
+            urgent={group.band.rank <= 2} showUrgency />
+        ))
+        : (
+          <>
+            {nearGroups.map(group => (
+              <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
+                onGo={go} onDelete={removeDeadline} onComplete={completeRow} isMobile={isMobile} />
+            ))}
+
+            {laterGroups.length > 0 && (
+              <Disclosure id="milestones-later" icon={CalendarDays} color={C.sky} m={isMobile}
+                title={`Further ahead (${laterCount} ${laterCount === 1 ? 'date' : 'dates'})`}
+                sub={`Everything from ${laterGroups[0].label} onwards — worth knowing about, nothing you can do today.`}>
+                <div style={CC({ gap: 14 })}>
+                  {laterGroups.map(group => (
+                    <MilestoneGroup key={group.key} group={group} accent={accent} openId={openId} setOpenId={setOpenId}
+                      onGo={go} onDelete={removeDeadline} onComplete={completeRow} isMobile={isMobile} />
+                  ))}
+                </div>
+              </Disclosure>
+            )}
+          </>
+        )}
 
       {/* Already handled — kept out of the feed so it reads as work left, but
           visible on demand so the student can see the engine noticing. */}
@@ -651,8 +793,8 @@ export default function PortfolioMilestones({ accent = C.indigo, user = null, ap
         <CollapsibleList
           id="milestones-done"
           title={`Already handled (${timeline.done.length})`} icon={CheckCircle2} color={C.green}
-          blurb="Dates you've already satisfied with something you logged. Nothing here is nagging you — it's the app noticing you're ahead."
-          items={timeline.done.filter(e => !hidden.has(e.id))} onGo={go} onDelete={removeDeadline} />
+          blurb="Dates you've marked done, and ones you've already satisfied with something you logged. Nothing here is nagging you."
+          items={timeline.done.filter(e => !hidden.has(e.id))} onGo={go} onDelete={removeDeadline} onReopen={reopenRow} />
       )}
 
       {timeline.past.length > 0 && (
@@ -728,9 +870,14 @@ function useBrainTake(askMedabrain, events) {
     let cancelled = false;
     setSummary({ loading: true, content: null, error: null });
     const list = events
-      .map(e => `"${e.title}" ${e.days < 0 ? `${Math.abs(e.days)}d OVERDUE` : `in ${e.days}d`} (${e.kind}${e.confidence === 'typical' ? ', typical date — not confirmed' : ', their own exact date'})`)
+      .map(e => {
+        const u = urgencyOf(e);
+        return `"${e.title}" ${e.days < 0 ? `${Math.abs(e.days)}d OVERDUE` : `in ${e.days}d`} (${e.kind}${e.confidence === 'typical' ? ', typical date — not confirmed' : ', their own exact date'}; the work behind it takes about ${u.lead} days, so ${u.slack <= 0 ? 'it should already have been started' : `there are about ${u.slack} days before it has to be started`})`;
+      })
       .join('; ');
-    askMedabrain(`Here is this student's real upcoming Milestones feed, soonest first: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
+    // The lead-time figures are in the prompt because "prioritize the soonest" is exactly the
+    // wrong advice on this feed and it is the advice a model gives when it only sees dates.
+    askMedabrain(`Here is this student's real upcoming Milestones feed: ${list}. In 2-3 concise sentences, tell them what to prioritize this week and why. Prioritise by how much SLACK is left — days until due minus the run-up the work needs — not by which date is soonest: a deadline ninety days out needing two months of preparation is more urgent than one thirty days out that takes an afternoon, and saying otherwise costs them the first one. Only reference milestones from this exact list — never invent one. If you cite a date marked "typical", say it still needs confirming on the official site.`)
       .then(content => { if (!cancelled) { setCached(cacheKey, content); setSummary({ loading: false, content, error: null }); } })
       .catch(err => { if (!cancelled) { fetchedKeyRef.current = null; setSummary({ loading: false, content: null, error: err.message }); } });
     return () => { cancelled = true; };
@@ -875,22 +1022,23 @@ function MonthStrip({ events, active, onPick, accent }) {
   );
 }
 
-function MilestoneGroup({ group, accent, openId, setOpenId, onGo, onDelete, isMobile }) {
-  const missed = group.key === 'missed';
-  const color = missed ? C.rose : accent;
+function MilestoneGroup({ group, accent, openId, setOpenId, onGo, onDelete, onComplete, isMobile, urgent = false, showUrgency = false }) {
+  const missed = group.key === 'missed' || group.key === 'overdue';
+  const color = missed ? C.rose : urgent ? C.amber : accent;
   return (
     <div style={{
       ...glass({ padding: isMobile ? 14 : 18 }),
-      background: `linear-gradient(160deg,${tint(color, missed ? 0.09 : 0.05)},rgba(255,255,255,0.02) 45%)`,
-      border: missed ? `1px solid ${tint(C.rose, 0.3)}` : undefined,
+      background: `linear-gradient(160deg,${tint(color, missed || urgent ? 0.09 : 0.05)},rgba(255,255,255,0.02) 45%)`,
+      border: missed ? `1px solid ${tint(C.rose, 0.3)}` : urgent ? `1px solid ${tint(C.amber, 0.28)}` : undefined,
     }}>
-      <SectionTitle icon={missed ? AlertTriangle : Hourglass} color={color}>{group.label} ({group.items.length})</SectionTitle>
+      <SectionTitle icon={missed ? AlertTriangle : urgent ? Flame : Hourglass} color={color}>{group.label} ({group.items.length})</SectionTitle>
       {group.blurb && <div style={{ fontSize: 11.5, color: C.t3, marginTop: -8, marginBottom: 14, lineHeight: 1.55 }}>{group.blurb}</div>}
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: `linear-gradient(180deg,${tint(color, 0.35)},${tint(color, 0.04)})`, borderRadius: 2 }} />
         <div style={CC({ gap: 8 })}>
           {group.items.map(e => (
-            <MilestoneRow key={e.id} e={e} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)} onGo={onGo} onDelete={onDelete} />
+            <MilestoneRow key={e.id} e={e} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)}
+              onGo={onGo} onDelete={onDelete} onComplete={onComplete} showUrgency={showUrgency} />
           ))}
         </div>
       </div>
@@ -898,7 +1046,12 @@ function MilestoneGroup({ group, accent, openId, setOpenId, onGo, onDelete, isMo
   );
 }
 
-function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
+function MilestoneRow({ e, open, onToggle, onGo, onDelete, onComplete, onReopen, showUrgency = false, dim = false }) {
+  const urgency = urgencyOf(e);
+  // A reminder generated by the 60/30/7 ladder, rather than a date in its own right. Marked so a
+  // student can tell "start the Stanford SIMR application" apart from the application deadline
+  // itself — three reminders and a deadline that all look identical is four deadlines.
+  const reminder = String(e.ownerRef?.sourceRef || e.sourceRef || '').startsWith('alert:');
   const meta = STATUS_META[e.status] || STATUS_META.upcoming;
   const col = meta.color(e.kind);
   const kc = kindColor(e.kind);
@@ -935,6 +1088,7 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
                 {meta.label && <span style={{ color: col, fontWeight: 700 }}>· {e.status === 'missed' ? `${countdown(e.days)} — still open` : countdown(e.days)}</span>}
                 {!meta.label && e.days >= 0 && <span>· {countdown(e.days)}</span>}
                 {e.doneLabel && <span style={pill(tint(C.green, 0.14), C.greenL, { fontSize: 9 })}>{e.doneLabel}</span>}
+                {reminder && <span style={pill(C.s3, C.t3, { fontSize: 9, gap: 3 })}><BellRing size={8} />reminder</span>}
                 {e.confidence === 'typical' && <span style={pill(C.s3, C.t3, { fontSize: 9 })}>typical</span>}
                 {e.confidence === 'exact' && e.source === 'profile' && <span style={pill(tint(C.sky, 0.12), C.skyL, { fontSize: 9 })}>yours</span>}
                 {e.source === 'roadmap' && <span style={pill(tint(C.fuchsia, 0.12), C.fuchsia, { fontSize: 9 })}>roadmap</span>}
@@ -943,6 +1097,18 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
             {StatusIcon && <StatusIcon size={13} color={col} style={{ flexShrink: 0 }} />}
             <ChevronRight size={13} color={C.t3} style={{ flexShrink: 0, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s' }} />
           </button>
+          {owned && onComplete && e.status !== 'done' && (
+            <button onClick={() => onComplete(e.ownerRef)} aria-label={`Mark ${e.title} done`} title="Mark this done — and update whatever it came from"
+              style={btnSm(tint(C.green, 0.14), { color: C.greenL, padding: '5px 9px', flexShrink: 0 })}>
+              <CheckCircle2 size={11} />
+            </button>
+          )}
+          {owned && onReopen && e.status === 'done' && (
+            <button onClick={() => onReopen(e.ownerRef)} aria-label={`Put ${e.title} back on the list`} title="Put this back on your list"
+              style={btnSm(C.s3, { color: C.t3, padding: '5px 9px', flexShrink: 0 })}>
+              <Undo2 size={11} />
+            </button>
+          )}
           {owned && (
             <button onClick={() => onDelete(e.ownerRef, e.id)} aria-label={`Remove ${e.title}`} title="Remove this date"
               style={btnSm(C.roseDim, { color: C.rose, padding: '5px 9px', flexShrink: 0 })}>
@@ -950,6 +1116,15 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
             </button>
           )}
         </div>
+
+        {/* The reason this row sits where it does. Only in the urgency ordering, and only when
+            the run-up is long enough for the placement to be surprising — a sentence explaining
+            why a two-week task is where it is would be noise. */}
+        {showUrgency && urgency.reason && (
+          <div style={{ fontSize: 11, color: urgency.band.rank <= 2 ? C.amberL : C.t3, lineHeight: 1.55, marginTop: 8, paddingLeft: 41 }}>
+            {urgency.reason}
+          </div>
+        )}
         {open && (
           <div style={{ marginTop: 11, paddingTop: 11, borderTop: `1px solid ${C.b1}` }}>
             <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>{e.detail}</div>
@@ -977,14 +1152,14 @@ function MilestoneRow({ e, open, onToggle, onGo, onDelete, dim = false }) {
  * want it" as every other one in Portfolio — the blurb becomes the sub-line, so
  * what's inside is described before it's opened rather than after.
  */
-function CollapsibleList({ id, title, icon: Icon, color, blurb, items, onGo, onDelete, dim = false }) {
+function CollapsibleList({ id, title, icon: Icon, color, blurb, items, onGo, onDelete, onReopen = null, dim = false }) {
   if (!items.length) return null;
   return (
     <Disclosure id={id} title={title} sub={blurb} icon={Icon} color={color}>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 14, top: 10, bottom: 10, width: 2, background: tint(color, 0.18), borderRadius: 2 }} />
         <div style={CC({ gap: 8 })}>
-          {items.map(e => <MilestoneRow key={e.id} e={e} open={false} onToggle={() => {}} onGo={onGo} onDelete={onDelete} dim={dim} />)}
+          {items.map(e => <MilestoneRow key={e.id} e={e} open={false} onToggle={() => {}} onGo={onGo} onDelete={onDelete} onReopen={onReopen} dim={dim} />)}
         </div>
       </div>
     </Disclosure>

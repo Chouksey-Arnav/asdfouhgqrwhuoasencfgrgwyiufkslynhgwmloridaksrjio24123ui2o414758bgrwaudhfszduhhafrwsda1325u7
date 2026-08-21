@@ -18,6 +18,10 @@ export const RESOURCES = [
   'deadlines',
   'essays',
   'essay_versions',
+  // The health-pathway reflection journal — one row per answered prompt. Deliberately not an
+  // `essays` row: it is never submitted anywhere and must never be counted as an application
+  // essay. See supabase/migrations/0019_health_pathway_portfolio.sql.
+  'reflection_entries',
   'test_scores',
   'scholarships',
   'activities',

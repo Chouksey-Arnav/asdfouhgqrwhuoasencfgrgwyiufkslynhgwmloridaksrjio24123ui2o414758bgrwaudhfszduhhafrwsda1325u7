@@ -196,7 +196,13 @@ const P = { critical: 3, important: 2, helpful: 1 };
 // THE MILESTONE CATALOG
 //
 // Each entry: { id, title, detail, kind, weight, grades, year, monthDay,
-//               action?, why?, when?, done?, doneLabel? }
+//               leadDays?, action?, why?, when?, done?, doneLabel? }
+//   leadDays — how long the work behind this date actually takes, in elapsed
+//              days. This is what the feed sorts by, because a deadline in
+//              ninety days needing a two-month run-up is more urgent than one
+//              in thirty that takes an afternoon. Omitted means "use the
+//              per-category default" (see LEAD_DAYS_BY_KIND in
+//              src/lib/milestoneUrgency.js).
 //   grades   — the class years this milestone is FOR. This is the freshman gate.
 //   year     — which class year's calendar it sits on (usually the same, except
 //              for deliberate look-aheads like a junior seeing senior-fall dates).
@@ -631,6 +637,127 @@ export const MILESTONES = [
   },
 
   // ── AP / IB, every year ────────────────────────────────────────────────────
+  // ── HEALTH-PATHWAY DATES, every year ───────────────────────────────────────
+  //
+  // The block that makes this a health-track calendar rather than a college
+  // calendar. Everything above is what any applicant needs; everything here is
+  // what a health-pathway student misses ENTIRELY, and misses in a specific and
+  // predictable way — by looking for it in the season when the thing happens
+  // rather than the season when you apply for it.
+  //
+  // The pattern repeats: summer research closes in December, HOSA competitive
+  // eligibility is decided by a membership form in the autumn, the ISEF fair a
+  // student qualifies through takes entries months before it runs, and a
+  // combined-degree program's own supplement closes before the university's
+  // general deadline it is attached to. A fifteen-year-old does not know what
+  // they do not know, and none of this is discoverable by looking at a calendar
+  // in the month it matters.
+  //
+  // `leadDays` on these entries is what stops the feed from burying them: a
+  // February program deadline with a sixty-day run-up outranks a thirty-day
+  // form, which is exactly the judgement a student cannot make for themselves
+  // about programs they have never applied to. See src/lib/milestoneUrgency.js.
+  {
+    id: 'hp_summer_window', title: 'Summer program applications are open NOW — for next summer', kind: 'experience', weight: P.critical,
+    grades: ALL_YEARS, year: 'current', monthDay: '12-01', leadDays: 45,
+    detail: 'This is the single most common way a health-track summer disappears. Selective summer research, hospital internships and pre-health institutes take applications from roughly December through February FOR THE FOLLOWING SUMMER. Students look in April, which is two months after the good ones closed.',
+    action: { tab: 'portfolio', view: 'opportunities', label: 'Browse programs' },
+    why: () => 'Nothing about a December deadline for a June program is intuitive, and it is why most students spend the summer that matters doing nothing they can write about.',
+  },
+  {
+    id: 'hp_summer_window_close', title: 'Most summer program deadlines close this month', kind: 'experience', weight: P.critical,
+    grades: ALL_YEARS, year: 'current', monthDay: '02-01', leadDays: 45,
+    detail: 'The back half of the December–February window. If you have not sent an application by the end of February, assume the competitive programs for this summer are gone and plan a local alternative — a hospital volunteer role, a lab email campaign, a certification course — rather than discovering it in May.',
+    action: { tab: 'portfolio', view: 'opportunities', label: 'See what is still open' },
+    why: () => 'Being told in February that the window is closing is useful. Being told in May is a post-mortem.',
+  },
+  {
+    id: 'hp_cert_fall_enrollment', title: 'Certification course enrolment — autumn term', kind: 'experience', weight: P.important,
+    grades: ALL_YEARS, year: 'current', monthDay: '08-20', leadDays: 21,
+    detail: 'CPR/BLS and first aid run year-round, but the ones with real weight — CNA, EMT-Basic, pharmacy tech, medical assisting — run on a school or community-college term and close registration before the term starts. A course you enrol in this month is a credential you hold by winter.',
+    action: { tab: 'portfolio', view: 'skills', label: 'Log a certification' },
+    why: (c) => c.skills > 0
+      ? 'You already hold at least one certification — the term-based ones (CNA, EMT) are the next step up, and they enrol now, not when you decide you want them.'
+      : 'Most hospital volunteer roles need a current CPR/BLS card before they will take you, and the term-based credentials behind it enrol on a calendar nobody publishes to students.',
+  },
+  {
+    id: 'hp_cert_spring_enrollment', title: 'Certification course enrolment — spring term', kind: 'experience', weight: P.important,
+    grades: ['sophomore', 'junior', 'senior', 'gap'], year: 'current', monthDay: '12-05', leadDays: 21,
+    detail: 'Spring-term dual-enrolment CNA and EMT-Basic courses register in December, before the winter break. State minimum ages vary — often 16 to start the course — so check yours before you plan around it.',
+    action: { tab: 'portfolio', view: 'skills', label: 'Open skills & certs' },
+    why: () => 'The registration closes weeks before the class starts, and over the break there is nobody to ask.',
+  },
+  {
+    id: 'hp_hosa_join', title: 'HOSA membership — join before the competitive-event window', kind: 'experience', weight: P.important,
+    grades: ALL_YEARS, year: 'current', monthDay: '09-25', leadDays: 14,
+    detail: 'Chapter membership and national/state dues are handled in the autumn, and paid membership by the chapter\'s deadline is what makes you eligible to compete at all. The membership is not the achievement — eligibility for the competitive events is, and it is decided by a form in September.',
+    action: { tab: 'portfolio', view: 'opportunities', label: 'See HOSA' },
+    why: () => 'Students join HOSA in January, discover the competitive events, and find out that eligibility closed in the autumn.',
+  },
+  {
+    id: 'hp_hosa_regionals', title: 'HOSA regional / area qualifying events', kind: 'experience', weight: P.important,
+    grades: ALL_YEARS, year: 'current', monthDay: '01-25', leadDays: 60,
+    detail: 'Regional and area competitions run through the winter and are the qualifying round for your State Leadership Conference. Event registration and any required written test usually close weeks before the event itself — confirm both dates with your chapter adviser.',
+    why: () => 'This is the round that decides whether the rest of the HOSA year exists for you, and its registration closes before most students have thought about it.',
+  },
+  {
+    id: 'hp_hosa_state', title: 'HOSA State Leadership Conference', kind: 'experience', weight: P.important,
+    grades: ALL_YEARS, year: 'current', monthDay: '03-20', leadDays: 45,
+    detail: 'State conferences run through March and April and are where qualification for the International Leadership Conference is decided. Dates vary by state — this is the typical window, not your state\'s date.',
+    why: () => 'A state placement is a specific, verifiable line on an application, and it is the only route to the international conference.',
+  },
+  {
+    id: 'hp_hosa_ilc', title: 'HOSA International Leadership Conference (ILC)', kind: 'experience', weight: P.helpful,
+    grades: ALL_YEARS, year: 'current', monthDay: '06-20', leadDays: 60,
+    detail: 'Late June, and you qualify for it at your state conference in the spring. Travel and registration are booked weeks in advance and are not cheap — if you are on the qualifying track, ask about chapter funding in March, not in June.',
+    why: () => 'The cost, not the qualification, is what most often stops a qualified student from going, and it is solvable months earlier.',
+  },
+  {
+    id: 'hp_sts', title: 'Regeneron Science Talent Search entry', kind: 'experience', weight: P.critical,
+    grades: ['senior', 'gap'], year: 'senior', monthDay: '11-05', leadDays: 300,
+    detail: 'Early-to-mid November of senior year, for the following spring. It is an individual original research project with a written report, recommendations and transcripts — which means the entry is the last week of a project that had to start a year or more earlier. Confirm the exact date on the Society for Science site.',
+    action: { tab: 'portfolio', view: 'opportunities', label: 'See the competition' },
+    when: (c) => c.research > 0 || c.pathway === 'biomedResearch',
+    why: (c) => c.research > 0
+      ? 'You have research logged, which is the only prerequisite that cannot be produced in a hurry — this is the entry it exists for.'
+      : 'The oldest pre-college science competition in the country, and being named a scholar is a line an admissions reader recognises.',
+  },
+  {
+    id: 'hp_isef_find_fair', title: 'Find your ISEF-affiliated regional fair and note its entry deadline', kind: 'experience', weight: P.important,
+    grades: ['freshman', 'sophomore', 'junior', 'senior'], year: 'current', monthDay: '11-15', leadDays: 60,
+    detail: 'You cannot enter ISEF directly. You qualify through an affiliated regional or state fair — and that fair, not ISEF, is the deadline that catches students out: the fairs themselves run January through mid-April, but each one sets its own entry deadline months earlier, often before the winter break.',
+    action: { tab: 'portfolio', view: 'opportunities', label: 'See ISEF' },
+    why: () => 'Every year students discover ISEF in March and find that the only route into it closed in December.',
+  },
+  {
+    id: 'hp_isef_season_end', title: 'Regional science fair season ends — ISEF qualifying closes', kind: 'experience', weight: P.important,
+    grades: ['freshman', 'sophomore', 'junior', 'senior'], year: 'current', monthDay: '04-15', leadDays: 90,
+    detail: 'Affiliated regional and state fairs conclude by roughly mid-April, which is when qualification for that year\'s ISEF is settled. If you did not enter a fair this cycle, the project you have keeps its value — enter it next cycle rather than starting again.',
+    why: () => 'This is the wall at the end of the qualifying route, and after it the next opportunity is a full year away.',
+  },
+  {
+    id: 'hp_combined_supplements', title: 'Combined-degree supplements — these close before everything else', kind: 'application', weight: P.critical,
+    grades: ['senior', 'gap'], year: 'senior', monthDay: '10-15', leadDays: 150,
+    detail: 'A BS/MD, direct-admit BSN or 0-6 PharmD program is a SECOND application with its own essays, its own recommendation requirements and — this is the part that costs people the year — its own deadline, frequently earlier than the university\'s general one and often earlier than November 1.',
+    action: { tab: 'portfolio', view: 'essays', label: 'See the prompts' },
+    when: (c) => c.combinedPrograms > 0,
+    why: (c) => `You are tracking ${c.combinedPrograms} combined-degree program${c.combinedPrograms === 1 ? '' : 's'}. Their supplements are visible in your essay workspace — read every one now rather than in the last week of October.`,
+  },
+  {
+    id: 'hp_combined_lookahead', title: 'Combined-degree deadlines land earlier than you think', kind: 'application', weight: P.important,
+    grades: ['junior'], year: 'senior', monthDay: '10-15', leadDays: 150,
+    detail: 'If a combined BS/MD or direct-admit program is on your list, its round next autumn is very likely to be earlier than the November date everything else runs on — which means its essays get written in the summer after junior year, not in the autumn of senior year.',
+    action: { tab: 'portfolio', view: 'combined', label: 'See the programs' },
+    when: (c) => c.combinedPrograms > 0,
+    why: () => 'It is a year away, and it is the reason your summer plan matters: the work you skip in July starts being due in September.',
+  },
+  {
+    id: 'hp_combined_requirements', title: 'Combined-degree requirements start counting now', kind: 'planning', weight: P.important,
+    grades: ['freshman', 'sophomore'], year: 'current', monthDay: '09-30', leadDays: 30,
+    detail: 'Programs you apply to from high school ask for documented service and clinical hours, a science record and often a single-sitting test score — over years, not months. A senior discovering this has already lost most of what it asks for; you have not.',
+    action: { tab: 'portfolio', view: 'combined', label: 'See what they ask for' },
+    why: () => 'This is the only medical-school decision made while you are still in high school, and the only one whose requirements begin in ninth grade.',
+  },
   {
     id: 'ap_registration', title: 'AP exam registration & fees due', kind: 'academics', weight: P.critical,
     grades: ALL_YEARS, year: 'current', monthDay: '11-05',
@@ -657,7 +784,13 @@ export function buildTimelineContext({ user = null, snapshot = {}, now = new Dat
   const colleges = arr(snapshot.colleges);
   const clinical = arr(snapshot.clinicalHours);
   const recommenders = arr(snapshot.recommenders);
-  const essays = arr(snapshot.essays);
+  // The "why this pathway" working document is stored as an essays row (so it inherits version
+  // history and the data export) but it is not an application essay and must never be counted as
+  // one — a student who opens their four-year notebook has not started a supplement, and a
+  // milestone that reads "1 draft started" off the back of it is telling them something false.
+  // The kind string is duplicated from src/lib/healthEssays.js rather than imported, because that
+  // module imports this one and this file has to stay importable from a plain Node script.
+  const essays = arr(snapshot.essays).filter(e => e?.essay_kind !== 'why_pathway');
   const skills = arr(snapshot.skills);
   const deadlines = arr(snapshot.deadlines);
   const experience = arr(user?.healthExperience);
@@ -707,6 +840,16 @@ export function buildTimelineContext({ user = null, snapshot = {}, now = new Dat
     hasFafsaDeadlineRow: deadlines.some(d => d.kind === 'fafsa'),
     hasApDeadlineRow: deadlines.some(d => d.kind === 'ap_exam' || d.kind === 'ib_exam'),
 
+    // Combined-degree and direct-admit programs the student has tracked. Derived here from the
+    // `source_ref` the Combined Degrees panel stamps on the milestone rows it writes, rather than
+    // by importing the program catalog — this module has to stay importable from a plain Node
+    // script (scripts/verifyTimeline.mjs), and callers that hold the college rows can pass a
+    // better count through `counts` (PortfolioMilestones does exactly that).
+    combinedPrograms: new Set(
+      deadlines.map(d => String(d.source_ref || '')).filter(r => r.startsWith('combined:'))
+        .map(r => r.split(':')[1]).filter(Boolean)
+    ).size,
+
 
     // Escape hatch for callers that hold real counts but not the rows behind them.
     // App.jsx keeps running totals (colleges, essays, clinical hours, recommenders…) for the
@@ -743,6 +886,7 @@ function catalogEvents(ctx) {
     out.push({
       id: m.id, date, title: m.title, detail: m.detail, kind: m.kind, weight: m.weight,
       source: 'catalog', confidence: 'typical',
+      leadDays: m.leadDays || null,
       action: m.action || null,
       why: call(m.why, ctx) || null,
       doneLabel: done ? (call(m.doneLabel, ctx) || 'Done') : null,
@@ -834,19 +978,26 @@ function profileEvents(ctx, snapshot) {
 
   arr(snapshot.deadlines).forEach(d => {
     if (!d.due_date) return;
+    // `completed_at` is what makes this feed two-way: finishing a date is a different act from
+    // deleting it, and a completed milestone should stop counting down without losing the record
+    // that it happened. See supabase/migrations/0019_health_pathway_portfolio.sql.
+    const finished = !!d.completed_at;
     out.push({
       id: `deadline_${d.id || d.title}_${d.due_date}`, date: d.due_date, title: d.title,
       kind: DEADLINE_KIND_MAP[d.kind] || 'application', weight: P.critical,
       detail: 'A date you added yourself. It counts down here and on your Home dashboard.',
       source: 'profile', confidence: 'exact',
+      leadDays: Number.isFinite(Number(d.lead_days)) ? Number(d.lead_days) : null,
+      sourceRef: d.source_ref || null,
       // ownerRef marks the one class of event that is a real, editable row rather than a
       // derived one — the Milestones tab renders these with a delete control so the feed is
       // where you manage your own dates, not just where you read them. Everything else on
       // the timeline is computed from data owned by another panel and must be edited there.
-      ownerRef: { resource: 'deadlines', id: d.id, kind: d.kind || 'custom' },
+      ownerRef: { resource: 'deadlines', id: d.id, kind: d.kind || 'custom', sourceRef: d.source_ref || null, leadDays: d.lead_days ?? null },
       action: null,
       why: 'You added this one yourself.',
-      ...classify(d.due_date, today, { weight: P.critical }),
+      ...classify(d.due_date, today, { done: finished, weight: P.critical }),
+      ...(finished ? { doneLabel: 'Done' } : {}),
     });
   });
 

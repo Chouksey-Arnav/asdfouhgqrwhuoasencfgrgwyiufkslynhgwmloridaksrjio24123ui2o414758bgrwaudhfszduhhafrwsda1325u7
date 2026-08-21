@@ -185,15 +185,24 @@ export function milestoneRowsFor(program, dueIso, today = new Date()) {
   const approx = program.deadline?.precision && program.deadline.precision !== 'exact';
   const kind = KIND_FOR_ROUND[program.deadline?.round] || 'regular_decision';
 
+  // `source_ref` is the join that makes the feed two-way: completing the application milestone
+  // marks the program's college-list row submitted and closes its own reminders, instead of the
+  // student's only option being to delete the row. See src/lib/milestoneSync.js.
+  const ref = `combined:${program.id}`;
   const rows = [{
     title: `${name} — application due${approx ? ' (approx. — confirm on the official page)' : ''}`,
     due_date: dueIso,
     kind,
+    source_ref: ref,
+    // Five months, matching the top of the alert ladder: a combined-degree supplement with its
+    // own essays and official score sends behind it is genuinely a summer's worth of work, and
+    // the urgency sort has to know that or it files this behind every thirty-day form.
+    lead_days: 150,
   }];
   for (const offset of ALERT_OFFSETS) {
     const when = new Date(due.getTime() - offset * DAY);
     if (when <= t) continue;
-    rows.push({ title: ALERT_COPY[offset](name), due_date: toISO(when), kind });
+    rows.push({ title: ALERT_COPY[offset](name), due_date: toISO(when), kind, source_ref: `alert:${ref}:${offset}`, lead_days: offset === 7 ? 3 : 7 });
   }
   return rows;
 }

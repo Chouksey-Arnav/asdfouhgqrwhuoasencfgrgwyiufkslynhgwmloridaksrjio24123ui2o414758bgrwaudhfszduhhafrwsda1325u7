@@ -441,12 +441,16 @@ export default function CombinedDegreePanel({
     setSavingId(program.id);
     try {
       const label = programLabel(program);
-      if (!existingColleges.some(c => String(c.name) === label)) {
-        const row = await createItem('colleges', collegeRowFor(program, dl));
-        setExistingColleges(prev => [...prev, row]);
+      let college = existingColleges.find(c => String(c.name) === label) || null;
+      if (!college) {
+        college = await createItem('colleges', collegeRowFor(program, dl));
+        setExistingColleges(prev => [...prev, college]);
       }
+      // The milestone rows carry the college id as well as the program's source_ref, so
+      // completing the application milestone can find and advance the exact college-list row this
+      // program created — see completionEffects in src/lib/milestoneSync.js.
       const rows = dl?.iso ? milestoneRowsFor(program, dl.iso) : [];
-      for (const r of rows) await createItem('deadlines', r);
+      for (const r of rows) await createItem('deadlines', { ...r, college_id: college?.id || null });
       setSavedIds(prev => new Set([...prev, program.id]));
 
       const alerts = Math.max(0, rows.length - 1);
