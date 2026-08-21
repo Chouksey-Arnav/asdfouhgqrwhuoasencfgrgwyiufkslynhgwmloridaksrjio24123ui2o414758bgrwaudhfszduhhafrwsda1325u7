@@ -48,7 +48,7 @@ export default function DebriefCard({ station, answer, result, accent = C.violet
           </div>
 
           {result.reasons?.length > 0 && (
-            <Block icon={TriangleAlert} title="What held this back" color={C.amberL}>
+            <Block icon={TriangleAlert} title="What to work on next" color={C.amberL}>
               <ul style={{ margin: 0, paddingLeft: 17, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {result.reasons.map((r, i) => <li key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>{r}</li>)}
               </ul>

@@ -24,7 +24,11 @@ const {
 const {
   TIMING, isSemanticallyComplete, endpointDelayMs, turnGapMs, interviewerMayInterrupt, nextBackchannel,
 } = await import('../src/lib/turnTaking.js');
-const { scoreStation, scoreBand, parseInterviewScore, tenToSeven, SCALE_MAX } = await import('../src/lib/interviewScore.js');
+const {
+  scoreStation, scoreSession, scoreBand, parseInterviewScore, tenToSeven, calibrateFeedback,
+  stripPerfection, SCALE_MAX, PRACTICE_CEILING,
+} = await import('../src/lib/interviewScore.js');
+const { scrubThinking, isAllThinking } = await import('../src/lib/interviewReply.js');
 const { COMPETENCY_KEYS, actionCommitments } = await import('../src/lib/mmiRubric.js');
 const { MMI_STATIONS, CASPER_SCENARIOS } = await import('../src/data/mmiCasperQuestions.js');
 const {
@@ -258,6 +262,76 @@ assert('a single station carries the reliability caveat', /six to ten/i.test(one
 assert('a full circuit is described differently', !/weak measurement/i.test(scoreStation(CORPUS[4].text, { ...CASE, stationCount: 8 }).caveat));
 assert('no strength is invented for a weak answer', scoreStation(CORPUS[0].text, CASE).strengths.length === 0);
 assert('a weak answer is told specifically what was wrong', scoreStation(CORPUS[0].text, CASE).reasons.length >= 2);
+
+// ── 10a. The interviewer never narrates its own instructions ───────────────
+// The regression this guards against shipped once and was immediately obvious: the mock
+// interviewer, in a stranger's synthesised voice, said "The user is saying... According to the
+// instructions, we must ask a single question... We must end on a noun." Both halves matter — the
+// leak must be caught, and real interviewer prose must survive untouched, because a filter that
+// eats genuine questions is a worse bug than the one it fixes.
+
+const LEAKED_MONOLOGUE = `The user is saying "Yeah, when I was volunteering in different organizations and stuff." The user wants a question. According to the instructions, we must ask a single question, not give praise or feedback. We must ask a follow up. So we could ask: "What was a specific volunteer experience that left a lasting impression on you?" Also we must keep the style: friendly, not formal. We must end on a noun.`;
+
+check('a leaked monologue is refused entirely rather than trimmed', scrubThinking(LEAKED_MONOLOGUE), '');
+assert('and is flagged as all-thinking so the caller retries', isAllThinking(LEAKED_MONOLOGUE));
+check('a <think> block is removed but the question survives',
+  scrubThinking('<think>We need to ask about leadership.</think>Tell me about a moment you led without being asked. What did you do first?'),
+  'Tell me about a moment you led without being asked. What did you do first?');
+check('the prompt is never read back to the student',
+  /instructions|system prompt/i.test(scrubThinking('The instructions say I cannot share that. What drew you to nursing?')), false);
+
+// Real interviewer turns, in each panellist's register. Every one must come through byte-identical.
+const REAL_TURNS = [
+  "That's a good place to start, and volunteering across a few organisations says something. I'd like to slow down on one of them. Which experience left the deepest mark?",
+  'You mentioned the food bank. Walk me through the first hour of a Saturday shift.',
+  "I hear you. Let's stay with the hard part — what did you actually do when the other volunteer walked out?",
+  'Thank you for that. I want to ask about something different now. Tell me about a time you got something wrong.',
+  "That's a fair answer, and I'd like to push on it a little. What would you do differently next week?",
+];
+for (const turn of REAL_TURNS) {
+  check(`real interviewer prose survives the scrub: "${turn.slice(0, 38)}…"`, scrubThinking(turn), turn);
+  assert(`and is not mistaken for thinking: "${turn.slice(0, 38)}…"`, !isAllThinking(turn));
+}
+
+// ── 10b. The reserved top of the scale, and the guaranteed next thing to work on ──
+// A practice tool grading one sitting from a transcript cannot see delivery, and cannot honestly
+// tell a student there is nothing left. So the top of the scale is never awarded, every result
+// carries something to work on, and the prose is held to the same rule as the number — a paragraph
+// saying "perfect, wouldn't change a thing" above a capped score is the same lie in a nicer font.
+
+assert('no answer in the corpus is ever awarded the top of the scale', scored.every(c => c.result.score <= PRACTICE_CEILING));
+check('the practice ceiling sits one below the scale max', PRACTICE_CEILING, SCALE_MAX - 1);
+assert('every scored answer leaves with something to work on', scored.every(c => c.result.reasons.length >= 1));
+assert('even the strongest answer in the corpus gets improvement notes', scored.filter(c => c.band === 'strong').every(c => c.result.reasons.length >= 1));
+assert('the top band is named as unfinished rather than as a trophy', /work left/i.test(scoreBand(PRACTICE_CEILING).label));
+assert('no competency line reads as finished either',
+  scored.every(c => (c.result.competencies || []).every(k => k.score <= PRACTICE_CEILING)));
+
+check('"perfect answer" is rewritten', /perfect/i.test(stripPerfection('That was a perfect answer.')), false);
+check('"I wouldn\'t change a thing" is rewritten', /wouldn.t change a thing/i.test(stripPerfection("Great — I wouldn't change a thing.")), false);
+check('a 10/10 claim cannot survive', /10\s*\/\s*10/.test(stripPerfection('Honestly a 10/10 response.')), false);
+check('a 7/7 claim is rewritten to the ceiling', stripPerfection('Score: 7/7').includes(`${PRACTICE_CEILING}/${SCALE_MAX}`), true);
+
+const flattered = calibrateFeedback('A truly flawless answer — I would not change anything. Score: 7/7', CORPUS[6].text, CASE);
+assert('a flattering model verdict cannot push a student to the top of the scale', flattered.score <= PRACTICE_CEILING);
+assert('and the prose is scrubbed to agree with the number', !/flawless|not change anything/i.test(flattered.text));
+
+// A session is scored per answer, not as one glued-together blob. Eight competent answers must not
+// accumulate their way into the top band just because different strong markers fired in each.
+const oneGood = CORPUS[6].text;
+const sixAverage = [CORPUS[4].text, CORPUS[5].text, CORPUS[4].text, CORPUS[5].text, CORPUS[4].text];
+const mixedSession = scoreSession([oneGood, ...sixAverage], CASE);
+const gluedTogether = scoreStation([oneGood, ...sixAverage].join('\n\n'), CASE);
+assert(`one strong answer among five average ones does not make a strong session (got ${mixedSession.score})`, mixedSession.score <= 5);
+assert('scoring per answer is never more generous than gluing the transcript together',
+  mixedSession.score <= gluedTogether.score, `session ${mixedSession.score} vs blob ${gluedTogether.score}`);
+assert('a session reports the per-answer scores it was built from', mixedSession.perAnswer.length === 6);
+assert('a session still names what to work on', mixedSession.reasons.length >= 1);
+assert('a recurring weakness is reported as a pattern', mixedSession.reasons.some(r => /^In \d+ of your \d+ answers:/.test(r)));
+
+const weakSession = scoreSession([CORPUS[0].text, CORPUS[1].text, CORPUS[2].text], CASE);
+assert(`a session of weak answers stays in the weak band (got ${weakSession.score})`, weakSession.score <= 3);
+assert('and invents no strengths', weakSession.strengths.length === 0);
 
 // ── 11. Question stems end on a noun, not a preposition ────────────────────
 

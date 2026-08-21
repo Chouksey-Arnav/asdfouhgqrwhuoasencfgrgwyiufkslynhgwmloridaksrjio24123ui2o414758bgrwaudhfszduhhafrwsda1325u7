@@ -30,8 +30,9 @@ import { Mic, MicOff, Square, Play, Volume2, VolumeX, Send, Loader2, Sparkles, R
 import { C, glass, glass2, btn, btnG, R, CC, pill } from '../lib/theme';
 import * as speech from '../lib/speech';
 import * as DB from '../lib/db';
-import { calibrateFeedback, SCALE_MAX } from '../lib/interviewScore';
+import { calibrateFeedback, SCALE_MAX, PRACTICE_CEILING } from '../lib/interviewScore';
 import { backchannelPolicy } from '../lib/interviewPanel';
+import { scrubThinking } from '../lib/interviewReply';
 import {
   createEndpointer, turnGapMs, noteTakingPause, nextBackchannel, studentBargeIn,
 } from '../lib/turnTaking';
@@ -125,9 +126,16 @@ STRONG (6-7) names specific people and moments; gives the decision AND the first
 
 Judge committed actions, not topic or vocabulary. "I'd sit down next to her and stay" and "I'd give her space and head home" are similar in topic and opposite in what they show — score what they said they would DO, to WHOM, and WHEN.
 
-Cover, in flowing spoken paragraphs (this is read aloud — no markdown or bullet symbols): (1) the single biggest weakness across their answers, named plainly in your very first sentence, quoting what they actually said — no warm-up, no softener; (2) two more concrete things to work on, each with a quick example of how a stronger version of their own answer would have sounded; (3) anything that genuinely worked, but only if it did and only tied to a specific answer they gave — if nothing stood out, say exactly that and move on. An invented compliment is the single most damaging thing you can give them.
+THE CEILING: never award ${SCALE_MAX}/${SCALE_MAX}, and never say an answer was perfect, flawless, or that you would not change anything. ${PRACTICE_CEILING}/${SCALE_MAX} is the highest score available and it still means there is work to do. Every interview has a weakest moment. If you cannot find one, you have not looked hard enough — go back and find the vaguest sentence, the person who stayed abstract ("someone", "people", "the organisation"), the action with no time attached, or the answer that ended by trailing off.
 
-End with a line exactly like "Score: X/7". Be blunt about the work and never unkind about the person — they are a teenager, and every criticism must carry its fix with it. Under 260 words.`;
+Cover, in flowing spoken paragraphs (this is read aloud — no markdown or bullet symbols):
+(1) The single biggest weakness across their answers, named plainly in your very first sentence, quoting what they actually said — no warm-up, no softener, no "you did a nice job, but".
+(2) THREE more specific things to work on. For each one: quote the sentence they actually said, say precisely what is weak about it, and then give the replacement — the actual words a stronger version of THEIR sentence would have used, not advice about what to do. "Instead of 'I volunteered at a few organisations', say 'I spent eight months at the Kingsway food bank, mostly on Saturday intake shifts.'"
+(3) The pattern across the whole session — the thing they did in most answers rather than in one. This is the most useful sentence in the debrief.
+(4) Anything that genuinely worked, but only if it did, and only tied to a specific answer they gave. If nothing stood out, say exactly that and move on. An invented compliment is the single most damaging thing you can give them.
+(5) The one thing to change before their next practice run, stated as an instruction they could follow tomorrow.
+
+End with a line exactly like "Score: X/7". Be blunt about the work and never unkind about the person — they are a teenager, and every criticism must carry its fix with it. Under 400 words.`;
 
 const MAX_QUESTIONS = 8; // soft cap; student can end sooner
 
@@ -153,6 +161,10 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   const [firstTimer, setFirstTimer] = useState(false);  // no previous sessions → default to the med student
   const [consent, setConsent] = useState(() => speech.getVoiceConsent());
   const [askingConsent, setAskingConsent] = useState(false);
+  // How much of each interviewer turn has actually been said out loud yet. Keyed by turn index; a
+  // turn with no entry is fully revealed, which is what makes muted and unsupported browsers work
+  // without a second code path.
+  const [revealed, setRevealed] = useState({});
 
   const sessionRef = useRef({ system: '', history: [] });
   const recognizerRef = useRef(null);
@@ -164,6 +176,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   const voiceRef = useRef(null);
   const listenStartRef = useRef(0);
   const lastBackchannelRef = useRef(0);
+  const speakingTurnRef = useRef(null); // which transcript turn the voice is currently revealing
   const backchannelTimerRef = useRef(null);
   useEffect(() => { mutedRef.current = muted; }, [muted]);
   useEffect(() => { voiceRef.current = interviewerVoice; }, [interviewerVoice]);
@@ -178,6 +191,17 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     DB.getInterviewSessions()
       .then(rows => setFirstTimer(!(rows || []).some(r => r.mode === 'live')))
       .catch(() => setFirstTimer(true));
+  }, []);
+
+  // Drop a turn's partial-reveal entry, which makes the transcript show it in full.
+  const revealAll = useCallback((turnIndex) => {
+    if (turnIndex == null) return;
+    setRevealed(r => {
+      if (!(turnIndex in r)) return r;
+      const next = { ...r };
+      delete next[turnIndex];
+      return next;
+    });
   }, []);
 
   const clearTimers = useCallback(() => {
@@ -201,37 +225,80 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
 
   // Speak one interviewer line. `intent` decides the emotional layer — a probe arrives slower and
   // lower with a beat before it, an acknowledgement is quick and light.
-  const speakLine = useCallback((text, { intent, isFirstTurn = false } = {}) => {
-    if (!ttsSupported || mutedRef.current) return;
+  //
+  // The line is also REVEALED as it is spoken, clause by clause, using the prosody plan's own
+  // segments as the unit. This is the difference between reading a transcript and watching someone
+  // talk: the words arrive at the speed of the voice, the pause before a hard question is visible
+  // as well as audible, and the sentence being said right now is the one lit up. When the voice is
+  // muted or unsupported, the whole line is shown at once — a reveal with no audio behind it is
+  // just an artificial delay.
+  const speakLine = useCallback((text, { intent, isFirstTurn = false, turnIndex } = {}) => {
+    if (!ttsSupported || mutedRef.current) { revealAll(turnIndex); return; }
+    speakingTurnRef.current = turnIndex ?? null;
     setSpeaking(true);
+    setRevealed(r => (turnIndex == null ? r : { ...r, [turnIndex]: '' }));
     cancelSpeakRef.current = speech.speak(text, {
       persona: voiceRef.current,
       intent,
       isFirstTurn,
-      onEnd: () => setSpeaking(false),
-      onError: () => setSpeaking(false),
+      onSegment: (i, seg) => {
+        if (turnIndex == null) return;
+        setRevealed(r => ({ ...r, [turnIndex]: `${r[turnIndex] || ''}${r[turnIndex] ? ' ' : ''}${seg.text}`.trim() }));
+      },
+      // However the passage ends — finished, cancelled by a barge-in, or an engine error — the full
+      // text is restored. A half-revealed line left on screen because the student interrupted would
+      // be a transcript that lies about what was said to them.
+      onEnd: () => { setSpeaking(false); revealAll(turnIndex); },
+      onError: () => { setSpeaking(false); revealAll(turnIndex); },
     });
-  }, [ttsSupported]);
+  }, [ttsSupported, revealAll]);
+
+  // Stop the voice for any reason — barge-in, mute, ending the session, unmounting. Cancelling a
+  // passage deliberately does NOT fire its onEnd (see speech.js), so the reveal has to be completed
+  // here or an interrupted line would sit in the transcript permanently half-written.
+  const haltSpeech = useCallback(() => {
+    cancelSpeakRef.current?.();
+    speech.cancelSpeech();
+    setSpeaking(false);
+    revealAll(speakingTurnRef.current);
+    speakingTurnRef.current = null;
+  }, [revealAll]);
 
   // One round-trip to the interviewer model. `extraUser` lets the debrief call append its
   // instruction as the final user turn without polluting the visible transcript.
-  async function askInterviewer({ extraUser, maxTokens = 200 } = {}) {
+  //
+  // TWO THINGS HERE ARE LOAD-BEARING, and both were learned from the same bug.
+  //
+  // The budget. A spoken turn is two to four sentences, so this used to ask for 200 tokens. On a
+  // reasoning model the thinking is billed against that same 200, so the model spent the whole
+  // allowance deliberating and returned with nothing written. `reasoningEffort: 'low'` is the real
+  // fix for a conversational turn — a person asking their next interview question does not need to
+  // deliberate — and the larger budget is the belt to that braces.
+  //
+  // The scrub. If any thinking still leaks through (a vendor that ignores the effort hint, a relief
+  // provider with a different response shape), it must never reach the student's eyes or the speech
+  // synthesiser. api/groq.js strips it server-side; scrubThinking below is the client's own last
+  // line, because the failure it prevents is the one that ends the illusion instantly: an
+  // interviewer who says "According to the instructions, we must ask a single question" out loud.
+  async function askInterviewer({ extraUser, maxTokens = 900, reasoningEffort = 'low' } = {}) {
     const messages = [...sessionRef.current.history];
     if (extraUser) messages.push({ role: 'user', content: extraUser });
     const r = await fetch('/api/groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: sessionRef.current.system, messages, maxTokens, purpose: 'interview' }),
+      body: JSON.stringify({ system: sessionRef.current.system, messages, maxTokens, reasoningEffort, purpose: 'interview' }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
-    return (d.content || '').trim();
+    const clean = scrubThinking(d.content || '');
+    if (!clean) throw new Error('The interviewer lost their train of thought. Try that again.');
+    return clean;
   }
 
   async function startInterview() {
     if (loading) return;
     setLoading(true);
-    setTurns([]); setDebrief(null); setQuestionCount(0);
+    setTurns([]); setDebrief(null); setQuestionCount(0); setRevealed({});
     const focus = chosenFocus.length ? chosenFocus : pickFocus();
     const sessionSeed = Math.random().toString(36).slice(2, 8);
     sessionRef.current = {
@@ -240,12 +307,12 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     };
     try {
       sessionRef.current.history.push({ role: 'user', content: "I'm ready to start the interview. Please begin." });
-      const opening = await askInterviewer({ maxTokens: 180 });
+      const opening = await askInterviewer({ maxTokens: 700 });
       sessionRef.current.history.push({ role: 'assistant', content: opening });
       setTurns([{ role: 'interviewer', text: opening }]);
       setQuestionCount(1);
       setPhase('active');
-      speakLine(opening, { isFirstTurn: true });
+      speakLine(opening, { isFirstTurn: true, turnIndex: 0 });
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not start the interview.');
     }
@@ -283,8 +350,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
       // BARGE-IN: the student started talking, so the interviewer stops. Immediately, mid-word,
       // every time. This direction of the asymmetry always wins.
       onSpeechStart: () => {
-        studentBargeIn({ cancelSpeech: () => { cancelSpeakRef.current?.(); speech.cancelSpeech(); } });
-        setSpeaking(false);
+        studentBargeIn({ cancelSpeech: haltSpeech });
       },
       onResult: (transcript) => { setDraft(transcript); endpointer.push(transcript); },
       onEnd: () => setListening(false),
@@ -324,7 +390,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     // Voice answers put a minor's audio through the browser vendor's speech service. Ask first, in
     // plain language, before the browser's own permission prompt — and let "no" cost them nothing.
     if (speech.getVoiceConsent() !== 'granted') { setAskingConsent(true); return; }
-    cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false);
+    haltSpeech();
     beginListening();
   }
 
@@ -334,15 +400,20 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     const answer = (answerOverride ?? draft).trim();
     if (!answer || loading) return;
     stopListening();
-    cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false);
+    haltSpeech();
     setDraft('');
     setTurns(t => [...t, { role: 'student', text: answer }]);
     sessionRef.current.history.push({ role: 'user', content: answer });
     setLoading(true);
     try {
-      const reply = await askInterviewer({ maxTokens: 200 });
+      const reply = await askInterviewer({ maxTokens: 900 });
       sessionRef.current.history.push({ role: 'assistant', content: reply });
+      // Where this reply will land in the transcript. Only this function appends, and it has just
+      // added the student's turn, so the arithmetic is exact — and knowing the index up front is
+      // what lets the line be revealed clause by clause as it is spoken.
+      const replyIndex = turns.length + 1;
       setTurns(t => [...t, { role: 'interviewer', text: reply }]);
+      setRevealed(r => ({ ...r, [replyIndex]: '' }));
       setQuestionCount(c => c + 1);
       setLoading(false);
 
@@ -356,7 +427,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
         setWritingNotes(true);
         later(() => setWritingNotes(false), notePause);
       }
-      later(() => speakLine(reply), gap);
+      later(() => speakLine(reply, { turnIndex: replyIndex }), gap);
     } catch (e) {
       toast.error(e.message?.slice(0, 100) || 'Could not continue the interview.');
       setLoading(false);
@@ -367,13 +438,21 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
     if (loading) return;
     stopListening();
     clearTimers();
-    cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false); setWritingNotes(false);
+    haltSpeech(); setWritingNotes(false);
     setLoading(true);
     setPhase('debrief');
     try {
-      const summary = await askInterviewer({ extraUser: DEBRIEF_INSTRUCTION, maxTokens: 620 });
+      // Rating is the one call in this component where deliberation is worth paying for, so it gets
+      // the deeper tier and a budget several times the length of the answer (reasoning tokens are
+      // billed against it — see askInterviewer).
+      const summary = await askInterviewer({ extraUser: DEBRIEF_INSTRUCTION, maxTokens: 2600, reasoningEffort: 'medium' });
       const studentTurns = turns.filter(t => t.role === 'student');
-      const answers = studentTurns.map(t => t.text).join('\n\n');
+      // The ARRAY is the point. Handing the rubric one glued-together transcript let strong markers
+      // accumulate across turns — a stakeholder named in answer one plus a deliberate ending in
+      // answer six read as a strong session even when no single answer was strong. Passed as
+      // separate answers, each is scored on its own and the session lands near the typical one,
+      // which is how a real rater's overall impression actually forms.
+      const answers = studentTurns.map(t => t.text);
       const questions = turns.filter(t => t.role === 'interviewer').map(t => t.text).join(' ');
       // Grade against everything the student actually said, not the model's mood: the rubric in
       // lib/interviewScore.js can only lower the number the model proposed.
@@ -396,11 +475,12 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   }
 
   function reset() {
-    cancelSpeakRef.current?.(); speech.cancelSpeech();
+    haltSpeech();
     recognizerRef.current?.abort?.();
     stopListening(); clearTimers();
     setPhase('idle'); setTurns([]); setDebrief(null); setDraft(''); setQuestionCount(0);
     setSpeaking(false); setListening(false); setWritingNotes(false);
+    setRevealed({});
   }
 
   // ── Idle / start screen ──────────────────────────────────────────────────
@@ -466,32 +546,53 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
 
   // ── Active / debrief / done ────────────────────────────────────────────────
   const canSubmit = draft.trim().length > 0 && !loading && phase === 'active';
-  const statusLine = speaking ? 'Speaking…'
-    : writingNotes ? 'Writing notes…'
+  // Named, and in the present continuous. "Speaking…" is a system state; "Priya is speaking" is a
+  // person — and it is the line a student glances at to know whose turn it is.
+  const who = interviewerVoice?.name || 'Your interviewer';
+  const statusLine = speaking ? `${who} is speaking`
+    : writingNotes ? `${who} is writing notes`
     : listening ? 'Listening — take your time'
-    : loading ? 'Thinking…'
+    : loading ? (phase === 'debrief' ? `${who} is writing up your debrief` : `${who} is thinking`)
     : phase === 'done' ? 'Interview complete'
-    : `Question ${questionCount}`;
+    : `Question ${questionCount} · your turn`;
 
   return (
     <div style={CC({ gap: 14 })}>
       {/* Status bar */}
       <div style={{ ...R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }), ...glass2({ padding: 12 }) }}>
         <div style={R({ gap: 10 })}>
-          <div style={{ position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center', background: `linear-gradient(135deg, ${accent}, ${C.violet})`, flexShrink: 0 }}>
-            {writingNotes ? <PenLine size={17} color="#fff" /> : <Mic size={17} color="#fff" />}
-            {speaking && <motion.span animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }} transition={{ repeat: Infinity, duration: 1.4 }} style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2px solid ${accent}` }} />}
-          </div>
+          {/* The avatar breathes while they speak and glows green while they listen — the two
+              states a person in a room is actually in. Two rings rather than one, offset in time,
+              because a single expanding circle reads as a loading spinner. */}
+          <motion.div
+            animate={speaking ? { scale: [1, 1.06, 1] } : { scale: 1 }}
+            transition={speaking ? { repeat: Infinity, duration: 1.9, ease: 'easeInOut' } : { duration: 0.3 }}
+            style={{ position: 'relative', width: 38, height: 38, borderRadius: '50%', display: 'grid', placeItems: 'center',
+              background: `linear-gradient(135deg, ${accent}, ${C.violet})`, flexShrink: 0,
+              boxShadow: listening ? `0 0 0 3px ${C.green}33` : speaking ? `0 0 22px ${accent}55` : 'none',
+              transition: 'box-shadow .3s ease' }}>
+            {writingNotes ? <PenLine size={17} color="#fff" /> : speaking ? <Volume2 size={17} color="#fff" /> : <Mic size={17} color="#fff" />}
+            {speaking && [0, 0.7].map(delay => (
+              <motion.span key={delay} animate={{ scale: [1, 1.45], opacity: [0.5, 0] }}
+                transition={{ repeat: Infinity, duration: 1.6, delay, ease: 'easeOut' }}
+                style={{ position: 'absolute', inset: -4, borderRadius: '50%', border: `2px solid ${accent}`, pointerEvents: 'none' }} />
+            ))}
+          </motion.div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
               {interviewerVoice?.name || 'Interviewer'}{interviewerVoice?.role ? ` · ${interviewerVoice.role}` : ''}
             </div>
-            <div style={{ fontSize: 11, color: speaking ? accent : listening ? C.green : C.t3, fontWeight: 600 }}>{statusLine}</div>
+            <div style={R({ gap: 6 })}>
+              <span style={{ fontSize: 11, color: speaking ? accent : listening ? C.green : C.t3, fontWeight: 600 }}>{statusLine}</span>
+              {speaking && <Waveform color={accent} height={10} />}
+              {listening && <Waveform color={C.green} height={10} />}
+              {loading && !speaking && <ThinkingDots color={C.t3} />}
+            </div>
           </div>
         </div>
         <div style={R({ gap: 6 })}>
           {ttsSupported && (
-            <button title={muted ? 'Unmute interviewer voice' : 'Mute interviewer voice'} onClick={() => { const m = !muted; setMuted(m); if (m) { cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false); } }}
+            <button title={muted ? 'Unmute interviewer voice' : 'Mute interviewer voice'} onClick={() => { const m = !muted; setMuted(m); if (m) haltSpeech(); }}
               style={{ ...iconBtn(), color: muted ? C.rose : C.t2 }}>{muted ? <VolumeX size={15} /> : <Volume2 size={15} />}</button>
           )}
           {phase !== 'done' && (
@@ -507,27 +608,50 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
 
       {/* Transcript */}
       <div ref={scrollRef} style={{ ...glass({ padding: 16 }), maxHeight: 420, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {turns.map((t, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-            style={{ display: 'flex', justifyContent: t.role === 'student' ? 'flex-end' : 'flex-start' }}>
-            <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 14,
-              background: t.role === 'student' ? accent : C.s3,
-              color: t.role === 'student' ? '#fff' : C.t1,
-              borderBottomRightRadius: t.role === 'student' ? 4 : 14, borderBottomLeftRadius: t.role === 'student' ? 14 : 4,
-              fontSize: 13.5, lineHeight: 1.6 }}>
-              <div style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', opacity: 0.65, marginBottom: 3 }}>{t.role === 'student' ? 'You' : (interviewerVoice?.name || 'Interviewer')}</div>
-              {t.text}
+        {turns.map((t, i) => {
+          const isStudent = t.role === 'student';
+          // A turn mid-reveal shows only what has actually been said out loud so far, with a caret
+          // where the voice currently is. An absent entry means "say it all" — muted, unsupported,
+          // finished, or interrupted.
+          const partial = !isStudent && i in revealed;
+          const shown = partial ? revealed[i] : t.text;
+          const live = partial && speakingTurnRef.current === i;
+          return (
+            <motion.div key={i} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+              transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+              style={{ display: 'flex', justifyContent: isStudent ? 'flex-end' : 'flex-start' }}>
+              <div style={{ maxWidth: '82%', padding: '10px 14px', borderRadius: 14,
+                background: isStudent ? accent : C.s3,
+                color: isStudent ? '#fff' : C.t1,
+                borderBottomRightRadius: isStudent ? 4 : 14, borderBottomLeftRadius: isStudent ? 14 : 4,
+                // The line being spoken right now is lifted off the surface, so the eye goes to the
+                // person who currently has the floor rather than to the bottom of the list.
+                boxShadow: live ? `0 0 0 1px ${accent}55, 0 6px 22px ${accent}22` : 'none',
+                transition: 'box-shadow .25s ease',
+                fontSize: 13.5, lineHeight: 1.6 }}>
+                <div style={R({ gap: 6, marginBottom: 3 })}>
+                  <span style={{ fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em', opacity: 0.65 }}>
+                    {isStudent ? 'You' : (interviewerVoice?.name || 'Interviewer')}
+                  </span>
+                  {live && <Waveform color={accent} height={9} />}
+                </div>
+                {shown}
+                {live && (
+                  <motion.span aria-hidden animate={{ opacity: [1, 0.15, 1] }} transition={{ repeat: Infinity, duration: 1.1 }}
+                    style={{ display: 'inline-block', width: 2, height: 13, background: accent, marginLeft: 3, verticalAlign: -2, borderRadius: 1 }} />
+                )}
+              </div>
+            </motion.div>
+          );
+        })}
+        {(loading || writingNotes) && phase !== 'done' && (
+          <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <div style={{ padding: '10px 14px', borderRadius: 14, borderBottomLeftRadius: 4, background: C.s3, color: C.t3, fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+              {writingNotes
+                ? <><PenLine size={13} />{who} is writing notes</>
+                : <><ThinkingDots color={C.t3} />{phase === 'debrief' ? `${who} is writing up your debrief` : `${who} is thinking`}</>}
             </div>
           </motion.div>
-        ))}
-        {(loading || writingNotes) && phase !== 'done' && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-            <div style={{ padding: '10px 14px', borderRadius: 14, background: C.s3, color: C.t3, fontSize: 13, display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              {writingNotes
-                ? <><PenLine size={13} />Writing notes…</>
-                : <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} />{phase === 'debrief' ? 'Preparing your debrief…' : 'Thinking…'}</>}
-            </div>
-          </div>
         )}
         {debrief && <DebriefCard debrief={debrief} />}
       </div>
@@ -539,7 +663,7 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
             <div style={{ marginBottom: 12 }}>
               <VoiceConsentGate accent={accent} onDecide={(v) => {
                 setConsent(v); setAskingConsent(false);
-                if (v === 'granted') { cancelSpeakRef.current?.(); speech.cancelSpeech(); setSpeaking(false); beginListening(); }
+                if (v === 'granted') { haltSpeech(); beginListening(); }
               }} />
             </div>
           )}
@@ -582,6 +706,43 @@ export default function LiveVoiceInterview({ accent = C.blue, pathwayLabel = 'Ge
   );
 }
 
+// ── Someone is actually talking ─────────────────────────────────────────────
+// A row of bars that move while a voice is active. Deliberately NOT driven by real audio analysis:
+// Web Speech gives no output stream to analyse, and the honest alternative — a static "Speaking…"
+// label — is exactly the thing that makes a spoken interview feel like a chatbot with a voice
+// bolted on. Each bar carries its own duration and delay so the row never pulses in unison, which
+// is the tell that separates "a person is talking" from "a loading animation".
+const BAR_TIMING = [
+  { d: 0.52, delay: 0 }, { d: 0.71, delay: 0.13 }, { d: 0.44, delay: 0.07 },
+  { d: 0.63, delay: 0.21 }, { d: 0.49, delay: 0.04 },
+];
+
+function Waveform({ color, height = 12, bars = 5 }) {
+  return (
+    <span aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 2, height }}>
+      {BAR_TIMING.slice(0, bars).map((b, i) => (
+        <motion.span key={i}
+          animate={{ scaleY: [0.35, 1, 0.5, 0.85, 0.35] }}
+          transition={{ repeat: Infinity, duration: b.d + 0.6, delay: b.delay, ease: 'easeInOut' }}
+          style={{ width: 2.5, height, borderRadius: 2, background: color, transformOrigin: 'center' }} />
+      ))}
+    </span>
+  );
+}
+
+// The three dots, which say "they're composing a reply" rather than "a request is in flight".
+function ThinkingDots({ color }) {
+  return (
+    <span aria-hidden style={{ display: 'inline-flex', gap: 3, alignItems: 'center' }}>
+      {[0, 1, 2].map(i => (
+        <motion.span key={i} animate={{ y: [0, -3, 0], opacity: [0.45, 1, 0.45] }}
+          transition={{ repeat: Infinity, duration: 1.1, delay: i * 0.16, ease: 'easeInOut' }}
+          style={{ width: 4, height: 4, borderRadius: '50%', background: color }} />
+      ))}
+    </span>
+  );
+}
+
 // The debrief card. It leads with the number and the anchor label, then the per-competency read-out,
 // then the specific reasons — and it always carries the reliability caveat, because a confident
 // verdict from one mock interview would be a lie about how the format works.
@@ -598,11 +759,14 @@ function DebriefCard({ debrief }) {
         </div>
       </div>
       <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>{debrief.anchor.blurb}</div>
+      {/* Printed on every debrief, not only the high ones. A student who scores a 4 should know the
+          top is reserved too — otherwise the cap reads as a personal verdict rather than a rule. */}
+      <div style={{ fontSize: 11, color: C.t4, marginBottom: 12, lineHeight: 1.55, paddingLeft: 9, borderLeft: `2px solid ${C.b1}` }}>{debrief.ceilingNote}</div>
       <div style={{ fontSize: 14, color: C.t1, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{debrief.text}</div>
       <CompetencyGrid competencies={debrief.competencies} max={debrief.scale} />
       {debrief.reasons.length > 0 && (
         <div style={{ ...glass2({ padding: 14, marginTop: 14 }), background: C.s2 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What held this session back</div>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 8 }}>What to work on next</div>
           <ul style={{ margin: 0, paddingLeft: 17, display: 'flex', flexDirection: 'column', gap: 6 }}>
             {debrief.reasons.map((r, i) => <li key={i} style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>{r}</li>)}
           </ul>
