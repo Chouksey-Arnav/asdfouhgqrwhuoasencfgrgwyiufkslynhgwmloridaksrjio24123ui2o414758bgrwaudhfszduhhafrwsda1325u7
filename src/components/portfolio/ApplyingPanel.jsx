@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  GraduationCap, ScrollText, Handshake, UserCheck, Mic, Calculator, Plus, ArrowRight,
+  GraduationCap, ScrollText, Handshake, UserCheck, Mic, Calculator, Plus, ArrowRight, Stethoscope,
 } from 'lucide-react';
 import { C, R, CC, G } from '../../lib/theme';
 import PanelHero, { StatTile } from '../ui/PanelHero';
@@ -27,6 +27,12 @@ import SectionScroller from './SectionScroller';
 
 export const APPLYING_SECTIONS = [
   { id: 'colleges', ic: GraduationCap, label: 'College List', color: C.sky, blurb: 'Where you are applying, and what each school wants' },
+  // Sits directly under the college list because that is what it feeds: tracking
+  // a combined-degree program puts a school ON that list, with its deadline. It
+  // is second rather than last because it is the only thing on this page with a
+  // timeline that starts in ninth grade — a senior finding it here has already
+  // lost most of what it asks for, and a freshman finding it here has not.
+  { id: 'combined', ic: Stethoscope, label: 'Combined Degrees', color: C.blue, blurb: 'BS/MD, direct-admit BSN, 0-6 PharmD and the rest — applied to from high school' },
   { id: 'essays', ic: ScrollText, label: 'Essays', color: C.violet, blurb: 'Drafts, prompts and word counts, per school' },
   { id: 'aid', ic: Handshake, label: 'Financial Aid', color: C.green, blurb: 'What it will actually cost, and who pays for it' },
   { id: 'recommenders', ic: UserCheck, label: 'Recommenders', color: C.fuchsia, blurb: 'Who is writing for you, and when you asked' },
@@ -62,6 +68,9 @@ export default function ApplyingPanel({
     if (colleges && !recommenders) out.push({ tone: 'info', text: 'No recommenders logged. Teachers write these in the order they were asked, and the good ones fill up in the spring.', actionLabel: 'Add one', onAction: () => onSectionOpen?.('recommenders') });
     if (colleges && !interviews) out.push({ tone: 'info', text: 'You have not run a practice interview. One scored MMI station tells you more than reading about them for an hour.', actionLabel: 'Practise', onAction: () => onSectionOpen?.('interview') });
     if (colleges >= 2) out.push({ tone: 'good', text: 'Your chances are calculated against the real admitted profiles of the schools on your list — not a generic score.', actionLabel: 'See the odds', onAction: () => onSectionOpen?.('calc') });
+    // Always offered, and never gated on having a list, because this is the one
+    // thing on the page whose deadlines a ninth-grader still has time to meet.
+    out.push({ tone: 'info', text: 'Combined-degree and direct-admit programs — BS/MD, direct-admit nursing, six-year pharmacy — are applied to from high school, and most of them close in November of senior year. Their requirements start counting in ninth grade.', actionLabel: 'See the programs', onAction: () => onSectionOpen?.('combined') });
     return out;
   }, [colleges, essays, recommenders, interviews, onSectionOpen]);
 
@@ -71,7 +80,7 @@ export default function ApplyingPanel({
     const st = {
       colleges: status(colleges, 4), essays: status(essays, 2),
       aid: null, recommenders: status(recommenders, 2), interview: status(interviews, 1),
-      calc: null,
+      calc: null, combined: null,
     }[s.id];
     return {
       ...s,
@@ -87,7 +96,7 @@ export default function ApplyingPanel({
     <div style={CC({ gap: 22 })}>
       <PanelHero tourTag="portfolio-deep-applying" icon={GraduationCap} color={accent} color2={C.violet} m={isMobile}
         eyebrow="Applications" title="Applying"
-        sub="Your school list and everything each school still needs from you — essays, aid, recommenders, interviews, and your real odds. One page, in the order you work through it." />
+        sub="Your school list and everything each school still needs from you — combined-degree programs, essays, aid, recommenders, interviews, and your real odds. One page, in the order you work through it." />
 
       <SectionScroller
         accent={accent} isMobile={isMobile}
@@ -96,7 +105,7 @@ export default function ApplyingPanel({
         summary={{
           eyebrow: 'Where you stand',
           title: colleges ? 'Your applications, end to end' : 'Start with one school',
-          sub: 'Six things that used to be six tabs. They are one page because they are one question — and everything you can do inside a section can be done from here.',
+          sub: 'Everything one application needs, on one page, because it is one question — and everything you can do inside a section can be done from here.',
           tiles: (
             <div style={G(4, 12, {}, isMobile)}>
               <StatTile icon={GraduationCap} value={colleges} label="Schools on your list" sub={colleges ? undefined : 'nothing else works without this'} color={C.sky} />
@@ -118,6 +127,7 @@ export default function ApplyingPanel({
 // this file deliberately does not reach into.
 const ACTIONS = {
   colleges: (go) => [{ label: 'Add a school', icon: Plus, primary: true, onClick: () => go?.('colleges') }],
+  combined: (go) => [{ label: 'Browse the programs', icon: ArrowRight, onClick: () => go?.('combined') }],
   essays: (go) => [{ label: 'Start an essay', icon: Plus, primary: true, onClick: () => go?.('essays') }],
   aid: (go) => [{ label: 'Open aid', icon: ArrowRight, onClick: () => go?.('aid') }],
   recommenders: (go) => [{ label: 'Add a recommender', icon: Plus, primary: true, onClick: () => go?.('recommenders') }],
