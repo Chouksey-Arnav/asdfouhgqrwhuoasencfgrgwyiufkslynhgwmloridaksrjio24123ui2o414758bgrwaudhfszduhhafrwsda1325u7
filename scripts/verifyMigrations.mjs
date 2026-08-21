@@ -83,6 +83,11 @@ const EXPECTED_TABLES = [
   'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',
   'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
+  // The health-pathway reflection journal — one row per answered prompt. Deliberately its own
+  // table rather than an `essays` row: a journal entry is never submitted anywhere and must never
+  // be counted as an application essay by anything that counts them. See
+  // supabase/migrations/0019_health_pathway_portfolio.sql.
+  'reflection_entries',
   'research_experience', 'reward_claims',
   'roadmap_revisions', 'roadmaps',
   'scholarships', 'sessions', 'skills_certifications',
