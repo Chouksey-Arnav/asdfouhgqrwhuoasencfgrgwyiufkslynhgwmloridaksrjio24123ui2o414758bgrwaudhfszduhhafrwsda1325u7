@@ -40,6 +40,16 @@ Allow: /legal/terms
 Allow: /legal/privacy
 Allow: /
 
+User-agent: OAI-SearchBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
 User-agent: ClaudeBot
 Allow: /$
 Allow: /signup
@@ -60,7 +70,17 @@ Allow: /legal/terms
 Allow: /legal/privacy
 Allow: /
 
-User-agent: PerplexityBot
+User-agent: Claude-SearchBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: anthropic-ai
 Allow: /$
 Allow: /signup
 Allow: /login
@@ -71,6 +91,316 @@ Allow: /legal/privacy
 Allow: /
 
 User-agent: Google-Extended
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Googlebot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Googlebot-News
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: GoogleOther
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: AdsBot-Google-Mobile
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Bingbot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: BingPreview
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: DuckAssistBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: YandexBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Baiduspider
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Meta-ExternalFetcher
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: FacebookBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Applebot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Amazonbot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Bytespider
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: cohere-ai
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Diffbot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: CCBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: YouBot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Omgili
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Omgilibot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: Timpibot
+Allow: /$
+Allow: /signup
+Allow: /login
+Allow: /parents
+Allow: /parents/signup
+Allow: /legal/terms
+Allow: /legal/privacy
+Allow: /
+
+User-agent: ImagesiftBot
 Allow: /$
 Allow: /signup
 Allow: /login
