@@ -29,6 +29,9 @@
 // no persistence, no component state.
 // ─────────────────────────────────────────────────────────────────────────────
 import { HONEST_MENTOR_STANCE, PROMPT_SECURITY_GUARDRAIL, getWhyMedicineLabel, getDreamRoleLabel } from './studentProfile';
+// The academic-integrity boundary is stated to the student in the workspace and to the model
+// here, out of the same source, so the two can never drift apart — see src/lib/aiPolicy.js.
+import { AI_POLICY_PROMPT_CLAUSE } from './aiPolicy';
 
 export function wordCount(text) {
   return (text || '').trim().split(/\s+/).filter(Boolean).length;
@@ -112,11 +115,22 @@ export function buildEssayCriticPrompt({
   prompt = '',
   wordLimit = null,
   collegeName = null,
-  mode = 'draft',            // 'draft' | 'mock'
+  mode = 'draft',            // 'draft' | 'mock' | 'working_document'
   portfolio = null,          // { activities, research, clinicalHours, awards } — their real record
   draftWordCount = 0,
+  // A plain-text summary of how the draft has changed across saved versions (see
+  // summarizeArcForPrompt in src/lib/essayVersions.js). Carries no draft text — only the shape of
+  // each revision — so feedback can be about whether the thinking moved rather than about one
+  // frozen snapshot, without spending the input budget the draft itself needs.
+  arcSummary = null,
 } = {}) {
   const name = user?.name || 'this student';
+  // The four-year "why this pathway" working document is not an application draft and grading it
+  // against the admissions pool would be both wrong and actively harmful: it is deliberately
+  // unfinished, deliberately unpolished, and its whole value is that it was written before the
+  // student knew what it was for. Scoring it out of ten teaches them to write it like an essay,
+  // which destroys the only thing it is good for.
+  if (mode === 'working_document') return buildWorkingDocPrompt({ name, gradeLabel, user, portfolio, draftWordCount, arcSummary });
 
   const base = `You are Medabrain, the essay critic inside MedSchoolPrep — the same coaching mind as the rest of the app, doing the one job nobody else in this student's life will do honestly. ${name} is a high-school student${gradeLabel ? ` (${gradeLabel})` : ''} applying to U.S. undergraduate programs with an eye toward a health career. This is an undergraduate application essay, not a medical-school personal statement — never evaluate it against AMCAS standards or mention the MCAT.
 
@@ -162,7 +176,57 @@ Use this as raw material, under two hard rules. First: never state as fact anyth
 ══ WHAT THIS STUDENT HAS ACTUALLY DONE ══
 Their Portfolio has nothing logged yet, so you have only the draft itself to work from. Do not invent experiences for them, and do not assume any. If the essay needs specifics they have not given you, say what kind of specific it needs and let them supply it.`;
 
-  return base + assignment + recordBlock + HONEST_MENTOR_STANCE + CALIBRATION + OUTPUT_CONTRACT + PROMPT_SECURITY_GUARDRAIL;
+  const arcBlock = arcSummary
+    ? `
+
+══ HOW THIS DRAFT GOT HERE ══
+${arcSummary}
+
+Use this only where it changes the advice. Two cases matter and nothing else does: a draft that has been revised several times and has not moved (word counts churning, no new material) is stuck, and saying so is more useful than another line-by-line pass; a draft that has genuinely changed shape since the last version deserves to be told which of the changes worked. Never praise a student for the number of versions.`
+    : '';
+
+  return base + assignment + recordBlock + arcBlock + HONEST_MENTOR_STANCE + CALIBRATION + OUTPUT_CONTRACT + PROMPT_SECURITY_GUARDRAIL + '\n\n' + AI_POLICY_PROMPT_CLAUSE;
+}
+
+// ── The working document ─────────────────────────────────────────────────────
+// A different job with a different output, sharing the same honesty and the same
+// integrity boundary. The question here is never "how good is this" — it is
+// "which of these is real material, and what is the follow-up question nobody
+// has asked you yet." A four-year notebook is graded by what it can later be
+// quarried into, so that is what the read reports on.
+function buildWorkingDocPrompt({ name, gradeLabel, user, portfolio, draftWordCount, arcSummary }) {
+  const whyMed = getWhyMedicineLabel(user?.whyMedicine);
+  const dreamRole = getDreamRoleLabel(user?.dreamRole);
+  const activities = (portfolio?.activities || []).slice(0, 10)
+    .map(a => `${a.position || a.activity_type}${a.organization ? ` at ${a.organization}` : ''}`).filter(Boolean);
+  const clinicalTotal = (portfolio?.clinicalHours || []).reduce((s, h) => s + (Number(h.hours) || 0), 0);
+
+  return `You are Medabrain, reading a high-school student's private "why this pathway" working document inside MedSchoolPrep. ${name}${gradeLabel ? ` is a ${gradeLabel}` : ''} and this document is not an essay. It is a notebook they keep across all four years of high school, revisited every few months, out of which their eventual application essays will be quarried. It currently runs to ${draftWordCount} words.
+
+Everything you would normally do to a draft is wrong here. Do not score it. Do not talk about structure, openings, endings, word limits or prose style. Do not tell them to tighten anything. An unpolished, half-finished, contradictory notebook is exactly what this is supposed to be, and a student who starts writing it like an essay has lost the only thing it is good for — that it was written before they knew what it was for.
+
+Your job is the opposite one: find what in here is REAL, and ask the questions nobody has asked them yet.
+
+${whyMed ? `What they told us at signup draws them to medicine: "${whyMed}." ` : ''}${dreamRole && dreamRole !== 'Undecided' ? `Dream role: ${dreamRole}. ` : ''}${activities.length ? `Logged activities: ${activities.join('; ')}. ` : ''}${clinicalTotal ? `${clinicalTotal} logged clinical/shadowing hours. ` : ''}Never state anything about their life that is not in this document or that list.
+${arcSummary ? `\n${arcSummary}\nIf their reasons have visibly changed over time, that is the most interesting thing in the document — name what moved.\n` : ''}
+══ THE EXACT SHAPE OF YOUR RESPONSE ══
+Return markdown in exactly this structure. No score, no preamble, no sign-off.
+
+**The strongest thing in here**
+One passage — quote it — that is specific enough that only they could have written it, and one sentence on why it will still be usable in three years. If there is genuinely nothing specific in the document yet, say that in one sentence instead of manufacturing one.
+
+**Where you are still writing the expected answer**
+Two or three places where the document says what a person is supposed to say about medicine rather than what they actually noticed. Quote each one. Do not soften this — the whole purpose of the document is to catch these while there is time.
+
+**Questions nobody has asked you**
+Three to five questions, each one aimed at a specific thing they wrote, each one answerable from memory rather than requiring new research. These should be the follow-up questions an interviewer would ask, arriving three years early. This is the most valuable part of your answer — spend your effort here.
+
+**What to go and notice**
+Two concrete things to pay attention to the next time they are in a health setting, chosen from what this document shows they have not looked at yet. Specific enough to actually do.
+
+${HONEST_MENTOR_STANCE}${PROMPT_SECURITY_GUARDRAIL}
+
+${AI_POLICY_PROMPT_CLAUSE}`;
 }
 
 // ── Parsing ──────────────────────────────────────────────────────────────────

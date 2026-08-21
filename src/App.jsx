@@ -2415,7 +2415,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     (async()=>{
       try{
         const [cols,ess]=await Promise.all([listItems('colleges'),listItems('essays')]);
-        setAppCounts(c=>({...c,colleges:cols?.length||0,essays:ess?.length||0}));
+        // The "why this pathway" working document is an essays row but is not an application
+        // essay — see src/lib/healthEssays.js. Counting it here would credit the "start an essay"
+        // achievement to a student who opened a notebook.
+        setAppCounts(c=>({...c,colleges:cols?.length||0,essays:(ess||[]).filter(e=>e?.essay_kind!=='why_pathway').length}));
       }catch(e){/* non-critical — achievement counts, fail silently */}
       try{
         const [hours,recs,sessions]=await Promise.all([listItems('clinical_hours'),listItems('recommenders'),DB.getInterviewSessions()]);
@@ -3914,7 +3917,9 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     research:portSnapshot?.research||[],
     skills:portSnapshot?.skills||[],
     clinical:portSnapshot?.clinical||clinicalHoursEntries,
-    essays:portSnapshot?.essays||[],
+    // Filtered for the same reason as appCounts above: the "why this pathway" working document
+    // is an essays row and is not an application essay, so no quest credits opening it.
+    essays:(portSnapshot?.essays||[]).filter(e=>e?.essay_kind!=='why_pathway'),
     awards:portSnapshot?.awards||portAwards||[],
     colleges:portSnapshot?.colleges||[],
     scholarships:portSnapshot?.scholarships||portScholarships||[],

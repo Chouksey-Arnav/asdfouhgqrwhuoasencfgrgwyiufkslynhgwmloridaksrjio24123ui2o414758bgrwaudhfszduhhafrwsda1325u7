@@ -11,9 +11,14 @@ import { RESOURCE_SET as RESOURCES } from '../_lib/resources.js';
 const WRITABLE = {
   colleges: ['name', 'category', 'status', 'ea_ed_deadline', 'rd_deadline', 'notes', 'css_profile_required', 'financial_aid_deadline'],
   college_checklist_items: ['college_id', 'label', 'done', 'sort_order'],
-  deadlines: ['college_id', 'title', 'due_date', 'kind'],
-  essays: ['college_id', 'title', 'prompt', 'word_limit', 'status', 'content'],
-  essay_versions: ['essay_id', 'content', 'word_count'],
+  // `completed_at` is what makes the Milestones feed two-way (finishing a date is a different act
+  // from deleting it); `source_ref` points a generated row back at the program it came from so
+  // completing it can update that program; `lead_days` is the run-up the work needs, which is what
+  // the feed sorts by instead of the date alone. See migration 0019.
+  deadlines: ['college_id', 'title', 'due_date', 'kind', 'completed_at', 'source_ref', 'lead_days'],
+  essays: ['college_id', 'title', 'prompt', 'word_limit', 'status', 'content', 'essay_kind', 'source_ref', 'source_label'],
+  essay_versions: ['essay_id', 'content', 'word_count', 'label', 'note'],
+  reflection_entries: ['prompt_id', 'prompt_text', 'content', 'entry_date'],
   test_scores: ['test_type', 'test_date', 'composite', 'section_scores', 'is_target'],
   scholarships: ['name', 'amount', 'deadline', 'status', 'notes'],
   activities: ['activity_type', 'position', 'organization', 'description', 'impact', 'status', 'hours_per_week', 'weeks_per_year', 'grade_levels', 'sort_order', 'evidence_url', 'verification_status', 'verifier_name', 'verifier_email', 'verifier_relationship', 'skills_tags', 'leadership_role'],
@@ -37,7 +42,7 @@ const WRITABLE = {
 // column — see the migration file for which ones do).
 const TOUCHES_UPDATED_AT = new Set([
   'colleges', 'essays', 'research_experience', 'skills_certifications', 'clinical_hours', 'recommenders',
-  'admission_intake', 'credential_suggestions',
+  'admission_intake', 'credential_suggestions', 'reflection_entries',
 ]);
 
 // entity_type -> table, for validating portfolio_evidence's polymorphic entity_id ownership.

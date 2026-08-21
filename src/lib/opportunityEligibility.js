@@ -230,15 +230,23 @@ export function milestoneRowsFor(program, dueIso, today = new Date()) {
   if (Number.isNaN(due.getTime())) return [];
   const t = startOfDay(today);
   const approx = program.deadline?.precision && program.deadline.precision !== 'exact';
+  // `source_ref` closes the loop the other way: completing this milestone marks the tracked
+  // activity done and clears its own reminders, rather than leaving the student to delete four
+  // rows by hand. See src/lib/milestoneSync.js.
+  const ref = `opportunity:${program.id}`;
   const rows = [{
     title: `${program.name} — application due${approx ? ' (approx. — confirm on the official site)' : ''}`,
     due_date: dueIso,
     kind: 'opportunity',
+    source_ref: ref,
+    // Summer programs and competitions want essays and usually a recommendation, so the run-up is
+    // measured in months. The urgency sort reads this — see src/lib/milestoneUrgency.js.
+    lead_days: program.type === 'Competition' ? 90 : 60,
   }];
   for (const offset of ALERT_OFFSETS) {
     const when = new Date(due.getTime() - offset * DAY);
     if (when <= t) continue;
-    rows.push({ title: ALERT_COPY[offset](program.name), due_date: toISO(when), kind: 'opportunity' });
+    rows.push({ title: ALERT_COPY[offset](program.name), due_date: toISO(when), kind: 'opportunity', source_ref: `alert:${ref}:${offset}`, lead_days: offset === 7 ? 3 : 7 });
   }
   return rows;
 }
