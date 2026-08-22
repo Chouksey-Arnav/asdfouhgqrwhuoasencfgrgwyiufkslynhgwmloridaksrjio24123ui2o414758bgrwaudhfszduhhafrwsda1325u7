@@ -41,7 +41,7 @@
 // testable and the prompt bank can be read and argued with as a list.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { dayKey, parseDay, daysBetween } from './timeline';
+import { dayKey, parseDay, daysBetween } from './timeline.js';
 
 // ── The working document ─────────────────────────────────────────────────────
 

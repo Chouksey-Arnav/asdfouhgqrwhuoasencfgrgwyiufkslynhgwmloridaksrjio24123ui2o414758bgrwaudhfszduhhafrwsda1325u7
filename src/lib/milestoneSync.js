@@ -32,8 +32,18 @@
 // the row. Format: "<kind>:<id>", and for reminders "alert:<parent-ref>:<days>".
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { updateItem } from './dataApi';
-import { alertParentRef, isAlertRow } from './milestoneUrgency';
+import { alertParentRef, isAlertRow } from './milestoneUrgency.js';
+
+// The data layer is imported lazily, inside the two functions that actually write.
+//
+// Not a performance tweak — a testability one. `./dataApi` reaches `./db`, which builds a Dexie
+// instance and registers a `versionchange` handler at module scope, so a static import here would
+// drag IndexedDB into any environment that so much as reads this file. That is what kept
+// completionEffects() — the pure half, and the half holding the rule that a recorded decision is
+// never overwritten — out of scripts/verifyHealthPortfolio.mjs, which is precisely the logic most
+// worth failing a build over. Vite bundles a dynamic import of a static specifier the same way it
+// bundles a static one, so nothing about the shipped behaviour changes.
+const dataApi = () => import('./dataApi.js');
 
 /** Build a source_ref. The one place the format is written. */
 export const sourceRef = (kind, id) => (kind && id ? `${kind}:${id}` : null);
@@ -167,7 +177,10 @@ function matchByName(rows, title, field = 'name') {
  * Returns the effects that were actually applied, for the confirmation toast.
  */
 export async function completeMilestone(row, snapshot = {}) {
+  // Read the snapshot before yielding, so the effects describe the state the student was looking
+  // at when they tapped rather than whatever it became while the module loaded.
   const effects = completionEffects(row, snapshot);
+  const { updateItem } = await dataApi();
   await updateItem('deadlines', row.id, { completed_at: new Date().toISOString() });
   const applied = [];
   for (const e of effects) {
@@ -180,6 +193,7 @@ export async function completeMilestone(row, snapshot = {}) {
 /** Undo. Clears the milestone's own completion only — never reverses a status
  *  change elsewhere, because by then the student may have set it deliberately. */
 export async function reopenMilestone(row) {
+  const { updateItem } = await dataApi();
   await updateItem('deadlines', row.id, { completed_at: null });
 }
 

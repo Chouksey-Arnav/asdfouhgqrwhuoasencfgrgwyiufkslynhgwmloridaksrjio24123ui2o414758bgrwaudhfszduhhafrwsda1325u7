@@ -99,9 +99,24 @@ export function characterizeChange(before, after) {
   const removed = parts.filter(p => p.type === 'removed').reduce((n, p) => n + tokenize(p.text).length, 0);
   const churn = (added + removed) / Math.max(1, a.length);
 
+  // A rewrite is REPLACEMENT: material out and different material in. Both sides have to be
+  // substantial, which is why this is not simply a churn threshold.
+  //
+  // Churn alone gets the common case backwards. A student who appends two sentences to a short
+  // working-document entry — 7 words onto 11, nothing removed — scores 0.64 churn and would be
+  // reported as having rewritten it, when they added and changed nothing they had already
+  // written. The mirror case is worse: cutting 80% of a draft and adding nothing is the single
+  // most valuable revision a student makes, and it would also have read as "Rewritten".
+  //
+  // That matters beyond the label, because this whole module exists so a student and whoever is
+  // giving them feedback can see how the draft moved, and because "most of this is new material,
+  // not a polish" is the one verdict that says the thinking changed. Spending it on an append
+  // makes the history actively misleading.
+  const SUBSTANTIAL = Math.max(1, a.length * 0.25);
+
   let id, label, detail;
   if (added === 0 && removed === 0) { id = 'none'; label = 'Identical'; detail = 'Nothing changed between these two.'; }
-  else if (churn >= 0.6) { id = 'rewritten'; label = 'Rewritten'; detail = `${added} words in, ${removed} out — most of this is new material, not a polish.`; }
+  else if (churn >= 0.6 && added >= SUBSTANTIAL && removed >= SUBSTANTIAL) { id = 'rewritten'; label = 'Rewritten'; detail = `${added} words in, ${removed} out — most of this is new material, not a polish.`; }
   else if (removed > added * 2) { id = 'cut'; label = 'Cut down'; detail = `${removed} words removed against ${added} added. Cutting is usually where an essay gets better.`; }
   else if (added > removed * 2) { id = 'grew'; label = 'Expanded'; detail = `${added} words added against ${removed} removed.`; }
   else if (churn < 0.05) { id = 'tinkered'; label = 'Small edits'; detail = `${added} in, ${removed} out — wording, not substance.`; }
