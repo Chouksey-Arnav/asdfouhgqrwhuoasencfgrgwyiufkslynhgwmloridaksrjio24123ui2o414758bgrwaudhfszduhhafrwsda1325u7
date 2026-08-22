@@ -80,7 +80,14 @@ const EXPECTED_TABLES = [
   'credential_suggestions',
   'deadlines', 'email_verifications', 'essay_versions', 'essays', 'gpa_entries', 'login_attempts',
   'lesson_feedback',
-  'master_plan_revisions', 'master_plans', 'otp_codes', 'parent_link_events', 'parent_links',
+  'master_plan_revisions', 'master_plans',
+  // The MedEx Score's weekly seals — one row per user per ISO week. The only part of that feature
+  // that is stored rather than recomputed, because it is the only part that CANNOT be recomputed:
+  // the portfolio each seal was taken from no longer exists, and re-deriving an old week from
+  // today's portfolio would show a student a history in which they were always as strong as they
+  // are now. See supabase/migrations/0021_medex_score.sql.
+  'medex_scores',
+  'otp_codes', 'parent_link_events', 'parent_links',
   'parent_messages',
   'parent_profiles', 'parent_summary_cache', 'portfolio_evidence', 'progress_sync', 'recommenders',
   // The health-pathway reflection journal — one row per answered prompt. Deliberately its own
