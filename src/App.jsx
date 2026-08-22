@@ -194,6 +194,7 @@ import {
   needsExtension as needsPlanExtension, refreshDayWindow as refreshPlanWindow, dropRetiredTasks,
 } from './lib/masterPlanGenerator';
 import SubNav from './components/ui/SubNav';
+import TabContentGuard from './components/TabContentGuard';
 import EmptyState from './components/ui/EmptyState';
 import { useMediaQuery, Arc, Bar, Stat } from './components/ui/primitives';
 // The SAT pillar ships sealed for v1 — the tab renders behind SatBetaCover and
@@ -10046,20 +10047,23 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               content that genuinely needs a narrower reading measure (lesson articles, essay
               editor, etc.) already caps itself internally rather than relying on this wrapper. */}
           <div style={{maxWidth:isMobile?'none':'min(1760px, 100%)',margin:'0 auto',padding:isMobile?'20px 16px 40px':'30px 40px 70px'}}>
-            <AnimatePresence mode="wait">
-              <motion.div key={tab} initial={reducedMotion?false:{opacity:0,y:10}} animate={{opacity:1,y:0}} exit={reducedMotion?{opacity:1}:{opacity:0,y:-6}} transition={{duration:reducedMotion?0:.22}}>
-                {/* Scoped to this tab's content only — a throw while rendering one tab (a piece of
-                    async state that hasn't landed yet, an edge case in one panel) used to bubble to
-                    the single boundary wrapping the ENTIRE shell below, replacing the sidebar and
-                    nav along with it and leaving no way back except a full reload. This boundary
-                    resets itself the moment `tab` changes (see ErrorBoundary's resetKey), so
-                    switching to another section — which the student can still do, since the nav
-                    survives outside this boundary — recovers on its own instead of staying stuck. */}
-                <ErrorBoundary resetKey={tab} onEscapeToPrep={()=>setTab('prep')}>
-                  {(tRenders[tab]||tHome)()}
-                </ErrorBoundary>
-              </motion.div>
-            </AnimatePresence>
+            {/* The tab swap deliberately does NOT go through AnimatePresence — mounting the next
+                tab must never be conditional on an exit animation reporting itself finished, which
+                is precisely how this app's content column used to end up permanently black after a
+                while on Portfolio. TabContentGuard carries the full explanation, keeps the fade-in,
+                and watches the content area so a blank one can never again be the end of the story. */}
+            <TabContentGuard tabKey={tab} reducedMotion={reducedMotion}>
+              {/* Scoped to this tab's content only — a throw while rendering one tab (a piece of
+                  async state that hasn't landed yet, an edge case in one panel) used to bubble to
+                  the single boundary wrapping the ENTIRE shell below, replacing the sidebar and
+                  nav along with it and leaving no way back except a full reload. This boundary
+                  resets itself the moment `tab` changes (see ErrorBoundary's resetKey), so
+                  switching to another section — which the student can still do, since the nav
+                  survives outside this boundary — recovers on its own instead of staying stuck. */}
+              <ErrorBoundary resetKey={tab} onEscapeToPrep={()=>setTab('prep')}>
+                {(tRenders[tab]||tHome)()}
+              </ErrorBoundary>
+            </TabContentGuard>
           </div>
         </main>
 

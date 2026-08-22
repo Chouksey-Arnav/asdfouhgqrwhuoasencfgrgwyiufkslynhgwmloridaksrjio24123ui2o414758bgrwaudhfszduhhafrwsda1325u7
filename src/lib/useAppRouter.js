@@ -73,9 +73,9 @@ function readPosition(key) {
 }
 
 /**
- * Scroll back to `top`, retrying across frames: the outgoing view animates out
- * (AnimatePresence mode="wait") and lazy panels mount a beat later, so the
- * container is often still too short to accept the offset on the first frame.
+ * Scroll back to `top`, retrying across frames: the incoming view fades in and
+ * its panels fill with fetched data a beat later, so the container is often
+ * still too short to accept the offset on the first frame.
  */
 function restoreScroll(top) {
   const started = performance.now();
