@@ -29,6 +29,18 @@ import { getStationType, DEFAULT_STATION_TYPE } from './interviewPanel';
 
 export { SCALE_MAX, SCALE_ANCHORS, anchorFor, SINGLE_STATION_CAVEAT, reliabilityNote };
 
+// ── The ceiling this simulator will never award ─────────────────────────────
+// A practice tool cannot see posture, eye contact, what the room felt like, or whether the answer
+// that read well on paper landed when spoken — and it is scoring one sitting, from a transcript,
+// against a rubric. "Nothing here could be better" is therefore a claim it is not equipped to make,
+// and it is the single most damaging thing it could say: a student told they are already at the top
+// of the scale has been handed a reason to stop practising. So the top of every scale is reserved.
+// The best a session can be told is "above the interviewed pool, and here is what is still missing."
+export const PRACTICE_CEILING = SCALE_MAX - 1;
+
+export const CEILING_NOTE =
+  'This simulator never awards the top of the scale. A transcript cannot see how you carried yourself, and one sitting is not enough to call anything finished — there is always a next layer, and the notes below are it.';
+
 // ── Parsing the model's proposal ────────────────────────────────────────────
 // Both feedback shapes end with a predictable scored line by prompt design. Legacy sessions (and
 // any model that ignores the instruction and reaches for the familiar ten-point scale) are
@@ -130,26 +142,43 @@ export function scoreStation(answer, ctx = {}) {
     ...Object.keys(ev.average).filter(k => !ev.average[k]).map(k => AVERAGE_GAPS[k]),
   ].filter(Boolean);
 
-  if (score >= 5) {
-    const missingStrong = Object.keys(ev.strong)
-      .filter(k => ev.strong[k] === false)
-      .map(k => STRONG_GAPS[k])
-      .filter(Boolean);
-    reasons.push(...missingStrong.slice(0, score === 5 ? 3 : 2));
-  }
+  // Every strong marker that did not fire is something to work on, and at the top of the range it
+  // is the ONLY thing left to work on — so the higher the score, the more of them are surfaced
+  // rather than fewer. A student at the ceiling should leave with more to do than a student at a 4,
+  // because the student at a 4 already knows what went wrong.
+  const missingStrong = Object.keys(ev.strong)
+    .filter(k => ev.strong[k] === false)
+    .map(k => STRONG_GAPS[k])
+    .filter(Boolean);
+  if (score >= 5) reasons.push(...missingStrong.slice(0, 4));
 
-  return finish(score, ev, station, reasons, ctx);
+  return finish(score, ev, station, reasons, ctx, missingStrong);
 }
 
-function finish(score, ev, station, reasons, ctx) {
+function finish(score, ev, station, reasons, ctx, missingStrong = []) {
+  // The reserved top of the scale — see PRACTICE_CEILING. Applied here so it holds for every path
+  // into this function, including the "too short to be an answer" early return.
+  const capped = Math.min(score, PRACTICE_CEILING);
+  // Nobody leaves with an empty list. If every detector fired and the rubric found nothing to say,
+  // the honest note is not "flawless" — it is that the rubric has run out of things it can measure,
+  // which is a limit of the tool rather than a verdict on the student.
+  const withFloor = reasons.length ? reasons : (
+    missingStrong.length ? missingStrong.slice(0, 3) : [
+      'This session cleared everything the rubric can detect in a transcript, which is not the same as being finished. The next layer is delivery — pace, where you place a pause, and whether you sound like you believe the answer. Record yourself and watch it back; that is the only place the remaining work is visible.',
+    ]
+  );
   return {
-    score,
+    score: capped,
+    rawScore: score,
+    ceilingApplied: capped < score,
+    ceiling: PRACTICE_CEILING,
+    ceilingNote: CEILING_NOTE,
+    reasons: withFloor,
     scale: SCALE_MAX,
-    anchor: anchorFor(score),
-    band: scoreBand(score),
-    reasons,
-    strengths: describeStrengths(ev, score),
-    competencies: scoreCompetencies(score, ev, station),
+    anchor: anchorFor(capped),
+    band: scoreBand(capped),
+    strengths: describeStrengths(ev, capped),
+    competencies: scoreCompetencies(capped, ev, station),
     signals: ev,
     caveat: reliabilityNote(ctx.stationCount),
   };
@@ -241,7 +270,9 @@ function scoreCompetencies(stationScore, ev, station) {
     let s = stationScore;
     if (read.up) s += 1;
     if (read.down) s -= 1;
-    s = Math.max(1, Math.min(SCALE_MAX, s));
+    // Same reserved top as the overall score — a competency line reading 7/7 would tell a student
+    // that one dimension of their interview is finished, which is the claim this tool cannot make.
+    s = Math.max(1, Math.min(PRACTICE_CEILING, s));
     return { key, label: COMPETENCIES[key].label, short: COMPETENCIES[key].short, score: s, note: read.note };
   });
 }
@@ -257,7 +288,7 @@ export function scoreBand(score) {
   if (s === 3) return { label: 'Borderline', tone: 'bad' };
   if (s === 4) return { label: 'Below the pool median', tone: 'mid' };
   if (s === 5) return { label: 'Satisfactory — and forgettable', tone: 'mid' };
-  if (s === 6) return { label: 'Above the interviewed pool', tone: 'good' };
+  if (s === 6) return { label: 'Above the pool — with work left', tone: 'good' };
   return { label: 'Outstanding — rare', tone: 'good' };
 }
 
@@ -279,7 +310,9 @@ STRONG (6-7) names stakeholders specifically rather than abstractly; states the 
 
 Judge committed actions, not topic or vocabulary. "I'd sit down next to her and stay" and "I'd give her space and head home" are similar in topic and opposite on empathy — score what they said they would DO, to WHOM, and WHEN. Sentiment words earn nothing on their own.
 
-Open with the single biggest weakness, quoting their own words — no warm-up, no softener. Then one concrete fix, and one sentence showing what a stronger version of THEIR answer would have sounded like. Only name a strength if it is genuinely there and you can point at it; if nothing stood out, say that. End with a line exactly like "Score: X/7". No markdown, no bullets, plain sentences, under 170 words.`;
+NEVER AWARD ${SCALE_MAX}/${SCALE_MAX}. ${PRACTICE_CEILING} is the highest score available here, and it still means work remains. There is no such thing as a finished answer: if you cannot find something to improve, you have not read closely enough — go back and find the vaguest sentence, the stakeholder who stayed abstract, the step that had no time attached. Never write that an answer was perfect, flawless, or that you would not change anything.
+
+Open with the single biggest weakness, quoting their own words — no warm-up, no softener. Then TWO more specific things to work on, each quoting what they said and each followed by a rewritten version of that exact sentence as it should have sounded — not advice about it, the actual replacement words. Only name a strength if it is genuinely there and you can point at it; if nothing stood out, say that plainly. End with a line exactly like "Score: X/7". No markdown, no bullets, plain sentences, under 230 words.`;
 }
 
 // ── Putting it together ─────────────────────────────────────────────────────
@@ -292,14 +325,103 @@ Open with the single biggest weakness, quoting their own words — no warm-up, n
  * can never disagree), and the reliability caveat is appended — because a confident verdict from a
  * single station would be a lie about how the format works.
  */
+/**
+ * Score a whole live session — several answers to several questions — rather than one station.
+ *
+ * WHY THIS EXISTS. The live interview used to glue every answer the student gave into one string and
+ * hand it to scoreStation(). That is much more generous than it looks, because the detectors are
+ * ORs over the text: name a stakeholder in answer one, flag uncertainty in answer four, end answer
+ * six deliberately, and the blob has three strong markers even though no single answer had more than
+ * one. Eight turns of merely-competent answers therefore accumulated their way to a 6 or a 7, which
+ * is exactly the "it makes you feel like you gave the best interview ever" failure.
+ *
+ * A rater does not score a transcript. They score answers, and their overall impression is closer to
+ * the typical answer than to the best one. So each answer is scored on its own, and the session
+ * lands on the mean — floored, not rounded, so one strong turn cannot round a session of 4s up.
+ * Weaknesses are pooled across turns, with anything that recurred surfaced first, because a habit is
+ * a more useful finding than an incident.
+ */
+export function scoreSession(answers, ctx = {}) {
+  const list = (Array.isArray(answers) ? answers : [answers]).map(a => String(a || '').trim()).filter(Boolean);
+  if (!list.length) return scoreStation('', ctx);
+
+  const perAnswer = list.map((a, i) => scoreStation(a, {
+    ...ctx,
+    // Only the answers that came after a follow-up can be assessed on adjustment; crediting the
+    // opening answer for adjusting to a probe it never heard is free points.
+    probed: i > 0 ? ctx.probed : false,
+    adjustedAfterProbe: i > 0 ? ctx.adjustedAfterProbe : false,
+  }));
+
+  const mean = perAnswer.reduce((n, r) => n + r.score, 0) / perAnswer.length;
+  const score = Math.max(1, Math.min(PRACTICE_CEILING, Math.floor(mean)));
+
+  // Recurring findings first — "you did this in four of six answers" is the sentence that changes
+  // behaviour, and a one-off is worth less than a pattern.
+  const counts = new Map();
+  for (const r of perAnswer) for (const reason of r.reasons || []) counts.set(reason, (counts.get(reason) || 0) + 1);
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const reasons = ranked.map(([reason, n]) =>
+    n > 1 && perAnswer.length > 1 ? `In ${n} of your ${perAnswer.length} answers: ${reason}` : reason
+  ).slice(0, 6);
+
+  // A strength has to have shown up in most of the session to count as one. Something that happened
+  // once is a moment, not a habit, and telling a student otherwise is how this tool starts lying.
+  const strengthCounts = new Map();
+  for (const r of perAnswer) for (const s of r.strengths || []) strengthCounts.set(s, (strengthCounts.get(s) || 0) + 1);
+  const threshold = Math.max(2, Math.ceil(perAnswer.length / 2));
+  const strengths = perAnswer.length === 1
+    ? perAnswer[0].strengths
+    : [...strengthCounts.entries()].filter(([, n]) => n >= threshold).map(([s]) => s);
+
+  const worst = perAnswer.reduce((lo, r) => (r.score < lo.score ? r : lo), perAnswer[0]);
+
+  return {
+    ...worst,
+    score,
+    rawScore: mean,
+    mean,
+    perAnswer: perAnswer.map(r => r.score),
+    ceiling: PRACTICE_CEILING,
+    ceilingNote: CEILING_NOTE,
+    anchor: anchorFor(score),
+    band: scoreBand(score),
+    reasons: reasons.length ? reasons : worst.reasons,
+    strengths,
+    competencies: scoreCompetencies(score, worst.signals, getStationType(ctx.stationKey || DEFAULT_STATION_TYPE)),
+  };
+}
+
+// ── The prose has to agree with the cap ─────────────────────────────────────
+// Capping the number does nothing if the paragraph above it says "a perfect answer — I wouldn't
+// change a thing." A student reads the sentence, not the arithmetic. These are the specific phrases
+// a model reaches for when it is being kind to a teenager, rewritten into something true: there is
+// always a next layer, and saying so is the entire premise of the feature.
+const PERFECTION_REWRITES = [
+  [/\b(?:that was |this was |a |an )?(?:absolutely |truly |genuinely )?(?:perfect|flawless|faultless|impeccable)\b(?: answer| response| interview)?/gi, 'a strong answer with room left'],
+  [/\bI would(?:n't| not) change (?:a thing|anything)\b/gi, 'there is still something I would change'],
+  [/\bnothing (?:to improve|to work on|I would change|needs improving)\b/gi, 'still something to work on'],
+  [/\b(?:you )?(?:nailed|aced|crushed) (?:it|this|that)\b/gi, 'you handled that well'],
+  [/\bcould(?:n't| not) (?:have been|be) better\b/gi, 'could still be sharper'],
+  [/\b(?:the|a) best (?:possible )?(?:answer|response)\b/gi, 'a strong answer'],
+  [/\btop marks?\b/gi, 'a good result'],
+  [/\b(?:10|ten)\s*(?:\/|out of)\s*(?:10|ten)\b/gi, 'strong'],
+  [/\b7\s*(?:\/|out of)\s*7\b/gi, `${PRACTICE_CEILING}/${SCALE_MAX}`],
+];
+
+export function stripPerfection(text) {
+  return PERFECTION_REWRITES.reduce((s, [re, to]) => s.replace(re, to), String(text || ''));
+}
+
 export function calibrateFeedback(feedbackText, answerText, ctx = {}) {
   const proposed = parseInterviewScore(feedbackText);
-  const rated = scoreStation(answerText, ctx);
-  const score = proposed === null ? rated.score : Math.min(proposed, rated.score);
+  // An array of answers is a session (see scoreSession); a string is one station.
+  const rated = Array.isArray(answerText) ? scoreSession(answerText, ctx) : scoreStation(answerText, ctx);
+  const score = Math.min(proposed === null ? rated.score : Math.min(proposed, rated.score), PRACTICE_CEILING);
   const band = scoreBand(score);
   const anchor = anchorFor(score);
 
-  let text = String(feedbackText || '').trim();
+  let text = stripPerfection(String(feedbackText || '').trim());
   const scoreLine = /(?:score|overall)\s*:?\s*\d+(?:\.\d+)?\s*(?:\/|out of)\s*(?:7|10)\.?/i;
   const rendered = `Score: ${score}/${SCALE_MAX} — ${anchor.label}.`;
   if (scoreLine.test(text)) text = text.replace(scoreLine, rendered);
@@ -310,7 +432,11 @@ export function calibrateFeedback(feedbackText, answerText, ctx = {}) {
     score,
     scale: SCALE_MAX,
     proposed,
-    ceiling: rated.score,
+    rubricCeiling: rated.score,
+    ceiling: PRACTICE_CEILING,
+    ceilingNote: CEILING_NOTE,
+    mean: rated.mean ?? null,
+    perAnswer: rated.perAnswer || null,
     anchor,
     band,
     reasons: rated.reasons,

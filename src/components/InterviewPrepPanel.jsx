@@ -16,6 +16,7 @@ import CasperTypedTest from './interview/CasperTypedTest';
 import { DoorCard, RoomCard, StationTags } from './interview/StationBrief';
 import DebriefCard from './interview/DebriefCard';
 import { calibrateFeedback, buildRubricPrompt, SCALE_MAX } from '../lib/interviewScore';
+import { scrubThinking } from '../lib/interviewReply';
 import { rateStation } from '../lib/interviewFeedback';
 import { takeInterviewIntent } from '../lib/interviewIntent';
 import * as DB from '../lib/db';
@@ -149,11 +150,14 @@ export default function InterviewPrepPanel({
     const r = await fetch('/api/groq', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system, message: answer, maxTokens: 260, purpose: 'interview' }),
+      // Sized for the thinking as well as the words: on this model family, reasoning tokens come
+      // out of the same allowance, and a budget cut to the length of the visible rating returns an
+      // empty response (or, before api/groq.js was fixed, the raw deliberation).
+      body: JSON.stringify({ system, message: answer, maxTokens: 1400, tier: 'sage', purpose: 'interview' }),
     });
     const d = await r.json();
     if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
-    return calibrateFeedback(d.content || '', answer, {
+    return calibrateFeedback(scrubThinking(d.content || ''), answer, {
       stationKey: 'standard', prompt: stdQuestion, stationCount: 1,
     });
   }

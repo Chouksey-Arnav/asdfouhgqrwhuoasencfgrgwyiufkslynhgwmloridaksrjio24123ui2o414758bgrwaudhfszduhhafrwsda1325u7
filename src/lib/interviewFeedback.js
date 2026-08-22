@@ -6,6 +6,7 @@
 // capped by the deterministic scorer before the student ever sees it. This module only decides the
 // FRAMING: what kind of thing was just attempted, and what the model should not say about it.
 import { calibrateFeedback, buildRubricPrompt } from './interviewScore';
+import { scrubThinking } from './interviewReply';
 import { getStationType } from './interviewPanel';
 import { STATION_FORMATS } from '../data/mmiStations';
 
@@ -46,7 +47,7 @@ The way candidates most commonly fail it: ${station.commonFailure}`;
 
   const system = `${framing}\n\n${buildRubricPrompt({ stationKey: station.stationType, hasActor: type.hasActor })}\n\n${AUDIENCE}`;
 
-  const content = await askModel({ system, message: answer, maxTokens: 280, signal });
+  const content = await askModel({ system, message: answer, maxTokens: 1400, signal });
   return calibrateFeedback(content, answer, {
     stationKey: station.stationType,
     prompt: station.prompt,
@@ -66,7 +67,7 @@ This was written under a five-minute clock covering all ${section.probes.length}
 
   const system = `${framing}\n\n${buildRubricPrompt({ stationKey: section.stationType, hasActor: type.hasActor })}\n\n${AUDIENCE}`;
 
-  const content = await askModel({ system, message: answer, maxTokens: 260, signal });
+  const content = await askModel({ system, message: answer, maxTokens: 1400, signal });
   return calibrateFeedback(content, answer, {
     stationKey: section.stationType,
     prompt: section.scenario,
@@ -74,14 +75,21 @@ This was written under a five-minute clock covering all ${section.probes.length}
   });
 }
 
+// The budget is deliberately several times the length of the rating itself. On the model family
+// behind this endpoint, the thinking is billed against the same allowance as the words, so a budget
+// sized to the visible answer buys a full internal monologue and an empty response — see the
+// chain-of-thought note in api/groq.js. Rating is a judgment call, so the effort stays high and the
+// budget covers it; a spoken conversational turn makes the opposite trade (see LiveVoiceInterview).
 async function askModel({ system, message, maxTokens, signal }) {
   const r = await fetch('/api/groq', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ system, message, maxTokens, purpose: 'interview' }),
+    body: JSON.stringify({ system, message, maxTokens, purpose: 'interview', tier: 'sage' }),
     signal,
   });
   const d = await r.json();
   if (!r.ok) throw new Error(d?.error || `Error ${r.status}`);
-  return d.content || '';
+  // A rating is displayed, not spoken, but leaked deliberation is just as wrong on the page — and
+  // it would carry the rubric's internals back to the student. See lib/interviewReply.js.
+  return scrubThinking(d.content || '');
 }

@@ -721,7 +721,14 @@ export default async function handler(req, res) {
   // with a proposed edit's JSON riding along at the end — see MEDABRAIN_ACTION_PROTOCOL in
   // src/lib/studentProfile.js). A cap tighter than what the caller actually asks for (see
   // clampedTokens below) silently cuts the reply off mid-sentence with no signal to the client.
-  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { coach: 2200, portfolio: 2400, prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000 };
+  // 'interview' is here for a reason that is invisible until it bites: on the gpt-oss family,
+  // reasoning tokens are billed against max_tokens alongside the visible answer. A spoken
+  // interviewer turn is genuinely short — two to four sentences — so it was asked for with a
+  // 200-token budget, and the model spent all 200 thinking and returned empty content. See the
+  // chain-of-thought note on extractText below for what the client then displayed. The ceiling is
+  // the backstop; the real fix is that interview callers now ask for a budget that covers the
+  // thinking as well as the sentence, and pin a low reasoning_effort for conversational turns.
+  const MAX_OUTPUT_TOKENS_BY_PURPOSE = { coach: 2200, portfolio: 2400, prep: 4000, masterplan: 16000, sat: 8000, essay: 4000, roadmap: 32000, interview: 3000 };
   const outputCeiling = MAX_OUTPUT_TOKENS_BY_PURPOSE[purpose] || 1500;
   const clampedTokens = Math.min(Math.max(50, parseInt(maxTokens) || 700), outputCeiling);
 
@@ -819,20 +826,64 @@ export default async function handler(req, res) {
     return last;
   }
 
+  // ── Never hand the caller a model's chain-of-thought ───────────────────────
+  // The gpt-oss family is a REASONING family: it thinks in a separate channel and
+  // then writes. Groq surfaces that channel as `reasoning`/`reasoning_content`,
+  // and — because reasoning tokens are billed against max_tokens — a caller with
+  // a small budget (a spoken interview turn asked for 200) can spend the entire
+  // budget thinking and return with `content` empty and `reasoning` full.
+  //
+  // This function used to fall back to that field, and the result was the worst
+  // output this app has ever produced: the mock interviewer "said", out loud, in
+  // the transcript, "The user is saying... According to the instructions, we must
+  // ask a single question, not give praise... We must end on a noun." That is
+  // three failures at once — the illusion of a person in the room is destroyed,
+  // the answer is never actually delivered, and the confidential system prompt is
+  // read back to the student verbatim, which is precisely what the SECURITY
+  // paragraph in that prompt forbids.
+  //
+  // So: chain-of-thought never leaves this handler as prose. `<think>` blocks and
+  // harmony-style analysis channels are stripped from content, and the reasoning
+  // field is consulted ONLY for jsonMode callers (where a structured object in the
+  // reasoning channel is genuinely the answer, not a monologue about it) and only
+  // for the JSON it contains. Everything else treats an empty content as what it
+  // is — a failed generation — and takes the relief hop or the honest error.
+  const THINK_BLOCK = /<think>[\s\S]*?<\/think>|<\|?(?:channel|start)\|?>\s*analysis[\s\S]*?(?=<\|?(?:message|channel|end)\|?>|$)/gi;
+
+  function stripReasoningArtifacts(s) {
+    return String(s || '').replace(THINK_BLOCK, '').replace(/^\s*<\|?message\|?>\s*/i, '').trim();
+  }
+
+  // The JSON object/array buried in a reasoning monologue, if there is one.
+  function jsonFromReasoning(s) {
+    const text = String(s || '');
+    const start = text.search(/[[{]/);
+    if (start < 0) return '';
+    const end = Math.max(text.lastIndexOf('}'), text.lastIndexOf(']'));
+    if (end <= start) return '';
+    const slice = text.slice(start, end + 1);
+    try { JSON.parse(slice); return slice; } catch { return ''; }
+  }
+
   // Groq's message.content is normally a string, but some models/response
   // shapes can return an array of content parts (e.g. [{type:'text',text:'…'}]).
   // Coerce defensively so the client never receives anything but a string.
   function extractText(message) {
     const c = message?.content;
-    if (typeof c === 'string' && c.trim()) return c;
+    if (typeof c === 'string') {
+      const cleaned = stripReasoningArtifacts(c);
+      if (cleaned) return cleaned;
+    }
     if (Array.isArray(c)) {
       const joined = c.map(part => (typeof part === 'string' ? part : part?.text || '')).join('');
-      if (joined.trim()) return joined;
+      const cleaned = stripReasoningArtifacts(joined);
+      if (cleaned) return cleaned;
     }
-    // Some reasoning models put the answer in `reasoning`/`reasoning_content`
-    // when `content` is empty.
-    if (typeof message?.reasoning === 'string' && message.reasoning.trim()) return message.reasoning;
-    if (typeof message?.reasoning_content === 'string' && message.reasoning_content.trim()) return message.reasoning_content;
+    if (jsonMode) {
+      const reasoning = message?.reasoning || message?.reasoning_content;
+      const salvaged = jsonFromReasoning(reasoning);
+      if (salvaged) return salvaged;
+    }
     return '';
   }
 
