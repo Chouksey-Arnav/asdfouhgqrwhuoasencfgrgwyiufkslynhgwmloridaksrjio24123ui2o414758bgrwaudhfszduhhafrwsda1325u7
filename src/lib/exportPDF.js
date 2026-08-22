@@ -349,6 +349,317 @@ export function exportPortfolioResume(studentName, activities, awards, gpaEntrie
   doc.save(`portfolio-resume-${Date.now()}.pdf`);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// The four-year record.
+//
+// ── What this renders ───────────────────────────────────────────────────────
+// The document model built by src/lib/portfolioDossier.js — profile, activities
+// grouped with totals and date ranges, the shadowing log by site with
+// supervisors and dates, research, awards, certifications, coursework, the
+// recommender list, and a chronological four-year timeline. In archive mode it
+// also renders the student's private reflections, which the builder only ever
+// includes for the student's own account.
+//
+// This function knows nothing about the database. It walks `doc.sections` by
+// `kind` — 'grouped' | 'rows' | 'timeline' | 'longform' — which is why a new
+// section can be added to the builder without touching the renderer.
+//
+// ── The free preview is a real page, not a mock ─────────────────────────────
+// With `preview: true` the renderer produces page one of the genuine document,
+// with the student's real name, real hours and real dates, diagonally
+// watermarked, ending in a line that says what the rest contains. That is
+// deliberate and it is the whole conversion argument: a seventeen-year-old
+// seeing their own four years formatted properly for the first time is a
+// different experience from reading a feature list, and a blurred placeholder
+// throws that away to protect content the student themselves entered.
+//
+// The watermark is drawn UNDER the text (before each page's content) rather
+// than over it, so the preview stays fully readable while being unmistakably
+// not the final document. A watermark that obscures the thing it is advertising
+// is an advert against itself.
+// ─────────────────────────────────────────────────────────────────────────────
+const PAGE_H = 297;
+const MARGIN_X = 14;
+const CONTENT_W = 182;
+const PAGE_BOTTOM = 272;
+
+function watermark(doc, label) {
+  doc.saveGraphicsState?.();
+  doc.setTextColor(232, 236, 244);
+  doc.setFontSize(46);
+  doc.setFont('helvetica', 'bold');
+  // Three passes down the page so no section of a full page reads as unmarked.
+  [90, 165, 240].forEach((y) => {
+    doc.text(label, 105, y, { align: 'center', angle: 32 });
+  });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0);
+  doc.restoreGraphicsState?.();
+}
+
+export function exportPortfolioDossier(dossier, opts = {}) {
+  const { preview = false, watermarkLabel = 'PREVIEW', fileName = null, save = true } = opts;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const meta = dossier?.meta || {};
+  const stats = dossier?.stats || {};
+  let page = 1;
+  let stopped = false;   // preview truncation — set once and never rendered past
+
+  const startPage = (title) => {
+    if (preview) watermark(doc, watermarkLabel);
+    return header(doc, title, [meta.studentName, meta.gradeLabel, meta.pathwayLabel]
+      .filter(Boolean).join(' · ') || meta.generatedLabel);
+  };
+
+  let y = startPage(meta.modeLabel === 'Personal archive'
+    ? 'Personal Archive — Four-Year Record'
+    : 'Four-Year Record');
+
+  /**
+   * Page break, or — in preview mode — the point where the document stops.
+   * Returns false when the caller must not draw anything more.
+   */
+  const room = (needed) => {
+    if (stopped) return false;
+    if (y + needed <= PAGE_BOTTOM) return true;
+    if (preview) { stopped = true; return false; }
+    footer(doc, page, page);
+    doc.addPage();
+    page += 1;
+    y = startPage(`${meta.modeLabel === 'Personal archive' ? 'Personal Archive' : 'Four-Year Record'} (continued)`);
+    return true;
+  };
+
+  const sectionBar = (title, color) => {
+    if (!room(14)) return false;
+    doc.setFillColor(...color);
+    doc.roundedRect(MARGIN_X, y, CONTENT_W, 7, 1, 1, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text(String(title).toUpperCase(), MARGIN_X + 4, y + 5);
+    y += 11;
+    return true;
+  };
+
+  const noteLine = (text) => {
+    if (!text || !room(8)) return;
+    doc.setTextColor(...LIGHT);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    const lines = doc.splitTextToSize(text, CONTENT_W - 4);
+    lines.forEach((l) => { doc.text(l, MARGIN_X + 2, y); y += 3.4; });
+    doc.setFont('helvetica', 'normal');
+    y += 2.5;
+  };
+
+  const entryRow = ({ title, meta: sub, description, impact, flag, verified }) => {
+    const descLines = description ? doc.splitTextToSize(description, CONTENT_W - 8).slice(0, 3) : [];
+    const impactLines = impact ? doc.splitTextToSize(`Impact: ${impact}`, CONTENT_W - 8).slice(0, 2) : [];
+    const h = 9 + descLines.length * 3.4 + impactLines.length * 3.4;
+    if (!room(h + 3)) return;
+    doc.setFillColor(248, 250, 252);
+    doc.rect(MARGIN_X, y, CONTENT_W, h, 'F');
+    doc.setDrawColor(230, 234, 240);
+    doc.line(MARGIN_X, y + h, MARGIN_X + CONTENT_W, y + h);
+
+    doc.setTextColor(...(flag === 'expired' ? RED : [20, 30, 50]));
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text(doc.splitTextToSize(title, CONTENT_W - 22)[0] || '', MARGIN_X + 3, y + 4);
+    if (verified) {
+      doc.setTextColor(...GREEN);
+      doc.setFontSize(6.5);
+      doc.text('VERIFIED', MARGIN_X + CONTENT_W - 16, y + 4);
+    }
+
+    doc.setTextColor(...LIGHT);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.text(doc.splitTextToSize(sub || '', CONTENT_W - 8)[0] || '', MARGIN_X + 3, y + 8);
+
+    let ly = y + 11.5;
+    doc.setTextColor(60, 70, 90);
+    doc.setFontSize(7);
+    descLines.forEach((l) => { doc.text(l, MARGIN_X + 3, ly); ly += 3.4; });
+    impactLines.forEach((l) => { doc.text(l, MARGIN_X + 3, ly); ly += 3.4; });
+    y += h + 2;
+  };
+
+  // ── Cover block: who this is and what is in it ──────────────────────────
+  doc.setFillColor(15, 24, 40);
+  doc.roundedRect(MARGIN_X, y, CONTENT_W, 30, 2, 2, 'F');
+  doc.setTextColor(...WHITE);
+  doc.setFontSize(13);
+  doc.setFont('helvetica', 'bold');
+  doc.text(meta.studentName || 'Student', MARGIN_X + 6, y + 9);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...LIGHT);
+  doc.text([meta.gradeLabel, meta.pathwayLabel, meta.schoolName].filter(Boolean).join(' · ')
+    || 'Health pathway record', MARGIN_X + 6, y + 14);
+  doc.text(`Record spans ${meta.recordSpan || 'no dated entries yet'} · Generated ${meta.generatedLabel}`, MARGIN_X + 6, y + 18.5);
+
+  const tiles = [
+    [`${Math.round(stats.totalHours || 0).toLocaleString()}`, 'total hours'],
+    [`${stats.clinicalEntries || 0}`, 'dated entries'],
+    [`${stats.activities || 0}`, 'activities'],
+    [`${stats.sites || 0}`, 'sites'],
+    [`${stats.certifications || 0}`, 'credentials'],
+  ];
+  tiles.forEach(([v, l], i) => {
+    const x = MARGIN_X + 6 + i * 35;
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.text(v, x, y + 26);
+    doc.setTextColor(...LIGHT);
+    doc.setFontSize(6);
+    doc.setFont('helvetica', 'normal');
+    doc.text(l, x + 12, y + 26);
+  });
+  y += 36;
+
+  if (meta.containsPrivate) {
+    doc.setFillColor(255, 240, 240);
+    doc.setDrawColor(...RED);
+    doc.roundedRect(MARGIN_X, y, CONTENT_W, 12, 1.5, 1.5, 'FD');
+    doc.setTextColor(...RED);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PERSONAL ARCHIVE — CONTAINS YOUR PRIVATE REFLECTIONS', MARGIN_X + 4, y + 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 40, 50);
+    doc.text('This version is for you. Use the application-ready export for anything you send to a program, a counsellor or a parent.', MARGIN_X + 4, y + 9);
+    y += 17;
+  }
+
+  const COLORS = {
+    activities: BLUE, clinical: GREEN, research: BLUE, awards: AMBER,
+    certifications: AMBER, coursework: GREEN, recommenders: BLUE,
+    timeline: DARK, reflections: RED,
+  };
+
+  for (const section of dossier?.sections || []) {
+    if (stopped) break;
+    const color = COLORS[section.id] || BLUE;
+    const heading = section.kind === 'grouped' && section.id === 'activities'
+      ? `${section.title} (${(section.groups || []).reduce((s, g) => s + g.count, 0)})`
+      : section.title;
+    if (!sectionBar(heading, color)) break;
+    noteLine(section.note);
+
+    if (section.kind === 'grouped') {
+      for (const group of section.groups || []) {
+        if (stopped) break;
+        if (!room(10)) break;
+        doc.setTextColor(...color);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.text(group.label, MARGIN_X + 2, y + 3);
+        doc.setTextColor(...LIGHT);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7);
+        doc.text([
+          `${group.count} ${group.count === 1 ? 'entry' : 'entries'}`,
+          group.totalHours ? `${Math.round(group.totalHours).toLocaleString()} hrs` : null,
+          group.gradeSpan,
+        ].filter(Boolean).join(' · '), MARGIN_X + CONTENT_W - 2, y + 3, { align: 'right' });
+        y += 6.5;
+        for (const row of group.rows || []) { if (stopped) break; entryRow(row); }
+        y += 2;
+      }
+    } else if (section.kind === 'rows') {
+      for (const row of section.rows || []) { if (stopped) break; entryRow(row); }
+      y += 2;
+    } else if (section.kind === 'timeline') {
+      for (const year of section.years || []) {
+        if (stopped) break;
+        if (!room(9)) break;
+        doc.setFillColor(238, 242, 248);
+        doc.rect(MARGIN_X, y, CONTENT_W, 6, 'F');
+        doc.setTextColor(...DARK);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'bold');
+        doc.text(year.label, MARGIN_X + 3, y + 4.2);
+        y += 8.5;
+        doc.setFont('helvetica', 'normal');
+        for (const ev of year.events || []) {
+          if (!room(5)) break;
+          doc.setTextColor(...LIGHT);
+          doc.setFontSize(6.8);
+          doc.text(ev.dateLabel || '', MARGIN_X + 4, y);
+          doc.setTextColor(30, 40, 60);
+          doc.setFontSize(7.4);
+          doc.text(doc.splitTextToSize(ev.label || '', 100)[0] || '', MARGIN_X + 34, y);
+          if (ev.detail) {
+            doc.setTextColor(...LIGHT);
+            doc.setFontSize(6.8);
+            doc.text(doc.splitTextToSize(ev.detail, 45)[0] || '', MARGIN_X + 136, y);
+          }
+          y += 4.4;
+        }
+        y += 3;
+      }
+    } else if (section.kind === 'longform') {
+      for (const entry of section.entries || []) {
+        if (stopped) break;
+        if (!room(14)) break;
+        doc.setTextColor(20, 30, 50);
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'bold');
+        doc.splitTextToSize(entry.heading || '', CONTENT_W - 6).slice(0, 2)
+          .forEach((l) => { doc.text(l, MARGIN_X + 2, y); y += 4; });
+        if (entry.dateLabel) {
+          doc.setTextColor(...LIGHT);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(7);
+          doc.text(entry.dateLabel, MARGIN_X + 2, y); y += 4;
+        }
+        doc.setTextColor(50, 60, 80);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        const body = doc.splitTextToSize(entry.body || '', CONTENT_W - 6);
+        for (const line of body) {
+          if (!room(5)) break;
+          doc.text(line, MARGIN_X + 2, y);
+          y += 4;
+        }
+        y += 5;
+      }
+    }
+  }
+
+  // ── The preview's closing line ──────────────────────────────────────────
+  // Says what the rest of the document contains, in the student's own numbers,
+  // and nothing about pricing — the pitch is the page they are holding.
+  if (preview) {
+    const boxY = Math.min(y + 2, PAGE_BOTTOM - 2);
+    doc.setFillColor(15, 24, 40);
+    doc.roundedRect(MARGIN_X, boxY, CONTENT_W, 18, 2, 2, 'F');
+    doc.setTextColor(...WHITE);
+    doc.setFontSize(8.5);
+    doc.setFont('helvetica', 'bold');
+    doc.text('This is page one of your real record.', MARGIN_X + 5, boxY + 6.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(...LIGHT);
+    doc.text(doc.splitTextToSize(
+      `The complete document continues with every one of your ${stats.sectionCount || 0} sections — `
+      + `${stats.activities || 0} activities grouped with totals, ${stats.clinicalEntries || 0} dated `
+      + `shadowing entries across ${stats.sites || 0} sites and ${stats.supervisors || 0} supervisors, `
+      + `${stats.certifications || 0} credentials, ${stats.recommenders || 0} recommenders, and the full `
+      + 'four-year timeline.', CONTENT_W - 10), MARGIN_X + 5, boxY + 11);
+  }
+
+  footer(doc, page, page);
+  if (!save) return doc;
+  const name = fileName
+    || `${(meta.studentName || 'student').replace(/\s+/g, '-').toLowerCase()}-${meta.mode === 'archive' ? 'archive' : 'record'}${preview ? '-preview' : ''}-${Date.now()}.pdf`;
+  doc.save(name);
+  return doc;
+}
+
 export function exportPathwayCertificate(pathwayLabel, stats={}) {
   const { studentName='Student', totalLessons=0, completedLessons=0, avgScore=null, completedAt=Date.now() } = stats;
   const doc  = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });

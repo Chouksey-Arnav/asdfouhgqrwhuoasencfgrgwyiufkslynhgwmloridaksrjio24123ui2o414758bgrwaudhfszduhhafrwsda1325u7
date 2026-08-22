@@ -7,6 +7,7 @@ import { SCHOLARSHIPS, SCHOLARSHIP_CATEGORIES } from '../data/scholarships';
 import { renderMarkdown } from '../lib/renderMarkdown';
 import TrackButton from './ui/TrackButton';
 import { scholarshipRowFromCatalog, scholarshipRowFromCustom, normalizeKey } from '../lib/trackingCatalog';
+import { openToSeniors, seniorExclusionReason, scholarshipCounts } from '../lib/scholarshipFilters';
 
 const fuse = new Fuse(SCHOLARSHIPS, {
   keys: [
@@ -35,13 +36,20 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
   const [expandedId, setExpandedId] = useState(null);
   const [busyId, setBusyId] = useState(null);
   const [aiLookup, setAiLookup] = useState(null); // { query, loading, content, error }
+  // Off by default, because this database is used by ninth-graders too and a
+  // senior filter left on would quietly hide the awards they should be aiming
+  // at for three years. On, it hides only the four entries whose own
+  // eligibility text rules a senior out — see src/lib/scholarshipFilters.js.
+  const [seniorOnly, setSeniorOnly] = useState(false);
+  const counts = scholarshipCounts();
 
   const results = useMemo(() => {
     const base = query.trim().length >= 2
       ? fuse.search(query.trim()).map(r => r.item)
       : SCHOLARSHIPS;
-    return category === 'all' ? base : base.filter(s => s.categories.includes(category));
-  }, [query, category]);
+    const byCategory = category === 'all' ? base : base.filter(s => s.categories.includes(category));
+    return seniorOnly ? byCategory.filter(openToSeniors) : byCategory;
+  }, [query, category, seniorOnly]);
 
   const showAiFallback = query.trim().length >= 3 && results.length === 0;
 
@@ -118,6 +126,22 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
         ))}
       </div>
 
+      <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+        <button type="button" onClick={() => setSeniorOnly(v => !v)}
+          style={pill(seniorOnly ? tint(C.green, 0.2) : C.surf2, seniorOnly ? C.greenL : C.t3, {
+            cursor: 'pointer', border: `1px solid ${seniorOnly ? tint(C.green, 0.36) : C.b1}`,
+            fontWeight: seniorOnly ? 700 : 500,
+          })}>
+          Only what a senior can apply for now
+        </button>
+        {seniorOnly && (
+          <span style={{ fontSize: 11, color: C.t4 }}>
+            Hiding {counts.excluded}: National Merit (entered as a junior), Goldwater (college),
+            AAMC fee assistance (medical school) and the first-gen reminder entry.
+          </span>
+        )}
+      </div>
+
       <div style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 6 }}>
         <Info size={11} />
         Reference info only — amounts and deadlines shift year to year. Always confirm current details on the program's official site before applying.
@@ -146,6 +170,18 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
                       <div><b style={{ color: C.t2 }}>Eligibility:</b> {s.eligibility}</div>
                       <div><b style={{ color: C.t2 }}>Typical deadline:</b> {s.deadline}</div>
                     </div>
+                    {/* A senior reading this needs to know BEFORE they start writing that this
+                        particular door closed a year ago — the four entries where that is true
+                        say so here rather than only being filtered out. */}
+                    {seniorExclusionReason(s) && (
+                      <div style={{
+                        marginTop: 8, padding: '8px 10px', borderRadius: 8,
+                        background: tint(C.amber, 0.06), border: `1px solid ${tint(C.amber, 0.22)}`,
+                        fontSize: 11.5, color: C.t2, lineHeight: 1.55,
+                      }}>
+                        <b style={{ color: C.amberL }}>Not open to a current senior:</b> {seniorExclusionReason(s)}
+                      </div>
+                    )}
                     <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {s.categories.map(cid => <span key={cid} style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{SCHOLARSHIP_CATEGORIES.find(c => c.id === cid)?.label || cid}</span>)}
                     </div>

@@ -188,6 +188,12 @@ export const PARENT_VIEWS = {
   // wedged into the messages thread would be read as another message — which is exactly the
   // status a quest must not have.
   quests: '/family/quests',
+  // What each health pathway costs and how long it takes. Its own screen because it is the one
+  // thing on this dashboard that is not about last week — it is about a decision their child is
+  // making now, that nobody has ever shown them the finances of, and that a parent will want to
+  // read slowly and send to the other parent. Wedged under the weekly numbers it would be scrolled
+  // past.
+  costs: '/family/costs',
   connections: '/family/connections',
   // What this dashboard is, what each number means, where the privacy line is drawn, and what to
   // do when something is not working. Addressable because it is the page a support reply wants to
