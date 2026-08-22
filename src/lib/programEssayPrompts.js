@@ -34,8 +34,8 @@
 // actually holds is ever presented as a prompt.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PROGRAMS as COMBINED_PROGRAMS } from '../data/combinedDegreePrograms';
-import { programLabel, nextDeadline } from './combinedDegree';
+import { PROGRAMS as COMBINED_PROGRAMS } from '../data/combinedDegreePrograms.js';
+import { programLabel, nextDeadline } from './combinedDegree.js';
 
 /** Normalised for matching: case, punctuation and dash style all vary by entry path. */
 const norm = (s) => String(s || '').toLowerCase().replace(/[—–-]/g, '-').replace(/\s+/g, ' ').trim();

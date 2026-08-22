@@ -110,8 +110,13 @@ export const URGENCY_BANDS = {
  * is not.
  */
 export function urgencyOf(event) {
-  const days = Number(event?.days);
   const lead = leadDaysFor(event);
+  // `days == null` is checked separately because Number(null) is 0, not NaN — so a finiteness
+  // check alone silently reads an event with no resolvable date as one due TODAY, which puts it
+  // in the `late` band and floats it above every real deadline in the feed. Empty string coerces
+  // to 0 the same way. An undated event is not urgent; it is unknown.
+  const raw = event?.days;
+  const days = raw == null || raw === '' ? NaN : Number(raw);
   if (!Number.isFinite(days)) return { slack: null, pressure: 0, band: URGENCY_BANDS.on_track, lead, reason: null };
 
   const slack = days - lead;
