@@ -96,7 +96,11 @@ import { exportQuizResult, exportFlashDeck, exportPathwayCertificate } from './l
 import { ACHIEVEMENTS, checkAchievements, PATHWAY_KEYS } from './lib/achievements';
 import CollegeListPanel from './components/CollegeListPanel';
 import AdmissionCalculatorPanel from './components/portfolio/admissions/AdmissionCalculatorPanel';
-import { resetIntakeCache } from './lib/admissions';
+import { resetIntakeCache, derivePortfolioSignals, deriveApplicantFromPortfolio, buildApplicant, assessCompleteness, unpackIntake } from './lib/admissions';
+import { computeMedEx, loadSeals, sealIfNeeded, planSeal, readMirror, resetMedexCache } from './lib/medex';
+import MedExHomeCard from './components/medex/MedExHomeCard';
+import MedExPanel from './components/medex/MedExPanel';
+import MedExChip from './components/medex/MedExChip';
 import EssayWorkspacePanel from './components/EssayWorkspacePanel';
 import FinancialAidPanel from './components/FinancialAidPanel';
 import FinancialAidHomeCard from './components/FinancialAidHomeCard';
@@ -406,6 +410,10 @@ const PORTFOLIO_GROUP_FOR_VIEW = {
   skills:['resume','credentials'], credentials:['resume','credentials'],
   colleges:['applying','colleges'], essays:['applying','essays'], aid:['applying','aid'],
   recommenders:['applying','recommenders'], interview:['applying','interview'], calc:['applying','calc'],
+  // The MedEx Score's own address. Sits under Applying beside the calculator
+  // because they answer the same question at two altitudes — position vs. odds —
+  // and a student sent here from Home should land on the number, not the page.
+  medex:['applying','medex'],
   // The combined-degree and direct-admit catalog. Addressable in its own right
   // (/portfolio/combined) because it is the one screen in this app a student is
   // sent a link to by a parent or a counsellor — "look at the BS/MD list" — and
@@ -2363,8 +2371,12 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     catch(e){ console.error('Portfolio snapshot error:',e); }
     finally{ setPortSnapLoading(false); }
   },[]);
+  // Home is in this list because the MedEx Score lives there and is computed from these rows
+  // (see the MEDEX SCORE block below). Fetching only on the Portfolio tab meant a student who
+  // opened the app to their dashboard and never navigated saw a skeleton where their score
+  // should be — for the whole session.
   useEffect(()=>{
-    if(tab!=='portfolio'||portSnapshot||portSnapLoading)return;
+    if(!['portfolio','home'].includes(tab)||portSnapshot||portSnapLoading)return;
     refreshPortSnapshot();
   },[tab,portSnapshot,portSnapLoading,refreshPortSnapshot]);
 
@@ -3439,6 +3451,10 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
                                 // account on this browser never sees the first one's answers
     await DB.clearAllData();
     clearViewState();
+    resetMedexCache(user?.id);   // …and the MedEx seal history plus its localStorage mirror, for
+                                 // the same reason: the score is one of the most personal numbers
+                                 // in the app and must not survive into a second account's session
+    setMedexSeals(null);setMedexSealState(null);
     setUser_(null);setPathway_({});setQScores_({});setCDecks_({});setPortActivities([]);setPortAwards([]);setPortGpa([]);setPortLoaded(false);setPortSnapshot(null);setCatPerf_({});setAchiev_(new Set());setStreak(0);setTab('home');
     toast('Signed out. See you next time!');
   }
@@ -3933,6 +3949,80 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     tracked:[...(portSnapshot?.activities||[]),...(portSnapshot?.scholarships||portScholarships||[])]
       .filter(r=>isCatalogSourced(r?.notes)||isCatalogSourced(r?.description)),
   }),[portSnapshot,portActivities,clinicalHoursEntries,portScholarships,portAwards]);
+
+  // ═══ MEDEX SCORE ═════════════════════════════════════════════════════════════
+  // One number for where this student stands against the class that gets admitted at the most
+  // selective school on their list. See src/lib/medex/ — the score is a PROJECTION of the
+  // Admissions Calculator's own five-layer model, never a second scoring model, so the two
+  // surfaces can never tell a student different things about the same portfolio.
+  //
+  // Everything below is derived from the shared Portfolio snapshot, which means the Home card,
+  // the breakdown panel and the Calculator are all reasoning over one fetch (src/lib/portfolioData.js).
+  const [medexSeals, setMedexSeals] = useState(null);       // null = not read yet; [] = read, empty
+  const [medexSealState, setMedexSealState] = useState(null);
+
+  // The saved intake rides along in the snapshot, so the score knows the student's GPA, rigor and
+  // citizenship without a second request — and without asking them for it twice.
+  const medexIntake = useMemo(()=>unpackIntake(portSnapshot?.admissionIntake?.[0]||null),[portSnapshot]);
+
+  const medex = useMemo(()=>{
+    if(!portSnapshot) return null;
+    const portfolio = derivePortfolioSignals(portSnapshot);
+    const derived = deriveApplicantFromPortfolio({ snapshot:portSnapshot, user });
+    const applicant = buildApplicant({ derived, answers:medexIntake.answers, portfolio });
+    const completeness = assessCompleteness({ applicant, answers:medexIntake.answers });
+    return computeMedEx({
+      colleges:portSnapshot.colleges||[], applicant, portfolio, completeness,
+      programRounds:medexIntake.programRounds,
+    });
+  },[portSnapshot,medexIntake,user]);
+
+  // ── The weekly seal ──────────────────────────────────────────────────────────
+  // Read the history once the snapshot lands, then take this week's seal if it has not been
+  // taken. Both are idempotent: sealIfNeeded() is a no-op on a week that already sealed, and the
+  // unique index on (user_id, week_key) settles the race between two open tabs.
+  useEffect(()=>{
+    if(!portSnapshot||medexSeals!==null)return;
+    let cancelled=false;
+    loadSeals(portSnapshot).then(rows=>{ if(!cancelled) setMedexSeals(rows||[]); }).catch(()=>{ if(!cancelled) setMedexSeals([]); });
+    return ()=>{ cancelled=true; };
+  },[portSnapshot,medexSeals]);
+
+  useEffect(()=>{
+    if(medexSeals===null)return;
+    const live=medex?.headline;
+    // A student with no score yet (too little logged, or a requirement they do not meet) seals
+    // nothing. Writing a row for a week whose number we declined to show would put a score in
+    // their history that they were never told about.
+    if(!live?.showsScore){ setMedexSealState(planSeal({ rows:medexSeals, liveScore:null })); return; }
+    let cancelled=false;
+    sealIfNeeded({ rows:medexSeals, live, benchmark:medex.headline.program, userId:user?.id })
+      .then(next=>{ if(!cancelled) setMedexSealState(next); })
+      .catch(()=>{ if(!cancelled) setMedexSealState(planSeal({ rows:medexSeals, liveScore:live.score })); });
+    return ()=>{ cancelled=true; };
+  },[medexSeals,medex,user?.id]);
+
+  // What every MedEx surface reads. `loading` is true only while we genuinely have nothing to
+  // show: once the snapshot is in, the card renders even if the seal write is still in flight,
+  // because the live score is already the right number to display.
+  const medexState = useMemo(()=>({
+    loading:!portSnapshot,
+    medex,
+    seal:medexSealState,
+    rows:medexSeals||[],
+    mirror:readMirror(user?.id),
+  }),[portSnapshot,medex,medexSealState,medexSeals,user?.id]);
+
+  // A mover names a model dimension ('clinical', 'research', 'academics'); the student needs the
+  // Portfolio section where that thing is actually logged.
+  const goMedexDimension = useCallback((key)=>{
+    const dest={
+      academics:'academics', clinical:'clinical', shadowing:'clinical', research:'research',
+      service:'activities', leadership:'activities', competitions:'activities',
+      certifications:'credentials', verification:'activities', completeness:'medex',
+    }[key]||'medex';
+    goPortfolio(dest);
+  },[goPortfolio]);
 
   const refreshQuestEvents = useCallback(async (rows)=>{
     const live=(rows||[]).filter(q=>!QUEST_TERMINAL.has(q.status));
@@ -5512,6 +5602,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
               <div style={R({gap:8,flexWrap:'wrap'})}>
                 <span style={pill(`${accent}22`,accent)}>{curPath?.label}</span>
                 <span style={pill(C.s3,C.t2,{fontFamily:C.FM})}>Level {lvl}</span>
+                {/* Renders nothing until there is a real score — see MedExChip. */}
+                <MedExChip state={medexState} onClick={()=>goPortfolio('medex')}/>
                 {streak>0&&<span style={{...pill(tint(streakLeague.color,0.14),streakLeague.color),display:'inline-flex',alignItems:'center',gap:5}}><Flame size={11}/>{streak} day streak</span>}
                 <BoostChip boosts={boosts} onClick={()=>goProgress('streak')} />
                 {streakFreezes>0&&<span style={{...pill(C.blueDim,C.blueL),display:'inline-flex',alignItems:'center',gap:5}}><Snowflake size={11}/>{streakFreezes} freeze{streakFreezes>1?'s':''}</span>}
@@ -5531,6 +5623,19 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
             </div>
           </div>
         </div>
+
+        {/* The MedEx Score — the one block on Home that is about the outside world rather than
+            about this session. It sits above the daily rail because it is the frame everything
+            below it serves: the rail answers "what do I do in the next twenty minutes", and this
+            answers "and why does that matter". It seals weekly, so unlike everything else on this
+            screen it is deliberately not a today-shaped number. */}
+        <MedExHomeCard
+          state={medexState}
+          onOpen={()=>goPortfolio('medex')}
+          onGoTo={goMedexDimension}
+          m={isMobile}
+          reducedMotion={reducedMotion}
+        />
 
         {/* Today's three — the first thing on Home under the header, because it is the only
             block on this screen that answers "what should I do in the next twenty minutes"
@@ -8048,6 +8153,21 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
   // 100 points and handed out bonuses — see the header of
   // AdmissionCalculatorPanel.jsx for why that had to be replaced rather than
   // retuned, and src/lib/admissions/ for the five-layer model that replaced it.
+  // The MedEx Score's full breakdown. Reads the same medexState the Home card does, so the
+  // headline number on the dashboard and the dial on this page are the same object — they cannot
+  // drift apart by a render.
+  function tMedex(){
+    return (
+      <MedExPanel
+        state={medexState}
+        onGoTo={goMedexDimension}
+        onOpenCalculator={()=>goPortfolio('calc')}
+        isMobile={isMobile}
+        reducedMotion={reducedMotion}
+      />
+    );
+  }
+
   function tCalc(){
     return (
       <AdmissionCalculatorPanel
@@ -9549,6 +9669,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       recommenders:()=><RecommendersPanel accent={C.fuchsia} user={user} gradeLabel={gradeLabel} snapshot={portSnapshot} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
       interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
       calc:tCalc,
+      medex:tMedex,
       }}/>,
     // Activities & Résumé reasons over the student's own academic history: it reads
     // gpa_entries/test_scores/colleges itself and matches U.S. schools against their real GPA,

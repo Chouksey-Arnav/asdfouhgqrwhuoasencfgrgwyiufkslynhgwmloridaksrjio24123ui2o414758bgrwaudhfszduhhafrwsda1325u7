@@ -476,7 +476,16 @@ function computeDrivers({ profile, base, hookRate, beta, signal, weights, academ
   return out.sort((a, b) => b.gain - a.gain).slice(0, 6);
 }
 
-const DRIVER_LABELS = {
+/**
+ * Exported because the MedEx Score lists the same actions on a different filter.
+ * `computeDrivers` below drops anything worth less than 0.15 percentage points of
+ * admission probability, which at a 3% programme silently discards moves that are
+ * genuinely worth several points on the 0-1000 scale — so src/lib/medex/score.js
+ * re-filters by points and needs the labels for the items this file dropped.
+ * Without sharing them it invents its own, and the two surfaces start describing
+ * the same action in two different voices.
+ */
+export const DRIVER_LABELS = {
   clinical: 'Build your clinical hours toward the strong band',
   shadowing: 'Add shadowing hours',
   research: 'Get deeper into a research project',

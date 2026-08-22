@@ -309,7 +309,16 @@ if (plansMap) {
   // the design exists to prevent: "write a journal entry about your summer," with a date on it.
   // The planner sees the four-year working document, because that is an `essays` row and is
   // legitimately part of the application; it does not see the journal behind it.
-  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence', 'credential_suggestions', 'reflection_entries']);
+  //
+  // medex_scores is excluded on both of the grounds above at once. It is not student-authored at
+  // all — it is OUR derived weekly seal of the MedEx Score, computed from the very tables the
+  // planner already reads (src/lib/medex/score.js), so feeding it back in would be the planner
+  // reasoning over its own inputs a second time, laundered through a number. And the task it
+  // would produce is precisely the one the score is designed not to generate: "raise your MedEx
+  // Score by 40 this month" is a target on a metric rather than on the work, and a student who
+  // optimises the metric instead of the portfolio has been actively mis-served. The plan should
+  // say "log the 60 shadowing hours you already have"; the score moves because that happened.
+  const CONTENTLESS = new Set(['essay_versions', 'portfolio_evidence', 'credential_suggestions', 'reflection_entries', 'medex_scores']);
   const serverResources = [...resourcesSrc.matchAll(/^\s*'([a-z_]+)',$/gm)].map(m => m[1]);
   for (const r of serverResources) {
     if (CONTENTLESS.has(r)) continue;

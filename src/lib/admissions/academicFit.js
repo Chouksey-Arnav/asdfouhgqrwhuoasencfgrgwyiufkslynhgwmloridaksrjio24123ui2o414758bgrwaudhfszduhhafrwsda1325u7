@@ -39,7 +39,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+// Number(null), Number('') and Number(false) are all 0, and 0 is finite — so a
+// bare Number()+isFinite() check silently turns "we do not know this student's
+// GPA" into "this student has a 0.00 GPA". That is not a rounding error: it put
+// an unanswered GPA three standard deviations below the admitted median, marked
+// the academic layer `available`, and printed "Your 0.00 is below their 25th
+// percentile" to a student who had never been asked. Absence must stay absent
+// all the way to the caller that decides what to do about it.
+const num = (v) => {
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 // p25 and p75 of a normal distribution sit at ∓0.6745σ, which is what lets a
 // published quartile band be turned into a z-score without inventing a spread.

@@ -23,6 +23,7 @@ export { evaluateGates } from './gates.js';
 export { scoreAcademicFit, academicLeverage, positionInBand, scoreRigor } from './academicFit.js';
 export { scorePortfolioFit, depthZ, sustainFactor, evidenceFactor } from './portfolioFit.js';
 export { scoreRound, ROUND_LABELS, ROUND_IDS } from './round.js';
+export { DRIVER_LABELS } from './model.js';
 export { estimateAdmission, probabilityCeiling, probabilityFloor, signalBudget, unhookedBaseRate, applyWeighting } from './model.js';
 export {
   INTAKE_FIELDS, METER_FIELDS, derivePortfolioSignals, deriveApplicantFromPortfolio,

@@ -33,7 +33,15 @@
 // even know to ask.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+// See academicFit.js's copy. Number(null) === 0, so the naive version turns an
+// unanswered field into an answered zero on the way INTO the applicant object —
+// which is the earliest and worst place for it to happen, because every layer
+// downstream then treats the zero as something the student told us.
+const num = (v) => {
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
 // ─────────────────────────────────────────────────────────────────────────────
