@@ -34,7 +34,9 @@ const WRITABLE = {
   credential_suggestions: ['name', 'issuing_body', 'credential_type', 'state_code', 'note'],
   clinical_hours: ['site_name', 'site_type', 'supervisor_name', 'supervisor_email', 'hours', 'entry_date', 'notes', 'verification_status', 'verified_at', 'experience_kind'],
   admission_intake: ['citizenship', 'state_residency', 'grade_level', 'answers', 'program_rounds'],
-  recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status'],
+  // `asked_at` is what makes the one-month lead-time nudge possible — a status alone has no
+  // memory of when it changed. See supabase/migrations/0020_recommender_asks.sql.
+  recommenders: ['name', 'relationship', 'type', 'status', 'due_date', 'notes', 'verification_status', 'asked_at'],
   portfolio_evidence: ['entity_type', 'entity_id', 'url', 'label'],
 };
 

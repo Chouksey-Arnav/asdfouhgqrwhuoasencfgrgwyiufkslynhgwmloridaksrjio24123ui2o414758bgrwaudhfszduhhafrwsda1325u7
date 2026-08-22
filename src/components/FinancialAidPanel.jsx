@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
-import { Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX, ChevronDown, ChevronUp, Building2, Users, FileText } from 'lucide-react';
+import { Trash2, DollarSign, CalendarPlus, Handshake, Landmark, Trophy, Send, Search as SearchIcon, CalendarX, ChevronDown, ChevronUp, Building2, Users, FileText, Scale, Calculator, Shield, Stethoscope } from 'lucide-react';
 import { C, glass, glass2, btnSm, inp, R, CC, G, pill, tint } from '../lib/theme';
 import { listItems, updateItem, deleteItem } from '../lib/dataApi';
 import { trackItem, cancelQueuedTrack } from '../lib/trackQueue';
@@ -9,8 +9,14 @@ import { trackedKeySet, rowDedupeKey, needsDeadlineDate, normalizeKey, scholarsh
 import { parseScholarshipNotes } from '../lib/scholarshipNotes';
 import TrackQueueNotice from './ui/TrackQueueNotice';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
+import Disclosure from './ui/Disclosure';
 import ScholarshipDatabase from './ScholarshipDatabase';
 import ScholarshipResearchAdd from './ScholarshipResearchAdd';
+import DebtTrajectoryTable from './finance/DebtTrajectoryTable';
+import PathwayCostCalculator from './finance/PathwayCostCalculator';
+import ServiceCommitmentPrograms from './finance/ServiceCommitmentPrograms';
+import HealthCareerScholarships from './finance/HealthCareerScholarships';
+import { FINANCE_BY_PATHWAY } from '../data/pathwayFinance';
 import { showMedabrainToast } from '../lib/medabrainComments';
 
 const STATUSES = [
@@ -21,7 +27,31 @@ const STATUSES = [
   { id: 'denied', label: 'Denied', color: C.roseL },
 ];
 
-export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// ── Why this panel is no longer about FAFSA ─────────────────────────────────
+// It used to open with FAFSA and the CSS Profile. Both are real and both stayed
+// — at the bottom, behind a disclosure — but neither is written for the person
+// looking at this screen. FAFSA is a form a PARENT fills in with a tax return.
+// A seventeen-year-old cannot act on any of it.
+//
+// What they can act on, and what nobody has ever put in front of them, is the
+// shape of the decision they are currently making: nursing versus medicine is a
+// financial decision as much as a clinical one, and they have never once seen
+// it framed that way. So the panel now opens with the debt trajectory across
+// five pathways, then their own numbers, then the service-commitment routes
+// that get decided before or during undergrad — several of which change which
+// colleges they should be applying to at all, and almost none of which they
+// have heard of.
+//
+// Order is the argument here:
+//   1. What each path costs and how long it takes      (the framing they lack)
+//   2. What it would cost YOU                          (their own numbers)
+//   3. Routes that pay for it in exchange for service  (deadline-critical)
+//   4. Health-career scholarships, senior-filtered     (what they can win now)
+//   5. The general scholarship database + tracker      (unchanged)
+//   6. FAFSA and CSS Profile                           (demoted, not removed)
+// ─────────────────────────────────────────────────────────────────────────────
+export default function FinancialAidPanel({ accent = C.blue, askMedabrain, pathwayKey = null }) {
   const [scholarships, setScholarships] = useState([]);
   const [colleges, setColleges] = useState([]);
   const [deadlineCollegeIds, setDeadlineCollegeIds] = useState(new Set());
@@ -123,14 +153,46 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
   const submittedCount = scholarships.filter(s => ['submitted','awarded','denied'].includes(s.status)).length;
   const awardedCount = scholarships.filter(s => s.status === 'awarded').length;
 
+  // The student's own pathway, mapped onto the finance catalog, so the
+  // comparison highlights their row and the calculator opens on it. Null for
+  // 'exploring' and the pathways with no finance profile — the comparison then
+  // simply highlights nothing, which is the honest state for a student who has
+  // not picked.
+  const financeProfile = pathwayKey ? FINANCE_BY_PATHWAY[pathwayKey] : null;
+
   return (
     <div style={CC({gap:22})}>
       <PanelHero tourTag="portfolio-deep-aid" icon={Handshake} color={accent} color2={C.teal}
-        eyebrow="Applications" title="Financial Aid & Scholarships"
-        sub="FAFSA, CSS Profile and every scholarship, so real costs are comparable."
+        eyebrow="Paying for it" title="Financial Aid"
+        sub="What each health pathway costs, who pays for it in exchange for service, and every scholarship you're tracking."
         stats={scholarships.length > 0 ? [{ value: scholarships.length, label: 'tracked' }] : []}/>
 
       <TrackQueueNotice entries={pendingEntries.filter(e => e.resource === 'scholarships' || e.resource === 'deadlines')} status={trackStatus} onRetried={load}/>
+
+      {/* ── 1. The framing nobody gives them ───────────────────────────────── */}
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.blue,0.07)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.blue,0.22)}`}}>
+        <SectionTitle icon={Scale} color={C.blueL}>Debt Trajectory by Pathway</SectionTitle>
+        <DebtTrajectoryTable audience="student" highlightPathwayKey={pathwayKey}
+          defaultExpandedId={financeProfile?.id || null}/>
+      </div>
+
+      {/* ── 2. Their own numbers ───────────────────────────────────────────── */}
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.green,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.green,0.2)}`}}>
+        <SectionTitle icon={Calculator} color={C.greenL}>What It Would Cost You, Start to Finish</SectionTitle>
+        <PathwayCostCalculator accent={C.green} defaultPathwayId={financeProfile?.id || 'md'}/>
+      </div>
+
+      {/* ── 3. The routes with a deadline in high school ───────────────────── */}
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.teal,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.teal,0.2)}`}}>
+        <SectionTitle icon={Shield} color={C.tealL}>Service Commitments & Loan Forgiveness</SectionTitle>
+        <ServiceCommitmentPrograms accent={C.teal} pathwayFinanceId={financeProfile?.id || null}/>
+      </div>
+
+      {/* ── 4. What they can actually win now ──────────────────────────────── */}
+      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.fuchsia,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.fuchsia,0.2)}`}}>
+        <SectionTitle icon={Stethoscope} color={C.fuchsia}>Health-Career Scholarships</SectionTitle>
+        <HealthCareerScholarships accent={C.fuchsia} pathwayFinanceId={financeProfile?.id || null}/>
+      </div>
 
       {/* Every curated scholarship arrives without a usable deadline date — the database records
           deadlines as prose seasons ("opens late summer, due mid-fall") because the real dates
@@ -165,31 +227,6 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
           <StatTile icon={DollarSign} value={`$${totalAwarded.toLocaleString()}`} label="Total money won" color={C.green}/>
         </div>
       )}
-
-      <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.teal,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.teal,0.2)}`}}>
-        <SectionTitle icon={Landmark} color={C.tealL}>FAFSA & CSS Profile</SectionTitle>
-        <p style={{fontSize:12,color:C.t2,marginBottom:aidSchools.length?14:0,lineHeight:1.6}}>FAFSA typically opens October 1 — add it to your Deadlines tab so it counts down alongside your application deadlines. Mark CSS Profile requirements and financial aid deadlines per school on the College List tab; they'll show up here.</p>
-        {aidSchools.length > 0 && (
-          <div style={CC({gap:8})}>
-            {aidSchools.map(c => (
-              <div key={c.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10}}>
-                <div style={{flex:1,minWidth:0}}>
-                  <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{c.name}</span>
-                  {c.css_profile_required && <span style={{marginLeft:8,fontSize:10,color:C.violetL}}>CSS Profile</span>}
-                </div>
-                {c.financial_aid_deadline ? (
-                  <>
-                    <span style={{fontSize:11,color:C.t3}}>Due {new Date(c.financial_aid_deadline+'T00:00:00').toLocaleDateString()}</span>
-                    {!deadlineCollegeIds.has(c.id) && (
-                      <button style={btnSm('rgba(255,255,255,0.06)',{color:C.t2})} onClick={()=>addAidDeadline(c)}><CalendarPlus size={12}/>Track</button>
-                    )}
-                  </>
-                ) : <span style={{fontSize:11,color:C.t3}}>No deadline set yet</span>}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div style={{...glass({padding:18}),background:`linear-gradient(120deg,${tint(C.violet,0.06)},rgba(255,255,255,0.02) 55%)`,border:`1px solid ${tint(C.violet,0.2)}`}}>
         <SectionTitle icon={SearchIcon} color={C.violetL}>Scholarship Database</SectionTitle>
@@ -251,6 +288,56 @@ export default function FinancialAidPanel({ accent = C.blue, askMedabrain }) {
           })}
         </div>
       )}
+
+      {/* ── 6. FAFSA and CSS Profile — kept, demoted ────────────────────────
+          Still the paperwork that decides how much of any of the above you
+          actually pay, and still worth a countdown on the Deadlines tab. But it
+          is a form filled in with a parent's tax return, and it is the wrong
+          thing to open this screen with for a sixteen-year-old deciding between
+          nursing and medicine. Closed by default; the student opens it in the
+          autumn of senior year, which is the only month it matters. */}
+      <Disclosure id="aid-fafsa" icon={Landmark} color={C.tealL} title="FAFSA & CSS Profile — the forms"
+        sub="The paperwork that decides how much of the above you actually pay. Mostly filled in with a parent, and only urgent in the autumn of senior year.">
+        <div style={CC({gap:12})}>
+          <p style={{fontSize:12,color:C.t2,lineHeight:1.65,margin:0}}>
+            FAFSA typically opens October 1 of your senior year — add it to your Deadlines tab so it
+            counts down alongside your application deadlines. It is what qualifies you for federal
+            loans, work-study and most institutional need-based aid, so skipping it because "we won't
+            qualify" is the most common expensive mistake in this whole area: several federal loan
+            programs and many college scholarships require it regardless of income.
+          </p>
+          <p style={{fontSize:12,color:C.t2,lineHeight:1.65,margin:0}}>
+            The CSS Profile is a separate, more detailed form used mainly by private colleges to
+            award their own money. Mark which of your schools require it, and their financial aid
+            deadlines, on the College List tab — they show up here.
+          </p>
+          {aidSchools.length > 0 ? (
+            <div style={CC({gap:8})}>
+              {aidSchools.map(c => (
+                <div key={c.id} style={{...glass2({padding:'10px 12px'}),display:'flex',alignItems:'center',gap:10}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <span style={{fontSize:13,fontWeight:600,color:C.t1}}>{c.name}</span>
+                    {c.css_profile_required && <span style={{marginLeft:8,fontSize:10,color:C.violetL}}>CSS Profile</span>}
+                  </div>
+                  {c.financial_aid_deadline ? (
+                    <>
+                      <span style={{fontSize:11,color:C.t3}}>Due {new Date(c.financial_aid_deadline+'T00:00:00').toLocaleDateString()}</span>
+                      {!deadlineCollegeIds.has(c.id) && (
+                        <button style={btnSm('rgba(255,255,255,0.06)',{color:C.t2})} onClick={()=>addAidDeadline(c)}><CalendarPlus size={12}/>Track</button>
+                      )}
+                    </>
+                  ) : <span style={{fontSize:11,color:C.t3}}>No deadline set yet</span>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{fontSize:11.5,color:C.t3}}>
+              No schools on your College List are marked as needing the CSS Profile or carrying a
+              financial aid deadline yet. Add them there and they'll appear here.
+            </div>
+          )}
+        </div>
+      </Disclosure>
     </div>
   );
 }

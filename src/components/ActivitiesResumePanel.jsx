@@ -10,6 +10,7 @@ import { Line } from 'react-chartjs-2';
 import { C, glass, glass2, btn, btnSm, btnG, inp, lbl, pill, R, CC, G, tint, accentFill } from '../lib/theme';
 import { listItems, createItem, deleteItem } from '../lib/dataApi';
 import { exportPortfolioResume } from '../lib/exportPDF';
+import FourYearExport from './portfolio/FourYearExport';
 import PanelHero, { SectionTitle, StatTile } from './ui/PanelHero';
 import { showMedabrainToast, showMedabrainLine } from '../lib/medabrainComments';
 import { resolveStudentScores } from '../lib/collegeRecommend';
@@ -267,6 +268,13 @@ export default function ActivitiesResumePanel({
   // Empty (the default) means every section is open, which is what a standalone
   // render of this panel — and any account past the ladder — sees.
   sectionLocks = [],
+  // The Portfolio-wide snapshot, when the caller already has one. Used only by
+  // the four-year export, which needs the three resources this panel does not
+  // itself hold (recommenders, test scores, the working document). This panel's
+  // own live state is layered OVER it at export time, so a résumé generated
+  // thirty seconds after adding an activity contains that activity.
+  portfolioSnapshot = null,
+  pathwayLabel = null,
   onResumeExported, onActivityLogged, onCollegeAdded,
   onClinicalLogged, onResearchLogged, onCredentialChanged,
 }) {
@@ -469,6 +477,14 @@ export default function ActivitiesResumePanel({
     onResumeExported?.();
   }
 
+  // The snapshot the four-year export reads: whatever the caller already
+  // fetched, with this panel's own live rows layered on top so an entry added a
+  // moment ago is in the document.
+  const exportSnapshot = useMemo(() => ({
+    ...(portfolioSnapshot || {}),
+    activities, awards, gpaEntries, clinicalHours: clinical, research, skills: certs,
+  }), [portfolioSnapshot, activities, awards, gpaEntries, clinical, research, certs]);
+
   const chartData = useMemo(() => ({
     labels: academics.entries.map(g => g.term),
     datasets: [{
@@ -531,6 +547,14 @@ export default function ActivitiesResumePanel({
             <button style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { fontSize: 12, boxShadow: `0 4px 14px ${tint(accent, 0.35)}` }), display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={exportPdf}><FileDown size={13} />Résumé PDF</button>
           </div>
         ) : undefined} />
+
+      {/* The four-year export sits above the record rather than inside it: it is
+          the thing a senior comes to this page for in October, and the one
+          artefact that only exists because they logged for four years. */}
+      <FourYearExport
+        accent={C.violet} user={user} snapshot={exportSnapshot} audience="student"
+        gradeLabel={gradeLabel} pathwayLabel={pathwayLabel}
+        onExported={(mode, { preview } = {}) => { if (!preview) onResumeExported?.(mode); }} />
 
       <SectionScroller
         accent={accent} isMobile={isMobile}

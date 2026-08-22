@@ -23,7 +23,7 @@
 // parent can actually act on, and it is the entire remit of this summary.
 
 /** Bumped when the derivation changes shape, so a cached row from an older build is discarded. */
-export const SUMMARY_VERSION = 1;
+export const SUMMARY_VERSION = 2;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const dayKey = (ms) => new Date(ms).toISOString().slice(0, 10);
@@ -145,6 +145,14 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
       // it back into a polled API response is a contact detail travelling for no reason.
       name: student?.name || null,
       gradeLevel: student?.grade_level || null,
+      // Which health pathway they are currently on, so the dashboard's debt
+      // trajectory comparison can highlight their child's row. It is a career
+      // interest the student set themselves and already tells the parent
+      // nothing they could not ask at dinner — unlike the coach chats, notes
+      // and essays, which stay private and are not in this payload at all.
+      // Null for a student who has not picked one, which is a real state and
+      // renders as "not picked yet" rather than as a default.
+      pathway: typeof user.specialty === 'string' && user.specialty ? user.specialty : null,
     },
     effort: {
       xp,

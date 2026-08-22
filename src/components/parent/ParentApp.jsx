@@ -31,7 +31,7 @@ import toast from 'react-hot-toast';
 import {
   Loader2, LayoutDashboard, Settings, LogOut, RefreshCw, Users, Brain, CalendarDays,
   UserCog, ChevronRight, ShieldCheck, Flame, ArrowLeft, Link2, Pencil, LifeBuoy, Eye, EyeOff,
-  Mail, KeyRound, X, WifiOff, MessageSquare, Swords,
+  Mail, KeyRound, X, WifiOff, MessageSquare, Swords, Scale,
 } from 'lucide-react';
 import { C, glass, glass2, btn, btnG, CC, R, autoGrid, pill, tint, storeMode, onTint } from '../../lib/theme';
 import { loadA11y, applyA11y } from '../../lib/a11y';
@@ -49,6 +49,7 @@ import ConnectionsPanel from './ConnectionsPanel';
 import ParentSetup from './ParentSetup';
 import FamilyThread from './FamilyThread';
 import QuestAssignPanel from './QuestAssignPanel';
+import PathwayCostsPanel from './PathwayCostsPanel';
 
 // Long enough that a parent leaving the tab open all day is not a meaningful load, short enough
 // that "did they do their revision?" is answered by looking rather than by reloading. The server
@@ -62,6 +63,7 @@ const NAV = [
   { id: 'activity', label: 'Activity', icon: CalendarDays },
   { id: 'messages', label: 'Messages', icon: MessageSquare },
   { id: 'quests', label: 'Quests', icon: Swords },
+  { id: 'costs', label: 'What it costs', icon: Scale },
   { id: 'connections', label: 'Connections', icon: Link2 },
   { id: 'guide', label: 'How this works', icon: LifeBuoy },
   { id: 'settings', label: 'Settings', icon: Settings },
@@ -1078,6 +1080,13 @@ export default function ParentApp({ user, initialPath = null, onSignedOut }) {
       {view === 'quests' && (
         noStudents ? inviteCta : <QuestAssignPanel students={students} hueFor={hueFor} />
       )}
+
+      {/* ── What it costs ────────────────────────────────────────────────────
+          The one tab that renders with no connected student, deliberately: a
+          parent evaluating whether this app is worth anything can read the
+          pathway finances before their child has accepted an invitation, and
+          the comparison is just as true for a family with nobody signed up. */}
+      {view === 'costs' && <PathwayCostsPanel students={students} />}
 
       {/* ── Activity ─────────────────────────────────────────────────────── */}
       {view === 'activity' && (

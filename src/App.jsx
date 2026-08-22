@@ -9544,8 +9544,8 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
       combined:()=><CombinedDegreePanel accent={C.blue} user={user} snapshot={portSnapshot} loading={portSnapLoading}
         pathwayKey={eSpec} onGoTo={goPortfolio} isMobile={isMobile}/>,
       essays:()=><EssayWorkspacePanel accent={C.violet} user={user} gradeLabel={gradeLabel} askMedabrain={askPortfolioMedabrain} isMobile={isMobile} onCreated={()=>{logEvent('portfolio_item_added','essay');saveUser(applyPlanAutoComplete(user,typeMatch('essay')));}}/>,
-      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain}/>,
-      recommenders:()=><RecommendersPanel accent={C.fuchsia} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
+      aid:()=><FinancialAidPanel accent={C.green} askMedabrain={askPortfolioMedabrain} pathwayKey={eSpec}/>,
+      recommenders:()=><RecommendersPanel accent={C.fuchsia} user={user} gradeLabel={gradeLabel} snapshot={portSnapshot} onChange={async()=>{const recs=await listItems('recommenders');setRecommendersCount(recs.length);logEvent('portfolio_item_added','recommender');checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{recommenders:recs.length});saveUser(applyPlanAutoComplete(user,typeMatch('recommender')));}}/>,
       interview:()=><InterviewPrepPanel accent={C.orange} pathway={curPath} pathwayKey={eSpec} studentName={user?.name?.split(' ')[0]||user?.name||null} onSessionComplete={(mode)=>{const nc=interviewCount+1;setInterviewCount(nc);logEvent('interview_session_completed',mode);const ivWrite=saveUser(applyPlanAutoComplete({...user,interviewCount:nc},t=>t.type==='interview'));bumpWeeklyCoachCount(getIsoWeekKey());const mmiNc=(mode==='mmi'||mode==='casper')?mmiCasperCount+1:mmiCasperCount;if(mmiNc!==mmiCasperCount)setMmiCasperCount(mmiNc);checkAndUnlockAchievements(user,qTaken,qHistory.filter(q=>q.score===100).length,streak,totalReviews,mastery,aiChatCount,{interviewSessions:nc,mmiCasperSessions:mmiNc});ivWrite.then(()=>creditStreak('interview_session')).catch(console.error);}}/>,
       calc:tCalc,
       }}/>,
@@ -9560,6 +9560,7 @@ export default function App({ account, onAccountChange, onOpenLegal }) {
     // hours still moves the readiness gauge and the achievement counters exactly as it did when
     // it was its own tab.
     resume:()=><ActivitiesResumePanel accent={portC.resume} user={user} gradeLabel={gradeLabel} isMobile={isMobile}
+      portfolioSnapshot={portSnapshot} pathwayLabel={PATHS[eSpec]?.label||null}
       section={sectionFor('resume')} sectionNonce={sectionNonce}
       onSectionChange={(id)=>focusPortfolioSection('resume',id)} sectionLocks={resumeSectionLocks}
       onCollegeAdded={()=>{logEvent('portfolio_item_added','college');saveUser(applyPlanAutoComplete(user,typeMatch('college')));}}
