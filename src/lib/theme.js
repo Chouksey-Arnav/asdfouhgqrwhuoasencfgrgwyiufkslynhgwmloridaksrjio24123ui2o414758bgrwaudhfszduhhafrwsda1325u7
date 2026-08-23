@@ -1,7 +1,17 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Design tokens + the app-wide theme engine (dark / light / system).
+// The app-wide theme engine, and the flat token view every component reads.
 //
-// ── Why `C` is a MUTABLE object rather than CSS custom properties ────────────
+// ── The three layers ────────────────────────────────────────────────────────
+// Colour lives in src/lib/tokens/, in three strictly separated layers:
+//
+//   primitives.js  raw values, no meaning, never touched by a component
+//   semantic.js    the ONLY layer that varies per theme; named by meaning
+//   components.js  aliases of semantic tokens; where restyling churn localises
+//
+// This file is the fourth thing: the runtime that resolves a mode to a theme,
+// merges in the high-contrast overlay, and FLATTENS the result into `C`.
+//
+// ── Why `C` is a MUTABLE flat object rather than CSS custom properties ───────
 // The obvious way to theme this app would be to make every token a
 // `var(--c-blue)`. That doesn't work here, and it's worth writing down why so
 // nobody "fixes" it back: the codebase composes colors by string concatenation
@@ -22,345 +32,139 @@
 // update. Build such maps inside a function instead (see catMeta below, which
 // is computed per call for exactly this reason).
 //
-// CSS custom properties ARE still emitted (see applyTheme) — but only for the
-// handful of things that live in index.css and genuinely need a variable:
-// the page background, scrollbars, selection color, focus rings.
+// CSS custom properties ARE still emitted (see applyTheme) — the legacy --c-*
+// set for the handful of things index.css needs, plus the full --sem-* and
+// --cmp-* sets so new stylesheet work can key off the token layers directly.
+//
+// ── The legacy key names ────────────────────────────────────────────────────
+// `bg`/`s0`…`s5`, `b0`…`b3`, `t1`…`t4` predate the token layers and are read in
+// roughly 4,000 places. They are kept as a COMPATIBILITY VIEW over the semantic
+// layer — see LEGACY_SURFACES below for the mapping — rather than renamed in a
+// single 466-file sweep. New code should prefer the semantic names.
+//
+// Two consequences of enforcing the token contract on that old view are worth
+// knowing about, because both are visible:
+//
+//   • Exactly three border strengths. The old view had four; `b2` and `b3` now
+//     both resolve to `border.strong`, so the handful of `b3` sites and the
+//     ~100 `b2` sites render at one shared strength instead of two adjacent
+//     ones. Structure gets slightly more present, never less.
+//   • Exactly three foreground tiers. `t4` was a fourth tier used for metadata
+//     and it is where contrast quietly rotted (2.4:1 at its worst). It now
+//     resolves to `fg.tertiary`, the same as `t3`. `fg.disabled` exists for
+//     genuinely-disabled controls and is deliberately not a text tier.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── Dark palette ─────────────────────────────────────────────────────────────
-// Lifted off pure black in the "less overstimulating" pass. The original page
-// was #04060b — effectively black — which sounds restful and is the opposite:
-// text at #eef2ff on near-black is a ~19:1 contrast ratio, well past the point
-// where extra contrast helps and into the range where the letterforms halate
-// for anyone with astigmatism. Every surface below moved up one step so the
-// darkest theme is deep rather than void, and so the elevation ladder
-// (bg → s5) is actually legible instead of five shades of the same black.
-// Accents are untouched: someone who explicitly picks Dark is asking for this
-// look, and BALANCED below is the calmer option in the picker.
-export const DARK = {
-  bg:'#0a0e16', s0:'#0e131d', s1:'#141b28', s2:'#18202e', s3:'#1e2735', s4:'#26303f', s5:'#2f3b4d',
-  b0:'rgba(255,255,255,0.04)', b1:'rgba(255,255,255,0.07)', b2:'rgba(255,255,255,0.11)', b3:'rgba(255,255,255,0.18)',
-  // t3/t4 lifted in the light-mode audit pass. They measured 2.8:1 and 1.7:1
-  // against a card — "faint" past the point of being text at all, and the same
-  // class of failure as the light palette's washed-out metadata, just in the
-  // other direction. Still clearly the two quietest steps in the ramp.
-  t1:'#e9eefb', t2:'#98a6c2', t3:'#6e7b97', t4:'#627086',
-  blue:'#2d7fff', blueL:'#5da0ff', blueLL:'#93c5fd', blueD:'#1d5fd9',
-  blueDim:'rgba(45,127,255,0.10)', blueGlow:'rgba(45,127,255,0.28)',
-  blueGrad:'linear-gradient(135deg,#2d7fff 0%,#1d5fd9 100%)',
-  green:'#10b981', greenL:'#34d399', greenDim:'rgba(16,185,129,0.10)',
-  amber:'#f59e0b', amberL:'#fbbf24', amberDim:'rgba(245,158,11,0.10)',
-  rose:'#f43f5e', roseL:'#fb7185', roseDim:'rgba(244,63,94,0.10)',
-  violet:'#8b5cf6', violetL:'#a78bfa', violetDim:'rgba(139,92,246,0.10)',
-  cyan:'#06b6d4', cyanDim:'rgba(6,182,212,0.10)', orange:'#f97316',
-  cyanL:'#22d3ee', orangeL:'#fb923c', orangeDim:'rgba(249,115,22,0.10)',
-  teal:'#14b8a6', tealL:'#2dd4bf', tealDim:'rgba(20,184,166,0.10)',
-  indigo:'#6366f1', indigoL:'#818cf8', indigoDim:'rgba(99,102,241,0.10)',
-  pink:'#ec4899', pinkL:'#f472b6', pinkDim:'rgba(236,72,153,0.10)',
-  fuchsia:'#d946ef', fuchsiaL:'#e879f9', fuchsiaDim:'rgba(217,70,239,0.10)',
-  lime:'#84cc16', limeL:'#a3e635', limeDim:'rgba(132,204,22,0.10)',
-  sky:'#0ea5e9', skyL:'#38bdf8', skyDim:'rgba(14,165,233,0.10)',
-  emerald:'#059669', emeraldL:'#34d399', emeraldDim:'rgba(5,150,105,0.10)',
-  red:'#ef4444', redL:'#f87171', redDim:'rgba(239,68,68,0.10)',
-  gold:'#eab308', goldL:'#facc15', goldDim:'rgba(234,179,8,0.10)',
-  auroraGrad:'linear-gradient(120deg,#2d7fff 0%,#8b5cf6 45%,#ec4899 100%)',
-  oceanGrad:'linear-gradient(135deg,#06b6d4 0%,#2d7fff 60%,#6366f1 100%)',
-  sunsetGrad:'linear-gradient(135deg,#f59e0b 0%,#f43f5e 55%,#d946ef 100%)',
-  forestGrad:'linear-gradient(135deg,#10b981 0%,#14b8a6 55%,#0ea5e9 100%)',
-  violetGrad:'linear-gradient(135deg,#8b5cf6 0%,#6366f1 100%)',
+import { THEMES, HC_OVERLAYS, HUE_NAMES } from './tokens/semantic.js';
+import { componentTokens } from './tokens/components.js';
 
-  // ── Surface/elevation tokens ──────────────────────────────────────────────
-  // Added with light mode. The app previously hard-coded
-  // `rgba(255,255,255,0.03)` inline for every glass surface, which reads as
-  // "lift a surface toward the light" — the correct instinct in dark mode and,
-  // as it happens, still correct in light mode, where a white wash over a gray
-  // page is exactly how a raised card looks. So the light values below are the
-  // same idea at a much higher alpha rather than an inversion.
-  surf:'rgba(255,255,255,0.03)', surf2:'rgba(255,255,255,0.025)', surfHi:'rgba(255,255,255,0.06)',
-  inputBg:'rgba(255,255,255,0.04)', inputBorder:'rgba(255,255,255,0.10)',
-  shadow:'0 2px 12px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.04)',
-  shadowSm:'0 2px 8px rgba(0,0,0,0.3)',
-  scrim:'rgba(0,0,0,0.55)',
-  onAccent:'#ffffff',
-  // Page backdrop, consumed by index.css via --c-pageGlow.
-  pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(45,127,255,0.10) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(139,92,246,0.06) 0%, transparent 58%)',
-  noiseOpacity:'0.018',
-  colorScheme:'dark',
+/** Legacy surface slot → semantic surface step. */
+const LEGACY_SURFACES = { bg: 'canvas', s0: 'canvasSubtle', s1: 'default', s2: 'inset', s3: 'raised', s4: 'hover', s5: 'pressed' };
+/** Legacy border slot → semantic strength. Three strengths, four slots. */
+const LEGACY_BORDERS = { b0: 'subtle', b1: 'default', b2: 'strong', b3: 'strong' };
+/** Legacy text slot → semantic tier. Three tiers, four slots. */
+const LEGACY_TEXT = { t1: 'primary', t2: 'secondary', t3: 'tertiary', t4: 'tertiary' };
 
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
+/** Deep-merge a high-contrast overlay onto a semantic theme. */
+const mergeOverlay = (sem, hc) => {
+  if (!hc) return sem;
+  const out = { ...sem };
+  for (const [k, v] of Object.entries(hc)) {
+    if (v && typeof v === 'object' && !Array.isArray(v)) {
+      out[k] = { ...(sem[k] || {}) };
+      for (const [kk, vv] of Object.entries(v)) {
+        out[k][kk] = (vv && typeof vv === 'object') ? { ...(sem[k]?.[kk] || {}), ...vv } : vv;
+      }
+    } else out[k] = v;
+  }
+  return out;
 };
 
-// ── Light palette ────────────────────────────────────────────────────────────
-// Not a mechanical inversion. Three deliberate decisions:
-//
-// 1. The page is a soft cool gray (#eaeef6), not white. That keeps the existing
-//    white-wash surface treatment meaningful — cards read as raised because
-//    they're whiter than the page — and it's markedly easier on the eyes for a
-//    student staring at a reading passage for an hour.
-// 2. Every `*L` token, which in dark mode means "the lighter, more readable
-//    variant", becomes the DARKER variant here. Those tokens are overwhelmingly
-//    used as text color, and the job of the token is legibility, not lightness.
-// 3. Base accents are pulled down until a colored heading or chip label clears
-//    4.5:1 against BOTH a card and the page. #2d7fff on white is about 3.1:1 —
-//    fine for a border, not fine for words.
-//    This originally stopped at the 600 weights and claimed the 4.5:1 result
-//    without ever measuring it; the 600s actually land around 2.6–3.1:1, which
-//    is why every section kicker ("SETTINGS", "PROFILE & GOALS", "UNIT 3") and
-//    every stat number rendered in an accent was washed out. They now sit near
-//    the 700 weights, and scripts/verifyPaletteContrast.mjs asserts it on every
-//    build so the claim can't drift away from the values again.
-// 4. (Added in the glare pass.) No large surface is pure #ffffff any more. A
-//    full-white card under a bright screen is the single biggest source of the
-//    "blinding" complaint, and dropping it two points to #fbfcfe costs nothing
-//    visually — the card still reads as raised against the #e6eaf1 page —
-//    while taking the peak luminance off every panel on screen at once.
-//    Body text moved off near-black for the same reason: maximum contrast in
-//    both directions is what makes a light UI feel like a flashbulb.
-export const LIGHT = {
-  bg:'#e6eaf1', s0:'#eff3f9', s1:'#fbfcfe', s2:'#f4f7fc', s3:'#edf1f8', s4:'#e0e7f1', s5:'#d0dae9',
-  b0:'rgba(15,23,42,0.05)', b1:'rgba(15,23,42,0.10)', b2:'rgba(15,23,42,0.15)', b3:'rgba(15,23,42,0.24)',
-  t1:'#111a2b', t2:'#3f4d66', t3:'#5c6a85', t4:'#737e96',
-  // t3/t4 are darker than a mechanical inversion would give. In dark mode a
-  // muted token can sit close to the page because the eye reads light-on-dark
-  // detail well below the ratio it needs the other way round; on a light page
-  // the same "muted" value is simply gone. The old #97a4bb t4 measured 2.4:1
-  // against a card, which is where "ASSESS", "new" and every unit's metadata
-  // row were disappearing.
-  blue:'#1b63d4', blueL:'#1651ae', blueLL:'#423bc0', blueD:'#1651ae',
-  blueDim:'rgba(27,99,212,0.1)', blueGlow:'rgba(27,99,212,0.22)',
-  blueGrad:'linear-gradient(135deg,#1b63d4 0%,#1651ae 100%)',
-  green:'#057855', greenL:'#046245', greenDim:'rgba(5,120,85,0.1)',
-  amber:'#9d5606', amberL:'#814605', amberDim:'rgba(157,86,6,0.11)',
-  rose:'#cc1940', roseL:'#ab1536', roseDim:'rgba(204,25,64,0.1)',
-  violet:'#7c3aed', violetL:'#6831c7', violetDim:'rgba(124,58,237,0.1)',
-  cyan:'#08718a', cyanL:'#075f74', cyanDim:'rgba(8,113,138,0.1)',
-  orange:'#b5440c', orangeL:'#94380a', orangeDim:'rgba(181,68,12,0.1)',
-  teal:'#0d746a', tealL:'#0b6159', tealDim:'rgba(13,116,106,0.1)',
-  indigo:'#4f46e5', indigoL:'#423bc0', indigoDim:'rgba(79,70,229,0.1)',
-  pink:'#c22268', pinkL:'#a31d57', pinkDim:'rgba(194,34,104,0.1)',
-  fuchsia:'#ad22bf', fuchsiaL:'#911da0', fuchsiaDim:'rgba(173,34,191,0.1)',
-  lime:'#48730d', limeL:'#3b5f0b', limeDim:'rgba(72,115,13,0.1)',
-  sky:'#026fa7', skyL:'#025b89', skyDim:'rgba(2,111,167,0.1)',
-  emerald:'#047857', emeraldL:'#036247', emeraldDim:'rgba(4,120,87,0.1)',
-  red:'#cd2323', redL:'#a81c1c', redDim:'rgba(205,35,35,0.1)',
-  gold:'#8d6104', goldL:'#734f03', goldDim:'rgba(141,97,4,0.11)',
-  auroraGrad:'linear-gradient(120deg,#1b63d4 0%,#7c3aed 45%,#c22268 100%)',
-  oceanGrad:'linear-gradient(135deg,#08718a 0%,#1b63d4 60%,#4f46e5 100%)',
-  sunsetGrad:'linear-gradient(135deg,#9d5606 0%,#cc1940 55%,#ad22bf 100%)',
-  forestGrad:'linear-gradient(135deg,#057855 0%,#0d746a 55%,#026fa7 100%)',
-  violetGrad:'linear-gradient(135deg,#7c3aed 0%,#4f46e5 100%)',
+/**
+ * Flatten a resolved semantic theme into the legacy `C` shape.
+ *
+ * Nothing here invents a value: every entry is a lookup into the semantic
+ * layer. That is the property that makes the flat view safe to keep — it cannot
+ * drift away from the tokens, because it has nothing of its own to drift with.
+ */
+export function flatten(sem) {
+  const cmp = componentTokens(sem);
+  const flat = {};
 
-  surf:'rgba(255,255,255,0.70)', surf2:'rgba(255,255,255,0.55)', surfHi:'rgba(255,255,255,0.88)',
-  inputBg:'#fcfdff', inputBorder:'rgba(15,23,42,0.14)',
-  shadow:'0 1px 2px rgba(15,23,42,0.04),0 6px 20px rgba(15,23,42,0.06)',
-  shadowSm:'0 1px 3px rgba(15,23,42,0.07)',
-  scrim:'rgba(15,23,42,0.35)',
-  onAccent:'#ffffff',
-  // Two hues, not five. The old five-color wash put a different tint in every
-  // corner of the page, which is exactly the ambient busy-ness this pass is
-  // removing — and at these alphas the extra three were never read as color,
-  // only as unevenness.
-  pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(45,127,255,0.07) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(124,58,237,0.04) 0%, transparent 58%)',
-  noiseOpacity:'0.012',
-  colorScheme:'light',
+  for (const [slot, step] of Object.entries(LEGACY_SURFACES)) flat[slot] = sem.surface[step];
+  for (const [slot, s] of Object.entries(LEGACY_BORDERS)) flat[slot] = sem.border[s];
+  for (const [slot, tier] of Object.entries(LEGACY_TEXT)) flat[slot] = sem.fg[tier];
 
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
-};
+  for (const name of HUE_NAMES) {
+    const h = sem.hue[name];
+    flat[name] = h.fg;
+    flat[`${name}L`] = h.fgStrong;
+    flat[`${name}Dim`] = h.subtleBg;
+  }
+  flat.blueLL = sem.accent.fgSoft;
+  flat.blueD = sem.accent.deep;
 
-// ── Balanced palette (the app's default) ─────────────────────────────────────
-// The middle setting the app was missing. Dark was a near-black void and Light
-// was a white flashbulb, so both extremes were uncomfortable for the two-hour
-// sittings this product is actually used for, and there was nothing between
-// them to pick.
-//
-// Balanced is a dusk slate: a page at #181d27 (light enough that the screen
-// isn't a black mirror, dark enough that it never glares), text at #e6eaf2
-// rather than white, and accents pulled roughly 15–20% of the way toward gray
-// from the Dark palette's saturated versions. That last part is what makes it
-// read as calm rather than merely dim — on a dark page, a fully-saturated
-// #10b981 or #f43f5e is a light source, and a screen with six of them is the
-// "overstimulating" feeling with a name.
-//
-// Contrast still clears WCAG AA comfortably (t1 on bg ≈ 12.5:1, t2 ≈ 6.4:1,
-// t3 ≈ 3.6:1 which is body-adjacent metadata only), so calmer is not dimmer in
-// the sense that matters.
-export const BALANCED = {
-  bg:'#181d27', s0:'#1c222d', s1:'#212834', s2:'#252d3a', s3:'#2a3341', s4:'#323c4c', s5:'#3d4959',
-  b0:'rgba(255,255,255,0.05)', b1:'rgba(255,255,255,0.09)', b2:'rgba(255,255,255,0.14)', b3:'rgba(255,255,255,0.22)',
-  t1:'#e6eaf2', t2:'#a7b2c6', t3:'#7c8799', t4:'#717b89',
-  blue:'#4b8bf5', blueL:'#7aa9f7', blueLL:'#a9c6fa', blueD:'#2f6ad4',
-  blueDim:'rgba(75,139,245,0.10)', blueGlow:'rgba(75,139,245,0.22)',
-  blueGrad:'linear-gradient(135deg,#4b8bf5 0%,#2f6ad4 100%)',
-  green:'#2ea37f', greenL:'#5fc7a6', greenDim:'rgba(46,163,127,0.10)',
-  amber:'#d9a23c', amberL:'#e8bd6a', amberDim:'rgba(217,162,60,0.10)',
-  rose:'#e0637a', roseL:'#ee8b9c', roseDim:'rgba(224,99,122,0.10)',
-  violet:'#8579e6', violetL:'#a89ef2', violetDim:'rgba(133,121,230,0.10)',
-  cyan:'#37a8c4', cyanDim:'rgba(55,168,196,0.10)', orange:'#e08344',
-  cyanL:'#5cc4dd', orangeL:'#eda370', orangeDim:'rgba(224,131,68,0.10)',
-  teal:'#2fa89b', tealL:'#5cc9bd', tealDim:'rgba(47,168,155,0.10)',
-  indigo:'#6f75e0', indigoL:'#9095ec', indigoDim:'rgba(111,117,224,0.10)',
-  pink:'#dd6ba4', pinkL:'#ea91be', pinkDim:'rgba(221,107,164,0.10)',
-  fuchsia:'#c471dd', fuchsiaL:'#d795ea', fuchsiaDim:'rgba(196,113,221,0.10)',
-  lime:'#8fb84a', limeL:'#aacf6f', limeDim:'rgba(143,184,74,0.10)',
-  sky:'#3f9fd6', skyL:'#6bbbe6', skyDim:'rgba(63,159,214,0.10)',
-  emerald:'#34a383', emeraldL:'#5fc7a6', emeraldDim:'rgba(52,163,131,0.10)',
-  red:'#e05a5a', redL:'#ec8484', redDim:'rgba(224,90,90,0.10)',
-  gold:'#d4a53c', goldL:'#e5c069', goldDim:'rgba(212,165,60,0.10)',
-  auroraGrad:'linear-gradient(120deg,#4b8bf5 0%,#8579e6 45%,#dd6ba4 100%)',
-  oceanGrad:'linear-gradient(135deg,#37a8c4 0%,#4b8bf5 60%,#6f75e0 100%)',
-  sunsetGrad:'linear-gradient(135deg,#d9a23c 0%,#e0637a 55%,#c471dd 100%)',
-  forestGrad:'linear-gradient(135deg,#2ea37f 0%,#2fa89b 55%,#3f9fd6 100%)',
-  violetGrad:'linear-gradient(135deg,#8579e6 0%,#6f75e0 100%)',
+  // Multi-hue gradients, composed from the flattened hues so they follow the
+  // theme instead of being a second place a colour is written down.
+  flat.blueGrad = `linear-gradient(135deg,${flat.blue} 0%,${flat.blueD} 100%)`;
+  flat.auroraGrad = `linear-gradient(120deg,${flat.blue} 0%,${flat.violet} 45%,${flat.pink} 100%)`;
+  flat.oceanGrad = `linear-gradient(135deg,${flat.cyan} 0%,${flat.blue} 60%,${flat.indigo} 100%)`;
+  flat.sunsetGrad = `linear-gradient(135deg,${flat.amber} 0%,${flat.rose} 55%,${flat.fuchsia} 100%)`;
+  flat.forestGrad = `linear-gradient(135deg,${flat.green} 0%,${flat.teal} 55%,${flat.sky} 100%)`;
+  flat.violetGrad = `linear-gradient(135deg,${flat.violet} 0%,${flat.indigo} 100%)`;
 
-  surf:'rgba(255,255,255,0.035)', surf2:'rgba(255,255,255,0.022)', surfHi:'rgba(255,255,255,0.07)',
-  inputBg:'rgba(255,255,255,0.05)', inputBorder:'rgba(255,255,255,0.12)',
-  shadow:'0 2px 10px rgba(0,0,0,0.30),inset 0 1px 0 rgba(255,255,255,0.03)',
-  shadowSm:'0 1px 6px rgba(0,0,0,0.22)',
-  scrim:'rgba(9,12,18,0.58)',
-  onAccent:'#ffffff',
-  pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(75,139,245,0.07) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(133,121,230,0.045) 0%, transparent 58%)',
-  noiseOpacity:'0.014',
-  colorScheme:'dark',
+  flat.surf = sem.translucent.surface;
+  flat.surf2 = sem.translucent.surfaceQuiet;
+  flat.surfHi = sem.translucent.surfaceRaised;
+  flat.inputBg = sem.translucent.inputBg;
+  flat.inputBorder = sem.translucent.inputBorder;
+  flat.shadow = sem.elevation.raised;
+  flat.shadowSm = sem.elevation.quiet;
+  flat.scrim = sem.scrim;
+  flat.focusRing = sem.focusRing;
 
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
-};
+  // The label on a SOLID accent fill. In the dark themes this is dark ink on a
+  // light fill; see the note in semantic.js.
+  flat.onAccent = sem.fg.onSolid;
+  // The label on a TRANSLUCENT accent TINT, which is a different problem and
+  // must not reuse onAccent — on Balanced, onAccent is near-black, and a
+  // near-black label on a dark tinted chip is invisible. `null` in the light
+  // family means "compute it", see onTint() below.
+  flat.onTintFg = sem.fg.onTint;
+  flat.fgDisabled = sem.fg.disabled;
 
-// ── Balanced Light palette ───────────────────────────────────────────────────
-// The other half of Balanced. BALANCED above is a dusk slate; this is the same
-// idea walked to the light side of the line — "overcast daylight" rather than
-// noon sun.
-//
-// It exists because "Balanced" previously only meant one thing, and that thing
-// was dark. A student who wants a light interface had exactly one option, and
-// that option is the brightest surface the app can draw. The two ends of the
-// ramp now both have a middle:
-//
-//   Dark ── Balanced Dark ──┼── Balanced Light ── Light
-//
-// Three things separate it from LIGHT:
-//   1. No surface goes above #f1f4f8. LIGHT already pulled cards off pure white
-//      to #fbfcfe; this goes four more steps down, which is the single biggest
-//      lever on the "the screen is a flashbulb" feeling.
-//   2. The page is #dfe3ea, deeper than LIGHT's #e6eaf1, so the contrast
-//      between page and card stays legible even though both moved down.
-//   3. Text stops short of the extremes in both directions — #1f2836 rather
-//      than #111a2b — for the same reason BALANCED's t1 is #e6eaf2 and not
-//      white. Maximum contrast in both directions is what makes long reading
-//      tiring, and this is the palette for the two-hour sitting.
-//
-// Accents are LIGHT's, unchanged where they already read as calm and pulled a
-// little further down where they didn't. They are NOT desaturated toward gray
-// the way BALANCED's are: on a light page, moving an accent toward gray moves
-// it toward the background, so the dark-side trick for "calmer" is the
-// light-side recipe for "invisible". Muting here is done with luminance only.
-export const BALANCED_LIGHT = {
-  bg:'#dfe3ea', s0:'#e7ebf1', s1:'#f1f4f8', s2:'#ebeff5', s3:'#e4e9f0', s4:'#d7dde7', s5:'#c6cfdd',
-  b0:'rgba(15,23,42,0.055)', b1:'rgba(15,23,42,0.11)', b2:'rgba(15,23,42,0.17)', b3:'rgba(15,23,42,0.27)',
-  t1:'#1f2836', t2:'#45536b', t3:'#5d6b85', t4:'#6d798d',
-  blue:'#1a5fcc', blueL:'#154ea7', blueLL:'#3b36a9', blueD:'#154ea7',
-  blueDim:'rgba(26,95,204,0.1)', blueGlow:'rgba(26,95,204,0.22)',
-  blueGrad:'linear-gradient(135deg,#1a5fcc 0%,#154ea7 100%)',
-  green:'#067156', greenL:'#055d46', greenDim:'rgba(6,113,86,0.1)',
-  amber:'#905808', amberL:'#764807', amberDim:'rgba(144,88,8,0.11)',
-  rose:'#c21a3e', roseL:'#9f1533', roseDim:'rgba(194,26,62,0.1)',
-  violet:'#6d31d4', violetL:'#5c29b2', violetDim:'rgba(109,49,212,0.1)',
-  cyan:'#0a6c84', cyanL:'#08596c', cyanDim:'rgba(10,108,132,0.1)',
-  orange:'#af420a', orangeL:'#8f3608', orangeDim:'rgba(175,66,10,0.1)',
-  teal:'#0b7166', tealL:'#095d54', tealDim:'rgba(11,113,102,0.1)',
-  indigo:'#4640c9', indigoL:'#3b36a9', indigoDim:'rgba(70,64,201,0.1)',
-  pink:'#bd2168', pinkL:'#9b1b55', pinkDim:'rgba(189,33,104,0.1)',
-  fuchsia:'#a422b8', fuchsiaL:'#871c97', fuchsiaDim:'rgba(164,34,184,0.1)',
-  lime:'#456f0b', limeL:'#395b09', limeDim:'rgba(69,111,11,0.1)',
-  sky:'#026b97', skyL:'#02587c', skyDim:'rgba(2,107,151,0.1)',
-  emerald:'#046a4f', emeraldL:'#035942', emeraldDim:'rgba(4,106,79,0.1)',
-  red:'#c02121', redL:'#a11c1c', redDim:'rgba(192,33,33,0.1)',
-  gold:'#865d05', goldL:'#6e4c04', goldDim:'rgba(134,93,5,0.11)',
-  auroraGrad:'linear-gradient(120deg,#1a5fcc 0%,#6d31d4 45%,#bd2168 100%)',
-  oceanGrad:'linear-gradient(135deg,#0a6c84 0%,#1a5fcc 60%,#4640c9 100%)',
-  sunsetGrad:'linear-gradient(135deg,#905808 0%,#c21a3e 55%,#a422b8 100%)',
-  forestGrad:'linear-gradient(135deg,#067156 0%,#0b7166 55%,#026b97 100%)',
-  violetGrad:'linear-gradient(135deg,#6d31d4 0%,#4640c9 100%)',
+  flat.pageGlow = sem.pageGlow;
+  flat.noiseOpacity = sem.noiseOpacity;
+  flat.colorScheme = sem.colorScheme;
 
-  // Lower peak white than LIGHT's surfaces (0.70/0.55/0.88): a glass card here
-  // lands around #f1f4f8 rather than near-white, which is the whole point.
-  surf:'rgba(255,255,255,0.55)', surf2:'rgba(255,255,255,0.42)', surfHi:'rgba(255,255,255,0.72)',
-  inputBg:'#f6f8fb', inputBorder:'rgba(15,23,42,0.16)',
-  shadow:'0 1px 2px rgba(15,23,42,0.05),0 6px 20px rgba(15,23,42,0.07)',
-  shadowSm:'0 1px 3px rgba(15,23,42,0.08)',
-  scrim:'rgba(15,23,42,0.38)',
-  onAccent:'#ffffff',
-  pageGlow:'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(29,102,219,0.055) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(109,49,212,0.035) 0%, transparent 58%)',
-  noiseOpacity:'0.010',
-  colorScheme:'light',
+  flat.FD = sem.font.display;
+  flat.FB = sem.font.body;
+  flat.FM = sem.font.mono;
 
-  FD:"'Bricolage Grotesque',-apple-system,sans-serif",
-  FB:"'Onest',-apple-system,BlinkMacSystemFont,sans-serif",
-  FM:"'JetBrains Mono','SF Mono',monospace",
-};
+  // Component tokens ride along under a `cmp` namespace so a component can
+  // reach for `C.cmp.cardBg` without a second import.
+  flat.cmp = cmp;
+  return flat;
+}
 
-// ── High-contrast overlays ───────────────────────────────────────────────────
-// Layered ON TOP of the chosen base palette when the student turns on the
-// high-contrast accessibility setting. Only the tokens that actually matter for
-// contrast are overridden: text pushed to the extremes, every border hardened
-// so structure is visible without relying on subtle fills, and the translucent
-// surfaces dropped to solid so text never sits on a see-through card.
-export const HC_DARK = {
-  t1:'#ffffff', t2:'#d5deee', t3:'#a9b6cd', t4:'#8593ac',
-  b0:'rgba(255,255,255,0.22)', b1:'rgba(255,255,255,0.34)', b2:'rgba(255,255,255,0.5)', b3:'rgba(255,255,255,0.72)',
-  surf:'#0d1524', surf2:'#101a2b', surfHi:'#16233a', inputBg:'#0d1524', inputBorder:'rgba(255,255,255,0.42)',
-  blueL:'#8fbaff', greenL:'#5ee7b4', amberL:'#ffcd55', roseL:'#ff8fa2', violetL:'#c4aaff',
-  cyanL:'#5fe6f8', tealL:'#5eead4', indigoL:'#a5b0ff', pinkL:'#ff8fc4', limeL:'#c2f34f',
-  skyL:'#74d0ff', emeraldL:'#5ee7b4', redL:'#ff9494', goldL:'#ffdd57', orangeL:'#ffab6b',
-  noiseOpacity:'0',
-};
-// Balanced's own overlay rather than reusing HC_DARK: the surfaces have to be
-// opaque versions of *this* palette's slate, not the near-black one, or turning
-// high contrast on would silently drop the student into a different theme.
-export const HC_BALANCED = {
-  t1:'#ffffff', t2:'#dae2ef', t3:'#b3bfd2', t4:'#8f9db3',
-  b0:'rgba(255,255,255,0.22)', b1:'rgba(255,255,255,0.34)', b2:'rgba(255,255,255,0.5)', b3:'rgba(255,255,255,0.72)',
-  surf:'#1f2531', surf2:'#232a37', surfHi:'#2a3341', inputBg:'#1f2531', inputBorder:'rgba(255,255,255,0.42)',
-  blueL:'#94bcff', greenL:'#6fdcb8', amberL:'#ffd06b', roseL:'#ff9aab', violetL:'#c6b6ff',
-  cyanL:'#6fdcf0', tealL:'#6fdcd0', indigoL:'#adb4ff', pinkL:'#ff9dc9', limeL:'#c6e97f',
-  skyL:'#84cdf0', emeraldL:'#6fdcb8', redL:'#ff9a9a', goldL:'#ffd870', orangeL:'#ffb27f',
-  pageGlow:'none', noiseOpacity:'0',
-};
-// Balanced Light's overlay. Same reasoning as HC_BALANCED: high contrast must
-// stay inside the theme the student picked, so the surfaces here go to the top
-// of *this* palette rather than to HC_LIGHT's pure white — which would defeat
-// the one thing Balanced Light exists to do.
-export const HC_BALANCED_LIGHT = {
-  t1:'#000000', t2:'#1b2434', t3:'#333e51', t4:'#4e5a6e',
-  b0:'rgba(15,23,42,0.24)', b1:'rgba(15,23,42,0.36)', b2:'rgba(15,23,42,0.52)', b3:'rgba(15,23,42,0.76)',
-  bg:'#e8ebf0', s0:'#f2f4f8', s1:'#f8fafc', s2:'#f2f5f9', s3:'#eaeef4', s4:'#dbe1ea', s5:'#c7cfdc',
-  surf:'#f8fafc', surf2:'#f8fafc', surfHi:'#eef2f7', inputBg:'#ffffff', inputBorder:'rgba(15,23,42,0.48)',
-  blue:'#0a48b4', blueL:'#08388c', green:'#046045', greenL:'#034936', amber:'#874709', amberL:'#6d3907',
-  rose:'#a30f2a', roseL:'#830c22', violet:'#521da4', violetL:'#421884', cyan:'#025f78', cyanL:'#014d61',
-  teal:'#06635b', tealL:'#054e47', indigo:'#312b93', indigoL:'#282374', pink:'#921152', pinkL:'#750d42',
-  fuchsia:'#7c1789', fuchsiaL:'#63126d', lime:'#3b5e0a', limeL:'#2e4907',
-  sky:'#015a80', skyL:'#014766', emerald:'#03533b', emeraldL:'#02422f', red:'#961616', redL:'#781111',
-  gold:'#7c5403', goldL:'#634302', orange:'#9e3707', orangeL:'#7e2c05',
-  pageGlow:'none', noiseOpacity:'0',
-};
-export const HC_LIGHT = {
-  t1:'#000000', t2:'#1d2637', t3:'#3b4658', t4:'#5a6577',
-  b0:'rgba(15,23,42,0.22)', b1:'rgba(15,23,42,0.34)', b2:'rgba(15,23,42,0.5)', b3:'rgba(15,23,42,0.75)',
-  bg:'#ffffff', s0:'#ffffff', s1:'#ffffff', s2:'#f5f7fb', s3:'#eef2f8', s4:'#e0e7f1', s5:'#ccd7e8',
-  surf:'#ffffff', surf2:'#ffffff', surfHi:'#f2f5fa', inputBg:'#ffffff', inputBorder:'rgba(15,23,42,0.45)',
-  blue:'#0b4fc4', blueL:'#0a3d99', green:'#046b4d', greenL:'#03533c', amber:'#96500a', amberL:'#7a4108',
-  rose:'#b3122f', roseL:'#8f0e26', violet:'#5b21b6', violetL:'#4c1d95', cyan:'#036b86', cyanL:'#02566c',
-  teal:'#0a6f66', tealL:'#08574f', indigo:'#3730a3', indigoL:'#312e81', pink:'#a4145c', pinkL:'#83104a',
-  fuchsia:'#8b1a99', fuchsiaL:'#6f1479', lime:'#42690b', limeL:'#334f08', sky:'#02648f', skyL:'#014f72',
-  emerald:'#035c42', emeraldL:'#024734', red:'#a81919', redL:'#861414', gold:'#8a5e03', goldL:'#6e4b02',
-  orange:'#b03e08', orangeL:'#8d3106',
-  pageGlow:'none', noiseOpacity:'0',
-};
+/** The four palettes, in the flat shape the app has always consumed. */
+export const DARK = flatten(THEMES.dark);
+export const LIGHT = flatten(THEMES.light);
+export const BALANCED = flatten(THEMES.balanced);
+export const BALANCED_LIGHT = flatten(THEMES.balancedLight);
+
+/**
+ * High-contrast palettes: the base semantic theme with its overlay merged in,
+ * then flattened. Exported flat (rather than as sparse overlays) because that
+ * is what the audit script and every caller actually want.
+ */
+export const HC_DARK = flatten(mergeOverlay(THEMES.dark, HC_OVERLAYS.dark));
+export const HC_LIGHT = flatten(mergeOverlay(THEMES.light, HC_OVERLAYS.light));
+export const HC_BALANCED = flatten(mergeOverlay(THEMES.balanced, HC_OVERLAYS.balanced));
+export const HC_BALANCED_LIGHT = flatten(mergeOverlay(THEMES.balancedLight, HC_OVERLAYS.balancedLight));
+
+/** The resolved semantic theme behind each mode, for callers that want the layers. */
+export const SEMANTIC = THEMES;
 
 // ── The live token object ────────────────────────────────────────────────────
 // Everything in the app imports this. It is intentionally mutable; see the
@@ -425,16 +229,38 @@ export function storeMode(mode) {
   try { localStorage.setItem(THEME_STORAGE_KEY, THEME_MODES.includes(m) ? m : DEFAULT_THEME_MODE); } catch { /* private mode */ }
 }
 
-// Only these tokens need to cross into index.css, so only these become CSS
-// custom properties. Keeping the list short is deliberate — the inline-style
-// object is the source of truth, and a second partially-overlapping one would
-// be a bug factory.
+// The legacy --c-* set, which is what the existing rules in index.css read.
+// Kept short on purpose: the flat object is the source of truth for inline
+// styles, and a second, partially-overlapping copy of it would be a bug factory.
 const CSS_VAR_TOKENS = [
   'bg', 's0', 's1', 's2', 's3', 's4', 's5', 'b1', 'b2', 'b3',
   't1', 't2', 't3', 't4', 'blue', 'blueL', 'blueDim', 'violet', 'rose', 'green', 'amber',
   'surf', 'surfHi', 'inputBg', 'inputBorder', 'pageGlow', 'noiseOpacity', 'scrim',
   'FD', 'FB', 'FM',
 ];
+
+/**
+ * Emit the semantic and component layers as CSS custom properties.
+ *
+ * `--sem-surface-default`, `--cmp-card-bg`, and so on. New stylesheet work
+ * should use these rather than the legacy `--c-*` names; the alpha-suffix
+ * concatenation idiom that keeps inline styles on the flat object doesn't apply
+ * in a stylesheet, so there is no reason for CSS to stay on the old names.
+ */
+const kebab = (s) => s.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+function emitLayerVars(root, sem, cmp) {
+  const set = (name, v) => { if (v != null) root.style.setProperty(name, String(v)); };
+  for (const [group, val] of Object.entries(sem)) {
+    if (val && typeof val === 'object') {
+      for (const [k, v] of Object.entries(val)) {
+        if (v && typeof v === 'object') {
+          for (const [kk, vv] of Object.entries(v)) set(`--sem-${kebab(group)}-${kebab(k)}-${kebab(kk)}`, vv);
+        } else set(`--sem-${kebab(group)}-${kebab(k)}`, v);
+      }
+    } else set(`--sem-${kebab(group)}`, val);
+  }
+  for (const [k, v] of Object.entries(cmp)) set(`--cmp-${kebab(k)}`, v);
+}
 
 let currentResolved = DEFAULT_THEME_MODE;
 
@@ -449,29 +275,37 @@ let currentResolved = DEFAULT_THEME_MODE;
  */
 export function applyTheme(mode = DEFAULT_THEME_MODE, opts = {}) {
   const resolved = resolveMode(mode);
-  const base = PALETTES[resolved] || BALANCED;
-  const HC = { light: HC_LIGHT, balancedLight: HC_BALANCED_LIGHT, dark: HC_DARK, balanced: HC_BALANCED };
-  const overlay = opts.highContrast ? (HC[resolved] || HC_BALANCED) : null;
+  const sem = opts.highContrast
+    ? mergeOverlay(SEMANTIC[resolved] || SEMANTIC.balanced, HC_OVERLAYS[resolved] || HC_OVERLAYS.balanced)
+    : (SEMANTIC[resolved] || SEMANTIC.balanced);
+  const flat = flatten(sem);
 
   // Reset first: without this, switching high-contrast back off would leave the
   // overlay's values behind, because Object.assign only ever adds.
   for (const k of Object.keys(C)) delete C[k];
-  Object.assign(C, base, overlay || {});
+  Object.assign(C, flat);
 
   if (opts.fontStack) { C.FB = opts.fontStack; C.FD = opts.fontStack; }
 
   if (typeof document !== 'undefined') {
     const root = document.documentElement;
+    // A data attribute, not a class. There are four themes plus a high-contrast
+    // axis; `dark`-as-a-boolean-class cannot express that, and every system that
+    // starts with the boolean ends up with `.dark.balanced.hc` selector soup.
     root.dataset.theme = resolved;
     // The family is what stylesheet rules should key off. Every "this rule
     // assumed a dark backdrop" correction in index.css applies to Balanced
     // Light exactly as much as it applies to Light, and pinning those rules to
     // [data-theme="light"] is how a new light palette ships half-styled.
     root.dataset.themeFamily = LIGHT_FAMILY.has(resolved) ? 'light' : 'dark';
+    // Both dark themes declare `color-scheme: dark` so native scrollbars, date
+    // pickers and form controls follow the page instead of rendering as a light
+    // rectangle punched into it.
     root.style.colorScheme = C.colorScheme || resolved;
     for (const k of CSS_VAR_TOKENS) {
       if (C[k] != null) root.style.setProperty(`--c-${k}`, String(C[k]));
     }
+    emitLayerVars(root, sem, C.cmp);
   }
   currentResolved = resolved;
   return resolved;
@@ -658,8 +492,31 @@ export const accentText = (color, surface = null, min = 4.5) => {
  * So: white in the dark family, and a darkened accent in the light family,
  * which also keeps the label tied to the tint's own hue instead of going flat
  * gray.
+ *
+ * NOTE the token this reads: `onTintFg`, never `onAccent`. Those are two
+ * different jobs and Balanced is where the difference bites — `onAccent` there
+ * is near-black ink for a LIGHT solid fill, and near-black on a dark tinted
+ * chip is nothing at all.
  */
-export const onTint = (accent, min = 4.5) => (isLight() ? accentText(accent, C.s1, min) : (C.onAccent || '#ffffff'));
+export const onTint = (accent, min = 4.5) => (isLight() ? accentText(accent, C.s1, min) : (C.onTintFg || C.t1 || '#ffffff'));
+
+/**
+ * The label colour for text on an arbitrary SOLID fill.
+ *
+ * `C.onAccent` is right whenever the fill really is an accent, which is the
+ * overwhelming majority of call sites. It is wrong when a "button" is filled
+ * with a surface token instead — `btn(C.s3)` — because Balanced's onAccent is
+ * dark ink and a dark label on a dark surface disappears. So measure the fill
+ * and pick the ink that survives on it.
+ */
+export const onFill = (bg) => {
+  const ink = C.onAccent || '#ffffff';
+  const r = contrastRatio(ink, bg);
+  // Non-hex (a gradient string, an rgba) can't be measured — those are accent
+  // fills in practice, so keep the accent ink.
+  if (r == null) return ink;
+  return r >= 3.5 ? ink : (C.t1 || '#ffffff');
+};
 
 /**
  * A two-stop gradient of `accent` for background-clipped TEXT (the big numbers
@@ -690,15 +547,22 @@ export const accentGrad = (accent, amount = 0.2) => {
 export const accentSweep = (accent, amount = 0.22) =>
   `linear-gradient(135deg,${accent},${isLight() ? shade(accent, amount) : tone(accent, amount)})`;
 
-export const glass  = (x={}) => ({ background:C.surf, border:`1px solid ${C.b1}`, borderRadius:16, padding:24, boxShadow:C.shadow, backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
-export const glass2 = (x={}) => ({ background:C.surf2, border:`1px solid ${C.b1}`, borderRadius:10, padding:14, ...x });
-export const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 20px', borderRadius:9, border:'none', background:bg, color:C.onAccent, fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', letterSpacing:'.01em', // A softer halo than the original 0 4px 16px @35%: the old one read as a lit
+// ── The primitives every screen is built from ────────────────────────────────
+// These read the COMPONENT layer (C.cmp.*), not the semantic one. That is the
+// whole point of the third layer: "cards should sit on the raised surface" is
+// now one edit in tokens/components.js, and it reaches every card in the app.
+export const glass  = (x={}) => ({ background:C.cmp.cardBg, border:`1px solid ${C.cmp.cardBorder}`, borderRadius:C.cmp.cardRadius, padding:C.cmp.cardPadding, boxShadow:C.cmp.cardShadow, backdropFilter:'blur(20px)', WebkitBackdropFilter:'blur(20px)', ...x });
+export const glass2 = (x={}) => ({ background:C.cmp.cardQuietBg, border:`1px solid ${C.cmp.cardBorder}`, borderRadius:C.cmp.cardQuietRadius, padding:C.cmp.cardQuietPadding, ...x });
+// `color` is measured against the fill rather than pinned to onAccent: a couple
+// of call sites pass a SURFACE token as the button background, and Balanced's
+// onAccent is dark ink meant for a light accent fill. See onFill().
+export const btn    = (bg=C.blueGrad,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'10px 20px', borderRadius:9, border:'none', background:bg, color:onFill(bg), fontWeight:600, fontSize:13, fontFamily:C.FB, cursor:'pointer', letterSpacing:'.01em', // A softer halo than the original 0 4px 16px @35%: the old one read as a lit
 // object on every screen that had more than one button on it.
-boxShadow:bg===C.blueGrad?`0 3px 12px ${tint(C.blue,0.22)},inset 0 1px 0 rgba(255,255,255,0.10)`:C.shadowSm, transition:'all .18s cubic-bezier(.16,1,.3,1)', ...x });
-export const btnSm  = (bg=C.surfHi,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 14px', borderRadius:7, border:`1px solid ${C.b1}`, background:bg, color:C.t1, fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-export const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 18px', borderRadius:9, border:`1px solid ${C.b2}`, background:'transparent', color:C.t2, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
-export const inp    = (x={}) => ({ background:C.inputBg, border:`1px solid ${C.inputBorder}`, borderRadius:10, padding:'10px 14px', color:C.t1, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:'border-color .15s,box-shadow .15s', ...x });
-export const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.t3, letterSpacing:'.1em', textTransform:'uppercase', display:'block', marginBottom:7, ...x });
+boxShadow:bg===C.blueGrad?`0 3px 12px ${tint(C.blue,0.22)},inset 0 1px 0 ${C.cmp.buttonSolidTopHighlight}`:C.shadowSm, transition:'all .18s cubic-bezier(.16,1,.3,1)', ...x });
+export const btnSm  = (bg=C.surfHi,x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:4, padding:'6px 14px', borderRadius:7, border:`1px solid ${C.cmp.buttonQuietBorder}`, background:bg, color:C.cmp.buttonQuietFg, fontWeight:600, fontSize:12, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
+export const btnG   = (x={}) => ({ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:6, padding:'9px 18px', borderRadius:9, border:`1px solid ${C.cmp.buttonGhostBorder}`, background:'transparent', color:C.cmp.buttonGhostFg, fontWeight:500, fontSize:13, fontFamily:C.FB, cursor:'pointer', transition:'all .15s', ...x });
+export const inp    = (x={}) => ({ background:C.cmp.inputBg, border:`1px solid ${C.cmp.inputBorder}`, borderRadius:10, padding:'10px 14px', color:C.cmp.inputFg, fontSize:13, fontFamily:C.FB, outline:'none', width:'100%', transition:'border-color .15s,box-shadow .15s', ...x });
+export const lbl    = (x={}) => ({ fontSize:10, fontWeight:700, color:C.cmp.kickerFg, letterSpacing:'.1em', textTransform:'uppercase', display:'block', marginBottom:7, ...x });
 export const R      = (x={}) => ({ display:'flex', alignItems:'center', gap:12, ...x });
 export const CC     = (x={}) => ({ display:'flex', flexDirection:'column', gap:12, ...x });
 export const G      = (cols=2,gap=14,x={},m=false) => ({ display:'grid', gridTemplateColumns:m?(cols<=2?'1fr':'repeat(2,1fr)'):`repeat(${cols},1fr)`, gap, ...x });

@@ -15,7 +15,7 @@
     <meta name="robots" content="index, follow" />
     <!-- Matches BALANCED.bg (the default palette) so the mobile browser chrome
          and the iOS status bar don't frame the app in a different colour. -->
-    <meta name="theme-color" content="#181d27" />
+    <meta name="theme-color" content="#272d34" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -137,7 +137,7 @@
       screen before /src/main.jsx has even been fetched. A stylesheet link would
       be a second round trip and would sometimes lose the race.
 
-      Colours are the dark palette's literals rather than tokens: src/index.css
+      Colours are the Balanced palette's literals rather than tokens: src/index.css
       and the theme system are inside the JS bundle, and by the time either is
       available this element is already gone. They match theme-color above so
       the shell, the browser chrome and the app that replaces it are one surface.
@@ -148,27 +148,27 @@
         margin: 0 auto;
         padding: 2rem 1.25rem 4rem;
         font-family: Onest, system-ui, -apple-system, "Segoe UI", sans-serif;
-        color: #b7bec9;
+        color: #b6bcc6;
         line-height: 1.65;
         font-size: 1rem;
       }
-      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #f2f5f9; line-height: 1.2; letter-spacing: -0.02em; }
+      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #e7ecf2; line-height: 1.2; letter-spacing: -0.02em; }
       .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; }
       .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; }
       .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; }
-      .seo-shell a { color: #7aa2ff; }
-      .seo-shell .seo-shell-lead { font-size: 1.1rem; color: #d3dae3; }
+      .seo-shell a { color: #72b5f8; }
+      .seo-shell .seo-shell-lead { font-size: 1.1rem; color: #b6bcc6; }
       .seo-shell ul, .seo-shell ol, .seo-shell dl { padding-left: 1.2rem; }
       .seo-shell li, .seo-shell dd { margin: 0.4rem 0; }
-      .seo-shell dt { color: #f2f5f9; font-weight: 600; margin-top: 1rem; }
+      .seo-shell dt { color: #e7ecf2; font-weight: 600; margin-top: 1rem; }
       .seo-shell dd { margin-left: 0; }
       .seo-shell-nav ul, .seo-shell-crumbs ol {
         list-style: none; padding: 0; margin: 0 0 0.5rem;
         display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; font-size: 0.9rem;
       }
-      .seo-shell-note { border-left: 3px solid #3a4353; padding-left: 0.9rem; margin: 1rem 0; color: #d3dae3; }
+      .seo-shell-note { border-left: 3px solid #5d646c; padding-left: 0.9rem; margin: 1rem 0; color: #b6bcc6; }
       .seo-shell-cta { margin-top: 2.5rem; font-weight: 600; }
-      .seo-shell footer { margin-top: 3rem; border-top: 1px solid #262d3a; padding-top: 1rem; font-size: 0.85rem; }
+      .seo-shell footer { margin-top: 3rem; border-top: 1px solid #30363d; padding-top: 1rem; font-size: 0.85rem; }
     </style>
   </head>
   <body>

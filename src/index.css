@@ -2,19 +2,25 @@
    applyTheme() in src/lib/theme.js overwrites these on <html> at boot and on
    every theme change. They're duplicated here (the BALANCED values, matching
    the app's default theme) purely so the very first paint — before any JS runs
-   — isn't a flash of the wrong palette. Keep them in sync with BALANCED. */
+   — isn't a flash of the wrong palette.
+
+   Do NOT hand-edit these to a colour you liked: they are asserted against the
+   BALANCED palette by scripts/verifyDesignTokens.mjs on every build, so drifting
+   out of sync is a build failure rather than a first-paint flash nobody
+   notices. `color-scheme: dark` is here for the same first-paint reason and so
+   native scrollbars and date pickers follow the page. */
 :root {
   color-scheme: dark;
-  --c-bg: #181d27; --c-s0: #1c222d; --c-s1: #212834; --c-s2: #252d3a;
-  --c-s3: #2a3341; --c-s4: #323c4c; --c-s5: #3d4959;
-  --c-b1: rgba(255,255,255,0.09); --c-b2: rgba(255,255,255,0.14); --c-b3: rgba(255,255,255,0.22);
-  --c-t1: #e6eaf2; --c-t2: #a7b2c6; --c-t3: #7c8799; --c-t4: #5c6879;
-  --c-blue: #4b8bf5; --c-blueL: #7aa9f7; --c-blueDim: rgba(75,139,245,0.10);
-  --c-violet: #8579e6; --c-rose: #e0637a; --c-green: #2ea37f; --c-amber: #d9a23c;
-  --c-surf: rgba(255,255,255,0.035); --c-surfHi: rgba(255,255,255,0.07);
-  --c-inputBg: rgba(255,255,255,0.05); --c-inputBorder: rgba(255,255,255,0.12);
-  --c-scrim: rgba(9,12,18,0.58);
-  --c-noiseOpacity: 0.014;
+  --c-bg: #272d34; --c-s0: #30363d; --c-s1: #30363d; --c-s2: #22272d;
+  --c-s3: #383e46; --c-s4: #3d434a; --c-s5: #464c54;
+  --c-b1: #5d646c; --c-b2: #888f97; --c-b3: #888f97;
+  --c-t1: #e7ecf2; --c-t2: #b6bcc6; --c-t3: #a9b1ba; --c-t4: #a9b1ba;
+  --c-blue: #72b5f8; --c-blueL: #9dcaff; --c-blueDim: #31465f;
+  --c-violet: #c99fed; --c-rose: #fd90a4; --c-green: #77c087; --c-amber: #d9a84f;
+  --c-surf: #30363d; --c-surfHi: #383e46;
+  --c-inputBg: #22272d; --c-inputBorder: #5d646c;
+  --c-scrim: rgba(18,23,28,0.62);
+  --c-noiseOpacity: 0.012;
   --c-pageGlow: none;
   --c-FD: 'Bricolage Grotesque', -apple-system, sans-serif;
   --c-FB: 'Onest', -apple-system, BlinkMacSystemFont, sans-serif;
