@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import {
   GraduationCap, ScrollText, Handshake, UserCheck, Mic, Calculator, Plus, ArrowRight, Stethoscope,
+  Activity,
 } from 'lucide-react';
 import { C, R, CC, G } from '../../lib/theme';
 import PanelHero, { StatTile } from '../ui/PanelHero';
@@ -26,6 +27,12 @@ import SectionScroller from './SectionScroller';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const APPLYING_SECTIONS = [
+  // First on the page because it is the summary of everything below it: one
+  // number for where this student currently stands against the class that gets
+  // admitted at the most selective school on their list, with the route to each
+  // thing that would move it. Every other section here answers a piece of the
+  // question it answers whole.
+  { id: 'medex', ic: Activity, label: 'MedEx Score', color: C.violet, blurb: 'Where you stand against the class that gets in — one number, sealed weekly' },
   { id: 'colleges', ic: GraduationCap, label: 'College List', color: C.sky, blurb: 'Where you are applying, and what each school wants' },
   // Sits directly under the college list because that is what it feeds: tracking
   // a combined-degree program puts a school ON that list, with its deadline. It
@@ -80,7 +87,7 @@ export default function ApplyingPanel({
     const st = {
       colleges: status(colleges, 4), essays: status(essays, 2),
       aid: null, recommenders: status(recommenders, 2), interview: status(interviews, 1),
-      calc: null, combined: null,
+      calc: null, combined: null, medex: null,
     }[s.id];
     return {
       ...s,
@@ -133,4 +140,5 @@ const ACTIONS = {
   recommenders: (go) => [{ label: 'Add a recommender', icon: Plus, primary: true, onClick: () => go?.('recommenders') }],
   interview: (go) => [{ label: 'Run a station', icon: Mic, primary: true, onClick: () => go?.('interview') }],
   calc: (go) => [{ label: 'See my odds', icon: Calculator, onClick: () => go?.('calc') }],
+  medex: (go) => [{ label: 'See my score', icon: Activity, primary: true, onClick: () => go?.('medex') }],
 };

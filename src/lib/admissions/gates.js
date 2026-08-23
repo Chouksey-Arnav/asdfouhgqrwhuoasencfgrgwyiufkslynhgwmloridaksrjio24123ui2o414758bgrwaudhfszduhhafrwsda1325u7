@@ -34,7 +34,14 @@
 
 const PASS = 'pass', FAIL = 'fail', UNKNOWN = 'unknown';
 
+// Number(null) === 0 and 0 is finite, so the naive version reads an unanswered
+// numeric field as a logged zero. This is the most consequential of the four
+// copies of this helper: a gate reading 0 instead of null returns FAIL where it
+// should return UNKNOWN, and a failed hard gate suppresses the estimate
+// entirely. A student who simply had not logged their service hours yet would
+// have been told they do not meet a published requirement.
 const num = (v) => {
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return null;
   const n = Number(v);
   return Number.isFinite(n) ? n : null;
 };

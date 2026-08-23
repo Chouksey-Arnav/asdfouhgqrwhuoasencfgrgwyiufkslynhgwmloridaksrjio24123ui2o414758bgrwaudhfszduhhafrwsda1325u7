@@ -41,7 +41,15 @@
 import { DEFAULT_REFERENCE_LEVELS, PORTFOLIO_DIMENSIONS } from '../../data/admissions/programProfiles.js';
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+// See the note on academicFit.js's copy: Number(null) is 0 and 0 is finite, so
+// the naive version reports an unlogged dimension as a logged zero. Here that
+// difference decides whether a dimension is `empty` (unknown, widens the range)
+// or genuinely at zero (counted against you).
+const num = (v) => {
+  if (v === null || v === undefined || v === '' || typeof v === 'boolean') return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
 
 const IQR_Z = 0.6745;
 

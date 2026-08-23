@@ -36,6 +36,11 @@ const RESOURCE_MAP = {
   // was created to end.
   test_scores: 'testScores',
   admission_intake: 'admissionIntake',
+  // The MedEx Score's weekly seals. In the shared snapshot because the score is
+  // computed from these same rows — fetching the history separately would mean
+  // the Home card and the breakdown panel could seal against two different
+  // reads of the portfolio and disagree about the week's number.
+  medex_scores: 'medexScores',
 };
 
 export const EMPTY_SNAPSHOT = Object.freeze({

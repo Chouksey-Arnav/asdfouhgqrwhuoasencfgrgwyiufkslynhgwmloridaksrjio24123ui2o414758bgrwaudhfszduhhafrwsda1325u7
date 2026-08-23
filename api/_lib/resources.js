@@ -41,6 +41,12 @@ export const RESOURCES = [
   // every other resource so a student's suggestions are exportable and deletable with their
   // account — see supabase/migrations/0018_credential_catalog.sql.
   'credential_suggestions',
+  // One row per user per ISO week — the MedEx Score's weekly seal history (see
+  // supabase/migrations/0021_medex_score.sql). Exportable and deletable like
+  // every other resource: it is a record of how a student's profile developed
+  // over a year, which is exactly the kind of thing a portability request is
+  // for.
+  'medex_scores',
 ];
 
 /** Membership test for the CRUD endpoint's `[resource]` path segment. */
