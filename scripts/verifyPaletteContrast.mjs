@@ -92,8 +92,12 @@ for (const [name, p] of Object.entries(PALETTES)) {
   // Every palette must define every key the others do — a missing token falls
   // back to whatever the previous theme left in `C`, which is exactly the
   // stale-color class of bug this file exists to catch.
+  // `onTintFg` is deliberately null in the light family — there the label on a
+  // tinted chip is computed from the tint's own hue rather than being a fixed
+  // token (see onTint() in theme.js), and a fixed value there is the bug.
+  const COMPUTED = new Set(['onTintFg']);
   for (const k of Object.keys(BALANCED)) {
-    if (p[k] == null) failures.push(`${name}: missing token "${k}"`);
+    if (p[k] == null && !COMPUTED.has(k)) failures.push(`${name}: missing token "${k}"`);
   }
 
   for (const surface of SURFACES) {

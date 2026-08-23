@@ -1,0 +1,434 @@
+{
+  "src/App.jsx": {
+    "hex": 40,
+    "rgba": 69
+  },
+  "src/components/AboutMePanel.jsx": {
+    "hex": 2,
+    "rgba": 0
+  },
+  "src/components/ActivitiesResumePanel.jsx": {
+    "hex": 0,
+    "rgba": 11
+  },
+  "src/components/AnimatedLogo.jsx": {
+    "hex": 0,
+    "rgba": 3
+  },
+  "src/components/AppTour.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/AppearanceSettings.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/BrandJourney.jsx": {
+    "hex": 6,
+    "rgba": 1
+  },
+  "src/components/CollegeAutocomplete.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/CollegeListPanel.jsx": {
+    "hex": 2,
+    "rgba": 6
+  },
+  "src/components/EssayCritique.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/EssayWorkspacePanel.jsx": {
+    "hex": 0,
+    "rgba": 5
+  },
+  "src/components/FinancialAidHomeCard.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/FinancialAidPanel.jsx": {
+    "hex": 0,
+    "rgba": 8
+  },
+  "src/components/GlobalCrashGuard.jsx": {
+    "hex": 8,
+    "rgba": 0
+  },
+  "src/components/HighlightableArticle.jsx": {
+    "hex": 4,
+    "rgba": 6
+  },
+  "src/components/InterviewPrepPanel.jsx": {
+    "hex": 6,
+    "rgba": 0
+  },
+  "src/components/LandingPage.jsx": {
+    "hex": 4,
+    "rgba": 3
+  },
+  "src/components/LessonAudioPlayer.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/LessonDifficultyCheck.jsx": {
+    "hex": 0,
+    "rgba": 3
+  },
+  "src/components/LessonNotesPanel.jsx": {
+    "hex": 1,
+    "rgba": 5
+  },
+  "src/components/LiveVoiceInterview.jsx": {
+    "hex": 7,
+    "rgba": 1
+  },
+  "src/components/MedabrainLauncher.jsx": {
+    "hex": 7,
+    "rgba": 6
+  },
+  "src/components/MyPlanCard.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/OpportunitiesDatabase.jsx": {
+    "hex": 0,
+    "rgba": 5
+  },
+  "src/components/PaceGoalCard.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/PathwaySwitcher.jsx": {
+    "hex": 0,
+    "rgba": 3
+  },
+  "src/components/PlansTab.jsx": {
+    "hex": 2,
+    "rgba": 10
+  },
+  "src/components/PortfolioMedabrain.jsx": {
+    "hex": 3,
+    "rgba": 8
+  },
+  "src/components/PortfolioMilestones.jsx": {
+    "hex": 0,
+    "rgba": 7
+  },
+  "src/components/PortfolioPlanWeek.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/PrepMedabrain.jsx": {
+    "hex": 2,
+    "rgba": 8
+  },
+  "src/components/PwaUpdatePrompt.jsx": {
+    "hex": 7,
+    "rgba": 1
+  },
+  "src/components/QuizRecommendationsPanel.jsx": {
+    "hex": 7,
+    "rgba": 12
+  },
+  "src/components/RecommendersPanel.jsx": {
+    "hex": 0,
+    "rgba": 4
+  },
+  "src/components/RewardChest.jsx": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/RootErrorBoundary.jsx": {
+    "hex": 6,
+    "rgba": 0
+  },
+  "src/components/ScholarshipDatabase.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/ScholarshipResearchAdd.jsx": {
+    "hex": 2,
+    "rgba": 1
+  },
+  "src/components/ScoreTrackerPanel.jsx": {
+    "hex": 1,
+    "rgba": 8
+  },
+  "src/components/SupplementalEssaysCard.jsx": {
+    "hex": 1,
+    "rgba": 4
+  },
+  "src/components/TodayPlanNudge.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/UnlockCelebration.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/auth/GoogleButton.jsx": {
+    "hex": 4,
+    "rgba": 0
+  },
+  "src/components/finance/DebtTrajectoryTable.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/finance/HealthCareerScholarships.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/finance/ServiceCommitmentPrograms.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/interview/MmiCircuitRunner.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/landing/v2/LandingPageV2.jsx": {
+    "hex": 539,
+    "rgba": 331
+  },
+  "src/components/landing/v2/dcRuntime.js": {
+    "hex": 2,
+    "rgba": 0
+  },
+  "src/components/legal/LegalPage.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/onboarding/brand.jsx": {
+    "hex": 22,
+    "rgba": 4
+  },
+  "src/components/onboarding/design.js": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/onboarding/primitives.jsx": {
+    "hex": 2,
+    "rgba": 10
+  },
+  "src/components/onboarding/steps/AgeBlockedStep.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/onboarding/steps/GeneratingStep.jsx": {
+    "hex": 3,
+    "rgba": 0
+  },
+  "src/components/onboarding/steps/PlanSummaryStep.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/onboarding/steps/SourceStep.jsx": {
+    "hex": 13,
+    "rgba": 0
+  },
+  "src/components/onboarding/steps/SpeedStep.jsx": {
+    "hex": 1,
+    "rgba": 2
+  },
+  "src/components/parent/ParentsLanding.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/parent/PathwayCostsPanel.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/portfolio/AiPolicyNotice.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/portfolio/ClinicalHoursSection.jsx": {
+    "hex": 0,
+    "rgba": 3
+  },
+  "src/components/portfolio/CombinedDegreePanel.jsx": {
+    "hex": 0,
+    "rgba": 4
+  },
+  "src/components/portfolio/CommonAppExport.jsx": {
+    "hex": 1,
+    "rgba": 5
+  },
+  "src/components/portfolio/CredentialsSection.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/FourYearExport.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/MedabrainRead.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/NextStepsCard.jsx": {
+    "hex": 2,
+    "rgba": 1
+  },
+  "src/components/portfolio/OpportunitiesPanel.jsx": {
+    "hex": 4,
+    "rgba": 7
+  },
+  "src/components/portfolio/ProgramPromptsCard.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/ProgramTiers.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/ReflectionJournal.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/portfolio/ResearchSection.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/SectionIntro.jsx": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/portfolio/SectionScroller.jsx": {
+    "hex": 1,
+    "rgba": 2
+  },
+  "src/components/portfolio/TrackedPanel.jsx": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/portfolio/WeeklyGoalTile.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/WeeklyGoalsBoard.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/portfolio/WhyPathwayDoc.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/portfolio/admissions/ProgramResultCard.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/quests/QuestBoard.jsx": {
+    "hex": 4,
+    "rgba": 0
+  },
+  "src/components/quests/QuestChainMap.jsx": {
+    "hex": 4,
+    "rgba": 0
+  },
+  "src/components/quests/QuestCompleteOverlay.jsx": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/quests/QuestPicker.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/roadmap/RoadmapHomeCard.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/roadmap/RoadmapIntake.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/roadmap/RoadmapItem.jsx": {
+    "hex": 1,
+    "rgba": 0
+  },
+  "src/components/sat/DesmosCalculator.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/sat/DesmosSurface.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/sat/SatAnnotatableText.jsx": {
+    "hex": 3,
+    "rgba": 4
+  },
+  "src/components/sat/SatLibraryPanel.jsx": {
+    "hex": 0,
+    "rgba": 4
+  },
+  "src/components/sat/SatMedabrain.jsx": {
+    "hex": 2,
+    "rgba": 6
+  },
+  "src/components/sat/SatPracticePanel.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/sat/SatQuestionPlayer.jsx": {
+    "hex": 0,
+    "rgba": 7
+  },
+  "src/components/sat/SatReferenceSheet.jsx": {
+    "hex": 1,
+    "rgba": 4
+  },
+  "src/components/sat/SatReviewLogPanel.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/sat/SatToolsContext.jsx": {
+    "hex": 3,
+    "rgba": 0
+  },
+  "src/components/sat/SatVideoRecs.jsx": {
+    "hex": 2,
+    "rgba": 1
+  },
+  "src/components/sat/satUi.jsx": {
+    "hex": 2,
+    "rgba": 2
+  },
+  "src/components/streak/LessonCompleteOverlay.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/streak/StreakCalendar.jsx": {
+    "hex": 2,
+    "rgba": 0
+  },
+  "src/components/ui/Disclosure.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/ui/PanelHero.jsx": {
+    "hex": 1,
+    "rgba": 1
+  },
+  "src/components/ui/SubNav.jsx": {
+    "hex": 3,
+    "rgba": 1
+  },
+  "src/components/ui/SuggestInput.jsx": {
+    "hex": 0,
+    "rgba": 2
+  },
+  "src/components/ui/TrackButton.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/ui/TrackQueueNotice.jsx": {
+    "hex": 0,
+    "rgba": 1
+  },
+  "src/components/ui/primitives.jsx": {
+    "hex": 0,
+    "rgba": 1
+  }
+}
