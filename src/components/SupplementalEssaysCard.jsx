@@ -167,7 +167,7 @@ export default function SupplementalEssaysCard({
               {colleges.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
-          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 4 }} onClick={dismiss} title="Hide"><X size={15} /></button>
+          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.t3, padding: 4 }} onClick={dismiss} aria-label="Hide" title="Hide"><X size={15} /></button>
         </div>
       </div>
 

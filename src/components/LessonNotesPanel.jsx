@@ -39,7 +39,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
       {!open && (
         <button
           onClick={() => onOpenChange(true)}
-          title="Lesson notes"
+          aria-label="Lesson notes" title="Lesson notes"
           style={{
             position: 'fixed', top: isMobile ? 'auto' : '50%', bottom: isMobile ? 96 : 'auto',
             left: isMobile ? 14 : 0, transform: isMobile ? 'none' : 'translateY(-50%)',

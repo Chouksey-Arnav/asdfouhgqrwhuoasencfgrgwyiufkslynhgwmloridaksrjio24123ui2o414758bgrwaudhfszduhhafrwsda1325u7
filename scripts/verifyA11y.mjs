@@ -309,6 +309,53 @@ const lineAt = (text, idx) => text.slice(0, idx).split('\n').length;
   }
 }
 
+// ── 11. Nothing is labelled by `title` alone ─────────────────────────────────
+{
+  // `title` is not a label. It does not exist on touch — which is most of this
+  // app's users — it cannot be styled or enlarged, and several screen readers
+  // ignore it when anything else is available. An icon button whose only label
+  // is a title has no accessible name at all on a phone.
+  //
+  // The fix is `aria-label` alongside it (and src/components/ui/Tooltip.jsx
+  // where the text is an explanation rather than a name — that one is hoverable,
+  // dismissible and persistent per WCAG 1.4.13, which a native title is not).
+  //
+  // Only icon-only controls are checked. A control that already shows its label
+  // must NOT be given a conflicting aria-label: that replaces the accessible
+  // name with text the visible label may not contain, which breaks WCAG 2.5.3
+  // Label in Name and with it every voice-control user's ability to say the
+  // button's name.
+  const TITLE = /\stitle=(\{(?:[^{}]|\{[^{}]*\})*\}|"[^"]*")/g;
+  let unnamed = 0;
+  for (const [f, text] of sources) {
+    if (!f.endsWith('.jsx')) continue;
+    for (const m of text.matchAll(TITLE)) {
+      const start = text.lastIndexOf('<', m.index);
+      const nextTag = text.indexOf('<', m.index);
+      const el = text.slice(start, nextTag === -1 ? m.index + 600 : nextTag);
+      if (/aria-label=/.test(el)) continue;
+      const tagM = el.match(/^<(button|a|select|input|summary)[\s>]/);
+      if (!tagM && !/role="(button|tab|link)"/.test(el)) continue;
+      const tag = tagM ? tagM[1] : null;
+      if (tag && tag !== 'input' && tag !== 'select') {
+        const openEnd = text.indexOf('>', m.index + m[0].length);
+        if (openEnd === -1) continue;
+        if (text[openEnd - 1] !== '/') {
+          const closeIdx = text.indexOf(`</${tag}>`, openEnd);
+          if (closeIdx === -1) continue;
+          const kids = text.slice(openEnd + 1, closeIdx).replace(/<[^>]*>/g, '');
+          // Renders visible text (a literal word, or an expression that may be
+          // one) — correctly left alone.
+          if (/[A-Za-z]{2,}/.test(kids.replace(/\s+/g, ' ').trim()) || /\{/.test(kids)) continue;
+        }
+      }
+      unnamed += 1;
+      fail(`${rel(f)}:${lineAt(text, m.index)} is an icon-only control whose only label is a \`title\`. On a touch device that is no label at all. Add an aria-label.`);
+    }
+  }
+  if (!unnamed) notes.push('no icon-only control is labelled by `title` alone.');
+}
+
 // ── Report ───────────────────────────────────────────────────────────────────
 console.log('\nAccessibility audit\n');
 console.log(`  scanned     ${files.length} source files + index.css`);

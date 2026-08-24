@@ -180,7 +180,7 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
                   <Trash2 size={13} />Remove
                 </button>
               ) : Object.entries(COLORS).map(([key, c]) => (
-                <button key={key} onClick={() => chooseColor(key)} title={`Highlight ${key}`}
+                <button key={key} onClick={() => chooseColor(key)} aria-label={`Highlight ${key}`} title={`Highlight ${key}`}
                   style={{ width: 22, height: 22, borderRadius: '50%', border: `2px solid ${C.s0}`, background: c.dot, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }} />
               ))}
             </motion.div>

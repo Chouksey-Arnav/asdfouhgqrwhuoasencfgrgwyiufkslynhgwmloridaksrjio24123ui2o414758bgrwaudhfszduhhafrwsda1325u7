@@ -247,7 +247,7 @@ export default function SatMedabrain({
                     <div style={{ fontSize: 10.5, color: C.t3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{subtitle}</div>
                   </div>
                   {messages.length > 0 && (
-                    <button onClick={() => onMessagesChange([])} title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
+                    <button onClick={() => onMessagesChange([])} aria-label="New conversation" title="New conversation" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                       <RotateCcw size={15} />
                     </button>
                   )}

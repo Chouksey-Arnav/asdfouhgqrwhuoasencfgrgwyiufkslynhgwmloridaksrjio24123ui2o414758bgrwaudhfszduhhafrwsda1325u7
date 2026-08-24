@@ -698,7 +698,7 @@ export default function SatQuestionPlayer({
           )}
           <button
             onClick={toggleFlag}
-            title="Flag for review (F)"
+            aria-label="Flag for review (F)" title="Flag for review (F)"
             style={btnSm(flagged.has(q.id) ? tint(C.amber, 0.2) : 'rgba(255,255,255,0.05)', {
               border: `1px solid ${flagged.has(q.id) ? tint(C.amber, 0.4) : C.b1}`, padding: '4px 8px',
             })}

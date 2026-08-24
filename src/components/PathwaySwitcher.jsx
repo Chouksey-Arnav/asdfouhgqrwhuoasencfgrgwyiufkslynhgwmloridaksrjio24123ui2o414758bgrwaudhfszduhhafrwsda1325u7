@@ -126,7 +126,7 @@ export function PathwayRail({
             onClick={() => onFocus?.(row.key)}
             whileHover={reducedMotion ? undefined : { y: -1 }}
             whileTap={reducedMotion ? undefined : { scale: 0.985 }}
-            title={`${row.label} — ${row.done}/${row.total} lessons (${row.pct}%)`}
+            aria-label={`${row.label} — ${row.done}/${row.total} lessons (${row.pct}%)`} title={`${row.label} — ${row.done}/${row.total} lessons (${row.pct}%)`}
             style={{
               // On a phone the rail scrolls sideways, and the chip width is picked so the NEXT
               // chip always peeks in from the edge — a rail that looks like it ends at two
