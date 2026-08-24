@@ -48,7 +48,7 @@ const SPLIT_STIMULUS_CHARS = 240;
 // needing its own scroll, instead of one that reads cleanly.
 const SPLIT_MIN_WIDTH = 1080;
 
-/** Normalise a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
+/** Normalize a grid-in answer for comparison: "1/2", "0.5", ".5" all match. */
 function sprMatches(input, accept) {
   if (!input || !accept?.values?.length) return false;
   const raw = String(input).trim();
@@ -81,9 +81,9 @@ function sprMatches(input, accept) {
 function FigureTable({ figure }) {
   if (!figure || figure.type !== 'table') return null;
   return (
-    <div style={{ ...glass2({ padding: 0, overflow: 'hidden' }), marginBottom: 14 }}>
+    <div style={{ ...glass2({ padding: 0, overflow: 'hidden' }), marginBottom: 12 }}>
       {figure.title && (
-        <div style={{ padding: '10px 14px', fontSize: 11.5, fontWeight: 700, color: C.t2, borderBottom: `1px solid ${C.b1}` }}>
+        <div style={{ padding: '8px 12px', fontSize: 11.5, fontWeight: 700, color: C.t2, borderBottom: `1px solid ${C.b1}` }}>
           {figure.title}
         </div>
       )}
@@ -92,7 +92,7 @@ function FigureTable({ figure }) {
           <thead>
             <tr>
               {figure.columns.map((c, i) => (
-                <th key={i} style={{ textAlign: i === 0 ? 'left' : 'right', padding: '8px 14px', color: C.t3, fontWeight: 700, fontSize: 11, borderBottom: `1px solid ${C.b1}`, whiteSpace: 'nowrap' }}>{c}</th>
+                <th key={i} style={{ textAlign: i === 0 ? 'left' : 'right', padding: '8px 12px', color: C.t3, fontWeight: 700, fontSize: 11, borderBottom: `1px solid ${C.b1}`, whiteSpace: 'nowrap' }}>{c}</th>
               ))}
             </tr>
           </thead>
@@ -100,7 +100,7 @@ function FigureTable({ figure }) {
             {figure.rows.map((row, ri) => (
               <tr key={ri}>
                 {row.map((cell, ci) => (
-                  <td key={ci} style={{ textAlign: ci === 0 ? 'left' : 'right', padding: '8px 14px', color: ci === 0 ? C.t2 : C.t1, fontFamily: ci === 0 ? C.FB : C.FM, borderBottom: ri < figure.rows.length - 1 ? `1px solid ${C.b0}` : 'none' }}>{cell}</td>
+                  <td key={ci} style={{ textAlign: ci === 0 ? 'left' : 'right', padding: '8px 12px', color: ci === 0 ? C.t2 : C.t1, fontFamily: ci === 0 ? C.FB : C.FM, borderBottom: ri < figure.rows.length - 1 ? `1px solid ${C.b0}` : 'none' }}>{cell}</td>
                 ))}
               </tr>
             ))}
@@ -119,7 +119,7 @@ function ToolButton({ icon: Icon, label, onClick, color = C.t2, active = false, 
       style={btnSm(active ? tint(color, 0.2) : 'rgba(255,255,255,0.035)', {
         border: `1px solid ${active ? tint(color, 0.42) : C.b1}`,
         color: disabled ? C.t4 : active ? onTint(color) : C.t2,
-        fontSize: 11.5, padding: '6px 11px', gap: 5,
+        fontSize: 11.5, padding: '4px 12px', gap: 4,
         cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.55 : 1,
       })}
     >
@@ -366,16 +366,16 @@ export default function SatQuestionPlayer({
     const unanswered = deck.filter(d => !answeredIds.has(d.id));
     const flaggedList = deck.filter(d => flagged.has(d.id));
     return (
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <div style={glass({ padding: isMobile ? 18 : 24 })}>
-          <h3 style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: 0 }}>Check your work</h3>
-          <div style={{ fontSize: 12.5, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>
+          <h3 style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: 0 }}>Check your work</h3>
+          <div style={{ fontSize: 12.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>
             {answeredCount} of {deck.length} answered
             {flaggedList.length > 0 && ` · ${flaggedList.length} flagged`}
             {unanswered.length > 0 && ` · ${unanswered.length} left blank`}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 44 : 44}px,1fr))`, gap: 8, marginTop: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill,minmax(${isMobile ? 44 : 44}px,1fr))`, gap: 8, marginTop: 16 }}>
             {deck.map((d, i) => {
               const isAnswered = answeredIds.has(d.id);
               const isFlagged = flagged.has(d.id);
@@ -386,7 +386,7 @@ export default function SatQuestionPlayer({
                   className="sat-tap"
                   aria-label={`Question ${i + 1}${isAnswered ? ', answered' : ', not answered'}${isFlagged ? ', flagged' : ''}`}
                   style={{
-                    position: 'relative', height: isMobile ? 44 : 40, borderRadius: 9, cursor: 'pointer',
+                    position: 'relative', height: isMobile ? 44 : 40, borderRadius: 8, cursor: 'pointer',
                     border: `1px solid ${isFlagged ? C.amber : isAnswered ? tint(accent, 0.4) : C.b2}`,
                     background: isAnswered ? tint(accent, 0.16) : 'rgba(255,255,255,0.02)',
                     color: isAnswered ? C.t1 : C.t3, fontWeight: 700, fontSize: 12.5, fontFamily: C.FM,
@@ -399,7 +399,7 @@ export default function SatQuestionPlayer({
             })}
           </div>
 
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 20 }}>
             <button onClick={() => finish(responses)} style={satBtn(accent)}>
               Submit {isExam ? 'module' : 'set'} <ArrowRight size={14} />
             </button>
@@ -444,17 +444,17 @@ export default function SatQuestionPlayer({
     <>
       {q.figure && <FigureTable figure={q.figure} />}
       {q.notes && (
-        <div style={{ ...glass2({ padding: 16 }), marginBottom: 14 }}>
-          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 8 }}>
+        <div style={{ ...glass2({ padding: 16 }), marginBottom: 12 }}>
+          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
             Student notes
           </div>
-          <ul style={{ margin: 0, paddingLeft: 18, color: C.t2, fontSize: 13, lineHeight: 1.75 }}>
+          <ul style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 13, lineHeight: 1.55 }}>
             {q.notes.map((n, i) => <li key={i}>{n}</li>)}
           </ul>
         </div>
       )}
       {q.stimulus && (
-        <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.8, marginBottom: splitLayout ? 0 : 18, whiteSpace: 'pre-wrap' }}>
+        <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.55, marginBottom: splitLayout ? 0 : 18, whiteSpace: 'pre-wrap' }}>
           {hasMathMarkup(q.stimulus) ? (
             // Maths stimuli go through MathText and lose highlighting: KaTeX
             // inserts nodes with no character correspondence, so any offset
@@ -474,7 +474,7 @@ export default function SatQuestionPlayer({
 
   const answerBlock = (
     <>
-      <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.7, fontWeight: 600, marginBottom: 18 }}>
+      <div style={{ fontSize: isMobile ? 13.5 : 14.5, color: C.t1, lineHeight: 1.55, fontWeight: 600, marginBottom: 16 }}>
         <MathText text={q.q} />
       </div>
 
@@ -490,11 +490,11 @@ export default function SatQuestionPlayer({
             onKeyDown={e => { if (e.key === 'Enter' && canSubmit && !revealed) submitAnswer(); }}
             placeholder="Your answer"
             disabled={revealed}
-            style={inp({ maxWidth: 220, fontFamily: C.FM, fontSize: 16, textAlign: 'center' })}
+            style={inp({ maxWidth: 220, fontFamily: C.FM, fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', textAlign: 'center' })}
           />
         </div>
       ) : (
-        <div style={CC({ gap: 9 })}>
+        <div style={CC({ gap: 8 })}>
           {q.ch.map((choice, i) => {
             const isSel = selected === i;
             const isCorrect = revealed && i === q.ans;
@@ -512,7 +512,7 @@ export default function SatQuestionPlayer({
                   disabled={revealed || isElim}
                   style={{
                     flex: 1, display: 'flex', alignItems: 'flex-start', gap: 12, textAlign: 'left',
-                    padding: isMobile ? '14px 15px' : '13px 16px', borderRadius: 11,
+                    padding: isMobile ? '14px 15px' : '13px 16px', borderRadius: 12,
                     border: `1px solid ${borderColor}`,
                     background: bg, cursor: revealed || isElim ? 'default' : 'pointer',
                     opacity: isElim ? 0.35 : 1, textDecoration: isElim ? 'line-through' : 'none',
@@ -520,13 +520,13 @@ export default function SatQuestionPlayer({
                   }}
                 >
                   <span style={{
-                    flexShrink: 0, width: 24, height: 24, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, width: 24, height: 24, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: `1px solid ${borderColor}`, background: isSel || isCorrect ? accentFill(borderColor) : 'transparent',
                     color: isSel || isCorrect ? C.onAccent : C.t3, fontSize: 11.5, fontWeight: 700, fontFamily: C.FM,
                   }}>
                     {isCorrect ? <Check size={13} /> : isWrongPick ? <X size={13} /> : LETTERS[i]}
                   </span>
-                  <span style={{ fontSize: isMobile ? 13 : 13.5, color: C.t1, lineHeight: 1.65 }}>
+                  <span style={{ fontSize: isMobile ? 13 : 13.5, color: C.t1, lineHeight: 1.55 }}>
                     <MathText text={choice} />
                   </span>
                 </button>
@@ -538,7 +538,7 @@ export default function SatQuestionPlayer({
                     aria-label={`Cross out choice ${LETTERS[i]}`}
                     aria-pressed={isElim}
                     style={{
-                      flexShrink: 0, width: isMobile ? 44 : 34, borderRadius: 9, cursor: 'pointer',
+                      flexShrink: 0, width: isMobile ? 44 : 34, borderRadius: 8, cursor: 'pointer',
                       border: `1px solid ${isElim ? tint(C.rose, 0.35) : C.b1}`,
                       background: isElim ? tint(C.rose, 0.12) : 'rgba(255,255,255,0.02)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -557,12 +557,12 @@ export default function SatQuestionPlayer({
       <AnimatePresence>
         {hint?.text && !revealed && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.amber, 0.24), background: satWash(C.amber, 0.06) }}>
-              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+            <div style={{ ...glass2({ padding: 12 }), marginTop: 16, borderColor: tint(C.amber, 0.24), background: satWash(C.amber, 0.06) }}>
+              <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                 <Lightbulb size={12} color={C.amberL} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: C.amberL, textTransform: 'uppercase', letterSpacing: '.08em' }}>Hint — not the answer</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.amberL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Hint — not the answer</span>
               </div>
-              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.7 }}>{hint.text}</div>
+              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.55 }}>{hint.text}</div>
             </div>
           </motion.div>
         )}
@@ -572,15 +572,15 @@ export default function SatQuestionPlayer({
       <AnimatePresence>
         {showStrategy && strategy && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ ...glass2({ padding: 14 }), marginTop: 14, borderColor: tint(C.violet, 0.25) }}>
-              <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+            <div style={{ ...glass2({ padding: 12 }), marginTop: 12, borderColor: tint(C.violet, 0.25) }}>
+              <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                 <Sparkles size={12} color={C.violetL} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                   How to attack {meta.label}
                 </span>
               </div>
-              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.7, fontWeight: 600 }}>{strategy.approach}</div>
-              <ol style={{ margin: '9px 0 0', paddingLeft: 17, color: C.t2, fontSize: 12, lineHeight: 1.8 }}>
+              <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.55, fontWeight: 600 }}>{strategy.approach}</div>
+              <ol style={{ margin: '8px 0px 0px', paddingLeft: 16, color: C.t2, fontSize: 12, lineHeight: 1.55 }}>
                 {strategy.steps.map((s, i) => <li key={i}>{s}</li>)}
               </ol>
             </div>
@@ -595,27 +595,27 @@ export default function SatQuestionPlayer({
             initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ ...glass2({ padding: 16 }), marginTop: 18, borderColor: tint(accent, 0.25) }}>
-              <div style={{ ...R({ gap: 6 }), marginBottom: 8 }}>
+            <div style={{ ...glass2({ padding: 16 }), marginTop: 16, borderColor: tint(accent, 0.25) }}>
+              <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                 <Sparkles size={13} color={accent} />
-                <span style={{ fontSize: 11, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                   Why
                 </span>
               </div>
-              <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.75 }}><MathText text={q.exp} /></div>
+              <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.55 }}><MathText text={q.exp} /></div>
 
               {/* The rationale for the choice they actually picked — the single
                   most useful thing to show after a miss. */}
               {q.format === 'mcq' && selected != null && selected !== q.ans && q.distractorExp?.[selected] && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
-                  <div style={{ fontSize: 10.5, fontWeight: 700, color: C.roseL, textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: 6 }}>
+                  <div style={{ fontSize: 10.5, fontWeight: 700, color: C.roseL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
                     You chose {LETTERS[selected]}
                   </div>
-                  <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}><MathText text={q.distractorExp[selected]} /></div>
+                  <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}><MathText text={q.distractorExp[selected]} /></div>
                 </div>
               )}
               {q.format === 'spr' && q.hint && (
-                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
                   {q.hint}
                 </div>
               )}
@@ -627,7 +627,7 @@ export default function SatQuestionPlayer({
                 </div>
               )}
               {onAskMedabrain && (
-                <button onClick={askMedabrain} style={{ ...btnG({ padding: '7px 13px', fontSize: 11.5 }), marginTop: 14 }}>
+                <button onClick={askMedabrain} style={{ ...btnG({ padding: '8px 12px', fontSize: 11.5 }), marginTop: 12 }}>
                   <Brain size={12} /> Ask Medabrain about this one
                 </button>
               )}
@@ -639,13 +639,13 @@ export default function SatQuestionPlayer({
   );
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       {/* Header: progress, timer, flag.
           Sticky so the countdown stays on screen through a long passage — on a
           timed module that is the difference between pacing yourself and
           discovering the clock ran out. */}
       <div className="sat-question-header" style={{ ...R({ gap: 12, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
-        <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FM }}>
             {idx + 1} <span style={{ color: C.t3, fontWeight: 500 }}>/ {deck.length}</span>
           </span>
@@ -685,7 +685,7 @@ export default function SatQuestionPlayer({
               style={{
                 ...pill(lowTime && !timerHidden ? tint(C.rose, 0.16) : 'rgba(255,255,255,0.05)',
                   lowTime && !timerHidden ? C.roseL : C.t2,
-                  { fontSize: 12, fontFamily: C.FM, fontWeight: 700, gap: 5, padding: '5px 12px' }),
+                  { fontSize: 12, fontFamily: C.FM, fontWeight: 700, gap: 4, padding: '4px 12px' }),
                 border: `1px solid ${lowTime && !timerHidden ? tint(C.rose, 0.3) : C.b1}`,
                 cursor: 'pointer',
               }}
@@ -700,7 +700,7 @@ export default function SatQuestionPlayer({
             onClick={toggleFlag}
             title="Flag for review (F)"
             style={btnSm(flagged.has(q.id) ? tint(C.amber, 0.2) : 'rgba(255,255,255,0.05)', {
-              border: `1px solid ${flagged.has(q.id) ? tint(C.amber, 0.4) : C.b1}`, padding: '6px 10px',
+              border: `1px solid ${flagged.has(q.id) ? tint(C.amber, 0.4) : C.b1}`, padding: '4px 8px',
             })}
           >
             <Flag size={12} color={flagged.has(q.id) ? C.amberL : C.t3} />
@@ -709,18 +709,18 @@ export default function SatQuestionPlayer({
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${((idx + 1) / deck.length) * 100}%`, background: accent, transition: 'width .3s' }} />
+      <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '100%', transform: `scaleX(${(((idx + 1) / deck.length) * 100) / 100})`, transformOrigin: 'left', background: accent, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
 
       {/* ── Test-day tool strip ── */}
-      <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         {tools.available && (
           <>
             <ToolButton
               icon={Calculator} label="Calculator" color={C.teal}
               active={tools.calculatorOpen} onClick={tools.toggleCalculator}
-              title="Desmos — Alt+C"
+              title="Desmos — alt+C"
             />
             <ToolButton
               icon={BookOpen} label="Formulas" color={C.emerald}
@@ -757,7 +757,7 @@ export default function SatQuestionPlayer({
           <ToolButton icon={Brain} label="Ask Medabrain" color={C.sky} onClick={askMedabrain} />
         )}
         {!isMobile && (
-          <span style={{ ...R({ gap: 5 }), marginLeft: 'auto', fontSize: 10, color: C.t4 }}>
+          <span style={{ ...R({ gap: 4 }), marginLeft: 'auto', fontSize: 10, color: C.t4 }}>
             <Keyboard size={11} />
             {q.format === 'mcq' ? 'A–D select · ' : ''}Enter {revealed ? 'next' : 'submit'} · F flag
           </span>
@@ -766,11 +766,11 @@ export default function SatQuestionPlayer({
 
       {/* Stimulus + question */}
       {splitLayout ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
-          <div style={{ ...glass({ padding: 22 }), position: 'sticky', top: 12, maxHeight: 'calc(var(--msp-vh) - 180px)', overflowY: 'auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'start' }}>
+          <div style={{ ...glass({ padding: 20 }), position: 'sticky', top: 12, maxHeight: 'calc(var(--msp-vh) - 180px)', overflowY: 'auto' }}>
             {stimulusBlock}
           </div>
-          <div style={glass({ padding: 22 })}>
+          <div style={glass({ padding: 20 })}>
             {answerBlock}
           </div>
         </div>
@@ -788,26 +788,26 @@ export default function SatQuestionPlayer({
           stays in flow — there is no scrolling to save. */}
       <div
         className={isMobile ? 'sat-action-bar' : undefined}
-        style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}
+        style={{ ...R({ gap: 8, flexWrap: 'wrap' }), justifyContent: 'space-between' }}
       >
         <div style={R({ gap: 8 })}>
           {!isExam && idx > 0 && (
-            <button onClick={() => setIdx(idx - 1)} className="sat-tap" style={btnG({ padding: '9px 14px' })}>
+            <button onClick={() => setIdx(idx - 1)} className="sat-tap" style={btnG({ padding: '8px 12px' })}>
               <ChevronLeft size={14} /> Back
             </button>
           )}
-          {onExit && <button onClick={onExit} className="sat-tap" style={btnG({ padding: '9px 14px' })}>Leave</button>}
+          {onExit && <button onClick={onExit} className="sat-tap" style={btnG({ padding: '8px 12px' })}>Leave</button>}
         </div>
         <div style={{ ...R({ gap: 8 }), flex: isMobile ? '1 1 100%' : '0 0 auto', justifyContent: 'flex-end' }}>
           {!isTutor && (
-            <button onClick={goNext} className="sat-tap" style={btnG({ padding: '9px 16px' })}>
+            <button onClick={goNext} className="sat-tap" style={btnG({ padding: '8px 16px' })}>
               Skip <ChevronRight size={14} />
             </button>
           )}
           {revealed ? (
             <button
               onClick={goNext} className="sat-tap"
-              style={satBtn(accent, isMobile ? { flex: 1, padding: '13px 20px' } : {})}
+              style={satBtn(accent, isMobile ? { flex: 1, padding: '12px 20px' } : {})}
             >
               {idx < deck.length - 1 ? 'Next question' : 'See results'} <ChevronRight size={14} />
             </button>
@@ -816,7 +816,7 @@ export default function SatQuestionPlayer({
               onClick={submitAnswer} disabled={!canSubmit} className="sat-tap"
               style={satBtn(accent, {
                 opacity: canSubmit ? 1 : 0.4, cursor: canSubmit ? 'pointer' : 'not-allowed',
-                ...(isMobile ? { flex: 1, padding: '13px 20px' } : {}),
+                ...(isMobile ? { flex: 1, padding: '12px 20px' } : {}),
               })}
             >
               {isTutor ? 'Check answer' : idx < deck.length - 1 ? 'Save & next' : 'Save & review'}

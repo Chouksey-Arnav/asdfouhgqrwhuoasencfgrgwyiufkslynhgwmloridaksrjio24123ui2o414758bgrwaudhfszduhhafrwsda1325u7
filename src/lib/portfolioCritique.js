@@ -86,7 +86,7 @@ export function buildSlatePrompt({ user = null, gradeLabel = null, activities = 
     ? A.gaps.map(g => `${g.label} (${g.why})`).join('; ')
     : 'none — all six pillars have something in them';
 
-  // What the rest of the Activities & Résumé tab holds. Clinical hours, research projects and
+  // What the rest of the Activities & résumé tab holds. Clinical hours, research projects and
   // certifications are tracked in their own sections of the same tab rather than as rows in the
   // activities list, so without this block a read of the list would tell a student with 140
   // logged shadowing hours to go get clinical exposure.
@@ -227,7 +227,7 @@ ${profile.label}. For this path specifically: ${profile.note}.
 ══ THEIR COLLEGE LIST RIGHT NOW ══
 ${colleges.length ? colleges.map(c => `- ${c.name} (${c.category || 'uncategorized'}, ${c.status || 'researching'})`).join('\n') : 'Empty — no schools added yet.'}
 
-══ SCHOOLS MEDSCHOOLPREP MATCHED TO THIS EXACT ACADEMIC PROFILE ══
+══ SCHOOLS MedSchoolPrep MATCHED TO THIS EXACT ACADEMIC PROFILE ══
 These come from the app's U.S. school database, categorized against BOTH their GPA and their score, and weighted toward the career above. You may discuss ANY of these by name and add real, specific knowledge about them. Do not invent a school that is not on this list when recommending — if you want to name one that isn't here, say plainly that it is your own suggestion rather than a matched result.
 ${pickLines}
 

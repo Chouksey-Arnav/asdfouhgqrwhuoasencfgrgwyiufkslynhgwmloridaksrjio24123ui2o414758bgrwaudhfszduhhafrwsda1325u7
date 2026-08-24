@@ -156,26 +156,26 @@ const WhyPathwayDoc = forwardRef(function WhyPathwayDoc({
   const wc = countWords(draft);
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       <div style={{
         ...glass({ padding: isMobile ? 15 : 19 }),
         background: `linear-gradient(120deg,${tint(accent, 0.08)},rgba(255,255,255,0.02) 58%)`,
         border: `1px solid ${tint(accent, 0.26)}`,
       }}>
-        <div style={R({ gap: 9, flexWrap: 'wrap', marginBottom: 8 })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 })}>
           <SectionTitle icon={Compass} color={accent} extra={{ marginBottom: 0 }}>{WHY_PATHWAY.title}</SectionTitle>
           <span style={pill(C.s3, C.t3, { fontSize: 9 })}>not an essay</span>
           <span style={{ flex: 1 }} />
           {wc > 0 && <span style={{ fontSize: 11, color: C.t3, fontFamily: C.FM }}>{wc.toLocaleString()} words</span>}
         </div>
-        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>{WHY_PATHWAY.blurb}</div>
+        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{WHY_PATHWAY.blurb}</div>
 
         {/* Said once, above an empty document, and never again — the hardest part
             of this document is the first paragraph, and the standard advice
             ("just start writing") is exactly what does not work here. */}
         {!loading && !wc && (
-          <div style={{ ...glass2({ padding: 13 }), marginTop: 12, borderLeft: `3px solid ${tint(accent, 0.5)}` }}>
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>{WHY_PATHWAY.opener}</div>
+          <div style={{ ...glass2({ padding: 12 }), marginTop: 12, borderLeft: `3px solid ${tint(accent, 0.5)}` }}>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{WHY_PATHWAY.opener}</div>
           </div>
         )}
 
@@ -183,9 +183,9 @@ const WhyPathwayDoc = forwardRef(function WhyPathwayDoc({
             cannot be late, and saying it is would turn the one pressure-free
             surface in the Portfolio into another red number. */}
         {status.state === 'stale' && (
-          <div style={{ ...glass2({ padding: '11px 13px' }), marginTop: 12, display: 'flex', gap: 9, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.24)}` }}>
-            <Clock size={13} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
-            <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+          <div style={{ ...glass2({ padding: '12px 12px' }), marginTop: 12, display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.24)}` }}>
+            <Clock size={13} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
+            <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
               You have not opened this in {status.days} days. Nothing is wrong — but a term has passed since you last wrote,
               and the things that happened in it are the ones that fade. Read what is here and add whatever is now missing.
             </div>
@@ -193,13 +193,13 @@ const WhyPathwayDoc = forwardRef(function WhyPathwayDoc({
         )}
 
         <textarea
-          style={{ ...inp(), minHeight: 300, resize: 'vertical', lineHeight: 1.7, marginTop: 13 }}
+          style={{ ...inp(), minHeight: 300, resize: 'vertical', lineHeight: 1.55, marginTop: 12 }}
           value={draft} onChange={e => setDraft(e.target.value)}
           placeholder={loading ? 'Loading…' : 'Write here. There is no length this is supposed to be.'} />
 
         <VersionLabelFields label={label} note={note} onLabel={setLabel} onNote={setNote} />
 
-        <div style={R({ gap: 10, marginTop: 11, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
           <button style={btn(accent, { opacity: savingVersion || !draft.trim() ? 0.55 : 1 })}
             disabled={savingVersion || !draft.trim()} onClick={saveVersion}>
             {savingVersion ? <Loader2 size={14} className="spin" /> : <Save size={14} />}Keep a copy of today's version
@@ -212,7 +212,7 @@ const WhyPathwayDoc = forwardRef(function WhyPathwayDoc({
           )}
         </div>
 
-        <div style={{ marginTop: 10 }}>
+        <div style={{ marginTop: 8 }}>
           <HelpNote>
             This saves itself as you type. “Keep a copy” freezes today's version so that in two years you can see what you
             used to think — which is usually the most useful thing in here. Nothing about this document is ever due.

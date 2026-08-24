@@ -34,7 +34,7 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-cid-0102', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'half_right', targetSeconds: 70,
-    stimulus: 'The Dutch "woonerf" was not designed to slow traffic with signs or humps. It removed the kerb, mixed the parking with the planting, and left drivers without a clear edge to the road. Speeds fell — not because drivers were instructed to slow down, but because a street with no obvious right of way is one no one is confident enough to drive quickly along.',
+    stimulus: 'The Dutch "woonerf" was not designed to slow traffic with signs or humps. It removed the curb, mixed the parking with the planting, and left drivers without a clear edge to the road. Speeds fell — not because drivers were instructed to slow down, but because a street with no obvious right of way is one no one is confident enough to drive quickly along.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Dutch traffic engineers found signs and speed humps ineffective at reducing speeds.',
@@ -54,13 +54,13 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-cid-0103', section: 'rw', domain: 'info_ideas', skill: 'central_ideas',
     difficulty: 'M', format: 'mcq', trap: 'too_extreme', targetSeconds: 70,
-    stimulus: 'Standardised shipping containers are usually credited with cutting the cost of moving goods. The cost fell, but the deeper change was to what could be moved at all. When loading a ship took a week and hand labor, only high-value cargo justified the trip. When it took hours, the calculation opened to goods that had never been worth shipping — and to supply chains that assumed they always would be.',
+    stimulus: 'Standardized shipping containers are usually credited with cutting the cost of moving goods. The cost fell, but the deeper change was to what could be moved at all. When loading a ship took a week and hand labor, only high-value cargo justified the trip. When it took hours, the calculation opened to goods that had never been worth shipping — and to supply chains that assumed they always would be.',
     q: 'Which choice best states the main idea of the text?',
     ch: [
       'Shipping containers reduced loading times from roughly a week to a few hours.',
       'Containerisation mattered less for lowering costs than for widening what was worth shipping.',
       'High-value cargo was the only kind of freight moved by ship before containerisation.',
-      'Modern supply chains would collapse without standardised shipping containers.',
+      'Modern supply chains would collapse without standardized shipping containers.',
     ],
     ans: 1,
     exp: '"The cost fell, but the deeper change was to what could be moved at all" states the thesis directly; the rest illustrates it.',
@@ -564,7 +564,7 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-inf-0102', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 80,
-    stimulus: 'In a trial of a new tutoring program, students assigned to it improved substantially more than students on the waiting list. Enrolment, however, required a parent to complete a written application and attend an evening meeting. The researchers acknowledge that this makes the comparison difficult to interpret, because the families who cleared those hurdles may well have ______',
+    stimulus: 'In a trial of a new tutoring program, students assigned to it improved substantially more than students on the waiting list. Enrollment, however, required a parent to complete a written application and attend an evening meeting. The researchers acknowledge that this makes the comparison difficult to interpret, because the families who cleared those hurdles may well have ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'been less able to help their children with schoolwork at home than others.',
@@ -624,7 +624,7 @@ export const RW_INFO_IDEAS_B = [
   {
     id: 'sat-rw-inf-0105', section: 'rw', domain: 'info_ideas', skill: 'inferences',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 80,
-    stimulus: 'A common test of animal self-recognition marks an animal and observes whether it investigates the mark on seeing its reflection. Dogs consistently fail. But dogs orient to the world by scent, and in a version of the test using scent rather than sight — presenting a dog with its own odour, altered — dogs investigate the alteration reliably. The mirror result may therefore say less about self-recognition than about ______',
+    stimulus: 'A common test of animal self-recognition marks an animal and observes whether it investigates the mark on seeing its reflection. Dogs consistently fail. But dogs orient to the world by scent, and in a version of the test using scent rather than sight — presenting a dog with its own odor, altered — dogs investigate the alteration reliably. The mirror result may therefore say less about self-recognition than about ______',
     q: 'Which choice most logically completes the text?',
     ch: [
       'whether the test uses the sensory channel the animal relies on.',
@@ -637,7 +637,7 @@ export const RW_INFO_IDEAS_B = [
     distractorExp: [
       'Correct. The visual test failed because vision is not how dogs orient.',
       'Training is never mentioned in the passage.',
-      'Odour strength is not what distinguishes the two tests here.',
+      'Odor strength is not what distinguishes the two tests here.',
       'Other species are outside what this comparison can speak to.',
     ],
   },

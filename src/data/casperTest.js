@@ -13,7 +13,7 @@
 //
 // So this mirrors: scenario first, questions revealed with the clock already
 // running, five minutes for the whole section, no going back, and a section
-// count that makes it a test rather than an exercise. Practising the questions
+// count that makes it a test rather than an exercise. Practicing the questions
 // without the clock teaches the wrong skill, because the skill CASPer actually
 // measures under time pressure is triage — deciding, in the first fifteen
 // seconds, which question you are going to answer properly and which one you
@@ -40,7 +40,7 @@ const section = (s) => ({
   level: 'hs-bsmd',
   // 'word' sections present the scenario as text. 'video' sections in the real test present it as
   // a short acted clip; we present the same scenario as a described scene, and label it, because
-  // pretending we are showing video would be a lie about what the student just practised.
+  // pretending we are showing video would be a lie about what the student just practiced.
   kind: s.kind || 'word',
   ...s,
 });
@@ -77,7 +77,7 @@ export const CASPER_SECTIONS = [
     kind: 'word',
     stationType: 'teamwork',
     title: 'The approach that will not work',
-    scenario: 'Halfway through a team project you realise the approach everyone agreed on is not going to work. Changing course now means redoing about two weeks of finished work, and the person whose idea it was has put the most hours into it.',
+    scenario: 'Halfway through a team project you realize the approach everyone agreed on is not going to work. Changing course now means redoing about two weeks of finished work, and the person whose idea it was has put the most hours into it.',
     probes: [
       'What do you do?',
       'How do you raise it with the team, and specifically with the person whose idea it was?',
@@ -258,7 +258,7 @@ export const CASPER_SECTIONS = [
 
 /**
  * A test, not a question list. Two lengths, both honest about what they are: the long one is
- * roughly the shape of the real thing, the short one is a warm-up and is labelled as one.
+ * roughly the shape of the real thing, the short one is a warm-up and is labeled as one.
  */
 export const CASPER_TEST_LENGTHS = [
   {

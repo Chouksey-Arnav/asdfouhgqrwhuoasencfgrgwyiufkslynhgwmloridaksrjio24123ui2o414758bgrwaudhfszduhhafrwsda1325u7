@@ -70,8 +70,8 @@ export function DeadlineChip({ dl }) {
 function Fact({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
-    <div style={R({ gap: 6, alignItems: 'flex-start' })}>
-      <Icon size={11} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
+    <div style={R({ gap: 4, alignItems: 'flex-start' })}>
+      <Icon size={11} color={C.t4} style={{ marginTop: 4, flexShrink: 0 }} />
       <span style={{ fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
         <b style={{ color: C.t2, fontWeight: 700 }}>{label}:</b> {value}
       </span>
@@ -93,11 +93,11 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
       background: `linear-gradient(150deg,${tint(col, 0.05)},rgba(255,255,255,0.02) 55%)`,
     }}>
       <div style={{ height: 2, background: `linear-gradient(90deg,${col},${tint(col, 0)})` }} />
-      <div style={{ padding: isMobile ? 14 : 16, ...CC({ gap: 10 }) }}>
+      <div style={{ padding: isMobile ? 14 : 16, ...CC({ gap: 8 }) }}>
         {/* Eligibility rides ABOVE the name. It is the first thing read, which
             is the entire point — a student should never spend attention on a
             program they cannot enter. */}
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           <EligibilityBadge verdict={verdict} />
           <DeadlineChip dl={dl} />
           <span style={pill(free ? tint(C.green, 0.12) : C.surf2, free ? C.greenL : C.t3, { fontSize: 9.5, gap: 4 })}>
@@ -109,19 +109,19 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
 
         <div>
           <div style={{ fontSize: isMobile ? 13.5 : 14.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.35 }}>{program.name}</div>
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3 }}>{program.org}</div>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{program.org}</div>
         </div>
 
-        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>{program.why}</div>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{program.why}</div>
 
         {/* Blocked, and what to do instead. Never a dead end. */}
         {verdict.blockers.length > 0 && (
-          <div style={{ ...CC({ gap: 7, padding: '10px 12px' }), borderRadius: 10, background: tint(C.rose, 0.06), border: `1px solid ${tint(C.rose, 0.18)}` }}>
+          <div style={{ ...CC({ gap: 8, padding: '8px 12px' }), borderRadius: 8, background: tint(C.rose, 0.06), border: `1px solid ${tint(C.rose, 0.18)}` }}>
             <div style={{ fontSize: 11, color: C.roseL, fontWeight: 700 }}>{verdict.blockers.join(' ')}</div>
             {verdict.alternative && (
-              <div style={R({ gap: 7, alignItems: 'flex-start' })}>
-                <Lightbulb size={12} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
-                <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>{verdict.alternative}</span>
+              <div style={R({ gap: 8, alignItems: 'flex-start' })}>
+                <Lightbulb size={12} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
+                <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{verdict.alternative}</span>
               </div>
             )}
           </div>
@@ -130,7 +130,7 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
         {verdict.notes.length > 0 && (
           <div style={CC({ gap: 4 })}>
             {verdict.notes.map((n, i) => (
-              <div key={i} style={R({ gap: 6, alignItems: 'flex-start' })}>
+              <div key={i} style={R({ gap: 4, alignItems: 'flex-start' })}>
                 <Info size={10.5} color={C.t4} style={{ marginTop: 2.5, flexShrink: 0 }} />
                 <span style={{ fontSize: 10.5, color: C.t3, lineHeight: 1.5 }}>{n}</span>
               </div>
@@ -139,7 +139,7 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
         )}
 
         {open && (
-          <div style={{ ...CC({ gap: 6 }), paddingTop: 9, borderTop: `1px solid ${C.b1}` }}>
+          <div style={{ ...CC({ gap: 4 }), paddingTop: 8, borderTop: `1px solid ${C.b1}` }}>
             <Fact icon={Users} label="Who can apply" value={program.eligibility} />
             <Fact icon={CalendarClock} label="Deadline" value={dl?.note} />
             <Fact icon={CalendarClock} label="When it runs" value={program.starts?.note} />
@@ -148,7 +148,7 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
           </div>
         )}
 
-        <div style={R({ gap: 7, flexWrap: 'wrap', paddingTop: 2 })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap', paddingTop: 4 })}>
           {dl?.date && (
             <button type="button" disabled={saving || saved} onClick={() => onSaveDeadline(program, dl)}
               style={btnSm(saved ? tint(C.green, 0.14) : tint(C.violet, 0.16), {
@@ -156,16 +156,16 @@ export function ProgramCard({ program, facts, saved, saving, onSaveDeadline, isM
                 border: `1px solid ${tint(saved ? C.green : C.violet, 0.3)}`,
                 cursor: saved ? 'default' : 'pointer',
               })}>
-              {saving ? <Loader2 size={11} className="spin" style={{ marginRight: 5 }} />
-                : saved ? <Check size={11} style={{ marginRight: 5 }} />
-                : <BellRing size={11} style={{ marginRight: 5 }} />}
+              {saving ? <Loader2 size={11} className="spin" style={{ marginRight: 4 }} />
+                : saved ? <Check size={11} style={{ marginRight: 4 }} />
+                : <BellRing size={11} style={{ marginRight: 4 }} />}
               {saved ? 'In your Milestones' : 'Remind me — 60/30/7 days'}
             </button>
           )}
           {program.url && (
             <a href={program.url} target="_blank" rel="noreferrer"
               style={{ ...btnSm(C.surf2, { color: C.t2, fontSize: 11, textDecoration: 'none' }) }}>
-              <ExternalLink size={11} style={{ marginRight: 5 }} />Official page
+              <ExternalLink size={11} style={{ marginRight: 4 }} />Official page
             </a>
           )}
           <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open}
@@ -206,20 +206,20 @@ export function ProgramTiersSection({
                 padding: isMobile ? '13px 14px' : '15px 18px', border: 'none',
                 background: on ? `linear-gradient(135deg,${tint(col, 0.14)},${tint(col, 0.04)})` : 'transparent',
               }}>
-              <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' })}>
-                <span style={R({ gap: 9, minWidth: 0 })}>
+              <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+                <span style={R({ gap: 8, minWidth: 0 })}>
                   <Trophy size={14} color={col} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: isMobile ? 13 : 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{tier.label}</span>
                   <span style={pill(tint(col, 0.14), col, { fontSize: 9.5, fontFamily: C.FM })}>{list.length}</span>
                 </span>
                 <ChevronDown size={14} color={C.t3} style={{ transform: on ? 'rotate(180deg)' : 'none', transition: 'transform .18s' }} />
               </div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 5, lineHeight: 1.6, maxWidth: 720 }}>{tier.blurb}</div>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.55, maxWidth: 720 }}>{tier.blurb}</div>
             </button>
             {on && (
               <div style={{ padding: isMobile ? '0 12px 14px' : '0 16px 16px' }}>
                 {list.length === 0 ? (
-                  <div style={{ fontSize: 11.5, color: C.t3, padding: '10px 2px' }}>
+                  <div style={{ fontSize: 11.5, color: C.t3, padding: '8px 4px' }}>
                     Nothing in this tier is free or funded — which, for the tier that costs thousands of dollars, is the point.
                   </div>
                 ) : (
@@ -262,11 +262,11 @@ export function DeadlineBoard({ facts, onSaveDeadline, savedIds = new Set(), sav
       background: `linear-gradient(120deg,${tint(C.rose, 0.08)},rgba(255,255,255,0.02) 60%)`,
       border: `1px solid ${tint(C.rose, 0.22)}`,
     }}>
-      <div style={R({ gap: 9, marginBottom: 4, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, marginBottom: 4, flexWrap: 'wrap' })}>
         <CalendarClock size={14} color={C.roseL} />
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: C.roseL }}>Closing soonest</span>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.roseL }}>Closing soonest</span>
       </div>
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 12, maxWidth: 700 }}>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12, maxWidth: 700 }}>
         Summer programs close in the winter <em>before</em> that summer. Most students find them in April, a year late.
         Saving one puts it in your Milestones with reminders {ALERT_OFFSETS.join(', ')} days out.
       </div>
@@ -276,12 +276,12 @@ export function DeadlineBoard({ facts, onSaveDeadline, savedIds = new Set(), sav
           const saved = savedIds.has(p.id);
           return (
             <div key={p.id} style={{
-              ...R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', padding: '10px 12px' }),
-              borderRadius: 10, background: tint(col, 0.06), border: `1px solid ${tint(col, 0.18)}`,
+              ...R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', padding: '8px 12px' }),
+              borderRadius: 8, background: tint(col, 0.06), border: `1px solid ${tint(col, 0.18)}`,
             }}>
               <span style={{ minWidth: 0 }}>
                 <span style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>{p.name}</span>
-                <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2 }}>
+                <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>
                   {dl.label} · {dl.daysOut} days away{dl.passedThisCycle ? " · this year's has already passed, so this is next cycle" : ''}
                 </span>
               </span>
@@ -291,7 +291,7 @@ export function DeadlineBoard({ facts, onSaveDeadline, savedIds = new Set(), sav
                   border: `1px solid ${tint(saved ? C.green : col, 0.3)}`, cursor: saved ? 'default' : 'pointer',
                 })}>
                 {savingId === p.id ? <Loader2 size={10.5} className="spin" /> : saved ? <Check size={10.5} /> : <BellRing size={10.5} />}
-                <span style={{ marginLeft: 5 }}>{saved ? 'Saved' : 'Remind me'}</span>
+                <span style={{ marginLeft: 4 }}>{saved ? 'Saved' : 'Remind me'}</span>
               </button>
             </div>
           );
@@ -320,7 +320,7 @@ export function HosaTracker({ value = {}, onChange, isMobile = false }) {
 
   return (
     <div style={CC({ gap: 12 })}>
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65 }}>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
         HOSA's competitive events, grouped the way HOSA groups them. Mark the ones you are chasing and how far you have got —
         a regional or state placement is an <b style={{ color: C.t2 }}>honor</b>, so log it in Activities &amp; Honors too once you place.
         {' '}<a href={HOSA_GUIDELINES_URL} target="_blank" rel="noreferrer" style={{ color: C.tealL }}>HOSA's own Competitive Event Guidelines</a> are
@@ -328,7 +328,7 @@ export function HosaTracker({ value = {}, onChange, isMobile = false }) {
       </div>
 
       {tracked.length > 0 && (
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           {tracked.map(([id, lvl]) => {
             const ev = HOSA_EVENTS_BY_CAT.flatMap(c => c.events).find(e => e.id === id);
             const meta = HOSA_LEVELS.find(l => l.id === lvl);
@@ -350,7 +350,7 @@ export function HosaTracker({ value = {}, onChange, isMobile = false }) {
                 width: '100%', boxSizing: 'border-box', textAlign: 'left', font: 'inherit', cursor: 'pointer',
                 border: 'none', background: on ? tint(col, 0.09) : 'transparent', padding: isMobile ? '11px 13px' : '12px 15px',
               }}>
-              <div style={R({ gap: 9, justifyContent: 'space-between', flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' })}>
                 <span style={R({ gap: 8, minWidth: 0 })}>
                   <span style={{ fontSize: 12.5, fontWeight: 800, color: C.t1 }}>{cat.label}</span>
                   <span style={pill(tint(col, 0.13), col, { fontSize: 9, fontFamily: C.FM })}>{cat.events.length}</span>
@@ -358,14 +358,14 @@ export function HosaTracker({ value = {}, onChange, isMobile = false }) {
                 </span>
                 <ChevronDown size={13} color={C.t3} style={{ transform: on ? 'rotate(180deg)' : 'none', transition: 'transform .18s' }} />
               </div>
-              <div style={{ fontSize: 10.5, color: C.t4, marginTop: 3 }}>{cat.blurb}</div>
+              <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4 }}>{cat.blurb}</div>
             </button>
             {on && (
-              <div style={{ padding: isMobile ? '0 11px 12px' : '0 15px 14px', ...CC({ gap: 7 }) }}>
+              <div style={{ padding: isMobile ? '0 11px 12px' : '0 15px 14px', ...CC({ gap: 8 }) }}>
                 {cat.events.map(ev => {
                   const lvl = value[ev.id] || null;
                   return (
-                    <div key={ev.id} style={R({ gap: 9, justifyContent: 'space-between', flexWrap: 'wrap', paddingTop: 7, borderTop: `1px solid ${C.b1}` })}>
+                    <div key={ev.id} style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', paddingTop: 8, borderTop: `1px solid ${C.b1}` })}>
                       <span style={{ fontSize: 11.5, color: lvl ? C.t1 : C.t2, fontWeight: lvl ? 700 : 500, minWidth: 0 }}>
                         {ev.name}{ev.team ? <span style={{ color: C.t4, fontWeight: 500 }}> · team</span> : null}
                       </span>
@@ -376,7 +376,7 @@ export function HosaTracker({ value = {}, onChange, isMobile = false }) {
                           return (
                             <button key={l.id} type="button" onClick={() => setLevel(ev.id, l.id)} aria-pressed={active}
                               style={{
-                                font: 'inherit', cursor: 'pointer', fontSize: 9.5, padding: '3px 8px', borderRadius: 999,
+                                font: 'inherit', cursor: 'pointer', fontSize: 9.5, padding: '4px 8px', borderRadius: 999,
                                 background: active ? tint(lc, 0.2) : 'transparent',
                                 border: `1px solid ${active ? tint(lc, 0.42) : C.b1}`,
                                 color: active ? onTint(lc) : C.t4, fontWeight: active ? 800 : 500,

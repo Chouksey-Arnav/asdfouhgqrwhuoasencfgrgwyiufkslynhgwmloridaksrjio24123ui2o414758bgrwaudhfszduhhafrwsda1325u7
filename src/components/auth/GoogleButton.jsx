@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { C } from '../../lib/theme';
+import { C, CONTROL_TRANSITION } from '../../lib/theme';
 import { signInWithGoogle, GOOGLE_OAUTH_CONFIGURED } from '../../lib/supabaseClient';
 import { stashPendingRole } from '../../lib/authApi';
 import { FieldError } from './ui';
@@ -48,10 +48,10 @@ export default function GoogleButton({ label = 'Continue with Google', role = nu
         disabled={busy}
         className="msp-google-btn"
         style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-          width: '100%', padding: '10px 18px', borderRadius: 9, border: `1px solid ${C.b2}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          width: '100%', padding: '8px 16px', borderRadius: 8, border: `1px solid ${C.b2}`,
           background: C.surf2, color: C.t1, fontWeight: 600, fontSize: 13, fontFamily: C.FB,
-          cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1, transition: 'all .15s',
+          cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1, transition: CONTROL_TRANSITION,
         }}
       >
         <GoogleG />

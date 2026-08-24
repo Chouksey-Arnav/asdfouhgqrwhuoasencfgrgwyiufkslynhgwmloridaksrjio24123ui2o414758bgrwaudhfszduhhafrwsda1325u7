@@ -13,7 +13,7 @@
  * How it works:
  *   1. logo.png is glow art rendered over a near-black backdrop, so a pixel's
  *      max channel is its coverage. Un-premultiplying by that gives straight
- *      alpha and the true colour, which is what puts the mark on the app's own
+ *      alpha and the true color, which is what puts the mark on the app's own
  *      background instead of a black tile.
  *   2. Bright cores are labelled with a connected-component pass and named by
  *      size + centroid (see CLASSIFY).
@@ -73,7 +73,7 @@ function decodePng(buf) {
       width = data.readUInt32BE(0); height = data.readUInt32BE(4);
       depth = data[8]; colorType = data[9];
       if (depth !== 8 || (colorType !== 2 && colorType !== 6)) {
-        throw new Error(`unsupported PNG: depth ${depth}, colour type ${colorType}`);
+        throw new Error(`unsupported PNG: depth ${depth}, color type ${colorType}`);
       }
     } else if (type === 'IDAT') idat.push(data);
     else if (type === 'IEND') break;
@@ -138,7 +138,7 @@ function encodePng(width, height, rgba) {
 }
 
 // Box-filter downscale in premultiplied space, so transparent pixels cannot
-// bleed their colour into the edges of the art.
+// bleed their color into the edges of the art.
 function resize(width, height, rgba, size) {
   const out = Buffer.alloc(size * size * 4);
   const sx = width / size, sy = height / size;
@@ -173,7 +173,7 @@ const { width: W, height: H, channels, data } = decodePng(readFileSync(SRC));
 const N = W * H;
 
 const alpha = new Uint8Array(N);
-const colour = new Uint8Array(N * 3);
+const color = new Uint8Array(N * 3);
 const core = new Uint8Array(N);
 for (let i = 0; i < N; i++) {
   const k = i * channels;
@@ -183,9 +183,9 @@ for (let i = 0; i < N; i++) {
   if (v <= BLACK_FLOOR) continue;
   alpha[i] = Math.min(255, Math.round(((v - BLACK_FLOOR) * 255) / (255 - BLACK_FLOOR)));
   const s = 255 / v;
-  colour[i * 3] = Math.min(255, Math.round(r * s));
-  colour[i * 3 + 1] = Math.min(255, Math.round(g * s));
-  colour[i * 3 + 2] = Math.min(255, Math.round(b * s));
+  color[i * 3] = Math.min(255, Math.round(r * s));
+  color[i * 3 + 1] = Math.min(255, Math.round(g * s));
+  color[i * 3 + 2] = Math.min(255, Math.round(b * s));
 }
 
 const LAYERS = [
@@ -267,16 +267,16 @@ while (head < tail) {
 mkdirSync(OUT_DIR, { recursive: true });
 const full = Buffer.alloc(N * 4);
 for (let i = 0; i < N; i++) {
-  full[i * 4] = colour[i * 3]; full[i * 4 + 1] = colour[i * 3 + 1];
-  full[i * 4 + 2] = colour[i * 3 + 2]; full[i * 4 + 3] = alpha[i];
+  full[i * 4] = color[i * 3]; full[i * 4 + 1] = color[i * 3 + 1];
+  full[i * 4 + 2] = color[i * 3 + 2]; full[i * 4 + 3] = alpha[i];
 }
 for (let li = 0; li < LAYERS.length; li++) {
   const buf = Buffer.alloc(N * 4);
   let kept = 0;
   for (let i = 0; i < N; i++) {
     if (owner[i] !== li || !alpha[i]) continue;
-    buf[i * 4] = colour[i * 3]; buf[i * 4 + 1] = colour[i * 3 + 1];
-    buf[i * 4 + 2] = colour[i * 3 + 2]; buf[i * 4 + 3] = alpha[i];
+    buf[i * 4] = color[i * 3]; buf[i * 4 + 1] = color[i * 3 + 1];
+    buf[i * 4 + 2] = color[i * 3 + 2]; buf[i * 4 + 3] = alpha[i];
     kept++;
   }
   const png = encodePng(OUT_SIZE, OUT_SIZE, resize(W, H, buf, OUT_SIZE));

@@ -180,7 +180,7 @@ export default function useDragScroll(ref, { enabled = true, momentum = true, ax
     };
   }, [ref, enabled, momentum, stopGlide, vertical]);
 
-  /** Scroll to a position along the hook's axis, cancelling any glide first. */
+  /** Scroll to a position along the hook's axis, canceling any glide first. */
   const scrollToPos = useCallback((value, { smooth = true } = {}) => {
     const el = ref.current;
     if (!el) return;

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { BrandLoader } from '../BrandJourney';
+import { SkeletonRows, useLoadingPhase } from '../ui/Loading';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
@@ -80,6 +80,8 @@ export default function TrackedPanel({
   // change re-ranks the board instantly instead of waiting for a refetch.
   const effective = useMemo(() => applyPatches(snapshot, patches), [snapshot, patches]);
   const items = useMemo(() => buildTrackedItems(effective || {}), [effective]);
+  // 'none' until the wait is long enough to be worth telling anyone about.
+  const loadPhase = useLoadingPhase(loading && !items.length);
   const report = useMemo(() => buildDailyReport(items), [items]);
   const counts = useMemo(() => stageCounts(items), [items]);
   const signature = useMemo(() => trackedSignature(items), [items]);
@@ -198,31 +200,31 @@ export default function TrackedPanel({
         background: `linear-gradient(125deg,${tint(C.violet, 0.11)},rgba(255,255,255,0.02) 60%)`,
         border: `1px solid ${tint(C.violet, 0.24)}`,
       }}>
-        <div style={R({ gap: 10, marginBottom: 10, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
           <div style={{
-            width: 32, height: 32, borderRadius: 10, background: `linear-gradient(135deg,${C.violet},${C.indigo})`,
+            width: 32, height: 32, borderRadius: 8, background: `linear-gradient(135deg,${C.violet},${C.indigo})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}>
             <Brain size={16} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: accentText(C.violet) }}>
               Today’s check-in
             </div>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{report.date}</div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{report.date}</div>
           </div>
           <button onClick={() => setShowLog((s) => !s)} aria-expanded={showLog} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })}>
             <History size={12} />Past days
           </button>
         </div>
 
-        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em', lineHeight: 1.35 }}>
+        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))', lineHeight: 1.35 }}>
           {report.headline}
         </div>
 
-        <ul style={{ margin: '10px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <ul style={{ margin: '8px 0px 0px', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
           {report.lines.map((line, i) => (
-            <li key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, display: 'flex', gap: 8 }}>
+            <li key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, display: 'flex', gap: 8 }}>
               <span aria-hidden style={{ color: C.violetL, flexShrink: 0 }}>·</span>{line}
             </li>
           ))}
@@ -232,13 +234,13 @@ export default function TrackedPanel({
           <button onClick={() => onOpen?.(report.focus.view)}
             style={{
               boxSizing: 'border-box', width: '100%', textAlign: 'left', font: 'inherit', color: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', padding: 12, borderRadius: 10,
+              display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: 12, borderRadius: 8,
               background: tint(C.rose, 0.08), border: `1px solid ${tint(C.rose, 0.24)}`, marginTop: 12,
             }}>
             <AlertTriangle size={14} color={C.roseL} style={{ flexShrink: 0 }} />
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.t1 }}>Do this first: {report.focus.name}</span>
-              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 2 }}>{report.focus.nextStep}</span>
+              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4 }}>{report.focus.nextStep}</span>
             </span>
             <ArrowRight size={13} color={C.roseL} />
           </button>
@@ -247,7 +249,7 @@ export default function TrackedPanel({
         {(aiReport?.loading || aiReport?.content) && (
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
             {aiReport.loading
-              ? <div style={R({ gap: 7, fontSize: 11.5, color: C.t3 })}><Loader2 size={12} className="spin" />Meta Brain is writing today's read…</div>
+              ? <div style={R({ gap: 8, fontSize: 11.5, color: C.t3 })}><Loader2 size={12} className="spin" />Meta Brain is writing today's read…</div>
               : <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiReport.content) }} />}
           </div>
         )}
@@ -255,10 +257,10 @@ export default function TrackedPanel({
         <AnimatePresence initial={false}>
           {showLog && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-              <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', flexDirection: 'column', gap: 7 }}>
-                <div style={{ fontSize: 10.5, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', fontWeight: 700 }}>Last {LOG_DAYS} days</div>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ fontSize: 10.5, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontWeight: 700 }}>Last {LOG_DAYS} days</div>
                 {log.length ? log.map((e) => (
-                  <div key={e.date} style={R({ gap: 10, fontSize: 11.5, color: C.t2 })}>
+                  <div key={e.date} style={R({ gap: 8, fontSize: 11.5, color: C.t2 })}>
                     <span style={{ fontFamily: C.FM, color: C.t3, flexShrink: 0, width: 74 }}>{e.date}</span>
                     <span style={{ flex: 1, minWidth: 0 }}>{e.headline}</span>
                     {e.needsAction > 0 && <span style={pill(tint(C.rose, 0.14), C.roseL, { fontSize: 9.5 })}>{e.needsAction}</span>}
@@ -276,7 +278,7 @@ export default function TrackedPanel({
           Hidden entirely when there is nothing tracked: four zeroes above an empty state is just
           a more elaborate way of saying nothing. */}
       {items.length > 0 && (<>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2,1fr)' : 'repeat(4,1fr)', gap: 8 }}>
         {STAGES.map((s) => {
           const Icon = STAGE_ICONS[s.id];
           const c = C[s.colorKey] || C.blue;
@@ -284,16 +286,16 @@ export default function TrackedPanel({
           return (
             <button key={s.id} onClick={() => setStage(active ? 'all' : s.id)} aria-pressed={active}
               style={{
-                all: 'unset', boxSizing: 'border-box', cursor: 'pointer', padding: 14, borderRadius: 12,
+                all: 'unset', boxSizing: 'border-box', cursor: 'pointer', padding: 12, borderRadius: 12,
                 background: active ? tint(c, 0.14) : C.surf2,
                 border: `1px solid ${active ? tint(c, 0.4) : C.b1}`,
               }}>
-              <div style={R({ gap: 6, marginBottom: 6 })}>
+              <div style={R({ gap: 4, marginBottom: 4 })}>
                 <Icon size={13} color={c} />
-                <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{s.label}</span>
+                <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{s.label}</span>
               </div>
               <div style={{ fontSize: 20, fontWeight: 800, fontFamily: C.FM, color: counts[s.id] ? C.t1 : C.t3 }}>{counts[s.id] || 0}</div>
-              <div style={{ fontSize: 10, color: C.t3, marginTop: 3, lineHeight: 1.4 }}>{s.blurb}</div>
+              <div style={{ fontSize: 10, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>{s.blurb}</div>
             </button>
           );
         })}
@@ -306,19 +308,19 @@ export default function TrackedPanel({
           above five, where the whole list already fits on one screen. They appear when the list
           is big enough to need them. */}
       {items.length >= FILTER_THRESHOLD && (
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           <div style={R({ gap: 8 })}>
             <Search size={14} color={C.t3} />
             <input style={inp({ flex: 1 })} placeholder="Search everything you're tracking…" value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
             {KIND_FILTERS.map((k) => {
               const active = kind === k.id;
               const n = k.id === 'all' ? items.length : items.filter((i) => i.kind === k.id).length;
               return (
                 <button key={k.id} onClick={() => setKind(k.id)} aria-pressed={active}
                   style={pill(active ? tint(accent, 0.22) : C.surf2, active ? onTint(accent) : C.t3, {
-                    cursor: 'pointer', border: `1px solid ${active ? tint(accent, 0.4) : C.b1}`, fontWeight: active ? 700 : 500, gap: 6,
+                    cursor: 'pointer', border: `1px solid ${active ? tint(accent, 0.4) : C.b1}`, fontWeight: active ? 700 : 500, gap: 4,
                   })}>
                   {k.label}<span style={{ fontFamily: C.FM, opacity: 0.75 }}>{n}</span>
                 </button>
@@ -330,10 +332,16 @@ export default function TrackedPanel({
       </>)}
 
       {/* ── The board ── */}
+      {/* Under 300ms this renders nothing at all: a loader that flashes and
+          vanishes makes the wait feel longer than no loader does. Past that it
+          is a skeleton in the shape of the rows that are coming, so nothing
+          jumps when they land. See src/components/ui/Loading.jsx. */}
       {loading && !items.length ? (
-        <div style={glass({ padding: 36 })}>
-          <BrandLoader size={140} caption="Pulling in everything you're tracking…" />
-        </div>
+        loadPhase === 'none' ? null : (
+          <div style={glass({ padding: 24 })} aria-busy="true">
+            <SkeletonRows rows={4} h={64} gap={8} />
+          </div>
+        )
       ) : !items.length ? (
         <EmptyState
           icon={Compass} accent={accent} title="Nothing tracked yet"
@@ -341,13 +349,12 @@ export default function TrackedPanel({
           actionLabel="Find opportunities" onAction={() => onOpen?.('opportunities')}
         />
       ) : !filtered.length ? (
-        <div style={{ ...glass2({ padding: 20, textAlign: 'center' }) }}>
-          <div style={{ fontSize: 12.5, color: C.t2 }}>Nothing here right now.</div>
-          <button onClick={() => { setStage('all'); setKind('all'); setQuery(''); }}
-            style={{ ...btnSm(tint(accent, 0.16), { color: onTint(accent), fontSize: 11.5, marginTop: 10 }) }}>
-            Show everything again
-          </button>
-        </div>
+        <EmptyState
+          kind="filtered" icon={Compass}
+          title="Nothing matches those filters"
+          body="You are tracking things — none of them match what you have selected right now."
+          actionLabel="Clear filters" onAction={() => { setStage('all'); setKind('all'); setQuery(''); }}
+        />
       ) : (
         <div style={CC({ gap: 8 })}>
           <AnimatePresence initial={false}>
@@ -383,16 +390,16 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
   return (
     <motion.div layout initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
       style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${c}` }}>
-      <div style={{ ...R({ gap: 12, padding: '13px 14px', cursor: 'pointer', alignItems: 'flex-start' }) }} onClick={() => setOpen((o) => !o)}>
+      <div style={{ ...R({ gap: 12, padding: '12px 12px', cursor: 'pointer', alignItems: 'flex-start' }) }} onClick={() => setOpen((o) => !o)}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{item.name}</span>
             <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>{item.kind}</span>
             {item.flags.includes('no-date') && <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 9.5 })}>No deadline</span>}
             {overdue && <span style={pill(tint(C.rose, 0.15), C.roseL, { fontSize: 9.5 })}>Date passed</span>}
             {item.flags.includes('stalled') && <span style={pill(tint(C.rose, 0.12), C.roseL, { fontSize: 9.5 })}>Stalled</span>}
           </div>
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 3 }}>
+          <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
             {[item.sub, item.statusLabel].filter(Boolean).join(' · ')}
             {item.dueInDays != null && (
               <span style={{ color: dueColor, fontWeight: 600 }}>
@@ -410,28 +417,28 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${C.b1}`, paddingTop: 12 }}>
+            <div style={{ padding: '0px 12px 12px', borderTop: `1px solid ${C.b1}`, paddingTop: 12 }}>
               <div style={{
-                fontSize: 11.5, color: C.t2, lineHeight: 1.6, padding: '9px 11px', borderRadius: 9,
+                fontSize: 11.5, color: C.t2, lineHeight: 1.6, padding: '8px 12px', borderRadius: 8,
                 background: tint(C.violet, 0.06), border: `1px solid ${tint(C.violet, 0.18)}`, display: 'flex', gap: 8,
               }}>
-                <Brain size={12} color={C.violetL} style={{ flexShrink: 0, marginTop: 2 }} />
+                <Brain size={12} color={C.violetL} style={{ flexShrink: 0, marginTop: 4 }} />
                 <span>{item.nextStep}</span>
               </div>
 
-              <div style={R({ gap: 8, marginTop: 10, flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8, marginTop: 8, flexWrap: 'wrap' })}>
                 {canAdvance && (
                   <button onClick={onAdvance} disabled={busy} style={btnSm(tint(accent, 0.18), { color: onTint(accent), fontSize: 11 })}>
                     {busy ? <Loader2 size={11} className="spin" /> : <ArrowRight size={11} />}I did this — move it forward
                   </button>
                 )}
                 {canDate && (
-                  <label style={R({ gap: 6, fontSize: 11, color: C.t3 })}>
+                  <label style={R({ gap: 4, fontSize: 11, color: C.t3 })}>
                     <CalendarClock size={12} color={C.t3} />
                     <span>Deadline</span>
                     <input type="date" defaultValue={item.dueDate ? String(item.dueDate).slice(0, 10) : ''}
                       onChange={(e) => onSetDate(e.target.value)} aria-label={`Deadline for ${item.name}`}
-                      style={inp({ width: 'auto', fontSize: 11.5, padding: '6px 9px' })} />
+                      style={inp({ width: 'auto', fontSize: 11.5, padding: '4px 8px' })} />
                   </label>
                 )}
                 <button onClick={onOpen} style={btnSm(C.s3, { color: C.t2, fontSize: 11 })}>See full details<ArrowRight size={11} /></button>
@@ -444,7 +451,7 @@ function TrackedRow({ item, accent, busy, canAdvance, onAdvance, onSetDate, onOp
               </div>
 
               {item.notes && (
-                <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 10, whiteSpace: 'pre-wrap' }}>
+                <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 8, whiteSpace: 'pre-wrap' }}>
                   {String(item.notes).slice(0, 420)}{String(item.notes).length > 420 ? '…' : ''}
                 </div>
               )}

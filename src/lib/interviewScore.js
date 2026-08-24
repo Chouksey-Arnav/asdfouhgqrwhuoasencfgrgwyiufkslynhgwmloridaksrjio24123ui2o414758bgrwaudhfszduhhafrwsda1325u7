@@ -34,7 +34,7 @@ export { SCALE_MAX, SCALE_ANCHORS, anchorFor, SINGLE_STATION_CAVEAT, reliability
 // that read well on paper landed when spoken — and it is scoring one sitting, from a transcript,
 // against a rubric. "Nothing here could be better" is therefore a claim it is not equipped to make,
 // and it is the single most damaging thing it could say: a student told they are already at the top
-// of the scale has been handed a reason to stop practising. So the top of every scale is reserved.
+// of the scale has been handed a reason to stop practicing. So the top of every scale is reserved.
 // The best a session can be told is "above the interviewed pool, and here is what is still missing."
 export const PRACTICE_CEILING = SCALE_MAX - 1;
 
@@ -302,7 +302,7 @@ export function buildRubricPrompt({ stationKey = DEFAULT_STATION_TYPE, hasActor 
 
 CALIBRATION — this is the part people get wrong. In real MMIs the modal score is 5, and a 5 means competent, fluent, and completely forgettable. A 6 is genuinely above the interviewed pool, roughly the top twenty percent. A 7 is rare. A 4 is already below the median of the interviewed pool. Assume 5 until the answer earns more, and if you are about to give a 6 or 7, re-read the response and find the reason it is not one.
 
-WEAK (1-3) looks like: picking a side in the first sentence and never revisiting it; restating the prompt at length instead of engaging with it; answering a nearby question rather than the one asked; moralising instead of analysing; stating a rule without ever saying what they would actually do; faking confidence about law or policy instead of saying "I don't know, here is how I'd find out"; ${hasActor ? "talking over the actor's disclosure; " : ''}running out of content and padding; never acknowledging that a reasonable person could disagree.
+WEAK (1-3) looks like: picking a side in the first sentence and never revisiting it; restating the prompt at length instead of engaging with it; answering a nearby question rather than the one asked; moralizing instead of analyzing; stating a rule without ever saying what they would actually do; faking confidence about law or policy instead of saying "I don't know, here is how I'd find out"; ${hasActor ? "talking over the actor's disclosure; " : ''}running out of content and padding; never acknowledging that a reasonable person could disagree.
 
 AVERAGE (4-5) identifies the tension, names two perspectives, reaches a defensible position, and communicates clearly — but is missing stakeholder specificity, any acknowledgement of what would change their mind, any concrete first action, and any self-implication. Fluent, structured, generic.
 
@@ -357,7 +357,7 @@ export function scoreSession(answers, ctx = {}) {
   const score = Math.max(1, Math.min(PRACTICE_CEILING, Math.floor(mean)));
 
   // Recurring findings first — "you did this in four of six answers" is the sentence that changes
-  // behaviour, and a one-off is worth less than a pattern.
+  // behavior, and a one-off is worth less than a pattern.
   const counts = new Map();
   for (const r of perAnswer) for (const reason of r.reasons || []) counts.set(reason, (counts.get(reason) || 0) + 1);
   const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);

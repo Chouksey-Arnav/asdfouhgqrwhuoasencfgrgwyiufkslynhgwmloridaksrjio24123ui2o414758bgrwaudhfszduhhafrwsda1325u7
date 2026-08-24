@@ -14,7 +14,7 @@
 // angle theorem and transversal relationships by name; determining what must be
 // true to satisfy a similarity or congruence criterion; the sine/cosine
 // complementary-angle relationship; converting between degrees and radians;
-// and completing the square to recover a circle's centre and radius.
+// and completing the square to recover a circle's center and radius.
 //
 // No question here needs a figure the student cannot reconstruct from the text.
 // That is a deliberate constraint of this bank rather than of the exam: the
@@ -951,17 +951,17 @@ export const MATH_GEO_TRIG_D = [
   {
     id: 'sat-m-cir-0302', section: 'math', domain: 'geo_trig', skill: 'circles',
     difficulty: 'E', format: 'mcq', trap: 'reference_formula', targetSeconds: 65,
-    q: 'What are the centre and radius of the circle with equation (x − 3)² + (y + 5)² = 49?',
+    q: 'What are the center and radius of the circle with equation (x − 3)² + (y + 5)² = 49?',
     ch: [
-      'Centre (3, −5), radius 7',
-      'Centre (3, −5), radius 49',
-      'Centre (−3, 5), radius 7',
-      'Centre (−3, 5), radius 49',
+      'Center (3, −5), radius 7',
+      'Center (3, −5), radius 49',
+      'Center (−3, 5), radius 7',
+      'Center (−3, 5), radius 49',
     ],
     ans: 0,
-    exp: 'In the form (x − h)² + (y − k)² = r², the centre is (h, k) and the radius is r. Here h = 3, k = −5 and r = √49 = 7.',
+    exp: 'In the form (x − h)² + (y − k)² = r², the center is (h, k) and the radius is r. Here h = 3, k = −5 and r = √49 = 7.',
     distractorExp: [
-      'Correct. The centre is (3, −5) and the radius is √49 = 7.',
+      'Correct. The center is (3, −5) and the radius is √49 = 7.',
       'The 49 is r², so the radius is its square root.',
       'The signs in the equation are subtracted from x and y, so they flip when read off.',
       'Both the signs and the radius are misread here.',
@@ -1033,8 +1033,8 @@ export const MATH_GEO_TRIG_D = [
     ans: 2,
     exp: 'Completing the square gives (x² − 6x + 9) + (y² + 8y + 16) = 0 + 9 + 16, that is (x − 3)² + (y + 4)² = 25, so the radius is √25 = 5.',
     distractorExp: [
-      'This is the x-coordinate of the centre, not the radius.',
-      'This is the magnitude of the y-coordinate of the centre.',
+      'This is the x-coordinate of the center, not the radius.',
+      'This is the magnitude of the y-coordinate of the center.',
       'Correct. Completing the square gives r² = 25, so r = 5.',
       'This is r², not r.',
     ],
@@ -1042,7 +1042,7 @@ export const MATH_GEO_TRIG_D = [
   {
     id: 'sat-m-cir-0309', section: 'math', domain: 'geo_trig', skill: 'circles',
     difficulty: 'H', format: 'mcq', trap: 'reference_formula', targetSeconds: 95,
-    q: 'A circle in the xy-plane has centre (2, −1) and passes through the point (2, 4). Which equation represents this circle?',
+    q: 'A circle in the xy-plane has center (2, −1) and passes through the point (2, 4). Which equation represents this circle?',
     ch: [
       '(x − 2)² + (y + 1)² = 5',
       '(x − 2)² + (y + 1)² = 25',
@@ -1053,9 +1053,9 @@ export const MATH_GEO_TRIG_D = [
     exp: 'The radius is the distance from (2, −1) to (2, 4), which is 5. The equation is (x − 2)² + (y + 1)² = 5² = 25.',
     distractorExp: [
       'This uses the radius itself on the right side instead of the radius squared.',
-      'Correct. Centre (2, −1) and radius 5 give (x − 2)² + (y + 1)² = 25.',
+      'Correct. Center (2, −1) and radius 5 give (x − 2)² + (y + 1)² = 25.',
       'Both the signs and the right-hand side are wrong here.',
-      'The signs of the centre coordinates are flipped.',
+      'The signs of the center coordinates are flipped.',
     ],
   },
   {
@@ -1091,10 +1091,10 @@ export const MATH_GEO_TRIG_D = [
       '(x + 1)² + (y − 7)² = 16',
     ],
     ans: 1,
-    exp: 'The original centre is (−1, 4). Moving 3 units right puts the centre at (2, 4), so the equation becomes (x − 2)² + (y − 4)² = 16. The radius is unchanged.',
+    exp: 'The original center is (−1, 4). Moving 3 units right puts the center at (2, 4), so the equation becomes (x − 2)² + (y − 4)² = 16. The radius is unchanged.',
     distractorExp: [
-      'This moves the centre 3 units LEFT, to (−4, 4).',
-      'Correct. The centre moves from (−1, 4) to (2, 4).',
+      'This moves the center 3 units LEFT, to (−4, 4).',
+      'Correct. The center moves from (−1, 4) to (2, 4).',
       'This moves the circle vertically rather than horizontally.',
       'This also moves the circle vertically, in the other direction.',
     ],
@@ -1138,15 +1138,15 @@ export const MATH_GEO_TRIG_D = [
   {
     id: 'sat-m-cir-0316', section: 'math', domain: 'geo_trig', skill: 'circles',
     difficulty: 'M', format: 'mcq', trap: 'reference_formula', targetSeconds: 85,
-    q: 'A circle has centre (−4, 7) and radius 6. Which of the following points lies on the circle?',
+    q: 'A circle has center (−4, 7) and radius 6. Which of the following points lies on the circle?',
     ch: ['(−4, 1)', '(−4, 7)', '(0, 7)', '(3, 7)'],
     ans: 0,
-    exp: 'A point lies on the circle when its distance from the centre is exactly 6. The point (−4, 1) shares the centre’s x-coordinate and sits 6 units below it, so its distance from the centre is 6.',
+    exp: 'A point lies on the circle when its distance from the center is exactly 6. The point (−4, 1) shares the center’s x-coordinate and sits 6 units below it, so its distance from the center is 6.',
     distractorExp: [
-      'Correct. (−4, 1) is 6 units directly below the centre.',
-      'This is the centre itself, at distance 0 from the centre.',
-      'This is 4 units to the right of the centre, not 6.',
-      'This is 7 units to the right of the centre, one unit too far.',
+      'Correct. (−4, 1) is 6 units directly below the center.',
+      'This is the center itself, at distance 0 from the center.',
+      'This is 4 units to the right of the center, not 6.',
+      'This is 7 units to the right of the center, one unit too far.',
     ],
   },
   {
@@ -1166,7 +1166,7 @@ export const MATH_GEO_TRIG_D = [
   {
     id: 'sat-m-cir-0318', section: 'math', domain: 'geo_trig', skill: 'circles',
     difficulty: 'H', format: 'mcq', trap: 'reference_formula', targetSeconds: 100,
-    q: 'A circle has equation (x − 5)² + (y + 2)² = 36. The radius is then doubled while the centre stays fixed. Which equation represents the new circle?',
+    q: 'A circle has equation (x − 5)² + (y + 2)² = 36. The radius is then doubled while the center stays fixed. Which equation represents the new circle?',
     ch: [
       '(x − 5)² + (y + 2)² = 72',
       '(x − 5)² + (y + 2)² = 144',
@@ -1174,12 +1174,12 @@ export const MATH_GEO_TRIG_D = [
       '(x − 10)² + (y + 4)² = 144',
     ],
     ans: 1,
-    exp: 'The original radius is √36 = 6, so the new radius is 12 and the right-hand side becomes 12² = 144. The centre is unchanged, so the left-hand side is untouched.',
+    exp: 'The original radius is √36 = 6, so the new radius is 12 and the right-hand side becomes 12² = 144. The center is unchanged, so the left-hand side is untouched.',
     distractorExp: [
       'This doubles r² rather than doubling r.',
-      'Correct. Doubling r from 6 to 12 makes r² = 144, with the centre fixed.',
-      'This doubles the CENTRE coordinates and leaves the radius alone.',
-      'This doubles the centre coordinates as well as the radius.',
+      'Correct. Doubling r from 6 to 12 makes r² = 144, with the center fixed.',
+      'This doubles the CENTER coordinates and leaves the radius alone.',
+      'This doubles the center coordinates as well as the radius.',
     ],
   },
   {
@@ -1221,10 +1221,10 @@ export const MATH_GEO_TRIG_D = [
   {
     id: 'sat-m-cir-0322', section: 'math', domain: 'geo_trig', skill: 'circles',
     difficulty: 'M', format: 'mcq', trap: 'reference_formula', targetSeconds: 85,
-    q: 'A circle in the xy-plane has its centre at the origin and passes through the point (0, 9). Which equation represents this circle?',
+    q: 'A circle in the xy-plane has its center at the origin and passes through the point (0, 9). Which equation represents this circle?',
     ch: ['x² + y² = 3', 'x² + y² = 9', 'x² + y² = 18', 'x² + y² = 81'],
     ans: 3,
-    exp: 'The radius is the distance from (0, 0) to (0, 9), which is 9, and the equation of a circle centred at the origin is x² + y² = r² = 81.',
+    exp: 'The radius is the distance from (0, 0) to (0, 9), which is 9, and the equation of a circle centered at the origin is x² + y² = r² = 81.',
     distractorExp: [
       'This uses a radius of √3.',
       'This puts the radius itself on the right side rather than the radius squared.',

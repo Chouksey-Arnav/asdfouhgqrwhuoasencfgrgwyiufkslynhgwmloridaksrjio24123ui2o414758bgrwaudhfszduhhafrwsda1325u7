@@ -10,7 +10,7 @@ import { SERVICE_PROGRAMS, COMMITMENT_TIMING, PATHWAY_FINANCE } from '../../data
 // ── Why this is on the parent dashboard at all ──────────────────────────────
 // Every other screen in this app answers "is my child showing up, and is it
 // working". This one answers a question no school, no college website and no
-// counsellor ever puts in front of a parent, and which parents care about more
+// counselor ever puts in front of a parent, and which parents care about more
 // intensely than anything else here: what does each of these careers actually
 // cost, and how many years before they are earning.
 //
@@ -65,12 +65,12 @@ export default function PathwayCostsPanel({ students = [] }) {
     .sort((a, b) => (COMMITMENT_TIMING[a.timing]?.order ?? 9) - (COMMITMENT_TIMING[b.timing]?.order ?? 9));
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <div>
-        <div style={{ fontSize: 18, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
+        <div style={{ fontSize: 18, letterSpacing: 'calc(-0.17px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
           What each path costs
         </div>
-        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>
+        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>
           Training length and typical graduate debt across the five health careers, with the
           service programs that pay for them. The same figures your child sees on their own
           Financial Aid tab.
@@ -79,11 +79,11 @@ export default function PathwayCostsPanel({ students = [] }) {
 
       {highlight && (
         <div style={glass2({
-          ...R({ gap: 10, alignItems: 'flex-start' }),
+          ...R({ gap: 8, alignItems: 'flex-start' }),
           borderColor: tint(C.blue, 0.28), background: tint(C.blue, 0.05),
         })}>
-          <Info size={15} color={C.blueL} style={{ flexShrink: 0, marginTop: 2 }} />
-          <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+          <Info size={15} color={C.blueL} style={{ flexShrink: 0, marginTop: 4 }} />
+          <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
             {highlightName ? `${highlightName} is` : 'Your student is'} currently on the{' '}
             <b style={{ color: C.t1 }}>
               {PATHWAY_FINANCE.find(p => p.pathwayKey === highlight)?.label || 'selected'}
@@ -94,10 +94,10 @@ export default function PathwayCostsPanel({ students = [] }) {
         </div>
       )}
 
-      <div style={glass({ padding: 18 })}>
-        <div style={{ ...R({ gap: 7, marginBottom: 14 }) }}>
+      <div style={glass({ padding: 16 })}>
+        <div style={{ ...R({ gap: 8, marginBottom: 12 }) }}>
           <Scale size={14} color={C.blueL} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.blueL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.blueL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
             Debt trajectory by pathway
           </span>
         </div>
@@ -105,14 +105,14 @@ export default function PathwayCostsPanel({ students = [] }) {
       </div>
 
       {/* ── The part with a deadline attached ─────────────────────────────── */}
-      <div style={glass({ padding: 18 })}>
-        <div style={{ ...R({ gap: 7, marginBottom: 12 }) }}>
+      <div style={glass({ padding: 16 })}>
+        <div style={{ ...R({ gap: 8, marginBottom: 12 }) }}>
           <ShieldCheck size={14} color={C.tealL} />
-          <span style={{ fontSize: 11, fontWeight: 700, color: C.tealL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.tealL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
             Routes decided before or during college
           </span>
         </div>
-        <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, margin: '0 0 12px' }}>
+        <p style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, margin: '0px 0px 12px' }}>
           These pay for some or all of the training in exchange for working somewhere specific
           afterwards. They are on this page because two of them are decided while your child is
           still in high school — the ROTC scholarship application opens in the summer before senior
@@ -125,30 +125,30 @@ export default function PathwayCostsPanel({ students = [] }) {
             const color = TONE[timing.color] || C.blueL;
             return (
               <div key={p.id} style={{
-                ...glass2({ padding: 13 }), borderLeft: `3px solid ${color}`,
+                ...glass2({ padding: 12 }), borderLeft: `3px solid ${color}`,
                 background: `linear-gradient(120deg,${tint(color, 0.05)},rgba(255,255,255,0.02) 55%)`,
               }}>
                 <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.name}</span>
                   <span style={pill(tint(color, 0.14), color, { fontSize: 9 })}>{timing.label}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 7 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>
                   <b style={{ color: C.t1 }}>Pays for:</b> {p.covers}
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 5 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
                   <b style={{ color: C.t1 }}>In exchange for:</b> {p.commitment}
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 5 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
                   <b style={{ color: C.t1 }}>Decided:</b> {p.decidedBy}
                 </div>
                 <div style={{
-                  fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 9, padding: '9px 11px',
+                  fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 8, padding: '8px 12px',
                   borderRadius: 8, background: tint(C.amber, 0.05), border: `1px solid ${tint(C.amber, 0.22)}`,
                 }}>
                   <b style={{ color: C.amberL }}>Read this part with them:</b> {p.catch}
                 </div>
                 <a href={p.url} target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: 11.5, color: C.blueL, textDecoration: 'none', display: 'inline-block', marginTop: 9 }}>
+                  style={{ fontSize: 11.5, color: C.blueL, textDecoration: 'none', display: 'inline-block', marginTop: 8 }}>
                   Official page →
                 </a>
               </div>
@@ -157,7 +157,7 @@ export default function PathwayCostsPanel({ students = [] }) {
         </div>
       </div>
 
-      <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.6 }}>
+      <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.55 }}>
         Nothing on this page is advice about your family's finances, and none of it is a prediction
         about your child. It is what national bodies publish about what people who finished each of
         these paths typically owed, with the source and the date we read it named on every figure.

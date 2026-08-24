@@ -54,7 +54,7 @@ export default function SatTestPicker({
       {/* ── Official first. They are better than ours and saying so is the ──
           ── only honest ordering. ────────────────────────────────────────── */}
       <SatCard title="Official College Board tests" icon={Award} iconColor={C.gold} m={isMobile}>
-        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7, marginBottom: 14 }}>
+        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
           These are written by the people who write the real exam, and they are free. Sit them in
           College Board&rsquo;s own app or on paper, then bring the score back here — logged scores
           chart alongside your in-app tests and feed the same projection.
@@ -80,8 +80,8 @@ export default function SatTestPicker({
         </button>
 
         {showLinear && (
-          <div style={{ ...CC({ gap: 8 }), marginTop: 10 }}>
-            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.65 }}>
+          <div style={{ ...CC({ gap: 8 }), marginTop: 8 }}>
+            <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55 }}>
               Linear, not adaptive: everyone gets the same Module 2, so these cannot show you which
               module you would have routed into. Use them for content practice, and Bluebook or an
               in-app form when you want a realistic score.
@@ -102,13 +102,13 @@ export default function SatTestPicker({
 
       {/* ── In-app forms ──────────────────────────────────────────────────── */}
       <SatCard title="Tests in this app" icon={Play} iconColor={accent} m={isMobile}>
-        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7, marginBottom: 14 }}>
+        <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
           Each form is a fixed, full-length adaptive test — the same questions in the same order
           every time, so a score on Form B this month is comparable with your Form B last month.
           Forms are laid out so the early ones share no questions at all.
         </div>
 
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {rows.map(row => (
             <FormRow
               key={row.id} row={row} accent={accent} disabled={disabled}
@@ -117,16 +117,16 @@ export default function SatTestPicker({
           ))}
 
           <div style={{
-            ...glass2({ padding: 14 }),
+            ...glass2({ padding: 12 }),
             borderColor: tint(C.teal, 0.22),
           }}>
-            <div style={{ ...R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
+            <div style={{ ...R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
               <div style={{ minWidth: 0, flex: 1 }}>
                 <div style={R({ gap: 8 })}>
                   <Shuffle size={13} color={C.teal} />
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{FRESH_MIX.label}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>
                   {FRESH_MIX.blurb}
                 </div>
               </div>
@@ -165,7 +165,7 @@ function FormRow({ row, accent, disabled, onStart }) {
   const seenPct = seen.total ? Math.round(seen.ratio * 100) : 0;
 
   return (
-    <div style={{ ...glass2({ padding: 14 }) }}>
+    <div style={{ ...glass2({ padding: 12 }) }}>
       <div style={{ ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
@@ -185,7 +185,7 @@ function FormRow({ row, accent, disabled, onStart }) {
             )}
           </div>
 
-          <div style={{ fontSize: 11.5, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>
             {row.blurb}
           </div>
 
@@ -193,7 +193,7 @@ function FormRow({ row, accent, disabled, onStart }) {
               overlaps an earlier FORM, or this student has already answered its
               questions somewhere else in the app — and they are worth saying
               separately, because only the second one is about them. */}
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 7, fontFamily: C.FM }}>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 8, fontFamily: C.FM }}>
             {!allNew && `${Math.round(freshness.ratio * 100)}% of this form is unused by earlier forms · `}
             {seen.seen === 0
               ? 'none of these questions are ones you have answered before'
@@ -224,7 +224,7 @@ function OfficialRow({ test, accent, logged, onLog, primary = false, compact = f
       ...glass2({ padding: compact ? 11 : 14 }),
       ...(primary ? { borderColor: tint(accent, 0.3) } : null),
     }}>
-      <div style={{ ...R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <span style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: C.t1 }}>{test.label}</span>
@@ -237,24 +237,24 @@ function OfficialRow({ test, accent, logged, onLog, primary = false, compact = f
             )}
           </div>
           {!compact && (
-            <div style={{ fontSize: 11.5, color: C.t2, marginTop: 6, lineHeight: 1.6 }}>{test.blurb}</div>
+            <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{test.blurb}</div>
           )}
           {!compact && test.why && (
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 5, lineHeight: 1.6 }}>{test.why}</div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>{test.why}</div>
           )}
         </div>
 
-        <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <a
             href={test.url} target="_blank" rel="noopener noreferrer"
-            style={{ ...btnG({ textDecoration: 'none', padding: '7px 13px', fontSize: 12 }) }}
+            style={{ ...btnG({ textDecoration: 'none', padding: '8px 12px', fontSize: 12 }) }}
           >
             <ExternalLink size={12} /> {test.delivery === 'paper' ? 'PDF' : 'Open'}
           </a>
           {test.answersUrl && (
             <a
               href={test.answersUrl} target="_blank" rel="noopener noreferrer"
-              style={{ ...btnG({ textDecoration: 'none', padding: '7px 13px', fontSize: 12 }) }}
+              style={{ ...btnG({ textDecoration: 'none', padding: '8px 12px', fontSize: 12 }) }}
             >
               Answers
             </a>
@@ -262,12 +262,12 @@ function OfficialRow({ test, accent, logged, onLog, primary = false, compact = f
           {test.scoringUrl && (
             <a
               href={test.scoringUrl} target="_blank" rel="noopener noreferrer"
-              style={{ ...btnG({ textDecoration: 'none', padding: '7px 13px', fontSize: 12 }) }}
+              style={{ ...btnG({ textDecoration: 'none', padding: '8px 12px', fontSize: 12 }) }}
             >
               Scoring
             </a>
           )}
-          <button onClick={onLog} style={{ ...btnG({ padding: '7px 13px', fontSize: 12, color: accent, borderColor: tint(accent, 0.35) }) }}>
+          <button onClick={onLog} style={{ ...btnG({ padding: '8px 12px', fontSize: 12, color: accent, borderColor: tint(accent, 0.35) }) }}>
             <PenLine size={12} /> Log score
           </button>
         </div>
@@ -296,11 +296,11 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
   const composite = ok ? rwN + mathN : null;
 
   const field = {
-    width: '100%', padding: '9px 11px', borderRadius: 8,
+    width: '100%', padding: '8px 12px', borderRadius: 8,
     border: `1px solid ${C.b2}`, background: C.surf2, color: C.t1,
     fontSize: 13, fontFamily: C.FM, outline: 'none',
   };
-  const labelStyle = { fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.07em', marginBottom: 5, display: 'block' };
+  const labelStyle = { fontSize: 10.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4, display: 'block' };
 
   async function save() {
     if (!ok) { toast.error('Section scores must be between 200 and 800, in steps of 10.'); return; }
@@ -320,7 +320,7 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
 
   return (
     <SatCard title={`Log your score — ${test.label}`} icon={PenLine} iconColor={accent} m={isMobile}>
-      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7, marginBottom: 14 }}>
+      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
         Enter the two section scores from your score report. They are recorded as a full-length
         test, so they show up in your score history and become the basis of your projection —
         an official score is better evidence than anything measured in here.
@@ -332,7 +332,7 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
         gap: 12,
       }}>
         <div>
-          <label style={labelStyle} htmlFor="official-rw">Reading &amp; Writing</label>
+          <label style={labelStyle} htmlFor="official-rw">Reading &amp; writing</label>
           <input
             id="official-rw" style={field} inputMode="numeric" placeholder="200–800"
             value={rw} onChange={e => setRw(e.target.value.replace(/[^0-9]/g, ''))}
@@ -367,7 +367,7 @@ function LogOfficialScore({ test, accent, isMobile, onCancel, onSave }) {
         <div style={{ fontSize: 13, fontWeight: 800, color: composite ? C.t1 : C.t4, fontFamily: C.FM }}>
           {composite ? `Composite ${composite}` : 'Composite —'}
         </div>
-        <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <button onClick={onCancel} style={btnG()}>Cancel</button>
           <button
             onClick={save}

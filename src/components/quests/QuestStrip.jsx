@@ -48,14 +48,14 @@ export default function QuestStrip({
         disabled={busyId === assignment.id}
         style={{
           width: '100%', textAlign: 'left', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', gap: 11,
+          display: 'flex', alignItems: 'center', gap: 12,
           padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
           background: tint(C.green, 0.1), border: `1px solid ${tint(C.green, 0.3)}`,
           opacity: busyId === assignment.id ? 0.6 : 1,
         }}
       >
         <div style={{
-          width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+          width: 28, height: 28, borderRadius: 8, flexShrink: 0,
           background: tint(C.green, 0.16), border: `1px solid ${tint(C.green, 0.3)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><Gift size={14} color={C.greenL} /></div>
@@ -72,13 +72,13 @@ export default function QuestStrip({
       onClick={onOpen}
       style={{
         width: '100%', textAlign: 'left', cursor: onOpen ? 'pointer' : 'default',
-        display: 'flex', alignItems: 'center', gap: 11,
+        display: 'flex', alignItems: 'center', gap: 12,
         padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
         background: tint(color, 0.08), border: `1px solid ${tint(color, 0.24)}`,
       }}
     >
       <div style={{
-        width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
         background: tint(color, 0.16), border: `1px solid ${tint(color, 0.3)}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}><Icon size={14} color={color} /></div>
@@ -90,7 +90,7 @@ export default function QuestStrip({
             <span style={{ color: C.t3, fontWeight: 500 }}> · {assignment.assignerName} asked</span>
           )}
         </div>
-        <div style={{ fontSize: 10.5, color: tone.color, marginTop: 2, lineHeight: 1.4 }}>{questHeadline(ev)}</div>
+        <div style={{ fontSize: 10.5, color: tone.color, marginTop: 4, lineHeight: 1.4 }}>{questHeadline(ev)}</div>
       </div>
 
       <span style={{ ...pill(tint(color, 0.13), color, { fontSize: 10, fontFamily: C.FM, fontWeight: 800, flexShrink: 0 }) }}>

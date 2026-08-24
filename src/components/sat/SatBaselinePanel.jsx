@@ -300,7 +300,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
   const delta = compareBaselines(last, prev);
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       <SatPageHeader
         accent={C.gold} m={isMobile}
         eyebrow="SAT · Adaptive placement"
@@ -318,11 +318,11 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
         <SatCard title="Where you stand" icon={BarChart3} iconColor={accent} m={isMobile}>
           <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3,1fr)', gap: 12 }}>
             <StatTile icon={Target} value={`${last.low}–${last.high}`} label="Composite range" sub={`midpoint ${last.mid}`} color={accent} />
-            <StatTile icon={Sparkles} value={last.sections?.rw?.scaled ?? '—'} label="Reading & Writing" color={C.blue} />
+            <StatTile icon={Sparkles} value={last.sections?.rw?.scaled ?? '—'} label="Reading & writing" color={C.blue} />
             <StatTile icon={Zap} value={last.sections?.math?.scaled ?? '—'} label="Math" color={C.violet} />
           </div>
           {delta && (
-            <div style={{ ...glass2({ padding: 13 }), marginTop: 12, ...R({ gap: 10 }) }}>
+            <div style={{ ...glass2({ padding: 12 }), marginTop: 12, ...R({ gap: 8 }) }}>
               {delta.direction === 'up' ? <TrendingUp size={15} color={C.greenL} />
                 : delta.direction === 'down' ? <TrendingDown size={15} color={C.roseL} />
                 : <Minus size={15} color={C.t3} />}
@@ -350,8 +350,8 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
                 <row.icon size={13} color={row.hue} />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 2 }}>{row.title}</div>
-                <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>{row.body}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>{row.title}</div>
+                <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>{row.body}</div>
               </div>
             </div>
           ))}
@@ -366,10 +366,10 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
       }}>
         {gateOpen ? (
           <>
-            <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, fontFamily: C.FD, color: C.t1, marginBottom: 6, letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, fontFamily: C.FD, color: C.t1, marginBottom: 4, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
               {history.length ? 'Take a new baseline' : 'Set your baseline'}
             </div>
-            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, maxWidth: 560, margin: '0 auto 16px' }}>
+            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, maxWidth: 560, margin: '0 auto 16px' }}>
               About 40 minutes, {BASELINE_LENGTH} questions, no going back. Sit somewhere you can concentrate —
               this is the number the rest of your plan gets built on, so a distracted run costs you more than it saves.
             </div>
@@ -379,13 +379,13 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
           </>
         ) : (
           <>
-            <Lock size={22} color={C.t3} style={{ marginBottom: 10 }} />
-            <div style={{ fontSize: 15, fontWeight: 700, color: C.t2, fontFamily: C.FD, marginBottom: 5 }}>Next baseline in {waitLabel}</div>
-            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, maxWidth: 520, margin: '0 auto 14px' }}>
+            <Lock size={22} color={C.t3} style={{ marginBottom: 8 }} />
+            <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 700, color: C.t2, fontFamily: C.FD, marginBottom: 4 }}>Next baseline in {waitLabel}</div>
+            <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, maxWidth: 520, margin: '0 auto 14px' }}>
               One per week. Between now and then, the work that moves the number is in Practice and the Review Log —
               your baseline flagged exactly what to go after.
             </div>
-            <div style={R({ gap: 10, justifyContent: 'center', flexWrap: 'wrap' })}>
+            <div style={R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' })}>
               <button onClick={() => onNavigate?.('review')} style={btnG({ fontSize: 12 })}>Open the Review Log</button>
               <button onClick={() => onNavigate?.('practice')} style={btnG({ fontSize: 12 })}>Practice a weak skill</button>
             </div>
@@ -393,7 +393,7 @@ function Intro({ history, gateOpen, waitLabel, accent, isMobile, onStart, user, 
         )}
       </div>
 
-      <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.7, textAlign: 'center', padding: '0 12px' }}>{SCORE_DISCLAIMER}</div>
+      <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55, textAlign: 'center', padding: '0px 12px' }}>{SCORE_DISCLAIMER}</div>
     </div>
   );
 }
@@ -418,15 +418,15 @@ function Running({
     <div style={CC({ gap: 16 })}>
       {/* ── Progress ─────────────────────────────────────────────────── */}
       <div style={glass({ padding: isMobile ? 14 : 18 })}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 9, flexWrap: 'wrap', gap: 8 })}>
-          <div style={R({ gap: 9 })}>
+        <div style={R({ justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 })}>
+          <div style={R({ gap: 8 })}>
             <Gauge size={15} color={accent} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
               Question {Math.min(answered + 1, BASELINE_LENGTH)} of {BASELINE_LENGTH}
             </span>
             {meta && <span style={pill(tint(C.t3, 0.12), C.t2, { fontSize: 10 })}>{meta.sectionLabel}</span>}
           </div>
-          <div style={R({ gap: 7 })}>
+          <div style={R({ gap: 8 })}>
             {/* Showing the band is a deliberate call. It could be read as
                 pressure — but hiding it makes the test feel arbitrary, and a
                 student who just watched it step up after three right answers
@@ -437,7 +437,7 @@ function Running({
           </div>
         </div>
         <Bar pct={pct} color={accent} h={5} />
-        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 7 }}>
+        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 8 }}>
           No going back — each question's difficulty depends on the one before it. Answer as well as you can and move on.
         </div>
       </div>
@@ -447,7 +447,7 @@ function Running({
         {generating && (
           <motion.div key="gen" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             style={{ ...glass({ padding: isMobile ? 28 : 44, textAlign: 'center' }) }}>
-            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', marginBottom: 14 }}>
+            <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.4, repeat: Infinity, ease: 'linear' }} style={{ display: 'inline-block', marginBottom: 12 }}>
               <Sparkles size={22} color={accent} />
             </motion.div>
             <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
@@ -461,8 +461,8 @@ function Running({
 
         {!generating && genError && (
           <motion.div key="err" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ ...glass({ padding: 24, textAlign: 'center' }), border: `1px solid ${tint(C.rose, 0.3)}` }}>
-            <AlertTriangle size={18} color={C.roseL} style={{ marginBottom: 10 }} />
-            <div style={{ fontSize: 13, color: C.t2, marginBottom: 14, lineHeight: 1.6 }}>{genError}</div>
+            <AlertTriangle size={18} color={C.roseL} style={{ marginBottom: 8 }} />
+            <div style={{ fontSize: 13, color: C.t2, marginBottom: 12, lineHeight: 1.6 }}>{genError}</div>
             <button onClick={onRetry} style={btn(C.blueGrad, { fontSize: 12 })}><RotateCcw size={13} /> Try again</button>
           </motion.div>
         )}
@@ -490,7 +490,7 @@ function Running({
                 />
               </div>
             ) : (
-              <div role="radiogroup" aria-label="Answer choices" style={CC({ gap: 9 })}>
+              <div role="radiogroup" aria-label="Answer choices" style={CC({ gap: 8 })}>
                 {question.ch.map((choice, i) => {
                   const on = selected === i;
                   return (
@@ -506,9 +506,9 @@ function Running({
                       }}
                     >
                       <span style={{
-                        width: 24, height: 24, borderRadius: 7, flexShrink: 0, display: 'grid', placeItems: 'center',
+                        width: 24, height: 24, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center',
                         border: `1.5px solid ${on ? accent : C.b2}`, background: on ? accentFill(accent) : 'transparent',
-                        color: on ? C.onAccent : C.t3, fontSize: 12, fontWeight: 800, fontFamily: C.FM, marginTop: 1,
+                        color: on ? C.onAccent : C.t3, fontSize: 12, fontWeight: 800, fontFamily: C.FM, marginTop: 4,
                       }}>{'ABCD'[i]}</span>
                       <span style={{ minWidth: 0 }}><MathText text={choice} /></span>
                     </button>
@@ -517,12 +517,12 @@ function Running({
               </div>
             )}
 
-            <div className="sat-action-bar" style={{ ...R({ justifyContent: 'space-between', marginTop: 18, flexWrap: 'wrap', gap: 10 }) }}>
-              <button onClick={onAbandon} style={btnG({ fontSize: 11, padding: '7px 14px', color: C.t3 })}>End baseline</button>
+            <div className="sat-action-bar" style={{ ...R({ justifyContent: 'space-between', marginTop: 16, flexWrap: 'wrap', gap: 8 }) }}>
+              <button onClick={onAbandon} style={btnG({ fontSize: 11, padding: '8px 12px', color: C.t3 })}>End baseline</button>
               <button
                 onClick={onSubmit} disabled={!ready}
                 style={satBtn(accent, {
-                  padding: '11px 24px', fontSize: 13.5, borderRadius: 11,
+                  padding: '12px 24px', fontSize: 13.5, borderRadius: 12,
                   opacity: ready ? 1 : 0.4, cursor: ready ? 'pointer' : 'not-allowed',
                 })}
               >
@@ -546,29 +546,29 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
   const generatedCount = result.flagged.filter(f => f.question?.generated).length;
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       {/* ── The number ─────────────────────────────────────────────────── */}
       <div style={{
         ...glass({ padding: isMobile ? 22 : 32, textAlign: 'center' }),
         background: satWash(accent, 0.09),
         border: `1px solid ${tint(accent, 0.24)}`,
       }}>
-        <div style={{ ...lbl({ marginBottom: 10 }), color: accent }}>Your baseline</div>
-        <div style={{ fontSize: isMobile ? 40 : 56, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: '-.04em', lineHeight: 1 }}>
+        <div style={{ ...lbl({ marginBottom: 8 }), color: accent }}>Your baseline</div>
+        <div style={{ fontSize: isMobile ? 40 : 56, fontWeight: 800, fontFamily: C.FD, color: C.t1, letterSpacing: 'calc(-0.04em + var(--msp-letter-spacing))', lineHeight: 1 }}>
           {result.low}<span style={{ color: C.t3, fontWeight: 500 }}>–</span>{result.high}
         </div>
-        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 10, lineHeight: 1.6, maxWidth: 520, margin: '10px auto 0' }}>
+        <div style={{ fontSize: 12.5, color: C.t3, marginTop: 8, lineHeight: 1.6, maxWidth: 520, margin: '10px auto 0' }}>
           A range, not a score. Thirty-five questions place you in a band — anyone who quotes you a single number
           off a practice test this length is overselling what it can tell them.
         </div>
-        <div style={{ ...R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }), marginTop: 14 }}>
-          <span style={pill(tint(confColor, 0.15), confColor, { gap: 5 })}><ShieldCheck size={11} />{result.confidence} confidence</span>
+        <div style={{ ...R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }), marginTop: 12 }}>
+          <span style={pill(tint(confColor, 0.15), confColor, { gap: 4 })}><ShieldCheck size={11} />{result.confidence} confidence</span>
           <span style={pill(tint(C.t3, 0.12), C.t2)}>{result.correct}/{result.answered} correct</span>
-          <span style={pill(tint(C.t3, 0.12), C.t2, { gap: 5 })}><Clock size={11} />{fmtDuration(result.durationMs)}</span>
+          <span style={pill(tint(C.t3, 0.12), C.t2, { gap: 4 })}><Clock size={11} />{fmtDuration(result.durationMs)}</span>
           {result.percentile != null && <span style={pill(tint(C.blue, 0.14), C.blueL)}>~{result.percentile}th percentile</span>}
         </div>
         {delta && (
-          <div style={{ fontSize: 12.5, color: C.t2, marginTop: 14, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12.5, color: C.t2, marginTop: 12, lineHeight: 1.6 }}>
             {delta.significant
               ? <><strong style={{ color: delta.direction === 'up' ? C.greenL : C.roseL }}>{delta.delta > 0 ? '+' : ''}{delta.delta}</strong> against your last baseline — real movement, beyond the noise in both estimates.</>
               : <>Effectively level with your last baseline ({delta.delta > 0 ? '+' : ''}{delta.delta}) — that gap is inside the margin, so treat it as the same result.</>}
@@ -577,15 +577,15 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
       </div>
 
       {/* ── Sections ───────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2,1fr)', gap: 12 }}>
         {Object.values(result.sections).map(sec => (
-          <div key={sec.section} style={glass({ padding: 18 })}>
-            <div style={R({ justifyContent: 'space-between', marginBottom: 10 })}>
+          <div key={sec.section} style={glass({ padding: 16 })}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
               <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{sec.label}</span>
-              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: C.FD, color: sec.section === 'rw' ? C.blueL : C.violetL, letterSpacing: '-.02em' }}>{sec.scaled}</span>
+              <span style={{ fontSize: 22, fontWeight: 800, fontFamily: C.FD, color: sec.section === 'rw' ? C.blueL : C.violetL, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{sec.scaled}</span>
             </div>
             <Bar pct={((sec.scaled - 200) / 600) * 100} color={sec.section === 'rw' ? C.blue : C.violet} h={5} />
-            <div style={{ fontSize: 11.5, color: C.t3, marginTop: 9, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 11.5, color: C.t3, marginTop: 8, lineHeight: 1.6 }}>
               {sec.correct}/{sec.answered} correct.
               {sec.ceiling
                 ? ` You were still reliable at ${DIFF_LABEL[sec.ceiling].toLowerCase()} questions — that's your working ceiling right now.`
@@ -598,20 +598,20 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
       {/* ── What to work on ────────────────────────────────────────────── */}
       {result.weakest.length > 0 && (
         <SatCard title="Where the points are" icon={Target} iconColor={C.rose} m={isMobile}>
-          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
             Ranked by leverage — how far off you were, multiplied by how heavily the real exam tests it.
             Your single worst skill is often worth two questions on test day; starting there would waste a week.
           </div>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {result.weakest.map(s => (
-              <div key={s.skill} style={{ ...glass2({ padding: 13 }), ...R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }) }}>
+              <div key={s.skill} style={{ ...glass2({ padding: 12 }), ...R({ justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }) }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{s.label}</div>
-                  <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
                     {s.sectionLabel} · {s.correct}/{s.seen} correct{s.hardestCorrect ? ` · cleared up to ${DIFF_LABEL[s.hardestCorrect].toLowerCase()}` : ''}
                   </div>
                 </div>
-                <button onClick={() => onNavigate?.('practice', { skill: s.skill })} style={btnG({ fontSize: 11, padding: '6px 13px' })}>
+                <button onClick={() => onNavigate?.('practice', { skill: s.skill })} style={btnG({ fontSize: 11, padding: '4px 12px' })}>
                   Drill this <ArrowRight size={11} />
                 </button>
               </div>
@@ -633,7 +633,7 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
 
       {result.flagged.length > 0 && (
         <SatCard title="The {result.flagged.length} you missed" icon={XCircle} iconColor={C.amber} m={isMobile}>
-          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginBottom: 12 }}>
             All of these are already in your Review Log on a spaced schedule. Work through them there — a miss nobody
             diagnoses simply repeats.
           </div>
@@ -646,21 +646,21 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
                   <button
                     onClick={() => setReviewIdx(open ? null : i)}
                     aria-expanded={open}
-                    style={{ width: '100%', textAlign: 'left', padding: '12px 14px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10 }}
+                    style={{ width: '100%', textAlign: 'left', padding: '12px 12px', background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
                   >
                     <span style={{ fontSize: 11, fontFamily: C.FM, color: C.t4, flexShrink: 0 }}>Q{miss.index + 1}</span>
                     <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: C.t2, fontWeight: 600 }}>{m.label}</span>
-                    <span style={pill(tint(DIFF_COLOR()[miss.difficulty] || C.blue, 0.14), DIFF_COLOR()[miss.difficulty] || C.blue, { fontSize: 9.5, padding: '1px 8px' })}>{DIFF_LABEL[miss.difficulty]}</span>
+                    <span style={pill(tint(DIFF_COLOR()[miss.difficulty] || C.blue, 0.14), DIFF_COLOR()[miss.difficulty] || C.blue, { fontSize: 9.5, padding: '4px 8px' })}>{DIFF_LABEL[miss.difficulty]}</span>
                     <ChevronRight size={13} color={C.t4} style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .18s' }} />
                   </button>
                   {open && miss.question && (
-                    <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${C.b1}` }}>
+                    <div style={{ padding: '0px 12px 12px', borderTop: `1px solid ${C.b1}` }}>
                       {miss.question.stimulus && (
-                        <div className="msp-prose" style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.75, margin: '12px 0' }}>
+                        <div className="msp-prose" style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.75, margin: '12px 0px' }}>
                           <MathText text={miss.question.stimulus} />
                         </div>
                       )}
-                      <div style={{ fontSize: 13, color: C.t1, fontWeight: 600, lineHeight: 1.65, marginBottom: 10 }}>
+                      <div style={{ fontSize: 13, color: C.t1, fontWeight: 600, lineHeight: 1.65, marginBottom: 8 }}>
                         <MathText text={miss.question.q} />
                       </div>
                       {Array.isArray(miss.question.ch) && miss.question.ch.map((choice, ci) => {
@@ -668,25 +668,25 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
                         const isPick = ci === miss.choice;
                         return (
                           <div key={ci} style={{
-                            padding: '8px 11px', borderRadius: 9, marginBottom: 5, fontSize: 12.5, lineHeight: 1.6,
+                            padding: '8px 12px', borderRadius: 8, marginBottom: 4, fontSize: 12.5, lineHeight: 1.6,
                             background: isAns ? tint(C.green, 0.09) : isPick ? tint(C.rose, 0.09) : 'transparent',
                             border: `1px solid ${isAns ? tint(C.green, 0.3) : isPick ? tint(C.rose, 0.3) : C.b0}`,
                             color: C.t2,
                           }}>
                             <div style={R({ gap: 8, alignItems: 'flex-start' })}>
-                              {isAns ? <CheckCircle2 size={13} color={C.greenL} style={{ flexShrink: 0, marginTop: 2 }} />
-                                : isPick ? <XCircle size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 2 }} />
+                              {isAns ? <CheckCircle2 size={13} color={C.greenL} style={{ flexShrink: 0, marginTop: 4 }} />
+                                : isPick ? <XCircle size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 4 }} />
                                 : <span style={{ width: 13, flexShrink: 0 }} />}
                               <span><strong style={{ color: C.t3 }}>{'ABCD'[ci]}.</strong> <MathText text={choice} /></span>
                             </div>
                             {miss.question.distractorExp?.[ci] && (isAns || isPick) && (
-                              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 5, paddingLeft: 21, lineHeight: 1.6 }}>{miss.question.distractorExp[ci]}</div>
+                              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, paddingLeft: 20, lineHeight: 1.6 }}>{miss.question.distractorExp[ci]}</div>
                             )}
                           </div>
                         );
                       })}
                       {miss.question.exp && (
-                        <div style={{ ...glass2({ padding: 11 }), marginTop: 8, fontSize: 12, color: C.t2, lineHeight: 1.7 }}>
+                        <div style={{ ...glass2({ padding: 12 }), marginTop: 8, fontSize: 12, color: C.t2, lineHeight: 1.7 }}>
                           <MathText text={miss.question.exp} />
                         </div>
                       )}
@@ -700,19 +700,19 @@ function Results({ result, history, accent, isMobile, onNavigate, onDone, review
       )}
 
       {/* ── Next ───────────────────────────────────────────────────────── */}
-      <div style={{ ...glass({ padding: 18 }), ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
+      <div style={{ ...glass({ padding: 16 }), ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
         <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, flex: 1, minWidth: 220 }}>
           Your next baseline unlocks in {BASELINE_COOLDOWN_DAYS} days. Between now and then, this result is what the
           rest of the SAT tab plans against.
         </div>
-        <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <button onClick={() => onNavigate?.('review')} style={btnG({ fontSize: 12 })}>Review Log</button>
           <button onClick={() => onNavigate?.('practice')} style={btn(C.blueGrad, { fontSize: 12 })}>Start practicing <ArrowRight size={12} /></button>
           <button onClick={onDone} style={btnG({ fontSize: 12 })}>Done</button>
         </div>
       </div>
 
-      <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.7, textAlign: 'center', padding: '0 12px' }}>{SCORE_DISCLAIMER}</div>
+      <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.7, textAlign: 'center', padding: '0px 12px' }}>{SCORE_DISCLAIMER}</div>
     </div>
   );
 }

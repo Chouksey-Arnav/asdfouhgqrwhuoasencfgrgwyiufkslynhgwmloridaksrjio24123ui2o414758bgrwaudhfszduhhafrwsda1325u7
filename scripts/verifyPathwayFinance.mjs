@@ -167,7 +167,7 @@ assert('an unknown pathway returns null rather than a zeroed row that reads as f
   eq('residency borrows nothing', res.borrowed, 0);
   assert('residency still accrues interest — the fact nobody warns students about',
     res.interestAccrued > 0, `got ${res.interestAccrued}`);
-  assert('residency interest is partly paid down, not modelled at zero payments',
+  assert('residency interest is partly paid down, not modeled at zero payments',
     res.interestPaidDuringPhase > 0);
 }
 

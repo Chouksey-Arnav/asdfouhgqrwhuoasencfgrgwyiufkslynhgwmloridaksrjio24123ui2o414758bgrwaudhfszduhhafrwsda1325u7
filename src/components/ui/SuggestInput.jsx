@@ -79,9 +79,9 @@ export default function SuggestInput({
       {open && options.length > 0 && (
         // Solid fill + high z-index: the glass surfaces used elsewhere let the cards underneath
         // bleed through and made the list unreadable where it overlaps the form.
-        <div ref={listRef} role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, background: C.s2, border: `1px solid ${C.b2 || C.b1}`, borderRadius: 12, padding: 6, maxHeight, overflowY: 'auto', boxShadow: '0 18px 44px rgba(0,0,0,0.45)' }}>
+        <div ref={listRef} role="listbox" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, background: C.s2, border: `1px solid ${C.b2 || C.b1}`, borderRadius: 12, padding: 4, maxHeight, overflowY: 'auto', boxShadow: '0 18px 44px rgba(0,0,0,0.45)' }}>
           {emptyHint && !value.trim() && (
-            <div style={{ fontSize: 10.5, color: C.t3, padding: '4px 8px 6px' }}>{emptyHint}</div>
+            <div style={{ fontSize: 10.5, color: C.t3, padding: '4px 8px 4px' }}>{emptyHint}</div>
           )}
           {options.map((o, i) => {
             const header = o.group && o.group !== lastGroup ? o.group : null;
@@ -90,7 +90,7 @@ export default function SuggestInput({
             return (
               <React.Fragment key={o.key ?? o.label}>
                 {header && (
-                  <div style={{ fontSize: 9.5, fontWeight: 800, color: C.t3, textTransform: 'uppercase', letterSpacing: '.09em', padding: '8px 8px 4px' }}>{header}</div>
+                  <div style={{ fontSize: 9.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding: '8px 8px 4px' }}>{header}</div>
                 )}
                 <div
                   role="option"
@@ -98,11 +98,11 @@ export default function SuggestInput({
                   data-active={isActive ? '1' : '0'}
                   onMouseDown={e => { e.preventDefault(); pick(o); }}
                   onMouseEnter={() => setActive(i)}
-                  style={{ padding: '8px 10px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent' }}
+                  style={{ padding: '8px 8px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, background: isActive ? 'rgba(255,255,255,0.07)' : 'transparent' }}
                 >
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.label}</div>
-                    {o.sub && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.sub}</div>}
+                    {o.sub && <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{o.sub}</div>}
                   </div>
                   {o.meta && <div style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM, textAlign: 'right', flexShrink: 0 }}>{o.meta}</div>}
                 </div>

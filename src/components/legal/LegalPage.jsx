@@ -47,7 +47,7 @@ function docMeta(slug) {
 
 function Paragraph({ children }) {
   return (
-    <p style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.72, color: P.t2 }}>{children}</p>
+    <p style={{ margin: '0px 0px 12px', fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', lineHeight: 1.53, color: P.t2 }}>{children}</p>
   );
 }
 
@@ -55,10 +55,10 @@ function Emphasis({ children }) {
   return (
     <p
       style={{
-        margin: '0 0 16px',
-        padding: '14px 16px',
+        margin: '0px 0px 16px',
+        padding: '12px 16px',
         fontSize: 14.5,
-        lineHeight: 1.7,
+        lineHeight: 1.54,
         color: P.t1,
         fontWeight: 600,
         background: P.surfHi,
@@ -75,10 +75,10 @@ function Note({ children }) {
   return (
     <div
       style={{
-        margin: '0 0 18px',
-        padding: '15px 17px',
+        margin: '0px 0px 16px',
+        padding: '16px 16px',
         fontSize: 14.5,
-        lineHeight: 1.7,
+        lineHeight: 1.54,
         color: P.t1,
         background: 'rgba(96,165,250,0.10)',
         border: '1px solid rgba(96,165,250,0.28)',
@@ -94,12 +94,12 @@ function SubHeading({ children }) {
   return (
     <h3
       style={{
-        margin: '24px 0 10px',
+        margin: '24px 0px 8px',
         fontSize: 16,
         fontWeight: 700,
         color: P.t1,
         fontFamily: P.FD,
-        letterSpacing: '-0.01em',
+        letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))',
       }}
     >
       {children}
@@ -109,16 +109,16 @@ function SubHeading({ children }) {
 
 function BulletList({ items }) {
   return (
-    <ul style={{ margin: '0 0 16px', padding: 0, listStyle: 'none' }}>
+    <ul style={{ margin: '0px 0px 16px', padding: 0, listStyle: 'none' }}>
       {items.map((item, i) => (
         <li
           key={i}
           style={{
             position: 'relative',
-            padding: '0 0 0 20px',
-            margin: '0 0 9px',
-            fontSize: 15,
-            lineHeight: 1.68,
+            padding: '0px 0px 0px 20px',
+            margin: '0px 0px 8px',
+            fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))',
+            lineHeight: 1.53,
             color: P.t2,
           }}
         >
@@ -142,21 +142,21 @@ function BulletList({ items }) {
  */
 function LegalTable({ caption, columns, rows, links }) {
   return (
-    <div style={{ margin: '0 0 20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+    <div style={{ margin: '0px 0px 20px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
       <table
         style={{
           width: '100%',
           minWidth: columns.length > 2 ? 560 : 380,
           borderCollapse: 'collapse',
           fontSize: 13.5,
-          lineHeight: 1.6,
+          lineHeight: 1.55,
         }}
       >
         <caption
           style={{
             captionSide: 'top',
             textAlign: 'left',
-            padding: '0 0 8px',
+            padding: '0px 0px 8px',
             fontSize: 13,
             fontWeight: 600,
             color: P.t3,
@@ -172,12 +172,11 @@ function LegalTable({ caption, columns, rows, links }) {
                 scope="col"
                 style={{
                   textAlign: 'left',
-                  padding: '9px 12px',
+                  padding: '8px 12px',
                   color: P.t1,
                   fontWeight: 700,
                   fontSize: 12.5,
-                  letterSpacing: '.03em',
-                  textTransform: 'uppercase',
+                  letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
                   background: P.surfHi,
                   borderBottom: `1px solid ${P.b1}`,
                   whiteSpace: 'nowrap',
@@ -195,7 +194,7 @@ function LegalTable({ caption, columns, rows, links }) {
                 <td
                   key={c}
                   style={{
-                    padding: '10px 12px',
+                    padding: '8px 12px',
                     color: c === 0 ? P.t1 : P.t2,
                     fontWeight: c === 0 ? 600 : 400,
                     verticalAlign: 'top',
@@ -253,8 +252,8 @@ function Section({ section }) {
   }
 
   return (
-    <section id={section.id} style={{ margin: '0 0 40px', scrollMarginTop: 20 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '0 0 12px' }}>
+    <section id={section.id} style={{ margin: '0px 0px 40px', scrollMarginTop: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, margin: '0px 0px 12px' }}>
         <h2
           style={{
             margin: 0,
@@ -262,7 +261,7 @@ function Section({ section }) {
             fontWeight: 800,
             color: P.t1,
             fontFamily: P.FD,
-            letterSpacing: '-0.015em',
+            letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))',
             lineHeight: 1.35,
           }}
         >
@@ -349,10 +348,10 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
           style={{
             display: 'inline-flex',
             alignItems: 'center',
-            gap: 7,
+            gap: 8,
             background: 'none',
             border: 'none',
-            padding: '8px 0',
+            padding: '8px 0px',
             marginBottom: 12,
             color: P.t3,
             fontSize: 14,
@@ -365,14 +364,13 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
 
         {/* Header */}
         <header style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <Icon size={22} color={P.blueL} />
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 700,
-                letterSpacing: '.08em',
-                textTransform: 'uppercase',
+                letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
                 color: P.t3,
               }}
             >
@@ -381,22 +379,22 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
           </div>
           <h1
             style={{
-              margin: '0 0 10px',
+              margin: '0px 0px 8px',
               fontSize: 32,
               lineHeight: 1.15,
               fontWeight: 800,
               fontFamily: P.FD,
-              letterSpacing: '-0.025em',
+              letterSpacing: 'calc(-0.73px + var(--msp-letter-spacing))',
               color: P.t1,
             }}
           >
             {doc.title}
           </h1>
-          <p style={{ margin: '0 0 14px', fontSize: 13.5, color: P.t3, fontFamily: P.FM }}>
+          <p style={{ margin: '0px 0px 12px', fontSize: 13.5, color: P.t3, fontFamily: P.FM }}>
             Version {meta.version} · Effective {formatLegalDate(meta.effective)} · Last updated{' '}
             {formatLegalDate(meta.updated)}
           </p>
-          <p style={{ margin: 0, fontSize: 15.5, lineHeight: 1.7, color: P.t2 }}>{doc.intro}</p>
+          <p style={{ margin: 0, fontSize: 15.5, letterSpacing: 'calc(-0.04px + var(--msp-letter-spacing))', lineHeight: 1.51, color: P.t2 }}>{doc.intro}</p>
         </header>
 
         {/* Companion document */}
@@ -407,11 +405,11 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
             display: 'inline-flex',
             alignItems: 'center',
             gap: 8,
-            padding: '9px 15px',
-            marginBottom: 30,
+            padding: '8px 16px',
+            marginBottom: 28,
             background: P.surfHi,
             border: `1px solid ${P.b1}`,
-            borderRadius: 10,
+            borderRadius: 8,
             color: P.t1,
             fontSize: 13.5,
             fontWeight: 600,
@@ -427,25 +425,24 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
           aria-label={`${doc.title} contents`}
           style={{
             marginBottom: 36,
-            padding: '16px 18px',
+            padding: '16px 16px',
             background: P.surf,
             border: `1px solid ${P.b1}`,
-            borderRadius: 14,
+            borderRadius: 12,
           }}
         >
           <div
             style={{
               fontSize: 11.5,
               fontWeight: 700,
-              letterSpacing: '.08em',
-              textTransform: 'uppercase',
+              letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
               color: P.t3,
-              marginBottom: 10,
+              marginBottom: 8,
             }}
           >
             Contents
           </div>
-          <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 6 }}>
+          <ol style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 4 }}>
             {toc.map((s) => (
               <li key={s.id}>
                 <a
@@ -468,14 +465,14 @@ export default function LegalPage({ slug, onBack, onNavigate }) {
         <footer
           style={{
             marginTop: 48,
-            paddingTop: 22,
+            paddingTop: 20,
             borderTop: `1px solid ${P.b1}`,
             fontSize: 13,
-            lineHeight: 1.7,
+            lineHeight: 1.55,
             color: P.t3,
           }}
         >
-          <p style={{ margin: '0 0 10px' }}>
+          <p style={{ margin: '0px 0px 8px' }}>
             © {new Date().getFullYear()} {LEGAL.operatorName}. Questions about this document:{' '}
             <a href={`mailto:${LEGAL.contactEmail}`} style={{ color: P.blueL }}>
               {LEGAL.contactEmail}

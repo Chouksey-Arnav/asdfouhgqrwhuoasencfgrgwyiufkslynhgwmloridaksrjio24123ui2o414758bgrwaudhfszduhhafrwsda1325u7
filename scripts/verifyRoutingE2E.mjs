@@ -111,7 +111,7 @@ try {
   // nothing to do with routing, but it eats clicks.
   async function dismissChest() {
     for (let i = 0; i < 4; i += 1) {
-      const open = page.locator('button:has-text("Open Chest")');
+      const open = page.locator('button:has-text("Open chest")');
       if (await open.count()) { await open.first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(1400); continue; }
       const nice = page.locator('button:has-text("Nice!")');
       if (await nice.count()) { await nice.first().click({ timeout: 3000 }).catch(() => {}); await page.waitForTimeout(500); continue; }
@@ -131,7 +131,7 @@ try {
   await page.waitForURL('**/sat/**', { timeout: 10000 });
   check(url() === '/sat/overview', `SAT tab → /sat/overview (got ${url()})`);
 
-  await pill('Full Tests').click();
+  await pill('Full tests').click();
   await page.waitForURL('**/sat/tests', { timeout: 10000 });
   check(url() === '/sat/tests', `SAT sub-tab → /sat/tests (got ${url()})`);
 
@@ -195,7 +195,7 @@ try {
   await page.goto(`${BASE}/prep/pathways`, { waitUntil: 'domcontentloaded' });
   await page.locator('a[aria-current="page"]:has-text("Pathway")').waitFor({ timeout: 20000 });
   await dismissChest();
-  const startLesson = page.locator('button:has-text("Start Lesson")').first();
+  const startLesson = page.locator('button:has-text("Start lesson")').first();
   if (await startLesson.count()) {
     await startLesson.click();
     await page.waitForTimeout(900);
@@ -221,7 +221,7 @@ try {
   // Small viewport so an ordinary panel is guaranteed to overflow.
   await page.setViewportSize({ width: 900, height: 480 });
   await page.goto(`${BASE}/portfolio/colleges`, { waitUntil: 'domcontentloaded' });
-  await page.locator('a[aria-current="page"]:has-text("College List")').waitFor({ timeout: 20000 });
+  await page.locator('a[aria-current="page"]:has-text("College list")').waitFor({ timeout: 20000 });
   await dismissChest();
   await page.waitForTimeout(600);
   await page.evaluate(() => { const el = document.querySelector('#msp-main'); if (el) el.scrollTop = 260; });

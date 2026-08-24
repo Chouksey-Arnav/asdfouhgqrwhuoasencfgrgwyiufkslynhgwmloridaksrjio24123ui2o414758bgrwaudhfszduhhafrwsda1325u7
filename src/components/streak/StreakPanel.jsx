@@ -36,7 +36,7 @@ import {
   Flame, Snowflake, Trophy, Target, Check, Lock, CalendarCheck, CalendarRange,
   Sparkles, TrendingUp, Info, Zap,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnG, pill, R, CC, lbl, tint, onTint, autoGrid } from '../../lib/theme';
+import { C, glass, glass2, btn, btnG, pill, R, CC, lbl, tint, onTint, autoGrid, CONTROL_TRANSITION } from '../../lib/theme';
 import {
   STREAK_GOALS, STREAK_TARGETS, STREAK_REWARDS, STREAK_ACTIONS,
   PERFECT_WEEK_REWARD, PERFECT_MONTH_REWARD, rewardKey, perfectWeekKey, perfectMonthKey,
@@ -108,33 +108,33 @@ export default function StreakPanel({
             boxShadow: `0 0 44px ${tint(league.color, 0.4)}`,
           }}>
             <Flame size={m ? 22 : 26} color={league.color} fill={streak > 0 ? league.color : 'none'} />
-            <div style={{ fontSize: m ? 20 : 24, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 2 }}>{streak}</div>
+            <div style={{ fontSize: m ? 20 : 24, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 4 }}>{streak}</div>
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 6 }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: league.color, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 4 }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: league.color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 Current streak
               </span>
               <LeagueChip streak={streak} size="sm" />
             </div>
-            <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, margin: '0 0 10px', fontFamily: C.FD, letterSpacing: '-.02em' }}>
+            <h2 style={{ fontSize: m ? 22 : 26, fontWeight: 800, color: C.t1, margin: '0px 0px 8px', fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
               {streak === 0 ? 'Start one today' : `${streak} day${streak === 1 ? '' : 's'} in a row`}
             </h2>
-            <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 8, flexWrap: 'wrap' })}>
               <span style={pill(C.s3, C.t2, { fontFamily: C.FM })}><Trophy size={11} style={{ marginRight: 4 }} />Best {bestStreak}</span>
               <span style={pill(C.s3, C.t2, { fontFamily: C.FM })}>{totalEarnedDays} days earned all-time</span>
               {bonusLabel && (
-                <span style={{ ...pill(tint(C.amber, 0.14), C.amberL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ ...pill(tint(C.amber, 0.14), C.amberL), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <TrendingUp size={11} />{bonusLabel} on everything
                 </span>
               )}
               {freezesHeld > 0 && (
-                <span style={{ ...pill(C.blueDim, C.blueL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ ...pill(C.blueDim, C.blueL), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <Snowflake size={11} />{freezesHeld} freeze{freezesHeld > 1 ? 's' : ''}
                 </span>
               )}
               {liveBoosts.length > 0 && (
-                <span style={{ ...pill(C.violetDim, C.violetL), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ ...pill(C.violetDim, C.violetL), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <Zap size={11} />{liveBoosts.length} boost{liveBoosts.length > 1 ? 's' : ''} live
                 </span>
               )}
@@ -144,9 +144,9 @@ export default function StreakPanel({
 
         {/* Today — the only live thing on this screen */}
         {day && (
-          <div style={{ position: 'relative', marginTop: 20, paddingTop: 18, borderTop: `1px solid ${C.b1}` }}>
-            <div style={R({ justifyContent: 'space-between', marginBottom: 9, flexWrap: 'wrap', gap: 8 })}>
-              <span style={R({ gap: 7 })}>
+          <div style={{ position: 'relative', marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.b1}` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 })}>
+              <span style={R({ gap: 8 })}>
                 {day.met
                   ? <span style={{ width: 20, height: 20, borderRadius: '50%', background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check size={13} color={onTint(C.green)} strokeWidth={3} /></span>
                   : <Target size={15} color={C.t2} />}
@@ -163,7 +163,7 @@ export default function StreakPanel({
                 style={{ height: '100%', borderRadius: 8, background: day.met ? C.green : `linear-gradient(90deg,${ACCENT},${C.orange})`, boxShadow: `0 0 14px ${(day.met ? C.green : ACCENT)}60` }}
               />
             </div>
-            <div style={{ fontSize: 12, color: day.met ? C.greenL : C.t2, marginTop: 9 }}>
+            <div style={{ fontSize: 12, color: day.met ? C.greenL : C.t2, marginTop: 8 }}>
               {day.met
                 ? (week?.stillPossible && !week.complete
                   ? `Locked in. ${week.remaining} more day${week.remaining === 1 ? '' : 's'} this week for the Perfect Week reward.`
@@ -184,7 +184,7 @@ export default function StreakPanel({
       {liveBoosts.length > 0 && (
         <div style={glass({ padding: m ? 16 : 20 })}>
           <div style={{ ...lbl({ marginBottom: 4 }) }}>Boosts running</div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 14 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12 }}>
             A boost multiplies every XP award while it lasts, on top of your league bonus.
           </div>
           <BoostList boosts={boosts} streakBonusLabel={bonusLabel} m={m} />
@@ -204,9 +204,9 @@ export default function StreakPanel({
 
       {/* ── 5. The record ────────────────────────────────────────────────── */}
       <div style={glass({ padding: m ? 16 : 22 })}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+        <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
           <div>
-            <div style={{ ...lbl(), marginBottom: 3 }}>Streak calendar</div>
+            <div style={{ ...lbl(), marginBottom: 4 }}>Streak calendar</div>
             <div style={{ fontSize: 11.5, color: C.t3 }}>Tap any day to see exactly what earned it.</div>
           </div>
         </div>
@@ -255,21 +255,21 @@ export default function StreakPanel({
               <button
                 key={g.id} onClick={() => onSetGoal?.(g.id)}
                 style={{
-                  ...glass2({ padding: 14, textAlign: 'left' }),
+                  ...glass2({ padding: 12, textAlign: 'left' }),
                   cursor: 'pointer', width: '100%',
                   border: `1.5px solid ${active ? ACCENT : C.b1}`,
                   background: active ? tint(ACCENT, 0.1) : C.surf2,
-                  transition: 'all .15s',
+                  transition: CONTROL_TRANSITION,
                 }}
               >
-                <div style={R({ justifyContent: 'space-between', marginBottom: 6 })}>
+                <div style={R({ justifyContent: 'space-between', marginBottom: 4 })}>
                   <span style={{ fontSize: 13.5, fontWeight: 800, color: active ? ACCENT : C.t1, fontFamily: C.FD }}>{g.label}</span>
                   {active && <Check size={14} color={ACCENT} strokeWidth={3} />}
                 </div>
-                <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, marginBottom: 7 }}>{g.credits} credits · {g.minutes}</div>
+                <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, marginBottom: 8 }}>{g.credits} credits · {g.minutes}</div>
                 <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.45, marginBottom: 8 }}>{g.blurb}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {g.examples.map(e => <span key={e} style={pill(C.s3, C.t3, { fontSize: 9.5, padding: '2px 8px' })}>{e}</span>)}
+                  {g.examples.map(e => <span key={e} style={pill(C.s3, C.t3, { fontSize: 9.5, padding: '4px 8px' })}>{e}</span>)}
                 </div>
               </button>
             );
@@ -277,7 +277,7 @@ export default function StreakPanel({
         </div>
 
         <div style={{ ...lbl(), marginTop: 24, marginBottom: 4 }}>Your streak goal</div>
-        <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 14 }}>
+        <div style={{ fontSize: 11.5, color: C.t3, marginBottom: 12 }}>
           The number you are actually aiming for. Every streak bar in the app measures against it.
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -287,8 +287,8 @@ export default function StreakPanel({
               <button
                 key={t} onClick={() => onSetTarget?.(t)}
                 style={{
-                  ...(active ? btn(`linear-gradient(135deg,${ACCENT},${C.orange})`, { padding: '9px 18px', fontSize: 12.5 })
-                    : btnG({ padding: '9px 18px', fontSize: 12.5 })),
+                  ...(active ? btn(`linear-gradient(135deg,${ACCENT},${C.orange})`, { padding: '8px 16px', fontSize: 12.5 })
+                    : btnG({ padding: '8px 16px', fontSize: 12.5 })),
                   minWidth: 76,
                 }}
               >{t} days</button>
@@ -299,7 +299,7 @@ export default function StreakPanel({
 
       {/* ── 8. What counts ───────────────────────────────────────────────── */}
       <div style={glass({ padding: m ? 16 : 22 })}>
-        <div style={R({ gap: 7, marginBottom: 4 })}>
+        <div style={R({ gap: 8, marginBottom: 4 })}>
           <Info size={13} color={C.t3} />
           <div style={{ ...lbl(), marginBottom: 0 }}>What earns credit</div>
         </div>
@@ -310,16 +310,16 @@ export default function StreakPanel({
         </div>
         <div style={autoGrid(210, 10)}>
           {Object.entries(STREAK_ACTIONS).map(([key, a]) => (
-            <div key={key} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div key={key} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 8 }}>
               <div style={{
-                width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+                width: 30, height: 30, borderRadius: 8, flexShrink: 0,
                 background: tint(ACCENT, 0.13), border: `1px solid ${tint(ACCENT, 0.28)}`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 12, fontWeight: 800, color: ACCENT, fontFamily: C.FM,
               }}>{a.credits}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12, fontWeight: 600, color: C.t1, lineHeight: 1.3 }}>{a.label}</div>
-                <div style={{ fontSize: 10, color: C.t4, marginTop: 2 }}>per {a.per}</div>
+                <div style={{ fontSize: 10, color: C.t4, marginTop: 4 }}>per {a.per}</div>
               </div>
             </div>
           ))}
@@ -337,8 +337,8 @@ function PerfectWeekCard({ week, claimed, m }) {
       border: `1px solid ${week.complete ? tint(C.green, 0.35) : C.b1}`,
       background: week.complete ? tint(C.green, 0.07) : C.surf,
     }}>
-      <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
-        <span style={R({ gap: 7 })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
+        <span style={R({ gap: 8 })}>
           <CalendarCheck size={15} color={tone} />
           <span style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Perfect Week</span>
         </span>
@@ -346,11 +346,11 @@ function PerfectWeekCard({ week, claimed, m }) {
           {claimed ? 'Claimed' : week.complete ? 'Earned' : `${week.met}/7`}
         </span>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 5, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginBottom: 12 }}>
         {week.days.map(d => (
           <div key={d.key} style={{ textAlign: 'center' }}>
             <div style={{
-              height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              height: 30, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: d.met ? ACCENT : d.frozen ? tint(C.blue, 0.2) : d.future ? 'transparent' : C.s2,
               border: d.isToday ? `1.5px solid ${C.t1}` : `1px solid ${d.future ? C.b1 : 'transparent'}`,
               opacity: d.future ? 0.35 : 1,
@@ -359,7 +359,7 @@ function PerfectWeekCard({ week, claimed, m }) {
                 : d.frozen ? <Snowflake size={11} color={C.blueL} />
                   : <span style={{ fontSize: 10, color: C.t4 }}>·</span>}
             </div>
-            <div style={{ fontSize: 9, color: d.isToday ? C.t1 : C.t4, marginTop: 3, fontWeight: d.isToday ? 800 : 600 }}>{d.letter}</div>
+            <div style={{ fontSize: 9, color: d.isToday ? C.t1 : C.t4, marginTop: 4, fontWeight: d.isToday ? 800 : 600 }}>{d.letter}</div>
           </div>
         ))}
       </div>
@@ -390,8 +390,8 @@ function PerfectMonthCard({ month, claimed, m }) {
       border: `1px solid ${month.complete ? tint(C.green, 0.35) : month.stillPossible ? tint(C.violet, 0.28) : C.b1}`,
       background: month.complete ? tint(C.green, 0.07) : month.stillPossible ? tint(C.violet, 0.05) : C.surf,
     }}>
-      <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
-        <span style={R({ gap: 7 })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
+        <span style={R({ gap: 8 })}>
           <CalendarRange size={15} color={tone} />
           <span style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Perfect {month.label}</span>
         </span>
@@ -402,13 +402,13 @@ function PerfectMonthCard({ month, claimed, m }) {
 
       {/* One pip per day of the month. Dense on purpose — the shape of the month
           is the information, not any individual square. */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(16, month.daysInMonth)}, 1fr)`, gap: 3, marginBottom: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(16, month.daysInMonth)}, 1fr)`, gap: 4, marginBottom: 12 }}>
         {month.days.map(d => (
           <div
             key={d.key}
             title={`${d.key}${d.met ? ' — earned' : d.frozen ? ' — frozen' : ''}`}
             style={{
-              height: 14, borderRadius: 3,
+              height: 14, borderRadius: 4,
               background: d.met ? C.violet : d.frozen ? tint(C.blue, 0.22) : d.future ? 'transparent' : C.s2,
               border: d.isToday ? `1px solid ${C.t1}` : `1px solid ${d.future ? C.b0 : 'transparent'}`,
               opacity: d.future ? 0.4 : 1,
@@ -431,8 +431,8 @@ function PerfectMonthCard({ month, claimed, m }) {
 function TargetCard({ targetInfo, streak, next, m }) {
   return (
     <div style={glass({ padding: m ? 16 : 20 })}>
-      <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
-        <span style={R({ gap: 7 })}>
+      <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
+        <span style={R({ gap: 8 })}>
           <Target size={15} color={ACCENT} />
           <span style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Your streak goal</span>
         </span>
@@ -452,7 +452,7 @@ function TargetCard({ targetInfo, streak, next, m }) {
         {targetInfo.surpassed && ` You already passed ${targetInfo.original}.`}
       </div>
       {next && (
-        <div style={{ ...R({ gap: 7 }), marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
+        <div style={{ ...R({ gap: 8 }), marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
           <Trophy size={13} color={C.goldL} />
           <span style={{ fontSize: 11.5, color: C.t3 }}>
             Next reward at {next.days} days — +{next.xp} XP
@@ -485,7 +485,7 @@ function RewardRow({ reward, streak, claimed, m }) {
             : <Lock size={14} color={C.t4} />}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={R({ justifyContent: 'space-between', gap: 8, marginBottom: 3, flexWrap: 'wrap' })}>
+        <div style={R({ justifyContent: 'space-between', gap: 8, marginBottom: 4, flexWrap: 'wrap' })}>
           <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
             {reward.days} days · {reward.title}
           </span>
@@ -495,8 +495,8 @@ function RewardRow({ reward, streak, claimed, m }) {
         </div>
         <div style={{ fontSize: 11, color: C.t3, marginBottom: reached ? 0 : 7, lineHeight: 1.4 }}>{reward.blurb}</div>
         {!reached && (
-          <div style={{ height: 4, borderRadius: 3, background: C.s2, overflow: 'hidden' }}>
-            <div style={{ width: `${pct}%`, height: '100%', background: tint(ACCENT, 0.6), borderRadius: 3 }} />
+          <div style={{ height: 4, borderRadius: 4, background: C.s2, overflow: 'hidden' }}>
+            <div style={{ width: `${pct}%`, height: '100%', background: tint(ACCENT, 0.6), borderRadius: 4 }} />
           </div>
         )}
       </div>

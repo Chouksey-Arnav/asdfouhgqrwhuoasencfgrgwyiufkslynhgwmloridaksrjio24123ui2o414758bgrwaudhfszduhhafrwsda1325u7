@@ -140,7 +140,7 @@ export function downloadIcs(events, opts = {}) {
   a.click();
   a.remove();
   // Revoked on the next tick rather than immediately: Safari has historically
-  // cancelled the download if the object URL dies inside the same task.
+  // canceled the download if the object URL dies inside the same task.
   setTimeout(() => URL.revokeObjectURL(url), 0);
   return events.filter((e) => e && e.date).length;
 }

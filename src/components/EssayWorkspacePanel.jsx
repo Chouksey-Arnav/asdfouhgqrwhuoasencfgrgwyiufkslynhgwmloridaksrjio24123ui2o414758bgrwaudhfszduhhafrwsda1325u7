@@ -35,7 +35,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 // gap a general tool cannot close because it does not know what the student is
 // applying to:
 //
-//  1. THE ESSAY THAT ACTUALLY DECIDES THESE ADMISSIONS was not modelled at all.
+//  1. THE ESSAY THAT ACTUALLY DECIDES THESE ADMISSIONS was not modeled at all.
 //     "Why this pathway" is not written in senior year; it is assembled over
 //     four years out of moments a student cannot articulate at the time and
 //     cannot reconstruct afterwards. It is now a persistent working document
@@ -49,7 +49,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 //  3. NINTH AND TENTH GRADERS were handed an application-essay task list they
 //     cannot act on for two or three years. The tracker is still visible and
 //     still clickable for them — hiding it would mean arriving at junior year
-//     never having seen it — but it is labelled as junior-year work and it is
+//     never having seen it — but it is labeled as junior-year work and it is
 //     out of their working set. Their surface is the journal.
 //
 // And the AI policy is enforced where the writing happens rather than in the
@@ -58,7 +58,7 @@ import EssayVersionHistory, { VersionLabelFields } from './portfolio/EssayVersio
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STATUSES = [
-  { id: 'not_started', label: 'Not Started', color: C.t3 },
+  { id: 'not_started', label: 'Not started', color: C.t3 },
   { id: 'outlining', label: 'Outlining', color: C.violetL },
   { id: 'drafting', label: 'Drafting', color: C.blueL },
   { id: 'revising', label: 'Revising', color: C.amberL },
@@ -332,7 +332,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
   );
 
   const tracker = (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       {programCards.length > 0 && (
         <ProgramPromptsCard cards={programCards} essays={essays} accent={C.blue} isMobile={isMobile}
           onCreateEssay={createEssayFromRow} />
@@ -357,18 +357,18 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
 
       <div style={{ ...glass({ padding: isMobile ? 15 : 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
         <SectionTitle icon={Plus} color={accent}>Start a new essay</SectionTitle>
-        <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           <input style={inp({ flex: 1, minWidth: 180 })} placeholder="e.g. Common App Personal Statement" value={newTitle} onChange={e => setNewTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && addEssay()} />
-          <button style={btn(accent !== C.blue ? accent : C.blueGrad)} onClick={addEssay}><Plus size={14} />New Essay</button>
+          <button style={btn(accent !== C.blue ? accent : C.blueGrad)} onClick={addEssay}><Plus size={14} />New essay</button>
         </div>
-        <div style={{ marginTop: 11 }}>
+        <div style={{ marginTop: 12 }}>
           <HelpNote>You can rename it later, and nothing here is submitted anywhere — this is your own workspace.</HelpNote>
         </div>
       </div>
 
       {!loading && essays.length === 0 && (
-        <div style={glass({ padding: 30, textAlign: 'center' })}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+        <div style={glass({ padding: 28, textAlign: 'center' })}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: tint(accent, 0.12), border: `1px solid ${tint(accent, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
             <FileText size={22} color={accent} />
           </div>
           <div style={{ fontSize: 14, color: C.t2 }}>
@@ -393,9 +393,9 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
               <div key={essay.id} onClick={() => selectEssay(essay)} style={{ ...glass2({ padding: 12, cursor: 'pointer', border: selected?.id === essay.id ? `1px solid ${accent}60` : `1px solid ${C.b1}` }), borderLeft: `3px solid ${st.color}`, background: selected?.id === essay.id ? `linear-gradient(120deg,${tint(accent, 0.08)},rgba(255,255,255,0.02))` : undefined }}>
                 <div style={R({ gap: 8, justifyContent: 'space-between' })}>
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{essay.title}</span>
-                  <button style={btnSm(C.roseDim, { color: C.rose, padding: '3px 8px' })} onClick={e => { e.stopPropagation(); removeEssay(essay.id); }}><Trash2 size={11} /></button>
+                  <button style={btnSm(C.roseDim, { color: C.rose, padding: '4px 8px' })} onClick={e => { e.stopPropagation(); removeEssay(essay.id); }}><Trash2 size={11} /></button>
                 </div>
-                <div style={R({ gap: 6, marginTop: 6 })}>
+                <div style={R({ gap: 4, marginTop: 4 })}>
                   <span style={pill(`${st.color}18`, st.color, { fontSize: 9 })}>{st.label}</span>
                   <span style={{ fontSize: 10, color: C.t3 }}>{ewc}/{essay.word_limit} words</span>
                 </div>
@@ -404,8 +404,8 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
                     from {essay.source_label}
                   </div>
                 )}
-                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden', marginTop: 8 }}>
-                  <div style={{ height: '100%', width: `${wpct}%`, background: ewc > essay.word_limit ? C.rose : st.color, borderRadius: 2, transition: 'width .3s' }} />
+                <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden', marginTop: 8 }}>
+                  <div style={{ height: '100%', width: '100%', transform: `scaleX(${(wpct) / 100})`, transformOrigin: 'left', background: ewc > essay.word_limit ? C.rose : st.color, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
                 </div>
               </div>
             );
@@ -413,9 +413,9 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
         </div>
 
         {selected && (
-          <div style={glass({ padding: 18 })}>
-            <div style={R({ gap: 10, flexWrap: 'wrap', marginBottom: 14, justifyContent: 'space-between' })}>
-              <input style={{ ...inp({ fontSize: 15, fontWeight: 700, width: 'auto', flex: 1, minWidth: 160 }) }} value={selected.title}
+          <div style={glass({ padding: 16 })}>
+            <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 12, justifyContent: 'space-between' })}>
+              <input style={{ ...inp({ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 700, width: 'auto', flex: 1, minWidth: 160 }) }} value={selected.title}
                 onChange={e => setEssayLocal(selected.id, { title: e.target.value })}
                 onBlur={e => updateItem('essays', selected.id, { title: e.target.value }).catch(err => toast.error(err.message))} />
               <select style={inp({ width: 'auto' })} value={selected.status} onChange={e => patchEssay(selected.id, { status: e.target.value })}>
@@ -423,7 +423,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
               </select>
             </div>
             {selected.source_label && (
-              <div style={{ ...glass2({ padding: '9px 12px' }), marginBottom: 12, fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
+              <div style={{ ...glass2({ padding: '8px 12px' }), marginBottom: 12, fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
                 This prompt came from <b style={{ color: C.t2 }}>{selected.source_label}</b>'s own supplemental application.
                 Confirm the wording and the word limit on the program's page before you submit — program prompts change year to year.
               </div>
@@ -451,13 +451,13 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
                 placeholder="Paste the essay prompt here…" />
             </div>
             <div style={{ marginTop: 12 }}>
-              <div style={R({ justifyContent: 'space-between', marginBottom: 7 })}>
+              <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
                 <label style={lbl({ marginBottom: 0 })}>Draft</label>
                 <span style={{ fontSize: 11, color: over ? C.roseL : C.t3 }}>{wc} / {selected.word_limit} words</span>
               </div>
-              <textarea style={{ ...inp(), minHeight: 260, resize: 'vertical', lineHeight: 1.6 }} value={draft} onChange={e => setDraft(e.target.value)} placeholder="Write your essay here…" />
-              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginTop: 8 }}>
-                <div style={{ height: '100%', width: `${selected.word_limit ? Math.min(100, Math.round((wc / selected.word_limit) * 100)) : 0}%`, background: over ? C.rose : wc >= selected.word_limit * 0.85 ? C.amber : accent, borderRadius: 3, transition: 'width .3s' }} />
+              <textarea style={{ ...inp(), minHeight: 260, resize: 'vertical', lineHeight: 1.55 }} value={draft} onChange={e => setDraft(e.target.value)} placeholder="Write your essay here…" />
+              <div style={{ height: 4, background: 'rgba(255,255,255,0.06)', borderRadius: 4, overflow: 'hidden', marginTop: 8 }}>
+                <div style={{ height: '100%', width: '100%', transform: `scaleX(${(selected.word_limit ? Math.min(100, Math.round((wc / selected.word_limit) * 100)) : 0) / 100})`, transformOrigin: 'left', background: over ? C.rose : wc >= selected.word_limit * 0.85 ? C.amber : accent, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
               </div>
             </div>
 
@@ -466,7 +466,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
                 which read prompted which change. */}
             <VersionLabelFields label={versionLabel} note={versionNote} onLabel={setVersionLabel} onNote={setVersionNote} />
 
-            <div style={R({ gap: 10, marginTop: 12, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
               <button style={btn(accent !== C.blue ? accent : C.blueGrad)} onClick={saveVersion}>Save a copy of this draft</button>
               {!activeCritique && (
                 <button
@@ -476,7 +476,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
                 >Get a critique</button>
               )}
             </div>
-            <div style={{ marginTop: 9 }}>
+            <div style={{ marginTop: 8 }}>
               <HelpNote>
                 {wc < 20
                   ? 'Your draft saves by itself as you type. Write a few real sentences and the critique button switches on.'
@@ -485,7 +485,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
             </div>
 
             {activeCritique && (
-              <div style={{ marginTop: 14 }}>
+              <div style={{ marginTop: 12 }}>
                 {critiqueStale && (
                   <div style={{ fontSize: 11, color: C.amberL, marginBottom: 8, lineHeight: 1.5 }}>
                     You've changed the draft since this critique — it's judging {activeCritique.ofWords} words, you now have {wc}. Re-run it when you're ready for a fresh read.
@@ -496,7 +496,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
             )}
 
             {versions.length > 0 && (
-              <div style={{ marginTop: 18 }}>
+              <div style={{ marginTop: 16 }}>
                 <EssayVersionHistory versions={versions} currentContent={draft} accent={C.violet} isMobile={isMobile}
                   onRestore={(v) => {
                     if (!window.confirm('Bring this version back into the editor? Save a copy of what you have now first if you want to keep it.')) return;
@@ -524,7 +524,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
               <div style={{ ...glass2({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.25)}` }}>
                 <div style={R({ gap: 8, marginBottom: brainTake.loading ? 0 : 8 })}>
                   <Sparkles size={13} color={C.violetL} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.06em' }}>Meta Brain's honest read</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Meta Brain's honest read</span>
                 </div>
                 {brainTake.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Reading your essays and portfolio…</div>}
                 {brainTake.error && <div style={{ fontSize: 12, color: C.t3 }}>Couldn't reach Meta Brain right now.</div>}
@@ -540,7 +540,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
   );
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-essays" icon={preview ? NotebookPen : ScrollText} color={accent} color2={C.fuchsia} m={isMobile}
         eyebrow="Essays"
         title={preview ? 'Where your essays start' : 'Write your essays here'}
@@ -576,7 +576,7 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
         <>
           {/* ── Ninth and tenth grade ──────────────────────────────────────────
               Journal first, working document second, tracker last and clearly
-              labelled. The tracker is one tap away and never taken from them —
+              labeled. The tracker is one tap away and never taken from them —
               a student who has never seen it arrives at junior year blind — but
               it is not in their working set, so nothing about it can read as
               something they are behind on. */}
@@ -587,8 +587,8 @@ export default function EssayWorkspacePanel({ accent = C.blue, user = null, grad
             title="The essay tracker — you'll use this in junior year"
             sub={trackerUnlockLabel(gradeStage) || 'Have a look around. Nothing in here is yours to do yet.'}>
             <div style={CC({ gap: 16 })}>
-              <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 10, alignItems: 'flex-start', border: `1px solid ${tint(C.sky, 0.22)}` }}>
-                <Compass size={14} color={C.skyL} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.sky, 0.22)}` }}>
+                <Compass size={14} color={C.skyL} style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }}>
                   This is what application season looks like: one essay per prompt, a word limit, a draft that saves
                   itself and a critique that tells you the truth. It is genuinely usable right now if you want to try

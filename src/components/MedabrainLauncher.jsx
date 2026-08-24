@@ -98,8 +98,8 @@ export default function MedabrainLauncher({ onClick, accent = C.violet, accent2 
       className="mb-launcher msp-pulse-glow"
       style={{
         position: 'fixed', right: 0, top: '50%', translateY: '-50%', zIndex: 320,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 9,
-        padding: '18px 10px', borderRadius: '16px 0 0 16px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+        padding: '16px 8px', borderRadius: '16px 0 0 16px',
         border: `1px solid ${tint('#ffffff', 0.16)}`, borderRight: 'none',
         // A deep accent body, in every theme. This used to be two 30%-alpha accent
         // tints over C.s1 with one dark stop between them, which is a dark glass tab
@@ -121,8 +121,7 @@ export default function MedabrainLauncher({ onClick, accent = C.violet, accent2 
       <Brain size={18} className="mb-brain" color="#fff" strokeWidth={2.1} style={{ position: 'relative', zIndex: 2, filter: `drop-shadow(0 0 6px ${tint(accent, 0.8)})` }} />
       <span style={{
         position: 'relative', zIndex: 2, writingMode: 'vertical-rl',
-        fontSize: 10.5, fontWeight: 700, color: '#fff', letterSpacing: '.14em',
-        textTransform: 'uppercase', fontFamily: C.FB, textShadow: '0 1px 3px rgba(0,0,0,0.35)',
+        fontSize: 10.5, fontWeight: 700, color: '#fff', letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontFamily: C.FB, textShadow: '0 1px 3px rgba(0,0,0,0.35)',
       }}>{label}</span>
     </motion.button>
   );

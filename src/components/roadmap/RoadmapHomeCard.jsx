@@ -31,7 +31,7 @@ export default function RoadmapHomeCard({ user, onOpen, onStart, isMobile = fals
       }}>
         <div style={{ ...R({ gap: 12, alignItems: 'flex-start' }) }}>
           <div style={{
-            width: 38, height: 38, borderRadius: 11, flexShrink: 0,
+            width: 38, height: 38, borderRadius: 12, flexShrink: 0,
             background: `linear-gradient(135deg,${C.violet},${C.fuchsia})`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -39,11 +39,11 @@ export default function RoadmapHomeCard({ user, onOpen, onStart, isMobile = fals
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Map your next twelve months</div>
-            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginTop: 5 }}>
+            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>
               Every competition, program, scholarship and deadline that applies to you — with the week
               the work has to start, not just the day it closes.
             </div>
-            <button onClick={onStart} style={{ ...btn(accentFill(C.violet)), color: onTint(C.violet), marginTop: 13, fontSize: 12.5, padding: '9px 16px' }}>
+            <button onClick={onStart} style={{ ...btn(accentFill(C.violet)), color: onTint(C.violet), marginTop: 12, fontSize: 12.5, padding: '8px 16px' }}>
               <Sparkles size={13} /> Build my roadmap
             </button>
           </div>
@@ -66,7 +66,7 @@ export default function RoadmapHomeCard({ user, onOpen, onStart, isMobile = fals
       <div style={{ ...R({ justifyContent: 'space-between', marginBottom: 12 }) }}>
         <span style={{ ...R({ gap: 8 }) }}>
           <MapIcon size={14} color={C.violet} />
-          <span style={{ fontSize: 10, fontWeight: 800, color: C.violet, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: C.violet, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
             Roadmap{season ? ` · ${season.label}` : ''}
           </span>
         </span>
@@ -77,36 +77,36 @@ export default function RoadmapHomeCard({ user, onOpen, onStart, isMobile = fals
         <>
           {/* The one thing. Urgency first, because "this needs starting now"
               is the entire message and the title is only the subject of it. */}
-          <div style={{ ...R({ gap: 7, marginBottom: 7 }) }}>
+          <div style={{ ...R({ gap: 8, marginBottom: 8 }) }}>
             <span style={{
               ...pill(tint(URGENCY_META[next.urgency]?.color || C.t3, 0.14), URGENCY_META[next.urgency]?.color || C.t3, {
-                fontSize: 9.5, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
+                fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
               }),
             }}>{URGENCY_META[next.urgency]?.label || 'Next'}</span>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: trackColor(next.track) }} />
           </div>
-          <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.35, letterSpacing: '-.01em' }}>
+          <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.35, letterSpacing: 'calc(-0.01em + var(--msp-letter-spacing))' }}>
             {next.title}
           </div>
           <div style={{ marginTop: 8 }}>
             <ItemDate item={next} size={11.5} />
           </div>
           {(next.firstMove || next.steps?.[0]) && (
-            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginTop: 9 }}>
+            <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 8 }}>
               <b style={{ color: C.t2 }}>First move: </b>{next.firstMove || next.steps[0]}
             </div>
           )}
         </>
       ) : (
-        <div style={{ ...R({ gap: 9 }) }}>
+        <div style={{ ...R({ gap: 8 }) }}>
           <CheckCircle2 size={16} color={C.green} />
-          <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+          <span style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
             Nothing needs starting in the next three weeks. Your year is genuinely under control.
           </span>
         </div>
       )}
 
-      <div style={{ ...R({ gap: 14, marginTop: 14, paddingTop: 12, borderTop: `1px solid ${C.b1}`, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 12, marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}`, flexWrap: 'wrap' }) }}>
         <MiniStat value={`${stats.pct}%`} label="of your year done" color={C.green} />
         {stats.startNow > 0 && <MiniStat value={stats.startNow} label="need starting" color={C.amber} icon={AlertTriangle} />}
         {stats.awaitingDate > 0 && <MiniStat value={stats.awaitingDate} label="dates to look up" color={C.violet} icon={CalendarSearch} />}
@@ -117,7 +117,7 @@ export default function RoadmapHomeCard({ user, onOpen, onStart, isMobile = fals
 
 function MiniStat({ value, label, color, icon: Icon }) {
   return (
-    <span style={{ ...R({ gap: 6 }) }}>
+    <span style={{ ...R({ gap: 4 }) }}>
       {Icon && <Icon size={11} color={color} />}
       <b style={{ fontSize: 12.5, color, fontFamily: C.FM }}>{value}</b>
       <span style={{ fontSize: 10.5, color: C.t4 }}>{label}</span>

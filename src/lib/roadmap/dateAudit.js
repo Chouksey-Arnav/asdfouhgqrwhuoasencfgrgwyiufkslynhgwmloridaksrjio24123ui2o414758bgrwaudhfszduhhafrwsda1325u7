@@ -179,7 +179,7 @@ function checkCoherent(item) {
  *
  * The only gate that needs a clock, and the only one whose verdict is REPAIR:
  * everything it catches is a wrong OCCURRENCE of a right date, and the fix is
- * to roll to the next one rather than to withhold an annual programme forever.
+ * to roll to the next one rather than to withhold an annual program forever.
  *
  * `missed` is checked in both directions on purpose. An item flagged as missed
  * that is actually in the future tells a student to give up on something they

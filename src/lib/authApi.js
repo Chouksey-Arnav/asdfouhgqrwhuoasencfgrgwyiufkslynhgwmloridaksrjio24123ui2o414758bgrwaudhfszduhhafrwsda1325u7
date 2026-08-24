@@ -95,7 +95,7 @@ export const loginWithCode = (email, verificationToken) =>
 
 // Exchanges a Supabase Auth access token (minted by supabase.auth.signInWithOAuth in
 // the browser, see src/lib/supabaseClient.js) for this app's own session token.
-// `role` is honoured only when this sign-in CREATES the account — see api/auth/google.js. An
+// `role` is honored only when this sign-in CREATES the account — see api/auth/google.js. An
 // existing account's role is never touched, so replaying this flow cannot escalate a student.
 export const googleAuth = (accessToken, role = 'student') =>
   req('/auth/google', { method: 'POST', body: JSON.stringify({ accessToken, role }) });

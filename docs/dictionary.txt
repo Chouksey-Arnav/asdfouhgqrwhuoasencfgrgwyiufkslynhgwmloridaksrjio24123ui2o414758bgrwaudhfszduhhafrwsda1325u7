@@ -1,0 +1,107 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# The words a general en-US dictionary does not know but this app is right to
+# use. scripts/verifyCopy.mjs spell-checks every UI string against en-US plus
+# this file; anything in neither is a build failure.
+#
+# The bar for adding a word here: it is a real term a student or an admissions
+# office would recognise, and it is spelled the way THEY spell it. "It looked
+# fine to me" is not the bar — that is how "recieve" survives for two years.
+#
+# Keep the sections. A flat 200-line list is a list nobody can review.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# ── Our own names ────────────────────────────────────────────────────────────
+MedSchoolPrep
+Medabrain
+MedEx
+
+# ── Tests, applications, admissions bodies ───────────────────────────────────
+AAMC
+AMCAS
+CASPer
+PSAT
+NMSQT
+Superscore
+superscore
+superscored
+superscoring
+subscore
+subscores
+Bluebook
+Desmos
+Kaplan
+Medline
+Anki
+Pomodoro
+
+# ── Programs, competitions, organizations ────────────────────────────────────
+HOSA
+ISEF
+USABO
+HHMI
+NHSC
+HRSA
+UMKC
+Drexel
+STNA
+Medabrain
+FAFSA
+
+# ── Clinical and science vocabulary that reaches the screens ─────────────────
+Biochem
+carboxylic
+Carboxylic
+synthase
+cytosol
+bilayer
+cofactor
+cofactors
+phlebotomy
+Phlebotomy
+naloxone
+Naloxone
+SnNout
+SpPin
+
+# ── Words the app coined, and words en-US simply lacks ───────────────────────
+schooler          # "a high schooler" — the audience, in their own word
+paywalled
+roleplay
+unlogged
+untimed
+Untimed
+hideable
+autoplaying
+remarketing
+excludable
+Overclaiming
+letterforms
+
+# ── Legal and privacy ────────────────────────────────────────────────────────
+FERPA
+COPPA
+CCPA
+CPRA
+majeure          # "force majeure"
+
+# ── Vendors ──────────────────────────────────────────────────────────────────
+Groq
+Vercel
+Dexie
+FSRS
+fsrs
+
+# ── Loanwords we keep the accents on ─────────────────────────────────────────
+résumé
+Résumé
+
+# ── Fragments ────────────────────────────────────────────────────────────────
+# Not typos: the app pluralizes inline — `activit{n === 1 ? 'y' : 'ies'}` — so
+# the extractor sees the stem on its own. Fixing this by rewriting 30 call
+# sites to hold two whole words is worse copy for a cleaner word list.
+activit
+
+# ── Placeholder names in examples ────────────────────────────────────────────
+Priya
+Kingsway
+EFGH

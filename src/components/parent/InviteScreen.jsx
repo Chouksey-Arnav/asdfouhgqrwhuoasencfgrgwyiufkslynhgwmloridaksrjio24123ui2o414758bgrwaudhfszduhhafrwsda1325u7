@@ -50,13 +50,13 @@ const NOT_SHARED = [
 function Bullets({ items, icon: Icon, hue, title }) {
   return (
     <div>
-      <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
         {title}
       </div>
-      <div style={CC({ gap: 7 })}>
+      <div style={CC({ gap: 8 })}>
         {items.map((item) => (
           <div key={item} style={R({ gap: 8, alignItems: 'flex-start' })}>
-            <Icon size={14} color={hue} style={{ flexShrink: 0, marginTop: 2 }} />
+            <Icon size={14} color={hue} style={{ flexShrink: 0, marginTop: 4 }} />
             <span style={{ fontSize: 13, color: C.t2, lineHeight: 1.5 }}>{item}</span>
           </div>
         ))}
@@ -68,10 +68,10 @@ function Bullets({ items, icon: Icon, hue, title }) {
 function Frame({ children }) {
   return (
     // flex:1 so this actually fills the flex row #root creates (src/index.css) rather than
-    // collapsing to the card's own width and centring itself inside a 530px sliver.
+    // collapsing to the card's own width and centering itself inside a 530px sliver.
     <div style={{ flex: 1, minWidth: 0, height: 'var(--msp-vh)', overflowY: 'auto', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 480, ...CC({ gap: 14 }) }}>
-        <div style={{ ...R({ gap: 10 }), justifyContent: 'center' }}>
+      <div style={{ width: '100%', maxWidth: 480, ...CC({ gap: 12 }) }}>
+        <div style={{ ...R({ gap: 8 }), justifyContent: 'center' }}>
           <AnimatedLogo size={26} variant="pop" />
           <span style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</span>
         </div>
@@ -84,9 +84,9 @@ function Frame({ children }) {
 function Failed({ title, body, action }) {
   return (
     <Frame>
-      <div style={CC({ gap: 14 })}>
-        <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
-        <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>{body}</div>
+      <div style={CC({ gap: 12 })}>
+        <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</div>
+        <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>{body}</div>
         {action || (
           <button type="button" onClick={() => { window.location.href = '/'; }} style={btn(C.blueGrad, { alignSelf: 'flex-start' })}>
             Go to MedSchoolPrep
@@ -182,7 +182,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
 
   /** Signed in and connected — the one exit both redemption paths share. */
   function finish(res) {
-    // Signed in either way. If the accept itself did not go through — the student cancelled the
+    // Signed in either way. If the accept itself did not go through — the student canceled the
     // invitation while this was happening, another tab already used it — the account and session
     // are real and the dashboard explains itself, which beats stranding somebody who did
     // everything right on an error page with nothing to click.
@@ -268,11 +268,11 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
   if (mode === 'accepted') {
     return (
       <Frame>
-        <div style={CC({ gap: 14 })}>
-          <div style={{ width: 40, height: 40, borderRadius: 11, background: tint(C.green, 0.13), border: `1px solid ${tint(C.green, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={CC({ gap: 12 })}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: tint(C.green, 0.13), border: `1px solid ${tint(C.green, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldCheck size={19} color={C.green} />
           </div>
-          <div style={{ fontSize: 19, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>You're connected</div>
+          <div style={{ fontSize: 19, letterSpacing: 'calc(-0.23px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>You're connected</div>
           <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
             You can end this at any time from Settings, and it takes effect immediately.
           </div>
@@ -308,9 +308,9 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
       return (
         <Frame>
           <form onSubmit={submitCode}>
-            <div style={CC({ gap: 18 })}>
+            <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>
+                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
                   Check your email
                 </div>
                 <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.6 }}>
@@ -347,7 +347,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
                 article. "It didn't arrive" is almost always one of these two, and both are things
                 only the visitor can check.
               */}
-              <div style={glass2({ fontSize: 12, color: C.t3, lineHeight: 1.6 })}>
+              <div style={glass2({ fontSize: 12, color: C.t3, lineHeight: 1.55 })}>
                 No code? Check your spam or Promotions folder. If <strong style={{ color: C.t2 }}>{invite.emailHint}</strong> isn't
                 an address you can read, ask {inviterName} to re-send the invitation to one that is.
               </div>
@@ -359,12 +359,12 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
 
     return (
       <Frame>
-        <div style={CC({ gap: 18 })}>
+        <div style={CC({ gap: 16 })}>
           <div>
             <div style={{ fontSize: 21, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>
               {inviterName} wants to share their progress with you
             </div>
-            <div style={{ fontSize: 12.5, color: C.t3, marginTop: 6 }}>
+            <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4 }}>
               Invited {invite.emailHint}
               {invite.relationship ? ` · you're their ${invite.relationship.toLowerCase()}` : ''}
             </div>
@@ -408,8 +408,8 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
               [Lock, "Your own account — you never sign in as your student, and you never see their password."],
               [ShieldCheck, 'Either of you can end this at any time, and it takes effect immediately.'],
             ].map(([Icon, text]) => (
-              <div key={text} style={R({ gap: 9, alignItems: 'flex-start' })}>
-                <Icon size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 3 }} />
+              <div key={text} style={R({ gap: 8, alignItems: 'flex-start' })}>
+                <Icon size={13} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
                 <span style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>{text}</span>
               </div>
             ))}
@@ -427,12 +427,12 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
 
   return (
     <Frame>
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <div>
           <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>
             {inviterName} would like to follow your progress
           </div>
-          <div style={{ fontSize: 12.5, color: C.t3, marginTop: 6 }}>
+          <div style={{ fontSize: 12.5, color: C.t3, marginTop: 4 }}>
             Sent to {invite.addressedTo}
             {invite.relationship ? ` · ${invite.relationship}` : ''}
           </div>
@@ -445,14 +445,14 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
           performed by a server — it is performed here, by the one person who knows whether they
           have a mother called Priya. Everything the parent had to fill in before they could send
           anything (see ParentSetup.jsx and migration 0009) exists so that this box has something
-          in it. A student who reads a name they do not recognise, or their own name spelled as
+          in it. A student who reads a name they do not recognize, or their own name spelled as
           somebody else's, closes the tab and nothing has happened.
         */}
         {(invite.claimedByName || invite.claimedStudentName) && (
           <div style={glass2({ ...CC({ gap: 8 }), borderColor: tint(C.amber, 0.3), background: tint(C.amber, 0.05) })}>
             <div style={R({ gap: 8 })}>
               <BadgeCheck size={14} color={C.amberL} />
-              <span style={{ fontSize: 11, fontWeight: 700, color: C.amberL, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, color: C.amberL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 What they told us
               </span>
             </div>
@@ -464,7 +464,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
               {invite.claimedStudentName && (
                 <>They named the student as <strong style={{ color: C.t1 }}>{invite.claimedStudentName}</strong>.{' '}</>
               )}
-              If that is not you, or you don't recognise this person, don't accept — close this
+              If that is not you, or you don't recognize this person, don't accept — close this
               page and nothing is shared.
             </div>
           </div>
@@ -496,7 +496,7 @@ export default function InviteScreen({ token, code, user, onAuthed, onDone, onSi
           is how an invitation dies on a screen the recipient cannot get past.
         */}
         {(wrongEmail || wrongRole) && (
-          <div style={CC({ gap: 10 })}>
+          <div style={CC({ gap: 8 })}>
             <div style={{ fontSize: 13, color: C.amberL, lineHeight: 1.6 }}>
               {wrongEmail
                 ? `This invitation was sent to ${invite.addressedTo}, but you're signed in as ${user.email}.`

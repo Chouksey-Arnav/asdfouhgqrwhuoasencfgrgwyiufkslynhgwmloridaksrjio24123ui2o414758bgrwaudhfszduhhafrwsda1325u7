@@ -10,12 +10,12 @@
  * The personal archive contains the student's reflection journal. That journal
  * is the only surface in the app a fifteen-year-old writes honestly in, and it
  * is honest precisely because nothing else can read it — not a parent, not a
- * counsellor, not a scoring engine. A leak into a parent-visible export would
+ * counselor, not a scoring engine. A leak into a parent-visible export would
  * not merely breach a boundary; it would end the honesty that makes the journal
  * worth keeping, silently and permanently.
  *
  * So section 3 below is not a normal test section. It asserts that:
- *   • archive mode THROWS for a parent or counsellor audience rather than
+ *   • archive mode THROWS for a parent or counselor audience rather than
  *     quietly returning a stripped document, because a function that silently
  *     downgrades is one whose callers stop checking;
  *   • no reflection text appears anywhere in an application-mode document, in
@@ -225,7 +225,7 @@ eq('a null user is free', E.readPlan(null).id, 'free');
 eq('a pro plan unlocks the full document', E.canExportFullDossier({ plan: 'pro' }), true);
 eq('a free plan does not', E.canExportFullDossier({ plan: 'free' }), false);
 eq('a parent on a paid plan still cannot build the archive', E.canExportArchive({ plan: 'pro' }, 'parent'), false);
-eq('a counsellor on a paid plan still cannot', E.canExportArchive({ plan: 'pro' }, 'counselor'), false);
+eq('a counselor on a paid plan still cannot', E.canExportArchive({ plan: 'pro' }, 'counselor'), false);
 eq('the student on a paid plan can', E.canExportArchive({ plan: 'pro' }, 'student'), true);
 eq('the archive mode declares itself student-only in its own spec',
   D.DOSSIER_MODES.archive.audiences.join(), 'student');

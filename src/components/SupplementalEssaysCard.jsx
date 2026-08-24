@@ -121,16 +121,16 @@ export default function SupplementalEssaysCard({
   if (!view) {
     const name = activeCollege?.name || 'your school';
     return (
-      <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.1)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.28)}` }}>
-        <div style={R({ gap: 10, alignItems: 'flex-start' })}>
-          <div style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.1)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.28)}` }}>
+        <div style={R({ gap: 8, alignItems: 'flex-start' })}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg,${C.violet},${C.indigo})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Brain size={15} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.6, fontWeight: 600 }}>
+            <div style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.55, fontWeight: 600 }}>
               You have <strong>{name}</strong> on your college list. Want to see the supplemental essays {name} asks for?
             </div>
-            <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginTop: 6 }}>
+            <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>
               I'll pull up the prompts, you can answer them right here under the real word limit, and I'll grade what you write the same way I'd grade a draft you were about to submit.
             </div>
             {colleges.length > 1 && (
@@ -141,10 +141,10 @@ export default function SupplementalEssaysCard({
               </div>
             )}
             <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
-              <button style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { fontSize: 12.5, padding: '9px 16px' })} onClick={() => load(activeCollege)}>
+              <button style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { fontSize: 12.5, padding: '8px 16px' })} onClick={() => load(activeCollege)}>
                 Yes — show me {activeCollege?.name?.split(' ')[0] || 'them'}'s supplements
               </button>
-              <button style={btnG({ fontSize: 12.5, padding: '9px 16px' })} onClick={dismiss}>Not now</button>
+              <button style={btnG({ fontSize: 12.5, padding: '8px 16px' })} onClick={dismiss}>Not now</button>
             </div>
           </div>
         </div>
@@ -153,9 +153,9 @@ export default function SupplementalEssaysCard({
   }
 
   return (
-    <div style={{ ...glass({ padding: 18 }), border: `1px solid ${tint(C.violet, 0.24)}` }}>
-      <div style={R({ gap: 10, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 14 })}>
-        <div style={R({ gap: 9 })}>
+    <div style={{ ...glass({ padding: 16 }), border: `1px solid ${tint(C.violet, 0.24)}` }}>
+      <div style={R({ gap: 8, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 12 })}>
+        <div style={R({ gap: 8 })}>
           <Brain size={15} color={C.violetL} />
           <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
             Supplemental essays{view.data ? ` — ${view.data.school}` : ''}
@@ -178,9 +178,9 @@ export default function SupplementalEssaysCard({
       )}
 
       {view.error && (
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           <div style={{ fontSize: 12.5, color: C.roseL }}>{view.error}</div>
-          <div><button style={btnG({ fontSize: 12, padding: '7px 14px' })} onClick={() => load(activeCollege)}>Try again</button></div>
+          <div><button style={btnG({ fontSize: 12, padding: '8px 12px' })} onClick={() => load(activeCollege)}>Try again</button></div>
         </div>
       )}
 
@@ -205,13 +205,13 @@ export default function SupplementalEssaysCard({
             const alreadyTracked = existingEssays.some(e => (e.prompt || '').trim() === essay.prompt.trim());
 
             return (
-              <div key={key} style={{ ...glass2({ padding: 14 }), borderLeft: `3px solid ${essay.required ? C.violet : C.b2}` }}>
-                <div style={R({ gap: 6, flexWrap: 'wrap', marginBottom: 8 })}>
+              <div key={key} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${essay.required ? C.violet : C.b2}` }}>
+                <div style={R({ gap: 4, flexWrap: 'wrap', marginBottom: 8 })}>
                   <span style={pill(tint(accent, 0.14), accent, { fontSize: 10 })}>{KIND_LABELS[essay.kind] || 'Supplemental'}</span>
                   <span style={pill('rgba(255,255,255,0.05)', essay.required ? C.t2 : C.t4, { fontSize: 10 })}>{essay.required ? 'Required' : 'Optional'}</span>
                   {limit > 0 && <span style={pill('rgba(255,255,255,0.05)', C.t3, { fontSize: 10 })}>{limit} words</span>}
                   <span style={pill('rgba(255,255,255,0.05)', TONE_FG[conf.tone] || C.t3, { fontSize: 10 })}>{conf.label}</span>
-                  {alreadyTracked && <span style={pill(C.greenDim, C.greenL, { fontSize: 10 })}><Check size={9} style={{ marginRight: 3 }} />In your workspace</span>}
+                  {alreadyTracked && <span style={pill(C.greenDim, C.greenL, { fontSize: 10 })}><Check size={9} style={{ marginRight: 4 }} />In your workspace</span>}
                 </div>
 
                 <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.6 }}>{essay.prompt}</div>
@@ -224,15 +224,15 @@ export default function SupplementalEssaysCard({
                     <PenLine size={12} />{isOpen ? 'Close' : 'Answer it now'}{isOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   </button>
                   {onCreateEssay && (
-                    <button style={btnG({ fontSize: 12, padding: '6px 13px' })} disabled={saving === key} onClick={() => saveToWorkspace(key, view.data, essay, { withContent: false })}>
+                    <button style={btnG({ fontSize: 12, padding: '4px 12px' })} disabled={saving === key} onClick={() => saveToWorkspace(key, view.data, essay, { withContent: false })}>
                       <Plus size={12} />Add to my essays
                     </button>
                   )}
                 </div>
 
                 {isOpen && (
-                  <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.b1}` }}>
-                    <div style={R({ justifyContent: 'space-between', marginBottom: 7 })}>
+                  <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
+                    <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
                       <span style={{ fontSize: 11, color: C.t3 }}>Write it here — real prompt, real limit, real grading.</span>
                       <span style={{ fontSize: 11, color: over ? C.roseL : C.t3 }}>{wc}{limit > 0 ? ` / ${limit}` : ''} words</span>
                     </div>
@@ -243,14 +243,14 @@ export default function SupplementalEssaysCard({
                       placeholder="Answer the prompt as if you were submitting it…"
                     />
                     {over && (
-                      <div style={R({ gap: 6, marginTop: 7, fontSize: 11, color: C.roseL })}>
+                      <div style={R({ gap: 4, marginTop: 8, fontSize: 11, color: C.roseL })}>
                         <Info size={11} />{wc - limit} words over. On the real form this gets cut off, not politely flagged.
                       </div>
                     )}
 
                     <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
                       <button
-                        style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { fontSize: 12.5, padding: '9px 16px', opacity: grades[key]?.loading ? 0.6 : 1 })}
+                        style={btn(`linear-gradient(135deg,${C.violet},${C.indigo})`, { fontSize: 12.5, padding: '8px 16px', opacity: grades[key]?.loading ? 0.6 : 1 })}
                         disabled={grades[key]?.loading}
                         onClick={() => gradeAnswer(key, view.data, essay)}
                       >
@@ -258,7 +258,7 @@ export default function SupplementalEssaysCard({
                         Grade this — honestly
                       </button>
                       {onCreateEssay && wc > 0 && (
-                        <button style={btnG({ fontSize: 12, padding: '9px 15px' })} disabled={saving === key} onClick={() => saveToWorkspace(key, view.data, essay, { withContent: true })}>
+                        <button style={btnG({ fontSize: 12, padding: '8px 16px' })} disabled={saving === key} onClick={() => saveToWorkspace(key, view.data, essay, { withContent: true })}>
                           <Plus size={12} />Save this draft to my essays
                         </button>
                       )}
@@ -278,8 +278,8 @@ export default function SupplementalEssaysCard({
             );
           })}
 
-          <div style={R({ gap: 7, alignItems: 'flex-start', paddingTop: 4 })}>
-            <Info size={11} color={C.t4} style={{ marginTop: 3, flexShrink: 0 }} />
+          <div style={R({ gap: 8, alignItems: 'flex-start', paddingTop: 4 })}>
+            <Info size={11} color={C.t4} style={{ marginTop: 4, flexShrink: 0 }} />
             <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55 }}>
               {(CONFIDENCE_LABELS[view.data.essays[0]?.confidence] || CONFIDENCE_LABELS.curated).note}
             </span>

@@ -256,9 +256,9 @@ export const ACTIVITY_GATES = [
   { field: 'diagnosticTaken', label: 'Take the Pathway Diagnostic', hint: 'Prep → Diagnostic', goTab: 'prep', goView: 'diagnostic', ok: (user) => !!user.diagnosticResult },
   { field: 'quizAttempted', label: 'Try one practice quiz', hint: 'Prep → Quiz Library', goTab: 'prep', goView: 'quizzes', ok: (_user, s) => s.quizzesTaken == null || s.quizzesTaken >= 1 },
   // goView was `null` here, which navigated to Portfolio's default view and left the student to
-  // find something addable themselves. Activities & Résumé is the one panel where a first
+  // find something addable themselves. Activities & résumé is the one panel where a first
   // Portfolio item can always be logged in a few taps, whatever the student has to show yet.
-  { field: 'portfolioTracked', label: 'Add one item to your Portfolio', hint: 'Portfolio → Activities & Résumé', goTab: 'portfolio', goView: 'resume', ok: (_user, s) => s.portfolioItemCount == null || s.portfolioItemCount >= 1 },
+  { field: 'portfolioTracked', label: 'Add one item to your Portfolio', hint: 'Portfolio → Activities & résumé', goTab: 'portfolio', goView: 'resume', ok: (_user, s) => s.portfolioItemCount == null || s.portfolioItemCount >= 1 },
 ];
 export function computePlanReadiness(user, signals = {}) {
   const totalChecks = PLAN_READINESS_FIELDS.length + ACTIVITY_GATES.length;
@@ -494,7 +494,7 @@ You're talking with ${user?.name || 'a student'}${gradeLabel ? `, a ${gradeLabel
     ? `\n\n${paceText} This target is theirs, not ours — support it, never lecture about it, and if it has become unrealistic say so kindly and offer to help them reset it.`
     : '';
   const levelNote = feedbackSummary
-    ? `\n\n── How they rate their own lessons ──\n${feedbackSummary} Pitch your explanations accordingly. This is what they reported, not a measure of their ability — never hand it back to them as a judgement.`
+    ? `\n\n── How they rate their own lessons ──\n${feedbackSummary} Pitch your explanations accordingly. This is what they reported, not a measure of their ability — never hand it back to them as a judgment.`
     : '';
 
   return base + buildPersonalBriefBlock(user) + onboardingNote + liveNote + recentActivityNote + timelineNote + roadmapNote + planNote + paceNote + levelNote + portfolioBrainNote + KNOWLEDGE_POLICY + HONEST_MENTOR_STANCE + tail;
@@ -531,7 +531,7 @@ export function buildPortfolioSystemPrompt({
   timelineSummary = null,
   roadmapSummary = null,
 } = {}) {
-  const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialised on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
+  const base = `You are Medabrain, the Portfolio Intelligence specialist inside MedSchoolPrep — the same coaching mind as the app's head Medabrain coach, specialized on ${user?.name || 'this student'}'s undergraduate application: their college list, essays, deadlines, financial aid/scholarships, activities & resume, research, skills/certifications, clinical hours, recommenders, test scores, awards, and GPA. You go deeper here than the head coach can because you're handed the student's full tracked data below, not just summary counts.
 
 ${user?.name || 'This student'} is on the ${pathwayLabel} pathway${gradeLabel ? `, a ${gradeLabel}` : ''}, preparing for undergraduate admissions with an eye toward a future health career — not currently applying to medical/graduate school, so never bring up the MCAT or clinical rotations as something to act on now.
 
@@ -546,7 +546,7 @@ Questions that stray outside the application (a study-plan question, a science q
     colleges.forEach(c => { if (byCategory[c.category] != null) byCategory[c.category]++; });
     collegeParts.push(`Full college list (${colleges.length} school${colleges.length === 1 ? '' : 's'}): ${colleges.map(c => `${c.name} [id:${c.id}] (${c.category || 'uncategorized'}, status: ${c.status || 'researching'}${c.ea_ed_deadline ? `, EA/ED due ${c.ea_ed_deadline}` : ''}${c.rd_deadline ? `, RD due ${c.rd_deadline}` : ''})`).join('; ')}.`);
     collegeParts.push(`Balance: ${byCategory.reach} reach, ${byCategory.target} target, ${byCategory.safety} safety.`);
-    if (byCategory.reach === 0 && byCategory.safety === 0 && colleges.length > 0) collegeParts.push(`No reach or safety schools categorized yet — worth flagging if asked about list balance.`);
+    if (byCategory.reach === 0 && byCategory.safety === 0 && colleges.length > 0) collegeParts.push(`No reach or safety programs categorized yet — worth flagging if asked about list balance.`);
   } else {
     collegeParts.push(`No colleges on the list yet — if asked which schools fit them, say so plainly and point them to the College List tab first instead of inventing a list.`);
   }
@@ -670,7 +670,7 @@ Questions that stray outside the application (a study-plan question, a science q
     academicParts.push(`ACADEMIC HISTORY — ${ac.count} term(s) logged, in real chronological order: ${ac.entries.map(e => `${e.term}: ${e.gpa}${e.weighted ? ' weighted' : ''}${e.course_rigor ? ` (rigor: ${e.course_rigor})` : ''}`).join('; ')}.`);
     academicParts.push(`Latest GPA ${ac.latestGpa}${ac.latestWeighted ? ` weighted, which is roughly ${ac.comparableGpa} on the unweighted scale colleges compare against — always reason with the unweighted number, never the weighted one` : ' unweighted'}. Best ${ac.best}, lowest ${ac.worst}, mean ${ac.mean}. Trend: ${ac.trend}${ac.count >= 2 ? ` (${ac.delta >= 0 ? '+' : ''}${ac.delta} from first term to latest)` : ''}. This reads as: ${band.label}.${ctx ? ` They are at or above the admitted-student average at ${ctx.atOrAbove} of the ${ctx.total} U.S. schools this app tracks (${ctx.pct}%).` : ''}`);
     if (ac.trend === 'falling') academicParts.push(`The downward trend is the most important academic fact about this student right now — a falling transcript costs more with admissions readers than the average itself does. Raise it when they ask anything about their chances or their list.`);
-    if (ac.trend === 'rising') academicParts.push(`The upward trend is genuinely in their favour and worth naming — readers explicitly look for it, and it is what makes an early weak term stop mattering.`);
+    if (ac.trend === 'rising') academicParts.push(`The upward trend is genuinely in their favor and worth naming — readers explicitly look for it, and it is what makes an early weak term stop mattering.`);
     if (!ac.hasRigorNote) academicParts.push(`No course rigor recorded on any term, so you cannot tell whether this GPA came from a demanding schedule or an easy one — say so rather than assuming either, and tell them the rigor field is what would settle it.`);
     if (ac.anyWeighted && !ac.allWeighted) academicParts.push(`Their entries mix weighted and unweighted scales, so their own GPA chart is comparing two different things — worth flagging if they ask about their trend.`);
   } else academicParts.push(`No GPA entries logged yet. This is the number admissions offices weight most heavily, so if they ask about their chances at any school, the honest answer starts with "I don't know your GPA yet" and points at the Activities & Resume Builder's Academic History section, which is where it goes and which also drives the app's college matching.`);

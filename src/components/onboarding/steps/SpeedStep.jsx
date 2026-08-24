@@ -29,21 +29,21 @@ const MAX_MINUTES = COMMIT_LEVELS[COMMIT_LEVELS.length - 1].minutes;
 function WeekPreview({ minutes, g }) {
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 6, height: 74 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 74 }}>
         {DAYS.map((d, i) => {
           // Weekends sit a little lower than weekdays. Showing seven identical
           // bars would be a promise the plan doesn't make.
           const factor = i >= 5 ? 0.72 : 1;
           const pct = Math.max(0.08, (minutes / MAX_MINUTES) * factor);
           return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <div style={{ width: '100%', height: 56, display: 'flex', alignItems: 'flex-end', borderRadius: 6, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{ width: '100%', height: 56, display: 'flex', alignItems: 'flex-end', borderRadius: 4, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
                 <motion.div
                   animate={{ height: `${pct * 100}%` }}
                   transition={{ ...SETTLE, delay: i * 0.02 }}
                   style={{ width: '100%', background: g.bar, boxShadow: lit(0.2) }} />
               </div>
-              <span style={meta(8.5, { color: C.t4, letterSpacing: '.08em' })}>{d}</span>
+              <span style={meta(8.5, { color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' })}>{d}</span>
             </div>
           );
         })}
@@ -79,12 +79,12 @@ function PaceTrack({ index, onChange, g }) {
         if (e.key === 'Home') { e.preventDefault(); move(0); }
         if (e.key === 'End') { e.preventDefault(); move(last); }
       }}
-      style={{ position: 'relative', padding: '18px 0 4px', cursor: 'pointer', outline: 'none' }}
+      style={{ position: 'relative', padding: '16px 0px 4px', cursor: 'pointer', outline: 'none' }}
     >
       {/* Track */}
-      <div style={{ position: 'relative', height: 6, borderRadius: 3, background: C.s3, margin: '0 11px' }}>
+      <div style={{ position: 'relative', height: 6, borderRadius: 4, background: C.s3, margin: '0px 12px' }}>
         <motion.div animate={{ width: `${pct}%` }} transition={SETTLE}
-          style={{ position: 'absolute', inset: 0, right: 'auto', borderRadius: 3, background: g.bar, boxShadow: `0 0 12px ${g.edge}` }} />
+          style={{ position: 'absolute', inset: 0, right: 'auto', borderRadius: 4, background: g.bar, boxShadow: `0 0 12px ${g.edge}` }} />
         {COMMIT_LEVELS.map((lvl, i) => {
           const passed = i <= index;
           return (
@@ -119,7 +119,7 @@ function PaceTrack({ index, onChange, g }) {
       </div>
 
       {/* Stop labels */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
         {COMMIT_LEVELS.map((lvl, i) => (
           <button key={lvl.label} type="button" onClick={() => move(i)}
             style={{
@@ -149,18 +149,18 @@ export function SpeedStep({ value, answers, onChange, onNext, h }) {
         title="How much time can you give this each day?"
         subtitle="Your whole plan — coursework, experiences, and application — is paced around this. Honest beats heroic." />
 
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 18, paddingTop: 4 }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16, paddingTop: 4 }}>
         {/* The readout */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 12 }}>
           <motion.div key={intel.minutes} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
             style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={numeral(52, { color: C.t1, fontWeight: 800, letterSpacing: '-.04em' })}>{intel.minutes}</span>
+            <span style={numeral(52, { color: C.t1, fontWeight: 800, letterSpacing: 'calc(-0.04em + var(--msp-letter-spacing))' })}>{intel.minutes}</span>
             <span style={meta(11, { color: C.t3 })}>min / day</span>
           </motion.div>
           {intel.recommended && (
             <motion.span initial={{ opacity: 0, scale: 0.85 }} animate={{ opacity: 1, scale: 1 }} transition={POP}
               style={{
-                marginBottom: 8, padding: '4px 10px', borderRadius: R.pill,
+                marginBottom: 8, padding: '4px 8px', borderRadius: R.pill,
                 background: g.soft, border: `1px solid ${g.edgeSoft}`,
                 ...meta(9, { color: g.ink }),
               }}>Recommended</motion.span>
@@ -171,7 +171,7 @@ export function SpeedStep({ value, answers, onChange, onNext, h }) {
 
         {/* What that week actually looks like. */}
         <div style={panel({ padding: '16px 16px 12px' })}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
             <span style={{ width: 14, height: 1, background: g.edge }} />
             <span style={meta(9.5, { color: C.t3 })}>Your week at this pace</span>
             <span style={{ flex: 1 }} />
@@ -182,11 +182,11 @@ export function SpeedStep({ value, answers, onChange, onNext, h }) {
 
         <motion.div key={idx} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE_FAST}
           style={{
-            padding: '14px 16px', borderRadius: R.md,
+            padding: '12px 16px', borderRadius: R.md,
             background: `linear-gradient(135deg, ${g.softer}, transparent 70%), ${C.surf}`,
             border: `1px solid ${g.edgeSoft}`,
           }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 7 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
             <span style={{ display: 'flex', color: g.ink }}><Icon name="route" size={14} /></span>
             <span style={meta(9.5, { color: g.ink })}>{intel.split}</span>
           </div>

@@ -121,7 +121,7 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
         return (
           <div key={i} ref={(el) => { sectionRefs.current[i] = el; }}
             style={{
-              marginBottom: 22,
+              marginBottom: 20,
               // Deliberately a left rule + faint wash rather than a background block: it has to be
               // distinguishable from a student's own text highlights, not compete with them.
               borderLeft: `2px solid ${speaking ? accent : 'transparent'}`,
@@ -129,13 +129,13 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
               marginLeft: speaking ? -14 : 0,
               background: speaking ? `${accent}0d` : 'transparent',
               borderRadius: speaking ? 8 : 0,
-              transition: 'background .35s, padding .2s, border-color .2s',
+              transition: 'background-color 200ms cubic-bezier(.4,0,.2,1), border-color 200ms cubic-bezier(.4,0,.2,1)',
             }}>
             <h3 style={{ fontSize: m ? 15 : 17, fontWeight: 700, color: speaking ? accent : C.t1, fontFamily: C.FD, marginBottom: 8, transition: 'color .25s' }}>{sec.heading}</h3>
-            <p data-section-idx={i} style={{ fontSize: m ? 13.5 : 14.5, color: C.t2, lineHeight: 1.75, margin: 0, userSelect: 'text', WebkitUserSelect: 'text' }}>
+            <p data-section-idx={i} style={{ fontSize: m ? 13.5 : 14.5, color: C.t2, lineHeight: 1.55, margin: 0, userSelect: 'text', WebkitUserSelect: 'text' }}>
               {segs.map((s, j) => s.highlight ? (
                 <mark key={j} onClick={(e) => clickExistingHighlight(e, s.highlight)}
-                  style={{ background: COLORS[s.highlight.color]?.bg || COLORS.yellow.bg, color: 'inherit', borderRadius: 3, padding: '0 1px', cursor: 'pointer' }}>
+                  style={{ background: COLORS[s.highlight.color]?.bg || COLORS.yellow.bg, color: 'inherit', borderRadius: 4, padding: '0px 4px', cursor: 'pointer' }}>
                   {s.text}
                 </mark>
               ) : <React.Fragment key={j}>{s.text}</React.Fragment>)}
@@ -153,13 +153,13 @@ export default function HighlightableArticle({ sections, highlights = [], onAdd,
               transition={{ duration: 0.12 }}
               style={{
                 position: 'absolute', left: toolbar.x, top: toolbar.y, transform: 'translate(-50%, -100%) translateY(-8px)',
-                zIndex: 201, ...glass2({ padding: 7 }), display: 'flex', gap: 6, alignItems: 'center',
+                zIndex: 201, ...glass2({ padding: 8 }), display: 'flex', gap: 4, alignItems: 'center',
                 boxShadow: '0 10px 30px rgba(0,0,0,0.4)', whiteSpace: 'nowrap',
               }}
             >
               {toolbar.existingId ? (
                 <button onClick={() => { onRemove(toolbar.existingId); clearToolbar(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, border: 'none', background: 'none', cursor: 'pointer', color: C.rose, fontSize: 11.5, padding: '4px 6px' }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 4, border: 'none', background: 'none', cursor: 'pointer', color: C.rose, fontSize: 11.5, padding: '4px 4px' }}>
                   <Trash2 size={13} />Remove
                 </button>
               ) : Object.entries(COLORS).map(([key, c]) => (

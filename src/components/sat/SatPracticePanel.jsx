@@ -235,7 +235,7 @@ export default function SatPracticePanel({
   // ── Active session ──
   if (session) {
     return (
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <SatQuestionPlayer
           profile={profile}
           questions={session.questions}
@@ -264,7 +264,7 @@ export default function SatPracticePanel({
       if (r.correct) s.correct++;
     }
     return (
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         <SatPageHeader
           accent={pct >= 70 ? C.green : C.amber}
           eyebrow="Set complete" title={`${summary.correct} of ${summary.responses.length} correct`}
@@ -282,7 +282,7 @@ export default function SatPracticePanel({
               const p = Math.round((s.correct / s.total) * 100);
               return (
                 <div key={s.skill}>
-                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 5 }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{meta.label}</span>
                     <span style={{ fontSize: 11.5, color: C.t3, fontFamily: C.FM }}>{s.correct}/{s.total}</span>
                   </div>
@@ -291,7 +291,7 @@ export default function SatPracticePanel({
               );
             })}
           </div>
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 20 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 20 }}>
             {missed.length > 0 && (
               <button onClick={() => onNavigate?.('review')} style={satBtn(C.rose)}>
                 Sort these {missed.length} misses <ChevronRight size={14} />
@@ -314,7 +314,7 @@ export default function SatPracticePanel({
     <div style={CC({ gap: 20 })}>
       <SatPageHeader
         accent={accent}
-        eyebrow="SAT · Practice" title="Targeted practice"
+        eyebrow="SAT · practice" title="Targeted practice"
         sub="Modes that aim your time at the skills costing you points."
         meta={[
           { value: dueReviewIds.length, label: 'due retries' },
@@ -336,19 +336,19 @@ export default function SatPracticePanel({
               className="sat-choice"
               aria-pressed={isActive}
               style={{
-                textAlign: 'left', padding: isMobile ? 14 : 16, borderRadius: 13, cursor: 'pointer',
+                textAlign: 'left', padding: isMobile ? 14 : 16, borderRadius: 12, cursor: 'pointer',
                 border: `1px solid ${isActive ? tint(m.color, 0.32) : C.b1}`,
                 background: isActive ? satWash(m.color, 0.09) : C.surf2,
                 fontFamily: C.FB,
               }}
             >
-              <div style={{ ...R({ gap: 9 }), marginBottom: 8 }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(m.color, 0.12), border: `1px solid ${tint(m.color, 0.22)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ ...R({ gap: 8 }), marginBottom: 8 }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(m.color, 0.12), border: `1px solid ${tint(m.color, 0.22)}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Icon size={14} color={m.color} />
                 </div>
                 <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{m.label}</span>
               </div>
-              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>{m.blurb}</div>
+              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{m.blurb}</div>
             </motion.button>
           );
         })}
@@ -358,20 +358,20 @@ export default function SatPracticePanel({
       {mode === 'smart' && (
         <SatCard title="What this set will cover" icon={Sparkles} iconColor={C.blue} m={isMobile}>
           {smartPreview.rationale.length === 0 ? (
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
               We have no performance data yet, so this first set spreads across the whole test to find out where you stand.
             </div>
           ) : (
             <div style={CC({ gap: 8 })}>
               {smartPreview.rationale.slice(0, 5).map(r => (
-                <div key={r.skill} style={{ ...R({ gap: 10 }), justifyContent: 'space-between', ...glass2({ padding: '10px 14px' }) }}>
+                <div key={r.skill} style={{ ...R({ gap: 8 }), justifyContent: 'space-between', ...glass2({ padding: '8px 12px' }) }}>
                   <span style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>{r.label}</span>
                   <span style={{ fontSize: 11, color: C.t3 }}>{r.reason}</span>
                 </div>
               ))}
             </div>
           )}
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 18 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 16 }}>
             <button onClick={beginSmart} style={satBtn(C.blue)}>
               Start Smart Set · {smartPreview.questions.length} questions <ChevronRight size={14} />
             </button>
@@ -397,7 +397,7 @@ export default function SatPracticePanel({
           </div>
 
           {/* ── The blueprint, shown before anything is generated ── */}
-          <div style={{ fontSize: 12, color: C.t3, marginBottom: 12, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>
             {profile?.questionsAnswered
               ? 'Built from your own answers. Here is exactly what it will ask for, and why:'
               : 'You have not answered enough questions for this to be personal yet, so this first set spreads across the heaviest skills on the exam to find out where you stand.'}
@@ -405,17 +405,17 @@ export default function SatPracticePanel({
           <div style={CC({ gap: 8 })}>
             {aiBlueprint.map(b => (
               <div key={b.skill} style={{
-                ...glass2({ padding: '11px 14px' }),
-                display: 'flex', gap: 10, alignItems: 'flex-start', flexWrap: 'wrap',
+                ...glass2({ padding: '12px 12px' }),
+                display: 'flex', gap: 8, alignItems: 'flex-start', flexWrap: 'wrap',
               }}>
                 <span style={pill(tint(C.violet, 0.14), C.violetL, { fontSize: 10, fontFamily: C.FM, flexShrink: 0 })}>
                   {b.count}x
                 </span>
                 <div style={{ flex: 1, minWidth: 150 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{b.label}</div>
-                  <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55, marginTop: 2 }}>{b.why}</div>
+                  <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>{b.why}</div>
                   {b.trap && (
-                    <div style={{ ...R({ gap: 5 }), marginTop: 5 }}>
+                    <div style={{ ...R({ gap: 4 }), marginTop: 4 }}>
                       <Target size={10} color={C.amberL} />
                       <span style={{ fontSize: 10.5, color: C.amberL, lineHeight: 1.5 }}>
                         targeting your repeated trap: {b.trap.label}
@@ -438,15 +438,15 @@ export default function SatPracticePanel({
                 style={{ overflow: 'hidden' }}
               >
                 <div style={{
-                  ...glass2({ padding: 15 }), marginTop: 16,
+                  ...glass2({ padding: 16 }), marginTop: 16,
                   borderColor: tint(C.violet, 0.24),
                   background: satWash(C.violet, 0.07),
                 }}>
-                  <div style={R({ gap: 10, alignItems: 'flex-start' })}>
-                    <Loader2 size={15} color={C.violetL} className="spin" style={{ marginTop: 1, flexShrink: 0 }} />
+                  <div style={R({ gap: 8, alignItems: 'flex-start' })}>
+                    <Loader2 size={15} color={C.violetL} className="spin" style={{ marginTop: 4, flexShrink: 0 }} />
                     <div>
                       <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{STAGE_COPY[aiStage].title}</div>
-                      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65, marginTop: 3 }}>
+                      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
                         {STAGE_COPY[aiStage].body}
                       </div>
                     </div>
@@ -458,20 +458,20 @@ export default function SatPracticePanel({
 
           {/* ── Failure ── */}
           {aiError && !aiStage && (
-            <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.amber, 0.28) }}>
+            <div style={{ ...glass2({ padding: 12 }), marginTop: 16, borderColor: tint(C.amber, 0.28) }}>
               <div style={R({ gap: 8, alignItems: 'flex-start' })}>
-                <AlertTriangle size={13} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
+                <AlertTriangle size={13} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
                 <div>
                   <div style={{ fontSize: 12.5, color: C.t1, fontWeight: 600 }}>Could not build a set just now</div>
-                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65, marginTop: 3 }}>
+                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
                     {aiError}. Nothing is lost — Smart Set draws on the hand-written bank and needs no
                     connection to the AI at all.
                   </div>
-                  <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 11 }}>
-                    <button onClick={() => buildAiSet({ fresh: true })} style={btnG({ padding: '7px 13px', fontSize: 11.5 })}>
+                  <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
+                    <button onClick={() => buildAiSet({ fresh: true })} style={btnG({ padding: '8px 12px', fontSize: 11.5 })}>
                       <RotateCcw size={12} /> Try again
                     </button>
-                    <button onClick={() => setMode('smart')} style={btnG({ padding: '7px 13px', fontSize: 11.5 })}>
+                    <button onClick={() => setMode('smart')} style={btnG({ padding: '8px 12px', fontSize: 11.5 })}>
                       Use a Smart Set instead
                     </button>
                   </div>
@@ -484,11 +484,11 @@ export default function SatPracticePanel({
           {aiResult && !aiStage && (
             <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
               <div style={{
-                ...glass2({ padding: 15 }), marginTop: 16,
+                ...glass2({ padding: 16 }), marginTop: 16,
                 borderColor: tint(C.green, 0.24),
                 background: satWash(C.green, 0.06),
               }}>
-                <div style={R({ gap: 9, flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                   <ShieldCheck size={15} color={C.greenL} />
                   <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>
                     {aiResult.questions.length} question{aiResult.questions.length === 1 ? '' : 's'} ready
@@ -503,7 +503,7 @@ export default function SatPracticePanel({
                     that came back malformed and an item whose answer key the
                     checker disagreed with are not the same event, and collapsing
                     them into "some were discarded" hides the one that matters. */}
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65, marginTop: 8 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>
                   {aiResult.rejected > 0 || aiResult.discarded > 0 ? (
                     <>
                       {aiResult.rejected > 0 && (
@@ -526,7 +526,7 @@ export default function SatPracticePanel({
                   )}
                   {aiResult.thin && 'This set came out short; run it, then generate another.'}
                 </div>
-                <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginTop: 14 }}>
+                <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
                   <button
                     onClick={() => startSession({
                       questions: aiResult.questions, mode: 'tutor', kind: 'drill', generated: true,
@@ -535,7 +535,7 @@ export default function SatPracticePanel({
                   >
                     Start this set <ChevronRight size={14} />
                   </button>
-                  <button onClick={() => buildAiSet({ fresh: true })} style={btnG({ padding: '9px 15px', fontSize: 12.5 })}>
+                  <button onClick={() => buildAiSet({ fresh: true })} style={btnG({ padding: '8px 16px', fontSize: 12.5 })}>
                     <RotateCcw size={12} /> Generate different ones
                   </button>
                   <span style={{ fontSize: 11.5, color: C.t3 }}>~{estimateMinutes(aiResult.questions)} min</span>
@@ -546,7 +546,7 @@ export default function SatPracticePanel({
 
           {/* ── Kick-off ── */}
           {!aiResult && !aiStage && (
-            <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), marginTop: 18 }}>
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 16 }}>
               <button
                 onClick={() => buildAiSet()}
                 disabled={!aiBlueprint.length}
@@ -565,11 +565,11 @@ export default function SatPracticePanel({
 
           {/* ── The honest caveat ── */}
           <div style={{
-            ...R({ gap: 7, alignItems: 'flex-start' }),
-            marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.b1}`,
+            ...R({ gap: 8, alignItems: 'flex-start' }),
+            marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.b1}`,
           }}>
-            <Info size={12} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
-            <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>
+            <Info size={12} color={C.t4} style={{ marginTop: 4, flexShrink: 0 }} />
+            <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55 }}>
               These are original questions written to the published Digital SAT blueprint — never real exam
               content, which College Board does not license. Every answer key is re-derived by a second,
               different model before you see it, and anything the two disagree on is discarded. It is still
@@ -581,7 +581,7 @@ export default function SatPracticePanel({
 
       {mode === 'drill' && (
         <SatCard title="Pick a skill" icon={Target} iconColor={C.teal} m={isMobile}>
-          <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.t3, marginBottom: 12 }}>
             Ordered by leverage — how weak you are, multiplied by how heavily the exam tests it.
           </div>
           <div style={CC({ gap: 8 })}>
@@ -592,16 +592,16 @@ export default function SatPracticePanel({
                 <button
                   key={s.skill} onClick={() => setDrillSkill(s.skill)}
                   style={{
-                    textAlign: 'left', padding: '12px 14px', borderRadius: 11, cursor: 'pointer', fontFamily: C.FB,
+                    textAlign: 'left', padding: '12px 12px', borderRadius: 12, cursor: 'pointer', fontFamily: C.FB,
                     border: `1px solid ${isSel ? tint(s.color, 0.45) : C.b1}`,
                     background: isSel ? tint(s.color, 0.1) : 'rgba(255,255,255,0.02)',
                   }}
                 >
-                  <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between', marginBottom: 6 }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{s.label}</span>
                     <span style={pill(tint(s.color, 0.14), s.color, { fontSize: 10 })}>{s.sectionLabel}</span>
                   </div>
-                  <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between' }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between' }}>
                     <div style={{ flex: 1 }}><Bar pct={s.mastery * 100} color={s.color} h={4} /></div>
                     <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM, whiteSpace: 'nowrap' }}>
                       {s.attempts ? `${Math.round(s.mastery * 100)}% · ${s.attempts} seen` : 'not started'} · {bankSize} in bank
@@ -614,7 +614,7 @@ export default function SatPracticePanel({
           <button
             onClick={() => drillSkill && beginDrill(drillSkill)}
             disabled={!drillSkill || generating}
-            style={satBtn(C.violet, { marginTop: 18, opacity: drillSkill && !generating ? 1 : 0.4, cursor: drillSkill && !generating ? 'pointer' : 'not-allowed' })}
+            style={satBtn(C.violet, { marginTop: 16, opacity: drillSkill && !generating ? 1 : 0.4, cursor: drillSkill && !generating ? 'pointer' : 'not-allowed' })}
           >
             {generating ? 'Building your drill…' : <>Start drill <ChevronRight size={14} /></>}
           </button>
@@ -623,7 +623,7 @@ export default function SatPracticePanel({
 
       {mode === 'timed' && (
         <SatCard title="Choose a section" icon={Clock} iconColor={C.amber} m={isMobile}>
-          <div style={{ fontSize: 12, color: C.t3, marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: C.t3, marginBottom: 12 }}>
             One module's worth of questions at real exam pacing. Explanations are held back until you submit, so you practice committing under time.
           </div>
           <div style={G(2, 12, {}, isMobile)}>
@@ -641,7 +641,7 @@ export default function SatPracticePanel({
               </button>
             ))}
           </div>
-          <button onClick={() => beginTimed(timedSection)} style={satBtn(C.amber, { marginTop: 18 })}>
+          <button onClick={() => beginTimed(timedSection)} style={satBtn(C.amber, { marginTop: 16 })}>
             Start timed set <ChevronRight size={14} />
           </button>
         </SatCard>
@@ -649,7 +649,7 @@ export default function SatPracticePanel({
 
       {weakest.length === 0 && (
         <EmptyState
-          icon={Layers} title="No question bank loaded"
+          kind="error" icon={Layers} title="No question bank loaded"
           body="The SAT question bank appears to be empty. This is a build problem, not something you did."
           accent={accent}
         />

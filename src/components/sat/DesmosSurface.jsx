@@ -169,16 +169,16 @@ export default function DesmosSurface({
             <WifiOff size={19} color={C.amberL} />
           </div>
           <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>Desmos could not load</div>
-          <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, marginTop: 7 }}>
+          <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>
             {error} The calculator is served from Desmos, so it needs a connection — everything
             else in the SAT tab keeps working offline.
           </div>
-          <div style={{ ...R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }), marginTop: 14 }}>
-            <button onClick={() => setAttempt(a => a + 1)} style={btnG({ padding: '7px 14px', fontSize: 12 })}>
+          <div style={{ ...R({ gap: 8, justifyContent: 'center', flexWrap: 'wrap' }), marginTop: 12 }}>
+            <button onClick={() => setAttempt(a => a + 1)} style={btnG({ padding: '8px 12px', fontSize: 12 })}>
               <RotateCcw size={12} /> Try again
             </button>
             <a href={DESMOS_FALLBACK_URL} target="_blank" rel="noopener noreferrer"
-              style={{ ...btnG({ padding: '7px 14px', fontSize: 12 }), textDecoration: 'none' }}>
+              style={{ ...btnG({ padding: '8px 12px', fontSize: 12 }), textDecoration: 'none' }}>
               Open desmos.com <ExternalLink size={12} />
             </a>
           </div>
@@ -193,7 +193,7 @@ export default function DesmosSurface({
       {status === 'loading' && (
         <div style={{
           position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 9, background: C.s1, color: C.t3, fontSize: 12.5, borderRadius: 10,
+          gap: 8, background: C.s1, color: C.t3, fontSize: 12.5, borderRadius: 8,
         }}>
           <Loader2 size={15} className="spin" /> Loading Desmos…
         </div>
@@ -218,5 +218,5 @@ export function resetCalculator(calc, mode = 'graphing') {
 /** Shared chrome-button styling for the calculator's own toolbar. */
 export const calcChromeButton = (active, accent = C.teal) => btnSm(
   active ? tint(accent, 0.22) : 'rgba(255,255,255,0.04)',
-  { border: `1px solid ${active ? tint(accent, 0.45) : C.b1}`, padding: '5px 10px', fontSize: 11.5, color: active ? onTint(accent) : C.t2 },
+  { border: `1px solid ${active ? tint(accent, 0.45) : C.b1}`, padding: '4px 8px', fontSize: 11.5, color: active ? onTint(accent) : C.t2 },
 );

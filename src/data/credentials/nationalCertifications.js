@@ -3,7 +3,7 @@
 // ASCP, DANB, AMT.
 //
 // Nobody licenses these. They are voluntary, national, and issued by private
-// organisations that compete with each other, which is why the same job has
+// organizations that compete with each other, which is why the same job has
 // four different acronyms depending on which body's exam the training program
 // happened to be aligned with. A phlebotomist can hold NHA's CPT, ASCP's PBT,
 // AMCA's CPT, or NCCT's NCPT, and all four are real.
@@ -109,15 +109,15 @@ export const NATIONAL_CERTIFICATIONS = [
     group: 'Pharmacy',
     summary: 'Filling and checking prescriptions under a pharmacist. A retail pharmacy will often train and pay for this while you work there.',
     issuers: ['Pharmacy Technician Certification Board (PTCB)', 'National Healthcareer Association (NHA)'],
-    issuerNote: 'PTCB\'s CPhT is the one most states recognise for licensure or registration; NHA\'s ExCPT is the other accepted route. Almost every state ALSO requires you to register with its Board of Pharmacy separately, and several set their own age minimum there.',
+    issuerNote: 'PTCB\'s CPhT is the one most states recognize for licensure or registration; NHA\'s ExCPT is the other accepted route. Almost every state ALSO requires you to register with its Board of Pharmacy separately, and several set their own age minimum there.',
     siblings: ['ExCPT (NHA)'],
     minAge: { value: 18, basis: 'state-varies', note: 'PTCB itself does not set an age floor, but most state Boards of Pharmacy require 18 to register as a technician — a handful allow 17 or 16 as a pharmacy clerk/trainee.' },
     provisional: {
       applies: true,
-      rule: 'PTCB requires a high school diploma or equivalent, or completion of a PTCB-recognised education program, before it awards the credential.',
+      rule: 'PTCB requires a high school diploma or equivalent, or completion of a PTCB-recognized education program, before it awards the credential.',
       note: 'The state registration is the harder gate for a high schooler, not the exam.',
     },
-    trainingHours: { value: 200, basis: 'typical', note: 'PTCB-recognised programs typically run 200–600 hours; the employer-training route substitutes supervised work experience.' },
+    trainingHours: { value: 200, basis: 'typical', note: 'PTCB-recognized programs typically run 200–600 hours; the employer-training route substitutes supervised work experience.' },
     cost: { low: 0, high: 1200, basis: 'issuer-published', note: 'PTCB exam fee is around $130. Chain pharmacies frequently reimburse it.' },
     cteCommon: true,
     cteNote: 'Commonly offered in CTE pharmacy tech pathways, and one of the few credentials with a real paid-while-you-learn route.',
@@ -258,7 +258,7 @@ export const NATIONAL_CERTIFICATIONS = [
     group: 'Language & communication',
     summary: 'Interpreting between a clinician and a patient. If you are already bilingual this converts a household fact into a credential.',
     issuers: ['National Board of Certification for Medical Interpreters (NBCMI)', 'Certification Commission for Healthcare Interpreters (CCHI)'],
-    issuerNote: 'Two competing national bodies: NBCMI issues the CMI, CCHI issues the CHI and the CoreCHI. Both are real; neither is a licence.',
+    issuerNote: 'Two competing national bodies: NBCMI issues the CMI, CCHI issues the CHI and the CoreCHI. Both are real; neither is a license.',
     siblings: ['CHI (CCHI)', 'CoreCHI (CCHI)'],
     minAge: { value: 18, basis: 'issuer-published', note: 'Both boards require candidates to be at least 18.' },
     provisional: {

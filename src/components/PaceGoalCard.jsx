@@ -77,7 +77,7 @@ export default function PaceGoalCard({
   function renderEditor() {
     return (
       <div style={CC({ gap: 12 })}>
-        <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
           {totalLessons} lesson{totalLessons === 1 ? '' : 's'} in {pathwayLabel}. Pick a target — or type your own.
           {hasGoal ? ' Changing the number keeps the clock you already started; use Restart to reset it to today.' : ''}
         </div>
@@ -95,7 +95,7 @@ export default function PaceGoalCard({
                     border: `1px solid ${accent}${active ? '' : '38'}`,
                     fontSize: 11.5, textAlign: 'left',
                   }),
-                  display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 1, lineHeight: 1.25,
+                  display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: 4, lineHeight: 1.25,
                 }}>
                 <span style={{ fontWeight: 700 }}>{p.label}</span>
                 {per != null && <span style={{ fontSize: 9.5, opacity: 0.85 }}>~{per}/week</span>}
@@ -104,7 +104,7 @@ export default function PaceGoalCard({
           })}
         </div>
         <div style={R({ gap: 8, flexWrap: 'wrap' })}>
-          <div style={{ ...R({ gap: 6 }), background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 10, padding: '6px 10px' }}>
+          <div style={{ ...R({ gap: 4 }), background: 'rgba(255,255,255,0.04)', border: `1px solid ${C.b2}`, borderRadius: 8, padding: '4px 8px' }}>
             <input
               type="number" inputMode="numeric" min={PACE_MIN_WEEKS} max={PACE_MAX_WEEKS}
               value={customValue}
@@ -115,7 +115,7 @@ export default function PaceGoalCard({
             />
             <span style={{ fontSize: 11.5, color: C.t3 }}>weeks</span>
           </div>
-          <button style={{ ...btn(accent, { fontSize: 12, padding: '9px 16px' }), display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          <button style={{ ...btn(accent, { fontSize: 12, padding: '8px 16px' }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
             onClick={() => applyWeeks(customValue, { keepStart: hasGoal })}>
             <Check size={13} />{hasGoal ? 'Update goal' : 'Set my goal'}
           </button>
@@ -128,13 +128,13 @@ export default function PaceGoalCard({
         {customError && <div style={{ fontSize: 11, color: C.roseL || C.rose }}>{customError}</div>}
         <div style={R({ gap: 8, flexWrap: 'wrap' })}>
           {hasGoal && (
-            <button style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+            <button style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
               onClick={() => applyWeeks(goal.targetWeeks, { keepStart: false })}>
               <RefreshCw size={11} />Restart from today
             </button>
           )}
           {hasGoal && (
-            <button style={{ ...btnSm(C.roseDim, { color: C.roseL || C.rose, border: `1px solid ${C.rose}30`, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+            <button style={{ ...btnSm(C.roseDim, { color: C.roseL || C.rose, border: `1px solid ${C.rose}30`, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
               onClick={() => { onClearGoal?.(); setEditing(false); }}>
               <Trash2 size={11} />Remove goal
             </button>
@@ -152,11 +152,11 @@ export default function PaceGoalCard({
   if (!hasGoal) {
     if (variant !== 'full') {
       return (
-        <div style={{ ...glass2({ padding: '13px 16px' }), display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Target size={15} color={accent} />
           <div style={{ flex: 1, minWidth: 160 }}>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>No pace goal set</div>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>Give {pathwayLabel} a deadline you choose and this card starts tracking it.</div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>Give {pathwayLabel} a deadline you choose and this card starts tracking it.</div>
           </div>
           <button style={btnSm(`${accent}22`, { color: accent, border: `1px solid ${accent}40`, fontSize: 11 })} onClick={onEditRequest}>Set a goal</button>
         </div>
@@ -164,7 +164,7 @@ export default function PaceGoalCard({
     }
     if (dismissed && !editing) {
       return (
-        <div style={{ ...glass2({ padding: '11px 16px' }), display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <div style={{ ...glass2({ padding: '12px 16px' }), display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <Target size={14} color={C.t3} />
           <span style={{ flex: 1, minWidth: 160, fontSize: 11.5, color: C.t3 }}>No pace goal on {pathwayLabel} — you can set one whenever you want.</span>
           <button style={btnSm(`${accent}18`, { color: accent, border: `1px solid ${accent}35`, fontSize: 11 })} onClick={() => setEditing(true)}>Set a pace goal</button>
@@ -172,8 +172,8 @@ export default function PaceGoalCard({
       );
     }
     return (
-      <div style={glass2({ padding: '14px 18px' })}>
-        <div style={R({ gap: 10, marginBottom: 10 })}>
+      <div style={glass2({ padding: '12px 16px' })}>
+        <div style={R({ gap: 8, marginBottom: 8 })}>
           <Target size={15} color={accent} />
           <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>Set a pace goal for {pathwayLabel}</div>
         </div>
@@ -199,13 +199,13 @@ export default function PaceGoalCard({
 
   const body = (
     <>
-      <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <CalendarDays size={15} color={tone.color} />
         <div style={{ flex: 1, minWidth: 170 }}>
           <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>
             {status.targetWeeks}-week pace goal{variant === 'compact' ? ` · ${pathwayLabel}` : ''}
           </div>
-          <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>
+          <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
             {status.doneLessons}/{status.totalLessons} verified · week {status.weekNumber} of {status.targetWeeks}
             {targetDate ? ` · target ${targetDate}` : ''}
           </div>
@@ -213,7 +213,7 @@ export default function PaceGoalCard({
         <span style={pill(tone.dim, tone.light, { fontSize: 10.5, fontWeight: 700 })}>{status.label}</span>
         {variant === 'full' && (
           <button aria-label="Change pace goal" title="Change your pace goal"
-            style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+            style={{ ...btnSm(C.s4, { color: C.t2, fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
             onClick={() => setEditing((v) => !v)}>
             {editing ? <X size={11} /> : <Pencil size={11} />}{editing ? 'Close' : 'Change'}
           </button>
@@ -232,21 +232,21 @@ export default function PaceGoalCard({
           <div title={`An even pace would be ${status.expectedByNow} lesson${status.expectedByNow === 1 ? '' : 's'} by today`}
             style={{
               position: 'absolute', top: -3, left: `${Math.min(100, (status.expectedByNow / Math.max(1, status.totalLessons)) * 100)}%`,
-              width: 2, height: 12, background: C.t2, opacity: 0.7, borderRadius: 2,
+              width: 2, height: 12, background: C.t2, opacity: 0.7, borderRadius: 4,
             }} />
         )}
       </div>
 
-      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 10 }}>{headline}</div>
+      <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{headline}</div>
 
-      <div style={R({ gap: 14, flexWrap: 'wrap', marginTop: 8 })}>
+      <div style={R({ gap: 12, flexWrap: 'wrap', marginTop: 8 })}>
         {status.remaining > 0 && (
-          <span style={{ fontSize: 10.5, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 10.5, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Flag size={11} />{status.neededPerWeek}/week to finish on time
           </span>
         )}
         {status.measuredPerWeek != null && (
-          <span style={{ fontSize: 10.5, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ fontSize: 10.5, color: C.t3, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <TrendingUp size={11} />your actual pace: {status.measuredPerWeek}/week
           </span>
         )}
@@ -260,7 +260,7 @@ export default function PaceGoalCard({
         {editing && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
             style={{ overflow: 'hidden' }}>
-            <div style={{ borderTop: `1px solid ${C.b1}`, marginTop: 14, paddingTop: 14 }}>{renderEditor()}</div>
+            <div style={{ borderTop: `1px solid ${C.b1}`, marginTop: 12, paddingTop: 12 }}>{renderEditor()}</div>
           </motion.div>
         )}
       </AnimatePresence>

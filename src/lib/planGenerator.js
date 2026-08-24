@@ -168,7 +168,7 @@ function parsePlanJSON(text) {
     tryParse(body) ||
     // Strip trailing commas before } or ] — the single most common model JSON error.
     tryParse(body.replace(/,\s*([}\]])/g, '$1')) ||
-    // Normalise smart quotes that occasionally leak into keys/strings.
+    // Normalize smart quotes that occasionally leak into keys/strings.
     tryParse(body.replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/,\s*([}\]])/g, '$1')) ||
     null
   );

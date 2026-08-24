@@ -12,7 +12,7 @@
 // answer at all. An invitation used to arrive saying "a parent would like to follow your
 // progress" above an email address, and the student had to make a consent decision on that. Now
 // it arrives naming a person, their stated relationship, and the student's own name as the
-// requester typed it — so a request from someone the student does not know is recognisable as
+// requester typed it — so a request from someone the student does not know is recognizable as
 // one. That check happens in a human's head, and it is the only check that can actually catch
 // impersonation; everything this module does is in service of making it possible.
 //

@@ -24,7 +24,7 @@
 // `componentWillUnmount` — so the logic below is the design's logic verbatim,
 // with `renderVals()` feeding the template instead of a `render()`.
 //
-// The point of doing it that way: every colour, every spacing value and every
+// The point of doing it that way: every color, every spacing value and every
 // line of copy on this page is the string the design shipped, not a
 // re-interpretation of it. If the design is revised, re-port it the same way
 // rather than hand-patching the JSX.
@@ -90,21 +90,21 @@ const V2_STYLES = `
 const PILLARS = [
   { id: 'home', label: 'Home', color: '#1a5fcc', title: 'Home' },
   { id: 'prep', label: 'Prep', color: '#6d31d4', title: 'Prep \u00b7 Physician pathway' },
-  { id: 'portfolio', label: 'Portfolio', color: '#067156', title: 'Portfolio \u00b7 Overview' },
-  { id: 'roadmap', label: 'Roadmap', color: '#a422b8', title: 'Roadmap \u00b7 Your Year' },
+  { id: 'portfolio', label: 'Portfolio', color: '#067156', title: 'Portfolio \u00b7 overview' },
+  { id: 'roadmap', label: 'Roadmap', color: '#a422b8', title: 'Roadmap \u00b7 your year' },
   { id: 'plans', label: 'Plans', color: '#905808', title: 'Plans \u00b7 This week' },
 ];
 
 const PATHWAYS = {
   physician: { label: 'Physician (MD/DO)', color: '#1a5fcc', blurb: 'Maximum scope of practice, and the longest training. Anatomy, lab interpretation and diagnostic reasoning start here.' },
   nursing: { label: 'Nursing', color: '#067156', blurb: 'Hands-on patient contact soonest, on a team rather than carrying sole diagnostic responsibility.' },
-  physicianAssistant: { label: 'Physician Assistant', color: '#0b7166', blurb: 'You diagnose and treat, faster to practice, inside a physician-led team.' },
+  physicianAssistant: { label: 'Physician assistant', color: '#0b7166', blurb: 'You diagnose and treat, faster to practice, inside a physician-led team.' },
   pharmacy: { label: 'Pharmacy', color: '#6d31d4', blurb: 'Deep specialism in one drug or therapy area, and the go-to expert on it.' },
-  physicalOccupTherapy: { label: 'Physical & Occupational Therapy', color: '#026b97', blurb: 'Movement, rehabilitation and the long arc of someone getting their life back.' },
-  biomedResearch: { label: 'Biomedical Research', color: '#4640c9', blurb: 'The bench work behind treatment guidelines — PCR, cell culture, publication.' },
+  physicalOccupTherapy: { label: 'Physical & occupational therapy', color: '#026b97', blurb: 'Movement, rehabilitation and the long arc of someone getting their life back.' },
+  biomedResearch: { label: 'Biomedical research', color: '#4640c9', blurb: 'The bench work behind treatment guidelines — PCR, cell culture, publication.' },
   dentistry: { label: 'Dentistry', color: '#0a6c84', blurb: 'The most hands-on path in medicine, and the one most likely to end in your own practice.' },
-  publicHealth: { label: 'Public Health', color: '#905808', blurb: 'Population-level medicine: outbreaks, screening, prevention at scale.' },
-  healthAdmin: { label: 'Health Administration', color: '#a422b8', blurb: 'The operations and economics of care — staffing, budget, how a clinic actually runs.' },
+  publicHealth: { label: 'Public health', color: '#905808', blurb: 'Population-level medicine: outbreaks, screening, prevention at scale.' },
+  healthAdmin: { label: 'Health administration', color: '#a422b8', blurb: 'The operations and economics of care — staffing, budget, how a clinic actually runs.' },
 };
 
 const DIAG = [
@@ -183,9 +183,9 @@ const COACH = [
 ];
 
 const STEPS = [
-  { id: 's1', label: 'Log your shadowing hours', why: 'Nine weeks of clinical exposure are sitting unlogged \u2014 they count for nothing until they are on the record.', cta: 'Open Clinical Hours', color: '#c21a3e' },
-  { id: 's2', label: 'Write the impact line on your HOSA entry', why: 'It is the strongest thing on your r\u00e9sum\u00e9 and currently reads as a job title.', cta: 'Open Activities', color: '#026b97' },
-  { id: 's3', label: 'Add two more colleges to your list', why: 'Financial Aid needs a comparison, and aid is a comparison between schools rather than a single number.', cta: 'Open College List', color: '#6d31d4' },
+  { id: 's1', label: 'Log your shadowing hours', why: 'Nine weeks of clinical exposure are sitting unlogged \u2014 they count for nothing until they are on the record.', cta: 'Open clinical hours', color: '#c21a3e' },
+  { id: 's2', label: 'Write the impact line on your HOSA entry', why: 'It is the strongest thing on your r\u00e9sum\u00e9 and currently reads as a job title.', cta: 'Open activities', color: '#026b97' },
+  { id: 's3', label: 'Add two more colleges to your list', why: 'Financial Aid needs a comparison, and aid is a comparison between schools rather than a single number.', cta: 'Open college list', color: '#6d31d4' },
 ];
 
 const ACT_PARTS = [
@@ -205,7 +205,7 @@ const OPP_FILTERS = [
 
 const OPPS = [
   { id: 'hosa', track: 'competition', name: 'HOSA competitive events season', org: 'HOSA \u2013 Future Health Professionals', why: 'Over a hundred events from Medical Terminology to Emergency Preparedness \u2014 placing at state is a line a general student cannot match.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Selective', color: '#905808' }, { label: '10 weeks prep', color: '#5d6b85' }] },
-  { id: 'usabo', track: 'competition', name: 'USA Biology Olympiad', org: 'Center for Excellence in Education', why: 'The most recognisable biology credential open to a high-schooler. The real barrier is a teacher willing to register in September.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Very selective', color: '#c21a3e' }, { label: 'Free exam', color: '#067156' }] },
+  { id: 'usabo', track: 'competition', name: 'USA Biology Olympiad', org: 'Center for Excellence in Education', why: 'The most recognizable biology credential open to a high-schooler. The real barrier is a teacher willing to register in September.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Very selective', color: '#c21a3e' }, { label: 'Free exam', color: '#067156' }] },
   { id: 'brainbee', track: 'competition', name: 'Brain Bee \u2014 local chapter round', org: 'International Brain Bee', why: 'A published study text and a small enough field that a motivated freshman can win a local round in one winter.', chips: [{ label: 'Competition', color: '#a422b8' }, { label: 'Free', color: '#067156' }, { label: 'Find the date', color: '#6d31d4' }] },
   { id: 'isef', track: 'program', name: 'Regional science fair \u2014 ISEF qualifying round', org: 'Society for Science affiliated fairs', why: 'The path to the largest pre-college science competition runs entirely through your regional fair, which closes in mid-winter.', chips: [{ label: 'Program', color: '#4640c9' }, { label: 'Immersive', color: '#c21a3e' }, { label: '24 weeks prep', color: '#5d6b85' }] },
   { id: 'volunteer', track: 'experience', name: 'Hospital volunteer intake', org: 'Your nearest teaching hospital', why: 'Intakes run once or twice a year and close early. Miss the autumn window and clinical hours wait until spring.', chips: [{ label: 'Experience', color: '#0b7166' }, { label: 'Open to you', color: '#067156' }, { label: 'Find the date', color: '#6d31d4' }] },
@@ -256,11 +256,11 @@ const PLAN_DAYS = [
   { short: 'Mon', label: 'Monday', meta: '70 minutes \u00b7 light day before your shift', note: 'Short on purpose \u2014 you volunteer Monday evenings, and a plan that ignores your calendar is a plan you abandon.',
     rows: [ { id: 'm1', label: 'Physician \u00b7 Lesson 4: Reading a CBC and a metabolic panel', meta: '25m', color: '#1a5fcc' }, { id: 'm2', label: 'Flashcards \u2014 12 due, lab values weighted', meta: '15m', color: '#6d31d4' }, { id: 'm3', label: 'Log Monday shadowing hours before you forget them', meta: '5m', color: '#0b7166' }, { id: 'm4', label: 'HOSA event study block \u2014 Medical Terminology', meta: '25m', color: '#905808' } ] },
   { short: 'Tue', label: 'Tuesday', meta: '85 minutes \u00b7 your heaviest study day', note: 'Tuesday carries the quiz because your accuracy is measurably higher on days you have not been on your feet for six hours.',
-    rows: [ { id: 't1', label: 'Physician \u00b7 Lesson 5: Pre-test probability', meta: '30m', color: '#1a5fcc' }, { id: 't2', label: 'Quiz: Lab Values & Diagnostic Testing', meta: '20m', color: '#067156' }, { id: 't3', label: 'Review the two you missed with Medabrain', meta: '10m', color: '#a422b8' }, { id: 't4', label: 'Draft the impact line on your HOSA activity', meta: '25m', color: '#026b97' } ] },
+    rows: [ { id: 't1', label: 'Physician \u00b7 Lesson 5: Pre-test probability', meta: '30m', color: '#1a5fcc' }, { id: 't2', label: 'Quiz: lab values & diagnostic testing', meta: '20m', color: '#067156' }, { id: 't3', label: 'Review the two you missed with Medabrain', meta: '10m', color: '#a422b8' }, { id: 't4', label: 'Draft the impact line on your HOSA activity', meta: '25m', color: '#026b97' } ] },
   { short: 'Wed', label: 'Wednesday', meta: '60 minutes \u00b7 application block', note: 'Wednesdays are for the Portfolio. Study alone does not get you in, and a r\u00e9sum\u00e9 you touch twice a year rots.',
     rows: [ { id: 'w1', label: 'Flashcards \u2014 9 due', meta: '10m', color: '#6d31d4' }, { id: 'w2', label: 'Add two colleges to your list', meta: '20m', color: '#026b97' }, { id: 'w3', label: 'Ask Dr. Alvarez for a letter \u2014 draft the message', meta: '15m', color: '#067156' }, { id: 'w4', label: 'Science Olympiad event study \u2014 Anatomy', meta: '15m', color: '#a422b8' } ] },
   { short: 'Thu', label: 'Thursday', meta: '75 minutes \u00b7 back to the pathway', note: 'Medabrain rewrote Thursday after you logged two clinical shifts \u2014 the r\u00e9sum\u00e9 block moved and the flashcard load dropped.',
-    rows: [ { id: 'h1', label: 'Physician \u00b7 Lesson 6: Diagnostic reasoning traps', meta: '30m', color: '#1a5fcc' }, { id: 'h2', label: 'Flashcards \u2014 14 due', meta: '15m', color: '#6d31d4' }, { id: 'h3', label: 'Quiz: Psych & Soc \u2014 Mental Health', meta: '20m', color: '#067156' }, { id: 'h4', label: 'USABO registration \u2014 email your bio teacher', meta: '10m', color: '#4640c9' } ] },
+    rows: [ { id: 'h1', label: 'Physician \u00b7 Lesson 6: Diagnostic reasoning traps', meta: '30m', color: '#1a5fcc' }, { id: 'h2', label: 'Flashcards \u2014 14 due', meta: '15m', color: '#6d31d4' }, { id: 'h3', label: 'Quiz: Psych & Soc \u2014 mental health', meta: '20m', color: '#067156' }, { id: 'h4', label: 'USABO registration \u2014 email your bio teacher', meta: '10m', color: '#4640c9' } ] },
   { short: 'Fri', label: 'Friday', meta: '45 minutes \u00b7 clear the week', note: 'Friday is deliberately small. A plan with no slack breaks the first week something goes wrong.',
     rows: [ { id: 'f1', label: 'Flashcards \u2014 whatever is due', meta: '15m', color: '#6d31d4' }, { id: 'f2', label: 'Verify Lesson 4 \u2014 prove you kept it', meta: '15m', color: '#067156' }, { id: 'f3', label: 'Interview Prep \u2014 one MMI station', meta: '15m', color: '#c21a3e' } ] },
   { short: 'Sat', label: 'Saturday', meta: '90 minutes \u00b7 the long block', note: 'The only slot in your week long enough for research and essay work, so that is what it holds.',
@@ -279,7 +279,7 @@ const FAQS = [
 
 const FEATURES = [
   { pillar: 'Prep', color: '#6d31d4', items: ['Pathway diagnostic', 'Ten full curricula', 'Quiz Library', 'Flashcards on FSRS', 'E-Library', 'Lesson audio', 'Notes & highlights', 'Verified mastery'] },
-  { pillar: 'Portfolio', color: '#067156', items: ['Overview', 'Opportunities', 'Activities & R\u00e9sum\u00e9', 'Academics', 'Clinical Hours', 'Research', 'Skills & Certs', 'Interview Prep', 'Recommenders', 'Essays', 'College List', 'Admissions Calc', 'Financial Aid', 'Scholarships', 'Common App export', 'Milestones'] },
+  { pillar: 'Portfolio', color: '#067156', items: ['Overview', 'Opportunities', 'Activities & r\u00e9sum\u00e9', 'Academics', 'Clinical hours', 'Research', 'Skills & certs', 'Interview prep', 'Recommenders', 'Essays', 'College list', 'Admissions calc', 'Financial aid', 'Scholarships', 'Common App export', 'Milestones'] },
   { pillar: 'Roadmap', color: '#a422b8', items: ['Overview', 'Your Year', 'Seasons', 'Everything', 'Your Answers', 'Deadline catalog', 'Prep-time scheduling'] },
   { pillar: 'Plans & Progress', color: '#905808', items: ['Day-by-day plan', 'Pace goals', 'Daily quests', 'Streaks', 'Achievements', 'Performance breakdown', 'Family Access', 'Appearance & accessibility'] },
 ];
@@ -415,8 +415,8 @@ class LandingPageV2Class extends React.Component {
     const tabs = [
       { id: 'overview', label: 'Overview', color: '#067156' },
       { id: 'opportunities', label: 'Opportunities', color: '#0b7166' },
-      { id: 'resume', label: 'Activities & R\u00e9sum\u00e9', color: '#026b97' },
-      { id: 'interview', label: 'Interview Prep', color: '#c21a3e' },
+      { id: 'resume', label: 'Activities & r\u00e9sum\u00e9', color: '#026b97' },
+      { id: 'interview', label: 'Interview prep', color: '#c21a3e' },
     ];
     const stepsDoneCount = STEPS.filter((st) => s.stepsDone[st.id]).length;
     const strength = 41 + stepsDoneCount * 16;
@@ -435,7 +435,7 @@ class LandingPageV2Class extends React.Component {
           style: `display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${on ? 700 : 600};padding:10px 16px;border-radius:999px;`
             + `background:${on ? `color-mix(in srgb, ${t.color} 13%, transparent)` : 'rgba(255,255,255,0.55)'};`
             + `border:1px solid ${on ? `color-mix(in srgb, ${t.color} 30%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? t.color : '#45536b'};transition:all .18s ease;`,
+            + `color:${on ? t.color : '#45536b'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           dot: `width:7px;height:7px;border-radius:50%;background:${on ? t.color : 'rgba(15,23,42,0.22)'};`,
         };
       }),
@@ -456,7 +456,7 @@ class LandingPageV2Class extends React.Component {
           badgeStyle: `font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#c21a3e;background:rgba(194,26,62,0.12);padding:3px 8px;border-radius:999px;`,
           style: `display:flex;align-items:flex-start;gap:13px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:15px 17px;border-radius:13px;`
             + `background:${done ? 'rgba(6,113,86,0.08)' : 'rgba(255,255,255,0.75)'};border:1px solid ${done ? 'rgba(6,113,86,0.26)' : 'rgba(15,23,42,0.11)'};`
-            + `border-left:3px solid ${done ? '#067156' : st.color};transition:all .2s ease;`,
+            + `border-left:3px solid ${done ? '#067156' : st.color};transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;`,
           check: `width:26px;height:26px;flex-shrink:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:${done ? '#fff' : st.color};`
             + `background:${done ? '#067156' : `color-mix(in srgb, ${st.color} 14%, transparent)`};border:1px solid ${done ? '#067156' : `color-mix(in srgb, ${st.color} 26%, transparent)`};`,
           mark: done ? '\u2713' : '\u2192',
@@ -475,7 +475,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.setState({ oppFilter: f.id }),
           style: `cursor:pointer;font-family:inherit;font-size:12px;font-weight:${on ? 700 : 600};padding:8px 14px;border-radius:999px;`
             + `background:${on ? 'rgba(11,113,102,0.13)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(11,113,102,0.3)' : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? '#0b7166' : '#45536b'};transition:all .16s ease;`,
+            + `color:${on ? '#0b7166' : '#45536b'};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       opps: OPPS.filter((o) => s.oppFilter === 'all' || o.track === s.oppFilter).map((o) => {
@@ -487,7 +487,7 @@ class LandingPageV2Class extends React.Component {
           trackLabel: on ? 'Tracked \u2713' : 'Track it',
           toggle: () => this.toggleTrack(o.id),
           trackStyle: `flex-shrink:0;cursor:pointer;font-family:inherit;font-size:12px;font-weight:700;padding:9px 15px;border-radius:10px;`
-            + `background:${on ? '#0b7166' : 'rgba(255,255,255,0.85)'};color:${on ? '#fff' : '#0b7166'};border:1px solid ${on ? '#0b7166' : 'rgba(11,113,102,0.34)'};transition:all .18s ease;`,
+            + `background:${on ? '#0b7166' : 'rgba(255,255,255,0.85)'};color:${on ? '#fff' : '#0b7166'};border:1px solid ${on ? '#0b7166' : 'rgba(11,113,102,0.34)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           chips: o.chips.map((c) => ({
             label: c.label,
             style: `font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:999px;color:${c.color};background:color-mix(in srgb, ${c.color} 12%, transparent);border:1px solid color-mix(in srgb, ${c.color} 24%, transparent);`,
@@ -504,14 +504,14 @@ class LandingPageV2Class extends React.Component {
           points: `${on ? p.points : 0}/${p.points}`,
           toggle: () => this.toggleActPart(p.id),
           style: `display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:12px 14px;border-radius:11px;`
-            + `background:${on ? 'rgba(2,107,151,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(2,107,151,0.28)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(2,107,151,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(2,107,151,0.28)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           box: `width:20px;height:20px;flex-shrink:0;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;color:#fff;`
             + `background:${on ? '#026b97' : 'transparent'};border:1px solid ${on ? '#026b97' : 'rgba(15,23,42,0.22)'};`,
           mark: on ? '\u2713' : '',
         };
       }),
       actScore: String(actScore),
-      actBar: `width:${actScore}%;height:100%;border-radius:99px;background:${actVerdict.color};transition:width .5s cubic-bezier(.16,1,.3,1);`,
+      actBar: `width:100%;transform:scaleX(${(actScore) / 100});transform-origin:left;height:100%;border-radius:99px;background:${actVerdict.color};transition:transform .5s cubic-bezier(.16,1,.3,1);`,
       actVerdict: actVerdict.label,
       actVerdictStyle: `display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;padding:6px 13px;border-radius:999px;color:${actVerdict.color};background:color-mix(in srgb, ${actVerdict.color} 12%, transparent);border:1px solid color-mix(in srgb, ${actVerdict.color} 26%, transparent);`,
 
@@ -522,7 +522,7 @@ class LandingPageV2Class extends React.Component {
           kind: q.kind,
           pick: () => this.setState({ ivIndex: i, ivScored: false }),
           style: `display:flex;flex-direction:column;gap:5px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:13px 15px;border-radius:12px;`
-            + `background:${on ? 'rgba(194,26,62,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(194,26,62,0.28)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(194,26,62,0.08)' : 'rgba(255,255,255,0.72)'};border:1px solid ${on ? 'rgba(194,26,62,0.28)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           kindStyle: `font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:${on ? '#c21a3e' : '#6d798d'};`,
         };
       }),
@@ -538,7 +538,7 @@ class LandingPageV2Class extends React.Component {
         label: r.label,
         note: r.note,
         pct: `${r.pct}%`,
-        bar: `width:${r.pct}%;height:100%;border-radius:99px;background:${r.pct >= 75 ? '#067156' : r.pct >= 55 ? '#905808' : '#c21a3e'};transition:width .7s cubic-bezier(.16,1,.3,1);`,
+        bar: `width:100%;transform:scaleX(${(r.pct) / 100});transform-origin:left;height:100%;border-radius:99px;background:${r.pct >= 75 ? '#067156' : r.pct >= 55 ? '#905808' : '#c21a3e'};transition:transform .7s cubic-bezier(.16,1,.3,1);`,
       })),
     };
   }
@@ -559,7 +559,7 @@ class LandingPageV2Class extends React.Component {
           blurb: v.blurb,
           pick: () => this.setState({ rmView: v.id }),
           style: `display:flex;flex-direction:column;gap:3px;text-align:left;cursor:pointer;font-family:inherit;padding:11px 15px;border-radius:12px;`
-            + `background:${on ? 'rgba(109,49,212,0.1)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(109,49,212,0.3)' : 'rgba(15,23,42,0.11)'};transition:all .18s ease;`,
+            + `background:${on ? 'rgba(109,49,212,0.1)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(109,49,212,0.3)' : 'rgba(15,23,42,0.11)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           labelStyle: `font-size:13px;font-weight:700;color:${on ? '#6d31d4' : '#1f2836'};`,
         };
       }),
@@ -580,12 +580,12 @@ class LandingPageV2Class extends React.Component {
           trackStyle: `font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;color:${it.color};background:color-mix(in srgb, ${it.color} 12%, transparent);border:1px solid color-mix(in srgb, ${it.color} 24%, transparent);`,
           cardStyle: `flex-shrink:0;width:266px;text-align:left;font-family:inherit;cursor:pointer;padding:16px;border-radius:15px;`
             + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.66)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 42%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `box-shadow:${on ? '0 14px 30px -14px rgba(15,23,42,0.28)' : 'none'};transform:translateY(${on ? '-4px' : '0'});transition:all .22s cubic-bezier(.16,1,.3,1);`,
-          nodeStyle: `width:${on ? 16 : 11}px;height:${on ? 16 : 11}px;border-radius:50%;background:${it.color};box-shadow:0 0 0 ${on ? 5 : 0}px color-mix(in srgb, ${it.color} 18%, transparent);transition:all .22s ease;`,
+            + `box-shadow:${on ? '0 14px 30px -14px rgba(15,23,42,0.28)' : 'none'};transform:translateY(${on ? '-4px' : '0'});transition:background-color .22s cubic-bezier(.16,1,.3,1), border-color .22s cubic-bezier(.16,1,.3,1), color .22s cubic-bezier(.16,1,.3,1), box-shadow .22s cubic-bezier(.16,1,.3,1), transform .22s cubic-bezier(.16,1,.3,1), opacity .22s cubic-bezier(.16,1,.3,1);`,
+          nodeStyle: `width:${on ? 16 : 11}px;height:${on ? 16 : 11}px;border-radius:50%;background:${it.color};box-shadow:0 0 0 ${on ? 5 : 0}px color-mix(in srgb, ${it.color} 18%, transparent);transition:background-color .22s ease, border-color .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease, opacity .22s ease;`,
           rowStyle: `display:flex;align-items:center;gap:12px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:13px 15px;border-radius:12px;`
-            + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 38%, transparent)` : 'rgba(15,23,42,0.09)'};transition:all .18s ease;`,
+            + `background:${on ? '#ffffff' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? `color-mix(in srgb, ${it.color} 38%, transparent)` : 'rgba(15,23,42,0.09)'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           month: it.month,
-          barStyle: `width:${it.load}%;height:8px;border-radius:99px;background:${it.color};opacity:${on ? 1 : 0.55};transition:all .22s ease;`,
+          barStyle: `width:${it.load}%;height:8px;border-radius:99px;background:${it.color};opacity:${on ? 1 : 0.55};transition:background-color .22s ease, border-color .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease, opacity .22s ease;`,
         };
       }),
       rmSel: {
@@ -639,7 +639,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.setState({ planDay: i }),
           style: `width:44px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:${on ? 700 : 600};padding:9px 0;border-radius:11px;`
             + `background:${on ? 'rgba(144,88,8,0.13)' : 'rgba(255,255,255,0.6)'};border:1px solid ${on ? 'rgba(144,88,8,0.32)' : 'rgba(15,23,42,0.09)'};`
-            + `color:${on ? '#905808' : '#5d6b85'};transition:all .16s ease;`,
+            + `color:${on ? '#905808' : '#5d6b85'};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       planDayLabel: day.label,
@@ -653,7 +653,7 @@ class LandingPageV2Class extends React.Component {
           meta: r.meta,
           toggle: () => this.togglePlanRow(r.id),
           style: `display:flex;align-items:center;gap:13px;width:100%;text-align:left;font-family:inherit;cursor:pointer;padding:14px 16px;border-radius:13px;`
-            + `background:${done ? 'rgba(6,113,86,0.07)' : 'rgba(255,255,255,0.76)'};border:1px solid ${done ? 'rgba(6,113,86,0.24)' : 'rgba(15,23,42,0.11)'};transition:all .2s ease;`,
+            + `background:${done ? 'rgba(6,113,86,0.07)' : 'rgba(255,255,255,0.76)'};border:1px solid ${done ? 'rgba(6,113,86,0.24)' : 'rgba(15,23,42,0.11)'};transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease, opacity .2s ease;`,
           box: `width:22px;height:22px;flex-shrink:0;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;color:#fff;`
             + `background:${done ? '#067156' : 'transparent'};border:1px solid ${done ? '#067156' : `color-mix(in srgb, ${r.color} 40%, transparent)`};`,
           mark: done ? '\u2713' : '',
@@ -678,7 +678,7 @@ class LandingPageV2Class extends React.Component {
           qStyle: `flex:1;font-size:16px;font-weight:700;font-family:'Bricolage Grotesque',sans-serif;color:#1f2836;`,
           sign: on ? '\u2212' : '+',
           signStyle: `width:26px;height:26px;flex-shrink:0;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:15px;color:#1a5fcc;background:rgba(26,95,204,0.1);border:1px solid rgba(26,95,204,0.22);`,
-          bodyStyle: `overflow:hidden;max-height:${on ? 260 : 0}px;opacity:${on ? 1 : 0};transition:max-height .45s cubic-bezier(.16,1,.3,1), opacity .3s ease;`,
+          bodyStyle: `overflow:hidden;max-height:${on ? 260 : 0}px;opacity:${on ? 1 : 0};transition:opacity .3s ease, transform .3s cubic-bezier(.16,1,.3,1);`,
         };
       }),
       featureGroups: FEATURES.map((g) => ({
@@ -706,8 +706,8 @@ class LandingPageV2Class extends React.Component {
       prepIsQuiz: s.prepTab === 'quizzes',
       prepIsCoach: s.prepTab === 'coach',
       prepTabs: [
-        { id: 'diagnostic', label: 'Diagnostic Pathways', color: '#6d31d4' },
-        { id: 'quizzes', label: 'Quiz Library', color: '#067156' },
+        { id: 'diagnostic', label: 'Diagnostic pathways', color: '#6d31d4' },
+        { id: 'quizzes', label: 'Quiz library', color: '#067156' },
         { id: 'coach', label: 'Medabrain', color: '#a422b8' },
       ].map((t) => {
         const on = t.id === s.prepTab;
@@ -717,14 +717,14 @@ class LandingPageV2Class extends React.Component {
           style: `display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:${on ? 700 : 600};padding:10px 16px;border-radius:999px;`
             + `background:${on ? `color-mix(in srgb, ${t.color} 13%, transparent)` : 'rgba(255,255,255,0.55)'};`
             + `border:1px solid ${on ? `color-mix(in srgb, ${t.color} 30%, transparent)` : 'rgba(15,23,42,0.11)'};`
-            + `color:${on ? t.color : '#45536b'};transition:all .18s ease;`,
+            + `color:${on ? t.color : '#45536b'};transition:background-color .18s ease, border-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease, opacity .18s ease;`,
           dot: `width:7px;height:7px;border-radius:50%;background:${on ? t.color : 'rgba(15,23,42,0.22)'};`,
         };
       }),
       diagPrompt: q.q,
       diagKind: q.type === 'scenario' ? 'Scenario' : 'Work style',
       diagStep: `Question ${Math.min(s.diagIndex + 1, DIAG.length)} of ${DIAG.length}`,
-      diagBar: `width:${((s.diagDone ? DIAG.length : s.diagIndex) / DIAG.length) * 100}%;height:100%;border-radius:99px;background:linear-gradient(90deg,#6d31d4,#a422b8);transition:width .5s cubic-bezier(.16,1,.3,1);`,
+      diagBar: `width:100%;transform:scaleX(${(((s.diagDone ? DIAG.length : s.diagIndex) / DIAG.length) * 100) / 100});transform-origin:left;height:100%;border-radius:99px;background:linear-gradient(90deg,#6d31d4,#a422b8);transition:transform .5s cubic-bezier(.16,1,.3,1);`,
       diagDone: s.diagDone,
       diagNotDone: !s.diagDone,
       quizNotChecked: !s.quizChecked,
@@ -733,7 +733,7 @@ class LandingPageV2Class extends React.Component {
       diagResults: ranked.map((r, i) => ({
         label: PATHWAYS[r.id].label,
         pct: `${Math.round((r.score / top) * (i === 0 ? 94 : 88))}%`,
-        bar: `width:${Math.round((r.score / top) * (i === 0 ? 94 : 88))}%;height:100%;border-radius:99px;background:${PATHWAYS[r.id].color};transition:width .8s cubic-bezier(.16,1,.3,1);`,
+        bar: `width:100%;transform:scaleX(${(Math.round((r.score / top) * (i === 0 ? 94 : 88))) / 100});transform-origin:left;height:100%;border-radius:99px;background:${PATHWAYS[r.id].color};transition:transform .8s cubic-bezier(.16,1,.3,1);`,
         chip: `font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:${PATHWAYS[r.id].color};background:color-mix(in srgb, ${PATHWAYS[r.id].color} 13%, transparent);`,
         rank: i === 0 ? 'Best fit' : `#${i + 1}`,
         color: PATHWAYS[r.id].color,
@@ -765,7 +765,7 @@ class LandingPageV2Class extends React.Component {
           pick: () => this.pickQuiz(i),
           mark: String.fromCharCode(65 + i),
           markStyle: `width:24px;height:24px;flex-shrink:0;border-radius:7px;display:inline-flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:${col};background:${picked || (s.quizChecked && right) ? 'rgba(255,255,255,0.85)' : 'rgba(15,23,42,0.05)'};border:1px solid ${bd};`,
-          style: `display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;cursor:${s.quizChecked ? 'default' : 'pointer'};font-family:inherit;font-size:14px;line-height:1.5;color:${col};padding:13px 15px;border-radius:12px;background:${bg};border:1px solid ${bd};transition:all .16s ease;`,
+          style: `display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;cursor:${s.quizChecked ? 'default' : 'pointer'};font-family:inherit;font-size:14px;line-height:1.5;color:${col};padding:13px 15px;border-radius:12px;background:${bg};border:1px solid ${bd};transition:background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;`,
         };
       }),
       checkQuiz: this.checkQuiz,
@@ -830,14 +830,14 @@ class LandingPageV2Class extends React.Component {
       heroPlanRows: [
         { label: 'Physician \u00b7 Lesson 5: Pre-test probability', mins: '25m', color: '#1a5fcc' },
         { label: 'Flashcards \u2014 12 due, lab values weighted', mins: '15m', color: '#6d31d4' },
-        { label: 'Quiz: Lab Values & Diagnostic Testing', mins: '20m', color: '#067156' },
+        { label: 'Quiz: lab values & diagnostic testing', mins: '20m', color: '#067156' },
         { label: 'HOSA event study block', mins: '15m', color: '#905808' },
       ].map((r) => ({ label: r.label, mins: r.mins, dot: `width:8px;height:8px;border-radius:50%;flex-shrink:0;background:${r.color};` })),
       marquee: (() => {
         const items = [
           ['10 health pathways', '#1a5fcc'], ['Pathway diagnostic', '#6d31d4'], ['Quiz Library', '#067156'],
           ['Medabrain coach', '#a422b8'], ['Flashcards with FSRS', '#4640c9'], ['E-Library', '#0a6c84'],
-          ['Opportunities database', '#0b7166'], ['Activities & R\u00e9sum\u00e9', '#026b97'], ['Interview Prep', '#c21a3e'],
+          ['Opportunities database', '#0b7166'], ['Activities & r\u00e9sum\u00e9', '#026b97'], ['Interview prep', '#c21a3e'],
           ['Twelve-month Roadmap', '#905808'], ['Day-by-day Plans', '#865d05'], ['Common App export', '#1a5fcc'],
           ['Scholarships', '#067156'], ['Family access', '#6d31d4'],
         ];
@@ -1825,7 +1825,7 @@ class LandingPageV2Class extends React.Component {
                                 {arr(v.diagOptions).map((o, __k6) => (
                                   <Fragment key={__k6}>
                                     {' '}
-                                    <button className="mspv2-hover-7" onClick={o.pick} style={css("text-align: left; width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.5; color: #1f2836; background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.11); border-radius: 13px; padding: 15px 17px; cursor: pointer; transition: all .16s ease;")}>
+                                    <button className="mspv2-hover-7" onClick={o.pick} style={css("text-align: left; width: 100%; font-family: inherit; font-size: 14.5px; line-height: 1.5; color: #1f2836; background: rgba(255,255,255,0.75); border: 1px solid rgba(15,23,42,0.11); border-radius: 13px; padding: 15px 17px; cursor: pointer; transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;")}>
                                       {hole(o.text)}
                                     </button>
                                     {' '}
@@ -2146,7 +2146,7 @@ class LandingPageV2Class extends React.Component {
                                   {arr(v.coachSuggestions).map((s, __k8) => (
                                     <Fragment key={__k8}>
                                       {' '}
-                                      <button className="mspv2-hover-8" onClick={s.ask} style={css("text-align: left; font-family: inherit; font-size: 13.5px; color: #1f2836; background: rgba(255,255,255,0.85); border: 1px solid rgba(15,23,42,0.11); border-radius: 11px; padding: 11px 14px; cursor: pointer; transition: all .16s ease;")}>
+                                      <button className="mspv2-hover-8" onClick={s.ask} style={css("text-align: left; font-family: inherit; font-size: 13.5px; color: #1f2836; background: rgba(255,255,255,0.85); border: 1px solid rgba(15,23,42,0.11); border-radius: 11px; padding: 11px 14px; cursor: pointer; transition: background-color .16s ease, border-color .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease, opacity .16s ease;")}>
                                         {hole(s.text)}
                                       </button>
                                       {' '}

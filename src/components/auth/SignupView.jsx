@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Mail, ArrowRight, GraduationCap, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { C, btn, inp, lbl, CC, tint } from '../../lib/theme';
+import { C, btn, inp, lbl, CC, tint, CONTROL_TRANSITION } from '../../lib/theme';
 import { AUTH_VIEWS } from '../../lib/routes';
 import * as AuthAPI from '../../lib/authApi';
 import { OtpBoxes, ResendTimer, PasswordField, PasswordStrengthMeter, PasswordChecklist, passwordError, FieldError, BackButton, OrDivider, ConsentNotice } from './ui';
@@ -37,7 +37,7 @@ const ROLES = [
  *
  * /parents/signup exists so a parent never has to find the right radio button — they followed a
  * link that says "for parents" and the form should simply be the parent form. Rendered as a
- * statement of what is being created rather than a disabled control, because a greyed-out picker
+ * statement of what is being created rather than a disabled control, because a grayed-out picker
  * invites people to try to click it.
  */
 function LockedRole({ role }) {
@@ -46,7 +46,7 @@ function LockedRole({ role }) {
   const c = meta.hue();
   return (
     <div style={{
-      display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', borderRadius: 10,
+      display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 12px', borderRadius: 8,
       background: tint(c, 0.10), border: `1px solid ${tint(c, 0.45)}`,
     }}>
       <div style={{
@@ -58,7 +58,7 @@ function LockedRole({ role }) {
       </div>
       <div>
         <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{meta.title}</div>
-        <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{meta.desc}</div>
+        <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{meta.desc}</div>
       </div>
     </div>
   );
@@ -77,10 +77,10 @@ function RolePicker({ value, onChange }) {
             aria-pressed={on}
             style={{
               display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', width: '100%',
-              padding: '12px 14px', borderRadius: 10, cursor: 'pointer', fontFamily: C.FB,
+              padding: '12px 12px', borderRadius: 8, cursor: 'pointer', fontFamily: C.FB,
               background: on ? tint(c, 0.10) : C.surf2,
               border: `1px solid ${on ? tint(c, 0.45) : C.b1}`,
-              transition: 'all .15s',
+              transition: CONTROL_TRANSITION,
             }}
           >
             <div style={{
@@ -92,7 +92,7 @@ function RolePicker({ value, onChange }) {
             </div>
             <div>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>{title}</div>
-              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{desc}</div>
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{desc}</div>
             </div>
           </button>
         );
@@ -189,7 +189,7 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
           <motion.form key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleSendCode}>
             <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
+                <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>
                   {lockedRole === 'parent' ? 'Create your parent account' : 'Create your account'}
                 </div>
                 <div style={{ fontSize: 13, color: C.t2 }}>
@@ -206,7 +206,7 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
                 told up front reads it as the reason the thing is safe.
               */}
               {lockedRole === 'parent' && (
-                <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>
+                <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
                   After this you'll tell us who you are and who you're here for, then send your
                   student a request. Nothing about them is visible until they accept it.
                 </div>
@@ -244,9 +244,9 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
 
         {step === 'code' && (
           <motion.form key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleVerify}>
-            <div style={CC({ gap: 18 })}>
+            <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Check your inbox</div>
+                <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Check your inbox</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>Enter the 6-digit code sent to <strong style={{ color: C.t1 }}>{email}</strong></div>
               </div>
               <OtpBoxes value={code} onChange={setCode} />
@@ -265,7 +265,7 @@ export default function SignupView({ initialEmail = '', initialRole = 'student',
           <motion.form key="password" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleCreatePassword}>
             <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create a password</div>
+                <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Create a password</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>Email verified. Now set a password to finish creating your account.</div>
               </div>
               <div>

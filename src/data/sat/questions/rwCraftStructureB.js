@@ -208,7 +208,7 @@ export const RW_CRAFT_STRUCTURE_B = [
   {
     id: 'sat-rw-wic-0114', section: 'rw', domain: 'craft_structure', skill: 'words_in_context',
     difficulty: 'H', format: 'mcq', trap: 'half_right', targetSeconds: 70,
-    stimulus: 'In her essays on translation, Jhumpa Lahiri treats the loss of nuance not as a defect to be minimised but as ______ of the form: something a translator works with rather than against, since a version that surrendered nothing would not be a translation at all.',
+    stimulus: 'In her essays on translation, Jhumpa Lahiri treats the loss of nuance not as a defect to be minimized but as ______ of the form: something a translator works with rather than against, since a version that surrendered nothing would not be a translation at all.',
     q: 'Which choice completes the text with the most logical and precise word or phrase?',
     ch: ['a symptom', 'a constituent', 'an indictment', 'a byproduct'],
     ans: 1,
@@ -239,7 +239,7 @@ export const RW_CRAFT_STRUCTURE_B = [
       'Correct. Undisputed result first, then competing interpretations.',
       'The text explicitly leaves the question open rather than settling it.',
       'No term is defined anywhere in the passage.',
-      'The method is never described, and the sample is not criticised.',
+      'The method is never described, and the sample is not criticized.',
     ],
   },
   {
@@ -339,7 +339,7 @@ export const RW_CRAFT_STRUCTURE_B = [
       'No technical flaw is named, and the passage does not say the mechanism fails.',
       'Correct. It sets elegance against fifteen years of near-zero deployment.',
       'The sentence makes no prediction; it reports the record so far.',
-      'It adds new information rather than summarising the chemistry.',
+      'It adds new information rather than summarizing the chemistry.',
     ],
   },
   {
@@ -520,7 +520,7 @@ export const RW_CRAFT_STRUCTURE_B = [
     distractorExp: [
       'Correct. The advantage is granted; the hidden cost is the objection.',
       'Text 2 never disputes that the argument persuades committees.',
-      'Text 2 is criticising the argument, not calling it decisive.',
+      'Text 2 is criticizing the argument, not calling it decisive.',
       'Measurement precision is not the objection Text 2 raises.',
     ],
   },

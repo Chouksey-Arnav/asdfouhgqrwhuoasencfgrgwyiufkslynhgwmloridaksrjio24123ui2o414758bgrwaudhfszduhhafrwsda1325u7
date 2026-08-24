@@ -5,7 +5,7 @@
 //
 // There is no test runner in this repo, so this script is the test suite for those modules.
 // scripts/verifyTimeline.mjs already asserts the catalog's shape and grade gating; this one
-// asserts the BEHAVIOURS that make the workspace health-specific, each of which is invisible in
+// asserts the BEHAVIORS that make the workspace health-specific, each of which is invisible in
 // review and easy to undo by accident:
 //
 //   1. THE WORKING DOCUMENT IS NOT AN ESSAY. No word limit, no status ladder, never "overdue",
@@ -296,7 +296,7 @@ assert('an identical current draft adds no phantom step',
   buildVersionArc(versions, versions[1].content).length === 2);
 assert('the arc summary for the critique pass carries the shape, not the draft text',
   !summarizeArcForPrompt(arc).includes(words(10)), String(summarizeArcForPrompt(arc)));
-assert('a single version has no arc worth summarising', summarizeArcForPrompt(buildVersionArc([versions[0]])) === null);
+assert('a single version has no arc worth summarizing', summarizeArcForPrompt(buildVersionArc([versions[0]])) === null);
 
 // ─────────────────────────────────────────────────────────────────────────────
 section('6. Milestones are two-way, and only ever move forward');
@@ -362,7 +362,7 @@ const alerts = alertRowsFor({ title: 'X', due_date: '2026-11-25', kind: 'applica
   { today: new Date('2026-08-22') });
 eq('a date ninety-five days out gets all three reminders', alerts.length, 3);
 assert('every reminder points back at its parent', alerts.every(a => alertParentRef(a) === 'combined:foo'));
-assert('every reminder is recognisable as one', alerts.every(isAlertRow));
+assert('every reminder is recognizable as one', alerts.every(isAlertRow));
 assert('reminders land before the date they warn about', alerts.every(a => a.due_date < '2026-11-25'));
 eq('a date five days out gets none — the row is already at the top of the feed',
   alertRowsFor({ title: 'X', due_date: '2026-08-27' }, { today: new Date('2026-08-22') }).length, 0);
@@ -430,8 +430,8 @@ const REQUIRED = [
   ['hp_combined_lookahead', 'the junior-year warning that they close early', m => m.grades.includes('junior')],
   ['hp_summer_window', 'summer programs open (Dec)', m => ['11', '12', '01'].includes(m.monthDay.slice(0, 2))],
   ['hp_summer_window_close', 'summer programs close (Feb)', m => ['01', '02', '03'].includes(m.monthDay.slice(0, 2))],
-  ['hp_cert_fall_enrollment', 'certification enrolment, autumn term', m => !!m.monthDay],
-  ['hp_cert_spring_enrollment', 'certification enrolment, spring term', m => !!m.monthDay],
+  ['hp_cert_fall_enrollment', 'certification enrollment, autumn term', m => !!m.monthDay],
+  ['hp_cert_spring_enrollment', 'certification enrollment, spring term', m => !!m.monthDay],
   ['hp_hosa_join', 'HOSA membership before the event window', m => !!m.monthDay],
   ['hp_hosa_regionals', 'HOSA qualifying', m => !!m.monthDay],
   ['hp_hosa_ilc', 'the HOSA ILC', m => m.monthDay.startsWith('06')],

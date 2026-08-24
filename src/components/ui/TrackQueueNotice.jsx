@@ -27,7 +27,7 @@ export default function TrackQueueNotice({ entries = [], status = {}, onRetried 
   }
 
   return (
-    <div style={{ ...glass2({ padding: 14 }), border: `1px solid ${tint(color, 0.3)}`, background: `linear-gradient(120deg,${tint(color, 0.08)},rgba(255,255,255,0.02) 55%)` }}>
+    <div style={{ ...glass2({ padding: 12 }), border: `1px solid ${tint(color, 0.3)}`, background: `linear-gradient(120deg,${tint(color, 0.08)},rgba(255,255,255,0.02) 55%)` }}>
       <div style={R({ gap: 8, marginBottom: 8 })}>
         <Icon size={14} color={color} />
         <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>
@@ -36,12 +36,12 @@ export default function TrackQueueNotice({ entries = [], status = {}, onRetried 
             : `${queued.length} item${queued.length === 1 ? '' : 's'} finishing saving`}
         </span>
       </div>
-      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>
+      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 8 }}>
         {blocked.length
           ? 'These are saved on this device and will be added to your account automatically once you sign in — nothing has been lost.'
           : "These are saved on this device. They'll finish saving to your account automatically as soon as the connection comes back — you don't need to add them again."}
       </p>
-      <div style={CC({ gap: 5, marginBottom: 10 })}>
+      <div style={CC({ gap: 4, marginBottom: 8 })}>
         {entries.slice(0, 6).map(e => (
           <div key={e.id} style={{ fontSize: 11.5, color: C.t2 }}>· {e.label || e.row?.name || e.row?.position || 'Tracked item'}</div>
         ))}
@@ -51,7 +51,7 @@ export default function TrackQueueNotice({ entries = [], status = {}, onRetried 
         {retrying ? <><Loader2 size={12} className="spin" />Retrying…</> : <><RefreshCw size={12} />Try saving now</>}
       </button>
       {status.lastError && !blocked.length && (
-        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 6 }}>Last attempt: {status.lastError}</div>
+        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>Last attempt: {status.lastError}</div>
       )}
     </div>
   );

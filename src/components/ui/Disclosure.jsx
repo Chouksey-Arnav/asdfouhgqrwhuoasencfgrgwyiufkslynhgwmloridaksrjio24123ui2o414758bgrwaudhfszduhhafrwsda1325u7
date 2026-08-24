@@ -76,7 +76,7 @@ export default function Disclosure({
       >
         {Icon && (
           <div style={{
-            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
             background: tint(color, 0.14), border: `1px solid ${tint(color, 0.24)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -85,9 +85,9 @@ export default function Disclosure({
         )}
         <span style={{ flex: 1, minWidth: 0 }}>
           <span style={{ display: 'block', fontSize: m ? 13 : 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{title}</span>
-          {sub && <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{sub}</span>}
+          {sub && <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{sub}</span>}
         </span>
-        <span style={R({ gap: 6, flexShrink: 0, fontSize: 11, fontWeight: 700, color: accentText(color) })}>
+        <span style={R({ gap: 4, flexShrink: 0, fontSize: 11, fontWeight: 700, color: accentText(color) })}>
           {open ? 'Hide' : 'Show'}
           <motion.span animate={{ rotate: open ? 180 : 0 }} style={{ display: 'flex' }}><ChevronDown size={14} /></motion.span>
         </span>
@@ -116,9 +116,9 @@ export default function Disclosure({
  */
 export function HelpNote({ children, color = C.t3, icon: Icon = HelpCircle }) {
   return (
-    <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-      <Icon size={12} color={color} style={{ flexShrink: 0, marginTop: 2 }} />
-      <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>{children}</span>
+    <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+      <Icon size={12} color={color} style={{ flexShrink: 0, marginTop: 4 }} />
+      <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{children}</span>
     </div>
   );
 }
@@ -143,8 +143,8 @@ export function HowItWorks({ id, title = 'How this works', steps = [], color = C
       background: `linear-gradient(120deg,${tint(color, 0.08)},rgba(255,255,255,0.02) 62%)`,
       border: `1px solid ${tint(color, 0.2)}`,
     }}>
-      <div style={R({ gap: 8, marginBottom: 10, flexWrap: 'wrap' })}>
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(color) }}>{title}</span>
+      <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: accentText(color) }}>{title}</span>
         <button type="button" onClick={dismiss}
           style={{ marginLeft: 'auto', all: 'unset', cursor: 'pointer', fontSize: 10.5, color: C.t4 }}>
           Got it
@@ -152,16 +152,16 @@ export function HowItWorks({ id, title = 'How this works', steps = [], color = C
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: m ? '1fr' : `repeat(${steps.length}, 1fr)`, gap: m ? 10 : 14 }}>
         {steps.map((s, i) => (
-          <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+          <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
             <span style={{
-              width: 19, height: 19, borderRadius: '50%', flexShrink: 0, marginTop: 1,
+              width: 19, height: 19, borderRadius: '50%', flexShrink: 0, marginTop: 4,
               background: tint(color, 0.18), border: `1px solid ${tint(color, 0.3)}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 10, fontWeight: 800, fontFamily: C.FM, color: accentText(color),
             }}>{i + 1}</span>
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.t1 }}>{s.title}</span>
-              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>{s.body}</span>
+              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{s.body}</span>
             </span>
           </div>
         ))}

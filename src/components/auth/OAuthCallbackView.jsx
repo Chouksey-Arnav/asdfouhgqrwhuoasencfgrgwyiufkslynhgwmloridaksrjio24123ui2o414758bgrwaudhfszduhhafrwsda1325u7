@@ -57,9 +57,9 @@ export default function OAuthCallbackView({ onAuthed, onBack }) {
 
   if (error) {
     return (
-      <div style={{ textAlign: 'center', padding: '8px 0' }}>
-        <AlertTriangle size={22} color={C.roseL} style={{ marginBottom: 10 }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, marginBottom: 6 }}>Sign-in didn't go through</div>
+      <div style={{ textAlign: 'center', padding: '8px 0px' }}>
+        <AlertTriangle size={22} color={C.roseL} style={{ marginBottom: 8 }} />
+        <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, marginBottom: 4 }}>Sign-in didn't go through</div>
         <div style={{ fontSize: 12.5, color: C.t2, marginBottom: 20, lineHeight: 1.5 }}>{error}</div>
         <button type="button" onClick={onBack} style={btn(C.blueGrad, { width: '100%' })}>Back to log in</button>
       </div>
@@ -67,7 +67,7 @@ export default function OAuthCallbackView({ onAuthed, onBack }) {
   }
 
   return (
-    <div style={{ textAlign: 'center', padding: '28px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+    <div style={{ textAlign: 'center', padding: '28px 0px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
       <BrandJourney size={150} />
       <div style={{ fontSize: 13, color: C.t2 }}>Finishing sign-in with Google…</div>
     </div>

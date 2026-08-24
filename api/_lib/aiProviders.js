@@ -8,7 +8,7 @@
 // still arrived, stamped `degraded`, carrying the sentence
 //
 //     "Medabrain could not be reached for part of this build, so some of it was
-//      assembled from the deadline catalogue rather than by judgment."
+//      assembled from the deadline catalog rather than by judgment."
 //
 // That sentence is honest and it is also an admission that the product did not
 // do the thing it exists to do. Retrying harder against Groq does not fix it:
@@ -44,7 +44,7 @@
 //                          open-weight models (gpt-oss-120b, Llama 3.3 70B) at
 //                          comparable speed, so a relief answer is not a worse
 //                          answer, just a slower path to the same one.
-//   OPENROUTER_API_KEY   — OpenRouter. The broadest catalogue and the best
+//   OPENROUTER_API_KEY   — OpenRouter. The broadest catalog and the best
 //                          single choice when you do not want to think about it:
 //                          one key reaches every model named below.
 //   TOGETHER_API_KEY     — Together AI. Same open-weight family again.

@@ -193,7 +193,7 @@ export function unclaimedMilestones(streak, claimedKeys) {
 // The rung ladder above pays out at fourteen specific numbers. Between those
 // numbers a streak is just an integer that goes up, which is fine for an adult
 // and not enough for the audience this product is actually for. A LEAGUE is the
-// identity attached to the number: it changes name, colour and shape at seven
+// identity attached to the number: it changes name, color and shape at seven
 // thresholds, it is drawn everywhere the streak is drawn, and — critically — it
 // carries two things that are not cosmetic:
 //
@@ -587,7 +587,7 @@ export function isoWeekKey(date = new Date()) {
 export const WEEKDAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 /**
- * The current week's seven days, each labelled with whether it was cleared.
+ * The current week's seven days, each labeled with whether it was cleared.
  * `metDates` is a Set of YYYY-MM-DD keys that cleared their goal; `bridged` is
  * the Set of dates a streak freeze covered (those count toward the streak but
  * NOT toward a perfect week — a perfect week has to actually be perfect).

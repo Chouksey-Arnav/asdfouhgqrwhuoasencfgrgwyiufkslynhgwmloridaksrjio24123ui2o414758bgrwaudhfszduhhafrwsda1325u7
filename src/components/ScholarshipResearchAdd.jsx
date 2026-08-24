@@ -98,15 +98,15 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
 
   if (!open) {
     return (
-      <button onClick={() => setOpen(true)} style={btn(accent !== C.blue ? `linear-gradient(135deg,${accent},${C.teal})` : C.blueGrad, { padding: '11px 22px' })}>
-        <Plus size={15} />Add New Scholarship
+      <button onClick={() => setOpen(true)} style={btn(accent !== C.blue ? `linear-gradient(135deg,${accent},${C.teal})` : C.blueGrad, { padding: '12px 20px' })}>
+        <Plus size={15} />Add new scholarship
       </button>
     );
   }
 
   return (
-    <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.07)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.22)}` }}>
-      <div style={{ ...R({ justifyContent: 'space-between' }), marginBottom: 14 }}>
+    <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.07)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.22)}` }}>
+      <div style={{ ...R({ justifyContent: 'space-between' }), marginBottom: 12 }}>
         <div style={R({ gap: 8 })}>
           <Sparkles size={15} color={accent} />
           <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>Add a new scholarship</span>
@@ -116,7 +116,7 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
 
       {(phase === 'name' || phase === 'researching') && (
         <>
-          <form onSubmit={e => { e.preventDefault(); runResearch(); }} style={R({ gap: 10, flexWrap: 'wrap' })}>
+          <form onSubmit={e => { e.preventDefault(); runResearch(); }} style={R({ gap: 8, flexWrap: 'wrap' })}>
             <input ref={nameRef} style={inp({ flex: 1, minWidth: 200 })} placeholder="Scholarship name — e.g. Horatio Alger National Scholarship"
               value={name} onChange={e => setName(e.target.value)} disabled={phase === 'researching'} />
             <button type="submit" disabled={!name.trim() || phase === 'researching'}
@@ -124,7 +124,7 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
               {phase === 'researching' ? <ThinkingDots color="#fff" /> : <><Sparkles size={13} />Research with Medabrain</>}
             </button>
           </form>
-          <div style={{ marginTop: 10 }}>
+          <div style={{ marginTop: 8 }}>
             {phase === 'researching' ? (
               <div style={{ ...R({ gap: 8 }), fontSize: 12, color: C.t3 }}>
                 <ThinkingDots color={C.violetL} />
@@ -136,7 +136,7 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
               </button>
             )}
           </div>
-          {error && <div style={{ marginTop: 10, fontSize: 12, color: C.roseL }}>{error}</div>}
+          {error && <div style={{ marginTop: 8, fontSize: 12, color: C.roseL }}>{error}</div>}
         </>
       )}
 
@@ -149,26 +149,26 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', marginBottom: 4 }}>
               <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{name.trim()}</div>
               <motion.div initial={{ scaleY: 0 }} animate={{ scaleY: 1 }} transition={{ duration: 0.28, ease: 'easeOut' }}
-                style={{ width: 1, height: 16, background: tint(accent, 0.5), transformOrigin: 'top', marginLeft: 3 }} />
+                style={{ width: 1, height: 16, background: tint(accent, 0.5), transformOrigin: 'top', marginLeft: 4 }} />
               <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22, duration: 0.2 }}>
                 <ArrowDown size={12} color={tint(accent, 0.7)} style={{ marginLeft: -2 }} />
               </motion.div>
             </div>
 
             <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.25 }}
-              style={{ ...glass2({ padding: 14 }) }}>
+              style={{ ...glass2({ padding: 12 }) }}>
               {!recognized && (
-                <div style={{ ...R({ gap: 8 }), marginBottom: 12, padding: '8px 10px', borderRadius: 8, background: tint(C.amber, 0.1), border: `1px solid ${tint(C.amber, 0.25)}` }}>
+                <div style={{ ...R({ gap: 8 }), marginBottom: 12, padding: '8px 8px', borderRadius: 8, background: tint(C.amber, 0.1), border: `1px solid ${tint(C.amber, 0.25)}` }}>
                   <AlertTriangle size={13} color={C.amberL} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>Medabrain doesn't have confident knowledge of this program — the fields below are best-effort, or blank. Fill in what you know, or track it as-is and research it yourself later.</span>
                 </div>
               )}
-              <div style={CC({ gap: 10 })}>
+              <div style={CC({ gap: 8 })}>
                 <div>
                   <span style={lbl()}>Organization</span>
                   <input style={inp()} placeholder="Who runs it (optional)" value={fields.org} onChange={e => setFields(f => ({ ...f, org: e.target.value }))} />
                 </div>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 160 }}>
                     <span style={lbl()}>Typical amount</span>
                     <input style={inp()} placeholder="e.g. Around $2,500" value={fields.amount} onChange={e => setFields(f => ({ ...f, amount: e.target.value }))} />
@@ -188,13 +188,13 @@ export default function ScholarshipResearchAdd({ accent = C.blue, onTrack }) {
                 </div>
               </div>
 
-              <div style={{ ...R({ gap: 6 }), marginTop: 10, fontSize: 10.5, color: C.t4 }}>
+              <div style={{ ...R({ gap: 4 }), marginTop: 8, fontSize: 10.5, color: C.t4 }}>
                 <Info size={11} />You can add a real deadline date later from the tracked list once you've confirmed it on the official site.
               </div>
 
-              {error && <div style={{ marginTop: 10, fontSize: 12, color: C.roseL }}>{error}</div>}
+              {error && <div style={{ marginTop: 8, fontSize: 12, color: C.roseL }}>{error}</div>}
 
-              <div style={{ ...R({ gap: 8 }), marginTop: 14 }}>
+              <div style={{ ...R({ gap: 8 }), marginTop: 12 }}>
                 <button onClick={save} disabled={saving} style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), opacity: saving ? 0.7 : 1 }}>
                   {saving ? <ThinkingDots color="#fff" /> : <><Check size={13} />Track this scholarship</>}
                 </button>

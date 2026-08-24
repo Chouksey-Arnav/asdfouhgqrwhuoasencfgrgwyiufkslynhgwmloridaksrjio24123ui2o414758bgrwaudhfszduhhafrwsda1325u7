@@ -76,7 +76,7 @@ const LEGAL_DOCS = { terms: TERMS_DOC, privacy: PRIVACY_DOC };
 // Every string below originates in this repository, not from a user — but these
 // files are the one place where a stray apostrophe in a piece of marketing copy
 // silently breaks an attribute, so escape unconditionally rather than by
-// judgement about which strings "can't" contain one.
+// judgment about which strings "can't" contain one.
 
 const escapeHtml = (s) =>
   String(s)

@@ -31,7 +31,7 @@ import CredentialsSection, { isCertExpired, isCertExpiringSoon } from './portfol
 import SectionScroller from './portfolio/SectionScroller';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Activities & Résumé.
+// Activities & résumé.
 //
 // This is the tab that holds everything a student *did*, as opposed to where
 // they are applying (College List), what they wrote (Essays), or when it is due
@@ -85,14 +85,14 @@ const CATEGORY_COLOR = { reach: C.rose, target: C.blue, safety: C.green };
 // retired /portfolio/clinical, /portfolio/research and /portfolio/skills URLs
 // (and every in-app link that still names them) onto them.
 export const RESUME_SECTIONS = [
-  { id: 'activities',  ic: Layers,       label: 'Activities & Honors', color: C.amber, blurb: 'Your ten Common App slots, scored and read back' },
+  { id: 'activities',  ic: Layers,       label: 'Activities & honors', color: C.amber, blurb: 'Your ten Common App slots, scored and read back' },
   { id: 'academics',   ic: GraduationCap,label: 'Grades',              color: C.green, blurb: 'GPA term by term, and the colleges it matches' },
   // "Shadowing" is the word students use. The database calls this table
   // clinical_hours and the Admissions Calculator calls it clinical exposure;
   // neither is a phrase a fifteen-year-old has ever said out loud.
-  { id: 'clinical',    ic: Stethoscope,  label: 'Shadowing & Hours',   color: C.pink,  blurb: 'Shadowing, volunteering and patient-care hours, by site' },
+  { id: 'clinical',    ic: Stethoscope,  label: 'Shadowing & hours',   color: C.pink,  blurb: 'Shadowing, volunteering and patient-care hours, by site' },
   { id: 'research',    ic: FlaskConical, label: 'Research',            color: C.cyan,  blurb: 'Projects, mentors and publications' },
-  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & Certs',      color: C.teal,  blurb: 'Dated credentials, with their expiry dates tracked' },
+  { id: 'credentials', ic: BadgeCheck,   label: 'Skills & certs',      color: C.teal,  blurb: 'Dated credentials, with their expiry dates tracked' },
 ];
 // The section a caller that names no section should land on, and the one the
 // unlock ladder must keep open on day one (see verifyNavUnlocks.mjs). It is NOT
@@ -117,16 +117,16 @@ function CoachStrip({ lines, label = 'Medabrain, while you type' }) {
   if (!lines.length) return null;
   const col = (l) => l === 'error' ? C.rose : l === 'warn' ? C.amber : l === 'good' ? C.green : C.violet;
   return (
-    <div style={{ ...CC({ gap: 6 }), marginTop: 12 }}>
-      <div style={R({ gap: 6, marginBottom: 1 })}>
+    <div style={{ ...CC({ gap: 4 }), marginTop: 12 }}>
+      <div style={R({ gap: 4, marginBottom: 4 })}>
         <Sparkles size={11} color={C.violetL} />
-        <span style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.07em' }}>{label}</span>
+        <span style={{ fontSize: 9.5, fontWeight: 800, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{label}</span>
       </div>
       {lines.map((l, i) => {
         const c = col(l.level);
         return (
-          <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '7px 10px' }), borderRadius: 8, background: tint(c, 0.07), border: `1px solid ${tint(c, 0.17)}` }}>
-            <span style={{ width: 5, height: 5, borderRadius: 3, background: c, flexShrink: 0, marginTop: 6 }} />
+          <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '8px 8px' }), borderRadius: 8, background: tint(c, 0.07), border: `1px solid ${tint(c, 0.17)}` }}>
+            <span style={{ width: 5, height: 5, borderRadius: 4, background: c, flexShrink: 0, marginTop: 4 }} />
             <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{l.text}</span>
           </div>
         );
@@ -144,7 +144,7 @@ function CharCap({ value, limit, note = null }) {
   const over = len > limit;
   const near = !over && len > limit * 0.88;
   return (
-    <span style={{ fontSize: 9.5, fontFamily: C.FM, color: over ? C.rose : near ? C.amber : C.t4, fontWeight: over ? 800 : 500, marginLeft: 7 }}>
+    <span style={{ fontSize: 9.5, fontFamily: C.FM, color: over ? C.rose : near ? C.amber : C.t4, fontWeight: over ? 800 : 500, marginLeft: 8 }}>
       {len}/{limit}{over ? ` · ${len - limit} over the Common App limit` : note ? ` · ${note}` : ''}
     </span>
   );
@@ -184,24 +184,24 @@ function ActivityCard({ a, accent, user, gradeLabel, analysis, onRemove }) {
   const warns = issues.filter(i => i.level === 'warn').length;
 
   return (
-    <div style={{ ...glass2({ padding: 14 }), borderLeft: `3px solid ${tc}`, background: `linear-gradient(120deg,${tint(tc, 0.05)},rgba(255,255,255,0.02) 55%)` }}>
+    <div style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${tc}`, background: `linear-gradient(120deg,${tint(tc, 0.05)},rgba(255,255,255,0.02) 55%)` }}>
       <div style={{ display: 'flex', gap: 12 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>
             {a.position} <span style={{ color: tc, fontWeight: 600 }}>· {a.activity_type}</span><span style={{ color: C.t3, fontWeight: 400 }}>{a.organization ? ` · ${a.organization}` : ''}</span>
             <span style={{ ...pill(a.status === 'ongoing' ? C.greenDim : C.blueDim, a.status === 'ongoing' ? C.greenL : C.blueL, { fontSize: 9, marginLeft: 8 }), textTransform: 'capitalize' }}>{a.status}</span>
-            {a.leadership_role && <span style={pill(`${accent}20`, accent, { fontSize: 9, marginLeft: 6 })}><Crown size={9} style={{ marginRight: 3 }} />Leadership</span>}
+            {a.leadership_role && <span style={pill(`${accent}20`, accent, { fontSize: 9, marginLeft: 4 })}><Crown size={9} style={{ marginRight: 4 }} />Leadership</span>}
             <VerificationBadge status={a.verification_status} />
           </div>
-          {a.description && <div style={{ fontSize: 12, color: C.t2, marginTop: 3 }}>{a.description}</div>}
-          {a.impact && <div style={{ fontSize: 12, color: accent, marginTop: 3, fontWeight: 600 }}>{a.impact}</div>}
+          {a.description && <div style={{ fontSize: 12, color: C.t2, marginTop: 4 }}>{a.description}</div>}
+          {a.impact && <div style={{ fontSize: 12, color: accent, marginTop: 4, fontWeight: 600 }}>{a.impact}</div>}
           <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>
             {a.hours_per_week} hrs/wk · {a.weeks_per_year} wks/yr · <b style={{ color: C.t2, fontFamily: C.FM }}>≈{s.hoursPerYear}h/yr</b> · Grades {(a.grade_levels || []).join(', ') || '—'}
           </div>
-          {(a.skills_tags || []).length > 0 && <div style={{ marginTop: 6, display: 'flex', gap: 5, flexWrap: 'wrap' }}>{a.skills_tags.map(sk => <span key={sk} style={pill('rgba(255,255,255,0.06)', C.t2, { fontSize: 9 })}>{sk}</span>)}</div>}
+          {(a.skills_tags || []).length > 0 && <div style={{ marginTop: 4, display: 'flex', gap: 4, flexWrap: 'wrap' }}>{a.skills_tags.map(sk => <span key={sk} style={pill('rgba(255,255,255,0.06)', C.t2, { fontSize: 9 })}>{sk}</span>)}</div>}
           {a.evidence_url && <a href={a.evidence_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, marginTop: 4, display: 'inline-block' }}>View evidence →</a>}
         </div>
-        <div style={{ ...CC({ gap: 6 }), alignItems: 'flex-end', flexShrink: 0 }}>
+        <div style={{ ...CC({ gap: 4 }), alignItems: 'flex-end', flexShrink: 0 }}>
           <span style={pill(tint(bandColor, 0.14), bandColor, { fontSize: 9.5, fontWeight: 800, border: `1px solid ${tint(bandColor, 0.26)}` })}>{s.score}/100</span>
           <button style={btnSm(C.roseDim, { color: C.rose })} onClick={onRemove} aria-label="Delete activity"><Trash2 size={12} /></button>
         </div>
@@ -209,36 +209,36 @@ function ActivityCard({ a, accent, user, gradeLabel, analysis, onRemove }) {
 
       {/* How much of this entry actually made it onto the page — the bar is the
           record's completeness, not a judgment of the student's commitment. */}
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 8 }}>
         <div style={R({ gap: 8, justifyContent: 'space-between', marginBottom: 4 })}>
-          <span style={{ fontSize: 9.5, color: C.t4, textTransform: 'uppercase', letterSpacing: '.06em', fontWeight: 700 }}>{s.band.label}</span>
+          <span style={{ fontSize: 9.5, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontWeight: 700 }}>{s.band.label}</span>
           <span style={{ fontSize: 9.5, color: C.t4 }}>
             {errors > 0 && <b style={{ color: C.rose }}>{errors} blocking</b>}{errors > 0 && warns > 0 && ' · '}{warns > 0 && <b style={{ color: C.amberL }}>{warns} to fix</b>}
             {errors === 0 && warns === 0 && <b style={{ color: C.greenL }}>nothing blocking</b>}
           </span>
         </div>
-        <div style={{ height: 4, borderRadius: 3, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
-          <div style={{ width: `${s.score}%`, height: '100%', background: bandColor, borderRadius: 3, transition: 'width .3s' }} />
+        <div style={{ height: 4, borderRadius: 4, background: 'rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+          <div style={{ width: '100%', transform: `scaleX(${(s.score) / 100})`, transformOrigin: 'left', height: '100%', background: bandColor, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
         </div>
       </div>
 
       {issues.length > 0 && (
         <button type="button" onClick={() => setOpen(o => !o)}
-          style={{ ...R({ gap: 6, marginTop: 10 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.violetL, fontSize: 11, fontWeight: 700, fontFamily: C.FB }}>
+          style={{ ...R({ gap: 4, marginTop: 8 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.violetL, fontSize: 11, fontWeight: 700, fontFamily: C.FB }}>
           <Sparkles size={11} />{open ? 'Hide' : `What Medabrain would change (${issues.length})`}
           <ChevronDown size={12} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }} />
         </button>
       )}
 
       {open && (
-        <div style={{ ...CC({ gap: 9 }), marginTop: 10 }}>
-          <div style={CC({ gap: 6 })}>
+        <div style={{ ...CC({ gap: 8 }), marginTop: 8 }}>
+          <div style={CC({ gap: 4 })}>
             {issues.map((iss, i) => {
               const c = iss.level === 'error' ? C.rose : iss.level === 'warn' ? C.amber : C.blue;
               const Icon = iss.level === 'tip' ? Info : AlertTriangle;
               return (
-                <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '7px 10px' }), borderRadius: 8, background: tint(c, 0.06), border: `1px solid ${tint(c, 0.16)}` }}>
-                  <Icon size={12} color={c} style={{ flexShrink: 0, marginTop: 2 }} />
+                <div key={i} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '8px 8px' }), borderRadius: 8, background: tint(c, 0.06), border: `1px solid ${tint(c, 0.16)}` }}>
+                  <Icon size={12} color={c} style={{ flexShrink: 0, marginTop: 4 }} />
                   <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{iss.text}</span>
                 </div>
               );
@@ -537,20 +537,20 @@ export default function ActivitiesResumePanel({
   }, [certsToRenew, activities.length, clinical.length, academics.hasData, certs.length, research.length, canExport, setSection]);
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-resume" icon={Award} color={accent} color2={C.orange} m={isMobile}
-        eyebrow="Applications" title="Activities & Résumé"
+        eyebrow="Applications" title="Activities & résumé"
         sub="Activities, GPA, hours, research and certifications — exportable to the Common App or one PDF."
         right={canExport ? (
           <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button style={btnG({ fontSize: 12 })} onClick={() => setExportOpen(true)}><ClipboardList size={13} />Export to Common App</button>
-            <button style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { fontSize: 12, boxShadow: `0 4px 14px ${tint(accent, 0.35)}` }), display: 'inline-flex', alignItems: 'center', gap: 6 }} onClick={exportPdf}><FileDown size={13} />Résumé PDF</button>
+            <button style={{ ...btn(`linear-gradient(135deg,${accent},${C.orange})`, { fontSize: 12, boxShadow: `0 4px 14px ${tint(accent, 0.35)}` }), display: 'inline-flex', alignItems: 'center', gap: 4 }} onClick={exportPdf}><FileDown size={13} />Résumé PDF</button>
           </div>
         ) : undefined} />
 
       {/* The four-year export sits above the record rather than inside it: it is
           the thing a senior comes to this page for in October, and the one
-          artefact that only exists because they logged for four years. */}
+          artifact that only exists because they logged for four years. */}
       <FourYearExport
         accent={C.violet} user={user} snapshot={exportSnapshot} audience="student"
         gradeLabel={gradeLabel} pathwayLabel={pathwayLabel}
@@ -587,8 +587,8 @@ export default function ActivitiesResumePanel({
             render: () => (
         <>
           <SectionIntro icon={Layers} color={accent} color2={C.orange} m={isMobile}
-            title="Activities & Honors"
-            blurb="Log every extracurricular, job, leadership role and honor with real hours and impact. Each entry is scored on how much of it actually made it into the record — because three words is what a reader gets, no matter how much the activity meant."
+            title="Activities & honors"
+            blurb="Log every activity, job, leadership role and honor with real hours and impact. Each entry is scored on how much of it actually made it into the record — because three words is what a reader gets, no matter how much the activity meant."
             stats={[
               { value: `${analysis.slotsUsed}/10`, label: 'activity slots', color: accent },
               { value: `${analysis.awardCount}/${CA_LIMITS.maxHonors}`, label: 'honors slots', color: C.goldL },
@@ -599,8 +599,8 @@ export default function ActivitiesResumePanel({
               It counts this tab's clinical and research sections, not just rows
               in the activities list. */}
           {(activities.length > 0 || clinical.length > 0 || research.length > 0) && (
-            <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.16)}` }}>
-              <div style={R({ justifyContent: 'space-between', marginBottom: 13, flexWrap: 'wrap', gap: 8 })}>
+            <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.16)}` }}>
+              <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
                 <SectionTitle icon={Gauge} color={C.violetL} extra={{ marginBottom: 0 }}>What your application is made of</SectionTitle>
                 <span style={pill(tint(C.violet, 0.14), C.violetL, { fontFamily: C.FM, fontSize: 11 })}>{coverage.score}% covered</span>
               </div>
@@ -610,14 +610,14 @@ export default function ActivitiesResumePanel({
                   const elsewhere = coverage.fromOtherSection[p.id];
                   const c = has ? C.green : p.id === 'clinical' ? C.rose : C.amber;
                   return (
-                    <div key={p.id} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '10px 12px' }), borderRadius: 10, background: tint(c, has ? 0.06 : 0.05), border: `1px solid ${tint(c, has ? 0.18 : 0.14)}` }}>
-                      {has ? <CheckCircle2 size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} /> : <AlertTriangle size={13} color={c} style={{ flexShrink: 0, marginTop: 1 }} />}
+                    <div key={p.id} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '8px 12px' }), borderRadius: 8, background: tint(c, has ? 0.06 : 0.05), border: `1px solid ${tint(c, has ? 0.18 : 0.14)}` }}>
+                      {has ? <CheckCircle2 size={13} color={c} style={{ flexShrink: 0, marginTop: 4 }} /> : <AlertTriangle size={13} color={c} style={{ flexShrink: 0, marginTop: 4 }} />}
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontSize: 11.5, fontWeight: 700, color: has ? C.t1 : c }}>{p.label}</div>
-                        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>{has ? p.why : 'Nothing logged here yet.'}</div>
+                        <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{has ? p.why : 'Nothing logged here yet.'}</div>
                         {elsewhere && (
                           <button type="button" onClick={() => setSection(elsewhere)}
-                            style={{ ...R({ gap: 4, marginTop: 5 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.greenL, fontSize: 10, fontWeight: 700, fontFamily: C.FB }}>
+                            style={{ ...R({ gap: 4, marginTop: 4 }), background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: C.greenL, fontSize: 10, fontWeight: 700, fontFamily: C.FB }}>
                             Covered by your {elsewhere === 'clinical' ? 'Clinical Hours' : 'Research'} section<ArrowRight size={10} />
                           </button>
                         )}
@@ -627,7 +627,7 @@ export default function ActivitiesResumePanel({
                 })}
               </div>
               {Object.keys(coverage.fromOtherSection).length > 0 && (
-                <div style={{ fontSize: 10.5, color: C.t4, marginTop: 11, lineHeight: 1.55 }}>
+                <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.55 }}>
                   Pillars marked as covered by another section are counted from your logged hours there. Adding a matching entry to the activities list is still what puts it on the Common App — the ten slots below are the only thing a reader sees.
                 </div>
               )}
@@ -635,7 +635,7 @@ export default function ActivitiesResumePanel({
           )}
 
           {/* ── Add an activity ───────────────────────────────────────────── */}
-          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
+          <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(accent, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(accent, 0.2)}` }}>
             <SectionTitle icon={Plus} color={accent}>Add an activity</SectionTitle>
             <div style={G(2, 10, {}, true)}>
               <div>
@@ -645,64 +645,64 @@ export default function ActivitiesResumePanel({
                 </select>
               </div>
               <div>
-                <label style={lbl()}>Position / Leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
+                <label style={lbl()}>Position / leadership<CharCap value={draft.position} limit={CA_LIMITS.position} /></label>
                 <input style={inp()} value={draft.position} onChange={e => setDraft({ ...draft, position: e.target.value })} placeholder="e.g. Team Captain" />
               </div>
             </div>
-            <div style={G(2, 10, { marginTop: 10 }, true)}>
+            <div style={G(2, 10, { marginTop: 8 }, true)}>
               <div>
                 <label style={lbl()}>Organization<CharCap value={draft.organization} limit={CA_LIMITS.organization} /></label>
                 <input style={inp()} value={draft.organization} onChange={e => setDraft({ ...draft, organization: e.target.value })} placeholder="e.g. Lincoln High School Debate Club" />
               </div>
               <div>
                 <label style={lbl()}>Status</label>
-                <div style={R({ gap: 6 })}>
+                <div style={R({ gap: 4 })}>
                   {STATUSES.map(s => (
                     <button key={s} type="button" style={btnSm(draft.status === s ? accentFill(accent) : C.s3, { color: draft.status === s ? C.onAccent : C.t1, flex: 1, textTransform: 'capitalize' })} onClick={() => setDraft({ ...draft, status: s })}>{s}</button>
                   ))}
                 </div>
               </div>
             </div>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <label style={lbl()}>Description<CharCap value={draft.description} limit={CA_LIMITS.description} note="shares one 150-char Common App field with your impact line" /></label>
               <textarea style={{ ...inp(), minHeight: 60, resize: 'vertical' }} value={draft.description} onChange={e => setDraft({ ...draft, description: e.target.value })} placeholder="What did you actually do? Lead with the verb — ran, built, trained, raised, taught." />
             </div>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <label style={lbl()}>Impact / results</label>
               <textarea style={{ ...inp(), minHeight: 44, resize: 'vertical' }} value={draft.impact} onChange={e => setDraft({ ...draft, impact: e.target.value })} placeholder="What changed because you were there? e.g. Grew membership from 12 to 40 students" />
             </div>
-            <div style={G(2, 10, { marginTop: 10 }, true)}>
+            <div style={G(2, 10, { marginTop: 8 }, true)}>
               <div><label style={lbl()}>Hours / week</label><input type="number" min="0" style={inp()} value={draft.hours_per_week} onChange={e => setDraft({ ...draft, hours_per_week: e.target.value })} /></div>
               <div><label style={lbl()}>Weeks / year</label><input type="number" min="0" style={inp()} value={draft.weeks_per_year} onChange={e => setDraft({ ...draft, weeks_per_year: e.target.value })} /></div>
             </div>
             {(Number(draft.hours_per_week) > 0 && Number(draft.weeks_per_year) > 0) && (
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 6, fontFamily: C.FM }}>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 4, fontFamily: C.FM }}>
                 ≈ {Math.round(Number(draft.hours_per_week) * Number(draft.weeks_per_year))} hours a year · {Number(draft.weeks_per_year) >= 40 ? 'All year' : Number(draft.weeks_per_year) <= 14 ? 'School break' : 'School year'} on the Common App's timing field
               </div>
             )}
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <label style={lbl()}>Grade levels involved</label>
-              <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+              <div style={R({ gap: 4, flexWrap: 'wrap' })}>
                 {GRADE_LEVELS.map(g => (
                   <button key={g} type="button" onClick={() => toggleGrade(g)} style={btnSm(draft.grade_levels.includes(g) ? accentFill(accent) : C.s3, { color: draft.grade_levels.includes(g) ? C.onAccent : C.t1 })}>{g}</button>
                 ))}
               </div>
             </div>
-            <div style={G(2, 10, { marginTop: 10 }, true)}>
+            <div style={G(2, 10, { marginTop: 8 }, true)}>
               <div><label style={lbl()}>Skills gained (comma-separated, optional)</label><input style={inp()} value={draft.skills_tags} onChange={e => setDraft({ ...draft, skills_tags: e.target.value })} placeholder="e.g. public speaking, triage, teamwork" /></div>
               <div><label style={lbl()}>Evidence link (optional)</label><input style={inp()} value={draft.evidence_url} onChange={e => setDraft({ ...draft, evidence_url: e.target.value })} placeholder="Certificate, article, photo…" /></div>
             </div>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <button type="button" style={btnSm(draft.leadership_role ? accentFill(accent) : C.s3, { color: draft.leadership_role ? C.onAccent : C.t1 })} onClick={() => setDraft({ ...draft, leadership_role: !draft.leadership_role })}>{draft.leadership_role ? 'Leadership role ✓' : 'Mark as a leadership role'}</button>
             </div>
 
             <CoachStrip lines={draftCoaching} />
 
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addActivity}><Plus size={14} />Add Activity</button>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addActivity}><Plus size={14} />Add activity</button>
             {draft.activity_type === 'Clinical/Shadowing' && (
-              <div style={{ ...R({ gap: 6, marginTop: 10 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
+              <div style={{ ...R({ gap: 4, marginTop: 8 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
                 <Stethoscope size={12} color={C.pink} style={{ flexShrink: 0 }} />
-                <span>Logging the shift-by-shift hours too? The <button type="button" onClick={() => setSection('clinical')} style={{ all: 'unset', cursor: 'pointer', color: C.pinkL, fontWeight: 700 }}>Clinical Hours</button> section keeps the dated, per-site record with a supervisor for verification. This entry is the one that reaches the Common App.</span>
+                <span>Logging the shift-by-shift hours too? The <button type="button" onClick={() => setSection('clinical')} style={{ all: 'unset', cursor: 'pointer', color: C.pinkL, fontWeight: 700 }}>Clinical hours</button> section keeps the dated, per-site record with a supervisor for verification. This entry is the one that reaches the Common App.</span>
               </div>
             )}
           </div>
@@ -742,8 +742,8 @@ export default function ActivitiesResumePanel({
           )}
 
           {/* ── Honors ────────────────────────────────────────────────────── */}
-          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.gold, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.gold, 0.2)}` }}>
-            <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+          <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.gold, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.gold, 0.2)}` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
               <SectionTitle icon={Award} color={C.goldL} extra={{ marginBottom: 0 }}>Add an honor or award</SectionTitle>
               <span style={pill(tint(C.gold, 0.13), C.goldL, { fontFamily: C.FM })}>{awards.length}/{CA_LIMITS.maxHonors} Common App slots</span>
             </div>
@@ -763,26 +763,32 @@ export default function ActivitiesResumePanel({
                 <label style={lbl()}>Recognition level</label>
                 <select style={inp()} value={awardDraft.level} onChange={e => setAwardDraft({ ...awardDraft, level: e.target.value })}>
                   <option value="">Recognition level</option>
-                  <option>School</option><option>State/Regional</option><option>National</option><option>International</option>
+                  {/* Explicit values: the label is sentence case now, and the stored string
+                      must not change with it — entries saved before this read
+                      "State/Regional". */}
+                  <option value="School">School</option>
+                  <option value="State/Regional">State/regional</option>
+                  <option value="National">National</option>
+                  <option value="International">International</option>
                 </select>
               </div>
             </div>
-            <div style={G(2, 10, { marginTop: 10 }, true)}>
+            <div style={G(2, 10, { marginTop: 8 }, true)}>
               <input style={inp()} placeholder="Issuing organization (optional)" value={awardDraft.issuing_organization} onChange={e => setAwardDraft({ ...awardDraft, issuing_organization: e.target.value })} />
               <input style={inp()} placeholder="Certificate link (optional)" value={awardDraft.certificate_url} onChange={e => setAwardDraft({ ...awardDraft, certificate_url: e.target.value })} />
             </div>
             {awardDraft.title && !awardDraft.level && (
               <CoachStrip label="Medabrain" lines={[{ level: 'warn', text: 'Set the level of recognition. It is a required field on the form and it is most of what the honor communicates — "Science Award" and "Science Award, National" are different lines to a reader.' }]} />
             )}
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14 }} onClick={addAward}><Plus size={14} />Add Award</button>
-            <div style={{ ...R({ gap: 6, marginTop: 10 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12 }} onClick={addAward}><Plus size={14} />Add award</button>
+            <div style={{ ...R({ gap: 4, marginTop: 8 }), fontSize: 11, color: C.t3, lineHeight: 1.5 }}>
               <BadgeCheck size={12} color={C.teal} style={{ flexShrink: 0 }} />
-              <span>A certification is not an honor — CPR, EMT, lifeguard and lab-safety credentials belong in <button type="button" onClick={() => setSection('credentials')} style={{ all: 'unset', cursor: 'pointer', color: C.tealL, fontWeight: 700 }}>Skills &amp; Certs</button>, where their expiry dates get tracked. Both end up on your résumé PDF.</span>
+              <span>A certification is not an honor — CPR, EMT, lifeguard and lab-safety credentials belong in <button type="button" onClick={() => setSection('credentials')} style={{ all: 'unset', cursor: 'pointer', color: C.tealL, fontWeight: 700 }}>Skills &amp; certs</button>, where their expiry dates get tracked. Both end up on your résumé PDF.</span>
             </div>
           </div>
 
           {!loading && (
-            <div style={CC({ gap: 9 })}>
+            <div style={CC({ gap: 8 })}>
               <MedabrainRead
                 kind="honors"
                 title="Medabrain on your honors section"
@@ -795,11 +801,11 @@ export default function ActivitiesResumePanel({
               />
               {awards.length > 0 && awards.map(a => (
                 <div key={a.id} style={{ ...glass2({ padding: 12 }), display: 'flex', alignItems: 'center', gap: 12, borderLeft: `3px solid ${C.gold}`, background: `linear-gradient(120deg,${tint(C.gold, 0.05)},rgba(255,255,255,0.02) 55%)` }}>
-                  <div style={{ width: 30, height: 30, borderRadius: 9, background: tint(C.gold, 0.13), border: `1px solid ${tint(C.gold, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Award size={14} color={C.goldL} /></div>
+                  <div style={{ width: 30, height: 30, borderRadius: 8, background: tint(C.gold, 0.13), border: `1px solid ${tint(C.gold, 0.25)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Award size={14} color={C.goldL} /></div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ fontSize: 13, fontWeight: 600, color: C.t1 }}>{a.title}</span>
                     <span style={{ fontSize: 11, color: C.t3, marginLeft: 8 }}>{[a.level, a.grade_level && `Grade ${a.grade_level}`, a.issuing_organization].filter(Boolean).join(' · ')}</span>
-                    {!a.level && <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 6 })}>No level set</span>}
+                    {!a.level && <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 4 })}>No level set</span>}
                     {a.certificate_url && <a href={a.certificate_url} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: accent, marginLeft: 8 }}>View certificate →</a>}
                   </div>
                   <VerificationBadge status={a.verification_status} />
@@ -818,7 +824,7 @@ export default function ActivitiesResumePanel({
             render: () => (
         <>
           <SectionIntro icon={GraduationCap} color={C.green} color2={C.blue} m={isMobile}
-            title="Academic History"
+            title="Academic history"
             blurb="The number admissions offices weight most heavily — and here it actually does something. Every term you log re-decides the college matches below it and goes straight to Medabrain, so it reasons about your list from your real transcript instead of a guess."
             stats={academics.hasData ? [
               { value: academics.latestGpa, label: academics.latestWeighted ? 'weighted' : 'unweighted', color: C.greenL },
@@ -828,16 +834,16 @@ export default function ActivitiesResumePanel({
           {/* ── Academic History ────────────────────────────────────────────
               The spine of the tab. Everything entered here decides the college
               matches below it and is handed to every Medabrain surface. */}
-          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.green, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.green, 0.18)}` }}>
-            <div style={R({ justifyContent: 'space-between', marginBottom: 14, flexWrap: 'wrap', gap: 8 })}>
+          <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.green, 0.05)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.green, 0.18)}` }}>
+            <div style={R({ justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 })}>
               <SectionTitle icon={TrendingUp} color={C.greenL} extra={{ marginBottom: 0 }}>Log a term</SectionTitle>
               {academics.hasData && (
-                <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                   <span style={pill(tint(C.green, 0.15), C.greenL, { fontFamily: C.FM })}>{academics.latestGpa}{academics.latestWeighted ? ' weighted' : ''}</span>
                   {academics.latestWeighted && <span style={pill(tint(C.blue, 0.13), C.blueL, { fontFamily: C.FM })}>≈ {academics.comparableGpa} unweighted</span>}
                   {academics.count > 1 && (
                     <span style={pill(tint(academics.trend === 'rising' ? C.green : academics.trend === 'falling' ? C.rose : C.blue, 0.13), academics.trend === 'rising' ? C.greenL : academics.trend === 'falling' ? C.roseL : C.blueL)}>
-                      <TrendIcon size={10} style={{ marginRight: 3 }} />{academics.trend}
+                      <TrendIcon size={10} style={{ marginRight: 4 }} />{academics.trend}
                     </span>
                   )}
                 </div>
@@ -845,7 +851,7 @@ export default function ActivitiesResumePanel({
             </div>
 
             {academics.count > 1 && (
-              <div style={{ height: 180, marginBottom: 18 }}>
+              <div style={{ height: 180, marginBottom: 16 }}>
                 <Line data={chartData} options={chartOptions} />
               </div>
             )}
@@ -868,33 +874,33 @@ export default function ActivitiesResumePanel({
             {gpaDraft.gpa && !gpaDraft.course_rigor && (
               <CoachStrip label="Medabrain" lines={[{ level: 'tip', text: 'Add the course rigor. A 3.8 with five APs and a 3.8 with none are different applications, and rigor is the only field that tells them apart — it also gets handed to Medabrain when it reasons about your college list.' }]} />
             )}
-            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA Entry</button>
+            <button style={{ ...btn(accent !== C.blue ? accent : C.blueGrad), marginTop: 12, display: 'inline-flex', alignItems: 'center', gap: 8 }} onClick={addGpaEntry}><TrendingUp size={14} />Add GPA entry</button>
 
             {/* The reaction to the number they just entered. */}
             {gpaReaction && (
               <div style={{ ...glass2({ padding: 16 }), marginTop: 16, border: `1px solid ${tint(gpaReaction.tone === 'critical' ? C.rose : gpaReaction.tone === 'warn' ? C.amber : C.green, 0.3)}`, background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 60%)` }}>
-                <div style={R({ gap: 8, marginBottom: 9 })}>
+                <div style={R({ gap: 8, marginBottom: 8 })}>
                   <Sparkles size={13} color={C.violetL} />
-                  <span style={{ fontSize: 10.5, fontWeight: 800, color: C.violetL, textTransform: 'uppercase', letterSpacing: '.07em' }}>Medabrain on your GPA</span>
+                  <span style={{ fontSize: 10.5, fontWeight: 800, color: C.violetL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Medabrain on your GPA</span>
                 </div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, lineHeight: 1.5, marginBottom: 8 }}>{gpaReaction.headline}</div>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>{gpaReaction.verdict}</div>
-                {gpaReaction.trend && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65, marginTop: 9 }}>{gpaReaction.trend}</div>}
-                {gpaReaction.context && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6, marginTop: 9 }}>{gpaReaction.context}</div>}
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{gpaReaction.verdict}</div>
+                {gpaReaction.trend && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 8 }}>{gpaReaction.trend}</div>}
+                {gpaReaction.context && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, marginTop: 8 }}>{gpaReaction.context}</div>}
                 {gpaReaction.picks.length > 0 && (
-                  <div style={{ marginTop: 13 }}>
-                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 9 }}>{gpaReaction.careerLine}</div>
-                    <div style={CC({ gap: 7 })}>
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 8 }}>{gpaReaction.careerLine}</div>
+                    <div style={CC({ gap: 8 })}>
                       {gpaReaction.picks.map(p => (
-                        <div key={p.name} style={{ ...R({ gap: 9, alignItems: 'flex-start', padding: '9px 12px' }), borderRadius: 9, background: tint(CATEGORY_COLOR[p.category] || C.blue, 0.06), border: `1px solid ${tint(CATEGORY_COLOR[p.category] || C.blue, 0.2)}` }}>
-                          <School size={13} color={CATEGORY_COLOR[p.category] || C.blue} style={{ flexShrink: 0, marginTop: 2 }} />
+                        <div key={p.name} style={{ ...R({ gap: 8, alignItems: 'flex-start', padding: '8px 12px' }), borderRadius: 8, background: tint(CATEGORY_COLOR[p.category] || C.blue, 0.06), border: `1px solid ${tint(CATEGORY_COLOR[p.category] || C.blue, 0.2)}` }}>
+                          <School size={13} color={CATEGORY_COLOR[p.category] || C.blue} style={{ flexShrink: 0, marginTop: 4 }} />
                           <div style={{ minWidth: 0 }}>
-                            <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                            <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                               <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{p.name}</span>
                               <span style={pill(tint(CATEGORY_COLOR[p.category] || C.blue, 0.16), CATEGORY_COLOR[p.category] || C.blue, { fontSize: 9.5, textTransform: 'capitalize' })}>{p.category}</span>
                               <span style={pill(tint(C.violet, 0.13), C.violetL, { fontSize: 9.5 })}>{p.fit}% fit</span>
                             </div>
-                            <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>{p.reason}</div>
+                            <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>{p.reason}</div>
                           </div>
                         </div>
                       ))}
@@ -902,9 +908,9 @@ export default function ActivitiesResumePanel({
                   </div>
                 )}
                 {gpaReaction.belief && (
-                  <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.65, marginTop: 13, paddingLeft: 11, borderLeft: `3px solid ${C.violetL}` }}>{gpaReaction.belief}</div>
+                  <div style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.55, marginTop: 12, paddingLeft: 12, borderLeft: `3px solid ${C.violetL}` }}>{gpaReaction.belief}</div>
                 )}
-                <div style={R({ gap: 8, marginTop: 13, flexWrap: 'wrap' })}>
+                <div style={R({ gap: 8, marginTop: 12, flexWrap: 'wrap' })}>
                   <button style={btnSm(C.s3, { fontSize: 11.5 })} onClick={() => setGpaReaction(null)}>Dismiss</button>
                   <span style={{ fontSize: 10.5, color: C.t4, alignSelf: 'center' }}>The full matched slate is below, with an Add button on each.</span>
                 </div>
@@ -951,15 +957,15 @@ export default function ActivitiesResumePanel({
               admitted averages, on score against midpoints, and on the career
               the student named at signup — so two students with identical
               numbers and different goals get different slates. */}
-          <div style={{ ...glass({ padding: 18 }), background: `linear-gradient(120deg,${tint(C.violet, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.2)}` }}>
+          <div style={{ ...glass({ padding: 16 }), background: `linear-gradient(120deg,${tint(C.violet, 0.06)},rgba(255,255,255,0.02) 55%)`, border: `1px solid ${tint(C.violet, 0.2)}` }}>
             <SectionTitle icon={Target} color={C.violetL}>Colleges matched to your academic record</SectionTitle>
             {!academics.hasData && !scores.hasScore ? (
-              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55 }}>
                 Nothing to match on yet. Add a GPA term above and this fills with U.S. schools picked from your actual numbers and the career you told us you want — each one addable to your college list in a tap, already categorized.
               </div>
             ) : (
               <>
-                <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 13 })}>
+                <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 12 })}>
                   {academics.hasData && <span style={pill(tint(C.green, 0.14), C.greenL, { fontFamily: C.FM })}>GPA {academics.comparableGpa} unweighted</span>}
                   {scores.hasScore && <span style={pill(tint(C.blue, 0.14), C.blueL, { fontFamily: C.FM })}>SAT {scores.effectiveSat} effective</span>}
                   <span style={pill(tint(C.violet, 0.13), C.violetL)}>Aiming at {profile.label}</span>
@@ -967,7 +973,7 @@ export default function ActivitiesResumePanel({
                     {!scores.hasScore ? 'Matching on GPA alone — a logged test score sharpens every result.' : !academics.hasData ? 'Matching on test score alone — add a GPA term and these re-rank.' : 'Matched on both, with the stricter of the two deciding each category.'}
                   </span>
                 </div>
-                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
                   For {profile.label}, {profile.note}. That is weighted into every fit score below, not just the numbers.
                 </div>
                 {picks.length === 0 ? (
@@ -976,15 +982,15 @@ export default function ActivitiesResumePanel({
                     {dismissedPicks.length > 0 && <button style={btnSm(C.s4, { marginLeft: 4 })} onClick={() => setDismissedPicks([])}>Show passed-on schools</button>}
                   </div>
                 ) : (
-                  <div style={CC({ gap: 9 })}>
+                  <div style={CC({ gap: 8 })}>
                     {picks.map(p => {
                       const cc = CATEGORY_COLOR[p.category] || C.blue;
                       const busy = addingCollege === p.name;
                       return (
-                        <div key={p.name} style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${cc}`, background: `linear-gradient(120deg,${tint(cc, 0.05)},rgba(255,255,255,0.02) 50%)` }}>
-                          <div style={R({ gap: 10, flexWrap: 'wrap', alignItems: 'flex-start' })}>
+                        <div key={p.name} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${cc}`, background: `linear-gradient(120deg,${tint(cc, 0.05)},rgba(255,255,255,0.02) 50%)` }}>
+                          <div style={R({ gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' })}>
                             <div style={{ flex: 1, minWidth: 180 }}>
-                              <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+                              <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                                 <span style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.name}</span>
                                 <span style={pill(tint(cc, 0.16), cc, { textTransform: 'capitalize' })}>{p.category}</span>
                                 <span style={pill(tint(C.violet, 0.13), C.violetL)}>{p.fit}% fit</span>
@@ -992,13 +998,13 @@ export default function ActivitiesResumePanel({
                                 {p.driver === 'gpa' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>GPA decides this</span>}
                                 {p.driver === 'score' && <span style={pill(tint(C.amber, 0.13), C.amberL)}>Score decides this</span>}
                               </div>
-                              <div style={{ fontSize: 11, color: C.t3, marginTop: 5, fontFamily: C.FM }}>
+                              <div style={{ fontSize: 11, color: C.t3, marginTop: 4, fontFamily: C.FM }}>
                                 {p.school.state} · {p.school.type} · admitted GPA {p.school.gpa} · SAT {p.school.sat} · ACT {p.school.act} · {p.school.accept}% admit · strong in {p.school.specialtyStrong}
                               </div>
-                              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 6, lineHeight: 1.55 }}>{p.reason}</div>
+                              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>{p.reason}</div>
                             </div>
-                            <div style={R({ gap: 6, flexShrink: 0 })}>
-                              <button style={btn(accent !== C.blue ? accent : C.blueGrad, { fontSize: 12, padding: '7px 12px' })} disabled={busy} onClick={() => addPick(p)}>
+                            <div style={R({ gap: 4, flexShrink: 0 })}>
+                              <button style={btn(accent !== C.blue ? accent : C.blueGrad, { fontSize: 12, padding: '8px 12px' })} disabled={busy} onClick={() => addPick(p)}>
                                 {busy ? <Loader2 size={13} className="spin" /> : <Plus size={13} />}Add
                               </button>
                               <button style={btnSm(C.s4)} title="Not interested" onClick={() => setDismissedPicks(prev => [...prev, p.name])}>Pass</button>
@@ -1057,7 +1063,7 @@ export default function ActivitiesResumePanel({
 }
 
 function VerificationBadge({ status }) {
-  if (status === 'verified') return <span style={pill(C.greenDim, C.greenL, { fontSize: 9, marginLeft: 6 })}><ShieldCheck size={9} style={{ marginRight: 3 }} />Verified</span>;
-  if (status === 'pending') return <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 6 })}><ShieldQuestion size={9} style={{ marginRight: 3 }} />Pending</span>;
+  if (status === 'verified') return <span style={pill(C.greenDim, C.greenL, { fontSize: 9, marginLeft: 4 })}><ShieldCheck size={9} style={{ marginRight: 4 }} />Verified</span>;
+  if (status === 'pending') return <span style={pill(C.amberDim, C.amberL, { fontSize: 9, marginLeft: 4 })}><ShieldQuestion size={9} style={{ marginRight: 4 }} />Pending</span>;
   return null; // self_reported is the default state — no badge needed for the common case
 }

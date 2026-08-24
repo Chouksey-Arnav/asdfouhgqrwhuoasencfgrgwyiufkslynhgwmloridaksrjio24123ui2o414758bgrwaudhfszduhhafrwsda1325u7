@@ -622,7 +622,7 @@ export const MATH_PSDA_D = [
       'This is the median, the middle value, not the mean.',
       'Correct. The five values sum to 60, so the mean is 12.',
       'This is the midpoint of the smallest and largest values.',
-      'This is one of the values, not a measure of centre.',
+      'This is one of the values, not a measure of center.',
     ],
   },
   {
@@ -801,7 +801,7 @@ export const MATH_PSDA_D = [
     ch: [
       'P contains more values in it than Q does.',
       'P is more spread out than Q is.',
-      'P is centred lower on the line than Q.',
+      'P is centered lower on the line than Q.',
       'Every value in P is smaller than every value in Q.',
     ],
     ans: 2,
@@ -948,11 +948,11 @@ export const MATH_PSDA_D = [
       'Both the mean and the standard deviation are left unchanged.',
     ],
     ans: 1,
-    exp: 'Shifting every value by the same amount slides the whole distribution along the number line: its centre moves by 6, but the distances between values, which is what standard deviation measures, are identical.',
+    exp: 'Shifting every value by the same amount slides the whole distribution along the number line: its center moves by 6, but the distances between values, which is what standard deviation measures, are identical.',
     distractorExp: [
       'Standard deviation measures spread, and a uniform shift changes no distance between values.',
-      'Correct. The centre moves by 6; the spread is untouched.',
-      'The mean is the centre, and shifting everything must move it.',
+      'Correct. The center moves by 6; the spread is untouched.',
+      'The mean is the center, and shifting everything must move it.',
       'The mean must move when every value moves.',
     ],
   },
@@ -1524,7 +1524,7 @@ export const MATH_PSDA_D = [
     difficulty: 'M', format: 'spr', targetSeconds: 80,
     q: 'A plausible interval for a population mean runs from 118 to 134. What is the margin of error used to build it?',
     sprAccept: { values: [8], tolerance: 0 },
-    exp: 'The interval is centred at (118 + 134)/2 = 126 and extends 8 in each direction, so the margin of error is 8.',
+    exp: 'The interval is centered at (118 + 134)/2 = 126 and extends 8 in each direction, so the margin of error is 8.',
     hint: 'The margin of error is half the width of the interval.',
   },
   {
@@ -1593,7 +1593,7 @@ export const MATH_PSDA_D = [
     exp: 'The plausible interval runs from 3.1 − 0.2 = 2.9 to 3.1 + 0.2 = 3.3. The value 3.40 lies outside it.',
     distractorExp: [
       'This lies inside the interval, above the lower bound of 2.9.',
-      'This is the estimate itself, at the centre of the interval.',
+      'This is the estimate itself, at the center of the interval.',
       'This lies inside the interval, below the upper bound of 3.3.',
       'Correct. 3.40 exceeds the upper bound of 3.3.',
     ],
@@ -1622,7 +1622,7 @@ export const MATH_PSDA_D = [
     difficulty: 'H', format: 'spr', targetSeconds: 95,
     q: 'A poll of randomly selected voters reports support for a candidate as a plausible interval from 44% to 52%. What is the sample estimate, as a percent, that the interval was built around? (Enter the number only.)',
     sprAccept: { values: [48], tolerance: 0 },
-    exp: 'The estimate sits at the centre of the interval: (44 + 52)/2 = 48%.',
+    exp: 'The estimate sits at the center of the interval: (44 + 52)/2 = 48%.',
     hint: 'The estimate is always the midpoint of its interval.',
   },
   {

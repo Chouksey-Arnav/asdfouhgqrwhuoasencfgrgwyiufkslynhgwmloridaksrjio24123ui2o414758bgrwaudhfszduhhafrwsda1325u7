@@ -87,8 +87,8 @@ export default function VoiceSelector({ accent = C.blue, value, onChange, firstT
             onClick={() => choose(opt)}
             title={opt.blurb}
             style={{
-              ...R({ gap: 9, alignItems: 'flex-start' }),
-              padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
+              ...R({ gap: 8, alignItems: 'flex-start' }),
+              padding: '12px 12px', borderRadius: 12, cursor: 'pointer',
               background: selected ? `${accent}14` : C.s2,
               border: `1px solid ${selected ? accent : C.b1}`,
             }}
@@ -99,20 +99,20 @@ export default function VoiceSelector({ accent = C.blue, value, onChange, firstT
               title={playing ? 'Stop preview' : `Hear ${opt.name}`}
               style={{
                 width: 28, height: 28, borderRadius: '50%', flexShrink: 0, border: 'none', cursor: 'pointer',
-                display: 'grid', placeItems: 'center', marginTop: 1,
+                display: 'grid', placeItems: 'center', marginTop: 4,
                 background: playing ? accentFill(accent) : `${accent}1c`,
                 color: playing ? C.onAccent : onTint(accent),
               }}
             >
-              {playing ? <Square size={10} fill="currentColor" /> : <Play size={11} fill="currentColor" style={{ marginLeft: 1 }} />}
+              {playing ? <Square size={10} fill="currentColor" /> : <Play size={11} fill="currentColor" style={{ marginLeft: 4 }} />}
             </button>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ ...R({ gap: 5, flexWrap: 'wrap' }), fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
+              <div style={{ ...R({ gap: 4, flexWrap: 'wrap' }), fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>
                 {opt.name}
                 {selected && <Check size={13} color={accent} style={{ flexShrink: 0 }} />}
                 {suggested && !selected && <span style={pill(`${accent}18`, accent, { fontSize: 9 })}>Suggested</span>}
               </div>
-              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>{opt.role} · {opt.age}</div>
+              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{opt.role} · {opt.age}</div>
               <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4, lineHeight: 1.45 }}>{opt.bestFor}</div>
             </div>
           </motion.div>

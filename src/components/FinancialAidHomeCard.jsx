@@ -54,9 +54,9 @@ export default function FinancialAidHomeCard({ scholarships = [], accent = C.gre
     }}
       onMouseEnter={e => e.currentTarget.style.borderColor = tint(accent, 0.4)}
       onMouseLeave={e => e.currentTarget.style.borderColor = tint(accent, 0.22)}>
-      <div style={{ ...R({ justifyContent: 'space-between' }), marginBottom: 14 }}>
-        <div style={R({ gap: 10 })}>
-          <div style={{ width: 32, height: 32, borderRadius: 10, background: tint(accent, 0.16), border: `1px solid ${tint(accent, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ ...R({ justifyContent: 'space-between' }), marginBottom: 12 }}>
+        <div style={R({ gap: 8 })}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: tint(accent, 0.16), border: `1px solid ${tint(accent, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Handshake size={16} color={accent} />
           </div>
           <span style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Financial Aid & Scholarships</span>
@@ -64,15 +64,15 @@ export default function FinancialAidHomeCard({ scholarships = [], accent = C.gre
         <span style={{ ...R({ gap: 4 }), fontSize: 11, color: C.t3, fontWeight: 600 }}>View all<ChevronRight size={13} /></span>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
         <span style={pill(C.s3, C.t2, { fontFamily: C.FM })}>{scholarships.length} tracked</span>
         {nextDeadline && (
-          <span style={{ ...pill(nextDeadline.days <= 14 ? C.roseDim : C.s3, nextDeadline.days <= 14 ? C.roseL : C.t2, { fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...pill(nextDeadline.days <= 14 ? C.roseDim : C.s3, nextDeadline.days <= 14 ? C.roseL : C.t2, { fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <CalendarDays size={11} />{nextDeadline.s.name} in {nextDeadline.days}d
           </span>
         )}
         {awardedCount > 0 && (
-          <span style={{ ...pill(C.greenDim, C.greenL, { fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...pill(C.greenDim, C.greenL, { fontFamily: C.FM }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Trophy size={11} />${totalAwarded.toLocaleString()} won
           </span>
         )}
@@ -80,7 +80,7 @@ export default function FinancialAidHomeCard({ scholarships = [], accent = C.gre
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {rows.map(({ s, details, days }) => (
-          <div key={s.id} style={{ ...glass2({ padding: '10px 12px' }), display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div key={s.id} style={{ ...glass2({ padding: '8px 12px' }), display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 26, height: 26, borderRadius: 8, background: s.status === 'awarded' ? tint(C.gold, 0.16) : tint(accent, 0.13), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               {s.status === 'awarded' ? <Trophy size={12} color={C.goldL} /> : <DollarSign size={12} color={accent} />}
             </div>

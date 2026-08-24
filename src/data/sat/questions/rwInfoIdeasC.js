@@ -193,18 +193,18 @@ export const RW_INFO_IDEAS_C = [
   {
     id: 'sat-rw-cet-0205', section: 'rw', domain: 'info_ideas', skill: 'command_evidence_text',
     difficulty: 'H', format: 'mcq', trap: 'too_extreme', targetSeconds: 85,
-    stimulus: 'A long-running claim holds that handwriting notes produces better recall than typing them, because writing is slower and forces summarising rather than transcription. Psychologist Idris Vale notes that in the studies supporting this, typists were not told what the notes were for, while handwriters, physically unable to keep up, summarised by necessity. He proposes that the advantage belongs to summarising, not to handwriting, and designs a study to separate them.',
+    stimulus: 'A long-running claim holds that handwriting notes produces better recall than typing them, because writing is slower and forces summarizing rather than transcription. Psychologist Idris Vale notes that in the studies supporting this, typists were not told what the notes were for, while handwriters, physically unable to keep up, summarized by necessity. He proposes that the advantage belongs to summarizing, not to handwriting, and designs a study to separate them.',
     q: 'Which result from Vale’s study would most strongly support his proposal?',
     ch: [
-      'Typists told to summarise rather than transcribe recall as much as handwriters.',
+      'Typists told to summarize rather than transcribe recall as much as handwriters.',
       'Handwriters recall more than typists when neither group is given any instruction.',
       'Typists produce a greater number of words per minute than handwriters.',
       'Students report finding handwriting more effortful than typing notes.',
     ],
     ans: 0,
-    exp: 'Vale claims summarising is doing the work. If typists made to summarise match handwriters, the handwriting itself contributes nothing once summarising is held constant — which is exactly the separation he set out to make.',
+    exp: 'Vale claims summarizing is doing the work. If typists made to summarize match handwriters, the handwriting itself contributes nothing once summarizing is held constant — which is exactly the separation he set out to make.',
     distractorExp: [
-      'Correct. Equalise the summarising and the handwriting advantage disappears.',
+      'Correct. Equalise the summarizing and the handwriting advantage disappears.',
       'This is the original finding, with the two factors still tangled together — it supports neither account over the other.',
       'Typing speed is the mechanism behind the confound, not evidence about recall.',
       'Perceived effort is not recall, and Vale’s claim is about what produces recall.',

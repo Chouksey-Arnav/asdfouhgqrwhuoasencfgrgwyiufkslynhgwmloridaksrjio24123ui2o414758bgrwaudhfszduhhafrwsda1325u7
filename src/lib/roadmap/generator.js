@@ -10,7 +10,7 @@
 // header in api/groq.js for why a stateless round-robin would not actually
 // alternate and why a multi-call build must not straddle two accounts.
 //
-// ── The division of labour, restated because everything here depends on it ──
+// ── The division of labor, restated because everything here depends on it ──
 // The model is NEVER asked for a date. Not once, in any of the four passes. It
 // is handed a shortlist of real catalog entries that already carry their dates
 // (src/lib/roadmap/catalog.js, built from the hand-checked catalog in
@@ -615,7 +615,7 @@ function applyDeepening(parsed, picks) {
       ...p,
       howThisHelps: str(d.howThisHelps, 500) || p.why,
       // The model's steps replace the catalog's when it produced real ones —
-      // they are personalised where the catalog's are generic. The catalog's
+      // they are personalized where the catalog's are generic. The catalog's
       // survive as the fallback so an item is never left with no steps at all.
       steps: steps.length >= 2 ? steps : p.steps,
       watchOut: str(d.watchOut, 300),
@@ -651,7 +651,7 @@ Return ONLY this JSON:
   "notCovered": ["1-3 honest gaps: things this year does not address, that they should know it does not"]
 }
 
-No reassurance, no summarising back what they can already read. The value here is the sentence they would not have thought of. JSON only.`;
+No reassurance, no summarizing back what they can already read. The value here is the sentence they would not have thought of. JSON only.`;
 }
 
 // ── The deterministic fallback ───────────────────────────────────────────────
@@ -697,7 +697,7 @@ export function heuristicRoadmap({ slate, seasons, answers, gradeStage }) {
   // ── Every reach gets a backup, or it is not a reach, it is a hope ──────────
   // SLATE_RULES.requireFallbackForLottery is enforced on the finished roadmap by validateSlate,
   // and the deterministic path has to satisfy it too — otherwise the one roadmap a student gets
-  // when the network is down is the one that puts a 3%-admit programme in front of them with
+  // when the network is down is the one that puts a 3%-admit program in front of them with
   // nothing beside it. Score order alone does not guarantee this: a lottery entry can easily
   // outrank every achievable entry on its own track.
   //
@@ -729,7 +729,7 @@ export function heuristicRoadmap({ slate, seasons, answers, gradeStage }) {
     thesis: 'This roadmap was built from the verified deadline catalog rather than written for you personally — every date on it is real, and the sequencing follows what has to happen before what. Rebuild it when you have a connection and it will be tailored to your answers.',
     seasons: seasons.map((s) => ({ ...s, theme: s.label, narrative: '' })),
     risks: [{
-      title: 'This roadmap was not personalised',
+      title: 'This roadmap was not personalized',
       detail: 'Medabrain could not be reached while this was being built, so these items were chosen by rule rather than judgment.',
       mitigation: 'Tap Rebuild to have it written for you properly.',
     }],

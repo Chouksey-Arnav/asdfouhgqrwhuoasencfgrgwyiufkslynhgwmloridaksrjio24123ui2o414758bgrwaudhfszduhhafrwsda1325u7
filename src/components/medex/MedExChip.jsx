@@ -3,7 +3,7 @@
 //
 // The compact form for places that are already a row of status pills — the Home
 // hero's identity row beside the streak and level, and the Portfolio overview's
-// header. It carries the score, the band's colour, and the week's movement, and
+// header. It carries the score, the band's color, and the week's movement, and
 // nothing else: a chip that tried to also explain the benchmark would be a card.
 //
 // Renders NOTHING when there is no score. A chip reading "—" in a row of live
@@ -32,7 +32,7 @@ export default function MedExChip({ state = null, onClick = null, showDelta = tr
       type={onClick ? 'button' : undefined}
       title={`MedEx Score ${score} of 1000 — ${headline.band.label}, measured against ${headline.program.name}`}
       style={{
-        ...pill(tint(color, 0.14), color, { gap: 5, fontFamily: C.FM }),
+        ...pill(tint(color, 0.14), color, { gap: 4, fontFamily: C.FM }),
         border: `1px solid ${tint(color, 0.26)}`,
         cursor: onClick ? 'pointer' : 'default',
       }}

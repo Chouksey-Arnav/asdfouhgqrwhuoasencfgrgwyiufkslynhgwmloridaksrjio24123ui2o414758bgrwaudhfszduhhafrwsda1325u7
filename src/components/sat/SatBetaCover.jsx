@@ -84,7 +84,7 @@ export default function SatBetaCover({ children, isMobile = false }) {
         >
           <div
             style={{
-              width: 46, height: 46, borderRadius: 14, margin: '0 auto 14px',
+              width: 46, height: 46, borderRadius: 12, margin: '0 auto 14px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: tint(C.sky, 0.14), border: `1px solid ${tint(C.sky, 0.3)}`,
             }}
@@ -94,21 +94,21 @@ export default function SatBetaCover({ children, isMobile = false }) {
 
           <span style={pill(tint(C.sky, 0.16), C.sky, { fontSize: 10, letterSpacing: 0.6 })}>
             <Sparkles size={11} style={{ marginRight: 4, verticalAlign: -1 }} />
-            BETA — NOT YET AVAILABLE
+            BETA — Not yet available
           </span>
 
-          <h2 style={{ fontSize: isMobile ? 19 : 22, fontWeight: 800, color: C.t1, margin: '14px 0 8px', fontFamily: C.FD }}>
+          <h2 style={{ fontSize: isMobile ? 19 : 22, fontWeight: 800, color: C.t1, margin: '12px 0px 8px', fontFamily: C.FD }}>
             SAT prep is still in the workshop
           </h2>
 
-          <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.7, margin: 0 }}>
-            The full SAT centre — baseline, diagnostic, adaptive practice, full-length
+          <p style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, margin: 0 }}>
+            The full SAT center — baseline, diagnostic, adaptive practice, full-length
             tests, the review log and skill mastery — is built and sitting right behind
             this screen. It is closed for version one while we finish checking the
             question bank and the score scales.
           </p>
 
-          <p style={{ fontSize: 12, color: C.t3, lineHeight: 1.65, margin: '12px 0 0' }}>
+          <p style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, margin: '12px 0px 0px' }}>
             Nothing here counts toward your XP, streak, quests or study plan yet.
             Everything else in the app works as normal.
           </p>

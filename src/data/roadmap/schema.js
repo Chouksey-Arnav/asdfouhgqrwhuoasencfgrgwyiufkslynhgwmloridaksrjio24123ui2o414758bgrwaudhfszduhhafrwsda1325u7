@@ -8,15 +8,15 @@
 // wrong. "The Coca-Cola Scholars application is due October 31" is the kind of
 // sentence that reads as authoritative to a seventeen-year-old and costs them a
 // $20,000 scholarship when the real date was October 2. There is no prompt that
-// makes a model reliable about a hundred separate organisations' calendars.
+// makes a model reliable about a hundred separate organizations' calendars.
 //
-// So the division of labour is strict, and it is the single most important
+// So the division of labor is strict, and it is the single most important
 // design decision in this feature:
 //
 //   THE CATALOG OWNS FACTS.     Which programs exist, who is eligible, roughly
 //                               when they open and close, what they cost, and
 //                               where to confirm. Hand-written, source-linked.
-//   THE MODEL OWNS JUDGEMENT.   Which of these fit THIS student, in what order,
+//   THE MODEL OWNS JUDGMENT.   Which of these fit THIS student, in what order,
 //                               at what intensity, with what preparation, and
 //                               why. That is advising, and it is what a model is
 //                               genuinely good at.
@@ -27,7 +27,7 @@
 //
 // ── The honesty rules (do not relax these) ───────────────────────────────────
 //  1. EVERY ENTRY IS A REAL, INDEPENDENTLY VERIFIABLE PROGRAM. No invented
-//     names, no invented organisations, no invented URLs. If you cannot find the
+//     names, no invented organizations, no invented URLs. If you cannot find the
 //     official page, the entry does not go in.
 //  2. `confidence` IS NOT DECORATION. It is rendered to the student on every
 //     card and it changes the sentence the UI writes:
@@ -264,7 +264,7 @@ export function dateCaption(item, fmt = (d) => d, { compact = false } = {}) {
   // For surfaces where the item is a MARK rather than a card — a node on the
   // path, a dot on the spine — the full caption ("around May 20, 2027 — confirm
   // on the official site") is three wrapped lines under a 40px circle, and it
-  // collides with its neighbours.
+  // collides with its neighbors.
   //
   // The compact form is allowed to say LESS and is never allowed to say more.
   // A 'typical' date drops to its month, which is strictly vaguer than the

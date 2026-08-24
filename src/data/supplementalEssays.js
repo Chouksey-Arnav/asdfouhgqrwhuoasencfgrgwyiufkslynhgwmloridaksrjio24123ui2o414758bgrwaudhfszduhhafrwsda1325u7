@@ -18,16 +18,16 @@
 // and is stored as guidance to draft against, never as this year's official
 // requirement — `CYCLE_NOTE` is rendered next to every prompt list in the UI and
 // says exactly that. The rule for this file: it is better to show a student a
-// representative prompt they can practise on today (clearly labelled) than to
+// representative prompt they can practice on today (clearly labeled) than to
 // show them nothing, and it is much worse to imply a stale prompt is official.
 // Nothing in the app ever submits these anywhere; they exist to be drafted and
 // critiqued against.
 //
 // Schools not in this list fall through to AI-generated prompts (see
-// src/lib/supplementalPrompts.js), which are labelled even more loudly.
+// src/lib/supplementalPrompts.js), which are labeled even more loudly.
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const CYCLE_NOTE = 'Prompts reflect a recent application cycle and are here to practise against — confirm this year\'s exact prompts and word limits on the school\'s admissions site or in the Common App before you submit anything.';
+export const CYCLE_NOTE = 'Prompts reflect a recent application cycle and are here to practice against — confirm this year\'s exact prompts and word limits on the school\'s admissions site or in the Common App before you submit anything.';
 
 // kind: 'why_school' | 'why_major' | 'community' | 'identity' | 'activity' | 'intellectual' | 'creative' | 'short'
 // Used only for grouping/iconography in the UI and to tell the critic what

@@ -55,10 +55,22 @@ body {
   /* The base size every rem/em in the app scales from, so one setting resizes
      the whole interface rather than just body copy. */
   font-size: calc(14px * var(--msp-font-scale));
-  line-height: calc(1.6 * var(--msp-line-scale));
+  /* 1.55, not 1.6: the body end of the leading ramp in src/lib/tokens/type.js.
+     Sizes at and above 22px set their own, tighter, line-height — inheriting a
+     body leading is what makes a display heading look unset. */
+  line-height: calc(1.55 * var(--msp-line-scale));
   letter-spacing: var(--msp-letter-spacing);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Bricolage Grotesque is a variable font with a real optical-size axis
+     (opsz 12–96), and this is the switch that uses it. With it on, a 56px
+     heading gets the drawing the designer made FOR 56px — tighter apertures,
+     thinner joins, less spacing built into the sidebearings. With it off you
+     get the 14px drawing scaled up, which is the single clearest tell between
+     type that was set and type that was merely enlarged.
+     `auto` is the default per spec but Safari and older Chrome only honour the
+     axis when it is stated, so it is stated. */
+  font-optical-sizing: auto;
   overflow: hidden;
   touch-action: manipulation;
   transition: background-color .25s ease, color .25s ease;
@@ -479,7 +491,7 @@ body::before {
   position: absolute; inset: 0;
   background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.4) 48%, rgba(255,255,255,0.05) 58%, transparent 75%);
   transform: translateX(-140%);
-  transition: transform .85s cubic-bezier(.22,1,.36,1);
+  transition: transform 400ms cubic-bezier(.22,1,.36,1);
   pointer-events: none;
 }
 .mb-launcher:hover::after, .mb-launcher:focus-visible::after { transform: translateX(140%); }
@@ -508,12 +520,16 @@ body::before {
 
 /* Accent seam hugging the tab's outer edge — brightens + thickens on hover. */
 .mb-seam {
-  position: absolute; left: 0; top: 10%; bottom: 10%; width: 2px; z-index: 2;
+  /* The seam is drawn at its hover size and scaled down at rest, so growing it
+     is a composited transform rather than four layout properties animating at
+     once. transform-origin centres the vertical stretch. */
+  position: absolute; left: 0; top: 4%; bottom: 4%; width: 3px; z-index: 2;
   border-radius: 2px; opacity: .55;
-  transition: opacity .3s ease, width .3s ease, top .3s ease, bottom .3s ease;
+  transform: scale(0.667, 0.93); transform-origin: left center;
+  transition: opacity 200ms ease, transform 200ms ease;
   pointer-events: none;
 }
-.mb-launcher:hover .mb-seam { opacity: 1; width: 3px; top: 4%; bottom: 4%; }
+.mb-launcher:hover .mb-seam { opacity: 1; transform: scale(1, 1); }
 
 /* Icons wake up on hover: the sparkle twinkles, the brain gives one heartbeat. */
 @keyframes mbTwinkle {

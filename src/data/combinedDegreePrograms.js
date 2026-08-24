@@ -23,7 +23,7 @@
 //  2. Every number that a student could plan around carries a `basis`:
 //       'official'  — the program states it on its own page.
 //       'derived'   — computed from something official, by a stated rule.
-//       'estimated' — our judgement, or a widely-repeated third-party figure.
+//       'estimated' — our judgment, or a widely-repeated third-party figure.
 //     There is no fourth category and in particular no "we made it up but it
 //     looks precise". The UI renders the basis next to the number, always.
 //  3. ACCEPTANCE RATES ARE THE DANGEROUS ONE. Almost no BS/MD program
@@ -75,7 +75,7 @@ export const BASES = ['official', 'derived', 'estimated', 'unpublished'];
 export const BASIS_META = {
   official: { label: 'Official', colorKey: 'green', blurb: "The program publishes this number itself." },
   derived: { label: 'Derived', colorKey: 'blue', blurb: 'Computed from something the program publishes, by a stated rule.' },
-  estimated: { label: 'Estimated', colorKey: 'amber', blurb: 'Not published anywhere. This is a judgement — treat it as a rough shape, never as a target.' },
+  estimated: { label: 'Estimated', colorKey: 'amber', blurb: 'Not published anywhere. This is a judgment — treat it as a rough shape, never as a target.' },
   unpublished: { label: 'Not published', colorKey: 'rose', blurb: 'The program does not publish this, and anyone who shows you a precise number for it invented it.' },
 };
 
@@ -439,7 +439,7 @@ export const PROGRAMS = [
     casper: null,
     acceptance: { rate: null, basis: 'unpublished', admitted: null, enrolled: null, note: 'Not published.' },
     citizenship: null,
-    residency: { restricted: true, note: 'Ohio residents are strongly favoured.' },
+    residency: { restricted: true, note: 'Ohio residents are strongly favored.' },
     serviceHours: { required: null, basis: 'unpublished', note: null },
     cost: { usd: null, basis: 'unpublished', note: null },
     url: 'https://www.neomed.edu/admissions/bsmd/',
@@ -468,7 +468,7 @@ export const PROGRAMS = [
     url: 'https://www.bu.edu/admissions/apply/first-year/seven-year-medical/',
     verified: V,
     sources: [{ label: 'Boston University — Seven-Year Medical Program', url: 'https://www.bu.edu/admissions/apply/first-year/seven-year-medical/', retrieved: V }],
-    why: 'Binding Early Decision, which is a bigger commitment than most seventeen-year-olds realise: applying here means you cannot compare a financial aid offer against anywhere else.',
+    why: 'Binding Early Decision, which is a bigger commitment than most seventeen-year-olds realize: applying here means you cannot compare a financial aid offer against anywhere else.',
   },
   {
     id: 'case-ppsp-medicine',

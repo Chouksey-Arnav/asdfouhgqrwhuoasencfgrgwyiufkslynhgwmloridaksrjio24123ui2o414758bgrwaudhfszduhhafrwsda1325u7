@@ -54,7 +54,7 @@ export const RUBRIC = [
 // ── Calibration ──────────────────────────────────────────────────────────────
 // The single most important block in this file. A model asked to "grade an
 // essay 1-10" with no anchors will put almost everything between 7 and 8, which
-// makes the number decorative and reintroduces exactly the yes-man behaviour
+// makes the number decorative and reintroduces exactly the yes-man behavior
 // the rubric was supposed to remove. These anchors are stated in terms of what
 // the reader DOES with the essay, not in adjectives, because adjectives drift.
 const CALIBRATION = `
@@ -144,7 +144,7 @@ Take your time and read the whole draft closely before you judge any of it. Read
 Essay: "${title}"${collegeName ? `\nSchool: ${collegeName} — judge it as that school's reader would, including whether it shows any real, specific knowledge of that school when the prompt calls for it.` : ''}
 Prompt they are answering: ${prompt ? `"${prompt}"` : 'They have not recorded the prompt. Evaluate it as a general personal statement, and note in your verdict that you are judging it without the prompt — a "Why us" essay and a personal statement fail in completely different ways, so this is a real limitation.'}
 ${wordLimit ? `Word limit: ${wordLimit}. Their draft is ${draftWordCount} words${draftWordCount > wordLimit ? ` — ${draftWordCount - wordLimit} OVER the limit, which is not a stylistic note but a hard failure: a form that truncates at ${wordLimit} words will cut their ending off. Treat this as a top-level problem.` : draftWordCount < wordLimit * 0.6 ? ` — well under the limit, meaning they are leaving room they could be using. Say what should fill it.` : '.'}` : `Their draft is ${draftWordCount} words.`}
-${mode === 'mock' ? `This is a PRACTICE answer written in the app's supplemental-essay trainer — they are drafting against a real prompt under real constraints to find out where they stand. Grade it exactly as strictly as a submitted draft. Telling them practice work is fine when it isn't defeats the entire purpose of practising.` : `This is a tracked draft from their Essay Workspace, on its way to a real application.`}`;
+${mode === 'mock' ? `This is a PRACTICE answer written in the app's supplemental-essay trainer — they are drafting against a real prompt under real constraints to find out where they stand. Grade it exactly as strictly as a submitted draft. Telling them practice work is fine when it isn't defeats the entire purpose of practicing.` : `This is a tracked draft from their Essay Workspace, on its way to a real application.`}`;
 
   // Their actual record — this is what lets the critique say "you have 40
   // clinical hours at a specific place and none of it is in here," which is the
@@ -249,7 +249,7 @@ export function parseCritique(raw) {
   return { score, headline, body: body.trim() };
 }
 
-// Colour band for the score badge. Deliberately unflattering in the middle: a 6
+// Color band for the score badge. Deliberately unflattering in the middle: a 6
 // is amber, not green, because "would not move the application either way" is
 // not a passing grade for something this student gets one shot at.
 export function scoreBand(score) {

@@ -13,10 +13,10 @@
 //   they type          they want                          the label is
 //   ─────────────────────────────────────────────────────────────────────────
 //   "deadlines"        Portfolio → Milestones             "Milestones"
-//   "gpa"              Activities & Résumé → Academics    "Academics"
+//   "gpa"              Activities & résumé → Academics    "Academics"
 //   "fafsa"            Portfolio → Financial Aid          "Financial Aid"
 //   "money"            Financial Aid / Scholarships       —
-//   "shadowing"        Activities & Résumé → Clinical     "Clinical Hours"
+//   "shadowing"        Activities & résumé → Clinical     "Clinical Hours"
 //   "dark mode"        Settings → Appearance              "Appearance"
 //   "parents"          Settings → Family Access           "Family Access"
 //   "chatbot"          Prep → AI Coach                    "AI Coach"
@@ -32,7 +32,7 @@
 // ── What this is, and what it deliberately is not ──────────────────────────
 // It is a KEYWORD map, keyed by the same destination ids the router uses
 // ('portfolio/milestones'), plus a small scorer over them. It is not a second
-// nav: labels, icons, colours and order all still come from the NAV/*_SUBNAV
+// nav: labels, icons, colors and order all still come from the NAV/*_SUBNAV
 // arrays in App.jsx, which stay the single source of truth for what the nav
 // looks like. This file only answers "what else might somebody call it".
 //
@@ -59,7 +59,7 @@
  * destination id → the other things it is called.
  *
  * Ids are `tab` or `tab/view`, matching src/lib/routes.js, with one extra shape
- * for the sections of Activities & Résumé (`portfolio/resume:clinical`) that are
+ * for the sections of Activities & résumé (`portfolio/resume:clinical`) that are
  * a level below a sub-view and are real destinations the palette can open.
  */
 export const NAV_KEYWORDS = {
@@ -88,7 +88,7 @@ export const NAV_KEYWORDS = {
   'portfolio/applying:colleges': ['universities', 'schools', 'where to apply', 'reach safety', 'my list'],
   'portfolio/applying:essays': ['personal statement', 'writing', 'supplementals', 'common app essay', 'drafts'],
   'portfolio/applying:aid': ['fafsa', 'money', 'cost', 'paying for college', 'css profile', 'scholarships', 'grants'],
-  // Activities & Résumé holds five sections. Three of them are destinations the
+  // Activities & résumé holds five sections. Three of them are destinations the
   // palette offers in their own right; the other two are reached by opening the
   // tab, so THEIR words live here, on the tab. A keyword pointing at a screen
   // nothing can open is the same dead end as no keyword at all.

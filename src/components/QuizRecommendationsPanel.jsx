@@ -22,32 +22,32 @@ function LockedPicksCard({ progress }) {
   const [have, need] = progress || [0, 3];
   const pct = need > 0 ? Math.min(100, Math.round((have / need) * 100)) : 0;
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Brain size={15} color={C.violetL} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Medabrain Picks</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Medabrain Picks</span>
       </div>
       <div style={{
-        position: 'relative', overflow: 'hidden', borderRadius: 18, padding: 22,
+        position: 'relative', overflow: 'hidden', borderRadius: 16, padding: 20,
         background: `linear-gradient(135deg,${tint(C.violet, 0.12)},${tint(C.violet, 0.03)})`,
         border: `1px solid ${tint(C.violet, 0.32)}`,
       }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: `radial-gradient(circle,${tint(C.violet, 0.18)},transparent 70%)`, pointerEvents: 'none' }} />
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, position: 'relative' }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, position: 'relative' }}>
+          <div style={{ width: 34, height: 34, borderRadius: 8, background: tint(C.violet, 0.18), border: `1px solid ${tint(C.violet, 0.35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Lock size={15} color={C.violetL} />
           </div>
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Medabrain is still learning your profile</div>
+            <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Medabrain is still learning your profile</div>
             <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
               Ranked picks are built from your real performance — weak categories, your pathway,
               your courses. A few completed quizzes give it enough signal to actually mean something,
               instead of guessing. Finish {Math.max(need - have, 0)} more to unlock it.
             </div>
-            <div style={{ height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,${C.violet},${C.violetL})`, borderRadius: 3, transition: 'width .4s' }} />
+            <div style={{ height: 6, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left', background: `linear-gradient(90deg,${C.violet},${C.violetL})`, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
               <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>{have} of {need} quizzes completed</span>
               <span style={{ fontSize: 10.5, color: C.violetL, fontFamily: C.FM, fontWeight: 700 }}>{pct}%</span>
             </div>
@@ -74,13 +74,13 @@ function RankBadge({ rank }) {
   if (style) {
     const Icon = style.icon;
     return (
-      <div style={{ width: 34, height: 34, borderRadius: 10, background: style.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${style.glow}` }}>
+      <div style={{ width: 34, height: 34, borderRadius: 8, background: style.grad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${style.glow}` }}>
         <Icon size={16} color="#0a0a0a" />
       </div>
     );
   }
   return (
-    <div style={{ width: 34, height: 34, borderRadius: 10, background: C.s3, border: `1px solid ${C.b2}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+    <div style={{ width: 34, height: 34, borderRadius: 8, background: C.s3, border: `1px solid ${C.b2}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
       <span style={{ fontSize: 13, fontWeight: 800, color: C.t2, fontFamily: C.FM }}>{rank}</span>
     </div>
   );
@@ -115,13 +115,13 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
 
   if (!orderedRanked || !orderedRanked.length) {
     return (
-      <div style={{ ...glass({ padding: 24, background: C.greenDim, border: `1px solid ${C.green}30` }), display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ ...glass({ padding: 24, background: C.greenDim, border: `1px solid ${C.green}30` }), display: 'flex', alignItems: 'center', gap: 12 }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, background: `${C.green}18`, border: `1px solid ${C.green}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Trophy size={18} color={C.greenL} />
         </div>
         <div>
           <div style={{ fontSize: 14, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>You've cleared the entire quiz library</div>
-          <div style={{ fontSize: 12, color: C.t2, marginTop: 2 }}>Incredible work — check back after new quizzes are added, or review your weakest scores to sharpen further.</div>
+          <div style={{ fontSize: 12, color: C.t2, marginTop: 4 }}>Incredible work — check back after new quizzes are added, or review your weakest scores to sharpen further.</div>
         </div>
       </div>
     );
@@ -144,10 +144,10 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <Brain size={15} color={C.violetL} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Medabrain Picks — Ranked For You</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Medabrain Picks — Ranked For You</span>
       </div>
 
       {/* #1 — featured hero card */}
@@ -155,7 +155,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
         initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
         whileHover={{ y: -2 }}
         style={{
-          position: 'relative', overflow: 'hidden', borderRadius: 18,
+          position: 'relative', overflow: 'hidden', borderRadius: 16,
           background: topIsPlanPick
             ? `linear-gradient(135deg, rgba(45,127,255,0.12), rgba(245,158,11,0.05))`
             : `linear-gradient(135deg, rgba(245,158,11,0.10), rgba(245,158,11,0.03))`,
@@ -164,10 +164,10 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
         }}
       >
         <div style={{ position: 'absolute', top: -40, right: -40, width: 140, height: 140, borderRadius: '50%', background: 'radial-gradient(circle,rgba(245,158,11,0.18),transparent 70%)', pointerEvents: 'none' }} />
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap', position: 'relative' }}>
           <RankBadge rank={1} />
           <div style={{ flex: 1, minWidth: 200 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, flexWrap: 'wrap' }}>
               {topIsPlanPick && (
                 <span style={{ ...pill(`${C.blue}22`, C.blueL, { fontSize: 10, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                   <Target size={10} />DO FOR YOUR PLAN TODAY
@@ -179,20 +179,20 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
             </div>
             <div style={{ fontSize: compact ? 15 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4, lineHeight: 1.3 }}>{top.quiz.title}</div>
             <div style={{ fontSize: 12.5, color: C.t2, marginBottom: 4 }}>{top.reason}</div>
-            <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, display: 'flex', alignItems: 'center', gap: 5 }}><ScrollText size={11} />{top.quiz.qs.length} questions</div>
+            <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, display: 'flex', alignItems: 'center', gap: 4 }}><ScrollText size={11} />{top.quiz.qs.length} questions</div>
             <AnimatePresence>
               {brainNote?.rank === 1 && brainNote.text && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                  <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: C.violetDim, border: `1px solid ${C.violet}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <Brain size={13} color={C.violetL} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: C.violetDim, border: `1px solid ${C.violet}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <Brain size={13} color={C.violetL} style={{ flexShrink: 0, marginTop: 4 }} />
                     <span style={{ fontSize: 12, color: C.t2, fontStyle: 'italic' }}>{brainNote.text}</span>
                   </div>
                 </motion.div>
               )}
               {brainNote?.rank === 1 && brainNote.text === null && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-                  <div style={{ marginTop: 10, padding: '10px 12px', borderRadius: 10, background: C.roseDim, border: `1px solid ${C.rose}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <Brain size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 2 }} />
+                  <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 8, background: C.roseDim, border: `1px solid ${C.rose}25`, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                    <Brain size={13} color={C.roseL} style={{ flexShrink: 0, marginTop: 4 }} />
                     <span style={{ fontSize: 12, color: C.t2 }}>Medabrain couldn't explain this pick right now — try again in a moment.</span>
                   </div>
                 </motion.div>
@@ -201,17 +201,17 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'stretch', minWidth: 140 }}>
             <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              style={{ ...btn(`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.amberL)})`, { fontSize: 12.5, padding: '10px 20px', color: C.onAccent }), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+              style={{ ...btn(`linear-gradient(135deg,${accentFill(C.amber)},${accentFill(C.amberL)})`, { fontSize: 12.5, padding: '8px 20px', color: C.onAccent }), display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
               onClick={() => onStart(top.quiz)}>
-              Start Now<ChevronRight size={14} />
+              Start now<ChevronRight size={14} />
             </motion.button>
             {onAskMedabrain && (
               <button
-                style={{ ...pill('transparent', C.violetL, { fontSize: 10.5, cursor: 'pointer', border: `1px solid ${C.violet}30`, justifyContent: 'center', padding: '7px 12px' }) }}
+                style={{ ...pill('transparent', C.violetL, { fontSize: 10.5, cursor: 'pointer', border: `1px solid ${C.violet}30`, justifyContent: 'center', padding: '8px 12px' }) }}
                 disabled={brainLoading}
                 onClick={() => askMedabrain(top)}
               >
-                {brainLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Loader2 size={11} className="spin" /> Thinking…</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><Sparkles size={11} />Ask Medabrain why</span>}
+                {brainLoading ? <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Loader2 size={11} className="spin" /> Thinking…</span> : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Sparkles size={11} />Ask Medabrain why</span>}
               </button>
             )}
           </div>
@@ -229,15 +229,15 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
                 key={p.quiz.id}
                 initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 + i * 0.05 }}
                 whileHover={{ x: 2 }}
-                style={{ ...glass2({ padding: '12px 14px' }), display: 'flex', alignItems: 'center', gap: 12, border: planPick ? `1px solid ${C.blue}45` : undefined, background: planPick ? `${C.blue}0c` : undefined }}
+                style={{ ...glass2({ padding: '12px 12px' }), display: 'flex', alignItems: 'center', gap: 12, border: planPick ? `1px solid ${C.blue}45` : undefined, background: planPick ? `${C.blue}0c` : undefined }}
               >
                 <RankBadge rank={p.rank} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap', marginBottom: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{p.quiz.title}</span>
                     <span style={pill(`${dc}18`, dc, { fontSize: 9 })}>{p.quiz.diff}</span>
                     {planPick && (
-                      <span style={{ ...pill(`${C.blue}20`, C.blueL, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <span style={{ ...pill(`${C.blue}20`, C.blueL, { fontSize: 9, fontWeight: 800 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <Target size={9} />DO FOR TODAY
                       </span>
                     )}
@@ -245,7 +245,7 @@ export default function QuizRecommendationsPanel({ ranked, onStart, onAskMedabra
                   <div style={{ fontSize: 11, color: C.t3 }}>{p.reason}</div>
                 </div>
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                  style={{ ...btn(C.s3, { fontSize: 11.5, padding: '7px 14px', border: `1px solid ${C.b2}`, color: C.t1, flexShrink: 0 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                  style={{ ...btn(C.s3, { fontSize: 11.5, padding: '8px 12px', border: `1px solid ${C.b2}`, color: C.t1, flexShrink: 0 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}
                   onClick={() => onStart(p.quiz)}>
                   Start<ChevronRight size={12} />
                 </motion.button>

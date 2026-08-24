@@ -25,7 +25,7 @@ import { getSupplementsFor, CYCLE_NOTE } from '../data/supplementalEssays';
 export const CONFIDENCE_LABELS = {
   curated: { label: 'Recent cycle', tone: 'good', note: CYCLE_NOTE },
   recalled: { label: 'From memory — verify', tone: 'warn', note: 'Medabrain recognized this school and reconstructed its recent prompts from memory. Treat the wording as close, not exact, and confirm on the school\'s site before you submit.' },
-  representative: { label: 'Practice prompt — not official', tone: 'warn', note: 'Medabrain does not have this school\'s actual prompts. These are the kinds of questions a school like this asks, written so you have something real to practise against — do not treat them as this school\'s requirements.' },
+  representative: { label: 'Practice prompt — not official', tone: 'warn', note: 'Medabrain does not have this school\'s actual prompts. These are the kinds of questions a school like this asks, written so you have something real to practice against — do not treat them as this school\'s requirements.' },
 };
 
 const SYSTEM = `You are Medabrain, the supplemental-essay reference inside MedSchoolPrep, a college-prep app for U.S. high-school students. You are given the name of one U.S. college and you return that school's supplemental application essay prompts as JSON.
@@ -34,7 +34,7 @@ Two cases, and you must be honest about which one you are in — a student will 
 
 CASE 1 — YOU RECOGNIZE THE SCHOOL and can recall the substance of its recent supplemental prompts. Reproduce them as faithfully as you can, with their real word limits and whether each is required. Set "confidence": "recalled" on each one.
 
-CASE 2 — YOU DO NOT ACTUALLY KNOW this school's prompts, or you are unsure. Do NOT guess and present it as fact. Instead write 2-4 prompts of the archetypes this kind of school realistically asks (why this school, why this major, community/contribution, an activity elaboration), with plausible word limits, so the student has something genuine to practise on. Set "confidence": "representative" on each one. It is completely acceptable — and much better — to say you don't know by using this case. Never invent a named program, professor, tradition, or campus landmark you are not sure exists.
+CASE 2 — YOU DO NOT ACTUALLY KNOW this school's prompts, or you are unsure. Do NOT guess and present it as fact. Instead write 2-4 prompts of the archetypes this kind of school realistically asks (why this school, why this major, community/contribution, an activity elaboration), with plausible word limits, so the student has something genuine to practice on. Set "confidence": "representative" on each one. It is completely acceptable — and much better — to say you don't know by using this case. Never invent a named program, professor, tradition, or campus landmark you are not sure exists.
 
 If the school genuinely requires no supplemental essays (many large public universities do not), return an empty "essays" array and say so in "summary".
 

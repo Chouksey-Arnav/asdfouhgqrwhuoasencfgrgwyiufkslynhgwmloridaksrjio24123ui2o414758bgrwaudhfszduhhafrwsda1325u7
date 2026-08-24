@@ -55,22 +55,22 @@ export default function StreakRepairCard({
 
       <div style={{ position: 'relative', ...R({ gap: 12, alignItems: 'flex-start', flexWrap: 'wrap' }) }}>
         <div style={{
-          width: 40, height: 40, borderRadius: 13, flexShrink: 0,
+          width: 40, height: 40, borderRadius: 12, flexShrink: 0,
           background: tint(accent, 0.15), border: `1px solid ${tint(accent, 0.32)}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}><HeartCrack size={19} color={accent} /></div>
 
         <div style={{ flex: 1, minWidth: 190 }}>
-          <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+          <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
             {offer.headline}
           </div>
-          <div style={{ fontSize: 11.5, color: C.t2, marginTop: 5, lineHeight: 1.55 }}>
+          <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>
             You can buy it back. {offer.missedDays === 1 ? 'The missed day' : `The ${offer.missedDays} missed days`} will
             be marked as repaired — the run continues from {offer.lost} and keeps going — but repaired days never
             count as earned ones.
           </div>
 
-          <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 10 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 8 }}>
             <span style={pill(tint(C.amber, 0.13), C.amberL, { fontSize: 10.5, fontFamily: C.FM, fontWeight: 800 })}>
               {offer.cost.toLocaleString()} XP
             </span>
@@ -84,7 +84,7 @@ export default function StreakRepairCard({
         </div>
       </div>
 
-      <div style={{ position: 'relative', ...R({ gap: 10, flexWrap: 'wrap', justifyContent: 'space-between' }), marginTop: 14 }}>
+      <div style={{ position: 'relative', ...R({ gap: 8, flexWrap: 'wrap', justifyContent: 'space-between' }), marginTop: 12 }}>
         <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.5, flex: 1, minWidth: 160 }}>
           {!offer.cooldownOk && offer.nextAvailableAt
             ? <><Clock size={10} style={{ marginRight: 4, verticalAlign: -1 }} />Already repaired once this month — available again {fmtDate(offer.nextAvailableAt)}.</>
@@ -99,8 +99,8 @@ export default function StreakRepairCard({
           disabled={!offer.available || busy}
           style={{
             ...(offer.available
-              ? btn(`linear-gradient(135deg, ${C.violet}, ${C.fuchsia})`, { fontSize: 12.5, padding: '10px 18px', color: onTint(C.violet) })
-              : btnG({ fontSize: 12.5, padding: '10px 18px' })),
+              ? btn(`linear-gradient(135deg, ${C.violet}, ${C.fuchsia})`, { fontSize: 12.5, padding: '8px 16px', color: onTint(C.violet) })
+              : btnG({ fontSize: 12.5, padding: '8px 16px' })),
             opacity: offer.available ? (busy ? 0.6 : 1) : 0.5,
             cursor: offer.available ? 'pointer' : 'not-allowed',
             flexShrink: 0,
@@ -111,8 +111,8 @@ export default function StreakRepairCard({
         </motion.button>
       </div>
 
-      <div style={{ position: 'relative', ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 12, fontSize: 10.5, color: C.t4, lineHeight: 1.5 }}>
-        <Info size={11} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ position: 'relative', ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 12, fontSize: 10.5, color: C.t4, lineHeight: 1.5 }}>
+        <Info size={11} style={{ flexShrink: 0, marginTop: 4 }} />
         <span>
           Not interested? Nothing happens. Starting again from day one is a completely reasonable
           answer, and this offer disappears on its own in a few days.

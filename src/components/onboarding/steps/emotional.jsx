@@ -38,18 +38,18 @@ export function IdentityStep({ answers, onNext }) {
         {/* The badge. Hairline frame, mono kicker, the role's own mark. */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.35 }}
           style={{
-            marginTop: 26, padding: '20px 26px', borderRadius: R.xl, maxWidth: 400,
+            marginTop: 24, padding: '20px 24px', borderRadius: R.xl, maxWidth: 400,
             background: `linear-gradient(150deg, ${g.soft}, transparent 68%), ${C.surf}`,
             border: `1px solid ${g.edgeSoft}`, boxShadow: C.shadowSm,
           }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, marginBottom: 13 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
             <span style={{ width: 16, height: 1, background: g.edge }} />
             <span style={meta(9.5, { color: g.ink })}>{c.eyebrow}</span>
             <span style={{ width: 16, height: 1, background: g.edge }} />
           </div>
           <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...POP, delay: 0.5 }}
             style={{
-              width: 54, height: 54, borderRadius: 18, margin: '0 auto 14px',
+              width: 54, height: 54, borderRadius: 16, margin: '0 auto 14px',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: g.grad, color: g.onFill, boxShadow: `${g.glow}, ${lit(0.22)}`,
             }}>
@@ -63,15 +63,15 @@ export function IdentityStep({ answers, onNext }) {
         </motion.div>
 
         <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.85 }}
-          style={body(14, { maxWidth: 380, margin: '6px 0 0', lineHeight: 1.72 })}>
+          style={body(14, { maxWidth: 380, margin: '4px 0px 0px', lineHeight: 1.55 })}>
           {c.line}
         </motion.p>
 
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 1.1 }}
           style={{
-            marginTop: 18, padding: '9px 15px', borderRadius: R.pill,
+            marginTop: 16, padding: '8px 16px', borderRadius: R.pill,
             background: C.surf, border: `1px solid ${C.b1}`,
-            fontSize: 12.5, fontWeight: 600, color: C.t2, display: 'flex', alignItems: 'center', gap: 9,
+            fontSize: 12.5, fontWeight: 600, color: C.t2, display: 'flex', alignItems: 'center', gap: 8,
           }}>
           <span style={{ display: 'flex', color: g.ink }}><Icon name="hourglass" size={14} /></span>{c.sub}
         </motion.div>
@@ -92,8 +92,8 @@ export function ExperienceInsightStep({ answers, onNext }) {
         icon={ins.variant === 'fresh' ? 'sprout' : 'medal'}
         h={g} title={ins.title} subtitle={ins.sub} />
       <div style={{ flex: 1 }}>
-        <div style={panel({ padding: '20px 18px' })}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 18 }}>
+        <div style={panel({ padding: '20px 16px' })}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
             <span style={{ width: 14, height: 1, background: g.edge }} />
             <span style={meta(9.5, { color: C.t3 })}>
               {ins.variant === 'fresh' ? 'How future med students actually start' : 'Hands-on experience, students your age'}
@@ -103,11 +103,11 @@ export function ExperienceInsightStep({ answers, onNext }) {
         </div>
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 1.1 }}
           style={{
-            marginTop: 14, padding: '14px 16px', borderRadius: R.md,
+            marginTop: 12, padding: '12px 16px', borderRadius: R.md,
             background: `linear-gradient(135deg, ${g.soft}, ${g.softer})`, border: `1px solid ${g.edgeSoft}`,
-            display: 'flex', gap: 11, alignItems: 'flex-start',
+            display: 'flex', gap: 12, alignItems: 'flex-start',
           }}>
-          <span style={{ color: g.ink, display: 'flex', flexShrink: 0, marginTop: 1 }}><Icon name="sparkle" size={16} /></span>
+          <span style={{ color: g.ink, display: 'flex', flexShrink: 0, marginTop: 4 }}><Icon name="sparkle" size={16} /></span>
           <p style={{ fontSize: 13, color: C.t1, fontWeight: 600, lineHeight: 1.55, margin: 0 }}>{ins.stat}</p>
         </motion.div>
       </div>
@@ -129,7 +129,7 @@ export function ObstacleEmpathyStep({ answers, onNext }) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={POP}
           style={{
-            width: 52, height: 52, borderRadius: R.lg, marginBottom: 22,
+            width: 52, height: 52, borderRadius: R.lg, marginBottom: 20,
             background: g.soft, border: `1px solid ${g.edgeSoft}`, color: g.ink,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
@@ -138,18 +138,18 @@ export function ObstacleEmpathyStep({ answers, onNext }) {
 
         <div style={{ borderLeft: `2px solid ${g.edge}`, paddingLeft: 20 }}>
           <motion.h1 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.2 }}
-            style={display(25, { color: C.t1, margin: '0 0 14px', lineHeight: 1.3 })}>
+            style={display(25, { color: C.t1, margin: '0px 0px 12px', lineHeight: 1.3 })}>
             {e.title}
           </motion.h1>
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ ...GLIDE, delay: 0.45 }}
-            style={body(14.5, { margin: 0, maxWidth: 400, lineHeight: 1.75 })}>
+            style={body(14.5, { margin: 0, maxWidth: 400, lineHeight: 1.55 })}>
             {e.line}
           </motion.p>
         </div>
 
         {e.others.length > 0 && (
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-            style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.6, marginTop: 18, paddingLeft: 22 }}>
+            style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, marginTop: 16, paddingLeft: 20 }}>
             {e.others.length === 1
               ? `And ${e.others[0].toLowerCase()}? Your plan accounts for that too.`
               : `And the rest — ${e.others.map(o => o.toLowerCase()).join(', ')}? Your plan accounts for those too.`}
@@ -193,12 +193,12 @@ export function CommitmentStep({ answers, onNext }) {
         title="Make it a promise to yourself."
         subtitle="Everything you told us becomes your plan the moment you commit." />
       <div style={{ flex: 1 }}>
-        <div style={panel({ padding: '6px 6px 0', overflow: 'hidden' })}>
+        <div style={panel({ padding: '4px 4px 0px', overflow: 'hidden' })}>
           {pledges.map((p, i) => (
             <motion.div key={i} initial={{ opacity: 0, x: -14 }} animate={{ opacity: 1, x: 0 }}
               transition={{ ...GLIDE, delay: 0.3 + i * 0.32 }}
               style={{
-                display: 'flex', gap: 13, alignItems: 'center', padding: '13px 12px',
+                display: 'flex', gap: 12, alignItems: 'center', padding: '12px 12px',
                 borderBottom: i < pledges.length - 1 ? `1px solid ${C.b0}` : 'none',
               }}>
               <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ ...POP, delay: 0.5 + i * 0.32 }}
@@ -216,7 +216,7 @@ export function CommitmentStep({ answers, onNext }) {
         </div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: armed ? 1 : 0 }} transition={{ duration: 0.5 }}
-          style={{ marginTop: 22, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           {/* The signature mark carries its own baseline rule, so it is the
               whole flourish — a second hairline under it just read as noise. */}
           <span style={{ color: g.ink, opacity: 0.8 }}><Icon name="signature" size={44} stroke={1.3} /></span>

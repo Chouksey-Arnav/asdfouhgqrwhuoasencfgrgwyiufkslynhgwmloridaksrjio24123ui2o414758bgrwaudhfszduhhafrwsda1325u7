@@ -124,7 +124,7 @@ export function focusPathway(user, key, paths = {}) {
  * what's on the student's plate this month, not about erasing four weeks of
  * work — so re-adding it later picks up exactly where it left off.
  *
- * Dropping the focused pathway moves focus to the neighbour that took its place
+ * Dropping the focused pathway moves focus to the neighbor that took its place
  * in the rail (the next one along, or the last one if it was the tail), which is
  * where the eye already is. Dropping the last pathway leaves `specialty` null,
  * the same "pick a pathway" state a brand-new account is in.

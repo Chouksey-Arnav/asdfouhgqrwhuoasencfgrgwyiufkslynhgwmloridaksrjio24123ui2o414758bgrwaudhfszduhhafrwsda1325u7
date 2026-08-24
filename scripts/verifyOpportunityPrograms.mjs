@@ -87,7 +87,7 @@ for (const p of PROGRAMS) {
     // header). These live ONLY here, where the tier itself is the warning.
     assert(`[${p.id}] pay-to-play programs stay out of the browsable catalog`, !catalogIds.has(p.id));
     assert(`[${p.id}] says plainly why it costs what it costs`,
-      /open enrolment|open enrollment|anyone who pays|not a selective/i.test(`${p.why} ${p.eligibility}`));
+      /open enrollment|open enrollment|anyone who pays|not a selective/i.test(`${p.why} ${p.eligibility}`));
     assert(`[${p.id}] is never labelled free`, !isFreeOrFunded(p));
   } else if (catalogIds.has(p.id)) {
     assert(`[${p.id}] name matches the browsable catalog`, catalogById[p.id].name === p.name,

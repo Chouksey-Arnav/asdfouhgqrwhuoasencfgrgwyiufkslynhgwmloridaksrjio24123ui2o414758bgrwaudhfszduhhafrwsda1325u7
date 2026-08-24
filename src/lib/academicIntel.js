@@ -26,7 +26,7 @@
 //   3. It TALKS BACK — reactToGpa() is the "you just entered a 4.0" moment: a
 //      real verdict on the number, three named schools that fit it and fit
 //      their stated career, and a reason for each. This is the specific
-//      behaviour the panel was rebuilt around.
+//      behavior the panel was rebuilt around.
 //
 // HONESTY RULES, non-negotiable, same as everywhere else in the app:
 //   - Praise is proportional and specific. A 4.0 gets told it is excellent and

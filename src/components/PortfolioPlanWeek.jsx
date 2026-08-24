@@ -38,9 +38,9 @@ export default function PortfolioPlanWeek({ user, accent = C.blue, onOpenTask })
 
   return (
     <div style={{ ...glass({ padding: 0, overflow: 'hidden' }), border: `1px solid ${accent}30` }}>
-      <button onClick={() => setOpen(o => !o)} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '16px 18px' }}>
-        <div style={R({ justifyContent: 'space-between', gap: 10 })}>
-          <div style={R({ gap: 10 })}>
+      <button onClick={() => setOpen(o => !o)} style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%', boxSizing: 'border-box', padding: '16px 16px' }}>
+        <div style={R({ justifyContent: 'space-between', gap: 8 })}>
+          <div style={R({ gap: 8 })}>
             <CalendarRange size={15} color={accent} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>Plan this week</span>
             <span style={pill(`${accent}18`, accent, { fontSize: 10 })}>{items.length} to do</span>
@@ -53,7 +53,7 @@ export default function PortfolioPlanWeek({ user, accent = C.blue, onOpenTask })
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
-            <div style={{ padding: '0 18px 18px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ padding: '0px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {items.map(t => {
                 const meta = TYPE_META[t.type] || { icon: CalendarRange, label: t.type, color: accent };
                 const Icon = meta.icon;
@@ -61,7 +61,7 @@ export default function PortfolioPlanWeek({ user, accent = C.blue, onOpenTask })
                 const label = specific ? t.resourceLabel : t.title;
                 return (
                   <button key={t.id} onClick={() => onOpenTask?.(t)} aria-label={`Open plan task: ${label}`}
-                    style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 11, background: 'rgba(255,255,255,0.03)', border: `1px solid ${meta.color}25` }}>
+                    style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: `1px solid ${meta.color}25` }}>
                     <div style={{ width: 28, height: 28, borderRadius: 8, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       <Icon size={13} color={meta.color} />
                     </div>

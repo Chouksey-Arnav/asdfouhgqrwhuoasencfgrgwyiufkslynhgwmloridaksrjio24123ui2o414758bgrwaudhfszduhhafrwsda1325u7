@@ -6,7 +6,7 @@
 // copy of the breakdown panel — it carries only what changes a decision:
 //
 //   1. The score, and what it is measured against. A number without the
-//      programme name attached is not interpretable, so the benchmark is on the
+//      program name attached is not interpretable, so the benchmark is on the
 //      card, never one tap away.
 //   2. What moved since last week's seal, which is the only comparison that
 //      exists (the score does not change daily, by design).
@@ -86,13 +86,13 @@ export default function MedExHomeCard({
       <div style={{ position: 'relative', ...R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: m ? 14 : 16 }) }}>
         <span style={R({ gap: 8 })}>
           <Activity size={14} color={color} />
-          <span style={{ fontSize: 11, fontWeight: 800, color, letterSpacing: '.14em', textTransform: 'uppercase', fontFamily: C.FD }}>
+          <span style={{ fontSize: 11, fontWeight: 800, color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontFamily: C.FD }}>
             {MEDEX_COPY.name}
           </span>
         </span>
         <button onClick={onOpen} style={{
           background: 'transparent', border: 'none', color: C.t3, cursor: 'pointer',
-          display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, padding: 0,
+          display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: 0,
         }}>Full breakdown<ChevronRight size={12} /></button>
       </div>
 
@@ -112,21 +112,21 @@ export default function MedExHomeCard({
           idPrefix="medex-home"
         />
 
-        <div style={{ flex: 1, minWidth: m ? '100%' : 210, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ flex: 1, minWidth: m ? '100%' : 210, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <DeltaLine delta={delta} seal={seal} />
 
           {/* The benchmark. Never omitted: the score is not interpretable
               without the name of the thing it is measured against. */}
           <div style={{
-            background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 11, padding: '9px 11px',
+            background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 12, padding: '8px 12px',
           }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: '.11em', textTransform: 'uppercase', marginBottom: 3 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
               Measured against
             </div>
             <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.25 }}>
               {headline.program.name}
             </div>
-            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, fontFamily: C.FM }}>
+            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, fontFamily: C.FM }}>
               {headline.admitRate.published != null
                 ? `${(headline.admitRate.published * 100).toFixed(1)}% admitted`
                 : `~${Math.round(headline.admitRate.rate * 100)}% admitted (estimated)`}
@@ -135,13 +135,13 @@ export default function MedExHomeCard({
           </div>
 
           {/* Distance to the anchor the whole scale is defined by. */}
-          <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             {headline.atOrAboveCohort ? (
-              <span style={{ ...pill(tint(C.green, 0.15), C.greenL, { gap: 5 }) }}>
+              <span style={{ ...pill(tint(C.green, 0.15), C.greenL, { gap: 4 }) }}>
                 <Trophy size={11} />At the admitted median
               </span>
             ) : (
-              <span style={{ ...pill(tint(color, 0.14), color, { gap: 5, fontFamily: C.FM }) }}>
+              <span style={{ ...pill(tint(color, 0.14), color, { gap: 4, fontFamily: C.FM }) }}>
                 <Target size={11} />{headline.toCohort} to the median admit
               </span>
             )}
@@ -157,11 +157,11 @@ export default function MedExHomeCard({
       {/* ── The apex line — the reference that does not move ────────────── */}
       {medex.apex?.scoredCount > 0 && (
         <div style={{
-          position: 'relative', marginTop: 14, padding: '9px 12px', borderRadius: 11,
+          position: 'relative', marginTop: 12, padding: '8px 12px', borderRadius: 12,
           background: tint(C.gold, 0.06), border: `1px solid ${tint(C.gold, 0.18)}`,
           display: 'flex', gap: 8, alignItems: 'flex-start',
         }}>
-          <Sparkles size={12} color={C.gold} style={{ flexShrink: 0, marginTop: 2 }} />
+          <Sparkles size={12} color={C.gold} style={{ flexShrink: 0, marginTop: 4 }} />
           <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.45 }}>{medex.apex.sentence}</div>
         </div>
       )}
@@ -174,16 +174,16 @@ export default function MedExHomeCard({
       {/* ── The one thing to do about it ───────────────────────────────── */}
       {topMover && (
         <div style={{
-          position: 'relative', marginTop: 12, display: 'flex', gap: 10,
+          position: 'relative', marginTop: 12, display: 'flex', gap: 8,
           alignItems: 'center', flexWrap: 'wrap',
         }}>
           <div style={{ flex: 1, minWidth: 180 }}>
-            <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: '.11em', textTransform: 'uppercase', marginBottom: 3 }}>
+            <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
               Biggest move available
             </div>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, lineHeight: 1.35 }}>
               {topMover.label}
-              <span style={{ color: C.greenL, fontFamily: C.FM, fontWeight: 700, marginLeft: 6 }}>
+              <span style={{ color: C.greenL, fontFamily: C.FM, fontWeight: 700, marginLeft: 4 }}>
                 +{topMover.points}
               </span>
             </div>
@@ -208,7 +208,7 @@ function DeltaLine({ delta, seal }) {
   if (seal?.isFirstEver || delta == null) {
     return (
       <div>
-        <div style={{ fontSize: 22, fontWeight: 800, color: C.t2, fontFamily: C.FD, lineHeight: 1 }}>
+        <div style={{ fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t2, fontFamily: C.FD, lineHeight: 1 }}>
           First seal
         </div>
         <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>
@@ -225,13 +225,13 @@ function DeltaLine({ delta, seal }) {
 
   return (
     <div>
-      <div style={R({ gap: 7 })}>
+      <div style={R({ gap: 8 })}>
         <Icon size={18} color={col} />
-        <span style={{ fontSize: 26, fontWeight: 900, color: col, fontFamily: C.FD, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{ fontSize: 26, letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))', fontWeight: 900, color: col, fontFamily: C.FD, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
           {up ? '+' : ''}{delta}
         </span>
       </div>
-      <div style={{ fontSize: 11, color: C.t3, marginTop: 5, lineHeight: 1.4 }}>
+      <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>
         {flat
           ? `Level with your seal from ${since}. On a weekly scale that is normal — most real movement takes a month to show.`
           : `since ${since}${seal?.gapWeeks > 1 ? ` · ${seal.gapWeeks} weeks ago` : ''}`}
@@ -249,40 +249,40 @@ function NeedsEvidence({ headline, benchmark, onGoTo, onOpen, m }) {
       border: `1px solid ${tint(C.blue, 0.26)}`,
       background: `linear-gradient(140deg, ${tint(C.blue, 0.08)}, transparent 65%)`,
     }} data-tour="medex-home">
-      <div style={R({ gap: 8, marginBottom: 10 })}>
+      <div style={R({ gap: 8, marginBottom: 8 })}>
         <Activity size={14} color={C.blue} />
-        <span style={{ fontSize: 11, fontWeight: 800, color: C.blue, letterSpacing: '.14em', textTransform: 'uppercase', fontFamily: C.FD }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: C.blue, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontFamily: C.FD }}>
           {MEDEX_COPY.name}
         </span>
       </div>
 
-      <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.3, marginBottom: 7 }}>
+      <div style={{ fontSize: m ? 15 : 16.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.3, marginBottom: 8 }}>
         Not enough on the record for a score yet.
       </div>
-      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 13 }}>
+      <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>
         {headline.explanation}
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {asks.map(a => (
           <button key={a.key} onClick={() => onGoTo?.(a.key)} style={{
-            textAlign: 'left', background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 10,
-            padding: '9px 11px', cursor: onGoTo ? 'pointer' : 'default', display: 'flex',
-            gap: 9, alignItems: 'flex-start', width: '100%',
+            textAlign: 'left', background: C.surf2, border: `1px solid ${C.b1}`, borderRadius: 8,
+            padding: '8px 12px', cursor: onGoTo ? 'pointer' : 'default', display: 'flex',
+            gap: 8, alignItems: 'flex-start', width: '100%',
           }}>
-            <ChevronRight size={13} color={C.blue} style={{ flexShrink: 0, marginTop: 1 }} />
+            <ChevronRight size={13} color={C.blue} style={{ flexShrink: 0, marginTop: 4 }} />
             <span style={{ minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{a.label}</span>
-              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 2, lineHeight: 1.4 }}>{a.ask}</span>
+              <span style={{ display: 'block', fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.4 }}>{a.ask}</span>
             </span>
           </button>
         ))}
       </div>
 
-      <div style={{ fontSize: 10.5, color: C.t4, marginTop: 11, lineHeight: 1.45 }}>
+      <div style={{ fontSize: 10.5, color: C.t4, marginTop: 12, lineHeight: 1.45 }}>
         Once it starts, it will be measured against {benchmark?.profile?.name || 'your most selective school'} and seal once a week.
       </div>
-      <button onClick={onOpen} style={btnG({ marginTop: 11, fontSize: 12, padding: '7px 14px' })}>
+      <button onClick={onOpen} style={btnG({ marginTop: 12, fontSize: 12, padding: '8px 12px' })}>
         How the score works<ChevronRight size={12} />
       </button>
     </div>
@@ -297,17 +297,17 @@ function Blocked({ headline, onOpen, m }) {
       border: `1px solid ${tint(C.amber, 0.3)}`,
       background: `linear-gradient(140deg, ${tint(C.amber, 0.08)}, transparent 65%)`,
     }} data-tour="medex-home">
-      <div style={R({ gap: 8, marginBottom: 10 })}>
+      <div style={R({ gap: 8, marginBottom: 8 })}>
         <ShieldAlert size={14} color={C.amber} />
-        <span style={{ fontSize: 11, fontWeight: 800, color: C.amber, letterSpacing: '.14em', textTransform: 'uppercase', fontFamily: C.FD }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: C.amber, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontFamily: C.FD }}>
           {MEDEX_COPY.name}
         </span>
       </div>
-      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.35, marginBottom: 7 }}>
+      <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, lineHeight: 1.35, marginBottom: 8 }}>
         {headline.headline}
       </div>
       <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>{headline.explanation}</div>
-      <button onClick={onOpen} style={btnG({ marginTop: 12, fontSize: 12, padding: '7px 14px' })}>
+      <button onClick={onOpen} style={btnG({ marginTop: 12, fontSize: 12, padding: '8px 12px' })}>
         What would have to change<ChevronRight size={12} />
       </button>
     </div>
@@ -319,16 +319,16 @@ function Skeleton({ m }) {
   const size = m ? 150 : 186;
   return (
     <div style={{ ...glass({ padding: m ? 16 : 22 }), border: `1px solid ${C.b1}` }} aria-busy="true">
-      <div style={{ width: 120, height: 11, borderRadius: 6, background: C.s3, marginBottom: 18 }} className="msp-shimmer" />
+      <div style={{ width: 120, height: 11, borderRadius: 4, background: C.s3, marginBottom: 16 }} className="msp-shimmer" />
       <div style={{ display: 'flex', gap: m ? 14 : 22, alignItems: 'center', flexWrap: m ? 'wrap' : 'nowrap' }}>
         <div style={{
           width: size, height: size, borderRadius: '50%', flexShrink: 0,
           border: `${m ? 11 : 14}px solid ${C.s2}`, boxSizing: 'border-box',
         }} className="msp-shimmer" />
-        <div style={{ flex: 1, minWidth: m ? '100%' : 210, display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <div style={{ width: '55%', height: 26, borderRadius: 7, background: C.s3 }} className="msp-shimmer" />
-          <div style={{ width: '100%', height: 58, borderRadius: 11, background: C.s2 }} className="msp-shimmer" />
-          <div style={{ width: '70%', height: 20, borderRadius: 20, background: C.s2 }} className="msp-shimmer" />
+        <div style={{ flex: 1, minWidth: m ? '100%' : 210, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ width: '55%', height: 26, borderRadius: 8, background: C.s3 }} className="msp-shimmer" />
+          <div style={{ width: '100%', height: 58, borderRadius: 12, background: C.s2 }} className="msp-shimmer" />
+          <div style={{ width: '70%', height: 20, borderRadius: 16, background: C.s2 }} className="msp-shimmer" />
         </div>
       </div>
     </div>

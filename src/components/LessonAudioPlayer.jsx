@@ -165,7 +165,7 @@ export default function LessonAudioPlayer({
 
   if (!supported) {
     return (
-      <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'center' }}>
         <Headphones size={15} color={C.t3} style={{ flexShrink: 0 }} />
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5 }}>
           Audio narration isn't available in this browser — try Chrome, Edge, or Safari to listen to this lesson instead of reading it.
@@ -180,7 +180,7 @@ export default function LessonAudioPlayer({
 
   return (
     <div style={{ ...glass2({ padding: m ? 11 : 13, background: `${accent}0c`, border: `1px solid ${accent}28` }), position: 'relative' }}>
-      <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <motion.button
           whileTap={{ scale: 0.94 }} onClick={toggle}
           aria-label={playing && !paused ? 'Pause narration' : 'Play narration'}
@@ -190,33 +190,33 @@ export default function LessonAudioPlayer({
             display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}
         >
-          {playing && !paused ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" style={{ marginLeft: 2 }} />}
+          {playing && !paused ? <Pause size={17} fill="currentColor" /> : <Play size={17} fill="currentColor" style={{ marginLeft: 4 }} />}
         </motion.button>
 
         <div style={{ flex: 1, minWidth: 130 }}>
-          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD, display: 'flex', alignItems: 'center', gap: 4 }}>
             <Headphones size={13} color={accent} />
             {playing ? (paused ? 'Paused' : 'Listening') : 'Listen to this lesson'}
           </div>
-          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2 }}>
+          <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>
             {playing || idx > 0 ? `Part ${idx + 1} of ${total}` : `${listenLabel} · hands-free, good for the bus`}
           </div>
         </div>
 
-        <div style={R({ gap: 6, flexShrink: 0 })}>
+        <div style={R({ gap: 4, flexShrink: 0 })}>
           <button onClick={() => jump(-1)} disabled={idx === 0} aria-label="Previous paragraph"
-            style={{ ...btnSm(C.s3, { color: C.t2, padding: '7px 9px', opacity: idx === 0 ? 0.4 : 1 }) }}><SkipBack size={14} /></button>
+            style={{ ...btnSm(C.s3, { color: C.t2, padding: '8px 8px', opacity: idx === 0 ? 0.4 : 1 }) }}><SkipBack size={14} /></button>
           <button onClick={() => jump(1)} disabled={idx >= total - 1} aria-label="Next paragraph"
-            style={{ ...btnSm(C.s3, { color: C.t2, padding: '7px 9px', opacity: idx >= total - 1 ? 0.4 : 1 }) }}><SkipForward size={14} /></button>
+            style={{ ...btnSm(C.s3, { color: C.t2, padding: '8px 8px', opacity: idx >= total - 1 ? 0.4 : 1 }) }}><SkipForward size={14} /></button>
           <button onClick={restart} aria-label="Start over"
-            style={{ ...btnSm(C.s3, { color: C.t2, padding: '7px 9px' }) }}><RotateCcw size={13} /></button>
+            style={{ ...btnSm(C.s3, { color: C.t2, padding: '8px 8px' }) }}><RotateCcw size={13} /></button>
           <button onClick={() => setMenu(mn => (mn === 'speed' ? null : 'speed'))} aria-label="Playback speed"
-            style={{ ...btnSm(menu === 'speed' ? `${accent}22` : C.s3, { color: menu === 'speed' ? accent : C.t2, padding: '7px 10px', gap: 4, fontSize: 11.5 }) }}>
+            style={{ ...btnSm(menu === 'speed' ? `${accent}22` : C.s3, { color: menu === 'speed' ? accent : C.t2, padding: '8px 8px', gap: 4, fontSize: 11.5 }) }}>
             <Gauge size={13} />{rate}×
           </button>
           {narrators.length > 1 && (
             <button onClick={() => setMenu(mn => (mn === 'voice' ? null : 'voice'))} aria-label="Narrator voice"
-              style={{ ...btnSm(menu === 'voice' ? `${accent}22` : C.s3, { color: menu === 'voice' ? accent : C.t2, padding: '7px 10px', gap: 4, fontSize: 11.5 }) }}>
+              style={{ ...btnSm(menu === 'voice' ? `${accent}22` : C.s3, { color: menu === 'voice' ? accent : C.t2, padding: '8px 8px', gap: 4, fontSize: 11.5 }) }}>
               <Mic2 size={13} />{narrator?.label || 'Voice'}
             </button>
           )}
@@ -224,8 +224,8 @@ export default function LessonAudioPlayer({
       </div>
 
       {/* Progress rail — segment-granular, matching what skip back/forward move by */}
-      <div style={{ height: 3, borderRadius: 3, background: C.s4, marginTop: 10, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: accent, borderRadius: 3, transition: 'width .3s linear' }} />
+      <div style={{ height: 3, borderRadius: 4, background: C.s4, marginTop: 8, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left', background: accent, borderRadius: 4, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
 
       <AnimatePresence>
@@ -234,12 +234,12 @@ export default function LessonAudioPlayer({
             <div onClick={() => setMenu(null)} style={{ position: 'fixed', inset: 0, zIndex: 30 }} />
             <motion.div
               initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.13 }}
-              style={{ position: 'absolute', right: 8, top: '100%', marginTop: 6, zIndex: 31, ...glass2({ padding: 7 }), minWidth: 170, boxShadow: '0 14px 34px rgba(0,0,0,0.38)' }}
+              style={{ position: 'absolute', right: 8, top: '100%', marginTop: 4, zIndex: 31, ...glass2({ padding: 8 }), minWidth: 170, boxShadow: '0 14px 34px rgba(0,0,0,0.38)' }}
             >
-              <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.08em', padding: '3px 8px 6px' }}>
+              <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding: '4px 8px 4px' }}>
                 {menu === 'speed' ? 'Playback speed' : 'Narrator'}
               </div>
-              <div style={CC({ gap: 2 })}>
+              <div style={CC({ gap: 4 })}>
                 {menu === 'speed'
                   ? AUDIO_RATES.map(r => (
                     <MenuRow key={r} active={r === rate} accent={accent} onClick={() => chooseRate(r)} label={`${r}×`} hint={r === 1 ? 'Normal' : r < 1 ? 'Slower' : 'Faster'} />
@@ -261,7 +261,7 @@ function MenuRow({ active, accent, onClick, label, hint }) {
     <button onClick={onClick}
       style={{
         display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left', cursor: 'pointer',
-        border: 'none', borderRadius: 7, padding: '7px 8px', background: active ? `${accent}18` : 'transparent',
+        border: 'none', borderRadius: 8, padding: '8px 8px', background: active ? `${accent}18` : 'transparent',
         color: active ? accent : C.t2, fontSize: 12, fontWeight: active ? 700 : 500, fontFamily: 'inherit',
       }}>
       <span style={{ minWidth: 34 }}>{label}</span>

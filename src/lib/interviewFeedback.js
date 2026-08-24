@@ -33,7 +33,7 @@ export async function rateStation({ station, answer, signal }) {
     : station.format === 'collaborative'
       ? 'This is a COLLABORATIVE TASK station: the candidate had a partner holding information they did not have. The thing being assessed is whether they went and got that information — asking what the partner has, checking progress, adapting when the two accounts conflict. A beautifully reasoned plan built without ever asking the partner anything is the failure of this format.'
       : station.format === 'policy'
-        ? 'This is a POLICY station. The candidate is not expected to have personal experience of the issue and should not be penalised for saying so. What is assessed is whether they made a trade-off and named what their own answer fails to solve. An answer that endorses every option has not made one.'
+        ? 'This is a POLICY station. The candidate is not expected to have personal experience of the issue and should not be penalized for saying so. What is assessed is whether they made a trade-off and named what their own answer fails to solve. An answer that endorses every option has not made one.'
         : station.format === 'traditional'
           ? 'This is a TRADITIONAL interview question inside an MMI circuit. Specificity is the whole assessment: a named person, a named month, a named cost.'
           : 'This is an INTERVIEWER station. The probes are the station — an answer that is complete in forty seconds and has nothing further is an average answer, not a strong one.';

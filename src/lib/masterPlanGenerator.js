@@ -293,7 +293,7 @@ function buildPortfolioFactsText(portfolio) {
     const thin = activities.filter(a => !a.description || wordCount(a.description) < 12).length;
     if (thin) lines.push(`${thin} of those ${thin === 1 ? 'has' : 'have'} a thin or missing description — those need writing up before they're usable on an application.`);
   } else {
-    lines.push('No activities logged yet (Activities & Résumé panel is empty).');
+    lines.push('No activities logged yet (Activities & résumé panel is empty).');
   }
 
   // Clinical / shadowing — the single most decisive Portfolio metric for a pre-health student.
@@ -358,9 +358,9 @@ function buildPortfolioFactsText(portfolio) {
   if (intake) {
     const answered = Object.keys(intake.answers && typeof intake.answers === 'object' ? intake.answers : {}).length
       + ['citizenship', 'state_residency', 'grade_level'].filter(k => intake[k]).length;
-    lines.push(`Admissions Calculator intake: ${answered} field(s) answered${intake.citizenship ? '' : ', citizenship not answered (so eligibility for combined-degree programmes cannot be checked)'}.`);
+    lines.push(`Admissions Calculator intake: ${answered} field(s) answered${intake.citizenship ? '' : ', citizenship not answered (so eligibility for combined-degree programs cannot be checked)'}.`);
   } else {
-    lines.push('Admissions Calculator intake not started, so no programme eligibility has been checked.');
+    lines.push('Admissions Calculator intake not started, so no program eligibility has been checked.');
   }
 
   return lines.filter(Boolean).join('\n');
@@ -384,16 +384,16 @@ function buildPortfolioGapText(portfolio, user) {
   else if (p.colleges.length < 4 && isUpperclass) add(2, `Only ${plural(p.colleges.length, 'school')} on the list — a workable list is closer to 6-10 across reach/target/safety`, 'Portfolio → College List');
   if (!clinicalTotal) add(1, 'Zero clinical or shadowing hours logged — the single most visible gap for a pre-health applicant', 'Portfolio → Clinical Hours Log');
   else if (clinicalTotal < 40 && isUpperclass) add(2, `Only ${clinicalTotal} clinical/shadowing hours — thin for a junior/senior`, 'Portfolio → Clinical Hours Log');
-  if (!p.activities.length) add(1, 'No activities logged, so there is nothing to build a résumé from', 'Portfolio → Activities & Résumé');
-  else if (!p.activities.some(a => a.leadership_role)) add(3, 'No leadership role in any logged activity', 'Portfolio → Activities & Résumé');
+  if (!p.activities.length) add(1, 'No activities logged, so there is nothing to build a résumé from', 'Portfolio → Activities & résumé');
+  else if (!p.activities.some(a => a.leadership_role)) add(3, 'No leadership role in any logged activity', 'Portfolio → Activities & résumé');
   if (isUpperclass && !p.recommenders.length) add(2, 'No recommenders identified yet — teachers get asked early or they get overbooked', 'Portfolio → Recommenders');
   if (isUpperclass && !p.essays.length) add(2, 'No essay drafts started', 'Portfolio → Essay Workspace');
-  if (!p.gpaEntries.length) add(4, 'No GPA terms logged, so academic trend is invisible to the plan', 'Portfolio → Activities & Résumé (Academics)');
+  if (!p.gpaEntries.length) add(4, 'No GPA terms logged, so academic trend is invisible to the plan', 'Portfolio → Activities & résumé (Academics)');
   if (!p.research.length && gradeIdx >= 1) add(4, 'No research experience logged', 'Portfolio → Research Log');
   if (!p.skills.length) add(4, 'No skills/certifications logged (CPR, first aid, lab techniques all count)', 'Portfolio → Skills & Certifications');
   if (!p.scholarships.length && isUpperclass) add(4, 'No scholarships tracked', 'Portfolio → Financial Aid');
   if (!p.deadlines.length && isUpperclass) add(3, 'No application deadlines tracked', 'Portfolio → Milestones');
-  if (!(p.admissionIntake || []).length) add(isUpperclass ? 2 : 4, 'Admissions Calculator intake not started — until it is, no programme\'s published eligibility requirements have been checked against this student at all', 'Portfolio → Admissions Calc');
+  if (!(p.admissionIntake || []).length) add(isUpperclass ? 2 : 4, 'Admissions Calculator intake not started — until it is, no program\'s published eligibility requirements have been checked against this student at all', 'Portfolio → Admissions Calc');
   else if (!(p.admissionIntake[0] || {}).citizenship) add(3, 'Citizenship/residency unanswered in the Admissions Calculator, which is a hard eligibility gate at several combined-degree programmes', 'Portfolio → Admissions Calc');
 
   if (!gaps.length) return 'Their Portfolio has at least something in every major category — the plan should deepen and polish what is there rather than fill blanks.';
@@ -789,7 +789,7 @@ function seedFrom(str) {
 }
 
 // `lessons` is the pool a lesson task is allowed to land on — everything the student can open
-// today. `allLessons` keeps the full list so an exact name the model wrote can still be recognised
+// today. `allLessons` keeps the full list so an exact name the model wrote can still be recognized
 // (and then judged against the open pool) rather than falling through to a blind rotation.
 function buildResourceIndex(specialtyKey, pathwayState = null) {
   const info = classifyPathwayLessons(specialtyKey, pathwayState);
@@ -832,7 +832,7 @@ export function resolveTaskResource(task, index, { seedKey = '', weakestCategory
     dest = { resourceTab: 'prep', resourceView: 'quizzes' };
     const hit = bestMatch(exactHint, index.quizzes, q => q.title, 1) || bestMatch(hint, index.quizzes, q => q.title, 2)
       || (() => {
-        // Fallback: honour the category the task text names, else target the
+        // Fallback: honor the category the task text names, else target the
         // student's weakest category, else rotate — always lands on a real quiz.
         const mentioned = index.quizzes.filter(q => hint.toLowerCase().includes(q.cat.toLowerCase()));
         const catHit = index.quizzes.filter(q => weakestCategory && q.cat === weakestCategory);
@@ -845,7 +845,7 @@ export function resolveTaskResource(task, index, { seedKey = '', weakestCategory
     // `index.lessons` is already narrowed to what the student can open (buildResourceIndex), so a
     // match against it is safe by construction. The extra guard catches the one remaining path:
     // an exact name that matches a real-but-locked or already-finished lesson, which is scored
-    // against the FULL list on purpose — recognising the name is what lets us reject it knowingly
+    // against the FULL list on purpose — recognizing the name is what lets us reject it knowingly
     // and substitute the nearest open lesson, instead of silently linking to a padlock.
     const named = bestMatch(exactHint, index.allLessons || index.lessons, l => l.title, 1);
     const usableNamed = named && lessonIsSchedulable(index, named.id) ? named : null;

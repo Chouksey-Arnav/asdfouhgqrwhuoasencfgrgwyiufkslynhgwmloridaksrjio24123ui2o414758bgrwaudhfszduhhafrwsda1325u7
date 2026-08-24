@@ -35,8 +35,8 @@ export const PRIVACY_SECTIONS = [
       {
         list: [
           'We collect what we need to run a study app: your email, a display name, your grade and test track, your date of birth (to check your age), and whatever you save into the app — practice results, essays, activities, GPA, colleges, deadlines.',
-          'We do not sell your personal information. We do not share it for cross-context behavioural advertising. We never have.',
-          'Ads on this site are non-personalised for everyone, because our audience includes minors. Nothing you put into the app is used to target ads.',
+          'We do not sell your personal information. We do not share it for cross-context behavioral advertising. We never have.',
+          'Ads on this site are non-personalized for everyone, because our audience includes minors. Nothing you put into the app is used to target ads.',
           'We do not use your essays, coach conversations, scores, or any other content to train AI models — ours or anyone else\'s.',
           `You must be at least ${LEGAL.minAge} to use the Service. We do not knowingly collect anything from children under ${LEGAL.minAge}.`,
           'You can see, correct, export, or delete your data at any time, from the app or by emailing us. Deleting your account deletes your data.',
@@ -81,14 +81,14 @@ export const PRIVACY_SECTIONS = [
       'Most of our users are minors, so rather than treating minors as an exception, we apply the strongest of these protections to every user of the Service, at every age:',
       {
         list: [
-          'We do not sell personal information, and we do not share it for targeted or cross-context behavioural advertising — regardless of age or consent. Several state laws, including Connecticut\'s, prohibit this outright for anyone under 18; we simply do not do it for anyone.',
+          'We do not sell personal information, and we do not share it for targeted or cross-context behavioral advertising — regardless of age or consent. Several state laws, including Connecticut\'s, prohibit this outright for anyone under 18; we simply do not do it for anyone.',
           'We do not use personal data to build advertising profiles or to profile users for advertising purposes.',
           'We do not use design features intended to extend engagement time beyond what the study features themselves require, such as autoplaying feeds or infinite scroll.',
           'We collect only what the features you use actually need, and we delete it when you ask.',
         ],
       },
       `A parent or legal guardian of a user under ${LEGAL.minorAge} may request access to, correction of, or deletion of their child's information, and may direct us to stop further collection, by emailing ${LEGAL.privacyEmail}. We will verify the relationship proportionately to the sensitivity of what is being asked, and we will not require more information than is necessary to do that.`,
-      'Under the EU GDPR, where processing is based on consent and the user is below the age of digital consent in their country (between 13 and 16, depending on the member state), that consent must be given or authorised by a parent or guardian. In the United Kingdom the age is 13. We rely on the parent or guardian who agreed to our Terms of Service for that authorisation.',
+      'Under the EU GDPR, where processing is based on consent and the user is below the age of digital consent in their country (between 13 and 16, depending on the member state), that consent must be given or authorized by a parent or guardian. In the United Kingdom the age is 13. We rely on the parent or guardian who agreed to our Terms of Service for that authorization.',
     ],
   },
 
@@ -122,7 +122,7 @@ export const PRIVACY_SECTIONS = [
           'Server logs from our host, which record IP address, user agent, requested URL, and timestamp for each request. These are ordinary web-server logs, kept short-term for security and debugging.',
           'A session token stored in your browser so you stay signed in.',
           'Local application data stored on your own device (see Section 9), which stays on your device unless a feature syncs it to your account.',
-          'Ad requests to Google AdSense, which necessarily disclose your IP address and the page being viewed. These requests are tagged as child-directed, which disables personalised advertising and remarketing.',
+          'Ad requests to Google AdSense, which necessarily disclose your IP address and the page being viewed. These requests are tagged as child-directed, which disables personalized advertising and remarketing.',
         ],
       },
       {
@@ -165,7 +165,7 @@ export const PRIVACY_SECTIONS = [
           ],
         },
       },
-      'Where we rely on legitimate interests, we have considered whether those interests are overridden by your rights — and given that most of our users are minors, we have resolved that question in favour of the user wherever it was close. That is why there is no analytics package, no advertising profiling, and no model training on your content.',
+      'Where we rely on legitimate interests, we have considered whether those interests are overridden by your rights — and given that most of our users are minors, we have resolved that question in favor of the user wherever it was close. That is why there is no analytics package, no advertising profiling, and no model training on your content.',
       {
         emphasis:
           'We do not use your personal information for automated decision-making that produces legal or similarly significant effects about you. Score estimates, study plans, and coach feedback are study aids; they do not decide anything about you, and no admission, award, or eligibility decision is made by us on the basis of them.',
@@ -205,7 +205,7 @@ export const PRIVACY_SECTIONS = [
         list: [
           'The interviewer\'s voice is produced entirely by your own device\'s built-in speech synthesis. Nothing about it leaves your device, no network request is made to produce it, and it works exactly the same with your microphone switched off. This half of the feature never involves us or anyone else.',
           'Answering out loud is different: it uses your browser\'s own speech-recognition feature, not ours. On Chrome, Edge, and most other Chromium-based browsers, your browser sends the audio captured from your microphone to its vendor\'s speech service — in practice, Google\'s — to be turned into text, under that vendor\'s own privacy policy, not this one. We are not a party to that transmission: we do not receive the audio, we do not see it in transit, and we do not store a recording of it, ever. What reaches us is the written transcript your browser hands back, and only once — when you press send on your answer.',
-          'On recent versions of Safari, the transcription happens on your device and no audio is sent anywhere. We have no reliable way to detect which behaviour a given browser actually uses, so we describe the more exposed case rather than assume the safer one in our own favour.',
+          'On recent versions of Safari, the transcription happens on your device and no audio is sent anywhere. We have no reliable way to detect which behavior a given browser actually uses, so we describe the more exposed case rather than assume the safer one in our own favor.',
         ],
       },
       {
@@ -223,7 +223,7 @@ export const PRIVACY_SECTIONS = [
     body: [
       {
         emphasis:
-          'We do not sell personal information. We do not share personal information for cross-context behavioural advertising. We do not disclose personal information to data brokers, list brokers, or advertisers. We have never done any of these things and have no plans to.',
+          'We do not sell personal information. We do not share personal information for cross-context behavioral advertising. We do not disclose personal information to data brokers, list brokers, or advertisers. We have never done any of these things and have no plans to.',
       },
       'We share data only with the service providers that make the Service work, and only what each one needs. Every one of them is listed here — this is the complete list, not examples:',
       subprocessorTable,
@@ -274,7 +274,7 @@ export const PRIVACY_SECTIONS = [
       'The Service is free and supported by ads served through Google AdSense.',
       {
         emphasis:
-          'Because our audience includes minors, we tag every ad request from this Service for child-directed treatment. This turns off personalised and interest-based advertising, and remarketing, for every visitor regardless of age. You will see contextual ads — chosen by the topic of the page — not ads chosen by a profile of you.',
+          'Because our audience includes minors, we tag every ad request from this Service for child-directed treatment. This turns off personalized and interest-based advertising, and remarketing, for every visitor regardless of age. You will see contextual ads — chosen by the topic of the page — not ads chosen by a profile of you.',
       },
       {
         list: [
@@ -359,7 +359,7 @@ export const PRIVACY_SECTIONS = [
     id: 'your-rights',
     title: '12. Your rights and choices',
     body: [
-      'Wherever you live, you can do all of the following, and we will honour the request:',
+      'Wherever you live, you can do all of the following, and we will honor the request:',
       {
         list: [
           'Access — get a copy of the personal data we hold about you.',
@@ -376,7 +376,7 @@ export const PRIVACY_SECTIONS = [
       },
       `Most of this you can do yourself in the app's settings, including account deletion. For anything else, email ${LEGAL.privacyEmail} from the address on your account, or tell us the address on the account if you are writing from somewhere else. We will respond within 30 days, and within 45 days where a US state law sets that period, and we will tell you if we need a permitted extension. Using your rights costs nothing and we will not treat you differently for it.`,
       'One consent lives entirely in the app rather than needing an email: voice answers in the interview simulator, described in Section 6. Turn them on or off from the same screen the interview simulator shows you, at any time — the change applies immediately and no request to us is needed.',
-      'We will ask for enough information to be confident you are who you say you are, and no more. A parent or guardian may make a request on behalf of a user under 18, and an authorised agent may make a request where state law allows it.',
+      'We will ask for enough information to be confident you are who you say you are, and no more. A parent or guardian may make a request on behalf of a user under 18, and an authorized agent may make a request where state law allows it.',
       {
         heading: 'If you are in California',
       },
@@ -392,12 +392,12 @@ export const PRIVACY_SECTIONS = [
       {
         heading: 'If you are in another US state',
       },
-      'Colorado, Connecticut, Virginia, Utah, Texas, Oregon, Montana, and a growing number of other states give residents rights to access, correct, delete, and port their data, and to opt out of targeted advertising, sale, and profiling. We honour all of these for every user regardless of state — and because we do not conduct targeted advertising, sale, or profiling at all, the opt-outs have nothing to act on. Some of these states provide a right to appeal a refused request; if we ever refuse one of yours, we will tell you how to appeal and, if the appeal fails, how to contact your attorney general.',
+      'Colorado, Connecticut, Virginia, Utah, Texas, Oregon, Montana, and a growing number of other states give residents rights to access, correct, delete, and port their data, and to opt out of targeted advertising, sale, and profiling. We honor all of these for every user regardless of state — and because we do not conduct targeted advertising, sale, or profiling at all, the opt-outs have nothing to act on. Some of these states provide a right to appeal a refused request; if we ever refuse one of yours, we will tell you how to appeal and, if the appeal fails, how to contact your attorney general.',
       'North Carolina, where we are based, does not currently have a comprehensive consumer privacy statute. We apply the protections in this policy to North Carolina residents on the same terms as everyone else.',
       {
         heading: 'Global Privacy Control',
       },
-      'We honour the Global Privacy Control and similar browser opt-out signals. Because we do not sell or share personal information or serve targeted advertising, such a signal does not change our processing — but it will never be ignored.',
+      'We honor the Global Privacy Control and similar browser opt-out signals. Because we do not sell or share personal information or serve targeted advertising, such a signal does not change our processing — but it will never be ignored.',
     ],
   },
 
@@ -407,7 +407,7 @@ export const PRIVACY_SECTIONS = [
     title: '13. International data transfers',
     body: [
       'We operate from the United States, and our providers store and process data in the United States. If you use the Service from outside the United States, your personal data is transferred there.',
-      'For transfers of personal data out of the EEA or the UK, we rely on the European Commission\'s Standard Contractual Clauses (and the UK International Data Transfer Addendum where applicable) in our agreements with providers, together with the supplementary measures described in Section 11 — encryption in transit and at rest, minimisation of what is transferred, and no onward transfer for the providers\' own purposes.',
+      'For transfers of personal data out of the EEA or the UK, we rely on the European Commission\'s Standard Contractual Clauses (and the UK International Data Transfer Addendum where applicable) in our agreements with providers, together with the supplementary measures described in Section 11 — encryption in transit and at rest, minimization of what is transferred, and no onward transfer for the providers\' own purposes.',
       `You may request a copy of the relevant transfer safeguards by writing to ${LEGAL.privacyEmail}.`,
     ],
   },
@@ -420,7 +420,7 @@ export const PRIVACY_SECTIONS = [
       'We provide the Service directly to students and families, not to schools. Data you enter is yours, not a school\'s: we do not receive rosters from schools, we do not provide a teacher or administrator dashboard, and no educator can view another person\'s records through the Service.',
       'Because of that, the data we hold is not an "education record" under FERPA, and we do not act as a school official under FERPA\'s school-official exception.',
       `If a school or district wants to adopt the Service in a way that would change this, contact ${LEGAL.contactEmail}. That requires a separate written agreement covering FERPA, the Protection of Pupil Rights Amendment, and applicable state student-privacy laws before any such use begins.`,
-      'We do not engage in targeted advertising to students, do not sell student data, and do not create a profile of a student for any purpose other than providing the study and planning features they are using — commitments that also track the substance of the state student-data-privacy laws modelled on California\'s Student Online Personal Information Protection Act.',
+      'We do not engage in targeted advertising to students, do not sell student data, and do not create a profile of a student for any purpose other than providing the study and planning features they are using — commitments that also track the substance of the state student-data-privacy laws modeled on California\'s Student Online Personal Information Protection Act.',
     ],
   },
 

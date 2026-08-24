@@ -38,7 +38,7 @@ const MAX_PER_DAY = 25;
 // The subject areas a quiz can be asked for.
 //
 // A curated, parent-legible list rather than the app's internal quiz ids: the person choosing here
-// has not seen the catalogue and should not have to. It is also an allowlist, checked server-side,
+// has not seen the catalog and should not have to. It is also an allowlist, checked server-side,
 // so `topic` can never become a free-text field that renders into the student's app.
 const TOPICS = [
   'Anything — you pick',

@@ -5,7 +5,7 @@ import {
   Trophy, Sparkles, Loader2, SlidersHorizontal, Check, ChevronDown, ChevronUp,
   RefreshCw, Compass, Wallet, Laptop, Target, Radar as RadarIcon, Library, Info, Wand2,
 } from 'lucide-react';
-import { C, glass, glass2, btn, btnSm, R, CC, pill, tint, onTint, accentText } from '../../lib/theme';
+import { C, glass, glass2, btn, btnSm, R, CC, pill, tint, onTint, accentText, CONTROL_TRANSITION } from '../../lib/theme';
 import PanelHero from '../ui/PanelHero';
 import SectionIntro from './SectionIntro';
 import TrackQueueNotice from '../ui/TrackQueueNotice';
@@ -279,14 +279,14 @@ export default function OpportunitiesPanel({
           ...glass({ padding: isMobile ? 15 : 18 }),
           background: `linear-gradient(120deg,${tint(C.violet, 0.1)},rgba(255,255,255,0.02) 62%)`,
           border: `1px solid ${tint(C.violet, 0.26)}`,
-          display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap',
+          display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         }}>
-          <div style={{ width: 34, height: 34, borderRadius: 11, background: C.violetGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <div style={{ width: 34, height: 34, borderRadius: 12, background: C.violetGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Wand2 size={16} color="#fff" />
           </div>
           <div style={{ flex: 1, minWidth: 220 }}>
-            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>We’re guessing right now</div>
-            <div style={{ fontSize: 13, color: C.t1, fontWeight: 700, fontFamily: C.FD, marginTop: 3 }}>
+            <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: accentText(C.violet) }}>We’re guessing right now</div>
+            <div style={{ fontSize: 13, color: C.t1, fontWeight: 700, fontFamily: C.FD, marginTop: 4 }}>
               {profile.activeThemeIds.length
                 ? `From your signup answers, it looks like you’re into ${profile.activeThemeIds.slice(0, 3).map((id) => THEME_BY_ID[id]?.label.toLowerCase()).join(', ')}${profile.activeThemeIds.length > 3 ? ` and ${profile.activeThemeIds.length - 3} more` : ''}. Is that right?`
                 : 'Tell us what you actually care about and every pick below changes.'}
@@ -309,10 +309,10 @@ export default function OpportunitiesPanel({
         {tuning && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
             <div style={{ ...glass({ padding: isMobile ? 15 : 20 }), display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' })}>
+              <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' })}>
                 <div>
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Tell us about you</div>
-                  <div style={{ fontSize: 11.5, color: C.t3, marginTop: 3, maxWidth: 560, lineHeight: 1.6 }}>
+                  <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, maxWidth: 560, lineHeight: 1.6 }}>
                     Everything you tap here changes your picks straight away, and it’s saved. None of it commits you to anything — you can change it whenever you want.
                   </div>
                 </div>
@@ -321,7 +321,7 @@ export default function OpportunitiesPanel({
 
               <div>
                 <TuneLabel icon={Sparkles} text="What pulls you in" hint={pickedCount ? `${pickedCount} picked` : 'pick as many as are true'} />
-                <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {INTEREST_THEMES.map((t) => {
                     const on = prefs.themeIds.includes(t.id);
                     const suggested = !on && profile.inferredThemeIds.includes(t.id);
@@ -332,20 +332,20 @@ export default function OpportunitiesPanel({
                         aria-pressed={on} title={t.blurb}
                         style={{
                           textAlign: 'left', font: 'inherit', cursor: 'pointer',
-                          padding: '9px 13px', borderRadius: 12,
+                          padding: '8px 12px', borderRadius: 12,
                           background: on ? tint(col, 0.2) : C.surf2,
                           border: `1px solid ${on ? tint(col, 0.45) : C.b1}`,
                           boxShadow: on ? `0 4px 14px ${tint(col, 0.22)}` : 'none',
                           display: 'flex', alignItems: 'center', gap: 8,
                         }}>
                         <span style={{
-                          width: 15, height: 15, borderRadius: 5, flexShrink: 0,
+                          width: 15, height: 15, borderRadius: 4, flexShrink: 0,
                           background: on ? col : 'transparent', border: `1px solid ${on ? col : C.b2}`,
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}>{on && <Check size={10} color="#0a0a0a" strokeWidth={3} />}</span>
                         <span>
                           <span style={{ display: 'block', fontSize: 12, fontWeight: on ? 800 : 600, color: on ? onTint(col) : C.t2 }}>{t.label}</span>
-                          <span style={{ display: 'block', fontSize: 9.5, color: C.t4, marginTop: 1 }}>
+                          <span style={{ display: 'block', fontSize: 9.5, color: C.t4, marginTop: 4 }}>
                             {suggested ? 'suggested for you' : fromEc ? 'already in your portfolio' : t.blurb}
                           </span>
                         </span>
@@ -355,7 +355,7 @@ export default function OpportunitiesPanel({
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(230px,1fr))', gap: 14, paddingTop: 4, borderTop: `1px solid ${C.b1}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit,minmax(230px,1fr))', gap: 12, paddingTop: 4, borderTop: `1px solid ${C.b1}` }}>
                 <TuneGroup icon={Target} label="How selective" options={EFFORT_APPETITES.map((a) => ({ id: a.id, label: a.label, sub: a.sub }))}
                   value={prefs.effortAppetite} onChange={(v) => savePrefs({ effortAppetite: v })} accent={accent} />
                 <TuneGroup icon={Wallet} label="Cost" options={COST_STANCES.map((c) => ({ id: c.id, label: c.label, sub: c.sub }))}
@@ -382,15 +382,15 @@ export default function OpportunitiesPanel({
           reads, so the two can never disagree. */}
       <div style={{
         ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap', padding: isMobile ? '12px 14px' : '13px 18px' }),
-        borderRadius: 14,
+        borderRadius: 12,
         background: freeOnly ? `linear-gradient(120deg,${tint(C.green, 0.16)},rgba(255,255,255,0.02) 62%)` : C.surf2,
         border: `1px solid ${freeOnly ? tint(C.green, 0.36) : C.b1}`,
       }}>
-        <span style={R({ gap: 10, minWidth: 0 })}>
+        <span style={R({ gap: 8, minWidth: 0 })}>
           <Wallet size={15} color={freeOnly ? C.greenL : C.t3} style={{ flexShrink: 0 }} />
           <span style={{ minWidth: 0 }}>
             <span style={{ display: 'block', fontSize: 12.5, fontWeight: 800, color: C.t1 }}>Free and funded only</span>
-            <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.5 }}>
+            <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
               Free to enter, or it pays you. {freeOnly ? 'On — nothing below costs you money.' : 'Off — everything is shown, including programs that cost thousands.'}
             </span>
           </span>
@@ -398,12 +398,12 @@ export default function OpportunitiesPanel({
         <button type="button" role="switch" aria-checked={freeOnly} onClick={toggleFreeOnly}
           aria-label="Show only free and funded opportunities"
           style={{
-            flexShrink: 0, width: 50, height: 28, borderRadius: 999, cursor: 'pointer', padding: 3,
+            flexShrink: 0, width: 50, height: 28, borderRadius: 999, cursor: 'pointer', padding: 4,
             background: freeOnly ? C.green : C.s3, border: `1px solid ${freeOnly ? tint(C.green, 0.5) : C.b1}`,
             display: 'flex', justifyContent: freeOnly ? 'flex-end' : 'flex-start', alignItems: 'center',
             transition: 'background .18s',
           }}>
-          <span style={{ width: 20, height: 20, borderRadius: 999, background: freeOnly ? '#fff' : C.t3, display: 'block', transition: 'all .18s' }} />
+          <span style={{ width: 20, height: 20, borderRadius: 999, background: freeOnly ? '#fff' : C.t3, display: 'block', transition: CONTROL_TRANSITION }} />
         </button>
       </div>
 
@@ -417,13 +417,13 @@ export default function OpportunitiesPanel({
       <TrackQueueNotice entries={pendingEntries.filter((e) => e.resource === 'activities' || e.resource === 'scholarships')} status={trackStatus} />
 
       {/* ── 2 + 3. Match and narrate ─────────────────────────────────────── */}
-      <section aria-label="Your matched opportunities" style={CC({ gap: 14 })}>
+      <section aria-label="Your matched opportunities" style={CC({ gap: 12 })}>
         <SectionIntro icon={Sparkles} color={C.violet} color2={C.indigo} m={isMobile}
           title="Picked for you"
           blurb="Chosen from your interests, what you've already done, and your grade. Every card tells you exactly why it's here."
           stats={[{ value: matches.length, label: 'picks', color: C.violetL }]}
           right={
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               <button onClick={() => setTuning((t) => !t)} style={btnSm(C.surfHi, { fontSize: 11, color: C.t2 })}>
                 <SlidersHorizontal size={11} />Tune
               </button>
@@ -435,9 +435,9 @@ export default function OpportunitiesPanel({
             </div>
           } />
 
-        <div style={CC({ gap: 7 })}>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 10.5, color: C.t3, marginRight: 2 }}>Show:</span>
+        <div style={CC({ gap: 8 })}>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: 10.5, color: C.t3, marginRight: 4 }}>Show:</span>
             {OPPORTUNITY_TYPES.map((t) => (
               <button key={t} onClick={() => setTypeFilter(t)}
                 style={pill(typeFilter === t ? tint(accent, 0.22) : C.surf2, typeFilter === t ? onTint(accent) : C.t3,
@@ -450,7 +450,7 @@ export default function OpportunitiesPanel({
 
         {thinThemes.length > 0 && (
           <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.24)}` }}>
-            <Info size={12} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
+            <Info size={12} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
             <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
               Heads up: we only have {thinThemes.map((t) => `${t.reach} ${THEME_BY_ID[t.id]?.label.toLowerCase()} program${t.reach === 1 ? '' : 's'}`).join(' and ')} in our catalog so far. Those come first — the rest below are the next-closest fit for you.
             </span>
@@ -464,29 +464,29 @@ export default function OpportunitiesPanel({
             background: `linear-gradient(120deg,${tint(C.violet, 0.1)},rgba(255,255,255,0.02) 60%)`,
             border: `1px solid ${tint(C.violet, 0.24)}`,
           }}>
-            <div style={R({ gap: 9, marginBottom: 9, flexWrap: 'wrap' })}>
-              <div style={{ width: 26, height: 26, borderRadius: 9, background: C.violetGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
+              <div style={{ width: 26, height: 26, borderRadius: 8, background: C.violetGrad, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Sparkles size={13} color="#fff" />
               </div>
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.violet) }}>Which one to start with</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: accentText(C.violet) }}>Which one to start with</span>
               <button onClick={() => setBriefNonce((n) => n + 1)} disabled={brief?.loading}
                 style={{ ...btnSm(C.surfHi, { fontSize: 10.5, color: C.t3, marginLeft: 'auto', cursor: brief?.loading ? 'wait' : 'pointer' }) }}>
                 <RefreshCw size={10} />Regenerate
               </button>
             </div>
             {brief?.loading && <div style={R({ gap: 8, color: C.t3, fontSize: 12 })}><Loader2 size={13} className="spin" />Reading your portfolio…</div>}
-            {brief?.error && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.6 }}>Couldn’t reach Meta Brain right now — the picks below don’t need it, they’re worked out from your own portfolio.</div>}
+            {brief?.error && <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55 }}>Couldn’t reach Meta Brain right now — the picks below don’t need it, they’re worked out from your own portfolio.</div>}
             {brief?.content && !brief.loading && (
-              <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.7 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(brief.content) }} />
+              <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(brief.content) }} />
             )}
-            <div style={{ fontSize: 10, color: C.t4, marginTop: 10, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <div style={{ fontSize: 10, color: C.t4, marginTop: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
               <Info size={10} />Meta Brain can only pick from the real programs below — it never makes one up.
             </div>
           </div>
         )}
 
         {loading && !matches.length ? (
-          <div style={{ ...glass2({ padding: 22, textAlign: 'center' }) }}>
+          <div style={{ ...glass2({ padding: 20, textAlign: 'center' }) }}>
             <Loader2 size={18} className="spin" color={C.t3} />
             <div style={{ fontSize: 12.5, color: C.t3, marginTop: 8 }}>Reading your portfolio…</div>
           </div>
@@ -499,14 +499,14 @@ export default function OpportunitiesPanel({
             ))}
           </div>
         ) : (
-          <div style={{ ...glass2({ padding: 22, textAlign: 'center' }) }}>
+          <div style={{ ...glass2({ padding: 20, textAlign: 'center' }) }}>
             <Compass size={20} color={C.t3} style={{ marginBottom: 8 }} />
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
               {typeFilter !== 'All'
                 ? `Nothing in "${typeFilter}" clears your current filters — try another type, or loosen cost/format under Tune.`
                 : 'Your filters rule out every program in the catalog. Loosen cost, format, or grade under Tune to see matches again.'}
             </div>
-            <button onClick={() => setTuning(true)} style={{ ...btnSm(tint(C.violet, 0.16), { color: onTint(C.violet), fontSize: 11.5, marginTop: 10 }) }}>
+            <button onClick={() => setTuning(true)} style={{ ...btnSm(tint(C.violet, 0.16), { color: onTint(C.violet), fontSize: 11.5, marginTop: 8 }) }}>
               <SlidersHorizontal size={11} />Open tuning
             </button>
           </div>
@@ -520,7 +520,7 @@ export default function OpportunitiesPanel({
           thousand dollars for an open-enrollment summer program in the belief
           that it is a selective one. Three honest tiers, including the one that
           says so. */}
-      <section aria-label="Programs by tier" style={CC({ gap: 14 })}>
+      <section aria-label="Programs by tier" style={CC({ gap: 12 })}>
         <SectionIntro icon={Trophy} color={C.gold} color2={C.orange} m={isMobile}
           title="What's actually worth your time"
           blurb="The programs where the specifics matter, with their real eligibility, real deadlines and an honest read on what each one is worth. Eligibility is on the card, before you spend any attention on it."
@@ -546,7 +546,7 @@ export default function OpportunitiesPanel({
           when you want to shop, shut when you came here to be told what to do. */}
       <Disclosure id="opportunities-catalog" icon={Library} color={C.gold} m={isMobile}
         title={`Browse all ${OPPORTUNITIES.length} programs yourself`}
-        sub="Search and filter the whole catalogue yourself.">
+        sub="Search and filter the whole catalog yourself.">
         <div style={CC({ gap: 12 })}>
           <HelpNote>Anything you track from here shows up on your Tracked board with a deadline and a next step.</HelpNote>
           <OpportunitiesDatabase accent={accent} onTrack={onTrack}
@@ -577,13 +577,13 @@ function MatchCard({ match, accent, expanded, onToggle, state, busy, onTrack }) 
         display: 'flex', flexDirection: 'column',
       }}>
       <div style={{ height: 3, background: `linear-gradient(90deg,${mc},${tint(mc, 0)})` }} />
-      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 10, flex: 1 }}>
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
         <div style={R({ gap: 12, alignItems: 'flex-start' })}>
           <MatchDial pct={match.match} color={mc} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, lineHeight: 1.35 }}>{o.name}</div>
-            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3 }}>{o.org}</div>
-            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 7 }}>
+            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{o.org}</div>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
               <span style={pill(`${ec}18`, ec, { fontSize: 9 })}>{o.effort}</span>
               <span style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{o.type}</span>
               <span style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{o.level}</span>
@@ -592,12 +592,12 @@ function MatchCard({ match, accent, expanded, onToggle, state, busy, onTrack }) 
           </div>
         </div>
 
-        <div style={CC({ gap: 6 })}>
+        <div style={CC({ gap: 4 })}>
           {match.reasons.slice(0, 3).map((r, i) => {
             const meta = reasonMeta(r.type);
             return (
               <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                <span style={{ ...pill(tint(meta.col, 0.14), meta.col, { fontSize: 8.5, flexShrink: 0, padding: '2px 8px', letterSpacing: '.05em', textTransform: 'uppercase', fontWeight: 800 }) }}>{meta.label}</span>
+                <span style={{ ...pill(tint(meta.col, 0.14), meta.col, { fontSize: 8.5, flexShrink: 0, padding: '4px 8px', letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', fontWeight: 800 }) }}>{meta.label}</span>
                 <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.5 }}>{r.text}</span>
               </div>
             );
@@ -608,14 +608,14 @@ function MatchCard({ match, accent, expanded, onToggle, state, busy, onTrack }) 
         <AnimatePresence initial={false}>
           {expanded && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-              <div style={{ paddingTop: 10, borderTop: `1px solid ${C.b1}`, fontSize: 11.5, color: C.t2, lineHeight: 1.65 }}>
-                <p style={{ margin: '0 0 8px' }}>{o.desc}</p>
+              <div style={{ paddingTop: 8, borderTop: `1px solid ${C.b1}`, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
+                <p style={{ margin: '0px 0px 8px' }}>{o.desc}</p>
                 <div style={{ color: C.t3 }}>
                   <div><b style={{ color: C.t2 }}>Eligibility:</b> {o.eligibility}</div>
                   {o.season && <div><b style={{ color: C.t2 }}>Runs:</b> {o.season}{o.format ? ` · ${o.format}` : ''}</div>}
                   {o.grades && <div><b style={{ color: C.t2 }}>Typical grades:</b> {o.grades.join(', ')}</div>}
                 </div>
-                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 8 }}>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
                   {(o.tags || []).slice(0, 6).map((t) => <span key={t} style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{t}</span>)}
                 </div>
               </div>
@@ -657,7 +657,7 @@ function MatchDial({ pct, color, size = 46 }) {
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ fontSize: 13, fontWeight: 800, fontFamily: C.FM, color, lineHeight: 1 }}>{pct}</span>
-        <span style={{ fontSize: 7, color: C.t4, letterSpacing: '.08em', marginTop: 1 }}>MATCH</span>
+        <span style={{ fontSize: 7, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4 }}>MATCH</span>
       </div>
     </div>
   );
@@ -665,9 +665,9 @@ function MatchDial({ pct, color, size = 46 }) {
 
 function TuneLabel({ icon: Icon, text, hint }) {
   return (
-    <div style={R({ gap: 7, marginBottom: 9, flexWrap: 'wrap' })}>
+    <div style={R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' })}>
       <Icon size={12} color={C.t3} />
-      <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>{text}</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{text}</span>
       {hint && <span style={{ fontSize: 10.5, color: C.t4 }}>{hint}</span>}
     </div>
   );
@@ -680,18 +680,18 @@ function TuneGroup({ icon, label, options, value, onChange, accent }) {
   return (
     <div>
       <TuneLabel icon={icon} text={label} />
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {options.map((o) => {
           const on = value === o.id;
           return (
             <button key={o.id} onClick={() => onChange(o.id)} aria-pressed={on} title={o.sub || o.label}
               style={{
-                textAlign: 'left', font: 'inherit', cursor: 'pointer', padding: '7px 11px', borderRadius: 10,
+                textAlign: 'left', font: 'inherit', cursor: 'pointer', padding: '8px 12px', borderRadius: 8,
                 background: on ? tint(accent, 0.18) : C.surf2,
                 border: `1px solid ${on ? tint(accent, 0.4) : C.b1}`,
               }}>
               <span style={{ display: 'block', fontSize: 11.5, fontWeight: on ? 800 : 600, color: on ? onTint(accent) : C.t2 }}>{o.label}</span>
-              {o.sub && <span style={{ display: 'block', fontSize: 9.5, color: C.t4, marginTop: 1 }}>{o.sub}</span>}
+              {o.sub && <span style={{ display: 'block', fontSize: 9.5, color: C.t4, marginTop: 4 }}>{o.sub}</span>}
             </button>
           );
         })}

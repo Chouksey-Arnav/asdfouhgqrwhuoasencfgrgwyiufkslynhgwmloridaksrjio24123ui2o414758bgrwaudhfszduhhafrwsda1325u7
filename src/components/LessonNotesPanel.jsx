@@ -73,9 +73,9 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
                 display: 'flex', flexDirection: 'column', boxShadow: '8px 0 40px rgba(0,0,0,0.6)',
               }}
             >
-              <div style={{ padding: '16px 18px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: 10, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
+              <div style={{ padding: '16px 16px', borderBottom: `1px solid ${C.b1}`, background: `linear-gradient(120deg,${tint(accent, 0.12)},rgba(255,255,255,0.02))`, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 8, background: accentGrad(accent), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: `0 4px 14px ${tint(accent, 0.4)}` }}>
                     <NotebookPen size={16} color="#fff" />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -86,7 +86,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
                     {saveState === 'saving' && 'Saving…'}
                     {saveState === 'saved' && <><Check size={11} />Saved</>}
                   </div>
-                  <button onClick={() => onOpenChange(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                  <button onClick={() => onOpenChange(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                     <X size={17} />
                   </button>
                 </div>
@@ -99,7 +99,7 @@ export default function LessonNotesPanel({ open, onOpenChange, lessonTitle, valu
                   placeholder="Write down anything you want to remember from this lesson — a formula, a phrase, a question to revisit. Medabrain can see and discuss these notes with you."
                   style={{
                     flex: 1, resize: 'none', background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.b1}`,
-                    borderRadius: 12, padding: '13px 14px', color: C.t1, fontSize: 13.5, lineHeight: 1.65,
+                    borderRadius: 12, padding: '12px 12px', color: C.t1, fontSize: 13.5, lineHeight: 1.55,
                     fontFamily: C.FB, outline: 'none',
                   }}
                 />

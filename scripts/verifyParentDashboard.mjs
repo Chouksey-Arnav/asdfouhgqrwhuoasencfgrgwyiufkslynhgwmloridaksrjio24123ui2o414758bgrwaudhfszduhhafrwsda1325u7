@@ -202,7 +202,7 @@ function checkRoleIsWriteOnce(files) {
   for (const file of files) {
     const source = read(file);
     // Matches `role` as a COLUMN being written, not as a value being read — `revoked_by: role` is
-    // the caller's own role travelling into an audit field, which is the opposite of an escalation.
+    // the caller's own role traveling into an audit field, which is the opposite of an escalation.
     if (/\.update\(\s*\{[^}]*[\s{,]role\s*:/s.test(source)) writers.push(`${file} (update)`);
   }
   assert('no endpoint updates role on an existing account', writers.length === 0,
@@ -215,7 +215,7 @@ function checkRoleIsWriteOnce(files) {
     'an unvalidated role would let a client name any string, including one a CHECK constraint rejects at 3am');
 
   const google = read('api/auth/google.js');
-  assert('the Google path honours role only when it creates the account',
+  assert('the Google path honors role only when it creates the account',
     /if \(!user\) \{[\s\S]{0,600}?role[\s\S]{0,200}?\.insert/.test(google)
     && !/\.update\([^)]*role/.test(google));
 
@@ -275,8 +275,8 @@ function checkAllowlist() {
   }
 
   // The student's email is not private in the way a transcript is — the parent already has it, they
-  // invited that address. It is excluded because a contact detail travelling in every poll response
-  // is a detail travelling for no reason.
+  // invited that address. It is excluded because a contact detail traveling in every poll response
+  // is a detail traveling for no reason.
   assert("the student's email is not echoed in the summary", !serialized.includes('student@example.test'));
 
   // Per-question answers are the sharp edge of the SAT data: the aggregate score is the point of the
@@ -500,7 +500,7 @@ function checkProfileGate() {
   // ── …and reading a dashboard deliberately does NOT require it ────────────
   //
   // This assertion is the inverse of the one above, and it is here because the removal was a
-  // decision rather than a regression. The declaration is what lets a student recognise an
+  // decision rather than a regression. The declaration is what lets a student recognize an
   // unexpected request; it was never what kept a stranger out, and every active link has either
   // already passed the check above (parent-initiated) or was created by a student who typed the
   // address themselves (student-initiated). Re-checking at read time could therefore only ever
@@ -886,7 +886,7 @@ async function checkInviteInput() {
   refuses('a zero typed where an O was read', 'ABCD-EFG0', 'ambiguous');
 
   // The one that matters most for the round trip: whatever comes out has to be something the
-  // server will recognise, in the shape /parent-invite reads back off the URL.
+  // server will recognize, in the shape /parent-invite reads back off the URL.
   const { token } = parseInviteInput(`https://medschoolprep.cloud/parent-invite?token=${TOKEN}`);
   assert('a resolved token is in the shape api/parent/claim.js accepts', /^[0-9a-f]{64}$/i.test(token));
   const { code } = parseInviteInput('abcd efgh');

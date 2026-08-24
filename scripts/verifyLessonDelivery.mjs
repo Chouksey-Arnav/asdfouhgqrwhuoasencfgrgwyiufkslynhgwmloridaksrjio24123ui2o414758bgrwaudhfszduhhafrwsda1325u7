@@ -6,7 +6,7 @@
  *      whose content shape drifts (a section with no body, an article that is
  *      all headings) produces an empty narration and the audio bar quietly
  *      disappears for that lesson only, which nobody notices in review.
- *   2. LABELLING — the video step never calls itself a "verification video".
+ *   2. LABELING — the video step never calls itself a "verification video".
  *      Reviewers read that as "record yourself to prove you watched", which is
  *      the opposite of what the step does, and the wrong mental model is worse
  *      than no label. The step must also state its purpose.

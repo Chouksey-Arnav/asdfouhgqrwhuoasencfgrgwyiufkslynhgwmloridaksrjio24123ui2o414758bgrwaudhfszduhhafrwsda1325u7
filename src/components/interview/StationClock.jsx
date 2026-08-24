@@ -1,6 +1,6 @@
 // The clock, and the fact that it does not stop.
 //
-// Reading time is the part of the MMI students skip when they practise, and it is the part that
+// Reading time is the part of the MMI students skip when they practice, and it is the part that
 // decides how the first ninety seconds inside the room go. Two minutes outside a door with nothing
 // but the scenario is a genuinely different exercise from reading the scenario and then thinking
 // about it for as long as you like, and the difference is the whole reason this component exists
@@ -52,12 +52,12 @@ export default function StationClock({ seconds, resetKey, onExpire, label, warnA
 
   return (
     <div style={{ minWidth: 150 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>{label}</span>
-        <span style={{ fontSize: 20, fontWeight: 800, fontFamily: C.FM, color, fontVariantNumeric: 'tabular-nums' }}>{formatClock(left)}</span>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>{label}</span>
+        <span style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color, fontVariantNumeric: 'tabular-nums' }}>{formatClock(left)}</span>
       </div>
-      <div style={{ height: 4, borderRadius: 2, background: C.s3, overflow: 'hidden', marginTop: 5 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, transition: 'width .25s linear' }} />
+      <div style={{ height: 4, borderRadius: 4, background: C.s3, overflow: 'hidden', marginTop: 4 }}>
+        <div style={{ width: '100%', transform: `scaleX(${(pct) / 100})`, transformOrigin: 'left', height: '100%', background: color, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { C, tint, onTint, accentFill } from '../../lib/theme';
+import { C, tint, onTint, accentFill, CONTROL_TRANSITION } from '../../lib/theme';
 import { isPlainLeftClick } from '../../lib/useAppRouter';
 import { LockedPill } from '../NextUnlockCard';
 
@@ -88,13 +88,13 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
   }, []);
 
   return (
-    <div style={{ position: 'relative', marginBottom: 18 }}>
+    <div style={{ position: 'relative', marginBottom: 16 }}>
       <div
         ref={scrollRef}
         className="subnav-scroll"
         onScroll={updateEdges}
         style={{
-          display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 8,
+          display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 8,
           WebkitOverflowScrolling: 'touch', scrollSnapType: 'x proximity',
           '--subnav-accent': tint(accent, 0.55), '--subnav-accent-hover': tint(accent, 0.8),
         }}
@@ -102,7 +102,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
         {items.map(it => {
           const isActive = active === it.id;
           // Each item may carry its own color so a long sub-nav reads as a
-          // recognisable spectrum of sections rather than one flat accent.
+          // recognizable spectrum of sections rather than one flat accent.
           const c = it.color || accent;
           const Icon = it.icon || it.ic; // NAV configs use `ic`, older callers `icon`
           const href = hrefFor ? hrefFor(it.id) : null;
@@ -125,7 +125,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
               }}
               style={{
                 textDecoration: 'none',
-                display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
+                display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0,
                 scrollSnapAlign: 'start',
                 padding: m ? '8px 12px' : '8px 14px', borderRadius: 999,
                 border: isActive ? `1px solid ${c}66` : `1px solid ${C.b1}`,
@@ -136,7 +136,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
                 // simply disappeared.
                 color: isActive ? onTint(c) : C.t2, fontWeight: isActive ? 700 : 500,
                 fontSize: 12.5, fontFamily: C.FB, cursor: 'pointer', whiteSpace: 'nowrap',
-                transition: 'all .15s',
+                transition: CONTROL_TRANSITION,
                 boxShadow: isActive ? `0 4px 14px ${c}33` : 'none',
               }}
             >
@@ -146,7 +146,7 @@ export default function SubNav({ items, active, onChange, accent = C.blue, m = f
                 // Two different backdrops, so two different label colors. The
                 // inactive badge sits on C.s4, which is a light gray in the light
                 // themes — white on it was the unreadable "54" next to Flashcards.
-                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accentFill(accent) : C.s4, color: isActive ? C.onAccent : C.t1, fontSize: 9.5, fontWeight: 700, padding: '0 4px' }}>{it.badge}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 16, height: 16, borderRadius: 8, background: isActive ? accentFill(accent) : C.s4, color: isActive ? C.onAccent : C.t1, fontSize: 9.5, fontWeight: 700, padding: '0px 4px' }}>{it.badge}</span>
               )}
             </Pill>
           );

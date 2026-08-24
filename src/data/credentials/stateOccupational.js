@@ -87,7 +87,7 @@ export const STATE_OCCUPATIONAL = [
     registry: { ctid: null, query: 'Home Health Aide' },
     onetSoc: '31-1121.00',
     sources: [
-      src('eCFR 42 CFR 484.80 — Home health aide services', 'https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-484'),
+      src('eCFR 42 CFR 484.80 — Home Health Aide services', 'https://www.ecfr.gov/current/title-42/chapter-IV/subchapter-B/part-484'),
     ],
     aliases: ['hha', 'home health aide', 'chha', 'caregiver', 'personal care aide', 'pca'],
   },
@@ -99,7 +99,7 @@ export const STATE_OCCUPATIONAL = [
     group: 'Emergency & prehospital care',
     summary: 'Prehospital emergency care on an ambulance or a fire department rig. The highest-responsibility credential a teenager can realistically hold, and the one with the hardest age wall.',
     issuers: ['National Registry of EMTs (NREMT)', 'State EMS office'],
-    issuerNote: 'Two separate things share the name. NREMT issues the NATIONAL certification, which most states use as their exam. Your STATE EMS office issues the licence or certification that actually lets you work — and a few states will grant theirs on terms NREMT will not.',
+    issuerNote: 'Two separate things share the name. NREMT issues the NATIONAL certification, which most states use as their exam. Your STATE EMS office issues the license or certification that actually lets you work — and a few states will grant theirs on terms NREMT will not.',
     stateNames: {
       NY: 'EMT-Basic, certified by the NY State Bureau of EMS (New York runs its own written exam rather than requiring NREMT)',
       TX: 'EMT, certified by Texas DSHS',
@@ -122,7 +122,7 @@ export const STATE_OCCUPATIONAL = [
     cteCommon: true,
     cteNote: 'Offered free in some high school CTE programs and through fire-service explorer posts, usually to juniors and seniors.',
     renewalMonths: 24,
-    renewalNote: 'National certification recertifies on a two-year cycle through the National Continued Competency Program; state licences run on their own clock.',
+    renewalNote: 'National certification recertifies on a two-year cycle through the National Continued Competency Program; state licenses run on their own clock.',
     registry: { ctid: null, query: 'Emergency Medical Technician' },
     onetSoc: '29-2042.00',
     sources: [
@@ -216,7 +216,7 @@ export const STATE_OCCUPATIONAL = [
     officialName: 'Community Health Worker',
     abbreviation: 'CHW',
     group: 'Community & public health',
-    summary: 'A trusted person from a community who connects neighbours to care — outreach, navigation, translation, follow-up. Not a clinical role, and a genuinely strong one for a portfolio.',
+    summary: 'A trusted person from a community who connects neighbors to care — outreach, navigation, translation, follow-up. Not a clinical role, and a genuinely strong one for a portfolio.',
     issuers: ['State Department of Health', 'State CHW certification board'],
     issuerNote: 'Only some states certify CHWs at all, and the ones that do run very different programs. In an uncertified state this is training, not a credential.',
     stateNames: {

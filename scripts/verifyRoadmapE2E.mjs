@@ -186,7 +186,7 @@ try {
     for (let i = 0; i < tries; i += 1) {
       if (!(await scrimUp(page))) return true;
       const dismiss = page.locator(
-        '[aria-label="Close"], button:has-text("Nice!"), button:has-text("Got it"), button:has-text("Open Chest")',
+        '[aria-label="Close"], button:has-text("Nice!"), button:has-text("Got it"), button:has-text("Open chest")',
       );
       if (await dismiss.count()) await dismiss.first().click().catch(() => {});
       else await page.keyboard.press('Escape').catch(() => {});

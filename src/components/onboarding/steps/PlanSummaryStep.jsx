@@ -22,12 +22,12 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         {/* Warm summary */}
         {p.summary && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            style={{ ...glass({ padding: 16 }), backdropFilter: 'none', marginBottom: 18, borderColor: `${C.blue}30`, background: `linear-gradient(135deg, ${C.blue}12, ${C.violet}10)` }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+            style={{ ...glass({ padding: 16 }), backdropFilter: 'none', marginBottom: 16, borderColor: `${C.blue}30`, background: `linear-gradient(135deg, ${C.blue}12, ${C.violet}10)` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Sparkles size={14} color={C.blueL} />
-              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.blueL }}>Medabrain</span>
+              <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.blueL }}>Medabrain</span>
             </div>
-            <p style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.7, margin: 0 }}>{p.summary}</p>
+            <p style={{ fontSize: 13.5, color: C.t1, lineHeight: 1.55, margin: 0 }}>{p.summary}</p>
           </motion.div>
         )}
 
@@ -35,19 +35,19 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: 20 }}>
           <RadialRing pct={0.7} color={C.blue} size={82}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{dailyMins}m</div>
+              <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{dailyMins}m</div>
               <div style={{ fontSize: 8.5, color: C.t3 }}>daily</div>
             </div>
           </RadialRing>
           <RadialRing pct={0.55} color={C.green} size={82}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{weeklyQs}</div>
+              <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{weeklyQs}</div>
               <div style={{ fontSize: 8.5, color: C.t3 }}>Qs/week</div>
             </div>
           </RadialRing>
           <RadialRing pct={0.85} color={C.violet} size={82}>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{weeklySteps}</div>
+              <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{weeklySteps}</div>
               <div style={{ fontSize: 8.5, color: C.t3 }}>steps/week</div>
             </div>
           </RadialRing>
@@ -58,11 +58,11 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
           <Section icon={<Target size={13} color={C.blueL} />} title="What we'll focus on">
             {p.focusAreas.map((f, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -6 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}
-                style={{ ...glass({ padding: '11px 14px' }), backdropFilter: 'none', display: 'flex', gap: 11, alignItems: 'flex-start', marginBottom: 8 }}>
-                <span style={{ width: 22, height: 22, borderRadius: 7, background: `${C.blue}22`, color: C.blueL, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: C.FD }}>{i + 1}</span>
+                style={{ ...glass({ padding: '12px 12px' }), backdropFilter: 'none', display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
+                <span style={{ width: 22, height: 22, borderRadius: 8, background: `${C.blue}22`, color: C.blueL, fontSize: 11, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: C.FD }}>{i + 1}</span>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{f.title}</div>
-                  {f.why && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 2 }}>{f.why}</div>}
+                  {f.why && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 4 }}>{f.why}</div>}
                 </div>
               </motion.div>
             ))}
@@ -73,17 +73,17 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         {p.milestones?.length > 0 && (
           <Section icon={<Flag size={13} color={C.violetL} />} title="Your milestones">
             {p.milestones.map((m, i) => (
-              <div key={i} style={{ display: 'flex', gap: 11, marginBottom: 10 }}>
+              <div key={i} style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                   <span style={{ width: 9, height: 9, borderRadius: '50%', background: C.violet, boxShadow: `0 0 8px ${C.violet}` }} />
-                  {i < p.milestones.length - 1 && <span style={{ width: 2, flex: 1, background: `${C.violet}30`, marginTop: 2 }} />}
+                  {i < p.milestones.length - 1 && <span style={{ width: 2, flex: 1, background: `${C.violet}30`, marginTop: 4 }} />}
                 </div>
-                <div style={{ paddingBottom: 2 }}>
+                <div style={{ paddingBottom: 4 }}>
                   <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{m.title}</span>
-                    {m.when && <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, background: `${C.violet}18`, padding: '1px 8px', borderRadius: 20 }}>{m.when}</span>}
+                    {m.when && <span style={{ fontSize: 10, fontWeight: 700, color: C.violetL, background: `${C.violet}18`, padding: '4px 8px', borderRadius: 16 }}>{m.when}</span>}
                   </div>
-                  {m.detail && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 2 }}>{m.detail}</div>}
+                  {m.detail && <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginTop: 4 }}>{m.detail}</div>}
                 </div>
               </div>
             ))}
@@ -93,9 +93,9 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         {/* First week */}
         {p.firstWeek?.length > 0 && (
           <Section icon={<Rocket size={13} color={C.greenL} />} title="Start this week">
-            <div style={{ ...glass({ padding: '12px 14px' }), backdropFilter: 'none' }}>
+            <div style={{ ...glass({ padding: '12px 12px' }), backdropFilter: 'none' }}>
               {p.firstWeek.map((a, i) => (
-                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0px' }}>
                   <CheckCircle2 size={15} color={C.greenL} style={{ flexShrink: 0 }} />
                   <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
                 </div>
@@ -107,9 +107,9 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         {/* Weekly rhythm */}
         {p.weeklyRhythm?.length > 0 && (
           <Section icon={<CalendarRange size={13} color={C.cyan} />} title="Your weekly rhythm">
-            <div style={{ ...glass({ padding: '12px 14px' }), backdropFilter: 'none', borderColor: `${C.cyan}22`, background: `linear-gradient(135deg, ${C.cyan}0d, transparent)` }}>
+            <div style={{ ...glass({ padding: '12px 12px' }), backdropFilter: 'none', borderColor: `${C.cyan}22`, background: `linear-gradient(135deg, ${C.cyan}0d, transparent)` }}>
               {p.weeklyRhythm.map((a, i) => (
-                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0px' }}>
                   <span style={{ width: 6, height: 6, borderRadius: '50%', background: C.cyan, flexShrink: 0, boxShadow: `0 0 6px ${C.cyan}` }} />
                   <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
                 </div>
@@ -121,13 +121,13 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
         {/* Unlock the full day-by-day plan */}
         {p.unlockSteps?.length > 0 && (
           <Section icon={<Unlock size={13} color={C.amberL} />} title="Unlock your full day-by-day plan">
-            <div style={{ ...glass({ padding: '12px 14px' }), backdropFilter: 'none', borderColor: `${C.amber}30`, background: `linear-gradient(135deg, ${C.amber}12, transparent)` }}>
+            <div style={{ ...glass({ padding: '12px 12px' }), backdropFilter: 'none', borderColor: `${C.amber}30`, background: `linear-gradient(135deg, ${C.amber}12, transparent)` }}>
               <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5, marginBottom: 8 }}>
                 This is your day-one plan. Do these three things inside the app and Medabrain's Oracle builds your full day-by-day roadmap — grounded in real signal, not just what you told us here:
               </div>
               {p.unlockSteps.map((a, i) => (
-                <div key={i} style={{ display: 'flex', gap: 9, alignItems: 'center', padding: '5px 0' }}>
-                  <span style={{ width: 18, height: 18, borderRadius: 6, background: `${C.amber}22`, color: C.amberL, fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 0px' }}>
+                  <span style={{ width: 18, height: 18, borderRadius: 4, background: `${C.amber}22`, color: C.amberL, fontSize: 10, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{i + 1}</span>
                   <span style={{ fontSize: 12.5, color: C.t2 }}>{a}</span>
                 </div>
               ))}
@@ -137,10 +137,10 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
 
         {/* 90-day goal */}
         {p.ninetyDayGoal && (
-          <div style={{ marginBottom: 18, padding: '14px 16px', borderRadius: 12, background: `linear-gradient(135deg, ${C.amber}14, ${C.orange || '#f97316'}0d)`, border: `1px solid ${C.amber}30`, display: 'flex', gap: 11, alignItems: 'flex-start' }}>
-            <TrendingUp size={16} color={C.amberL} style={{ flexShrink: 0, marginTop: 1 }} />
+          <div style={{ marginBottom: 16, padding: '12px 16px', borderRadius: 12, background: `linear-gradient(135deg, ${C.amber}14, ${C.orange || '#f97316'}0d)`, border: `1px solid ${C.amber}30`, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+            <TrendingUp size={16} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
             <div>
-              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.amberL, marginBottom: 3 }}>Where you could be in 90 days</div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.amberL, marginBottom: 4 }}>Where you could be in 90 days</div>
               <p style={{ fontSize: 12.5, color: C.t1, lineHeight: 1.6, margin: 0 }}>{p.ninetyDayGoal}</p>
             </div>
           </div>
@@ -148,23 +148,23 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
 
         {/* Strengths & watch-outs */}
         {(p.strengths?.length > 0 || p.watchOut?.length > 0) && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 10, marginBottom: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, marginBottom: 16 }}>
             {p.strengths?.length > 0 && (
-              <div style={{ padding: '12px 14px', borderRadius: 12, background: `${C.green}0d`, border: `1px solid ${C.green}22` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+              <div style={{ padding: '12px 12px', borderRadius: 12, background: `${C.green}0d`, border: `1px solid ${C.green}22` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <ShieldCheck size={13} color={C.greenL} />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.greenL }}>Your edge</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.greenL }}>Your edge</span>
                 </div>
-                {p.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '3px 0' }}>• {s}</div>)}
+                {p.strengths.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '4px 0px' }}>• {s}</div>)}
               </div>
             )}
             {p.watchOut?.length > 0 && (
-              <div style={{ padding: '12px 14px', borderRadius: 12, background: `${C.rose}0d`, border: `1px solid ${C.rose}22` }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
+              <div style={{ padding: '12px 12px', borderRadius: 12, background: `${C.rose}0d`, border: `1px solid ${C.rose}22` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <AlertTriangle size={13} color={C.roseL} />
-                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.roseL }}>Keep an eye on</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.roseL }}>Keep an eye on</span>
                 </div>
-                {p.watchOut.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '3px 0' }}>• {s}</div>)}
+                {p.watchOut.map((s, i) => <div key={i} style={{ fontSize: 12, color: C.t2, lineHeight: 1.5, padding: '4px 0px' }}>• {s}</div>)}
               </div>
             )}
           </div>
@@ -172,7 +172,7 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
 
         {/* Encouragement */}
         {p.encouragement && (
-          <div style={{ marginTop: 16, padding: '14px 16px', borderRadius: 12, background: `${C.green}12`, border: `1px solid ${C.green}25` }}>
+          <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 12, background: `${C.green}12`, border: `1px solid ${C.green}25` }}>
             <p style={{ fontSize: 13, color: C.t1, lineHeight: 1.65, margin: 0, fontStyle: 'italic' }}>{p.encouragement}</p>
           </div>
         )}
@@ -184,10 +184,10 @@ export function PlanSummaryStep({ profile, plan, onNext }) {
 
 function Section({ icon, title, children }) {
   return (
-    <div style={{ marginBottom: 18 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 10 }}>
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         {icon}
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>{title}</span>
+        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>{title}</span>
       </div>
       {children}
     </div>

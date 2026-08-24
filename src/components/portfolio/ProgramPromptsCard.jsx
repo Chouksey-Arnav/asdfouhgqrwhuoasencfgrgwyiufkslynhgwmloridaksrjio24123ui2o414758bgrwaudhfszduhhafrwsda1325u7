@@ -49,7 +49,7 @@ export default function ProgramPromptsCard({
         The essays your tracked programs ask for
       </SectionTitle>
 
-      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, margin: '0 0 13px' }}>
+      <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, margin: '0px 0px 12px' }}>
         These come from the combined-degree and direct-admit programs you saved in Combined Degrees — not from your
         general college list. Each one is a <b style={{ color: C.t1 }}>separate application</b> on top of the
         university's own, and its round is usually earlier than the November date everything else runs on.
@@ -59,17 +59,17 @@ export default function ProgramPromptsCard({
         )}
       </p>
 
-      <div style={CC({ gap: 11 })}>
+      <div style={CC({ gap: 12 })}>
         {cards.map(card => (
-          <div key={card.key} style={{ ...glass2({ padding: 14 }), borderLeft: `3px solid ${card.binding ? C.rose : accent}` }}>
-            <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 7 })}>
+          <div key={card.key} style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${card.binding ? C.rose : accent}` }}>
+            <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 8 })}>
               <span style={{ fontSize: 13, fontWeight: 700, color: C.t1, lineHeight: 1.4 }}>{card.title}</span>
               {card.roundLabel && <span style={pill(tint(accent, 0.14), accent, { fontSize: 9 })}>{card.roundLabel}</span>}
               {card.binding && <span style={pill(C.roseDim, C.roseL, { fontSize: 9 })}>binding</span>}
             </div>
 
             {card.deadline?.iso && (
-              <div style={R({ gap: 6, marginBottom: 8 })}>
+              <div style={R({ gap: 4, marginBottom: 8 })}>
                 <CalendarClock size={11} color={card.deadline.urgency === 'critical' || card.deadline.urgency === 'urgent' ? C.amberL : C.t3} />
                 <span style={{ fontSize: 11, color: C.t3 }}>
                   Application due {card.deadline.label}
@@ -85,9 +85,9 @@ export default function ProgramPromptsCard({
                   const started = isPromptStarted(essays, card, prompt);
                   const key = `${card.key}:${prompt.id}`;
                   return (
-                    <div key={prompt.id} style={{ ...glass2({ padding: '10px 12px' }), background: 'rgba(255,255,255,0.02)' }}>
+                    <div key={prompt.id} style={{ ...glass2({ padding: '8px 12px' }), background: 'rgba(255,255,255,0.02)' }}>
                       <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.65 }}>“{prompt.text}”</div>
-                      <div style={R({ gap: 8, marginTop: 9, flexWrap: 'wrap' })}>
+                      <div style={R({ gap: 8, marginTop: 8, flexWrap: 'wrap' })}>
                         <span style={{ fontSize: 10, color: C.t4 }}>
                           No word limit published — we set 500 as a working target; confirm the real one.
                         </span>
@@ -107,8 +107,8 @@ export default function ProgramPromptsCard({
               </div>
             ) : (
               // The honest empty state, and the one that does the most work.
-              <div style={{ ...glass2({ padding: '10px 12px' }), display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.22)}` }}>
-                <AlertTriangle size={12} color={C.amberL} style={{ marginTop: 2, flexShrink: 0 }} />
+              <div style={{ ...glass2({ padding: '8px 12px' }), display: 'flex', gap: 8, alignItems: 'flex-start', border: `1px solid ${tint(C.amber, 0.22)}` }}>
+                <AlertTriangle size={12} color={C.amberL} style={{ marginTop: 4, flexShrink: 0 }} />
                 <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
                   {card.required
                     ? 'This program requires its own supplemental application, and its prompts are not published outside the applicant portal. We will not invent them — open the program page and copy the real ones in as soon as the portal opens.'
@@ -118,12 +118,12 @@ export default function ProgramPromptsCard({
             )}
 
             {card.note && (
-              <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 9, fontStyle: 'italic' }}>{card.note}</div>
+              <div style={{ fontSize: 11, color: C.t3, lineHeight: 1.6, marginTop: 8, fontStyle: 'italic' }}>{card.note}</div>
             )}
 
             {card.url && (
               <a href={card.url} target="_blank" rel="noopener noreferrer"
-                style={{ ...btnSm(C.s3, { color: C.t3, fontSize: 11, marginTop: 10 }), textDecoration: 'none', display: 'inline-flex' }}>
+                style={{ ...btnSm(C.s3, { color: C.t3, fontSize: 11, marginTop: 8 }), textDecoration: 'none', display: 'inline-flex' }}>
                 <ExternalLink size={11} />The program's own page
               </a>
             )}

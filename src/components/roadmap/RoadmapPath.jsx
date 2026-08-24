@@ -32,7 +32,7 @@ import useDragScroll from './useDragScroll';
 //   · It gives the year a TOP. A horizontal timeline runs off the edge of the
 //     screen in both directions and implies nothing; a path that ends has an
 //     end you can get to.
-//   · It turns scrolling into travelling. You move up the path the same way you
+//   · It turns scrolling into traveling. You move up the path the same way you
 //     move through the year, and the two gestures mean the same thing.
 //
 // ── The serpentine, and why it is not a straight line ───────────────────────
@@ -50,7 +50,7 @@ import useDragScroll from './useDragScroll';
 // Three things move on this screen, and each one is a fact rather than an
 // effect. This matters: an animation that means nothing is noise, and this
 // screen has enough going on that noise would cost it.
-//   1. A light travels the TRAVELLED part of the path, from the start towards
+//   1. A light travels the TRAVELED part of the path, from the start toward
 //      today, and stops there. It is the visible statement that the road behind
 //      you is done and the road ahead is not.
 //   2. The "you are here" marker breathes. It is the only node that does, so it
@@ -98,7 +98,7 @@ const columnsFor = (width, isMobile) => {
 // and the whole argument here is that it is a road.
 const ROW_H = { mobile: 150, desktop: 168 };
 // Horizontal inset of the outermost nodes. Three things have to fit in it and
-// it is sized by the widest of them: half a node label (a label is centred on
+// it is sized by the widest of them: half a node label (a label is centered on
 // its node, so the outermost one hangs into this margin), the U-turn's bulge,
 // and a few pixels of air. Undersize it and the first and last node of every
 // row lose the left and right of their titles to the frame.
@@ -114,7 +114,7 @@ const PAD_TOP = 46;
 const PAD_BOTTOM = 30;
 // The SVG path is given this pathLength so every dash calculation below is in
 // plain 0–1000 units regardless of the path's real geometry. Without it, the
-// travelled fraction would have to be recomputed from the real length every
+// traveled fraction would have to be recomputed from the real length every
 // time the container resized.
 const PATH_UNITS = 1000;
 
@@ -170,7 +170,7 @@ export default function RoadmapPath({
   );
 
   // Where today sits along the path, 0 at the start and 1 at the end. This is
-  // the number the travelled stroke and the pulse are both drawn from, so it is
+  // the number the traveled stroke and the pulse are both drawn from, so it is
   // computed once from the one place it is actually known: the index of the
   // "you are here" stop in the ordered list.
   const travelled = useMemo(() => {
@@ -254,7 +254,7 @@ export default function RoadmapPath({
 
   if (!stops.length) {
     return (
-      <div style={{ fontSize: 12, color: C.t4, padding: '18px 0' }}>
+      <div style={{ fontSize: 12, color: C.t4, padding: '16px 0px' }}>
         Nothing on your roadmap has a place in the year yet.
       </div>
     );
@@ -279,7 +279,7 @@ export default function RoadmapPath({
         ref={frameRef}
         style={{
           position: 'relative',
-          borderRadius: 14,
+          borderRadius: 12,
           border: `1px solid ${C.b1}`,
           background: `linear-gradient(180deg, ${tint(C.violet, 0.05)}, transparent 40%)`,
           overflow: 'hidden',
@@ -359,10 +359,10 @@ export default function RoadmapPath({
  *   · dated items in date order, using the student's pinned date when they have
  *     entered one;
  *   · a real "you are here" stop in its true chronological place, so the
- *     travelled part of the road is measured rather than estimated;
+ *     traveled part of the road is measured rather than estimated;
  *   · a season marker wherever the season changes, which is what turns the path
  *     into chapters;
- *   · undated items last, in their own stretch, labelled as what they are —
+ *   · undated items last, in their own stretch, labeled as what they are —
  *     things whose date the student has to go and find. They are not dropped and
  *     they are not invented into a position.
  */
@@ -452,7 +452,7 @@ function layout(stops, { width, perRow, rowH, bulge, maxLabel }) {
 
   // ── Label width first, then everything else from it ───────────────────────
   // The order matters and getting it backwards is what put labels off the edge
-  // of the frame. A label is centred on its node, so the outermost node's label
+  // of the frame. A label is centered on its node, so the outermost node's label
   // hangs half its width into the edge padding — which means the padding cannot
   // be chosen before the label width is known. Deriving it the other way round
   // (pick a padding, then fit a label to the slot it leaves) produces a label
@@ -495,7 +495,7 @@ function layout(stops, { width, perRow, rowH, bulge, maxLabel }) {
  * bulge is what makes it read as a road bending rather than as a bracket: a
  * turn drawn inside the node column looks like a mistake in a table.
  *
- * Every point is a node centre, so the drawing and the buttons over it can never
+ * Every point is a node center, so the drawing and the buttons over it can never
  * disagree — there is no separate curve fitted to a guess at where they are.
  */
 function pathThrough(placed, { perRow, padX, width, bulge }) {
@@ -565,10 +565,10 @@ function nearestStop(placed, centreY) {
  * Four strokes on top of each other, each one saying something different:
  *
  *   1. the road ahead — wide, dim, the whole path;
- *   2. the road travelled — the same path, drawn in green up to today only;
+ *   2. the road traveled — the same path, drawn in green up to today only;
  *   3. the focus glow — a short bright section following the middle of the
  *      viewport, which is the pulse you feel when you drag;
- *   4. the runner — a small light that travels the travelled section and stops
+ *   4. the runner — a small light that travels the traveled section and stops
  *      at today, so the eye is led to where the student is standing.
  *
  * All of it is done with dash offsets on a path declared `pathLength=1000`,
@@ -605,13 +605,13 @@ function PathDrawing({ geo, travelled, focus, reducedMotion, nodeR }) {
         d={geo.d} pathLength={PATH_UNITS} fill="none"
         stroke={aheadColor} strokeWidth={nodeR * 0.85} strokeLinecap="round" strokeLinejoin="round"
       />
-      {/* a thin dashed centre line, purely so the road reads as a road */}
+      {/* a thin dashed center line, purely so the road reads as a road */}
       <path
         d={geo.d} pathLength={PATH_UNITS} fill="none"
         stroke={tint(C.violet, 0.4)} strokeWidth={1.5} strokeDasharray="4 10" strokeLinecap="round"
       />
 
-      {/* 3 · the focus glow, under the travelled stroke so it lights the road
+      {/* 3 · the focus glow, under the traveled stroke so it lights the road
              rather than sitting on top of it */}
       {!reducedMotion && (
         <path
@@ -624,14 +624,14 @@ function PathDrawing({ geo, travelled, focus, reducedMotion, nodeR }) {
         />
       )}
 
-      {/* 2 · the road travelled */}
+      {/* 2 · the road traveled */}
       <path
         d={geo.d} pathLength={PATH_UNITS} fill="none"
         stroke="url(#rp-travelled)" strokeWidth={nodeR * 0.85} strokeLinecap="round" strokeLinejoin="round"
         strokeDasharray={`${travelled * PATH_UNITS} ${PATH_UNITS}`}
       />
 
-      {/* 4 · the runner. Travels the travelled section and stops at today —
+      {/* 4 · the runner. Travels the traveled section and stops at today —
              a light that ran the whole road would be saying the year is done. */}
       {!reducedMotion && travelled > 0.02 && (
         <motion.path
@@ -654,7 +654,7 @@ function PathDrawing({ geo, travelled, focus, reducedMotion, nodeR }) {
 
 function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMotion, onHover, onLeave, onSelect }) {
   const lift = reducedMotion ? 0 : Math.max(0, proximity);
-  // Centred with a translate, which is correct for everything here EXCEPT the
+  // Centered with a translate, which is correct for everything here EXCEPT the
   // item node — see the note on `itemBox` below for why that one cannot use it.
   const common = {
     position: 'absolute',
@@ -675,7 +675,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         }}>
           <Flag size={nodeR * 0.85} color={isStart ? C.green : C.violet} />
         </div>
-        <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.08em', color: C.t4, marginTop: 6, textTransform: 'uppercase' }}>
+        <div style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4, marginTop: 4}}>
           {isStart ? 'Start' : 'One year'}
         </div>
       </div>
@@ -708,7 +708,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
             <MapPin size={nodeR} color={C.s0} />
           </div>
         </div>
-        <div style={{ fontSize: 10, fontWeight: 800, color: C.amber, marginTop: 7, whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: C.amber, marginTop: 8, whiteSpace: 'nowrap' }}>
           You are here
         </div>
       </div>
@@ -731,10 +731,10 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         title={[p.season.theme, p.season.narrative].filter(Boolean).join(' — ') || p.season.label}
       >
         <span style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5, maxWidth: '100%',
+          display: 'inline-flex', alignItems: 'center', gap: 4, maxWidth: '100%',
           background: tint(C.teal, 0.18), border: `1px solid ${tint(C.teal, 0.45)}`,
-          borderRadius: 999, padding: '5px 11px',
-          fontSize: 9.5, fontWeight: 800, letterSpacing: '.05em', textTransform: 'uppercase', color: C.teal,
+          borderRadius: 999, padding: '4px 12px',
+          fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.teal,
           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}>
           {shortSeason(p.season.label)}
@@ -747,9 +747,9 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
     return (
       <div style={{ ...common, textAlign: 'center', pointerEvents: 'none', width: labelW }}>
         <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 5,
+          display: 'inline-flex', alignItems: 'center', gap: 4,
           background: tint(C.violet, 0.14), border: `1px dashed ${tint(C.violet, 0.45)}`,
-          borderRadius: 999, padding: '4px 10px', fontSize: 9.5, fontWeight: 800, color: C.violet,
+          borderRadius: 999, padding: '4px 8px', fontSize: 9.5, fontWeight: 800, color: C.violet,
         }}>
           <CalendarSearch size={11} /> {p.count} to look up
         </div>
@@ -778,16 +778,16 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
       aria-label={`${item.title}${done ? ', done' : ''} — ${meta.label}`}
       animate={reducedMotion ? undefined : { scale: 1 + lift * 0.06 }}
       transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-      // ── Positioned by arithmetic, not by a centring translate ──────────────
+      // ── Positioned by arithmetic, not by a centering translate ──────────────
       // framer-motion composes `transform` from its own animated values, so a
       // `transform: translate(-50%,-50%)` written in the style prop is silently
       // replaced the moment `scale` animates. Every item node then rendered with
-      // its top-left corner on the road instead of its centre: labels sat half a
-      // width to the right, overlapped their neighbours, and the right-hand
+      // its top-left corner on the road instead of its center: labels sat half a
+      // width to the right, overlapped their neighbors, and the right-hand
       // column ran off the edge of the frame.
       //
-      // So this one is placed by number. `left` centres the label block on the
-      // node's x; `top` puts the circle's TOP at y − r, which puts its centre on
+      // So this one is placed by number. `left` centers the label block on the
+      // node's x; `top` puts the circle's TOP at y − r, which puts its center on
       // the road. Nothing about that can be overwritten by an animation.
       style={{
         position: 'absolute',
@@ -796,7 +796,7 @@ function Stop({ p, today, nodeR, labelW, isMobile, active, proximity, reducedMot
         width: labelW,
         transformOrigin: `50% ${nodeR}px`,
         background: 'none', border: 0, padding: 0, cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
         zIndex: active ? 5 : 2,
       }}
     >
@@ -868,10 +868,10 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
       marginBottom: 12,
     }}>
       <div style={{ flex: 1, minWidth: isMobile ? 0 : 180 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase', color: C.t4 }}>
+        <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4 }}>
           Looking at
         </div>
-        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, marginTop: 2 }}>
+        <div style={{ fontSize: isMobile ? 14 : 15.5, fontWeight: 800, color: C.t1, marginTop: 4 }}>
           {where || '—'}
         </div>
       </div>
@@ -881,7 +881,7 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
       <div style={{
         textAlign: isMobile ? 'left' : 'right',
         display: isMobile ? 'flex' : 'block',
-        alignItems: 'center', justifyContent: 'space-between', gap: 10,
+        alignItems: 'center', justifyContent: 'space-between', gap: 8,
       }}>
         <div style={{ fontSize: 11, color: C.t4, fontWeight: 700 }}>
           {done}/{total} done · {Math.round(travelled * 100)}% through the year
@@ -890,9 +890,9 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
           type="button"
           onClick={onJumpToday}
           style={{
-            marginTop: isMobile ? 0 : 6, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 5,
+            marginTop: isMobile ? 0 : 6, flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4,
             background: tint(C.amber, 0.14), border: `1px solid ${tint(C.amber, 0.34)}`,
-            color: C.amber, borderRadius: 8, padding: '5px 11px',
+            color: C.amber, borderRadius: 8, padding: '4px 12px',
             fontSize: 11, fontWeight: 700, fontFamily: C.FB, cursor: 'pointer',
           }}
         >
@@ -905,12 +905,12 @@ function PathHeader({ focused, travelled, isMobile, onJumpToday, stops }) {
 
 function PathLegend({ isMobile, dragging }) {
   const Item = ({ children }) => (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 10, color: C.t4 }}>{children}</span>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 10, color: C.t4 }}>{children}</span>
   );
   return (
     <div style={{
-      display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
-      padding: '8px 14px', borderTop: `1px solid ${C.b1}`, background: C.surf2,
+      display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap',
+      padding: '8px 12px', borderTop: `1px solid ${C.b1}`, background: C.surf2,
     }}>
       <Item>
         <span style={{ width: 10, height: 10, borderRadius: '50%', border: `2px solid ${tint(C.violet, 0.65)}`, display: 'inline-block' }} />

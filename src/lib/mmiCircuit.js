@@ -11,7 +11,7 @@
 //
 // So this app draws the line where the real format draws it:
 //
-//   • Single-station practice is labelled PRACTICE. It gets per-station
+//   • Single-station practice is labeled PRACTICE. It gets per-station
 //     feedback and no aggregate, and it says out loud that a score from one
 //     station means very little.
 //   • A CIRCUIT of eight to ten stations gets an aggregate, because that is
@@ -23,7 +23,7 @@
 //   1. FORMAT SPREAD. A real circuit is not eight ethics questions. It has an
 //      interviewer station, an actor station, usually a collaborative task, a
 //      policy station and a couple of traditional questions. A student who has
-//      only ever practised interviewer stations is unprepared for the two
+//      only ever practiced interviewer stations is unprepared for the two
 //      formats they will find hardest.
 //   2. ARCHETYPE SPREAD. No more than two stations from the same archetype, so
 //      the circuit cannot become a grief circuit by accident.

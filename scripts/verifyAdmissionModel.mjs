@@ -4,13 +4,13 @@
  *
  * This model exists because the old one was optimistic, and optimism in a
  * chancing tool is not a tuning problem — it is a set of specific, nameable
- * modelling mistakes that every tool on the market makes and that creep back in
+ * modeling mistakes that every tool on the market makes and that creep back in
  * the moment nobody is checking. So the properties that make this model honest
  * are asserted here rather than trusted:
  *
  *   1. A FAILED HARD GATE SHOWS NO PERCENTAGE. Not a small one. None.
- *   2. THE CEILING HOLDS. A flawless applicant at a 3% programme cannot be
- *      shown a number that implies they are a favourite.
+ *   2. THE CEILING HOLDS. A flawless applicant at a 3% program cannot be
+ *      shown a number that implies they are a favorite.
  *   3. CLEARING THE 25TH PERCENTILE IS NOT "LIKELY". The exact failure the
  *      whole rebuild is about: benchmark at the 25th, and qualified quietly
  *      becomes likely.
@@ -138,7 +138,7 @@ section('2. Unknown is not pass and not fail');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-section('3. The ceiling holds — nobody is a favourite at a 3% programme');
+section('3. The ceiling holds — nobody is a favorite at a 3% program');
 // ─────────────────────────────────────────────────────────────────────────────
 {
   assert('ceiling at 3% base is under 20%', probabilityCeiling(0.03) < 0.20, `got ${probabilityCeiling(0.03)}`);
@@ -159,7 +159,7 @@ section('3. The ceiling holds — nobody is a favourite at a 3% programme');
     const est = estimateAdmission({ program: p, applicant: FLAWLESS.applicant, portfolio: FLAWLESS.portfolio, completeness: EMPTY_COMPLETENESS, roundId: 'ed' });
     return est.showsProbability && est.probability.high > 0.5;
   });
-  assert('no sub-20% programme can show a flawless applicant above 50%', overshoots.length === 0,
+  assert('no sub-20% program can show a flawless applicant above 50%', overshoots.length === 0,
     overshoots.slice(0, 3).map(p => p.name).join(', '));
 }
 
@@ -200,8 +200,8 @@ section('5. Academic leverage decays with selectivity');
     [0.02, 0.05, 0.1, 0.2, 0.4, 0.8].every((b, i, a) => i === 0 || academicLeverage(b) >= academicLeverage(a[i - 1])));
   assert('leverage never reaches zero — academics still matter, they stop discriminating', academicLeverage(0.001) > 0.1);
 
-  // The behavioural consequence: raising your SAT is worth less at the
-  // selective programme than at the mid one, for the same student.
+  // The behavioral consequence: raising your SAT is worth less at the
+  // selective program than at the mid one, for the same student.
   const gainAt = (profile) => {
     const weak = { ...AT_25TH.applicant, tests: { hasOfficialScore: true, sat: { composite: 1300, sections: { ebrw: 650, math: 650 } } } };
     const strong = { ...AT_25TH.applicant, tests: { hasOfficialScore: true, sat: { composite: 1560, sections: { ebrw: 780, math: 780 } } } };
@@ -251,7 +251,7 @@ section('6. Hooks deflate the unhooked base rate and the early-round lift');
   assert('not saying which round widens the range instead of assuming one',
     (unknownRound.probability.high - unknownRound.probability.low) > (rd.probability.high - rd.probability.low));
 
-  // A programme with one deadline must not offer a round lever that does nothing.
+  // A program with one deadline must not offer a round lever that does nothing.
   const rpi = scoreRound({ profile: resolveProfile('rpi-amc-physician-scientist'), roundId: null, hooks: null });
   assert('RPI, which has no early round, reports the lever as inapplicable', rpi.applicable === false && rpi.multiplier === 1);
 }
@@ -265,7 +265,7 @@ section('7. Never a single number — and missing data widens the range');
   assert('the range is genuinely a range', r.probability.high > r.probability.low);
   assert('the display string is a range, not a number', /–/.test(r.display.range));
   assert('a confidence label is always attached', !!r.confidence?.level);
-  assert('the reasons for the uncertainty are itemised', r.uncertainty.reasons.length > 0 && r.uncertainty.reasons.every(x => !!x.label));
+  assert('the reasons for the uncertainty are itemized', r.uncertainty.reasons.length > 0 && r.uncertainty.reasons.every(x => !!x.label));
 
   const gappy = estimateAdmission({
     program: 'umkc-ba-md', applicant: FLAWLESS.applicant, portfolio: FLAWLESS.portfolio,
@@ -284,7 +284,7 @@ section('7. Never a single number — and missing data widens the range');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-section('8. The research-vs-clinical axis is real, per programme');
+section('8. The research-vs-clinical axis is real, per program');
 // ─────────────────────────────────────────────────────────────────────────────
 {
   const researcher = {

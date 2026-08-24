@@ -36,7 +36,7 @@ export function SatVideoCard({ video, isMobile = false, accentColor = C.sky }) {
       target="_blank"
       rel="noopener noreferrer"
       style={{
-        ...glass2({ padding: 10 }),
+        ...glass2({ padding: 8 }),
         display: 'flex',
         gap: 12,
         alignItems: 'center',
@@ -51,7 +51,7 @@ export function SatVideoCard({ video, isMobile = false, accentColor = C.sky }) {
         width: isMobile ? 84 : 104,
         aspectRatio: '16 / 9',
         flexShrink: 0,
-        borderRadius: 7,
+        borderRadius: 8,
         overflow: 'hidden',
         background: tint(accentColor, 0.12),
         display: 'flex',
@@ -86,10 +86,10 @@ export function SatVideoCard({ video, isMobile = false, accentColor = C.sky }) {
         }}>
           {video.title}
         </div>
-        <div style={{ ...R({ gap: 7 }), marginTop: 5, flexWrap: 'wrap' }}>
+        <div style={{ ...R({ gap: 8 }), marginTop: 4, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>{video.channel}</span>
           {video.kind && video.kind !== 'lesson' && (
-            <span style={pill(tint(C.t3, 0.14), C.t3, { fontSize: 9.5, padding: '2px 8px' })}>
+            <span style={pill(tint(C.t3, 0.14), C.t3, { fontSize: 9.5, padding: '4px 8px' })}>
               {KIND_LABEL[video.kind] || video.kind}
             </span>
           )}
@@ -111,11 +111,10 @@ export function SatSkillVideos({ skill, limit = 2, isMobile = false, heading = t
   return (
     <div style={CC({ gap: 8 })}>
       {heading && (
-        <div style={{ ...R({ gap: 6 }) }}>
+        <div style={{ ...R({ gap: 4 }) }}>
           <PlayCircle size={12} color={meta.color} />
           <span style={{
-            fontSize: 10, fontWeight: 700, color: meta.color,
-            textTransform: 'uppercase', letterSpacing: '.08em',
+            fontSize: 10, fontWeight: 700, color: meta.color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
           }}>
             Watch someone teach {meta.label}
           </span>
@@ -146,14 +145,14 @@ export function SatVideoRecommendations({
 
   return (
     <SatCard title={title} icon={PlayCircle} iconColor={C.rose} m={isMobile}>
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginBottom: 14 }}>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 12 }}>
         Free lessons on the skills currently costing you the most points. Picked from what
         you have actually missed, not a generic playlist.
       </div>
-      <div style={CC({ gap: 18 })}>
+      <div style={CC({ gap: 16 })}>
         {groups.map(g => (
           <div key={g.skill}>
-            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 9 }}>
+            <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginBottom: 8 }}>
               <span style={pill(tint(g.color, 0.14), g.color, { fontSize: 10 })}>{g.skillLabel}</span>
               <span style={{ fontSize: 11, color: C.t3 }}>{g.reason}</span>
             </div>
@@ -165,7 +164,7 @@ export function SatVideoRecommendations({
             {onNavigate && (
               <button
                 onClick={() => onNavigate('practice', { skill: g.skill })}
-                style={{ ...btnG({ padding: '6px 12px', fontSize: 11.5 }), marginTop: 9 }}
+                style={{ ...btnG({ padding: '4px 12px', fontSize: 11.5 }), marginTop: 8 }}
               >
                 Then drill {g.skillLabel} <ChevronRight size={12} />
               </button>

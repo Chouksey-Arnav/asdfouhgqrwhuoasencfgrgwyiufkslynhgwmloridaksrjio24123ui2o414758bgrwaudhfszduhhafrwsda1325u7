@@ -45,7 +45,7 @@ export const RW_EXPRESSION_QUESTIONS = [
       'Frequency hopping underlies modern Bluetooth and Wi-Fi standards.',
     ],
     stimulus: 'While researching a topic, a student has taken the following notes.',
-    q: 'The student wants to emphasise the long-term significance of Lamarr’s invention. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
+    q: 'The student wants to emphasize the long-term significance of Lamarr’s invention. Which choice most effectively uses relevant information from the notes to accomplish this goal?',
     ch: [
       'Lamarr, a film actor of the 1930s and 1940s, co-invented a frequency-hopping system with the composer George Antheil in 1941.',
       'Though the Navy passed on it in wartime, Lamarr’s 1941 frequency-hopping system underlies Bluetooth and Wi-Fi today.',

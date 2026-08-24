@@ -3,7 +3,7 @@
 //
 // The real exam supplies a reference sheet of formulas. Questions here assume
 // the same, so items test whether a student can SELECT and APPLY the right
-// formula, not whether they memorised it.
+// formula, not whether they memorized it.
 export const MATH_GEO_TRIG_QUESTIONS = [
   // ── Area and Volume ───────────────────────────────────────────────────────
   {

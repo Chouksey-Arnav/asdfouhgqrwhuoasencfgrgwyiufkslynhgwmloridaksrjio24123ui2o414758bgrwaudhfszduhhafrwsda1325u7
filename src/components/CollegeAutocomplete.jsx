@@ -57,18 +57,18 @@ export default function CollegeAutocomplete({ value = '', onChange, onSelectScho
         // cards below bleed through and made the list unusable ("some colleges are getting blocked").
         // A solid background + z-index above sibling panels + a hairline border keeps it readable and
         // always on top of the form fields it overlaps.
-        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, background: C.s2, border: `1px solid ${C.b2 || C.b1}`, borderRadius: 12, padding: 6, maxHeight: 300, overflowY: 'auto', boxShadow: '0 18px 44px rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)' }}>
+        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 200, background: C.s2, border: `1px solid ${C.b2 || C.b1}`, borderRadius: 12, padding: 4, maxHeight: 300, overflowY: 'auto', boxShadow: '0 18px 44px rgba(0,0,0,0.65)', backdropFilter: 'blur(12px)' }}>
           {matches.map(s => (
             <div
               key={s.name}
               onMouseDown={() => pick(s)}
-              style={{ padding: '8px 10px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
+              style={{ padding: '8px 8px', borderRadius: 8, cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
             >
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name}</div>
-                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 1 }}>{s.state} · {s.type}</div>
+                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4 }}>{s.state} · {s.type}</div>
               </div>
               <div style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM, textAlign: 'right', flexShrink: 0 }}>
                 SAT ~{s.sat} · ACT ~{s.act} · {s.accept}% admit

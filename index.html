@@ -14,7 +14,7 @@
     <meta name="description" content="Free health-career prep for high schoolers: a 10-pathway diagnostic, verified lessons, flashcards, and a full college application portfolio." />
     <meta name="robots" content="index, follow" />
     <!-- Matches BALANCED.bg (the default palette) so the mobile browser chrome
-         and the iOS status bar don't frame the app in a different colour. -->
+         and the iOS status bar don't frame the app in a different color. -->
     <meta name="theme-color" content="#272d34" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -76,10 +76,10 @@
       Google AdSense, tagged for child-directed treatment.
 
       This site's audience is high-school students, i.e. minors, and a large
-      share are under 16. That makes untagged, personalised advertising a legal
+      share are under 16. That makes untagged, personalized advertising a legal
       problem on three fronts at once:
 
-        • COPPA forbids behavioural advertising to under-13s without verifiable
+        • COPPA forbids behavioral advertising to under-13s without verifiable
           parental consent, and Google may independently classify a site like
           this as child-directed under its own obligations.
         • Connecticut's amended data privacy act (in force 1 July 2026) bans
@@ -92,7 +92,7 @@
       `tagForChildDirectedTreatment` (TFCD) is set BEFORE the AdSense script
       loads — order matters here, because the tag has to be on the page when the
       first ad request is built, and an ad served before the flag is set is not
-      retroactively un-personalised. It disables interest-based advertising and
+      retroactively un-personalized. It disables interest-based advertising and
       remarketing for every visitor regardless of age, which is exactly what
       src/legal/privacy.js § 8 tells users we do.
 
@@ -137,7 +137,7 @@
       screen before /src/main.jsx has even been fetched. A stylesheet link would
       be a second round trip and would sometimes lose the race.
 
-      Colours are the Balanced palette's literals rather than tokens: src/index.css
+      Colors are the Balanced palette's literals rather than tokens: src/index.css
       and the theme system are inside the JS bundle, and by the time either is
       available this element is already gone. They match theme-color above so
       the shell, the browser chrome and the app that replaces it are one surface.
@@ -149,13 +149,18 @@
         padding: 2rem 1.25rem 4rem;
         font-family: Onest, system-ui, -apple-system, "Segoe UI", sans-serif;
         color: #b6bcc6;
-        line-height: 1.65;
+        line-height: 1.55;
         font-size: 1rem;
+        font-optical-sizing: auto;
       }
-      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #e7ecf2; line-height: 1.2; letter-spacing: -0.02em; }
-      .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; }
-      .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; }
-      .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; }
+      /* Tracking and leading follow the ramp in src/lib/tokens/type.js: tighter
+         and closer together as the size goes up. Stated per level rather than
+         shared, because one `-0.02em` across three sizes is only right for one
+         of them. */
+      .seo-shell h1, .seo-shell h2, .seo-shell h3 { color: #e7ecf2; }
+      .seo-shell h1 { font-size: clamp(1.9rem, 5vw, 2.6rem); margin: 1.5rem 0 0.75rem; line-height: 1.08; letter-spacing: -0.028em; }
+      .seo-shell h2 { font-size: 1.3rem; margin: 2.25rem 0 0.5rem; line-height: 1.28; letter-spacing: -0.019em; }
+      .seo-shell h3 { font-size: 1.05rem; margin: 1.5rem 0 0.4rem; line-height: 1.4; letter-spacing: -0.008em; }
       .seo-shell a { color: #72b5f8; }
       .seo-shell .seo-shell-lead { font-size: 1.1rem; color: #b6bcc6; }
       .seo-shell ul, .seo-shell ol, .seo-shell dl { padding-left: 1.2rem; }

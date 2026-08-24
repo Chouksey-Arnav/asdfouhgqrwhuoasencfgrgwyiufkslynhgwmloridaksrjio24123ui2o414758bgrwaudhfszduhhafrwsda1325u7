@@ -27,7 +27,7 @@ export const MATH_ADVANCED_QUESTIONS = [
       'Correct. (x − 3)(x + 3) ⁄ (x + 3)² = (x − 3)/(x + 3).',
       'This is the reciprocal — the surviving (x + 3) is in the denominator, since the denominator started with two of them.',
       'This would require both (x + 3) factors to cancel, but the numerator only supplies one.',
-      'Cancelling individual terms rather than factors is not a legal operation. You may only cancel whole factors.',
+      'Canceling individual terms rather than factors is not a legal operation. You may only cancel whole factors.',
     ],
   },
   {

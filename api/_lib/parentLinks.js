@@ -220,10 +220,10 @@ export async function sendInviteEmail({ to, token, code, inviterName, inviterRol
 
   // Names the student, in the requester's own words, when there is a claim to state. This is the
   // line that makes the email checkable by the person receiving it: a request addressed to
-  // somebody else's name, or from a name they do not recognise, is visibly wrong at a glance —
+  // somebody else's name, or from a name they do not recognize, is visibly wrong at a glance —
   // and no server-side check can do that job. See supabase/migrations/0009_parent_profiles.sql.
   const claimLine = inviterRole === 'parent' && claimedStudentName
-    ? `They say they are the parent or guardian of <strong>${esc(claimedStudentName)}</strong>. If that is not you, or you do not recognise this person, do not accept — just ignore this email, and nothing is shared.`
+    ? `They say they are the parent or guardian of <strong>${esc(claimedStudentName)}</strong>. If that is not you, or you do not recognize this person, do not accept — just ignore this email, and nothing is shared.`
     : null;
 
   const asksToView = inviterRole === 'parent'
@@ -285,7 +285,7 @@ export async function sendInviteEmail({ to, token, code, inviterName, inviterRol
     text: [
       asksToView,
       claimedStudentName && inviterRole === 'parent'
-        ? `They say they are the parent or guardian of ${claimedStudentName}. If that is not you, or you do not recognise this person, ignore this email — nothing is shared.`
+        ? `They say they are the parent or guardian of ${claimedStudentName}. If that is not you, or you do not recognize this person, ignore this email — nothing is shared.`
         : null,
       '',
       seeing,

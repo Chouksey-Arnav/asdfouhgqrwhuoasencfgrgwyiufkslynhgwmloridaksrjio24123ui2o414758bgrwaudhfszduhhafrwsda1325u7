@@ -138,19 +138,19 @@ export default function WeeklyGoalsBoard({
   const ringColor = summary.allMet ? C.green : summary.overallPct >= 60 ? accent : summary.overallPct > 0 ? C.amber : C.t3;
 
   return (
-    <section aria-label="Weekly portfolio goals" style={CC({ gap: 14 })}>
+    <section aria-label="Weekly portfolio goals" style={CC({ gap: 12 })}>
       {/* ── Week header ── */}
       <div style={{
         ...glass({ padding: isMobile ? 16 : 20 }),
         background: `linear-gradient(125deg,${tint(accent, 0.12)},${tint(C.violet, 0.05)} 55%,rgba(255,255,255,0.02))`,
         border: `1px solid ${tint(accent, 0.26)}`,
       }}>
-        <div style={R({ gap: 18, flexWrap: 'wrap', alignItems: 'flex-start' })}>
+        <div style={R({ gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' })}>
           <Arc pct={summary.overallPct} size={isMobile ? 62 : 72} stroke={6} color={ringColor}
             label={`${summary.overallPct}%`} sub="of goals" />
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={R({ gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
-              <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 Your week
               </span>
               <span style={pill(C.s3, C.t2, { fontSize: 10, gap: 4 })}><CalendarRange size={10} />{weekLabel()}</span>
@@ -163,12 +163,12 @@ export default function WeeklyGoalsBoard({
                 </span>
               )}
             </div>
-            <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
               {summary.goalsSet
                 ? `${summary.goalsMet} of ${summary.goalsSet} weekly goal${summary.goalsSet === 1 ? '' : 's'} met`
                 : 'Set your goals for this week'}
             </div>
-            <div style={{ fontSize: 12, color: C.t2, marginTop: 5, lineHeight: 1.6, maxWidth: 620 }}>
+            <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.55, maxWidth: 620 }}>
               {/* Zeros drawn before the fetch lands read as "you did nothing this week", which is
                   both false and demoralizing. Say what's actually happening instead. */}
               {loading && !snapshot ? 'Measuring this week from your real Portfolio entries…' : headline}
@@ -183,18 +183,18 @@ export default function WeeklyGoalsBoard({
         {/* Meta Brain's commentary, layered on top of the computed headline above. */}
         {(aiRead?.loading || aiRead?.content) && (
           <div style={{
-            ...glass2({ padding: 12, marginTop: 14 }),
+            ...glass2({ padding: 12, marginTop: 12 }),
             background: tint(C.violet, 0.07), border: `1px solid ${tint(C.violet, 0.2)}`,
           }}>
-            <div style={R({ gap: 7, marginBottom: aiRead.content ? 6 : 0 })}>
+            <div style={R({ gap: 8, marginBottom: aiRead.content ? 6 : 0 })}>
               <Brain size={13} color={C.violetL} />
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: accentText(C.violet), letterSpacing: '.06em', textTransform: 'uppercase' }}>
+              <span style={{ fontSize: 10.5, fontWeight: 700, color: accentText(C.violet), letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 Meta Brain on your week
               </span>
             </div>
             {aiRead.loading
-              ? <div style={R({ gap: 7, fontSize: 11.5, color: C.t3 })}><Loader2 size={12} className="spin" />Reading your week…</div>
-              : <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiRead.content) }} />}
+              ? <div style={R({ gap: 8, fontSize: 11.5, color: C.t3 })}><Loader2 size={12} className="spin" />Reading your week…</div>
+              : <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiRead.content) }} />}
           </div>
         )}
 
@@ -203,18 +203,18 @@ export default function WeeklyGoalsBoard({
           {picking && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
               style={{ overflow: 'hidden' }}>
-              <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${C.b1}` }}>
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${C.b1}` }}>
                 <div style={{ fontSize: 11, color: C.t3, marginBottom: 8 }}>
                   Pick the parts of your application you want on your dashboard. Everything stays tracked either way — this only decides what you look at every day.
                 </div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {METRICS.map((m) => {
                     const on = ids.includes(m.id);
                     const c = C[m.colorKey] || C.blue;
                     return (
                       <button key={m.id} onClick={() => togglePinned(m.id)} aria-pressed={on}
                         style={pill(on ? tint(c, 0.2) : C.surf2, on ? onTint(c) : C.t3, {
-                          cursor: 'pointer', border: `1px solid ${on ? tint(c, 0.4) : C.b1}`, fontSize: 11, gap: 5,
+                          cursor: 'pointer', border: `1px solid ${on ? tint(c, 0.4) : C.b1}`, fontSize: 11, gap: 4,
                         })}>
                         {on && <Check size={10} />}{m.short}
                       </button>
@@ -259,15 +259,15 @@ export default function WeeklyGoalsBoard({
           nothing applied until the student picks. */}
       {!summary.goalsSet && (
         <div style={{
-          ...glass2({ padding: 14 }),
+          ...glass2({ padding: 12 }),
           background: `linear-gradient(120deg,${tint(C.violet, 0.08)},rgba(255,255,255,0.02) 60%)`,
           border: `1px solid ${tint(C.violet, 0.22)}`,
         }}>
-          <div style={R({ gap: 8, marginBottom: 6 })}>
+          <div style={R({ gap: 8, marginBottom: 4 })}>
             <Sparkles size={13} color={C.violetL} />
             <span style={{ fontSize: 12, fontWeight: 700, color: C.t1 }}>Goals are yours to set</span>
           </div>
-          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.65, margin: 0 }}>
+          <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, margin: 0 }}>
             Meta Brain has a recommended number on every tracker above, based on your real pace and your actual deadlines — but it will never set one for you.
             Pick two or three you genuinely intend to hit this week. A goal you chose is the only kind that pulls.
           </p>

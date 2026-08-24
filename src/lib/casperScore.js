@@ -7,7 +7,7 @@
 // number, deliberately: the test's own position is that a raw score implies a
 // precision the instrument does not have, and that what a program should be
 // asking is roughly where this applicant sits, not whether they scored 61 or
-// 63. Showing a student a raw CASPer-style score would teach them to optimise a
+// 63. Showing a student a raw CASPer-style score would teach them to optimize a
 // number that does not exist.
 //
 // So this converts our per-section rubric output into a band and shows only the
@@ -64,7 +64,7 @@ export const QUARTILES = [
     short: 'Q1',
     tone: 'bad',
     plain: 'Bottom quarter.',
-    blurb: 'Usually one of three things: restating the scenario instead of engaging with it, moralising instead of reasoning, or running out of time before the later questions got a real answer.',
+    blurb: 'Usually one of three things: restating the scenario instead of engaging with it, moralizing instead of reasoning, or running out of time before the later questions got a real answer.',
   },
 ];
 

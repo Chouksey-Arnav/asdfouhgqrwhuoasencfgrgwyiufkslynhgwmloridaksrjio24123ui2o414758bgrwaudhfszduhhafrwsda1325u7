@@ -68,7 +68,7 @@ const authUi = read('src/components/auth/ui.jsx');
 // The route table these two checks used to grep — the indexable set in
 // src/lib/seo.js and the ROUTES array in scripts/generateSitemap.mjs — is now
 // one shared table (src/lib/seoRoutes.js) feeding both, plus the prerenderer.
-// So the checks below read the table for intent and the *generated artefacts*
+// So the checks below read the table for intent and the *generated artifacts*
 // for the result, which is strictly stronger than grepping a generator: it
 // catches a sitemap that was never regenerated as well as a route that was
 // deleted.
@@ -201,19 +201,19 @@ if (adsenseLoaded) {
   check(
     indexHtml.includes('tagForChildDirectedTreatment'),
     'Ad requests are tagged child-directed',
-    'index.html loads AdSense without the child-directed tag. The Privacy Policy § 8 and the Terms § 10 both promise non-personalised ads, and Connecticut bans targeted advertising to under-18s outright.',
+    'index.html loads AdSense without the child-directed tag. The Privacy Policy § 8 and the Terms § 10 both promise non-personalized ads, and Connecticut bans targeted advertising to under-18s outright.',
   );
   check(
     indexHtml.includes('requestNonPersonalizedAds'),
-    'Ads are requested non-personalised',
+    'Ads are requested non-personalized',
     'requestNonPersonalizedAds is not set, contradicting the Privacy Policy § 8.',
   );
   // Ordering is load-bearing: an ad request built before the flag is set is not
-  // retroactively de-personalised.
+  // retroactively de-personalized.
   check(
     indexHtml.indexOf('tagForChildDirectedTreatment') < indexHtml.indexOf('adsbygoogle.js'),
     'The child-directed tag is set before AdSense loads',
-    'The tag appears after the AdSense script tag. Ads requested before the flag is set are personalised regardless of the flag.',
+    'The tag appears after the AdSense script tag. Ads requested before the flag is set are personalized regardless of the flag.',
   );
   check(
     privacy.includes('child-directed'),
@@ -248,8 +248,8 @@ if (adsenseLoaded) {
     ['src/App.jsx', app],
   ]) {
     // Matches "no ads" / "0 ads" / "ad-free" as a user-facing claim, while
-    // allowing "no personalised ads", which is both true and the point.
-    const claim = stripComments(source).match(/(?<!personalised )\b(no ads|0 ads|ad-free|zero ads)\b/i);
+    // allowing "no personalized ads", which is both true and the point.
+    const claim = stripComments(source).match(/(?<!personalized )\b(no ads|0 ads|ad-free|zero ads)\b/i);
     check(
       !claim,
       `${file} makes no "no ads" claim`,

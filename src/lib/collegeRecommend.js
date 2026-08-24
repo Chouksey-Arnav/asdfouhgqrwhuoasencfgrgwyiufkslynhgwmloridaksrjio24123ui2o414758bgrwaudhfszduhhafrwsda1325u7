@@ -232,8 +232,8 @@ export function collegeListInsights({ scores, existing = [] }) {
     out.push({ tone: 'info', text: 'Your list is empty — a healthy first slate is about 2 reaches, 3 targets and 2 safeties.' });
     return out;
   }
-  if (!counts.safety) out.push({ tone: 'warn', text: 'No safety school on your list. Add at least one you would genuinely be happy attending — it is the single biggest protection against a bad April.' });
-  if (!counts.target) out.push({ tone: 'warn', text: 'No target schools yet. Targets are where most students actually enroll; aim for 3-4.' });
+  if (!counts.safety) out.push({ tone: 'warn', text: 'No safety program on your list. Add at least one you would genuinely be happy attending — it is the single biggest protection against a bad April.' });
+  if (!counts.target) out.push({ tone: 'warn', text: 'No target programs yet. Targets are where most students actually enroll; aim for 3-4.' });
   if (counts.reach > counts.target + counts.safety) out.push({ tone: 'warn', text: `${counts.reach} reaches against ${counts.target + counts.safety} target/safety schools is top-heavy. Balance it out before essay season.` });
   else if (counts.reach && counts.target && counts.safety) out.push({ tone: 'good', text: `Balanced spread: ${counts.reach} reach / ${counts.target} target / ${counts.safety} safety.` });
 

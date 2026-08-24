@@ -51,9 +51,9 @@ export function CompletenessMeter({ completeness, onJump, isMobile }) {
 
   return (
     <div style={{ ...glass({ padding: isMobile ? 16 : 20 }), border: `1px solid ${tint(color, 0.3)}` }}>
-      <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 12 })}>
-        <div style={R({ gap: 10 })}>
-          <div style={{ fontSize: 26, fontWeight: 800, fontFamily: C.FM, color }}>{have}<span style={{ color: C.t3, fontSize: 17 }}>/{total}</span></div>
+      <div style={R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 12 })}>
+        <div style={R({ gap: 8 })}>
+          <div style={{ fontSize: 26, letterSpacing: 'calc(-0.53px + var(--msp-letter-spacing))', lineHeight: 'calc(1.28 * var(--msp-line-scale))', fontWeight: 800, fontFamily: C.FM, color }}>{have}<span style={{ color: C.t3, fontSize: 17, letterSpacing: 'calc(-0.11px + var(--msp-letter-spacing))' }}>/{total}</span></div>
           <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, maxWidth: 520 }}>{sentence}</div>
         </div>
         <span style={pill(tint(color, 0.16), accentText(color), { fontSize: 10.5 })}>
@@ -62,23 +62,23 @@ export function CompletenessMeter({ completeness, onJump, isMobile }) {
       </div>
 
       <div style={{ height: 7, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
-        <div style={{ width: `${Math.round(ratio * 100)}%`, height: '100%', background: `linear-gradient(90deg,${color},${tint(color, 0.55)})`, transition: 'width .3s' }} />
+        <div style={{ width: '100%', transform: `scaleX(${(Math.round(ratio * 100)) / 100})`, transformOrigin: 'left', height: '100%', background: `linear-gradient(90deg,${color},${tint(color, 0.55)})`, transition: 'transform 200ms cubic-bezier(0.4, 0, 0.2, 1)' }} />
       </div>
 
       {missing.length > 0 && (
-        <div style={{ marginTop: 14, ...CC({ gap: 8 }) }}>
+        <div style={{ marginTop: 12, ...CC({ gap: 8 }) }}>
           <span style={lbl({ marginBottom: 0 })}>What's missing, and what each one would change</span>
           {missing.map(m => (
             <button key={m.id} onClick={() => onJump?.(m.id)} style={{
-              ...glass2({ padding: '10px 13px', display: 'flex', gap: 10, alignItems: 'flex-start', textAlign: 'left', cursor: 'pointer' }),
+              ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'flex-start', textAlign: 'left', cursor: 'pointer' }),
               borderLeft: `3px solid ${C.amber}`, width: '100%',
             }}>
-              <AlertTriangle size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }} />
+              <AlertTriangle size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 4 }} />
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{m.label}</span>
-                <span style={{ display: 'block', fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 3 }}>{m.changes}</span>
+                <span style={{ display: 'block', fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>{m.changes}</span>
               </span>
-              <ChevronRight size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
+              <ChevronRight size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
             </button>
           ))}
         </div>
@@ -94,11 +94,11 @@ function Field({ field, value, onChange, autoValue, autoSource, highlighted, isM
 
   return (
     <div id={`intake-${field.id}`} style={{
-      ...glass2({ padding: 14 }),
+      ...glass2({ padding: 12 }),
       border: `1px solid ${highlighted ? tint(C.amber, 0.45) : C.b1}`,
       background: highlighted ? tint(C.amber, 0.05) : undefined,
     }}>
-      <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 6 })}>
+      <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
         <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD }}>{field.label}</span>
         {usingAuto
           ? <span style={pill(tint(C.cyan, 0.14), C.cyan, { fontSize: 9.5, gap: 4 })}><Database size={9} /> {autoSource || 'from your Portfolio'}</span>
@@ -106,8 +106,8 @@ function Field({ field, value, onChange, autoValue, autoSource, highlighted, isM
             : <span style={pill(C.s3, C.t3, { fontSize: 9.5 })}>optional — skipping widens the range</span>}
       </div>
 
-      <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', marginBottom: 10 }}>
-        <HelpCircle size={11} color={C.t4 || C.t3} style={{ flexShrink: 0, marginTop: 3 }} />
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
+        <HelpCircle size={11} color={C.t4 || C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
         <span style={{ fontSize: 11, color: C.t3, lineHeight: 1.55 }}>{field.why}</span>
       </div>
 
@@ -127,7 +127,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
 
     case 'enum':
       return (
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           {field.options.map(o => (
             <button key={o.value} onClick={() => onChange(value === o.value ? null : o.value)}
               style={btnSm(value === o.value ? tint(C.blue, 0.2) : C.s3, {
@@ -154,7 +154,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
           {[['ap', 'AP'], ['ib', 'IB'], ['honors', 'Honours'], ['dualEnrollment', 'Dual enrol.']].map(([k, label]) => (
             <div key={k}>
               <span style={lbl({ fontSize: 9, marginBottom: 4 })}>{label}</span>
-              <input type="number" min="0" max="30" style={inp({ padding: '8px 10px' })} placeholder="—"
+              <input type="number" min="0" max="30" style={inp({ padding: '8px 8px' })} placeholder="—"
                 value={v[k] ?? ''} onChange={e => set(k, e.target.value)} />
             </div>
           ))}
@@ -180,7 +180,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
                     })}>{label}</button>
                 ))}
                 {rec.taken === true && (
-                  <select style={inp({ padding: '5px 9px', width: 'auto', fontSize: 11.5 })}
+                  <select style={inp({ padding: '4px 8px', width: 'auto', fontSize: 11.5 })}
                     value={rec.grade ?? ''} onChange={e => setCourse(c.id, { grade: e.target.value || undefined })}>
                     <option value="">grade?</option>
                     {GRADES.map(g => <option key={g} value={g}>{g}</option>)}
@@ -197,7 +197,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
       const v = value || {};
       return (
         <div style={CC({ gap: 8 })}>
-          <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 4, flexWrap: 'wrap' })}>
             {HOOK_OPTIONS.map(h => (
               <button key={h.id} onClick={() => onChange({ ...v, [h.id]: !v[h.id] })}
                 style={btnSm(v[h.id] ? tint(C.violet, 0.2) : C.s3, {
@@ -221,7 +221,7 @@ function FieldInput({ field, value, onChange, autoValue, isMobile }) {
 
 /**
  * Section scores. Auto-filled from the Score Tracker where the student has
- * entered them there; editable here because several programmes gate on a single
+ * entered them there; editable here because several programs gate on a single
  * section and a composite cannot answer that question.
  */
 function TestSections({ value, onChange, autoValue, isMobile }) {
@@ -237,22 +237,22 @@ function TestSections({ value, onChange, autoValue, isMobile }) {
         { test: 'act', label: 'ACT', sections: [['english', 'English'], ['math', 'Math'], ['reading', 'Reading'], ['science', 'Science']] },
       ].map(({ test, label, sections }) => (
         <div key={test}>
-          <span style={lbl({ marginBottom: 5 })}>
+          <span style={lbl({ marginBottom: 4 })}>
             {label} sections
             {auto[test]?.composite != null && <span style={{ color: C.t4 || C.t3, fontWeight: 500, textTransform: 'none', letterSpacing: 0 }}> — composite {auto[test].composite} from your Score Tracker</span>}
           </span>
           <div style={G(sections.length, 8, {}, isMobile)}>
             {sections.map(([id, sLabel]) => (
               <div key={id}>
-                <span style={{ fontSize: 9.5, color: C.t3, display: 'block', marginBottom: 3 }}>{sLabel}</span>
-                <input type="number" style={inp({ padding: '8px 10px' })} placeholder="—"
+                <span style={{ fontSize: 9.5, color: C.t3, display: 'block', marginBottom: 4 }}>{sLabel}</span>
+                <input type="number" style={inp({ padding: '8px 8px' })} placeholder="—"
                   value={shown(test, id)} onChange={e => set(test, id, e.target.value)} />
               </div>
             ))}
           </div>
           {test === 'act' && (
-            <div style={{ marginTop: 6 }}>
-              <HelpNote>The ACT Science score is here specifically because UMKC's six-year programme requires you to have sat it at all — a composite alone cannot tell us whether you did.</HelpNote>
+            <div style={{ marginTop: 4 }}>
+              <HelpNote>The ACT Science score is here specifically because UMKC's six-year program requires you to have sat it at all — a composite alone cannot tell us whether you did.</HelpNote>
             </div>
           )}
         </div>
@@ -283,21 +283,21 @@ export function AlreadyKnown({ portfolio, applicant, onGoTo, isMobile }) {
     <Disclosure id="admissions-already-known" title="What we already took from your Portfolio"
       sub="Nine things we did not have to ask you for. Edit them where they live and this updates."
       icon={Database} color={C.cyan} m={isMobile} defaultOpen={false}>
-      <div style={CC({ gap: 7 })}>
+      <div style={CC({ gap: 8 })}>
         {rows.map(r => (
-          <div key={r.key} style={{ ...glass2({ padding: '10px 13px', display: 'flex', gap: 10, alignItems: 'center' }), ...(r.warn ? { borderLeft: `3px solid ${C.amber}` } : {}) }}>
+          <div key={r.key} style={{ ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center' }), ...(r.warn ? { borderLeft: `3px solid ${C.amber}` } : {}) }}>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: 'block', fontSize: 12, fontWeight: 700, color: C.t1 }}>{r.label}</span>
-              {r.source && <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2 }}>{r.source}</span>}
+              {r.source && <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>{r.source}</span>}
             </span>
             <span style={{ fontSize: 12.5, fontWeight: 700, fontFamily: C.FM, color: C.t2, flexShrink: 0 }}>{r.value}</span>
             {onGoTo && (
-              <button onClick={() => onGoTo(r.view)} style={btnSm(C.s3, { fontSize: 10.5, padding: '4px 10px', flexShrink: 0 })}><Pencil size={10} /></button>
+              <button onClick={() => onGoTo(r.view)} style={btnSm(C.s3, { fontSize: 10.5, padding: '4px 8px', flexShrink: 0 })}><Pencil size={10} /></button>
             )}
           </div>
         ))}
       </div>
-      <div style={{ marginTop: 10 }}>
+      <div style={{ marginTop: 8 }}>
         <HelpNote>Where a number here is wrong, fix it at the source rather than here — that way every other part of the app agrees with the calculator instead of disagreeing quietly.</HelpNote>
       </div>
     </Disclosure>
@@ -305,8 +305,8 @@ export function AlreadyKnown({ portfolio, applicant, onGoTo, isMobile }) {
 }
 
 /**
- * The questions. Ordered so anything a programme on the student's list actually
- * gates on comes first — a student with no New York programmes should never be
+ * The questions. Ordered so anything a program on the student's list actually
+ * gates on comes first — a student with no New York programs should never be
  * asked a New York question before a question that decides their eligibility.
  */
 export default function IntakeForm({ answers, onAnswer, derived, completeness, priorityFields = [], isMobile }) {
@@ -318,9 +318,9 @@ export default function IntakeForm({ answers, onAnswer, derived, completeness, p
   });
 
   const groups = [
-    { id: 'eligibility', label: 'Eligibility — the yes/no questions', color: C.rose, note: 'These decide whether a percentage can be shown at all. A programme you are not eligible for gets no number, only what would have to change.' },
+    { id: 'eligibility', label: 'Eligibility — the yes/no questions', color: C.rose, note: 'These decide whether a percentage can be shown at all. A program you are not eligible for gets no number, only what would have to change.' },
     { id: 'academics', label: 'Academics', color: C.blue, note: 'Benchmarked against the 25th, 50th and 75th percentile of admitted students — all three, always.' },
-    { id: 'testing', label: 'Testing', color: C.violet, note: 'Section scores and superscore policy, because several programmes gate on one and refuse the other.' },
+    { id: 'testing', label: 'Testing', color: C.violet, note: 'Section scores and superscore policy, because several programs gate on one and refuse the other.' },
     { id: 'portfolio', label: 'Portfolio', color: C.green, note: 'Only what your logged activities cannot already tell us.' },
     { id: 'context', label: 'Context', color: C.amber, note: 'The things that are in every published admit rate and in no chancing tool.' },
   ];
@@ -333,7 +333,7 @@ export default function IntakeForm({ answers, onAnswer, derived, completeness, p
         return (
           <div key={g.id}>
             <SectionTitle color={g.color}>{g.label}</SectionTitle>
-            <div style={{ marginTop: -6, marginBottom: 10 }}><HelpNote color={g.color}>{g.note}</HelpNote></div>
+            <div style={{ marginTop: -6, marginBottom: 8 }}><HelpNote color={g.color}>{g.note}</HelpNote></div>
             <div style={G(2, 12, {}, isMobile)}>
               {fields.map(f => (
                 <Field key={f.id} field={f} isMobile={isMobile}

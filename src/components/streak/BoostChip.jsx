@@ -50,12 +50,12 @@ export default function BoostChip({ boosts = [], onClick, m = false }) {
       aria-label={`${top.def.label} active, ${boostCountdown(top.msLeft)}`}
       style={{
         ...pill(tint(top.def.color, 0.16), top.def.color, {
-          fontSize: m ? 10 : 10.5, fontWeight: 800, letterSpacing: '.03em',
+          fontSize: m ? 10 : 10.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
           border: `1px solid ${tint(top.def.color, 0.34)}`,
           padding: m ? '3px 9px' : '4px 11px',
           cursor: onClick ? 'pointer' : 'default',
         }),
-        display: 'inline-flex', alignItems: 'center', gap: 5,
+        display: 'inline-flex', alignItems: 'center', gap: 4,
         boxShadow: `0 0 14px ${tint(top.def.color, 0.3)}`,
       }}
     >
@@ -83,21 +83,21 @@ export function BoostList({ boosts = [], streakBonusLabel = null, m = false }) {
         const Icon = questIcon(b.def.icon);
         return (
           <div key={b.id ?? b.startedAt} style={{
-            ...glass2({ padding: m ? 11 : 13 }), ...R({ gap: 11 }),
+            ...glass2({ padding: m ? 11 : 13 }), ...R({ gap: 12 }),
             border: `1px solid ${tint(b.def.color, 0.3)}`,
             background: tint(b.def.color, 0.07),
           }}>
             <div style={{
-              width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+              width: 32, height: 32, borderRadius: 8, flexShrink: 0,
               background: tint(b.def.color, 0.16), border: `1px solid ${tint(b.def.color, 0.32)}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}><Icon size={15} color={b.def.color} /></div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={R({ gap: 7, flexWrap: 'wrap' })}>
+              <div style={R({ gap: 8, flexWrap: 'wrap' })}>
                 <span style={{ fontSize: 12.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{b.def.label}</span>
                 <span style={pill(tint(b.def.color, 0.15), b.def.color, { fontSize: 9.5, fontWeight: 800, fontFamily: C.FM })}>×{b.def.multiplier}</span>
               </div>
-              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 2, lineHeight: 1.45 }}>
+              <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>
                 {b.def.blurb}
                 {streakBonusLabel && <span style={{ color: C.t4 }}> Stacks with your league&rsquo;s {streakBonusLabel}.</span>}
               </div>

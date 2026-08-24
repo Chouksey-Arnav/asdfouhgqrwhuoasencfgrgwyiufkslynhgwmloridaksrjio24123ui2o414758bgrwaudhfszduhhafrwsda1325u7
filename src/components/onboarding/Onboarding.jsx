@@ -33,7 +33,7 @@
 // sequence (see steps/grouped.jsx), which takes the interactive screen count
 // from twenty to ten. Two screens whose only interaction was a Continue button
 // (the standalone thank-you, the second of the two settings toggles) folded
-// into their neighbours. The student's progress through those ten is stated in
+// into their neighbors. The student's progress through those ten is stated in
 // words on every screen: "3 more to go".
 //
 // Screens with no real product behind them (fake calendar connect, a
@@ -168,7 +168,7 @@ export default function Onboarding({ account, onComplete, preview = false }) {
 
   // ── Age gate ──────────────────────────────────────────────────────────────
   // Onboarding is where we first learn how old the student is, which makes it
-  // where COPPA is first decided. `blocked` is initialised from storage so a
+  // where COPPA is first decided. `blocked` is initialized from storage so a
   // failed screen survives a reload — a gate you get past by pressing refresh
   // is not a gate. See src/lib/ageGate.js for why the block lives there.
   // `preview` is the dev-only "Replay Onboarding" tool (see App.jsx), which

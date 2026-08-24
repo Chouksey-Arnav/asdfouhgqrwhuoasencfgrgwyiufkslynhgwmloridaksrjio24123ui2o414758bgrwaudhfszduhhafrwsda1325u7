@@ -117,7 +117,7 @@ export default function SatOverviewPanel({
   return (
     <div style={CC({ gap: isMobile ? 14 : 18 })}>
       <SatPageHeader
-        eyebrow="SAT · Digital" title="Score center"
+        eyebrow="SAT · digital" title="Score center"
         sub="Measured only from SAT questions you’ve actually answered."
         meta={[
           ...(daysToExam != null ? [{ value: daysToExam, label: daysToExam === 1 ? 'day to test' : 'days to test', color: daysToExam <= 30 ? C.rose : accent }] : []),
@@ -135,15 +135,15 @@ export default function SatOverviewPanel({
           the baseline is the one to plan against — the layout says so by
           giving them equal billing rather than burying one below the other. */}
       <section style={{
-        background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 14, boxShadow: C.shadow,
+        background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 12, boxShadow: C.shadow,
         overflow: 'hidden', display: 'grid',
         gridTemplateColumns: isMobile ? '1fr' : 'minmax(0,1.35fr) minmax(0,1fr)',
       }}>
         {/* Estimate */}
         <div style={{ padding: isMobile ? 18 : 26, minWidth: 0 }}>
-          <div style={{ ...R({ gap: 8 }), marginBottom: 14 }}>
+          <div style={{ ...R({ gap: 8 }), marginBottom: 12 }}>
             <TrendingUp size={13} color={accent} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: 'uppercase', letterSpacing: '.09em' }}>Score estimate</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Score estimate</span>
             {projection && (
               <span style={pill(tint(confColor, 0.13), confColor, { fontSize: 10, fontWeight: 700, border: `1px solid ${tint(confColor, 0.3)}` })}>
                 {projection.confidence} confidence
@@ -152,19 +152,19 @@ export default function SatOverviewPanel({
           </div>
           {projection ? (
             <>
-              <div style={{ ...R({ gap: 14, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
+              <div style={{ ...R({ gap: 12, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
                 <span style={{
                   fontSize: isMobile ? 38 : 48, fontWeight: 800, fontFamily: C.FD, lineHeight: 1,
-                  color: C.t1, letterSpacing: '-.035em', fontVariantNumeric: 'tabular-nums',
+                  color: C.t1, letterSpacing: 'calc(-0.035em + var(--msp-letter-spacing))', fontVariantNumeric: 'tabular-nums',
                 }}>
-                  {projection.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0 2px' }}>–</span>{projection.high}
+                  {projection.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0px 4px' }}>–</span>{projection.high}
                 </span>
                 <span style={{ fontSize: 11.5, color: C.t3 }}>
                   midpoint <b style={{ color: C.t2, fontFamily: C.FM }}>{projection.mid}</b> · ~{projection.percentile}th percentile
                 </span>
               </div>
 
-              <div style={{ fontSize: 12, color: C.t2, marginTop: 12, lineHeight: 1.65, maxWidth: 520 }}>{projection.note}</div>
+              <div style={{ fontSize: 12, color: C.t2, marginTop: 12, lineHeight: 1.55, maxWidth: 520 }}>{projection.note}</div>
 
               {projection.sections && (
                 <div style={{ ...G(2, 10, {}, isMobile), marginTop: 16 }}>
@@ -172,12 +172,12 @@ export default function SatOverviewPanel({
                     const s = projection.sections[id];
                     if (!s) return null;
                     return (
-                      <div key={id} style={{ ...glass2({ padding: '11px 14px' }), ...R({ gap: 10, justifyContent: 'space-between' }) }}>
+                      <div key={id} style={{ ...glass2({ padding: '12px 12px' }), ...R({ gap: 8, justifyContent: 'space-between' }) }}>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em' }}>{sec.label}</div>
-                          {s.attempts ? <div style={{ fontSize: 9.5, color: C.t4, marginTop: 2 }}>from {s.attempts} questions</div> : null}
+                          <div style={{ fontSize: 10.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{sec.label}</div>
+                          {s.attempts ? <div style={{ fontSize: 9.5, color: C.t4, marginTop: 4 }}>from {s.attempts} questions</div> : null}
                         </div>
-                        <span style={{ fontSize: 20, fontWeight: 800, fontFamily: C.FM, color: sec.color, lineHeight: 1 }}>{s.scaled}</span>
+                        <span style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, fontFamily: C.FM, color: sec.color, lineHeight: 1 }}>{s.scaled}</span>
                       </div>
                     );
                   })}
@@ -185,8 +185,8 @@ export default function SatOverviewPanel({
               )}
 
               {progress && (
-                <div style={{ marginTop: 18 }}>
-                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 6 }}>
+                <div style={{ marginTop: 16 }}>
+                  <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 11.5, color: C.t2, fontWeight: 600 }}>
                       Toward your {progress.target} target
                     </span>
@@ -198,16 +198,16 @@ export default function SatOverviewPanel({
                 </div>
               )}
 
-              <div style={{ ...R({ gap: 7, alignItems: 'flex-start' }), marginTop: 16, paddingTop: 13, borderTop: `1px solid ${C.b0}` }}>
-                <Info size={12} color={C.t4} style={{ marginTop: 2, flexShrink: 0 }} />
-                <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</span>
+              <div style={{ ...R({ gap: 8, alignItems: 'flex-start' }), marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.b0}` }}>
+                <Info size={12} color={C.t4} style={{ marginTop: 4, flexShrink: 0 }} />
+                <span style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55 }}>{SCORE_DISCLAIMER}</span>
               </div>
             </>
           ) : (
             <div>
-              <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, marginBottom: 6 }}>{empty.title}</div>
-              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, maxWidth: 520 }}>{empty.body}</div>
-              <button onClick={() => onNavigate?.(empty.view)} style={{ ...btnG({ padding: '8px 16px' }), marginTop: 14 }}>
+              <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 700, color: C.t1, marginBottom: 4 }}>{empty.title}</div>
+              <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, maxWidth: 520 }}>{empty.body}</div>
+              <button onClick={() => onNavigate?.(empty.view)} style={{ ...btnG({ padding: '8px 16px' }), marginTop: 12 }}>
                 {empty.cta} <ChevronRight size={13} />
               </button>
             </div>
@@ -222,18 +222,18 @@ export default function SatOverviewPanel({
           background: satWash(C.gold, 0.05),
           display: 'flex', flexDirection: 'column',
         }}>
-          <div style={{ ...R({ gap: 8 }), marginBottom: 14 }}>
+          <div style={{ ...R({ gap: 8 }), marginBottom: 12 }}>
             <Gauge size={13} color={C.gold} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: 'uppercase', letterSpacing: '.09em' }}>Adaptive baseline</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>Adaptive baseline</span>
           </div>
           {latestBaseline ? (
             <>
-              <div style={{ ...R({ gap: 10, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
+              <div style={{ ...R({ gap: 8, flexWrap: 'wrap', alignItems: 'baseline' }) }}>
                 <span style={{
                   fontSize: isMobile ? 28 : 34, fontWeight: 800, fontFamily: C.FD, color: C.t1,
-                  letterSpacing: '-.03em', lineHeight: 1, fontVariantNumeric: 'tabular-nums',
+                  letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', lineHeight: 1, fontVariantNumeric: 'tabular-nums',
                 }}>
-                  {latestBaseline.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0 1px' }}>–</span>{latestBaseline.high}
+                  {latestBaseline.low}<span style={{ color: C.t4, fontWeight: 600, padding: '0px 4px' }}>–</span>{latestBaseline.high}
                 </span>
                 <span style={pill(tint(C.gold, 0.14), C.gold, { fontSize: 10 })}>{latestBaseline.confidence} confidence</span>
                 {baselineDelta?.significant && (
@@ -242,14 +242,14 @@ export default function SatOverviewPanel({
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 10, lineHeight: 1.65, flex: 1 }}>
+              <div style={{ fontSize: 11.5, color: C.t3, marginTop: 8, lineHeight: 1.55, flex: 1 }}>
                 One clean {BASELINE_LENGTH}-question adaptive measurement — unlike the running estimate,
                 which averages everything you have ever answered.
                 {baselineOpen ? ' You can take a new one now.' : ` Next one in ${baselineWait}.`}
               </div>
             </>
           ) : (
-            <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, flex: 1 }}>
+            <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, flex: 1 }}>
               You have not set a baseline yet. {BASELINE_LENGTH} questions, each written for you and each one
               harder or easier depending on how the last went — the fastest honest answer to
               &ldquo;where am I actually scoring right now?&rdquo;. Everything else here plans against it.
@@ -257,7 +257,7 @@ export default function SatOverviewPanel({
           )}
           <button
             onClick={() => onNavigate?.('baseline')}
-            style={satBtn(C.gold, { fontSize: 12.5, padding: '10px 20px', marginTop: 16, alignSelf: 'flex-start' })}
+            style={satBtn(C.gold, { fontSize: 12.5, padding: '8px 20px', marginTop: 16, alignSelf: 'flex-start' })}
           >
             {latestBaseline ? (baselineOpen ? 'Retake baseline' : 'See breakdown') : 'Set your baseline'}
           </button>
@@ -272,23 +272,23 @@ export default function SatOverviewPanel({
         style={{
           background: C.surf, border: `1px solid ${C.b1}`,
           borderLeft: `3px solid ${urgent ? C.rose : accent}`,
-          borderRadius: 14, boxShadow: C.shadowSm,
+          borderRadius: 12, boxShadow: C.shadowSm,
           padding: isMobile ? 16 : '20px 24px',
         }}
       >
-        <div style={{ fontSize: 10, fontWeight: 800, color: urgent ? C.roseL : accent, letterSpacing: '.13em', textTransform: 'uppercase', marginBottom: 7 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: urgent ? C.roseL : accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
           Do this next
         </div>
-        <div style={{ ...R({ gap: 18, flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between' }) }}>
+        <div style={{ ...R({ gap: 16, flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between' }) }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>
+            <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
               {action.title}
             </div>
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginTop: 6, maxWidth: 620 }}>{action.body}</div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginTop: 4, maxWidth: 620 }}>{action.body}</div>
           </div>
-          <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
             {secondary.map(s => (
-              <button key={s.id} onClick={() => onNavigate?.(s.view, s.params)} style={btnG({ padding: '8px 14px', fontSize: 12 })}>
+              <button key={s.id} onClick={() => onNavigate?.(s.view, s.params)} style={btnG({ padding: '8px 12px', fontSize: 12 })}>
                 {s.label}
               </button>
             ))}
@@ -319,18 +319,18 @@ export default function SatOverviewPanel({
         // anything. Below that the honest answer is "take the diagnostic", which
         // the next-action card above is already saying.
         <div style={{
-          border: `1px dashed ${tint(accent, 0.35)}`, borderRadius: 14,
+          border: `1px dashed ${tint(accent, 0.35)}`, borderRadius: 12,
           background: C.surf2, padding: isMobile ? 16 : '18px 22px',
         }}>
           <div style={R({ gap: 12, flexWrap: 'wrap' })}>
             <div style={{ flex: 1, minWidth: 200 }}>
               <div style={{ fontSize: 13.5, fontWeight: 700, color: C.t1 }}>Want this turned into a plan?</div>
-              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6, marginTop: 4 }}>
+              <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
                 Medabrain will read your mastery, your review log and your pacing, and write you a few
                 specific weeks of work.
               </div>
             </div>
-            <button onClick={() => buildPlan()} style={btnG({ padding: '9px 16px', fontSize: 12.5, flexShrink: 0 })}>
+            <button onClick={() => buildPlan()} style={btnG({ padding: '8px 16px', fontSize: 12.5, flexShrink: 0 })}>
               <Sparkles size={13} /> Build my plan
             </button>
           </div>
@@ -366,23 +366,23 @@ export default function SatOverviewPanel({
           title="Where your points are" icon={Target} iconColor={C.rose} m={isMobile}
           action={<span style={{ fontSize: 10.5, color: C.t4 }}>ranked by leverage</span>}
         >
-          <div style={{ fontSize: 12, color: C.t3, marginBottom: 14, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.t3, marginBottom: 12, lineHeight: 1.55 }}>
             How far from mastered you are, multiplied by how many questions the real exam spends on it.
           </div>
-          <div style={CC({ gap: 10 })}>
+          <div style={CC({ gap: 8 })}>
             {topWeak.map(s => (
               <button
                 key={s.skill} onClick={() => onNavigate?.('practice', { skill: s.skill })}
                 className="sat-choice sat-tap"
-                style={{ ...glass2({ padding: 13 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}`, width: '100%' }}
+                style={{ ...glass2({ padding: 12 }), textAlign: 'left', cursor: 'pointer', fontFamily: C.FB, border: `1px solid ${C.b1}`, width: '100%' }}
               >
-                <div style={{ ...R({ gap: 10 }), justifyContent: 'space-between', marginBottom: 7 }}>
+                <div style={{ ...R({ gap: 8 }), justifyContent: 'space-between', marginBottom: 8 }}>
                   <span style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{s.label}</span>
                   <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
                     {Math.round(s.mastery * 100)}% · n={s.attempts}
                   </span>
                 </div>
-                <div style={R({ gap: 10 })}>
+                <div style={R({ gap: 8 })}>
                   <div style={{ flex: 1 }}><Bar pct={s.mastery * 100} color={s.color} h={4} /></div>
                   <span style={{ fontSize: 10, color: C.t4, whiteSpace: 'nowrap' }}>
                     ~{(s.examShare * 98).toFixed(1)} q/exam
@@ -412,7 +412,7 @@ export default function SatOverviewPanel({
           color-without-meaning the SAT palette policy rules out. They share
           the pillar accent now and are told apart by their icons and labels. */}
       <SatCard title="Your test-day tools" icon={Calculator} iconColor={accent} m={isMobile}>
-        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7, marginBottom: 14, maxWidth: 620 }}>
+        <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12, maxWidth: 620 }}>
           The Digital SAT gives you Desmos on every Math question and keeps a formula sheet on
           screen for the whole section. Both are here, on every SAT screen — including mid-question
           and mid-test — so the way you practice is the way you will actually sit the exam.

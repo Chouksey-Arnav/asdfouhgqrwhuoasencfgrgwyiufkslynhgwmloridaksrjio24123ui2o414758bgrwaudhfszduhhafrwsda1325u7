@@ -14,7 +14,7 @@
 // logic class computes per state change.
 
 const CACHE = new Map();
-// A style string built per-render (a colour interpolated into a template
+// A style string built per-render (a color interpolated into a template
 // literal) would otherwise grow the cache without bound over a long session.
 const MAX_CACHE = 4000;
 
@@ -29,7 +29,7 @@ export function css(decls) {
   // Split on semicolons that are not inside brackets or quotes: `background:
   // linear-gradient(...)` and `font-family: 'Onest', sans-serif` both contain
   // commas and parentheses, and one of the gradients contains a semicolon-free
-  // but comma-heavy colour list that a naive split would still survive — the
+  // but comma-heavy color list that a naive split would still survive — the
   // depth counter is here for the `url(data:...;base64,...)` shape that would
   // not.
   let depth = 0;

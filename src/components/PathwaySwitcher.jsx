@@ -6,7 +6,7 @@
 // other two doing?" Everything here exists to answer those in one glance and
 // make the move between them cost one click (or one keystroke).
 //
-// Four surfaces, one shared vocabulary of colour + progress ring, so switching
+// Four surfaces, one shared vocabulary of color + progress ring, so switching
 // feels like the same gesture wherever you do it:
 //
 //   PathwayRail          the primary switcher — a segmented control with a
@@ -16,11 +16,11 @@
 //   ParallelPathwayBoard the at-a-glance board — every enrolled pathway's real
 //                        progress and its exact next lesson, resumable in place
 //                        without switching focus at all.
-//   PathwayManager       add / swap / drop, over the full catalogue of ten.
+//   PathwayManager       add / swap / drop, over the full catalog of ten.
 //
 // Design rules held in common across all four:
 //   · The pathway's own accent is its identity everywhere. Never a generic
-//     "selected blue" — a student learns the colour, then stops reading labels.
+//     "selected blue" — a student learns the color, then stops reading labels.
 //   · Progress is always shown, never on hover. The reason to look at the
 //     switcher is usually to compare, not to navigate.
 //   · Motion is a single shared `layoutId` indicator that slides between chips,
@@ -104,7 +104,7 @@ export function PathwayRail({
       aria-label="Your pathways"
       data-tour="pathway-rail"
       style={{
-        ...glass({ padding: m ? 8 : 9, borderRadius: 18 }),
+        ...glass({ padding: m ? 8 : 9, borderRadius: 16 }),
         display: 'flex', gap: 8, alignItems: 'stretch',
         overflowX: 'auto', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
       }}
@@ -132,8 +132,8 @@ export function PathwayRail({
               // chip always peeks in from the edge — a rail that looks like it ends at two
               // pathways is a rail nobody scrolls.
               position: 'relative', flex: m ? '0 0 auto' : '1 1 0', minWidth: m ? 146 : 0,
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: m ? '10px 12px' : '11px 14px', borderRadius: 13,
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
               background: 'transparent', border: 'none', cursor: 'pointer',
               textAlign: 'left', fontFamily: C.FB, color: active ? C.t1 : C.t2,
               transition: 'color .18s',
@@ -144,13 +144,13 @@ export function PathwayRail({
                 rather than a repaint. */}
             {active && (
               reducedMotion ? (
-                <span style={{ position: 'absolute', inset: 0, borderRadius: 13, background: `${row.accent || C.blue}1f`, border: `1px solid ${row.accent || C.blue}55` }} />
+                <span style={{ position: 'absolute', inset: 0, borderRadius: 12, background: `${row.accent || C.blue}1f`, border: `1px solid ${row.accent || C.blue}55` }} />
               ) : (
                 <motion.span
                   layoutId={`${layoutGroup}-indicator`}
                   transition={springy}
                   style={{
-                    position: 'absolute', inset: 0, borderRadius: 13,
+                    position: 'absolute', inset: 0, borderRadius: 12,
                     background: `linear-gradient(135deg,${row.accent || C.blue}26,${row.accent || C.blue}0f)`,
                     border: `1px solid ${row.accent || C.blue}55`,
                     boxShadow: `0 6px 20px ${row.accent || C.blue}22, inset 0 1px 0 rgba(255,255,255,0.06)`,
@@ -167,12 +167,12 @@ export function PathwayRail({
             <span style={{ position: 'relative', flex: 1, minWidth: 0 }}>
               <span style={{
                 display: 'block', fontSize: 12.5, fontWeight: active ? 800 : 600,
-                color: active ? a : C.t2, fontFamily: C.FD, letterSpacing: '-.01em',
+                color: active ? a : C.t2, fontFamily: C.FD, 
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {shortLabel(row.key, row.label)}
               </span>
-              <span style={{ display: 'block', fontSize: 10, color: C.t3, fontFamily: C.FM, marginTop: 1 }}>
+              <span style={{ display: 'block', fontSize: 10, color: C.t3, fontFamily: C.FM, marginTop: 4 }}>
                 {row.complete ? 'complete' : `${row.done}/${row.total} lessons`}
               </span>
             </span>
@@ -183,7 +183,7 @@ export function PathwayRail({
                   position: 'relative', flexShrink: 0, fontSize: 9, fontFamily: C.FM,
                   color: active ? a : C.t4, opacity: active ? 0.9 : 0.55,
                   border: `1px solid ${active ? `${row.accent || C.blue}45` : C.b1}`,
-                  borderRadius: 5, padding: '1px 5px',
+                  borderRadius: 4, padding: '4px 4px',
                 }}>
                   {SLOT_HINTS[i]}
                 </span>
@@ -198,8 +198,8 @@ export function PathwayRail({
           whileTap={reducedMotion ? undefined : { scale: 0.985 }}
           title={`Add another pathway — you can run up to ${MAX_ACTIVE_PATHWAYS} at once`}
           style={{
-            flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 7,
-            padding: m ? '10px 12px' : '11px 14px', borderRadius: 13, cursor: 'pointer',
+            flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 8,
+            padding: m ? '10px 12px' : '11px 14px', borderRadius: 12, cursor: 'pointer',
             background: 'transparent', border: `1px dashed ${C.b2}`, color: C.t3,
             fontSize: 12, fontWeight: 600, fontFamily: C.FB, whiteSpace: 'nowrap',
           }}
@@ -286,7 +286,7 @@ export function PathwayQuickSwitch({
         data-tour="pathway-quickswitch"
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: compact ? 6 : 9,
-          padding: compact ? '6px 8px' : '9px 11px', borderRadius: 11, cursor: 'pointer',
+          padding: compact ? '6px 8px' : '9px 11px', borderRadius: 12, cursor: 'pointer',
           background: open ? `${current.accent || C.blue}16` : C.surfHi,
           border: `1px solid ${open ? `${current.accent || C.blue}45` : C.b1}`,
           color: C.t1, fontFamily: C.FB, textAlign: 'left', transition: 'background .15s,border-color .15s',
@@ -305,7 +305,7 @@ export function PathwayQuickSwitch({
             name above spells all of it out for a screen reader. */}
         {!compact && (
           <span style={{ flex: 1, minWidth: 0 }}>
-            <span style={{ display: 'block', fontSize: 8.5, fontWeight: 800, color: C.t3, letterSpacing: '.11em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+            <span style={{ display: 'block', fontSize: 8.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', whiteSpace: 'nowrap' }}>
               {rows.length > 1 ? `Pathway ${rows.findIndex((r) => r.key === current.key) + 1} of ${rows.length}` : 'Pathway'}
             </span>
             <span style={{
@@ -319,7 +319,7 @@ export function PathwayQuickSwitch({
         {/* The other running pathways, as their own accent dots. Even collapsed,
             the shell keeps saying "two more are alive over here." */}
         {rows.length > 1 && (
-          <span style={{ display: 'flex', gap: 3, flexShrink: 0 }} aria-hidden="true">
+          <span style={{ display: 'flex', gap: 4, flexShrink: 0 }} aria-hidden="true">
             {rows.filter((r) => r.key !== current.key).map((r) => (
               <span key={r.key} style={{
                 width: 6, height: 6, borderRadius: '50%',
@@ -355,19 +355,19 @@ export function PathwayQuickSwitch({
                 (typeof window !== 'undefined' ? window.innerWidth : 1280) - PANEL_W - 8,
               )),
               width: PANEL_W, maxWidth: 'calc(100vw - 16px)',
-              background: C.s1, border: `1px solid ${C.b2}`, borderRadius: 14,
+              background: C.s1, border: `1px solid ${C.b2}`, borderRadius: 12,
               boxShadow: '0 20px 56px rgba(0,0,0,0.55)', overflow: 'hidden',
             }}
           >
-            <div style={{ padding: '10px 13px 8px', borderBottom: `1px solid ${C.b1}` }}>
-              <div style={{ fontSize: 9, fontWeight: 800, color: C.t3, letterSpacing: '.11em', textTransform: 'uppercase' }}>
+            <div style={{ padding: '8px 12px 8px', borderBottom: `1px solid ${C.b1}` }}>
+              <div style={{ fontSize: 9, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                 Running in parallel
               </div>
-              <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.5 }}>
                 {rows.length} of {MAX_ACTIVE_PATHWAYS} slots · switch anytime, nothing is lost
               </div>
             </div>
-            <div style={{ padding: 6 }}>
+            <div style={{ padding: 4 }}>
               {rows.map((r, i) => {
                 const Ic = pathIcon(r.key);
                 const ra = accentText(r.accent || C.blue);
@@ -382,8 +382,8 @@ export function PathwayQuickSwitch({
                     onMouseEnter={() => setActiveIdx(i)}
                     onClick={() => { onFocus?.(r.key); setOpen(false); }}
                     style={{
-                      display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px',
-                      borderRadius: 10, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px',
+                      borderRadius: 8, cursor: 'pointer',
                       background: hover ? `${r.accent || C.blue}14` : 'transparent',
                       border: `1px solid ${isFocused ? `${r.accent || C.blue}40` : 'transparent'}`,
                     }}
@@ -395,14 +395,14 @@ export function PathwayQuickSwitch({
                       </span>
                     </span>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <span style={{
                           fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FD,
                           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                         }}>{shortLabel(r.key, r.label)}</span>
-                        {isFocused && <span style={{ ...pill(`${r.accent || C.blue}20`, ra, { fontSize: 8.5, padding: '1px 6px' }) }}>IN FOCUS</span>}
+                        {isFocused && <span style={{ ...pill(`${r.accent || C.blue}20`, ra, { fontSize: 8.5, padding: '4px 4px' }) }}>IN FOCUS</span>}
                       </span>
-                      <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2 }}>
+                      <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>
                         {r.complete ? 'Every lesson verified' : r.resume ? `Next: ${r.resume.lesson.title}` : `${r.done}/${r.total} lessons`}
                       </span>
                     </span>
@@ -427,14 +427,14 @@ export function PathwayQuickSwitch({
                 );
               })}
             </div>
-            <div style={{ display: 'flex', gap: 8, padding: '8px 10px 10px', borderTop: `1px solid ${C.b1}` }}>
+            <div style={{ display: 'flex', gap: 8, padding: '8px 8px 8px', borderTop: `1px solid ${C.b1}` }}>
               {rows.length < MAX_ACTIVE_PATHWAYS && onAdd && (
-                <button onClick={() => { setOpen(false); onAdd(); }} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 5 }}>
+                <button onClick={() => { setOpen(false); onAdd(); }} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 4 }}>
                   <Plus size={11} />Add pathway
                 </button>
               )}
               {onManage && (
-                <button onClick={() => { setOpen(false); onManage(); }} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 5 }}>
+                <button onClick={() => { setOpen(false); onManage(); }} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 4 }}>
                   <Layers3 size={11} />Manage
                 </button>
               )}
@@ -489,23 +489,23 @@ export function ParallelPathwayBoard({
             }}
           >
             {isFocused && <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${r.accent || C.blue},${r.accent || C.blue}00)` }} />}
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{
-                width: 38, height: 38, borderRadius: 11, flexShrink: 0, display: 'grid', placeItems: 'center',
+                width: 38, height: 38, borderRadius: 12, flexShrink: 0, display: 'grid', placeItems: 'center',
                 background: `${r.accent || C.blue}18`, border: `1px solid ${r.accent || C.blue}38`,
               }}>
                 <Ic size={17} color={a} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.01em' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD}}>
                     {shortLabel(r.key, r.label)}
                   </span>
                   {isFocused
-                    ? <span style={{ ...pill(`${r.accent || C.blue}1e`, a, { fontSize: 8.5, padding: '1px 6px', fontWeight: 800 }) }}>IN FOCUS</span>
-                    : <span style={{ ...pill(C.s3, C.t3, { fontSize: 8.5, padding: '1px 6px' }) }}>{SLOT_HINTS[i]}</span>}
+                    ? <span style={{ ...pill(`${r.accent || C.blue}1e`, a, { fontSize: 8.5, padding: '4px 4px', fontWeight: 800 }) }}>IN FOCUS</span>
+                    : <span style={{ ...pill(C.s3, C.t3, { fontSize: 8.5, padding: '4px 4px' }) }}>{SLOT_HINTS[i]}</span>}
                 </div>
-                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3, fontFamily: C.FM }}>
+                <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, fontFamily: C.FM }}>
                   {r.done}/{r.total} lessons · {r.pct}%
                 </div>
               </div>
@@ -516,22 +516,22 @@ export function ParallelPathwayBoard({
 
             <div style={{ flex: 1, minHeight: 34 }}>
               {r.complete ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 11.5, color: C.greenL }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 11.5, color: C.greenL }}>
                   <Trophy size={13} />Every lesson verified — certificate ready
                 </div>
               ) : r.resume ? (
                 <>
-                  <div style={{ fontSize: 8.5, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: 8.5, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                     {r.resumeIsContinue ? 'Pick back up' : r.started ? 'Up next' : 'Starts with'}
                   </div>
-                  <div style={{ fontSize: 12, color: C.t2, marginTop: 3, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  <div style={{ fontSize: 12, color: C.t2, marginTop: 4, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                     {r.resume.lesson.title}
                   </div>
                 </>
               ) : null}
             </div>
 
-            <div style={{ display: 'flex', gap: 7 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               {r.resume && onResume && (
                 <motion.button
                   whileHover={reducedMotion ? undefined : { scale: 1.02 }}
@@ -539,7 +539,7 @@ export function ParallelPathwayBoard({
                   onClick={() => onResume(r)}
                   style={{
                     ...btn(accentGrad(r.accent || C.blue), { flex: 1, fontSize: 11.5, padding: '8px 12px', color: onTint(r.accent || C.blue) }),
-                    display: 'inline-flex', gap: 6,
+                    display: 'inline-flex', gap: 4,
                   }}
                 >
                   {r.resumeIsContinue ? <RefreshCw size={12} /> : <Play size={12} />}
@@ -550,7 +550,7 @@ export function ParallelPathwayBoard({
                 <button
                   onClick={() => onFocus?.(r.key)}
                   title={`Bring ${r.label} into focus — your plan, coach and dashboard follow it`}
-                  style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t2, flex: r.resume ? '0 0 auto' : 1 }), display: 'inline-flex', gap: 5 }}
+                  style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t2, flex: r.resume ? '0 0 auto' : 1 }), display: 'inline-flex', gap: 4 }}
                 >
                   <ArrowLeftRight size={11} />Focus
                 </button>
@@ -570,7 +570,7 @@ export function ParallelPathwayBoard({
             gap: 8, minHeight: 150, textAlign: 'center', fontFamily: C.FB,
           }}
         >
-          <div style={{ width: 36, height: 36, borderRadius: 11, display: 'grid', placeItems: 'center', background: `${C.violet}16`, border: `1px solid ${C.violet}35` }}>
+          <div style={{ width: 36, height: 36, borderRadius: 12, display: 'grid', placeItems: 'center', background: `${C.violet}16`, border: `1px solid ${C.violet}35` }}>
             <Plus size={17} color={C.violetL} />
           </div>
           <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t2, fontFamily: C.FD }}>Add a pathway</div>
@@ -584,7 +584,7 @@ export function ParallelPathwayBoard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PathwayManager — add / swap / drop across the full catalogue
+// PathwayManager — add / swap / drop across the full catalog
 // ─────────────────────────────────────────────────────────────────────────────
 /**
  * Replaces the old "Switch Study Track" grid, whose every tile silently replaced
@@ -603,8 +603,8 @@ export function PathwayManager({
   const byKey = Object.fromEntries(rows.map((r) => [r.key, r]));
 
   return (
-    <div style={CC({ gap: 14 })}>
-      <div style={{ ...glass2({ padding: '11px 14px', background: `${C.violet}0d`, border: `1px solid ${C.violet}25` }), display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div style={CC({ gap: 12 })}>
+      <div style={{ ...glass2({ padding: '12px 12px', background: `${C.violet}0d`, border: `1px solid ${C.violet}25` }), display: 'flex', alignItems: 'center', gap: 8 }}>
         <Sparkles size={14} color={C.violetL} style={{ flexShrink: 0 }} />
         <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
           You're running <strong style={{ color: C.t1 }}>{rows.length} of {MAX_ACTIVE_PATHWAYS}</strong> pathways.
@@ -626,52 +626,52 @@ export function PathwayManager({
               key={key}
               whileHover={reducedMotion ? undefined : { borderColor: `${p.accent}45`, y: -1 }}
               style={{
-                ...glass2({ padding: 14, borderRadius: 13 }),
+                ...glass2({ padding: 12, borderRadius: 12 }),
                 border: `1px solid ${isEnrolled ? `${p.accent}45` : C.b1}`,
                 background: isEnrolled ? `linear-gradient(140deg,${p.accent}10,transparent 60%)` : C.surf2,
-                display: 'flex', flexDirection: 'column', gap: 10,
+                display: 'flex', flexDirection: 'column', gap: 8,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                <div style={{ width: 32, height: 32, borderRadius: 9, flexShrink: 0, display: 'grid', placeItems: 'center', background: `${p.accent}16`, border: `1px solid ${p.accent}30` }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, display: 'grid', placeItems: 'center', background: `${p.accent}16`, border: `1px solid ${p.accent}30` }}>
                   <Ic size={15} color={a} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 700, color: isEnrolled ? a : C.t1, fontFamily: C.FD, lineHeight: 1.3 }}>{p.label}</div>
-                  <div style={{ fontSize: 10, color: C.t3, marginTop: 2, fontFamily: C.FM }}>
+                  <div style={{ fontSize: 10, color: C.t3, marginTop: 4, fontFamily: C.FM }}>
                     {(p.units || []).length} units · {lessons} lessons
                     {row && row.done > 0 ? ` · ${row.done} done` : ''}
                   </div>
                 </div>
-                {isFocused && <span style={{ ...pill(`${p.accent}1e`, a, { fontSize: 8.5, padding: '1px 6px', fontWeight: 800, flexShrink: 0 }) }}>IN FOCUS</span>}
+                {isFocused && <span style={{ ...pill(`${p.accent}1e`, a, { fontSize: 8.5, padding: '4px 4px', fontWeight: 800, flexShrink: 0 }) }}>IN FOCUS</span>}
               </div>
 
               {p.tagline && <div style={{ fontSize: 10.5, color: C.t3, lineHeight: 1.5 }}>{p.tagline}</div>}
               {isEnrolled && row && <Bar pct={row.pct} color={row.complete ? C.green : a} h={3} />}
 
-              <div style={{ display: 'flex', gap: 6, marginTop: 'auto', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 4, marginTop: 'auto', flexWrap: 'wrap' }}>
                 {!isEnrolled && !full && (
-                  <button onClick={() => onEnroll?.(key)} style={{ ...btn(accentGrad(p.accent), { flex: 1, fontSize: 11, padding: '7px 10px', color: onTint(p.accent) }), display: 'inline-flex', gap: 5 }}>
+                  <button onClick={() => onEnroll?.(key)} style={{ ...btn(accentGrad(p.accent), { flex: 1, fontSize: 11, padding: '8px 8px', color: onTint(p.accent) }), display: 'inline-flex', gap: 4 }}>
                     <Plus size={11} />Add & study
                   </button>
                 )}
                 {!isEnrolled && full && (
-                  <button onClick={() => setSwapFor(swapFor === key ? null : key)} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 5 }}>
+                  <button onClick={() => setSwapFor(swapFor === key ? null : key)} style={{ ...btnSm(C.surfHi, { flex: 1, fontSize: 11, color: C.t2 }), display: 'inline-flex', gap: 4 }}>
                     <ArrowLeftRight size={11} />Swap one out
                   </button>
                 )}
                 {isEnrolled && !isFocused && (
-                  <button onClick={() => onFocus?.(key)} style={{ ...btn(accentGrad(p.accent), { flex: 1, fontSize: 11, padding: '7px 10px', color: onTint(p.accent) }), display: 'inline-flex', gap: 5 }}>
+                  <button onClick={() => onFocus?.(key)} style={{ ...btn(accentGrad(p.accent), { flex: 1, fontSize: 11, padding: '8px 8px', color: onTint(p.accent) }), display: 'inline-flex', gap: 4 }}>
                     <ArrowLeftRight size={11} />Focus
                   </button>
                 )}
                 {isEnrolled && isFocused && (
-                  <span style={{ ...btnSm(`${p.accent}14`, { flex: 1, fontSize: 11, color: a, border: `1px solid ${p.accent}35`, cursor: 'default' }), display: 'inline-flex', gap: 5 }}>
+                  <span style={{ ...btnSm(`${p.accent}14`, { flex: 1, fontSize: 11, color: a, border: `1px solid ${p.accent}35`, cursor: 'default' }), display: 'inline-flex', gap: 4 }}>
                     <Check size={11} />Studying now
                   </span>
                 )}
                 {onDetails && (
-                  <button onClick={() => onDetails(key)} title="See what this pathway covers" style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t3, padding: '6px 9px' }) }}>
+                  <button onClick={() => onDetails(key)} title="See what this pathway covers" style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t3, padding: '4px 8px' }) }}>
                     Details
                   </button>
                 )}
@@ -680,7 +680,7 @@ export function PathwayManager({
                     onClick={() => setConfirmDrop(confirmDrop === key ? null : key)}
                     title="Stop studying this pathway (progress is kept)"
                     aria-label={`Stop studying ${p.label}`}
-                    style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t3, padding: '6px 9px' }) }}
+                    style={{ ...btnSm(C.surfHi, { fontSize: 11, color: C.t3, padding: '4px 8px' }) }}
                   >
                     <X size={11} />
                   </button>
@@ -695,7 +695,7 @@ export function PathwayManager({
                     exit={reducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
                     style={{ overflow: 'hidden' }}
                   >
-                    <div style={{ ...glass2({ padding: '10px 12px', background: `${C.amber}0e`, border: `1px solid ${C.amber}30` }) }}>
+                    <div style={{ ...glass2({ padding: '8px 12px', background: `${C.amber}0e`, border: `1px solid ${C.amber}30` }) }}>
                       <div style={{ fontSize: 11, color: C.t2, lineHeight: 1.5 }}>
                         {/* The reassurance has to be true, not just soothing — so it counts. With
                             nothing finished yet there is no progress to promise, and saying "your
@@ -705,7 +705,7 @@ export function PathwayManager({
                           ? <>Stop studying {p.label}? Your {row.done} finished lesson{row.done === 1 ? '' : 's'} stay saved — add it back anytime and it resumes exactly here.</>
                           : <>Stop studying {p.label}? Nothing is lost — you haven't finished any lessons in it yet, and it'll be waiting exactly as it is if you come back.</>}
                       </div>
-                      <div style={{ display: 'flex', gap: 6, marginTop: 9 }}>
+                      <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
                         <button onClick={() => { onDrop?.(key); setConfirmDrop(null); }} style={{ ...btnSm(`${C.amber}1e`, { fontSize: 10.5, color: C.amberL, border: `1px solid ${C.amber}40` }) }}>Stop studying it</button>
                         <button onClick={() => setConfirmDrop(null)} style={{ ...btnSm(C.surfHi, { fontSize: 10.5, color: C.t3 }) }}>Keep it</button>
                       </div>
@@ -719,11 +719,11 @@ export function PathwayManager({
                     exit={reducedMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
                     style={{ overflow: 'hidden' }}
                   >
-                    <div style={{ ...glass2({ padding: '10px 12px', background: `${C.violet}0e`, border: `1px solid ${C.violet}30` }) }}>
+                    <div style={{ ...glass2({ padding: '8px 12px', background: `${C.violet}0e`, border: `1px solid ${C.violet}30` }) }}>
                       <div style={{ fontSize: 10.5, color: C.t2, lineHeight: 1.5, marginBottom: 8 }}>
                         You're at {MAX_ACTIVE_PATHWAYS}. Which one should {p.label} take over from? (Its progress is kept.)
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         {rows.map((r) => (
                           <button
                             key={r.key}

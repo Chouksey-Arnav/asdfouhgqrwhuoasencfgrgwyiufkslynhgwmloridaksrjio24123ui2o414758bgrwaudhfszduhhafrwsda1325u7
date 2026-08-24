@@ -111,7 +111,7 @@ function buildPlanPrompt(profile) {
 }
 
 /**
- * Validate and normalise a plan.
+ * Validate and normalize a plan.
  *
  * Anything referencing a skill or panel that does not exist is dropped rather
  * than rendered — a plan that points at a screen the app does not have is worse

@@ -137,7 +137,7 @@ export function ageGateFor(credential, age) {
  * that being wrong about it matters.
  */
 export function typicalAgeForGrade(gradeStage) {
-  return { freshman: 14, sophomore: 15, junior: 16, senior: 17, gap: 18 }[gradeStage] ?? null;
+  return { freshman: 14, sophomore: 15, junior: 16, senior: 17, gap: 16 }[gradeStage] ?? null;
 }
 
 /**
@@ -190,7 +190,7 @@ export function searchCredentials(query, { limit = 14, stateCode = null, types =
     else if ((item.issuers || []).some(i => norm(i).includes(q))) score = 20;
 
     if (!score) continue;
-    // A tie between a credential and a skill goes to the credential: the field is labelled
+    // A tie between a credential and a skill goes to the credential: the field is labeled
     // "Skill or certification" and the certifications are the ones with a wrong-name problem.
     if (item.type === 'skill') score -= 4;
     scored.push({ item, score });

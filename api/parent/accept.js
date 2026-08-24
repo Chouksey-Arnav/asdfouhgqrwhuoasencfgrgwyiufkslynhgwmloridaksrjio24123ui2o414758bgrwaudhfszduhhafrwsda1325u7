@@ -103,7 +103,7 @@ export default async function handler(req, res) {
       // own tolerant query rather than added to LINK_SELECT, because LINK_SELECT is used by every
       // other read in this feature and naming a column that a not-yet-migrated deployment does
       // not have would break all of them at once. Absent claim → the screen simply falls back to
-      // the account's display name, which is exactly the pre-0009 behaviour.
+      // the account's display name, which is exactly the pre-0009 behavior.
       let claim = {};
       const { data: claimRow } = await supabase
         .from('parent_links')

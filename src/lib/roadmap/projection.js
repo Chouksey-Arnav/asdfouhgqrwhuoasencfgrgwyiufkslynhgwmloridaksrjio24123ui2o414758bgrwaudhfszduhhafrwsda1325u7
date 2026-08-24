@@ -35,7 +35,7 @@
 //    splitting a contribution across components is a knob with no principled
 //    setting and it would make the arithmetic unauditable.
 // 2. An item is worth POINTS_PER_EFFORT_UNIT points in its component, scaled by
-//    the same effort weights monthlyLoad uses. That constant is a judgement,
+//    the same effort weights monthlyLoad uses. That constant is a judgment,
 //    not a measurement, and it is named and exported so it reads as one.
 // 3. A component cannot exceed 100, and contributions are applied against the
 //    remaining headroom rather than added blindly — so a student already at 90
@@ -48,10 +48,10 @@
 //    projection. They are not a future gain; they are why the line starts where
 //    it starts.
 //
-// Every one of those five is a modelling choice a reasonable person could argue
+// Every one of those five is a modeling choice a reasonable person could argue
 // with, which is why the UI that renders this says out loud that it is a
 // projection of this app's own score under the assumption that the roadmap gets
-// finished. An honest model, labelled, beats a confident one.
+// finished. An honest model, labeled, beats a confident one.
 // ─────────────────────────────────────────────────────────────────────────────
 import { dayKey, daysBetween, shiftDays } from '../timeline.js';
 import { allItems, effectiveDue, OPEN_STATUSES } from './model.js';
@@ -86,7 +86,7 @@ const EFFORT_UNITS = { light: 1, moderate: 2, heavy: 4, immersive: 6 };
 /**
  * Points of subscore movement one unit of effort is assumed to buy.
  *
- * A judgement call, exported so it is visible as one. Calibrated so that a
+ * A judgment call, exported so it is visible as one. Calibrated so that a
  * typical twelve-item year — the capacity the generator targets for a moderate
  * weekly load — closes roughly half to two thirds of an average student's gap
  * to 100, which is about what a genuinely good year does and is deliberately

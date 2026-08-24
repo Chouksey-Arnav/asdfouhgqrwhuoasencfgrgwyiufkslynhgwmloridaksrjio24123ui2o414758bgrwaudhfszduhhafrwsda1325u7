@@ -84,7 +84,7 @@ const NAV_GROUPS = [
 ];
 
 /**
- * The SAT sub-navigation: an underline tab rail with labelled groups.
+ * The SAT sub-navigation: an underline tab rail with labeled groups.
  * Consumes the same `items` array the old pill SubNav did (id, label, ic,
  * badge) and keeps its routing contract — `hrefFor` makes every tab a real
  * link so ⌘-click and "copy link address" behave like navigation.
@@ -193,12 +193,19 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
           <div
             aria-hidden
             style={{
-              position: 'absolute', left: ink.left + (m ? 6 : 10), width: ink.width - (m ? 12 : 20),
-              bottom: -1, height: 2, borderRadius: 2, background: accent,
+              // The ink bar is drawn at a fixed 1px width at the origin and
+              // moved and stretched with a transform, so sliding it between
+              // tabs costs a composited matrix rather than a layout pass per
+              // frame. `left`/`width` transitions were the old way and they
+              // stuttered on exactly the phones this is for.
+              position: 'absolute', left: 0, width: 1,
+              transform: `translateX(${ink.left + (m ? 6 : 10)}px) scaleX(${Math.max(0, ink.width - (m ? 12 : 20))})`,
+              transformOrigin: 'left',
+              bottom: -1, height: 2, borderRadius: 4, background: accent,
               // No halo. The underline is already the only moving thing in the
               // header; a glow under it made the whole rail feel electric.
               boxShadow: `0 0 6px ${tint(accent, 0.25)}`,
-              transition: 'left .25s cubic-bezier(.4,0,.2,1), width .25s cubic-bezier(.4,0,.2,1)',
+              transition: 'transform 200ms cubic-bezier(.4,0,.2,1)',
             }}
           />
         )}
@@ -209,8 +216,7 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
             )}
             {!m && g.label && (
               <span style={{
-                alignSelf: 'center', fontSize: 9, fontWeight: 800, letterSpacing: '.14em',
-                textTransform: 'uppercase', color: C.t4, marginRight: 8, userSelect: 'none', whiteSpace: 'nowrap',
+                alignSelf: 'center', fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4, marginRight: 8, userSelect: 'none', whiteSpace: 'nowrap',
               }}>
                 {g.label}
               </span>
@@ -236,12 +242,12 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
                     onChange(it.id);
                   }}
                   style={{
-                    position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 7,
+                    position: 'relative', display: 'inline-flex', alignItems: 'center', gap: 8,
                     padding: m ? '10px 10px 12px' : '10px 13px 13px',
                     background: 'none', border: 'none', textDecoration: 'none',
                     color: isActive ? C.t1 : C.t3, fontWeight: isActive ? 700 : 500,
                     fontSize: m ? 12 : 12.5, fontFamily: C.FB, cursor: 'pointer',
-                    whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '.005em',
+                    whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))',
                   }}
                 >
                   {Icon && <Icon size={m ? 13 : 14} color={isActive ? accent : C.t4} strokeWidth={isActive ? 2.4 : 2} />}
@@ -249,7 +255,7 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
                   {!!it.badge && (
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                      minWidth: 16, height: 16, borderRadius: 8, padding: '0 4px',
+                      minWidth: 16, height: 16, borderRadius: 8, padding: '0px 4px',
                       background: isActive ? accent : C.s4, color: isActive ? C.onAccent : C.t2,
                       fontSize: 9.5, fontWeight: 700, fontFamily: C.FM,
                     }}>
@@ -268,7 +274,7 @@ export function SatNav({ items, active, onChange, accent = C.sky, m = false, hre
               title={locked.hint}
               aria-label={`${locked.label} — locked. ${locked.hint}`}
               style={{
-                display: 'inline-flex', alignItems: 'center', gap: 7,
+                display: 'inline-flex', alignItems: 'center', gap: 8,
                 padding: m ? '10px 10px 12px' : '10px 13px 13px',
                 color: C.t4, fontWeight: 500, fontSize: m ? 12 : 12.5, fontFamily: C.FB,
                 whiteSpace: 'nowrap', flexShrink: 0, cursor: 'default',
@@ -305,20 +311,19 @@ export function SatPageHeader({ eyebrow = 'SAT', title, sub, meta = [], right, m
       gap: 16, flexWrap: 'wrap', padding: m ? '2px 2px 0' : '4px 2px 0',
     }}>
       <div style={{ minWidth: 220, flex: 1 }}>
-        <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 6 }}>
+        <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 4 }}>
           {eyebrow}
         </div>
-        <h2 style={{ fontSize: m ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.03em', margin: 0, lineHeight: 1.1, display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <h2 style={{ fontSize: m ? 22 : 28, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', margin: 0, lineHeight: 1.1, display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span>{title}</span>
           <span className="pbeta" style={{
             display: 'inline-flex',
             alignItems: 'center',
-            padding: '2px 8px',
-            borderRadius: 6,
+            padding: '4px 8px',
+            borderRadius: 4,
             fontSize: 10,
             fontWeight: 800,
-            letterSpacing: '.06em',
-            textTransform: 'uppercase',
+            letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
             background: tint(accent, 0.15),
             color: accentText(accent),
             border: `1px solid ${tint(accent, 0.35)}`,
@@ -329,7 +334,7 @@ export function SatPageHeader({ eyebrow = 'SAT', title, sub, meta = [], right, m
           </span>
         </h2>
         {sub && (
-          <p style={{ fontSize: m ? 11.5 : 12.5, color: C.t3, margin: '7px 0 0', lineHeight: 1.65, maxWidth: 620 }}>
+          <p style={{ fontSize: m ? 11.5 : 12.5, color: C.t3, margin: '8px 0px 0px', lineHeight: 1.55, maxWidth: 620 }}>
             {sub}
           </p>
         )}
@@ -353,8 +358,8 @@ export function SatPageHeader({ eyebrow = 'SAT', title, sub, meta = [], right, m
 export function MetaChip({ value, label, color }) {
   return (
     <span style={{
-      display: 'inline-flex', alignItems: 'baseline', gap: 6,
-      padding: '6px 12px', borderRadius: 9,
+      display: 'inline-flex', alignItems: 'baseline', gap: 4,
+      padding: '4px 12px', borderRadius: 8,
       background: C.surf2, border: `1px solid ${color ? tint(color, 0.24) : C.b1}`,
     }}>
       {value != null && (
@@ -374,16 +379,16 @@ export function Segmented({ options, value, onChange, accent = C.sky, label, siz
   const pad = size === 'sm' ? '5px 11px' : '7px 14px';
   const font = size === 'sm' ? 11 : 11.5;
   return (
-    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
       {label && (
-        <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: '.12em', textTransform: 'uppercase', color: C.t4, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 9.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t4, whiteSpace: 'nowrap' }}>
           {label}
         </span>
       )}
       <div
         role="group"
         style={{
-          display: 'inline-flex', padding: 3, gap: 2, borderRadius: 10,
+          display: 'inline-flex', padding: 4, gap: 4, borderRadius: 8,
           background: C.surf2, border: `1px solid ${C.b1}`, maxWidth: '100%', overflowX: 'auto',
         }}
         className="sat-nav-scroll"
@@ -398,7 +403,7 @@ export function Segmented({ options, value, onChange, accent = C.sky, label, siz
               aria-pressed={on}
               className="sat-seg"
               style={{
-                padding: pad, borderRadius: 7, border: 'none', cursor: 'pointer',
+                padding: pad, borderRadius: 8, border: 'none', cursor: 'pointer',
                 background: on ? tint(accent, 0.13) : 'transparent',
                 boxShadow: on ? `inset 0 0 0 1px ${tint(accent, 0.28)}` : 'none',
                 color: on ? C.t1 : C.t3, fontWeight: on ? 700 : 500,
@@ -407,7 +412,7 @@ export function Segmented({ options, value, onChange, accent = C.sky, label, siz
             >
               {o.label}
               {o.count != null && (
-                <span style={{ marginLeft: 6, fontFamily: C.FM, fontSize: font - 1, color: on ? accent : C.t4 }}>{o.count}</span>
+                <span style={{ marginLeft: 4, fontFamily: C.FM, fontSize: font - 1, color: on ? accent : C.t4 }}>{o.count}</span>
               )}
             </button>
           );
@@ -426,17 +431,17 @@ export function SatCard({ title, icon: Icon, iconColor = C.sky, action, children
   const padding = pad ?? (m ? 16 : 22);
   return (
     <section style={{
-      background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 14,
+      background: C.surf, border: `1px solid ${C.b1}`, borderRadius: 12,
       boxShadow: C.shadowSm, overflow: 'hidden', ...style,
     }}>
       {title && (
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
           padding: `${m ? 12 : 14}px ${padding}px`, borderBottom: `1px solid ${C.b0}`, ...headerStyle,
         }}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
             {Icon && <Icon size={13} color={iconColor} />}
-            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, textTransform: 'uppercase', letterSpacing: '.09em' }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
               {title}
             </span>
           </span>

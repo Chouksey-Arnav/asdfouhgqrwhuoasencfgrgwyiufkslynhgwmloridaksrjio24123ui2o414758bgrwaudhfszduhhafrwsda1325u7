@@ -53,21 +53,21 @@ export default function StreakHomeCard({
     }}>
       <div style={{ position: 'absolute', right: -50, top: -50, width: 160, height: 160, borderRadius: '50%', background: `radial-gradient(circle, ${tint(league.color, 0.16)}, transparent 70%)`, pointerEvents: 'none' }} />
 
-      <div style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
+      <div style={{ position: 'relative', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
         {/* Flame + count */}
         <div style={{
-          width: 56, height: 56, borderRadius: 18, flexShrink: 0,
+          width: 56, height: 56, borderRadius: 16, flexShrink: 0,
           background: tint(league.color, 0.15), border: `1.5px solid ${tint(league.color, 0.4)}`,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           boxShadow: streak > 0 ? `0 0 26px ${tint(league.color, 0.4)}` : 'none',
         }}>
           <Flame size={17} color={league.color} fill={streak > 0 ? league.color : 'none'} />
-          <div style={{ fontSize: 16, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 1 }}>{streak}</div>
+          <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1, marginTop: 4 }}>{streak}</div>
         </div>
 
         <div style={{ flex: 1, minWidth: 170 }}>
           <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
-            <span style={{ ...R({ gap: 7, flexWrap: 'wrap' }) }}>
+            <span style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
               <span style={{ fontSize: 13.5, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
                 {streak === 0 ? 'No streak yet' : `${streak}-day streak`}
               </span>
@@ -75,7 +75,7 @@ export default function StreakHomeCard({
             </span>
             <button
               onClick={onOpen}
-              style={{ background: 'transparent', border: 'none', color: C.t3, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, fontWeight: 600, padding: 0 }}
+              style={{ background: 'transparent', border: 'none', color: C.t3, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 11, fontWeight: 600, padding: 0 }}
             >
               Streak<ChevronRight size={12} />
             </button>
@@ -94,7 +94,7 @@ export default function StreakHomeCard({
 
       {/* Week strip */}
       {week && (
-        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 5, marginTop: 14 }}>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, marginTop: 12 }}>
           {week.days.map((d, i) => (
             <motion.div
               key={d.key}
@@ -115,7 +115,7 @@ export default function StreakHomeCard({
                   : d.frozen ? <Snowflake size={10} color={C.blueL} />
                     : <span style={{ fontSize: 9, color: C.t4 }}>·</span>}
               </div>
-              <div style={{ fontSize: 8.5, color: d.isToday ? C.t1 : C.t4, marginTop: 3, fontWeight: d.isToday ? 800 : 600 }}>{d.letter}</div>
+              <div style={{ fontSize: 8.5, color: d.isToday ? C.t1 : C.t4, marginTop: 4, fontWeight: d.isToday ? 800 : 600 }}>{d.letter}</div>
             </motion.div>
           ))}
         </div>
@@ -123,20 +123,20 @@ export default function StreakHomeCard({
 
       {/* Today's progress bar — only while there is something left to do */}
       {day && !met && (
-        <div style={{ position: 'relative', marginTop: 13 }}>
-          <div style={{ height: 7, borderRadius: 5, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
+        <div style={{ position: 'relative', marginTop: 12 }}>
+          <div style={{ height: 7, borderRadius: 4, background: C.s2, overflow: 'hidden', border: `1px solid ${C.b0}` }}>
             <motion.div
               initial={reducedMotion ? false : { width: 0 }} animate={{ width: `${day.pct}%` }}
               transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              style={{ height: '100%', borderRadius: 5, background: `linear-gradient(90deg,${ACCENT},${C.orange})` }}
+              style={{ height: '100%', borderRadius: 4, background: `linear-gradient(90deg,${ACCENT},${C.orange})` }}
             />
           </div>
         </div>
       )}
 
       {/* Footer chips + the one action */}
-      <div style={{ position: 'relative', ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginTop: 13 }) }}>
-        <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+      <div style={{ position: 'relative', ...R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginTop: 12 }) }}>
+        <div style={R({ gap: 4, flexWrap: 'wrap' })}>
           {targetInfo && (
             <span style={pill(C.s3, C.t2, { fontSize: 10, fontFamily: C.FM })}>
               <Target size={10} style={{ marginRight: 4 }} />{streak}/{targetInfo.target}
@@ -171,7 +171,7 @@ export default function StreakHomeCard({
         {!met && onStartStudying && nextLessonTitle && (
           <button
             onClick={onStartStudying}
-            style={btn(`linear-gradient(135deg,${ACCENT},${C.orange})`, { padding: '7px 15px', fontSize: 11.5 })}
+            style={btn(`linear-gradient(135deg,${ACCENT},${C.orange})`, { padding: '8px 16px', fontSize: 11.5 })}
           >
             Earn today
           </button>

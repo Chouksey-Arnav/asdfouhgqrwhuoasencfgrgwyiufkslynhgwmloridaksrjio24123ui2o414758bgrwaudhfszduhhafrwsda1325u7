@@ -90,7 +90,7 @@ export default function ForgotPasswordView({ initialEmail = '', onBack, onAuthed
           <motion.form key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleSendCode}>
             <div style={CC({ gap: 16 })}>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Reset your password</div>
+                <div style={{ fontSize: 20, letterSpacing: 'calc(-0.28px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Reset your password</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>Enter your email and we'll send a 6-digit code.</div>
               </div>
               <div>
@@ -110,7 +110,7 @@ export default function ForgotPasswordView({ initialEmail = '', onBack, onAuthed
 
         {step === 'code' && (
           <motion.form key="code" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onSubmit={handleVerify}>
-            <div style={CC({ gap: 18 })}>
+            <div style={CC({ gap: 16 })}>
               <div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>Check your inbox</div>
                 <div style={{ fontSize: 13, color: C.t2 }}>If an account exists for <strong style={{ color: C.t1 }}>{email}</strong>, we sent it a code.</div>

@@ -85,11 +85,11 @@ const ACCENT = C.violet;
 // chore list. See the header of RoadmapAscent.jsx.
 export const ROADMAP_SUBNAV = [
   { id: 'overview', ic: Compass, label: 'Overview', color: C.violet },
-  { id: 'year', ic: CalendarDays, label: 'Your Year', color: C.sky },
-  { id: 'climb', ic: TrendingUp, label: 'The Climb', color: C.green },
+  { id: 'year', ic: CalendarDays, label: 'Your year', color: C.sky },
+  { id: 'climb', ic: TrendingUp, label: 'The climb', color: C.green },
   { id: 'seasons', ic: Layers, label: 'Seasons', color: C.teal },
   { id: 'list', ic: ListChecks, label: 'Everything', color: C.amber },
-  { id: 'intake', ic: Target, label: 'Your Answers', color: C.fuchsia },
+  { id: 'intake', ic: Target, label: 'Your answers', color: C.fuchsia },
 ];
 
 // ── The build, as the student sees it ────────────────────────────────────────
@@ -352,7 +352,7 @@ export default function RoadmapTab({
       // the student sees an identical screen and concludes, reasonably, that the
       // button did nothing — see the header of DegradedNotice.
       setLastAttempt(next.generation?.degraded ? { at: Date.now(), outcome: 'failed' } : null);
-      toast.success(next.generation?.degraded ? 'Roadmap built — but not fully personalised.' : 'Your year is mapped.');
+      toast.success(next.generation?.degraded ? 'Roadmap built — but not fully personalized.' : 'Your year is mapped.');
     } catch (err) {
       // createRoadmap is contractually total, so reaching here means something
       // outside it broke. Say so plainly rather than leaving a dead spinner.
@@ -463,7 +463,7 @@ export default function RoadmapTab({
       <div>
         <PanelHero icon={Target} color={C.fuchsia} color2={accent} eyebrow="Roadmap" m={isMobile}
           title="Thirteen questions" sub="Everything we already know about you is filled in. What is left is the handful of things a counselor would ask in a first meeting — and that nothing else in this app has ever asked." />
-        <div style={{ marginTop: 22, maxWidth: 760 }}>
+        <div style={{ marginTop: 20, maxWidth: 760 }}>
           <RoadmapIntake
             user={user}
             portfolio={portfolio}
@@ -510,7 +510,7 @@ export default function RoadmapTab({
         ]}
       />
 
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 16 }}>
         <SubNav items={subnavItems} active={activeView} onChange={onViewChange} accent={viewAccent} m={isMobile} tourPrefix="roadmap-sub" hrefFor={hrefFor} locked={lockedItem} />
       </div>
 
@@ -595,7 +595,7 @@ function IntroScreen({ accent, isMobile, onStart, user, readiness, onGo }) {
         sub="Every deadline, competition, program and scholarship that applies to you — with the date it closes, the week the work has to start, and the reason it is on your list at all." />
 
       <div style={{ ...glass({ padding: isMobile ? 20 : 28, marginTop: 20 }) }}>
-        <div style={{ fontSize: 14.5, color: C.t2, lineHeight: 1.8, maxWidth: 700 }}>
+        <div style={{ fontSize: 14.5, color: C.t2, lineHeight: 1.54, maxWidth: 700 }}>
           A private admissions counselor costs several thousand dollars a year, and the students who
           need one most are the ones who will never have one. What they actually do is not mysterious:
           they know which deadlines exist, which ones apply to <b style={{ color: C.t1 }}>you</b>, how
@@ -624,13 +624,13 @@ function IntroScreen({ accent, isMobile, onStart, user, readiness, onGo }) {
           // would make the first thing this feature ever does a refusal.
           <>
             <ChecklistStrip readiness={readiness} accent={accent} onGo={onGo} isMobile={isMobile} />
-            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 18, fontSize: 15, padding: '13px 26px' }}>
+            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 16, fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', padding: '12px 24px' }}>
               <Sparkles size={16} /> See what is left
             </button>
           </>
         ) : (
           <>
-            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 26, fontSize: 15, padding: '13px 26px' }}>
+            <button onClick={onStart} style={{ ...btn(accentFill(accent)), color: onTint(accent), marginTop: 24, fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', padding: '12px 24px' }}>
               <Sparkles size={16} /> Start the thirteen questions
             </button>
             <div style={{ fontSize: 11, color: C.t4, marginTop: 12 }}>
@@ -650,11 +650,11 @@ function ChecklistStrip({ readiness, accent, onGo, isMobile }) {
       marginTop: 24, padding: isMobile ? '14px 15px' : '16px 18px', borderRadius: 12,
       background: tint(accent, 0.06), border: `1px solid ${tint(accent, 0.2)}`,
     }}>
-      <div style={{ ...R({ gap: 10, marginBottom: 12, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, marginBottom: 12, flexWrap: 'wrap' }) }}>
         <span style={{ fontSize: 11.5, fontWeight: 800, color: C.t1 }}>
           {readiness.done} of {readiness.total} ready
         </span>
-        <div style={{ flex: 1, minWidth: 90, height: 6, borderRadius: 3, background: C.s3, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minWidth: 90, height: 6, borderRadius: 4, background: C.s3, overflow: 'hidden' }}>
           <motion.div
             initial={{ width: 0 }} animate={{ width: `${readiness.pct}%` }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
@@ -662,7 +662,7 @@ function ChecklistStrip({ readiness, accent, onGo, isMobile }) {
           />
         </div>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {readiness.checklist.map((c) => {
           const done = c.state === 'done';
           return (
@@ -674,7 +674,7 @@ function ChecklistStrip({ readiness, accent, onGo, isMobile }) {
               title={c.gains}
               style={{
                 ...pill(done ? tint(C.green, 0.12) : C.surfHi, done ? C.green : C.t2, {
-                  fontSize: 11, fontWeight: done ? 700 : 600, padding: '5px 11px', gap: 5,
+                  fontSize: 11, fontWeight: done ? 700 : 600, padding: '4px 12px', gap: 4,
                   border: `1px solid ${done ? tint(C.green, 0.3) : C.b2}`,
                   cursor: done ? 'default' : 'pointer', fontFamily: C.FB,
                 }),
@@ -721,13 +721,13 @@ function ReadinessGate({ readiness, accent, isMobile, user, onGo, onBack }) {
       />
 
       <div style={{ ...glass({ padding: isMobile ? 18 : 24, marginTop: 20 }) }}>
-        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.8, maxWidth: 660 }}>
+        <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55, maxWidth: 660 }}>
           A roadmap built from a blank record is a list of national deadlines that could have been
           written for anybody — and you would only ever look at it once. Each of these changes what
           the roadmap actually says. Most take a minute.
         </div>
 
-        <div style={{ ...CC({ gap: 10, marginTop: 20 }) }}>
+        <div style={{ ...CC({ gap: 8, marginTop: 20 }) }}>
           {readiness.checklist.map((c) => (
             <GateRow
               key={c.id} gate={c} isMobile={isMobile}
@@ -737,7 +737,7 @@ function ReadinessGate({ readiness, accent, isMobile, user, onGo, onBack }) {
           ))}
         </div>
 
-        <div style={{ ...R({ gap: 9, marginTop: 22, flexWrap: 'wrap' }) }}>
+        <div style={{ ...R({ gap: 8, marginTop: 20, flexWrap: 'wrap' }) }}>
           {next && (
             <button onClick={() => onGo?.(next.goTab, next.goView)}
               style={{ ...btn(accentFill(accent)), color: onTint(accent), fontSize: 14 }}>
@@ -747,7 +747,7 @@ function ReadinessGate({ readiness, accent, isMobile, user, onGo, onBack }) {
           <button onClick={onBack} style={btnG({ fontSize: 13 })}>Not now</button>
         </div>
 
-        <div style={{ fontSize: 11, color: C.t4, marginTop: 14, lineHeight: 1.7, maxWidth: 620 }}>
+        <div style={{ fontSize: 11, color: C.t4, marginTop: 12, lineHeight: 1.55, maxWidth: 620 }}>
           Nothing here is a wait — every one of them is something you can do this afternoon, from
           inside the app. Come back when they are ticked{user?.name ? `, ${user.name}` : ''} and the
           whole year takes about four minutes to build.
@@ -769,7 +769,7 @@ function GateRow({ gate, highlight, onGo, isMobile }) {
       border: `1px solid ${highlight ? tint(C.amber, 0.26) : C.b1}`,
       opacity: done ? 0.72 : 1,
     }}>
-      <div style={{ flexShrink: 0, marginTop: 1 }}>
+      <div style={{ flexShrink: 0, marginTop: 4 }}>
         {done ? <CheckCircle2 size={18} color={C.green} />
           : loading ? <Circle size={18} color={C.t4} />
             : <Circle size={18} color={color} />}
@@ -784,7 +784,7 @@ function GateRow({ gate, highlight, onGo, isMobile }) {
         {/* The reason, always. This is the row's whole justification for existing
             and hiding it behind a tooltip would be hiding the argument. */}
         {!done && (
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65, marginTop: 5 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 4 }}>
             {gate.gains}
           </div>
         )}
@@ -800,12 +800,12 @@ function GateRow({ gate, highlight, onGo, isMobile }) {
 
 function Promise({ icon: Icon, color, title, body }) {
   return (
-    <div style={{ background: `linear-gradient(135deg,${tint(color, 0.07)},transparent 75%)`, border: `1px solid ${tint(color, 0.16)}`, borderRadius: 12, padding: '15px 16px' }}>
+    <div style={{ background: `linear-gradient(135deg,${tint(color, 0.07)},transparent 75%)`, border: `1px solid ${tint(color, 0.16)}`, borderRadius: 12, padding: '16px 16px' }}>
       <div style={{ ...R({ gap: 8, marginBottom: 8 }) }}>
         <Icon size={14} color={color} />
         <span style={{ fontSize: 12.5, fontWeight: 800, color: C.t1 }}>{title}</span>
       </div>
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65 }}>{body}</div>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{body}</div>
     </div>
   );
 }
@@ -855,14 +855,14 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
         flexDirection: isMobile ? 'column' : 'row', textAlign: isMobile ? 'center' : 'left',
       }}>
         {/* The brand journey animation, looping — this is an open-ended wait,
-            and it already honours prefers-reduced-motion internally. */}
+            and it already honors prefers-reduced-motion internally. */}
         <div style={{ flexShrink: 0 }}><BrandJourney size={isMobile ? 104 : 148} /></div>
 
         <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: '.14em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
             Pass {pass + 1} of {BUILD_PASSES.length} · {clock}
           </div>
-          <div style={{ fontSize: isMobile ? 19 : 25, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 7, letterSpacing: '-.02em', lineHeight: 1.2 }}>
+          <div style={{ fontSize: isMobile ? 19 : 25, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 8, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))', lineHeight: 1.2 }}>
             Building your year
           </div>
 
@@ -873,12 +873,12 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? undefined : { opacity: 0, y: -6 }}
               transition={{ duration: reducedMotion ? 0 : 0.28 }}
-              style={{ fontSize: isMobile ? 13 : 14, color: C.t2, marginTop: 10, lineHeight: 1.7, fontWeight: 600 }}
+              style={{ fontSize: isMobile ? 13 : 14, color: C.t2, marginTop: 8, lineHeight: 1.55, fontWeight: 600 }}
             >
               {stage}
             </motion.div>
           </AnimatePresence>
-          <div style={{ fontSize: 11.5, color: C.t4, marginTop: 6, lineHeight: 1.65, maxWidth: 460, marginInline: isMobile ? 'auto' : 0 }}>
+          <div style={{ fontSize: 11.5, color: C.t4, marginTop: 4, lineHeight: 1.55, maxWidth: 460, marginInline: isMobile ? 'auto' : 0 }}>
             {current.blurb}
           </div>
         </div>
@@ -892,7 +892,7 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
       {/* ── What is being drawn, in its real proportions ── */}
       <SpineSkeleton isMobile={isMobile} reducedMotion={reducedMotion} />
 
-      <div style={{ fontSize: 11, color: C.t4, marginTop: 18, lineHeight: 1.7, maxWidth: 560 }}>
+      <div style={{ fontSize: 11, color: C.t4, marginTop: 16, lineHeight: 1.55, maxWidth: 560 }}>
         This takes a minute or two, and the time is going somewhere: five separate passes over your
         year rather than one hurried one. Every date it will show you comes from a hand-checked
         catalog — Medabrain is choosing and sequencing, never inventing a deadline. Leaving this
@@ -905,13 +905,13 @@ function BuildingScreen({ stage, accent, isMobile, reducedMotion }) {
 function PassRail({ pass, accent, isMobile, reducedMotion }) {
   return (
     <div style={{ position: 'relative', display: 'flex', alignItems: 'flex-start' }}>
-      {/* The rail behind the nodes: travelled up to the current pass, ahead after
-          it. Inset to the FIRST and LAST node centres rather than to the edges of
+      {/* The rail behind the nodes: traveled up to the current pass, ahead after
+          it. Inset to the FIRST and LAST node centers rather than to the edges of
           the row — the nodes sit in the middle of equal flex cells, so a rail
           drawn edge to edge overshoots both ends and the line visibly fails to
           pass through the dots it is supposed to connect. */}
       <span aria-hidden="true" style={{
-        position: 'absolute', top: 8, height: 3, borderRadius: 2, background: C.s4,
+        position: 'absolute', top: 8, height: 3, borderRadius: 4, background: C.s4,
         left: `${100 / (2 * BUILD_PASSES.length)}%`, right: `${100 / (2 * BUILD_PASSES.length)}%`,
       }}>
         <motion.span
@@ -919,7 +919,7 @@ function PassRail({ pass, accent, isMobile, reducedMotion }) {
           animate={{ width: `${(pass / Math.max(1, BUILD_PASSES.length - 1)) * 100}%` }}
           transition={{ duration: reducedMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 2,
+            position: 'absolute', left: 0, top: 0, bottom: 0, borderRadius: 4,
             background: `linear-gradient(90deg,${tint(C.green, 0.7)},${accent})`,
           }}
         />
@@ -992,12 +992,12 @@ function SpineSkeleton({ isMobile, reducedMotion }) {
         ))}
         {/* the line */}
         <span style={{
-          position: 'absolute', left: 0, right: 0, top: isMobile ? 62 : 70, height: 3, borderRadius: 2, background: C.s5,
+          position: 'absolute', left: 0, right: 0, top: isMobile ? 62 : 70, height: 3, borderRadius: 4, background: C.s5,
         }} />
         {/* load */}
         <div style={{ position: 'absolute', left: 0, right: 0, top: isMobile ? 72 : 80, display: 'flex', gap: 4, alignItems: 'flex-start' }}>
           {bars.map((b, i) => (
-            <span key={i} style={{ flex: 1, height: Math.round(b * (isMobile ? 0.22 : 0.3)), borderRadius: 3, background: C.s4 }} />
+            <span key={i} style={{ flex: 1, height: Math.round(b * (isMobile ? 0.22 : 0.3)), borderRadius: 4, background: C.s4 }} />
           ))}
         </div>
       </div>
@@ -1012,7 +1012,7 @@ function StaleNotice({ stale, expired, onRebuild, onEditAnswers }) {
       background: tint(C.sky, 0.09), border: `1px solid ${tint(C.sky, 0.24)}`, borderRadius: 12, padding: '12px 16px',
     }}>
       <Info size={15} color={C.sky} style={{ flexShrink: 0 }} />
-      <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.6 }}>
+      <div style={{ flex: 1, minWidth: 220, fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
         {expired
           ? 'This roadmap is running out of runway — it was built for a year that is nearly up. Rebuild it and it will map the next one.'
           : 'Something that shaped this roadmap has changed — your grade, your college list, or an answer you gave. It is still usable; it is just describing a slightly different you.'}
@@ -1058,21 +1058,21 @@ function OverviewView({
           {first ? 'Then these' : 'Do this now'}
         </SectionTitle>
         {upNext.length ? (
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {upNext.slice(first ? 1 : 0).map((item) => (
               <RoadmapItem key={item.id} item={item} {...itemProps}
                 expanded={expandedId === item.id}
                 onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)} />
             ))}
             {upNext.length === 1 && (
-              <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.55 }}>
                 Nothing else needs starting in the next three weeks —{' '}
                 <button onClick={onGoYear} style={linkish}>see what is coming after that</button>.
               </div>
             )}
           </div>
         ) : (
-          <div style={{ ...glass2({ padding: 18 }), ...R({ gap: 11 }) }}>
+          <div style={{ ...glass2({ padding: 16 }), ...R({ gap: 12 }) }}>
             <CheckCircle2 size={17} color={C.green} />
             <span style={{ fontSize: 12.5, color: C.t2 }}>
               Nothing needs starting in the next three weeks. That is a real result — check{' '}
@@ -1112,7 +1112,7 @@ function OverviewView({
       {season?.advice && (
         <div style={{ ...glass({ padding: 20, background: `linear-gradient(135deg,${tint(C.teal, 0.08)},transparent 70%)`, border: `1px solid ${tint(C.teal, 0.2)}` }) }}>
           <SectionTitle icon={Compass} color={C.teal}>Getting through {season.label}</SectionTitle>
-          <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.75 }}>{season.advice}</div>
+          <div style={{ fontSize: 13, color: C.t2, lineHeight: 1.55 }}>{season.advice}</div>
         </div>
       )}
 
@@ -1123,9 +1123,9 @@ function OverviewView({
         <div style={{ ...glass({ padding: isMobile ? 18 : 24 }) }}>
           <SectionTitle icon={Quote} color={accent}>Straight talk about this plan</SectionTitle>
           {roadmap.review.verdict && (
-            <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.8 }}>{roadmap.review.verdict}</div>
+            <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55 }}>{roadmap.review.verdict}</div>
           )}
-          <div style={{ ...autoGrid(240, 12, { marginTop: 18 }) }}>
+          <div style={{ ...autoGrid(240, 12, { marginTop: 16 }) }}>
             {roadmap.review.ifOnlyOneThing && (
               <Callout icon={Lightbulb} color={C.amber} label="If you do one thing">{roadmap.review.ifOnlyOneThing}</Callout>
             )}
@@ -1135,10 +1135,10 @@ function OverviewView({
           </div>
           {!!roadmap.review.notCovered?.length && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+              <div style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
                 What this year does not cover
               </div>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: C.t3, lineHeight: 1.75 }}>
+              <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
                 {roadmap.review.notCovered.map((n, i) => <li key={i}>{n}</li>)}
               </ul>
             </div>
@@ -1150,15 +1150,15 @@ function OverviewView({
       {!!roadmap.risks?.length && (
         <div>
           <SectionTitle icon={AlertTriangle} color={C.rose}>What will actually derail this</SectionTitle>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {roadmap.risks.map((r, i) => (
-              <div key={i} style={{ ...glass2({ padding: 15 }) }}>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, marginBottom: 5 }}>{r.title}</div>
-                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65 }}>{r.detail}</div>
+              <div key={i} style={{ ...glass2({ padding: 16 }) }}>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, marginBottom: 4 }}>{r.title}</div>
+                <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>{r.detail}</div>
                 {r.mitigation && (
-                  <div style={{ ...R({ gap: 7, marginTop: 9 }) }}>
+                  <div style={{ ...R({ gap: 8, marginTop: 8 }) }}>
                     <Lightbulb size={12} color={C.green} style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>{r.mitigation}</span>
+                    <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{r.mitigation}</span>
                   </div>
                 )}
               </div>
@@ -1173,7 +1173,7 @@ function OverviewView({
       {!!balance?.warnings?.length && (
         <div style={{ ...glass2({ padding: 16 }) }}>
           <SectionTitle icon={Scale} color={C.sky}>Shape of your year</SectionTitle>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: C.t3, lineHeight: 1.75 }}>
+          <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: C.t3, lineHeight: 1.55 }}>
             {balance.warnings.map((w, i) => <li key={i}>{w}</li>)}
           </ul>
         </div>
@@ -1186,7 +1186,7 @@ function OverviewView({
           <SectionTitle icon={X} color={C.t3}>Deliberately not on your list</SectionTitle>
           <div style={CC({ gap: 8 })}>
             {roadmap.omitted.map((o, i) => (
-              <div key={i} style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.6 }}>
+              <div key={i} style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
                 <b style={{ color: C.t2 }}>{o.name}</b> — {o.reason}
               </div>
             ))}
@@ -1194,7 +1194,7 @@ function OverviewView({
         </div>
       )}
 
-      <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
         <button onClick={onExport} style={btnG({ fontSize: 12 })}><Download size={13} /> Add to my calendar</button>
         <button onClick={onGoYear} style={btnG({ fontSize: 12 })}><CalendarDays size={13} /> See the whole year</button>
         <button onClick={onRebuild} style={btnG({ fontSize: 12 })}><RefreshCw size={13} /> Rebuild</button>
@@ -1215,7 +1215,7 @@ function OverviewView({
  *
  * The card underneath is a normal <RoadmapItem>, unmodified. The frame supplies
  * the emphasis and the sentence naming why this one; the item supplies every
- * behaviour it has everywhere else, so expanding it here does exactly what
+ * behavior it has everywhere else, so expanding it here does exactly what
  * expanding it anywhere else does.
  */
 function TheOneThing({ item, accent, isMobile, expanded, onToggleExpand, itemProps }) {
@@ -1244,16 +1244,16 @@ function TheOneThing({ item, accent, isMobile, expanded, onToggleExpand, itemPro
         position: 'absolute', left: 0, top: 0, bottom: 0, width: 3,
         background: `linear-gradient(180deg,${meta.color},${tint(meta.color, 0.1)})`,
       }} />
-      <div style={{ ...R({ gap: 8, marginBottom: 10, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, marginBottom: 8, flexWrap: 'wrap' }) }}>
         <meta.icon size={14} color={meta.color} />
         <span style={{
           fontSize: 10, fontWeight: 800, color: meta.color,
-          letterSpacing: '.12em', textTransform: 'uppercase',
+          letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
         }}>
           If you do one thing today
         </span>
       </div>
-      <div style={{ fontSize: isMobile ? 12 : 12.5, color: C.t2, lineHeight: 1.65, marginBottom: 12, maxWidth: 620 }}>
+      <div style={{ fontSize: isMobile ? 12 : 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12, maxWidth: 620 }}>
         {line}
       </div>
       <RoadmapItem item={item} {...itemProps} expanded={expanded} onToggleExpand={onToggleExpand} />
@@ -1271,7 +1271,7 @@ function ClimbView({ roadmap, strength, today, isMobile, reducedMotion, accent, 
         <SectionTitle icon={TrendingUp} color={accent}>
           {schools.length ? 'Your climb toward these schools' : 'Your climb'}
         </SectionTitle>
-        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.75, margin: '0 0 18px', maxWidth: 680 }}>
+        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, margin: '0px 0px 16px', maxWidth: 680 }}>
           Every other screen in this tab tells you <b style={{ color: C.t2 }}>when</b> things happen.
           This one tells you <b style={{ color: C.t2 }}>what happens to you</b> if you do them —
           where the four halves of an application stand today, which months of your year build
@@ -1287,24 +1287,24 @@ function ClimbView({ roadmap, strength, today, isMobile, reducedMotion, accent, 
       {!!schools.length && (
         <div style={{ ...glass2({ padding: 16 }) }}>
           <SectionTitle icon={Target} color={C.fuchsia}>What you told us you are aiming at</SectionTitle>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 12 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
             {schools.map((s) => (
               <span key={s} style={{
                 ...pill(tint(C.fuchsia, 0.12), C.fuchsia, {
-                  fontSize: 11.5, fontWeight: 700, padding: '5px 12px',
+                  fontSize: 11.5, fontWeight: 700, padding: '4px 12px',
                   border: `1px solid ${tint(C.fuchsia, 0.26)}`,
                 }),
               }}>{s}</span>
             ))}
           </div>
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55 }}>
             Every application deadline on your roadmap was back-planned from these. Change the list
             in your Portfolio and rebuild, and the whole year re-sequences around the new one.
           </div>
         </div>
       )}
 
-      <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
         <button onClick={onGoList} style={btnG({ fontSize: 12 })}>
           <ListChecks size={13} /> See everything that builds it
         </button>
@@ -1320,12 +1320,12 @@ function ClimbView({ roadmap, strength, today, isMobile, reducedMotion, accent, 
 
 function Callout({ icon: Icon, color, label, children }) {
   return (
-    <div style={{ background: tint(color, 0.08), border: `1px solid ${tint(color, 0.2)}`, borderRadius: 11, padding: '13px 15px' }}>
-      <div style={{ ...R({ gap: 7, marginBottom: 7 }) }}>
+    <div style={{ background: tint(color, 0.08), border: `1px solid ${tint(color, 0.2)}`, borderRadius: 12, padding: '12px 16px' }}>
+      <div style={{ ...R({ gap: 8, marginBottom: 8 }) }}>
         <Icon size={13} color={color} />
-        <span style={{ fontSize: 10, fontWeight: 800, color, letterSpacing: '.1em', textTransform: 'uppercase' }}>{label}</span>
+        <span style={{ fontSize: 10, fontWeight: 800, color, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{label}</span>
       </div>
-      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>{children}</div>
+      <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>{children}</div>
     </div>
   );
 }
@@ -1366,10 +1366,10 @@ function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectIte
     <>
       {/* ── The year, drawn. Everything else on this screen is commentary. ── */}
       <div style={{ ...glass({ padding: isMobile ? 14 : 22 }) }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <SectionTitle icon={CalendarDays} color={accent}>Your next twelve months</SectionTitle>
           <div role="tablist" aria-label="How to draw your year" style={{
-            display: 'inline-flex', gap: 2, padding: 3, borderRadius: 10,
+            display: 'inline-flex', gap: 4, padding: 4, borderRadius: 8,
             background: C.surf2, border: `1px solid ${C.b1}`,
           }}>
             {YEAR_DRAWINGS.map((d) => {
@@ -1379,8 +1379,8 @@ function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectIte
                   key={d.id} type="button" role="tab" aria-selected={on} title={d.blurb}
                   onClick={() => setDrawing(d.id)}
                   style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 5,
-                    padding: '6px 12px', borderRadius: 8, border: 0, cursor: 'pointer',
+                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                    padding: '4px 12px', borderRadius: 8, border: 0, cursor: 'pointer',
                     background: on ? tint(accent, 0.2) : 'transparent',
                     color: on ? accentFill(accent) : C.t3,
                     fontSize: 11.5, fontWeight: on ? 800 : 600, fontFamily: C.FB,
@@ -1394,7 +1394,7 @@ function YearView({ roadmap, today, isMobile, accent, reducedMotion, onSelectIte
           </div>
         </div>
 
-        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.7, margin: '10px 0 16px', maxWidth: 660 }}>
+        <div style={{ fontSize: 12, color: C.t3, lineHeight: 1.55, margin: '8px 0px 16px', maxWidth: 660 }}>
           {drawing === 'path' && (
             <>
               Your year as one road, starting at the bottom and climbing. Every stop is something
@@ -1474,7 +1474,7 @@ function fmtMonthLabel(key) {
 function SeasonsView({ roadmap, today, isMobile, accent, itemProps, expandedId, setExpandedId }) {
   const current = currentSeason(roadmap, today);
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       {roadmap.seasons.map((s) => {
         const items = itemsInSeason(roadmap, s.id).sort(byUrgency(today));
         const isNow = s.id === current?.id;
@@ -1485,10 +1485,10 @@ function SeasonsView({ roadmap, today, isMobile, accent, itemProps, expandedId, 
             border: `1px solid ${isNow ? tint(accent, 0.35) : C.b1}`,
             background: isNow ? `linear-gradient(135deg,${tint(accent, 0.07)},transparent 70%)` : C.surf,
           }}>
-            <div style={{ ...R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginBottom: 10 }) }}>
+            <div style={{ ...R({ justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 8 }) }}>
               <div>
-                <div style={{ ...R({ gap: 9 }) }}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: isNow ? accent : C.t3, letterSpacing: '.12em', textTransform: 'uppercase' }}>
+                <div style={{ ...R({ gap: 8 }) }}>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: isNow ? accent : C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                     {s.label}
                   </span>
                   {isNow && <span style={{ ...pill(tint(accent, 0.16), accent, { fontSize: 9.5, fontWeight: 800 }) }}>NOW</span>}
@@ -1497,17 +1497,17 @@ function SeasonsView({ roadmap, today, isMobile, accent, itemProps, expandedId, 
                       style={{ ...pill(C.s4, C.t4, { fontSize: 9.5 }) }}>outline</span>
                   )}
                 </div>
-                <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 5, letterSpacing: '-.02em' }}>
+                <div style={{ fontSize: isMobile ? 16 : 19, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
                   {s.theme}
                 </div>
               </div>
               <span style={{ fontSize: 11, color: C.t4, fontFamily: C.FM }}>{done}/{items.length}</span>
             </div>
 
-            {s.narrative && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.75, marginBottom: 14, maxWidth: 640 }}>{s.narrative}</div>}
+            {s.narrative && <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12, maxWidth: 640 }}>{s.narrative}</div>}
             {s.advice && (
-              <div style={{ background: tint(C.teal, 0.07), border: `1px solid ${tint(C.teal, 0.16)}`, borderRadius: 9, padding: '11px 13px', marginBottom: 14 }}>
-                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.65 }}>{s.advice}</div>
+              <div style={{ background: tint(C.teal, 0.07), border: `1px solid ${tint(C.teal, 0.16)}`, borderRadius: 8, padding: '12px 12px', marginBottom: 12 }}>
+                <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{s.advice}</div>
               </div>
             )}
 
@@ -1551,8 +1551,8 @@ function ListView({
 
   return (
     <>
-      <div style={{ ...glass2({ padding: 14 }) }}>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
+      <div style={{ ...glass2({ padding: 12 }) }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
           <FilterPill active={trackFilter === 'all'} onClick={() => setTrackFilter('all')} color={accent}>
             All {items.length}
           </FilterPill>
@@ -1562,14 +1562,14 @@ function ListView({
             </FilterPill>
           ))}
           <span style={{ flex: 1 }} />
-          <label style={{ ...R({ gap: 6 }), fontSize: 11.5, color: C.t3, cursor: 'pointer' }}>
+          <label style={{ ...R({ gap: 4 }), fontSize: 11.5, color: C.t3, cursor: 'pointer' }}>
             <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
             Show finished
           </label>
         </div>
       </div>
 
-      <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+      <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
         <button onClick={() => setAdding((a) => !a)} style={btnSm(C.surfHi)}>
           <Plus size={12} /> Add something of your own
         </button>
@@ -1579,7 +1579,7 @@ function ListView({
       {adding && <AddItemForm roadmap={roadmap} onAdd={onAdd} onCancel={() => setAdding(false)} accent={accent} />}
 
       {visible.length ? (
-        <div style={CC({ gap: 9 })}>
+        <div style={CC({ gap: 8 })}>
           {visible.map((item) => (
             <RoadmapItem key={item.id} item={item} {...itemProps}
               expanded={expandedId === item.id}
@@ -1587,8 +1587,14 @@ function ListView({
           ))}
         </div>
       ) : (
-        <EmptyState icon={ListChecks} accent={accent} title="Nothing here"
-          body={showDone ? 'No items on this track.' : 'Everything on this track is finished — turn on "Show finished" to see it.'} />
+        <EmptyState
+          kind="filtered" icon={ListChecks} accent={accent}
+          title={showDone ? 'Nothing on this pathway yet' : 'Everything here is finished'}
+          body={showDone
+            ? 'This stretch of the roadmap has no items on it yet. New ones appear as your plan fills in.'
+            : 'Every item on this pathway is done. Turn on "Show finished" to see what you have already cleared.'}
+          actionLabel={showDone ? undefined : 'Show finished'}
+          onAction={showDone ? undefined : () => setShowDone(true)} />
       )}
     </>
   );
@@ -1598,7 +1604,7 @@ function FilterPill({ active, onClick, color, children }) {
   return (
     <button onClick={onClick} style={{
       ...pill(active ? tint(color, 0.16) : 'transparent', active ? onTint(color) : C.t3, {
-        fontSize: 11, fontWeight: active ? 700 : 500, padding: '5px 11px',
+        fontSize: 11, fontWeight: active ? 700 : 500, padding: '4px 12px',
         border: `1px solid ${active ? tint(color, 0.4) : C.b1}`, cursor: 'pointer', fontFamily: C.FB,
       }),
     }}>{children}</button>
@@ -1619,23 +1625,23 @@ function AddItemForm({ roadmap, onAdd, onCancel, accent }) {
   const [track, setTrack] = useState('application');
   const [note, setNote] = useState('');
   return (
-    <div style={{ ...glass({ padding: 18, border: `1px solid ${tint(accent, 0.3)}` }) }}>
+    <div style={{ ...glass({ padding: 16, border: `1px solid ${tint(accent, 0.3)}` }) }}>
       <SectionTitle icon={Plus} color={accent}>Add your own</SectionTitle>
-      <div style={CC({ gap: 10 })}>
+      <div style={CC({ gap: 8 })}>
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="What is it? e.g. Rotary Club scholarship" style={inp()} />
-        <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }) }}>
+        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Due date" style={inp({ flex: '1 1 160px', width: 'auto' })} />
           <select value={track} onChange={(e) => setTrack(e.target.value)} aria-label="Type" style={inp({ flex: '1 1 160px', width: 'auto' })}>
             {Object.values(TRACK_BY_ID).map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
           </select>
         </div>
         <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Why does this matter? (optional)" style={inp()} />
-        <div style={{ ...R({ gap: 9 }) }}>
+        <div style={{ ...R({ gap: 8 }) }}>
           <button disabled={!title.trim()} onClick={() => onAdd({ title, date: date || null, track, note })}
             style={{ ...btn(accentFill(accent)), color: onTint(accent), opacity: title.trim() ? 1 : 0.4, fontSize: 13 }}>Add it</button>
           <button onClick={onCancel} style={btnG({ fontSize: 13 })}>Cancel</button>
         </div>
-        <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 10.5, color: C.t4, lineHeight: 1.55 }}>
           Your date, your item — we will not second-guess either. Leave the date blank if you still
           need to look it up and it will sit in your "dates to find" list.
         </div>
@@ -1650,14 +1656,14 @@ function AnswersView({ roadmap, accent, onEdit, onRebuild }) {
   const progress = intakeProgress(roadmap.intake || {});
   return (
     <>
-      <div style={{ ...glass({ padding: 22 }) }}>
+      <div style={{ ...glass({ padding: 20 }) }}>
         <SectionTitle icon={Target} color={accent}>What this roadmap was built from</SectionTitle>
-        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.75, marginBottom: 18, maxWidth: 640 }}>
+        <div style={{ fontSize: 12.5, color: C.t3, lineHeight: 1.55, marginBottom: 16, maxWidth: 640 }}>
           These thirteen answers, plus everything in your Portfolio and everything you told us during
           setup. Change any of them and rebuild — the roadmap is only ever as good as what it knows
           about you, and what it knows about you changes.
         </div>
-        <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }) }}>
+        <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }) }}>
           <button onClick={onEdit} style={{ ...btn(accentFill(accent)), color: onTint(accent), fontSize: 13 }}>
             <Target size={14} /> Review my answers
           </button>
@@ -1669,23 +1675,23 @@ function AnswersView({ roadmap, accent, onEdit, onRebuild }) {
       {!!roadmap.gaps?.length && (
         <div style={{ ...glass2({ padding: 16 }) }}>
           <SectionTitle icon={ShieldQuestion} color={C.amber}>Things our catalog does not cover</SectionTitle>
-          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7, marginBottom: 10 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginBottom: 8 }}>
             Medabrain flagged these as genuinely relevant to you and absent from the verified
             deadline catalog. We have deliberately not invented dates for them — go and find them,
             then add them to your list yourself.
           </div>
-          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, color: C.t2, lineHeight: 1.8 }}>
+          <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
             {roadmap.gaps.map((g, i) => <li key={i}>{g}</li>)}
           </ul>
         </div>
       )}
 
       {roadmap.generation && (
-        <div style={{ ...glass2({ padding: 14 }) }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ ...glass2({ padding: 12 }) }}>
+          <div style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
             How this was built
           </div>
-          <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 11.5, color: C.t4, lineHeight: 1.55 }}>
             Built {fmtDate(dayKey(new Date(roadmap.generation.at)))} in {roadmap.generation.seconds}s
             across {roadmap.generation.aiCalls} Medabrain pass{roadmap.generation.aiCalls === 1 ? '' : 'es'}.
             Every date came from our verified catalog — Medabrain chose and sequenced, it never wrote a date.

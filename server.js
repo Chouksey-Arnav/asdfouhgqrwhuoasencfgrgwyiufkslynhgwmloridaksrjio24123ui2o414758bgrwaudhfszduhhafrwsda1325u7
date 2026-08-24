@@ -137,7 +137,7 @@ const PRERENDERED = (() => {
   } catch {
     // A dev build, or a `vite build` run without the prerender step. The SPA
     // fallback below still serves a working app — it just serves the generic
-    // shell, which is exactly the pre-prerender behaviour.
+    // shell, which is exactly the pre-prerender behavior.
     console.warn('prerender: no manifest in dist/ — falling back to index.html for all routes');
     return new Map();
   }

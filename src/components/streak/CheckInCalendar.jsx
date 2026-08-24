@@ -20,7 +20,7 @@
 //      one on purpose (see GRACE_DAYS in lib/dailyCheckin.js); it is the
 //      mechanic that gets a lapsed student back, and a mechanic that punishes
 //      the lapse cannot do that job.
-//   2. Pretend to be the streak. It carries its own colour (sky, not amber),
+//   2. Pretend to be the streak. It carries its own color (sky, not amber),
 //      its own icon and its own copy, and the panel it sits in says in one line
 //      that this measures turning up while the streak measures work.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ function Tile({ row, m, onSelect, selected }) {
         position: 'relative', cursor: 'pointer', padding: 0,
         aspectRatio: '1 / 1',
         minHeight: m ? 38 : 44,
-        borderRadius: 10,
+        borderRadius: 8,
         background: claimed
           ? tint(C.green, 0.13)
           : isToday
@@ -67,7 +67,7 @@ function Tile({ row, m, onSelect, selected }) {
             ? `1.5px solid ${accent}`
             : `1px solid ${claimed ? tint(C.green, 0.3) : row.milestone ? tint(accent, 0.28) : C.b1}`,
         boxShadow: isToday ? `0 0 18px ${tint(accent, 0.4)}` : 'none',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4,
         opacity: !claimed && !isToday && !row.milestone ? 0.66 : 1,
         transition: 'transform .12s',
       }}
@@ -110,15 +110,15 @@ export default function CheckInCalendar({
 
   return (
     <div style={glass({ padding: m ? 16 : 22 })}>
-      <div style={R({ justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 4 })}>
-        <div style={R({ gap: 9 })}>
+      <div style={R({ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', marginBottom: 4 })}>
+        <div style={R({ gap: 8 })}>
           <div style={{
-            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+            width: 32, height: 32, borderRadius: 8, flexShrink: 0,
             background: tint(ACCENT, 0.14), border: `1px solid ${tint(ACCENT, 0.3)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><CalendarHeart size={16} color={C.skyL} /></div>
           <div>
-            <div style={{ ...lbl({ marginBottom: 2 }) }}>Check-in calendar</div>
+            <div style={{ ...lbl({ marginBottom: 4 }) }}>Check-in calendar</div>
             <div style={{ fontSize: 11.5, color: C.t3 }}>
               Day {day} of {CYCLE_LENGTH}
               {cyclesDone > 0 && ` · ${cyclesDone} full cycle${cyclesDone === 1 ? '' : 's'} finished`}
@@ -129,16 +129,16 @@ export default function CheckInCalendar({
           <motion.button
             whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
             onClick={onClaim} disabled={busy}
-            style={{ ...btn(`linear-gradient(135deg, ${ACCENT}, ${C.blue})`, { fontSize: 12.5, padding: '9px 18px', color: onTint(ACCENT) }), opacity: busy ? 0.6 : 1 }}
+            style={{ ...btn(`linear-gradient(135deg, ${ACCENT}, ${C.blue})`, { fontSize: 12.5, padding: '8px 16px', color: onTint(ACCENT) }), opacity: busy ? 0.6 : 1 }}
           >{busy ? <Loader2 size={13} className="spin" /> : <Gift size={14} />}Claim day {day}</motion.button>
         ) : (
-          <span style={{ ...pill(tint(C.green, 0.13), C.greenL, { fontSize: 10.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ ...pill(tint(C.green, 0.13), C.greenL, { fontSize: 10.5, fontWeight: 700 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
             <Check size={11} strokeWidth={3} />Today claimed
           </span>
         )}
       </div>
 
-      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, margin: '10px 0 14px' }}>
+      <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.55, margin: '8px 0px 12px' }}>
         This is the ladder for <b style={{ color: C.t2 }}>turning up</b> — separate from the streak,
         which is the ladder for <b style={{ color: C.t2 }}>work done</b>. Missing a day here costs you
         that day&rsquo;s XP and nothing else: the cycle holds your place across a short gap.
@@ -162,14 +162,14 @@ export default function CheckInCalendar({
           key={detail.day}
           initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
           style={{
-            ...glass2({ padding: 13 }), marginTop: 13,
+            ...glass2({ padding: 12 }), marginTop: 12,
             border: `1px solid ${detail.milestone ? tint(C.amber, 0.28) : C.b1}`,
             background: detail.milestone ? tint(C.amber, 0.06) : C.surf2,
           }}
         >
-          <div style={R({ gap: 10, alignItems: 'flex-start' })}>
+          <div style={R({ gap: 8, alignItems: 'flex-start' })}>
             <div style={{
-              width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+              width: 30, height: 30, borderRadius: 8, flexShrink: 0,
               background: tint(detail.milestone ? C.amber : ACCENT, 0.14),
               border: `1px solid ${tint(detail.milestone ? C.amber : ACCENT, 0.28)}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -181,10 +181,10 @@ export default function CheckInCalendar({
                 {detail.state === 'claimed' && <span style={{ color: C.greenL, fontWeight: 600 }}> · claimed</span>}
                 {detail.state === 'today' && <span style={{ color: C.skyL, fontWeight: 600 }}> · today</span>}
               </div>
-              <div style={{ fontSize: 11, color: C.t2, marginTop: 3, lineHeight: 1.5 }}>
+              <div style={{ fontSize: 11, color: C.t2, marginTop: 4, lineHeight: 1.5 }}>
                 {detail.blurb || `Turn up on day ${detail.day} and take ${rewardSummary(detail)}.`}
               </div>
-              <div style={{ ...R({ gap: 6, flexWrap: 'wrap' }), marginTop: 8 }}>
+              <div style={{ ...R({ gap: 4, flexWrap: 'wrap' }), marginTop: 8 }}>
                 <span style={pill(tint(C.amber, 0.13), C.amberL, { fontSize: 10, fontFamily: C.FM, fontWeight: 800 })}>+{detail.xp} XP</span>
                 {detail.chest && <span style={{ ...pill(tint(C.amber, 0.1), C.amberL, { fontSize: 10 }), display: 'inline-flex', gap: 4, alignItems: 'center' }}><Gift size={10} />Chest</span>}
                 {detail.freeze > 0 && <span style={{ ...pill(C.blueDim, C.blueL, { fontSize: 10 }), display: 'inline-flex', gap: 4, alignItems: 'center' }}><Snowflake size={10} />{detail.freeze} freeze</span>}
@@ -208,7 +208,7 @@ export default function CheckInCalendar({
           drawn in full, so it gets its own row rather than being a caption. */}
       {next && (
         <div style={{
-          ...R({ gap: 8 }), marginTop: 11, padding: '9px 12px', borderRadius: 10,
+          ...R({ gap: 8 }), marginTop: 12, padding: '8px 12px', borderRadius: 8,
           background: tint(C.amber, 0.07), border: `1px solid ${tint(C.amber, 0.2)}`,
         }}>
           <Gift size={13} color={C.amberL} style={{ flexShrink: 0 }} />
@@ -241,18 +241,18 @@ export function CheckInHomeCard({ state, onClaim, onOpen, busy = false, m = fals
       ...R({ gap: 12, flexWrap: 'wrap' }),
     }}>
       <div style={{
-        width: 40, height: 40, borderRadius: 13, flexShrink: 0,
+        width: 40, height: 40, borderRadius: 12, flexShrink: 0,
         background: tint(ACCENT, 0.15), border: `1px solid ${tint(ACCENT, 0.32)}`,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       }}>
-        <span style={{ fontSize: 8, color: C.skyL, fontWeight: 800, letterSpacing: '.06em' }}>DAY</span>
+        <span style={{ fontSize: 8, color: C.skyL, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>DAY</span>
         <span style={{ fontSize: 14, fontWeight: 900, color: C.t1, fontFamily: C.FD, lineHeight: 1 }}>{day}</span>
       </div>
       <div style={{ flex: 1, minWidth: 170 }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>
           {claimable ? 'Check in for today' : 'Checked in'}
         </div>
-        <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>
+        <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>
           {claimable
             ? rewardSummary(reward)
             : next
@@ -264,7 +264,7 @@ export function CheckInHomeCard({ state, onClaim, onOpen, busy = false, m = fals
         <motion.button
           whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
           onClick={onClaim} disabled={busy}
-          style={{ ...btn(`linear-gradient(135deg, ${ACCENT}, ${C.blue})`, { fontSize: 12, padding: '8px 15px', color: onTint(ACCENT) }), flexShrink: 0, opacity: busy ? 0.6 : 1 }}
+          style={{ ...btn(`linear-gradient(135deg, ${ACCENT}, ${C.blue})`, { fontSize: 12, padding: '8px 16px', color: onTint(ACCENT) }), flexShrink: 0, opacity: busy ? 0.6 : 1 }}
         >{busy ? <Loader2 size={12} className="spin" /> : <Gift size={13} />}Claim</motion.button>
       ) : (
         <button onClick={onOpen} style={{ background: 'transparent', border: 'none', color: C.t3, cursor: 'pointer', fontSize: 11, fontWeight: 600, flexShrink: 0 }}>

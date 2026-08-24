@@ -61,7 +61,7 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
   const borrowsEverything = result.assumptions.borrowsFullCostOfAttendance;
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       {/* ── Inputs ───────────────────────────────────────────────────────── */}
       <div style={autoGrid(190, 10)}>
         <Field label="Pathway">
@@ -101,11 +101,11 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
 
       {/* ── The standing caveat, above the number rather than under it ────── */}
       <div style={{
-        ...R({ gap: 9, alignItems: 'flex-start' }),
+        ...R({ gap: 8, alignItems: 'flex-start' }),
         ...glass2({ padding: 12 }),
         border: `1px solid ${tint(C.amber, 0.24)}`, background: tint(C.amber, 0.05),
       }}>
-        <AlertTriangle size={14} color={C.amberL} style={{ flexShrink: 0, marginTop: 2 }} />
+        <AlertTriangle size={14} color={C.amberL} style={{ flexShrink: 0, marginTop: 4 }} />
         <span style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
           {borrowsEverything ? (
             <>
@@ -141,7 +141,7 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
         <Big label={`Monthly payment (${LOAN_ASSUMPTIONS.repaymentYears}-year standard plan)`}
           value={`${money(result.monthlyPayment)}/mo`} color={C.t1}
           sub={`${money(result.totalRepaid)} repaid in total`} />
-        <Big label="Share of a median paycheque"
+        <Big label="Share of a median paycheck"
           value={result.paymentShareOfMedianIncome != null ? `${result.paymentShareOfMedianIncome}%` : '—'}
           color={result.paymentShareOfMedianIncome > 25 ? C.roseL : C.greenL}
           sub={`of ${money(result.medianEarnings)}/yr — the whole-occupation median, so your first job pays less than this`} />
@@ -149,7 +149,7 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
 
       {/* ── Phase breakdown ──────────────────────────────────────────────── */}
       <button type="button" onClick={() => setShowPhases(s => !s)}
-        style={{ all: 'unset', cursor: 'pointer', ...R({ gap: 6 }), fontSize: 12, color: C.t2, fontWeight: 600 }}>
+        style={{ all: 'unset', cursor: 'pointer', ...R({ gap: 4 }), fontSize: 12, color: C.t2, fontWeight: 600 }}>
         {showPhases ? <ChevronUp size={14} /> : <ChevronDown size={14} />} Year by year, phase by phase
       </button>
 
@@ -162,7 +162,7 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
                 <span style={pill(tint(color, 0.12), color, { fontSize: 9 })}>{yearsLabel(p.years)}</span>
                 {p.earning === 'stipend' && <span style={pill(tint(C.green, 0.12), C.greenL, { fontSize: 9 })}>Paid</span>}
               </div>
-              <div style={{ ...autoGrid(110, 8), marginTop: 9 }}>
+              <div style={{ ...autoGrid(110, 8), marginTop: 8 }}>
                 <Small label="Cost" value={money(p.sticker)} />
                 {p.aid > 0 && <Small label="Aid" value={`−${money(p.aid)}`} />}
                 {p.outOfPocket > 0 && <Small label="Paid up front" value={`−${money(p.outOfPocket)}`} />}
@@ -177,10 +177,10 @@ export default function PathwayCostCalculator({ accent = C.green, defaultPathway
 
       {/* ── Every assumption, on screen ──────────────────────────────────── */}
       <div style={{ ...glass2({ padding: 12 }), background: C.s2 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8 }}>
           What this calculation assumes
         </div>
-        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11.5, color: C.t2, lineHeight: 1.65 }}>
+        <ul style={{ margin: 0, paddingLeft: 16, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
           <li>Federal interest rates of {(LOAN_ASSUMPTIONS.undergradRate * 100).toFixed(2)}% (undergrad),
             {' '}{(LOAN_ASSUMPTIONS.gradRate * 100).toFixed(2)}% (graduate) and
             {' '}{(LOAN_ASSUMPTIONS.gradPlusRate * 100).toFixed(2)}% (Grad PLUS, used above the
@@ -220,7 +220,7 @@ function Field({ label, hint, children }) {
 function Big({ label, value, sub, color }) {
   return (
     <div style={{ ...glass2({ padding: 12 }) }}>
-      <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: '.07em', textTransform: 'uppercase', lineHeight: 1.3 }}>{label}</div>
+      <div style={{ fontSize: 9.5, fontWeight: 700, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', lineHeight: 1.3 }}>{label}</div>
       <div style={{ fontSize: 19, fontWeight: 800, color, fontFamily: C.FM, marginTop: 4, lineHeight: 1.1 }}>{value}</div>
       {sub && <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4, lineHeight: 1.45 }}>{sub}</div>}
     </div>
@@ -230,8 +230,8 @@ function Big({ label, value, sub, color }) {
 function Small({ label, value }) {
   return (
     <div>
-      <div style={{ fontSize: 9, fontWeight: 700, color: C.t4, letterSpacing: '.06em', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FM, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 9, fontWeight: 700, color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>{label}</div>
+      <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1, fontFamily: C.FM, marginTop: 4 }}>{value}</div>
     </div>
   );
 }

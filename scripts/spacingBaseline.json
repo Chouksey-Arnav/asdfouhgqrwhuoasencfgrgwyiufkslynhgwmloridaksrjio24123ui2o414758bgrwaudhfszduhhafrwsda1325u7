@@ -1,0 +1,542 @@
+{
+  "src/App.jsx": {
+    "grid": 153,
+    "radii": 0
+  },
+  "src/components/AboutMePanel.jsx": {
+    "grid": 10,
+    "radii": 0
+  },
+  "src/components/ActivitiesResumePanel.jsx": {
+    "grid": 13,
+    "radii": 0
+  },
+  "src/components/AppTour.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/AppearanceSettings.jsx": {
+    "grid": 9,
+    "radii": 0
+  },
+  "src/components/CollegeAutocomplete.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/CollegeListPanel.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/EssayWorkspacePanel.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/FinancialAidHomeCard.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/HighlightableArticle.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/InterviewHistoryPanel.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/InterviewPrepPanel.jsx": {
+    "grid": 12,
+    "radii": 0
+  },
+  "src/components/LandingPage.jsx": {
+    "grid": 19,
+    "radii": 0
+  },
+  "src/components/LessonAudioPlayer.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/LessonDifficultyCheck.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/LessonNotesPanel.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/LiveVoiceInterview.jsx": {
+    "grid": 9,
+    "radii": 0
+  },
+  "src/components/NextUnlockCard.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/OpportunitiesDatabase.jsx": {
+    "grid": 8,
+    "radii": 0
+  },
+  "src/components/PaceGoalCard.jsx": {
+    "grid": 8,
+    "radii": 0
+  },
+  "src/components/PathwaySwitcher.jsx": {
+    "grid": 15,
+    "radii": 0
+  },
+  "src/components/PlansTab.jsx": {
+    "grid": 16,
+    "radii": 0
+  },
+  "src/components/PortfolioMedabrain.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/PortfolioMilestones.jsx": {
+    "grid": 15,
+    "radii": 0
+  },
+  "src/components/PrepMedabrain.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/QuizPlanToday.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/QuizRecommendationsPanel.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/RecommendersPanel.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/RewardChest.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/ScholarshipDatabase.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/ScholarshipResearchAdd.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/ScoreTrackerPanel.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/StreakHeatmap.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/SupplementalEssaysCard.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/ThemeToggle.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/TodayPlanNudge.jsx": {
+    "grid": 9,
+    "radii": 0
+  },
+  "src/components/UnlockCelebration.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/VoiceSelector.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/auth/ui.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/finance/DebtTrajectoryTable.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/finance/HealthCareerScholarships.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/finance/PathwayCostCalculator.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/finance/ServiceCommitmentPrograms.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/interview/CasperTypedTest.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/interview/DebriefCard.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/interview/MmiCircuitRunner.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/interview/StationBrief.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/landing/v2/LandingPageV2.jsx": {
+    "grid": 240,
+    "radii": 0
+  },
+  "src/components/legal/LegalPage.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/medex/MedExChip.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/medex/MedExHistoryChart.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/medex/MedExHomeCard.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/medex/MedExPanel.jsx": {
+    "grid": 6,
+    "radii": 0
+  },
+  "src/components/medex/SealCountdown.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/onboarding/OnboardingShell.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/onboarding/primitives.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/onboarding/scenes.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/onboarding/steps/GeneratingStep.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/onboarding/steps/SpeedStep.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/onboarding/steps/generic.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/onboarding/steps/grouped.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/parent/ConnectionsPanel.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/parent/FamilyThread.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/parent/ParentApp.jsx": {
+    "grid": 8,
+    "radii": 0
+  },
+  "src/components/parent/ParentSetup.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/parent/ParentsLanding.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/parent/ProgressSummary.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/parent/QuestAssignPanel.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/portfolio/AiPolicyNotice.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/ClinicalHoursSection.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/CombinedDegreePanel.jsx": {
+    "grid": 14,
+    "radii": 0
+  },
+  "src/components/portfolio/CommonAppExport.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/portfolio/CredentialsSection.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/portfolio/MedabrainRead.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/NextStepsCard.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/OpportunitiesPanel.jsx": {
+    "grid": 8,
+    "radii": 0
+  },
+  "src/components/portfolio/ProgramPromptsCard.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/ProgramTiers.jsx": {
+    "grid": 13,
+    "radii": 0
+  },
+  "src/components/portfolio/ResearchSection.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/portfolio/SectionIntro.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/portfolio/SectionScroller.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/portfolio/TrackedPanel.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/portfolio/WeeklyGoalTile.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/portfolio/WeeklyGoalsBoard.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/portfolio/admissions/AdmissionCalculatorPanel.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/portfolio/admissions/IntakeForm.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/portfolio/admissions/ProgramResultCard.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/quests/DailyQuestRail.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/quests/QuestBoard.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/quests/QuestCard.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/quests/QuestChainMap.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/quests/QuestCompleteOverlay.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/quests/QuestHomeCard.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/quests/QuestPicker.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapAscent.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapHomeCard.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapIntake.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapItem.jsx": {
+    "grid": 6,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapPath.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapSpine.jsx": {
+    "grid": 6,
+    "radii": 0
+  },
+  "src/components/roadmap/RoadmapTab.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/roadmap/roadmapUi.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/sat/DesmosCalculator.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/sat/SatAnnotatableText.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/sat/SatBaselinePanel.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/sat/SatFullTestPanel.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/sat/SatLibraryPanel.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/sat/SatMedabrain.jsx": {
+    "grid": 6,
+    "radii": 0
+  },
+  "src/components/sat/SatPracticePanel.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/sat/SatQuestionPlayer.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/sat/SatReferenceSheet.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/sat/SatReviewLogPanel.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/sat/SatSkillHeatmap.jsx": {
+    "grid": 4,
+    "radii": 0
+  },
+  "src/components/sat/SatSkillsPanel.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/sat/SatStudyPlanCard.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/sat/SatToolkitPanel.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/sat/SatVideoRecs.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/sat/satUi.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/streak/BoostChip.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/streak/CheckInCalendar.jsx": {
+    "grid": 7,
+    "radii": 0
+  },
+  "src/components/streak/FreezeCard.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/streak/LessonCompleteOverlay.jsx": {
+    "grid": 12,
+    "radii": 0
+  },
+  "src/components/streak/PathwayStreakStrip.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/streak/StreakCalendar.jsx": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/components/streak/StreakHomeCard.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/streak/StreakLeague.jsx": {
+    "grid": 3,
+    "radii": 0
+  },
+  "src/components/streak/StreakPanel.jsx": {
+    "grid": 6,
+    "radii": 0
+  },
+  "src/components/ui/Disclosure.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/ui/PanelHero.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/ui/PlanTaskStrip.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/ui/SubNav.jsx": {
+    "grid": 2,
+    "radii": 0
+  },
+  "src/components/ui/SuggestInput.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/components/ui/TrackQueueNotice.jsx": {
+    "grid": 1,
+    "radii": 0
+  },
+  "src/lib/renderMarkdown.js": {
+    "grid": 5,
+    "radii": 0
+  },
+  "src/lib/theme.js": {
+    "grid": 1,
+    "radii": 0
+  }
+}

@@ -103,7 +103,7 @@ export function exportQuizResult(quiz, answers, score, total) {
  * / Stretch tier per school. That export outlived the model behind it — the
  * calculator no longer produces tiers, because "Likely" at a school admitting
  * 3.4% of applicants was a word with nothing behind it. What goes on paper now
- * is what goes on screen: a range, a confidence label, and — for a programme
+ * is what goes on screen: a range, a confidence label, and — for a program
  * the student is not eligible for — no number at all, only what would have to
  * change. A PDF that is more confident than the screen it came from is the
  * version of this document that gets shown to a parent and believed.
@@ -127,7 +127,7 @@ export function exportAdmissionEstimates(results, meta = {}) {
   doc.setTextColor(...LIGHT);
   doc.setFontSize(7.5);
   doc.text(doc.splitTextToSize(
-    'Every figure below is a range, not a prediction. Estimates are benchmarked against the median admitted student rather than the 25th percentile, weighted by what each programme publishes, and adjusted for the fact that published admit rates include recruited athletes, legacies and development admits. Where a programme does not publish its admit rate, the estimate is built on a stated assumption and says so.',
+    'Every figure below is a range, not a prediction. Estimates are benchmarked against the median admitted student rather than the 25th percentile, weighted by what each program publishes, and adjusted for the fact that published admit rates include recruited athletes, legacies and development admits. Where a program does not publish its admit rate, the estimate is built on a stated assumption and says so.',
     176), 18, y + 5);
   y += 26;
 
@@ -175,12 +175,12 @@ export function exportAdmissionEstimates(results, meta = {}) {
     doc.setTextColor(60, 70, 90);
     doc.setFontSize(7);
     const baseline = r.baseRate.published ?? r.baseRate.assumed;
-    doc.text(`Everyone who applies: ${(baseline * 100).toFixed(1)}%${r.baseRate.isEstimate ? ' (estimated — not published by the programme)' : ''}`, 19, y + 16);
+    doc.text(`Everyone who applies: ${(baseline * 100).toFixed(1)}%${r.baseRate.isEstimate ? ' (estimated — not published by the program)' : ''}`, 19, y + 16);
     const top = (r.drivers || []).slice(0, 2).map(d => d.label).join(' · ');
     if (top) doc.text(doc.splitTextToSize(`Would move it most: ${top}`, 172), 19, y + 20.5);
     if (r.lottery) {
       doc.setTextColor(...AMBER);
-      doc.text('Selection at this programme is partly by random draw — preparation cannot remove that.', 19, y + 24);
+      doc.text('Selection at this program is partly by random draw — preparation cannot remove that.', 19, y + 24);
     }
     y += 30;
   });
@@ -190,7 +190,7 @@ export function exportAdmissionEstimates(results, meta = {}) {
 }
 
 // `extras` carries the three sections that used to be their own Portfolio tabs and were, until
-// the tabs were merged into Activities & Résumé, exported nowhere: clinical/shadowing hours,
+// the tabs were merged into Activities & résumé, exported nowhere: clinical/shadowing hours,
 // research experience, and dated certifications. A student handing this PDF to a program
 // director was leaving out the part of their record that is hardest to argue with.
 export function exportPortfolioResume(studentName, activities, awards, gpaEntries=[], extras={}) {
@@ -530,7 +530,7 @@ export function exportPortfolioDossier(dossier, opts = {}) {
     doc.text('PERSONAL ARCHIVE — CONTAINS YOUR PRIVATE REFLECTIONS', MARGIN_X + 4, y + 5);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(120, 40, 50);
-    doc.text('This version is for you. Use the application-ready export for anything you send to a program, a counsellor or a parent.', MARGIN_X + 4, y + 9);
+    doc.text('This version is for you. Use the application-ready export for anything you send to a program, a counselor or a parent.', MARGIN_X + 4, y + 9);
     y += 17;
   }
 

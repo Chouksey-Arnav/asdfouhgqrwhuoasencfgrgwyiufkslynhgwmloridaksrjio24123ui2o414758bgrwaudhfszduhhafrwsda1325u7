@@ -22,7 +22,7 @@
 //
 // `dailyCap` is the important one and the least obvious. Without it, "review 400
 // flashcards in 21 days" is a Sunday afternoon of mashing the space bar — which
-// is precisely the study behaviour spaced repetition exists to prevent. With a
+// is precisely the study behavior spaced repetition exists to prevent. With a
 // cap of 40, the same quest is a fortnight of real sessions and cannot be
 // finished any faster than the calendar allows. The floor a quest imposes is
 // therefore `ceil(target / dailyCap)` days, and the engine surfaces that number
@@ -151,7 +151,7 @@ export const QUEST_METRICS = {
   interview_session: { label: 'mock interviews',          unit: 'session',  verb: 'Practise', surface: 'portfolio', evidence: 'a mock interview was answered end to end' },
   portfolio_entry:   { label: 'portfolio entries logged', unit: 'entry',    verb: 'Log',      surface: 'portfolio', evidence: 'an activity, research, skill or clinical row was saved' },
   clinical_hour:     { label: 'clinical hours logged',    unit: 'hour',     verb: 'Log',      surface: 'portfolio', evidence: 'hours were logged against a clinical or shadowing site' },
-  award_logged:      { label: 'awards and honours',       unit: 'award',    verb: 'Log',      surface: 'portfolio', evidence: 'an award or honour was added to the record' },
+  award_logged:      { label: 'awards and honors',       unit: 'award',    verb: 'Log',      surface: 'portfolio', evidence: 'an award or honor was added to the record' },
   essay_work:        { label: 'essay drafts worked on',   unit: 'draft',    verb: 'Draft',    surface: 'portfolio', evidence: 'an essay draft was saved with real changes in it' },
   opportunity_track: { label: 'opportunities tracked',    unit: 'program',  verb: 'Track',    surface: 'portfolio', evidence: 'a program was tracked from the Opportunities or Scholarships catalogs' },
   scholarship_track: { label: 'scholarships tracked',     unit: 'award',    verb: 'Track',    surface: 'portfolio', evidence: 'a scholarship was saved to the tracker' },
@@ -298,7 +298,7 @@ export const QUESTS = [
     title: 'Three Units Mastered',
     blurb: 'Master 3 pathway units in 21 days — one unit a day, maximum.',
     proof: 'A unit is mastered when every lesson inside it is verified and the unit quiz is passed.',
-    why: 'Units are the level above lessons and the level the pathway is actually organised around. A student who has mastered three has finished a real, nameable chunk of a career track rather than a scattered handful of pages.',
+    why: 'Units are the level above lessons and the level the pathway is actually organized around. A student who has mastered three has finished a real, nameable chunk of a career track rather than a scattered handful of pages.',
     category: 'pathway', tier: 'hard', metric: 'unit_verified',
     target: 3, windowDays: 21, dailyCap: 1, minActiveDays: 3,
     icon: 'Boxes', surfaces: ['prep', 'home'], season: 'any',
@@ -370,7 +370,7 @@ export const QUESTS = [
     title: 'Twelve Quizzes',
     blurb: 'Complete 12 quizzes in 14 days, capped at 3 a day.',
     proof: 'Any quiz submitted, at any score. Retakes of the same quiz count once per day.',
-    why: 'Quizzes are the cheapest honest measurement in the app. A dozen in a fortnight gives the recommendation engine enough signal to actually personalise what comes next.',
+    why: 'Quizzes are the cheapest honest measurement in the app. A dozen in a fortnight gives the recommendation engine enough signal to actually personalize what comes next.',
     category: 'retention', tier: 'standard', metric: 'quiz_completed',
     target: 12, windowDays: 14, dailyCap: 3, minActiveDays: 5,
     icon: 'Layers', surfaces: ['prep'], season: 'any',
@@ -607,7 +607,7 @@ export const QUESTS = [
     id: 'port_clinical_start',
     title: 'First Twelve Hours',
     blurb: 'Log 12 clinical or shadowing hours in 21 days, capped at 4 a day.',
-    proof: 'Hours logged in Activities & Résumé, in the clinical section.',
+    proof: 'Hours logged in Activities & résumé, in the clinical section.',
     why: 'Twelve hours is three afternoons. It is the version of clinical experience that a student with no contacts and no car can actually achieve, and finishing it is what makes fifty hours feel possible.',
     category: 'portfolio', tier: 'standard', metric: 'clinical_hour',
     target: 12, windowDays: 21, dailyCap: 4, minActiveDays: 3,
@@ -617,7 +617,7 @@ export const QUESTS = [
     id: 'port_clinical_fifty',
     title: 'Fifty Hours on the Ground',
     blurb: 'Log 50 clinical or shadowing hours in 42 days, capped at 8 a day.',
-    proof: 'Hours logged in Activities & Résumé, in the clinical section.',
+    proof: 'Hours logged in Activities & résumé, in the clinical section.',
     why: 'This one is mostly earned outside the app, which is the point — it is the quest that connects screen time to a hospital corridor. Fifty hours is the number admissions readers start taking seriously.',
     category: 'portfolio', tier: 'elite', metric: 'clinical_hour',
     target: 50, windowDays: 42, dailyCap: 8, minActiveDays: 8,
@@ -636,7 +636,7 @@ export const QUESTS = [
   {
     id: 'port_interview_drill',
     title: 'Interview Drill',
-    blurb: 'Practise 6 mock interviews in 21 days — 1 a day, maximum.',
+    blurb: 'Practice 6 mock interviews in 21 days — 1 a day, maximum.',
     proof: 'A mock interview answered end to end, including the ones that go badly.',
     why: 'Six separate days of speaking out loud. Interview nerves are a volume problem, and the one-per-day cap is what turns this into rehearsal instead of an afternoon.',
     category: 'portfolio', tier: 'hard', metric: 'interview_session',
@@ -646,7 +646,7 @@ export const QUESTS = [
   {
     id: 'port_interview_marathon',
     title: 'Fifteen Sittings',
-    blurb: 'Practise 15 mock interviews in 35 days — 1 a day, maximum.',
+    blurb: 'Practice 15 mock interviews in 35 days — 1 a day, maximum.',
     proof: 'Fifteen interviews on fifteen separate days. There is no way to compress this one.',
     why: 'Fifteen separate days of being asked why medicine and having to answer out loud. Students who have done this walk into a real interview and find it familiar, which is the entire objective.',
     category: 'portfolio', tier: 'elite', metric: 'interview_session',
@@ -656,8 +656,8 @@ export const QUESTS = [
   {
     id: 'port_awards_ledger',
     title: 'The Awards Ledger',
-    blurb: 'Log 5 awards or honours in 21 days — one a day, maximum.',
-    proof: 'An award, honour, certification or placement added to the record.',
+    blurb: 'Log 5 awards or honors in 21 days — one a day, maximum.',
+    proof: 'An award, honor, certification or placement added to the record.',
     why: 'Students systematically under-report their own achievements, and the ones they forget are the ones that were three years ago. One a day for five days recovers most of a résumé nobody was keeping.',
     category: 'portfolio', tier: 'standard', metric: 'award_logged',
     target: 5, windowDays: 21, dailyCap: 1, minActiveDays: 5,
@@ -700,7 +700,7 @@ export const QUESTS = [
     title: 'Five Sittings',
     blurb: 'Work on 5 essay drafts in 14 days — one a day, maximum.',
     proof: 'A draft saved with real changes in it. Opening the editor is not a draft.',
-    why: 'The starter version of the essay work. Five separate sittings is the smallest number that produces something recognisable as a draft, and the one-a-day cap is what stops it being one panicked evening.',
+    why: 'The starter version of the essay work. Five separate sittings is the smallest number that produces something recognizable as a draft, and the one-a-day cap is what stops it being one panicked evening.',
     category: 'application', tier: 'standard', metric: 'essay_work',
     target: 5, windowDays: 14, dailyCap: 1, minActiveDays: 5,
     icon: 'PenTool', surfaces: ['portfolio'], season: 'any',

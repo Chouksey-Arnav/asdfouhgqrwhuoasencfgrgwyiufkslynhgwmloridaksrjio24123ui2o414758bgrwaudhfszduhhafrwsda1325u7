@@ -36,24 +36,24 @@ export default function NextStepsCard({
       background: `linear-gradient(125deg,${tint(C.blue, 0.11)},${tint(C.green, 0.05)} 58%,rgba(255,255,255,0.02))`,
       border: `1px solid ${tint(C.blue, 0.26)}`,
     }}>
-      <div style={R({ gap: 11, marginBottom: hasSteps || shownInsights.length ? 14 : 0, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 12, marginBottom: hasSteps || shownInsights.length ? 14 : 0, flexWrap: 'wrap' })}>
         <div style={{
-          width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+          width: 32, height: 32, borderRadius: 8, flexShrink: 0,
           background: `linear-gradient(135deg,${C.blue},${C.green})`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {hasSteps ? <Compass size={16} color="#fff" /> : <CheckCircle2 size={16} color="#fff" />}
         </div>
         <div style={{ flex: 1, minWidth: 200 }}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.1em', textTransform: 'uppercase', color: accentText(C.blue) }}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: accentText(C.blue) }}>
             Start here
           </div>
-          <div style={{ fontSize: isMobile ? 14.5 : 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 3, letterSpacing: '-.02em' }}>
+          <div style={{ fontSize: isMobile ? 14.5 : 16, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginTop: 4, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>
             {hasSteps
               ? (firstName ? `${firstName}, here’s what to do next` : 'Here’s what to do next')
               : 'You’re up to date — nothing is waiting on you'}
           </div>
-          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 3, lineHeight: 1.55, maxWidth: 600 }}>
+          <div style={{ fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.55, maxWidth: 600 }}>
             {hasSteps
               ? 'Pick the top one. Everything further down this page is just detail on how it’s going — you don’t have to read it.'
               : 'Keep the week’s goals below moving, or go find your next program under Opportunities.'}
@@ -78,26 +78,26 @@ export default function NextStepsCard({
                 }}
               >
                 <span style={{
-                  width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
+                  width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 4,
                   background: tint(col, 0.15), border: `1px solid ${tint(col, 0.26)}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Icon size={13} color={accentText(col)} />
                 </span>
                 <span style={{ flex: 1, minWidth: 0 }}>
-                  <span style={R({ gap: 7, flexWrap: 'wrap' })}>
+                  <span style={R({ gap: 8, flexWrap: 'wrap' })}>
                     <span style={{ fontSize: 13, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{s.label}</span>
                     {i === 0 && (
                       <span style={{
-                        fontSize: 9, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase',
-                        color: accentText(s.urgent ? C.rose : col), padding: '2px 7px', borderRadius: 999,
+                        fontSize: 9, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
+                        color: accentText(s.urgent ? C.rose : col), padding: '4px 8px', borderRadius: 999,
                         background: tint(s.urgent ? C.rose : col, 0.14),
                       }}>{s.urgent ? 'Do this first' : 'Start with this'}</span>
                     )}
                   </span>
-                  <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 3, lineHeight: 1.55 }}>{s.why}</span>
+                  <span style={{ display: 'block', fontSize: 11.5, color: C.t3, marginTop: 4, lineHeight: 1.55 }}>{s.why}</span>
                 </span>
-                <span style={{ ...R({ gap: 5, flexShrink: 0, fontSize: 11, fontWeight: 700, color: accentText(col) }), marginTop: 3 }}>
+                <span style={{ ...R({ gap: 4, flexShrink: 0, fontSize: 11, fontWeight: 700, color: accentText(col) }), marginTop: 4 }}>
                   {!isMobile && s.ctaLabel}<ArrowRight size={12} />
                 </span>
               </motion.button>
@@ -107,11 +107,11 @@ export default function NextStepsCard({
       )}
 
       {shownInsights.length > 0 && (
-        <div style={{ ...CC({ gap: 7 }), marginTop: hasSteps ? 12 : 0, paddingTop: hasSteps ? 12 : 0, borderTop: hasSteps ? `1px solid ${C.b1}` : 'none' }}>
+        <div style={{ ...CC({ gap: 8 }), marginTop: hasSteps ? 12 : 0, paddingTop: hasSteps ? 12 : 0, borderTop: hasSteps ? `1px solid ${C.b1}` : 'none' }}>
           {shownInsights.map((ins, i) => {
             const sevColor = { high: C.rose, medium: C.amber, low: C.t3, positive: C.green }[ins.severity] || C.t3;
             return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <Lightbulb size={13} color={sevColor} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1, fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>{ins.text}</span>
                 {ins.ctaLabel && (

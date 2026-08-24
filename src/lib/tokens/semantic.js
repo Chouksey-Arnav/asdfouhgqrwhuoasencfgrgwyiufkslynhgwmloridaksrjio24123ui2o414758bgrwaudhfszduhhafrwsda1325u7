@@ -6,14 +6,14 @@
 // custom properties in index.css).
 //
 // ── The naming rule ─────────────────────────────────────────────────────────
-// Semantic tokens are named for what they MEAN, never for what colour they
+// Semantic tokens are named for what they MEAN, never for what color they
 // currently are. `accentFg`, not `blue400`. The failure mode this prevents is
-// specific and happens to every design system that skips it: the brand colour
+// specific and happens to every design system that skips it: the brand color
 // changes, and you are left with a token called `blue` that holds green, so
 // every reader of the codebase is now permanently misled about what a line of
 // code does. The one deliberate exception is `hue` at the bottom of each theme,
-// where the colour genuinely IS the meaning — a subject category's identity is
-// its hue, the way a data series' identity is its colour — and that map is
+// where the color genuinely IS the meaning — a subject category's identity is
+// its hue, the way a data series' identity is its color — and that map is
 // scoped and documented as such so it can't quietly become a general palette.
 //
 // ── The Radix 12-step contract ──────────────────────────────────────────────
@@ -65,7 +65,7 @@ const RAMPS = { blue: BLUE, green: GREEN, amber: AMBER, rose: ROSE, violet: VIOL
  * designates as "the readable version of this hue" and is what carries AA;
  * `subtleBg` is the Radix step-3 tinted chip background for the same hue.
  * A missing step throws rather than falling back — a silently-absent token is
- * how a theme ends up rendering the previous theme's colour.
+ * how a theme ends up rendering the previous theme's color.
  */
 const expandHues = (steps, subtleBg) => {
   const out = {};
@@ -210,6 +210,12 @@ export const balanced = Object.freeze({
     inputBorder: SLATE['42'],     // …with the default outline
   }),
   // Depth without shadows: a hairline of light on the top edge, nothing else.
+  //
+  // This theme deliberately does NOT get the three-layer shadow ladder the
+  // other themes carry. Its surface steps are close enough together that a
+  // card already reads as lifted from the step it sits on, and a drop shadow
+  // over the top of a working surface ladder is how a dark UI ends up looking
+  // muddy — two depth systems arguing. See the ladder note on DARK below.
   elevation: Object.freeze({
     highlight: WHITE_A['5.5'],
     raised: `inset 0 1px 0 ${WHITE_A['5.5']}`,
@@ -264,10 +270,23 @@ export const dark = Object.freeze({
     surface: WHITE_A[3], surfaceQuiet: WHITE_WASH[3], surfaceRaised: WHITE_A[6],
     inputBg: WHITE_A[4], inputBorder: WHITE_A[10],
   }),
+  // ── The shadow ladder ──────────────────────────────────────────────────
+  // One big soft shadow (`0 2px 12px` at 50%, which is what this was) is a
+  // glow, not a shadow: real light casts a tight dark contact edge where the
+  // object meets the surface, a mid-distance falloff, and a wide faint
+  // ambient. Three low-opacity layers at different offsets and blurs simulate
+  // that; one layer at high opacity simulates a lightbulb behind the card.
+  //
+  // Every layer carries NEGATIVE SPREAD, which is the part that is usually
+  // missed. Without it a 24px blur bleeds 24px out on all four sides
+  // including UPWARD, so a card looks like it is lit from below as much as
+  // above. Pulling the spread in by roughly a third of the blur keeps the
+  // shadow under the object, where a single overhead light source would put
+  // it.
   elevation: Object.freeze({
     highlight: WHITE_A[4],
-    raised: `0 2px 12px ${SHADOW_A[5]},inset 0 1px 0 ${WHITE_A[4]}`,
-    quiet: `0 2px 8px ${SHADOW_A[3]}`,
+    raised: `0 1px 2px -1px ${SHADOW_A[30]},0 4px 8px -3px ${SHADOW_A[22]},0 12px 24px -8px ${SHADOW_A[30]},inset 0 1px 0 ${WHITE_A[4]}`,
+    quiet: `0 1px 2px -1px ${SHADOW_A[22]},0 4px 10px -4px ${SHADOW_A[22]}`,
   }),
   scrim: SCRIM_A.midnight55,
   pageGlow: 'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(45,127,255,0.10) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(139,92,246,0.06) 0%, transparent 58%)',
@@ -318,9 +337,10 @@ export const balancedLight = Object.freeze({
     inputBg: MIST['97.5'], inputBorder: INK_A[16],
   }),
   elevation: Object.freeze({
+    // Three layers, negative spread — see the note on DARK's ladder.
     highlight: WHITE_WASH[55],
-    raised: `0 1px 2px ${INK_A[5]},0 6px 20px ${INK_A[7]}`,
-    quiet: `0 1px 3px ${INK_A[8]}`,
+    raised: `0 1px 2px -1px ${INK_A[8]},0 4px 8px -3px ${INK_A[6]},0 14px 28px -10px ${INK_A[10]}`,
+    quiet: `0 1px 2px -1px ${INK_A[7]},0 4px 10px -5px ${INK_A[7]}`,
   }),
   scrim: SCRIM_A.mist38,
   pageGlow: 'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(29,102,219,0.055) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(109,49,212,0.035) 0%, transparent 58%)',
@@ -371,9 +391,10 @@ export const light = Object.freeze({
     inputBg: MIST['99.3'], inputBorder: INK_A[14],
   }),
   elevation: Object.freeze({
+    // Three layers, negative spread — see the note on DARK's ladder.
     highlight: WHITE_WASH[70],
-    raised: `0 1px 2px ${INK_A[4]},0 6px 20px ${INK_A[6]}`,
-    quiet: `0 1px 3px ${INK_A[7]}`,
+    raised: `0 1px 2px -1px ${INK_A[7]},0 4px 8px -3px ${INK_A[5]},0 14px 28px -10px ${INK_A[8]}`,
+    quiet: `0 1px 2px -1px ${INK_A[6]},0 4px 10px -5px ${INK_A[6]}`,
   }),
   scrim: SCRIM_A.mist35,
   pageGlow: 'radial-gradient(ellipse 75% 60% at 72% -8%, rgba(45,127,255,0.07) 0%, transparent 62%), radial-gradient(ellipse 60% 50% at 2% 12%, rgba(124,58,237,0.04) 0%, transparent 58%)',

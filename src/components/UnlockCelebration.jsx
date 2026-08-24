@@ -12,7 +12,7 @@ import { celebrateAchievement } from '../lib/celebrate';
 // — you glance at it and carry on. It is the wrong weight for the one gate the
 // ladder actually builds toward. Plans is the app's most expensive feature: it
 // reads the whole student and writes back a day-by-day schedule, and it was
-// arriving as a fifth line of grey text in the corner of the screen, three
+// arriving as a fifth line of gray text in the corner of the screen, three
 // seconds long, easy to miss entirely.
 //
 // A reward loop needs a moment. This is the moment: the work that earned it
@@ -80,7 +80,7 @@ export default function UnlockCelebration({
             <X size={16} />
           </button>
 
-          <div style={{ fontSize: 9.5, fontWeight: 800, color: accent, letterSpacing: '.16em', textTransform: 'uppercase', marginBottom: 16 }}>
+          <div style={{ fontSize: 9.5, fontWeight: 800, color: accent, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 16 }}>
             Milestone unlocked
           </div>
 
@@ -89,7 +89,7 @@ export default function UnlockCelebration({
             animate={reducedMotion ? false : { scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 14, delay: .08 }}
             style={{
-              width: 62, height: 62, borderRadius: 18, margin: '0 auto 16px',
+              width: 62, height: 62, borderRadius: 16, margin: '0 auto 16px',
               display: 'grid', placeItems: 'center',
               background: tint(accent, 0.18), border: `1px solid ${tint(accent, 0.42)}`,
               boxShadow: `0 10px 30px ${tint(accent, 0.28)}`,
@@ -98,10 +98,10 @@ export default function UnlockCelebration({
             <Sparkles size={27} color={accent} />
           </motion.div>
 
-          <div style={{ fontSize: 21, fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 8 }}>{label}</div>
+          <div style={{ fontSize: 21, letterSpacing: 'calc(-0.34px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD, marginBottom: 8 }}>{label}</div>
 
           {reward && (
-            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.6, marginBottom: 14 }}>{reward}</div>
+            <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55, marginBottom: 12 }}>{reward}</div>
           )}
 
           {/* The half students actually respond to: not "here's a feature", but
@@ -109,21 +109,21 @@ export default function UnlockCelebration({
           {earned && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left',
-              padding: '9px 11px', borderRadius: 10, marginBottom: 18,
+              padding: '8px 12px', borderRadius: 8, marginBottom: 16,
               background: C.s2, border: `1px solid ${C.b1}`,
             }}>
-              <span style={{ width: 18, height: 18, borderRadius: 9, background: tint(C.green, 0.18), display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+              <span style={{ width: 18, height: 18, borderRadius: 8, background: tint(C.green, 0.18), display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                 <Check size={11} color={C.greenL} />
               </span>
               <span style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.5 }}>{earned}</span>
             </div>
           )}
 
-          <button onClick={onGo} style={btn(accentFill(accent), { width: '100%', justifyContent: 'center', fontSize: 13.5, padding: '11px 16px' })}>
+          <button onClick={onGo} style={btn(accentFill(accent), { width: '100%', justifyContent: 'center', fontSize: 13.5, padding: '12px 16px' })}>
             {cta}<ArrowRight size={15} />
           </button>
           <button onClick={onClose}
-            style={{ background: 'transparent', border: 'none', color: C.t4, fontSize: 11.5, cursor: 'pointer', marginTop: 10, font: 'inherit', fontFamily: C.FB }}>
+            style={{ background: 'transparent', border: 'none', color: C.t4, fontSize: 11.5, cursor: 'pointer', marginTop: 8, font: 'inherit', fontFamily: C.FB }}>
             Later
           </button>
         </motion.div>

@@ -178,14 +178,14 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
   const depthMeta = {
     empty:   { label: 'Nothing yet',      pct: 0,   color: C.t4,    note: 'Medabrain is running on your onboarding answers alone right now.' },
     started: { label: 'Getting started',  pct: 25,  color: C.amber, note: 'A good start. Another minute of talking makes a noticeable difference.' },
-    good:    { label: 'Solid',            pct: 62,  color: C.blue,  note: 'Medabrain has enough to personalise most of what it says to you.' },
+    good:    { label: 'Solid',            pct: 62,  color: C.blue,  note: 'Medabrain has enough to personalize most of what it says to you.' },
     rich:    { label: 'Medabrain knows you', pct: 100, color: C.green, note: 'Every answer across the app is now shaped by what you have told it here.' },
   }[stats.depth];
 
   const remaining = BRIEF_ENTRY_MAX_CHARS - draft.length;
 
   return (
-    <div style={CC({ gap: 18 })}>
+    <div style={CC({ gap: 16 })}>
       {/* ── Explainer hero ─────────────────────────────────────────────── */}
       {!embedded && (
         <div style={{
@@ -195,26 +195,26 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
           position: 'relative', overflow: 'hidden',
         }}>
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg,${accent},transparent)` }} />
-          <div style={R({ gap: 14, alignItems: 'flex-start' })}>
+          <div style={R({ gap: 12, alignItems: 'flex-start' })}>
             <div style={{
-              width: 44, height: 44, borderRadius: 14, flexShrink: 0, display: 'grid', placeItems: 'center',
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0, display: 'grid', placeItems: 'center',
               background: C.violetGrad, boxShadow: `0 8px 20px ${tint(accent, 0.35)}`,
             }}>
               <Volume2 size={20} color="#fff" />
             </div>
             <div style={{ minWidth: 0 }}>
-              <h2 style={{ fontSize: isMobile ? 19 : 24, fontWeight: 800, fontFamily: C.FD, letterSpacing: '-.03em', color: C.t1, margin: 0 }}>
+              <h2 style={{ fontSize: isMobile ? 19 : 24, fontWeight: 800, fontFamily: C.FD, letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', color: C.t1, margin: 0 }}>
                 Tell Medabrain about yourself
               </h2>
-              <p style={{ fontSize: isMobile ? 12.5 : 13.5, color: C.t2, lineHeight: 1.65, marginTop: 6 }}>
-                Talk to it like you would to a counsellor who actually has time for you. Your family, your school,
+              <p style={{ fontSize: isMobile ? 12.5 : 13.5, color: C.t2, lineHeight: 1.55, marginTop: 4 }}>
+                Talk to it like you would to a counselor who actually has time for you. Your family, your school,
                 what you are scared of, where you want to end up — anything. Say as much as you want, come back and
                 add more whenever you want.
               </p>
               <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
-                <span style={pill(tint(C.green, 0.14), C.greenL, { gap: 5 })}><ShieldCheck size={11} /> Treated as the truth</span>
-                <span style={pill(tint(C.blue, 0.14), C.blueL, { gap: 5 })}><Brain size={11} /> Used across every tab</span>
-                <span style={pill(tint(C.violet, 0.14), C.violetL, { gap: 5 })}><Pencil size={11} /> Editable any time</span>
+                <span style={pill(tint(C.green, 0.14), C.greenL, { gap: 4 })}><ShieldCheck size={11} /> Treated as the truth</span>
+                <span style={pill(tint(C.blue, 0.14), C.blueL, { gap: 4 })}><Brain size={11} /> Used across every tab</span>
+                <span style={pill(tint(C.violet, 0.14), C.violetL, { gap: 4 })}><Pencil size={11} /> Editable any time</span>
               </div>
             </div>
           </div>
@@ -222,7 +222,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
       )}
 
       {/* ── Depth meter ─────────────────────────────────────────────────── */}
-      <div style={glass2({ padding: 14 })}>
+      <div style={glass2({ padding: 12 })}>
         <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
           <span style={lbl({ marginBottom: 0 })}>How well Medabrain knows you</span>
           <span style={{ fontSize: 11.5, fontWeight: 700, color: depthMeta.color }}>{depthMeta.label}</span>
@@ -230,11 +230,11 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
         <div
           role="progressbar" aria-valuenow={depthMeta.pct} aria-valuemin={0} aria-valuemax={100}
           aria-label={`How well Medabrain knows you: ${depthMeta.label}`}
-          style={{ height: 6, borderRadius: 6, background: C.s4, overflow: 'hidden' }}
+          style={{ height: 6, borderRadius: 4, background: C.s4, overflow: 'hidden' }}
         >
           <motion.div
             initial={{ width: 0 }} animate={{ width: `${depthMeta.pct}%` }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            style={{ height: '100%', background: depthMeta.color, borderRadius: 6 }}
+            style={{ height: '100%', background: depthMeta.color, borderRadius: 4 }}
           />
         </div>
         <div style={{ fontSize: 11.5, color: C.t3, marginTop: 8, lineHeight: 1.5 }}>
@@ -249,10 +249,10 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
         border: `1px solid ${listening ? tint(C.rose, 0.45) : C.b1}`,
         transition: 'border-color .25s',
       }}>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 10, flexWrap: 'wrap', gap: 8 })}>
+        <div style={R({ justifyContent: 'space-between', marginBottom: 8, flexWrap: 'wrap', gap: 8 })}>
           <span style={lbl({ marginBottom: 0 })}>{listening ? 'Listening — just talk' : 'Say or type something'}</span>
           {!sttOk && (
-            <span style={{ ...R({ gap: 5 }), fontSize: 11, color: C.t4 }}>
+            <span style={{ ...R({ gap: 4 }), fontSize: 11, color: C.t4 }}>
               <Keyboard size={11} /> Voice input isn't supported in this browser
             </span>
           )}
@@ -273,7 +273,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
           style={{
             ...inp({
               resize: 'vertical', minHeight: 120, lineHeight: 1.7, fontSize: isMobile ? 13 : 14,
-              fontFamily: C.FB, borderRadius: 12, padding: '12px 14px',
+              fontFamily: C.FB, borderRadius: 12, padding: '12px 12px',
             }),
           }}
         />
@@ -291,7 +291,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
           )}
         </AnimatePresence>
 
-        <div style={R({ justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 10 })}>
+        <div style={R({ justifyContent: 'space-between', marginTop: 12, flexWrap: 'wrap', gap: 8 })}>
           <div style={R({ gap: 8 })}>
             {sttOk && (
               <motion.button
@@ -301,7 +301,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
                 aria-label={listening ? 'Stop recording' : 'Start speaking'}
                 style={{
                   ...btn(listening ? `linear-gradient(135deg,${C.rose},${C.red})` : C.violetGrad, {
-                    padding: '9px 16px', borderRadius: 11, gap: 7,
+                    padding: '8px 16px', borderRadius: 12, gap: 8,
                   }),
                 }}
               >
@@ -309,18 +309,18 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
                 {listening && (
                   <motion.span
                     animate={{ opacity: [1, 0.25, 1] }} transition={{ duration: 1.1, repeat: Infinity }}
-                    style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', marginLeft: 2 }}
+                    style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff', marginLeft: 4 }}
                   />
                 )}
               </motion.button>
             )}
             {micDenied && (
-              <span style={{ ...R({ gap: 5 }), fontSize: 11, color: C.amberL }}>
+              <span style={{ ...R({ gap: 4 }), fontSize: 11, color: C.amberL }}>
                 <MicOff size={12} /> Mic blocked
               </span>
             )}
           </div>
-          <div style={R({ gap: 10 })}>
+          <div style={R({ gap: 8 })}>
             <span style={{ fontSize: 10.5, color: remaining < 150 ? C.amberL : C.t4, fontFamily: C.FM }}>
               {draft.length}/{BRIEF_ENTRY_MAX_CHARS}
             </span>
@@ -328,7 +328,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
               whileTap={{ scale: 0.96 }}
               onClick={save}
               disabled={!draft.trim()}
-              style={btn(C.blueGrad, { padding: '9px 20px', borderRadius: 11, opacity: draft.trim() ? 1 : 0.45, cursor: draft.trim() ? 'pointer' : 'not-allowed' })}
+              style={btn(C.blueGrad, { padding: '8px 20px', borderRadius: 12, opacity: draft.trim() ? 1 : 0.45, cursor: draft.trim() ? 'pointer' : 'not-allowed' })}
             >
               <Check size={14} /> Save to Medabrain
             </motion.button>
@@ -338,27 +338,27 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
 
       {/* ── Conversation starters ───────────────────────────────────────── */}
       <div>
-        <div style={{ ...R({ gap: 6 }), marginBottom: 10 }}>
+        <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
           <Lightbulb size={12} color={C.t3} />
           <span style={lbl({ marginBottom: 0 })}>Not sure what to say? Start here</span>
         </div>
-        <div style={CC({ gap: 14 })}>
+        <div style={CC({ gap: 12 })}>
           {PROMPT_GROUPS.map(group => {
             const GIcon = group.icon;
             const hue = C[group.hue];
             return (
               <div key={group.label}>
-                <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+                <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                   <GIcon size={11} color={hue} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, letterSpacing: '.02em' }}>{group.label}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: C.t2, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>{group.label}</span>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {group.prompts.map(p => (
                     <button
                       key={p}
                       onClick={() => usePrompt(p)}
                       style={{
-                        textAlign: 'left', padding: '7px 12px', borderRadius: 20,
+                        textAlign: 'left', padding: '8px 12px', borderRadius: 16,
                         border: `1px solid ${tint(hue, 0.28)}`, background: tint(hue, 0.07),
                         color: C.t2, fontSize: 11.5, fontFamily: C.FB, cursor: 'pointer',
                         transition: 'background .15s, border-color .15s',
@@ -376,7 +376,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
 
       {/* ── Saved entries ───────────────────────────────────────────────── */}
       <div>
-        <div style={R({ justifyContent: 'space-between', marginBottom: 10 })}>
+        <div style={R({ justifyContent: 'space-between', marginBottom: 8 })}>
           <span style={lbl({ marginBottom: 0 })}>What Medabrain knows</span>
           {entries.length > 1 && (
             <span style={{ fontSize: 10.5, color: C.t4 }}>Newest last · pinned entries are never dropped</span>
@@ -393,7 +393,7 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
             </div>
           </div>
         ) : (
-          <div style={CC({ gap: 10 })}>
+          <div style={CC({ gap: 8 })}>
             <AnimatePresence initial={false}>
               {entries.map(e => (
                 <motion.div
@@ -401,54 +401,54 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
                   layout
                   initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0, marginBottom: -10 }}
                   style={{
-                    ...glass2({ padding: 14 }),
+                    ...glass2({ padding: 12 }),
                     borderLeft: `3px solid ${e.pinned ? C.amber : tint(accent, 0.5)}`,
                     background: e.pinned ? tint(C.amber, 0.05) : C.surf2,
                   }}
                 >
                   {editingId === e.id ? (
-                    <div style={CC({ gap: 10 })}>
+                    <div style={CC({ gap: 8 })}>
                       <textarea
                         value={editText}
                         onChange={ev => setEditText(ev.target.value.slice(0, BRIEF_ENTRY_MAX_CHARS))}
                         rows={4}
                         aria-label="Edit this entry"
-                        style={inp({ resize: 'vertical', lineHeight: 1.65, fontSize: 13, borderRadius: 10 })}
+                        style={inp({ resize: 'vertical', lineHeight: 1.65, fontSize: 13, borderRadius: 8 })}
                       />
                       <div style={R({ gap: 8, justifyContent: 'flex-end' })}>
-                        <button style={btnG({ fontSize: 11, padding: '6px 14px' })} onClick={() => setEditingId(null)}><X size={12} /> Cancel</button>
-                        <button style={btn(C.blueGrad, { fontSize: 11, padding: '6px 16px' })} onClick={commitEdit}><Check size={12} /> Save</button>
+                        <button style={btnG({ fontSize: 11, padding: '4px 12px' })} onClick={() => setEditingId(null)}><X size={12} /> Cancel</button>
+                        <button style={btn(C.blueGrad, { fontSize: 11, padding: '4px 16px' })} onClick={commitEdit}><Check size={12} /> Save</button>
                       </div>
                     </div>
                   ) : (
                     <>
                       <div style={{ fontSize: 13, color: C.t1, lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{e.text}</div>
-                      <div style={R({ justifyContent: 'space-between', marginTop: 10, flexWrap: 'wrap', gap: 8 })}>
-                        <div style={R({ gap: 7 })}>
+                      <div style={R({ justifyContent: 'space-between', marginTop: 8, flexWrap: 'wrap', gap: 8 })}>
+                        <div style={R({ gap: 8 })}>
                           <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>{relTime(e.at)}</span>
-                          {e.source === 'voice' && <span style={pill(tint(C.violet, 0.12), C.violetL, { fontSize: 9.5, padding: '1px 8px', gap: 4 })}><Mic size={9} /> spoken</span>}
-                          {e.pinned && <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 9.5, padding: '1px 8px', gap: 4 })}><Pin size={9} /> pinned</span>}
+                          {e.source === 'voice' && <span style={pill(tint(C.violet, 0.12), C.violetL, { fontSize: 9.5, padding: '4px 8px', gap: 4 })}><Mic size={9} /> spoken</span>}
+                          {e.pinned && <span style={pill(tint(C.amber, 0.14), C.amberL, { fontSize: 9.5, padding: '4px 8px', gap: 4 })}><Pin size={9} /> pinned</span>}
                         </div>
                         <div style={R({ gap: 4 })}>
                           <button
                             onClick={() => onSaveUser(togglePinBriefEntry(user, e.id))}
                             title={e.pinned ? 'Unpin' : 'Pin — always kept, even as the log grows'}
                             aria-label={e.pinned ? 'Unpin this entry' : 'Pin this entry'}
-                            style={btnSm('transparent', { padding: '4px 9px', border: 'none', color: e.pinned ? C.amberL : C.t3 })}
+                            style={btnSm('transparent', { padding: '4px 8px', border: 'none', color: e.pinned ? C.amberL : C.t3 })}
                           >
                             {e.pinned ? <PinOff size={12} /> : <Pin size={12} />}
                           </button>
                           <button
                             onClick={() => startEdit(e)}
                             title="Edit" aria-label="Edit this entry"
-                            style={btnSm('transparent', { padding: '4px 9px', border: 'none', color: C.t3 })}
+                            style={btnSm('transparent', { padding: '4px 8px', border: 'none', color: C.t3 })}
                           >
                             <Pencil size={12} />
                           </button>
                           <button
                             onClick={() => remove(e.id)}
                             title="Delete" aria-label="Delete this entry"
-                            style={btnSm('transparent', { padding: '4px 9px', border: 'none', color: C.roseL })}
+                            style={btnSm('transparent', { padding: '4px 8px', border: 'none', color: C.roseL })}
                           >
                             <Trash2 size={12} />
                           </button>
@@ -464,8 +464,8 @@ export default function AboutMePanel({ user, onSaveUser, isMobile = false, accen
       </div>
 
       {/* ── How this is used ────────────────────────────────────────────── */}
-      <div style={{ ...glass2({ padding: 14 }), display: 'flex', gap: 11, alignItems: 'flex-start' }}>
-        <Info size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <Info size={14} color={C.t3} style={{ flexShrink: 0, marginTop: 4 }} />
         <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.65 }}>
           Everything here is sent to Medabrain with every question you ask it — in the main coach, in Portfolio,
           and in Prep. Where it conflicts with your sign-up answers or your tracker,{' '}

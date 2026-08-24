@@ -255,7 +255,7 @@ export default async function handler(req, res) {
     // The recovery path for the most common way this feature fails, which is not a bug in any of
     // this code: the mail lands in Promotions, or goes to the address with the typo in it, or the
     // relay's monthly quota ran out overnight. Before this existed the only control on an
-    // unanswered invitation was the one that cancelled it.
+    // unanswered invitation was the one that canceled it.
     //
     // The token is NOT re-minted. Re-minting would invalidate the link already sitting in the
     // recipient's inbox and the code already read out over the phone — so a resend that "fixed"

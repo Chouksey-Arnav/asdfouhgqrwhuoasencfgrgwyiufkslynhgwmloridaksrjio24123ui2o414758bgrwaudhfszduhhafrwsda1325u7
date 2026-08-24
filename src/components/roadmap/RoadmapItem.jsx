@@ -59,13 +59,13 @@ export default function RoadmapItem({
       transition: 'border-color .15s',
     }}>
       {/* ── Collapsed row ── */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 11, padding: dense ? '11px 13px' : '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: dense ? '11px 13px' : '14px 16px' }}>
         <button
           type="button"
           onClick={() => onToggleDone?.(item.id)}
           aria-label={done ? `Mark ${item.title} as not done` : `Mark ${item.title} as done`}
           title={done ? 'Mark as not done' : 'Mark as done'}
-          style={{ background: 'transparent', border: 0, padding: 2, cursor: 'pointer', flexShrink: 0, marginTop: 1 }}
+          style={{ background: 'transparent', border: 0, padding: 4, cursor: 'pointer', flexShrink: 0, marginTop: 4 }}
         >
           <StatusIcon size={19} color={done ? C.green : item.status === 'doing' ? C.sky : C.t4} />
         </button>
@@ -82,9 +82,9 @@ export default function RoadmapItem({
           }}>
             {item.title}
           </div>
-          {item.org && <div style={{ fontSize: 11, color: C.t4, marginTop: 2 }}>{item.org}</div>}
+          {item.org && <div style={{ fontSize: 11, color: C.t4, marginTop: 4 }}>{item.org}</div>}
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', marginTop: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center', marginTop: 8 }}>
             <TrackChip track={item.track} />
             {!done && !skipped && <UrgencyChip urgency={urgency} />}
             {item.isStretch && <Chip color={C.fuchsia} icon={Target}>Long shot</Chip>}
@@ -96,7 +96,7 @@ export default function RoadmapItem({
           {/* The date line. Always via <ItemDate>, never a raw interpolation —
               see the header of roadmapUi.jsx. When the work should START is
               printed alongside, because that is the number that changes
-              behaviour. */}
+              behavior. */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center', marginTop: 8 }}>
             <ItemDate item={item} onFindDate={awaitingDate(item) ? openDateEntry : null} />
             {!done && item.startBy && displaysExactDate(item) && item.startBy !== effectiveDue(item) && (
@@ -129,22 +129,22 @@ export default function RoadmapItem({
             transition={{ duration: 0.2 }}
             style={{ overflow: 'hidden' }}
           >
-            <div style={{ padding: dense ? '0 13px 13px' : '0 16px 16px', borderTop: `1px solid ${C.b1}`, paddingTop: 14, marginTop: 2 }}>
+            <div style={{ padding: dense ? '0 13px 13px' : '0 16px 16px', borderTop: `1px solid ${C.b1}`, paddingTop: 12, marginTop: 4 }}>
               {/* Why this, for you */}
-              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 14 }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 12 }}>
                 <div style={{
                   width: 26, height: 26, borderRadius: 8, flexShrink: 0, background: tint(color, 0.13),
                   border: `1px solid ${tint(color, 0.24)}`, display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
                   <Icon size={13} color={color} />
                 </div>
-                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.7 }}>
+                <div style={{ fontSize: 12.5, color: C.t2, lineHeight: 1.55 }}>
                   {item.howThisHelps || item.why}
                 </div>
               </div>
 
               {/* Honest cost + what usually goes wrong */}
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: item.watchOut ? 12 : 16 }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: item.watchOut ? 12 : 16 }}>
                 {item.timeCost && <Chip color={C.sky} icon={Clock}>{item.timeCost}</Chip>}
                 {!item.timeCost && item.effort && <Chip color={C.sky} icon={Clock}>{EFFORT_LABEL[item.effort]} effort</Chip>}
                 {item.cost && item.cost !== 'varies' && <Chip color={C.green}>{COST_LABEL[item.cost] || item.cost}</Chip>}
@@ -154,12 +154,12 @@ export default function RoadmapItem({
 
               {item.watchOut && (
                 <div style={{
-                  display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 16,
+                  display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 16,
                   background: tint(C.amber, 0.08), border: `1px solid ${tint(C.amber, 0.2)}`,
-                  borderRadius: 9, padding: '10px 12px',
+                  borderRadius: 8, padding: '8px 12px',
                 }}>
-                  <AlertTriangle size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.6 }}>
+                  <AlertTriangle size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 4 }} />
+                  <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
                     <b style={{ color: C.t1 }}>What usually goes wrong: </b>{item.watchOut}
                   </div>
                 </div>
@@ -170,29 +170,29 @@ export default function RoadmapItem({
                   that gets postponed. */}
               {stepCount > 0 && (
                 <div style={{ marginBottom: 16 }}>
-                  <div style={{ ...R({ justifyContent: 'space-between', marginBottom: 9 }) }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>
+                  <div style={{ ...R({ justifyContent: 'space-between', marginBottom: 8 }) }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>
                       How you actually do this
                     </span>
                     <span style={{ fontSize: 10.5, color: C.t4, fontFamily: C.FM }}>{stepsDone.size}/{stepCount}</span>
                   </div>
-                  <div style={CC({ gap: 6 })}>
+                  <div style={CC({ gap: 4 })}>
                     {(item.steps || []).map((step, i) => {
                       const on = stepsDone.has(i);
                       return (
                         <button key={i} type="button" onClick={() => onToggleStep?.(item.id, i)} style={{
-                          display: 'flex', gap: 9, alignItems: 'flex-start', textAlign: 'left', width: '100%',
-                          background: 'transparent', border: 0, padding: '3px 0', cursor: 'pointer', fontFamily: C.FB,
+                          display: 'flex', gap: 8, alignItems: 'flex-start', textAlign: 'left', width: '100%',
+                          background: 'transparent', border: 0, padding: '4px 0px', cursor: 'pointer', fontFamily: C.FB,
                         }}>
                           <span style={{
-                            width: 16, height: 16, borderRadius: 5, flexShrink: 0, marginTop: 1,
+                            width: 16, height: 16, borderRadius: 4, flexShrink: 0, marginTop: 4,
                             border: `1.5px solid ${on ? C.green : C.b2}`, background: on ? C.green : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                           }}>
                             {on && <CheckCircle2 size={11} color={C.onAccent || '#fff'} strokeWidth={3} />}
                           </span>
                           <span style={{
-                            fontSize: 12, color: on ? C.t4 : C.t2, lineHeight: 1.6,
+                            fontSize: 12, color: on ? C.t4 : C.t2, lineHeight: 1.55,
                             textDecoration: on ? 'line-through' : 'none',
                           }}>{step}</span>
                         </button>
@@ -203,9 +203,9 @@ export default function RoadmapItem({
               )}
 
               {item.firstMove && !stepCount && (
-                <div style={{ display: 'flex', gap: 9, alignItems: 'flex-start', marginBottom: 16 }}>
-                  <Lightbulb size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 2 }} />
-                  <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.6 }}>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start', marginBottom: 16 }}>
+                  <Lightbulb size={13} color={C.amber} style={{ flexShrink: 0, marginTop: 4 }} />
+                  <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55 }}>
                     <b style={{ color: C.t1 }}>Start here: </b>{item.firstMove}
                   </div>
                 </div>
@@ -223,7 +223,7 @@ export default function RoadmapItem({
                       value={dateDraft}
                       onChange={(e) => setDateDraft(e.target.value)}
                       aria-label={`Real date for ${item.title}`}
-                      style={{ ...inp({ width: 'auto', flex: '1 1 170px', fontSize: 12.5, padding: '8px 11px' }) }}
+                      style={{ ...inp({ width: 'auto', flex: '1 1 170px', fontSize: 12.5, padding: '8px 12px' }) }}
                     />
                     <button
                       disabled={!dateDraft}
@@ -240,7 +240,7 @@ export default function RoadmapItem({
               )}
 
               {item.studentDate && (
-                <div style={{ ...R({ gap: 7, marginTop: 12 }) }}>
+                <div style={{ ...R({ gap: 8, marginTop: 12 }) }}>
                   <span style={{ ...pill(tint(C.green, 0.12), C.green, { fontSize: 10.5, fontWeight: 700 }) }}>
                     Your date: {fmtDate(item.studentDate)}
                   </span>
@@ -251,7 +251,7 @@ export default function RoadmapItem({
               )}
 
               {/* Actions */}
-              <div style={{ ...R({ gap: 8, marginTop: 16, flexWrap: 'wrap', paddingTop: 14, borderTop: `1px solid ${C.b1}` }) }}>
+              <div style={{ ...R({ gap: 8, marginTop: 16, flexWrap: 'wrap', paddingTop: 12, borderTop: `1px solid ${C.b1}` }) }}>
                 {linkableUrl(item.url) && (
                   <a href={linkableUrl(item.url)} target="_blank" rel="noopener noreferrer" style={{ ...btnSm(C.surfHi, { textDecoration: 'none' }) }}>
                     <ExternalLink size={12} /> Official page
@@ -273,7 +273,7 @@ export default function RoadmapItem({
               </div>
 
               {item.fallbackFor && (
-                <div style={{ ...R({ gap: 7, marginTop: 12 }) }}>
+                <div style={{ ...R({ gap: 8, marginTop: 12 }) }}>
                   <ShieldQuestion size={12} color={C.teal} />
                   <span style={{ fontSize: 10.5, color: C.t3 }}>
                     This is your backup if the long shot it sits beside says no.
@@ -308,8 +308,8 @@ function StatusPicker({ status, onSet }) {
       </button>
       {open && (
         <div style={{
-          position: 'absolute', bottom: '100%', left: 0, marginBottom: 6, zIndex: 5,
-          background: C.surf, border: `1px solid ${C.b2}`, borderRadius: 9, padding: 5,
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 4, zIndex: 5,
+          background: C.surf, border: `1px solid ${C.b2}`, borderRadius: 8, padding: 4,
           boxShadow: C.shadow, minWidth: 148,
         }}>
           {Object.entries(STATUS_META).map(([key, m]) => {
@@ -317,8 +317,8 @@ function StatusPicker({ status, onSet }) {
             return (
               <button key={key} onClick={() => { onSet(key); setOpen(false); }} style={{
                 display: 'flex', alignItems: 'center', gap: 8, width: '100%', textAlign: 'left',
-                background: key === status ? C.surfHi : 'transparent', border: 0, borderRadius: 6,
-                padding: '7px 9px', cursor: 'pointer', fontSize: 12, color: C.t1, fontFamily: C.FB,
+                background: key === status ? C.surfHi : 'transparent', border: 0, borderRadius: 4,
+                padding: '8px 8px', cursor: 'pointer', fontSize: 12, color: C.t1, fontFamily: C.FB,
               }}>
                 <I size={12} color={m.color} /> {m.label}
               </button>
@@ -339,14 +339,14 @@ function SeasonPicker({ seasons, current, onMove }) {
       </button>
       {open && (
         <div style={{
-          position: 'absolute', bottom: '100%', left: 0, marginBottom: 6, zIndex: 5,
-          background: C.surf, border: `1px solid ${C.b2}`, borderRadius: 9, padding: 5,
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 4, zIndex: 5,
+          background: C.surf, border: `1px solid ${C.b2}`, borderRadius: 8, padding: 4,
           boxShadow: C.shadow, minWidth: 170,
         }}>
           {seasons.map((s) => (
             <button key={s.id} onClick={() => { onMove(s.id); setOpen(false); }} disabled={s.id === current} style={{
-              display: 'block', width: '100%', textAlign: 'left', border: 0, borderRadius: 6,
-              background: s.id === current ? C.surfHi : 'transparent', padding: '7px 9px',
+              display: 'block', width: '100%', textAlign: 'left', border: 0, borderRadius: 4,
+              background: s.id === current ? C.surfHi : 'transparent', padding: '8px 8px',
               cursor: s.id === current ? 'default' : 'pointer', fontSize: 12, color: s.id === current ? C.t3 : C.t1,
               fontFamily: C.FB, opacity: s.id === current ? 0.6 : 1,
             }}>

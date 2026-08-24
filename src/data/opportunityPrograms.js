@@ -50,7 +50,7 @@ export const PROGRAM_TIERS = [
     id: 'admissions_moving',
     label: 'Genuinely admissions-moving',
     colorKey: 'gold',
-    blurb: 'National awards and programs that admissions readers recognise on sight. Almost all are free to enter, and almost all have deadlines months earlier than students expect.',
+    blurb: 'National awards and programs that admissions readers recognize on sight. Almost all are free to enter, and almost all have deadlines months earlier than students expect.',
   },
   {
     id: 'accessible',
@@ -107,7 +107,7 @@ export const PROGRAMS = [
     url: 'https://www.societyforscience.org/regeneron-sts/',
     verified: '2026-08-20',
     eligibility: 'US high school seniors (plus students at US-affiliated schools abroad) submitting an original individual research project.',
-    why: 'The oldest and most recognised pre-college science competition in the country. Being named a scholar — not only a finalist — is a line an admissions reader knows.',
+    why: 'The oldest and most recognized pre-college science competition in the country. Being named a scholar — not only a finalist — is a line an admissions reader knows.',
     altUnder: 'Not a senior yet? The project is the point, not the entry. Start the research now; you enter with it in twelfth grade. ISEF and JSHS take you from grade nine.',
   },
   {
@@ -137,7 +137,7 @@ export const PROGRAMS = [
     type: 'Scholarship', tier: 'admissions_moving',
     pathways: ['biomedResearch', 'physician'],
     deadline: { month: 2, day: null, precision: 'approx', note: 'Mid-February, for work you have already completed' },
-    starts: { month: 9, note: 'Fellows announced in the summer, honoured in Washington, DC in the fall' },
+    starts: { month: 9, note: 'Fellows announced in the summer, honored in Washington, DC in the fall' },
     minAge: null, maxAge: 18, minGrade: null, maxGrade: 12,
     citizenship: 'us_or_pr',
     cost: { model: 'free', usd: 0, note: 'No application fee' },
@@ -167,7 +167,7 @@ export const PROGRAMS = [
     url: 'https://www.usabo-trc.org/',
     verified: '2026-08-20',
     eligibility: 'Grades 9–12 at a registered school. The bottleneck is not you — it is whether a teacher registers the school in time.',
-    why: 'The route to the US team for the International Biology Olympiad, and the most recognisable biology credential available to a high schooler. Semifinalist alone is a real line.',
+    why: 'The route to the US team for the International Biology Olympiad, and the most recognizable biology credential available to a high schooler. Semifinalist alone is a real line.',
     altUnder: 'Below grade nine, work the same material: Science Olympiad and the Brain Bee both start earlier and use the same anatomy and physiology.',
   },
   {
@@ -267,7 +267,7 @@ export const PROGRAMS = [
     url: 'https://congressionalaward.org/',
     verified: '2026-08-20',
     eligibility: 'Ages 13½ to 23. Not selective — you earn it by logging voluntary public service, personal development, physical fitness and an expedition against goals you set.',
-    why: 'The one national honour on this list that is earned rather than won, which makes it the one a fourteen-year-old can start today. The Gold Medal takes about two years, so starting early is the whole trick.',
+    why: 'The one national honor on this list that is earned rather than won, which makes it the one a fourteen-year-old can start today. The Gold Medal takes about two years, so starting early is the whole trick.',
     altUnder: null,
   },
 
@@ -282,7 +282,7 @@ export const PROGRAMS = [
     starts: { month: null, note: 'Usually a fixed weekly shift for a minimum number of months' },
     minAge: 14, minGrade: null, maxGrade: null,
     citizenship: null,
-    cost: { model: 'free', usd: 0, note: 'Free, though many require a paid TB test or immunisation records' },
+    cost: { model: 'free', usd: 0, note: 'Free, though many require a paid TB test or immunization records' },
     feeWaiver: null, stipend: false,
     location: 'Your local hospital', remote: false,
     selectivity: 'open',
@@ -368,7 +368,7 @@ export const PROGRAMS = [
     selectivity: 'competitive',
     url: 'https://www.thebrainbee.org/',
     verified: '2026-08-20',
-    eligibility: 'High school students, through a local chapter competition. If there is no chapter near you, the Brain Bee organisation helps schools start one.',
+    eligibility: 'High school students, through a local chapter competition. If there is no chapter near you, the Brain Bee organization helps schools start one.',
     why: 'Studiable — the syllabus is a published neuroscience primer — which makes it one of the few competitions where effort converts directly into placement.',
     altUnder: null,
   },
@@ -378,7 +378,7 @@ export const PROGRAMS = [
     org: 'National Registry of EMTs, via school or community-college courses',
     type: 'Program', tier: 'accessible',
     pathways: ['physician', 'nursing', 'physicianAssistant'],
-    deadline: { month: null, day: null, precision: 'varies', note: 'Follows your district or college enrolment calendar' },
+    deadline: { month: null, day: null, precision: 'varies', note: 'Follows your district or college enrollment calendar' },
     starts: { month: 8, note: 'A semester or a summer, depending on the provider' },
     minAge: 16, minGrade: 11, maxGrade: 12,
     citizenship: null,
@@ -407,7 +407,7 @@ export const PROGRAMS = [
     org: 'National Academy of Future Physicians and Medical Scientists',
     type: 'Program', tier: 'pay_to_play',
     pathways: ['physician'],
-    deadline: { month: null, day: null, precision: 'rolling', note: 'Enrolment is open until the event fills' },
+    deadline: { month: null, day: null, precision: 'rolling', note: 'Enrollment is open until the event fills' },
     starts: { month: 6, note: 'A multi-day summer event' },
     minAge: 14, minGrade: 9, maxGrade: 12,
     citizenship: null,
@@ -418,7 +418,7 @@ export const PROGRAMS = [
     url: 'https://www.futuredocs.com/',
     verified: '2026-08-20',
     eligibility: 'Arrives as a "nomination" letter, often addressed to students who never applied for anything. Open enrollment: anyone who pays attends, and there is no competitive selection to be named in.',
-    why: 'Listed here so you can recognise the letter. If you want the speakers, the talks are inspiring; if you want something an application reader will weigh, a hundred logged shadowing hours costs nothing and says more.',
+    why: 'Listed here so you can recognize the letter. If you want the speakers, the talks are inspiring; if you want something an application reader will weigh, a hundred logged shadowing hours costs nothing and says more.',
     altUnder: null,
   },
   {
@@ -427,7 +427,7 @@ export const PROGRAMS = [
     org: 'National Student Leadership Conference',
     type: 'Program', tier: 'pay_to_play',
     pathways: ['physician', 'nursing'],
-    deadline: { month: null, day: null, precision: 'rolling', note: 'Rolling enrolment until sessions fill' },
+    deadline: { month: null, day: null, precision: 'rolling', note: 'Rolling enrollment until sessions fill' },
     starts: { month: 6, note: '9–12 day summer sessions on university campuses' },
     minAge: 14, minGrade: 9, maxGrade: 12,
     citizenship: null,
@@ -437,7 +437,7 @@ export const PROGRAMS = [
     selectivity: 'open',
     url: 'https://www.nslcleaders.org/',
     verified: '2026-08-20',
-    eligibility: 'Open enrolment. Being "invited" is marketing, not selection.',
+    eligibility: 'Open enrollment. Being "invited" is marketing, not selection.',
     why: 'Genuinely fun, genuinely instructive, and genuinely not a selective credential. If the money is available and nothing free is being displaced, it is a good experience — just log it as an experience rather than an honor.',
     altUnder: null,
   },
@@ -466,7 +466,7 @@ export const PROGRAMS = [
 export const PROGRAM_BY_ID = Object.fromEntries(PROGRAMS.map(p => [p.id, p]));
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HOSA competitive events, organised the way HOSA organises them.
+// HOSA competitive events, organized the way HOSA organises them.
 //
 // A HOSA chapter member's question is never "what is HOSA" — it is "which event
 // do I enter". The categories below are HOSA's own; the event lineup is

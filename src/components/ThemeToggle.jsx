@@ -9,7 +9,7 @@
 // theme they were given should never have to go looking for the setting.
 //
 // It renders as an icon button (the current mode's glyph) that opens a short
-// labelled menu. Icon-only at rest is deliberate — this sits in the densest
+// labeled menu. Icon-only at rest is deliberate — this sits in the densest
 // part of the chrome, and a fifth word up there is exactly the kind of text
 // this app has too much of.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export default function ThemeToggle({ mode = 'balanced', onChange, size = 34, al
         aria-label={`Theme: ${current.label}. Change theme`}
         title={`Theme: ${current.label}`}
         style={{
-          width: size, height: size, borderRadius: 10, flexShrink: 0,
+          width: size, height: size, borderRadius: 8, flexShrink: 0,
           background: open ? tint(accent, 0.14) : C.surfHi,
           border: `1px solid ${open ? tint(accent, 0.35) : C.b1}`,
           color: open ? accent : C.t2,
@@ -90,12 +90,12 @@ export default function ThemeToggle({ mode = 'balanced', onChange, size = 34, al
             [align === 'left' ? 'left' : 'right']: 0,
             zIndex: 400,
             minWidth: 210,
-            padding: 6,
-            borderRadius: 13,
+            padding: 4,
+            borderRadius: 12,
             background: C.s1,
             border: `1px solid ${C.b2}`,
             boxShadow: C.shadow,
-            display: 'flex', flexDirection: 'column', gap: 2,
+            display: 'flex', flexDirection: 'column', gap: 4,
           }}
         >
           {THEME_OPTIONS.map(o => {
@@ -108,8 +108,8 @@ export default function ThemeToggle({ mode = 'balanced', onChange, size = 34, al
                 aria-checked={on}
                 onClick={() => pick(o.value)}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: 9, width: '100%',
-                  padding: '8px 10px', borderRadius: 9, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 8, width: '100%',
+                  padding: '8px 8px', borderRadius: 8, cursor: 'pointer',
                   border: 'none', textAlign: 'left', fontFamily: C.FB,
                   background: on ? tint(accent, 0.12) : 'transparent',
                   color: on ? C.t1 : C.t2,

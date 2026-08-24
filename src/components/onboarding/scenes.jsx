@@ -84,16 +84,16 @@ function ChartRow({ row, g, index }) {
       animate={{ opacity: filled ? 1 : 0.42 }}
       transition={GLIDE_FAST}
       style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '7px 10px', borderRadius: R.xs,
+        display: 'flex', alignItems: 'center', gap: 8,
+        padding: '8px 8px', borderRadius: R.xs,
         background: filled ? g.softer : 'transparent',
         borderLeft: `2px solid ${filled ? g.base : C.b1}`,
       }}>
       <span style={{ display: 'flex', color: filled ? g.ink : C.t4, flexShrink: 0 }}>
         <Icon name={row.icon} size={14} stroke={1.7} />
       </span>
-      <span style={{ ...meta(9, { color: C.t4, letterSpacing: '.14em' }), flexShrink: 0, minWidth: 62 }}>{row.label}</span>
-      <span style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 7 }}>
+      <span style={{ ...meta(9, { color: C.t4, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }), flexShrink: 0, minWidth: 62 }}>{row.label}</span>
+      <span style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
         {row.meter && filled && <MeterBars level={row.meter.value} of={Math.min(6, row.meter.of)} h={g} height={12} />}
         <AnimatePresence mode="wait" initial={false}>
           {filled ? (
@@ -108,7 +108,7 @@ function ChartRow({ row, g, index }) {
             </motion.span>
           ) : (
             <motion.span key="pending" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              style={{ width: 34, height: 2, borderRadius: 2, background: C.b2, display: 'block' }} />
+              style={{ width: 34, height: 2, borderRadius: 4, background: C.b2, display: 'block' }} />
           )}
         </AnimatePresence>
       </span>
@@ -129,7 +129,7 @@ function LiveChart({ answers, g }) {
       background: C.s1, border: `1px solid ${C.b1}`, boxShadow: C.shadowSm,
     }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+        display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
         borderBottom: `1px solid ${C.b1}`, background: g.softer,
       }}>
         <motion.span
@@ -139,7 +139,7 @@ function LiveChart({ answers, g }) {
         <span style={{ flex: 1 }} />
         <span style={numeral(10.5, { color: g.ink })}>{pad2(done)}<span style={{ color: C.t4 }}>/{pad2(total)}</span></span>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 8 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 8 }}>
         {rows.map((row, i) => <ChartRow key={row.key} row={row} g={g} index={i} />)}
       </div>
     </div>
@@ -153,14 +153,14 @@ function LiveChart({ answers, g }) {
 /** The five chapters as a spine of numbered ticks down the rail's footer. */
 function ChapterTicks({ chapters, activeIndex, g }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, width: '100%' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4, width: '100%' }}>
       {chapters.map((ch, i) => {
         const done = i < activeIndex;
         const active = i === activeIndex;
         return (
-          <div key={ch.key} style={{ flex: active ? 2.2 : 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 7, transition: 'flex .4s' }}>
+          <div key={ch.key} style={{ flex: active ? 2.2 : 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8, transition: 'opacity 200ms cubic-bezier(.4,0,.2,1)' }}>
             <span style={{
-              width: 18, height: 18, borderRadius: 6, flexShrink: 0,
+              width: 18, height: 18, borderRadius: 4, flexShrink: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: done || active ? g.grad : 'transparent',
               border: done || active ? 'none' : `1px solid ${C.b2}`,
@@ -192,7 +192,7 @@ export function StoryRail({ chapter, chapters, chapterIndex, stepKey, questionsL
   return (
     <div style={{
       position: 'relative', display: 'flex', flexDirection: 'column',
-      gap: 18, padding: '30px 34px 26px', height: '100%', boxSizing: 'border-box', overflow: 'hidden',
+      gap: 16, padding: '28px 32px 24px', height: '100%', boxSizing: 'border-box', overflow: 'hidden',
     }}>
       {/* ECG paper. The flow's one piece of ornament, and it means something:
           a chart is a thing printed on graph paper. */}
@@ -201,10 +201,10 @@ export function StoryRail({ chapter, chapters, chapterIndex, stepKey, questionsL
 
       {/* Chapter header */}
       <motion.div key={`hd-${chapter?.key}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={GLIDE}
-        style={{ position: 'relative', display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+        style={{ position: 'relative', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
         <ChapterMark mark={chapter?.mark || 'activity'} chapterKey={chapter?.key} size={50} />
-        <div style={{ minWidth: 0, paddingTop: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+        <div style={{ minWidth: 0, paddingTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
             <span style={numeral(10.5, { color: g.ink })}>{pad2(chapterIndex + 1)}</span>
             <span style={{ width: 14, height: 1, background: C.b2 }} />
             <span style={meta(9, { color: C.t4 })}>of {pad2(chapters.length)}</span>
@@ -262,7 +262,7 @@ export function ChartStrip({ answers, chapterKey }) {
   const shown = [...filled].reverse();
   return (
     <div style={{
-      display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2,
+      display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 4,
       scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch',
     }}>
       <AnimatePresence initial={false}>
@@ -272,8 +272,8 @@ export function ChartStrip({ answers, chapterKey }) {
             initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
             transition={POP}
             style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0,
-              padding: '5px 10px', borderRadius: R.pill,
+              display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0,
+              padding: '4px 8px', borderRadius: R.pill,
               background: i === 0 ? g.soft : C.surf,
               border: `1px solid ${i === 0 ? g.edge : C.b1}`,
               color: i === 0 ? C.t1 : C.t2, fontSize: 11.5, fontWeight: 600, whiteSpace: 'nowrap',

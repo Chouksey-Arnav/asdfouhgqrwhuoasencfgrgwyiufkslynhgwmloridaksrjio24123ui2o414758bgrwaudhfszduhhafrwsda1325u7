@@ -38,8 +38,8 @@ export function BirthdateWheels({ value, onChange, h }) {
   return (
     <div>
       <div style={{
-        display: 'flex', gap: 10, justifyContent: 'center', padding: '6px 0',
-        borderRadius: 14, background: C.surf, border: `1px solid ${C.b1}`, boxShadow: C.shadowSm,
+        display: 'flex', gap: 8, justifyContent: 'center', padding: '4px 0px',
+        borderRadius: 12, background: C.surf, border: `1px solid ${C.b1}`, boxShadow: C.shadowSm,
       }}>
         <WheelColumn items={MONTHS} index={monthIdx} width={92} itemH={40} visibleRows={3} h={h} onChange={i => onChange({ monthIdx: i, dobTouched: true })} />
         <WheelColumn items={DAYS} index={dayIdx} width={68} itemH={40} visibleRows={3} mono h={h} onChange={i => onChange({ dayIdx: i, dobTouched: true })} />
@@ -51,7 +51,7 @@ export function BirthdateWheels({ value, onChange, h }) {
         you in — so this states the rule as a fact without hinting that a
         particular wheel position is the "right" one.
       */}
-      <p style={{ marginTop: 16, textAlign: 'center', fontSize: 12.5, lineHeight: 1.6, color: C.t3, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto' }}>
+      <p style={{ marginTop: 16, textAlign: 'center', fontSize: 12.5, lineHeight: 1.55, color: C.t3, maxWidth: 340, marginLeft: 'auto', marginRight: 'auto' }}>
         You need to be at least {LEGAL.minAge} to use MedSchoolPrep. Please enter your real
         date of birth.
       </p>

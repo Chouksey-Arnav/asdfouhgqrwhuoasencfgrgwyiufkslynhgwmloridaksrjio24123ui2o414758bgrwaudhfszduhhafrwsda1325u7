@@ -37,7 +37,7 @@ const browser = await chromium.launch(
 
 for (const [name, size] of TARGETS) {
   // iOS ignores alpha and rounds the corners itself, so the home-screen icon is
-  // rendered opaque on the tile colour instead of leaving transparent corners
+  // rendered opaque on the tile color instead of leaving transparent corners
   // that would flatten to white.
   const opaque = name === 'apple-touch-icon.png';
   const page = await browser.newPage({ viewport: { width: size, height: size }, deviceScaleFactor: 1 });

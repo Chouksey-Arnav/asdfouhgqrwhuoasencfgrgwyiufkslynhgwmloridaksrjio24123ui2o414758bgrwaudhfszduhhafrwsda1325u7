@@ -20,7 +20,7 @@ export const SAT_STRATEGIES = {
   text_structure_purpose: {
     approach: 'Ask what the paragraph DOES, not what it says.',
     steps: [
-      'Summarise each part of the text in three words.',
+      'Summarize each part of the text in three words.',
       'Name the move: introduces, complicates, illustrates, qualifies, contrasts.',
       'Match that move to a choice — ignore choices that merely restate content.',
     ],
@@ -101,7 +101,7 @@ export const SAT_STRATEGIES = {
   transitions: {
     approach: 'Cover the transition and work out the relationship yourself first.',
     steps: [
-      'Summarise the sentence before and the sentence after.',
+      'Summarize the sentence before and the sentence after.',
       'Name the relationship: cause, contrast, example, addition, sequence.',
       'Pick the transition for that relationship — do not read the choices first.',
     ],
@@ -161,7 +161,7 @@ export const SAT_STRATEGIES = {
       'When raising a product to a power, the exponent hits the coefficient too.',
       'You may only cancel whole factors, never individual terms.',
     ],
-    watchFor: 'Cancelling a term that is being added rather than multiplied.',
+    watchFor: 'Canceling a term that is being added rather than multiplied.',
   },
   nonlinear_equations: {
     approach: 'Factor if you can, quadratic formula if you cannot — and always check.',

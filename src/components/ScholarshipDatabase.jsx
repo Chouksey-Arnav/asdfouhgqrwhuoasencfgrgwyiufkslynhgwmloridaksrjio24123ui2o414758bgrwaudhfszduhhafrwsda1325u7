@@ -105,7 +105,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
   }
 
   return (
-    <div style={CC({ gap: 14 })}>
+    <div style={CC({ gap: 12 })}>
       <div style={R({ gap: 8 })}>
         <Search size={14} color={C.t3} />
         <input
@@ -116,7 +116,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
         {SCHOLARSHIP_CATEGORIES.map(c => (
           <button key={c.id} onClick={() => setCategory(c.id)}
             style={pill(category === c.id ? tint(accent, 0.22) : C.surf2, category === c.id ? onTint(accent) : C.t3,
@@ -126,7 +126,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
         ))}
       </div>
 
-      <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+      <div style={R({ gap: 8, flexWrap: 'wrap' })}>
         <button type="button" onClick={() => setSeniorOnly(v => !v)}
           style={pill(seniorOnly ? tint(C.green, 0.2) : C.surf2, seniorOnly ? C.greenL : C.t3, {
             cursor: 'pointer', border: `1px solid ${seniorOnly ? tint(C.green, 0.36) : C.b1}`,
@@ -142,7 +142,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
         )}
       </div>
 
-      <div style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ fontSize: 11, color: C.t3, display: 'flex', alignItems: 'center', gap: 4 }}>
         <Info size={11} />
         Reference info only — amounts and deadlines shift year to year. Always confirm current details on the program's official site before applying.
       </div>
@@ -154,17 +154,17 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
             const state = stateOf(s.name);
             return (
               <div key={s.id} style={{ ...glass2({ padding: 0, overflow: 'hidden' }), borderLeft: `3px solid ${state === 'tracked' ? C.green : accent}` }}>
-                <div style={{ ...R({ gap: 12, padding: 14, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : s.id)}>
+                <div style={{ ...R({ gap: 12, padding: 12, cursor: 'pointer' }) }} onClick={() => setExpandedId(isOpen ? null : s.id)}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>{s.name}</div>
-                    <div style={{ fontSize: 11, color: C.t3, marginTop: 2 }}>{s.org} · {s.amount}</div>
+                    <div style={{ fontSize: 11, color: C.t3, marginTop: 4 }}>{s.org} · {s.amount}</div>
                   </div>
                   <TrackButton state={state} busy={busyId === s.id} accent={accent}
                     onClick={e => { e.stopPropagation(); handleAdd(s); }} />
                   {isOpen ? <ChevronUp size={15} color={C.t3} /> : <ChevronDown size={15} color={C.t3} />}
                 </div>
                 {isOpen && (
-                  <div style={{ padding: '0 14px 14px', borderTop: `1px solid ${C.b1}`, marginTop: 2, paddingTop: 12 }}>
+                  <div style={{ padding: '0px 12px 12px', borderTop: `1px solid ${C.b1}`, marginTop: 4, paddingTop: 12 }}>
                     <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>{s.description}</p>
                     <div style={{ fontSize: 11.5, color: C.t3, lineHeight: 1.7 }}>
                       <div><b style={{ color: C.t2 }}>Eligibility:</b> {s.eligibility}</div>
@@ -175,14 +175,14 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
                         say so here rather than only being filtered out. */}
                     {seniorExclusionReason(s) && (
                       <div style={{
-                        marginTop: 8, padding: '8px 10px', borderRadius: 8,
+                        marginTop: 8, padding: '8px 8px', borderRadius: 8,
                         background: tint(C.amber, 0.06), border: `1px solid ${tint(C.amber, 0.22)}`,
                         fontSize: 11.5, color: C.t2, lineHeight: 1.55,
                       }}>
                         <b style={{ color: C.amberL }}>Not open to a current senior:</b> {seniorExclusionReason(s)}
                       </div>
                     )}
-                    <div style={{ marginTop: 8, display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                    <div style={{ marginTop: 8, display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                       {s.categories.map(cid => <span key={cid} style={pill('rgba(255,255,255,0.06)', C.t3, { fontSize: 9 })}>{SCHOLARSHIP_CATEGORIES.find(c => c.id === cid)?.label || cid}</span>)}
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
           </div>
           {!aiLookup && (
             <>
-              <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 10 }}>
+              <p style={{ fontSize: 12, color: C.t2, lineHeight: 1.6, marginBottom: 8 }}>
                 "{query.trim()}" isn't in our {SCHOLARSHIPS.length}-program curated list. Meta Brain can try to tell you what it knows from general training — or you can just add it as a custom entry below with your own notes.
               </p>
               {askMedabrain && (
@@ -221,8 +221,8 @@ export default function ScholarshipDatabase({ accent = C.blue, onTrack, trackedK
           {aiLookup?.content && !aiLookup.loading && (
             <div>
               <div style={{ fontSize: 13, color: C.t2 }} dangerouslySetInnerHTML={{ __html: renderMarkdown(aiLookup.content) }} />
-              <div style={{ ...R({ gap: 6, marginTop: 4 }), fontSize: 10, color: C.t4 }}><ExternalLink size={10} />AI-generated, unverified — not from the curated database above.</div>
-              <button style={{ ...btn(C.violetGrad, { fontSize: 12 }), marginTop: 10 }} onClick={addAiResultAsCustom}><Plus size={13} />Add as custom scholarship</button>
+              <div style={{ ...R({ gap: 4, marginTop: 4 }), fontSize: 10, color: C.t4 }}><ExternalLink size={10} />AI-generated, unverified — not from the curated database above.</div>
+              <button style={{ ...btn(C.violetGrad, { fontSize: 12 }), marginTop: 8 }} onClick={addAiResultAsCustom}><Plus size={13} />Add as custom scholarship</button>
             </div>
           )}
         </div>

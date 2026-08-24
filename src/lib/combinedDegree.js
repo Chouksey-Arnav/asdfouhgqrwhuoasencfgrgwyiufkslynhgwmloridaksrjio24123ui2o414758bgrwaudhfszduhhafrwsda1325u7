@@ -526,7 +526,7 @@ export function requirementGaps(program, facts = {}) {
     rows.push({
       id: 'residency',
       label: 'State residency',
-      requirement: `${program.state} residents favoured`,
+      requirement: `${program.state} residents favored`,
       yours: facts.state || null,
       basis: 'official',
       status: facts.state ? (sameState ? 'met' : 'short') : 'info',
@@ -683,7 +683,7 @@ export function interviewTargetsFor(program) {
       // format, so an hour on it is never wasted whichever room turns up.
       const mmi = INTERVIEW_FORMATS.mmi;
       out.push({
-        key: 'mmi', label: 'Format not confirmed — practise the circuit', short: 'MMI',
+        key: 'mmi', label: 'Format not confirmed — practice the circuit', short: 'MMI',
         cta: mmi.cta, mode: mmi.mode, stationFilter: mmi.stationFilter,
         blurb: 'This program interviews but does not publish how. The MMI circuit is the harder version of every format, so an hour on it is never wasted whichever room turns up.',
         confirmed: false,

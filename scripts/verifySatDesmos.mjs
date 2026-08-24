@@ -209,12 +209,12 @@ await step('Rail lands in the right place on a phone, first frame included', asy
   }
 });
 
-await step('Alt+R opens the formula sheet, memorise-these list first', async () => {
+await step('Alt+R opens the formula sheet, memorize-these list first', async () => {
   await p.keyboard.press('Alt+r');
   await p.waitForTimeout(500);
   const text = await p.textContent('body');
   assert(/Formula sheet/.test(text), 'formula sheet did not open');
-  assert(/Quadratics/.test(text), 'memorise-these formulas missing');
+  assert(/Quadratics/.test(text), 'memorize-these formulas missing');
   assert(/NOT given on test day/.test(text), 'the given/not-given distinction is not stated');
   await p.keyboard.press('Escape');
   await p.waitForTimeout(400);

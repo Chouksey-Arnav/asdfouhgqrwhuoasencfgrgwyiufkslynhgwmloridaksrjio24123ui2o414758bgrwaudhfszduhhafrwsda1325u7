@@ -26,7 +26,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 //
 // What to reach for:
 //   <BrandJourney/>        the mark on its own — drop into any loading state
-//   <BrandLoader/>         the mark plus a caption, centred in its container
+//   <BrandLoader/>         the mark plus a caption, centered in its container
 //   <BrandLoaderScreen/>   the full-page version, used for app boot
 //   <BrandShowcase/>       the idle interstitial (see useBrandShowcase)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -154,7 +154,7 @@ export function BrandJourney({
 }
 
 /**
- * The journey with a caption under it, centred in whatever box it is given.
+ * The journey with a caption under it, centered in whatever box it is given.
  * This is the drop-in for a panel or section that is waiting on data.
  */
 export function BrandLoader({
@@ -182,11 +182,11 @@ export function BrandLoader({
     >
       <BrandJourney size={size} loop={loop} duration={duration} progress={progress} onDone={onDone} />
       {caption && (
-        <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--c-t2)', letterSpacing: '.01em' }}>
+        <div style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--c-t2)', letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
           {caption}
         </div>
       )}
-      {sub && <div style={{ fontSize: 11.5, color: 'var(--c-t3)', maxWidth: 320, lineHeight: 1.6 }}>{sub}</div>}
+      {sub && <div style={{ fontSize: 11.5, color: 'var(--c-t3)', maxWidth: 320, lineHeight: 1.55 }}>{sub}</div>}
     </div>
   );
 }
@@ -349,12 +349,12 @@ export function BrandShowcase({ onDone, duration = JOURNEY_MS }) {
       style={{
         position: 'fixed', inset: 0, zIndex: 9000,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        gap: 26, cursor: 'pointer',
+        gap: 24, cursor: 'pointer',
         background: 'radial-gradient(circle at 50% 46%, #101728 0%, #080b14 55%, #05070d 100%)',
       }}
     >
       <BrandJourney size={260} loop={false} duration={duration} onDone={handleDone} />
-      <div style={{ fontSize: 11, letterSpacing: '.16em', textTransform: 'uppercase', color: 'rgba(148,163,184,.55)' }}>
+      <div style={{ fontSize: 11, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: 'rgba(148,163,184,.55)' }}>
         Tap to skip
       </div>
     </div>

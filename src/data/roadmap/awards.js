@@ -11,7 +11,7 @@
 //
 //   2. THE EARLY ONES ARE THE INVISIBLE ONES. The awards with the best
 //      return — Jack Kent Cooke's Young Scholars, which opens to EIGHTH
-//      graders, or QuestBridge College Prep, which is a junior-year programme —
+//      graders, or QuestBridge College Prep, which is a junior-year program —
 //      are the ones nobody hears about, precisely because they arrive before
 //      anyone is thinking about college money. Those are carried here with their
 //      real grade gates so a tenth-grader's roadmap can surface them while they
@@ -25,7 +25,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const AWARDS = [
-  // ── Early-eligibility programmes (the under-known ones) ───────────────────
+  // ── Early-eligibility programs (the under-known ones) ───────────────────
   {
     id: 'jkcf-young-scholars',
     name: 'Jack Kent Cooke Young Scholars Program',
@@ -64,7 +64,7 @@ export const AWARDS = [
     cost: 'free',
     format: 'virtual',
     url: 'https://www.questbridge.org/high-school-students/college-prep-scholars',
-    why: 'The junior-year on-ramp to the National College Match, and the reason so many Match finalists were already in the system a year earlier. It carries free summer programmes and campus visits of its own, and it closes in March of junior year.',
+    why: 'The junior-year on-ramp to the National College Match, and the reason so many Match finalists were already in the system a year earlier. It carries free summer programs and campus visits of its own, and it closes in March of junior year.',
     prepWeeks: 6,
     requires: { needsFinancialAid: true },
     steps: [
@@ -180,7 +180,7 @@ export const AWARDS = [
     format: 'virtual',
     url: 'https://scholars.horatioalger.org/',
     scholarshipId: 'horatio-alger-national',
-    why: 'Explicitly for students who have overcome real adversity, with state-level awards alongside the national one — which means far better odds than the headline programme suggests, and most applicants never notice the state option.',
+    why: 'Explicitly for students who have overcome real adversity, with state-level awards alongside the national one — which means far better odds than the headline program suggests, and most applicants never notice the state option.',
     prepWeeks: 4,
     requires: { needsFinancialAid: true },
     steps: ['Apply to the national and your state award — they are separate', 'The essay is about adversity and what you did with it', 'State deadlines often run later, into the winter'],
@@ -269,7 +269,7 @@ export const AWARDS = [
   {
     id: 'local-scholarship-season',
     name: 'Local and community scholarship season',
-    org: 'Your school, town, employers and community organisations',
+    org: 'Your school, town, employers and community organizations',
     track: 'scholarship',
     grades: ['12'],
     window: { opensMonthDay: '01-15', dueMonthDay: '04-15', yearSlot: 'senior' },

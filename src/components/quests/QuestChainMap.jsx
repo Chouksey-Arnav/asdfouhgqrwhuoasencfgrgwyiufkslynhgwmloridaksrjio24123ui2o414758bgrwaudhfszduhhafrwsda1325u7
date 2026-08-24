@@ -45,7 +45,7 @@ function Rung({ row, chainColor, onTake, busyId, isLast, m }) {
   return (
     <div style={{ display: 'flex', gap: m ? 10 : 12, alignItems: 'stretch' }}>
       {/* The rail: node + connector. This is what makes it read as a road rather
-          than a list — and the connector is coloured only up to where the
+          than a list — and the connector is colored only up to where the
           student has actually got to. */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, width: 26 }}>
         <div style={{
@@ -63,7 +63,7 @@ function Rung({ row, chainColor, onTake, busyId, isLast, m }) {
           <div style={{
             flex: 1, width: 2, minHeight: 14,
             background: row.state === 'done' ? tint(C.green, 0.5) : C.b1,
-            marginTop: 2,
+            marginTop: 4,
           }} />
         )}
       </div>
@@ -77,31 +77,31 @@ function Rung({ row, chainColor, onTake, busyId, isLast, m }) {
           : row.state === 'done' ? tint(C.green, 0.05) : C.surf2,
         opacity: dim ? 0.68 : 1,
       }}>
-        <div style={R({ gap: 10, alignItems: 'flex-start', flexWrap: 'wrap' })}>
+        <div style={R({ gap: 8, alignItems: 'flex-start', flexWrap: 'wrap' })}>
           <div style={{
-            width: 30, height: 30, borderRadius: 9, flexShrink: 0,
+            width: 30, height: 30, borderRadius: 8, flexShrink: 0,
             background: tint(chainColor, 0.13), border: `1px solid ${tint(chainColor, 0.26)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Icon size={14} color={chainColor} /></div>
 
           <div style={{ flex: 1, minWidth: 130 }}>
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               <span style={{ fontSize: 12.5, fontWeight: 800, color: dim ? C.t2 : C.t1, fontFamily: C.FD }}>{quest.title}</span>
-              <span style={pill(tint(tier.color, 0.14), tier.color, { fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', padding: '2px 7px' })}>{tier.label}</span>
+              <span style={pill(tint(tier.color, 0.14), tier.color, { fontSize: 8.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding: '4px 8px' })}>{tier.label}</span>
               {meta.label && (
-                <span style={pill(tint(meta.color, 0.14), meta.color, { fontSize: 8.5, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', padding: '2px 7px' })}>{meta.label}</span>
+                <span style={pill(tint(meta.color, 0.14), meta.color, { fontSize: 8.5, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', padding: '4px 8px' })}>{meta.label}</span>
               )}
             </div>
-            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{quest.blurb}</div>
+            <div style={{ fontSize: 10.5, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{quest.blurb}</div>
           </div>
 
-          <div style={{ ...R({ gap: 7 }), flexShrink: 0 }}>
+          <div style={{ ...R({ gap: 8 }), flexShrink: 0 }}>
             <span style={pill(tint(C.amber, 0.13), C.amberL, { fontSize: 9.5, fontFamily: C.FM, fontWeight: 800 })}>+{row.xp}</span>
             {row.state === 'next' && onTake && (
               <button
                 onClick={() => onTake(quest.id)}
                 disabled={busyId === quest.id}
-                style={{ ...btn(`linear-gradient(135deg, ${chainColor}, ${tint(chainColor, 0.7)})`, { fontSize: 11, padding: '6px 12px', color: onTint(chainColor) }), opacity: busyId === quest.id ? 0.6 : 1 }}
+                style={{ ...btn(`linear-gradient(135deg, ${chainColor}, ${tint(chainColor, 0.7)})`, { fontSize: 11, padding: '4px 12px', color: onTint(chainColor) }), opacity: busyId === quest.id ? 0.6 : 1 }}
               >{busyId === quest.id ? <Loader2 size={11} className="spin" /> : null}Take it on</button>
             )}
           </div>
@@ -131,19 +131,19 @@ export function ChainCard({ chain, onTake, busyId = null, m = false }) {
       >
         <div style={R({ gap: 12, flexWrap: 'wrap' })}>
           <div style={{
-            width: m ? 36 : 42, height: m ? 36 : 42, borderRadius: 13, flexShrink: 0,
+            width: m ? 36 : 42, height: m ? 36 : 42, borderRadius: 12, flexShrink: 0,
             background: tint(chain.color, 0.15), border: `1px solid ${tint(chain.color, 0.32)}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}><Icon size={m ? 17 : 20} color={chain.color} /></div>
 
           <div style={{ flex: 1, minWidth: 170 }}>
-            <div style={R({ gap: 7, flexWrap: 'wrap' })}>
-              <span style={{ fontSize: m ? 14 : 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: '-.02em' }}>{chain.label}</span>
+            <div style={R({ gap: 8, flexWrap: 'wrap' })}>
+              <span style={{ fontSize: m ? 14 : 15, fontWeight: 800, color: C.t1, fontFamily: C.FD, letterSpacing: 'calc(-0.02em + var(--msp-letter-spacing))' }}>{chain.label}</span>
               <span style={pill(tint(chain.color, 0.13), chain.color, { fontSize: 9.5, fontFamily: C.FM, fontWeight: 800 })}>
                 {chain.completed}/{chain.of}
               </span>
             </div>
-            <div style={{ fontSize: 11, color: C.t3, marginTop: 3, lineHeight: 1.45 }}>{chain.blurb}</div>
+            <div style={{ fontSize: 11, color: C.t3, marginTop: 4, lineHeight: 1.45 }}>{chain.blurb}</div>
           </div>
 
           <div style={{ ...R({ gap: 8 }), flexShrink: 0 }}>
@@ -156,7 +156,7 @@ export function ChainCard({ chain, onTake, busyId = null, m = false }) {
 
         {/* The ladder as a single bar when collapsed — enough to see where you
             are without expanding, which is most of what anybody wants. */}
-        <div style={{ marginTop: 11, height: 6, borderRadius: 4, background: C.s2, overflow: 'hidden', display: 'flex', gap: 2 }}>
+        <div style={{ marginTop: 12, height: 6, borderRadius: 4, background: C.s2, overflow: 'hidden', display: 'flex', gap: 4 }}>
           {chain.steps.map((s) => (
             <div key={s.id} style={{
               flex: 1, height: '100%',
@@ -171,7 +171,7 @@ export function ChainCard({ chain, onTake, busyId = null, m = false }) {
       {open && (
         <motion.div
           initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }}
-          style={{ overflow: 'hidden', marginTop: 14 }}
+          style={{ overflow: 'hidden', marginTop: 12 }}
         >
           {chain.steps.map((row, i) => (
             <Rung
@@ -190,7 +190,7 @@ export function ChainCard({ chain, onTake, busyId = null, m = false }) {
 export default function QuestChainMap({ chains = [], onTake, busyId = null, m = false }) {
   if (!chains.length) return null;
   return (
-    <div style={CC({ gap: 11 })}>
+    <div style={CC({ gap: 12 })}>
       {chains.map((chain) => (
         <ChainCard key={chain.id} chain={chain} onTake={onTake} busyId={busyId} m={m} />
       ))}

@@ -142,7 +142,7 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
     student: {
       // The name and grade the student set on their own profile. Never the email — a parent who
       // needs it already has it (they invited that address, or were invited by it), and echoing
-      // it back into a polled API response is a contact detail travelling for no reason.
+      // it back into a polled API response is a contact detail traveling for no reason.
       name: student?.name || null,
       gradeLevel: student?.grade_level || null,
       // Which health pathway they are currently on, so the dashboard's debt
@@ -192,7 +192,7 @@ export function buildParentSummary({ student, snapshot, sourceUpdatedAt = null, 
  * has actually changed.
  *
  * Every failure here degrades to computing fresh rather than failing the request: the cache is an
- * optimisation and must never be the reason a parent sees an error.
+ * optimization and must never be the reason a parent sees an error.
  */
 export async function getParentSummary(supabase, student) {
   const { data: sync } = await supabase

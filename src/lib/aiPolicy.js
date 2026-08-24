@@ -74,7 +74,7 @@ export const HARD_RULES = AI_POLICY.rules.filter(r => r.tone === 'hard');
 
 /**
  * The paragraph appended to every essay-related Medabrain system prompt, so the
- * model's behaviour and the notice the student is reading are the same policy
+ * model's behavior and the notice the student is reading are the same policy
  * rather than two documents that agree by coincidence.
  */
 export const AI_POLICY_PROMPT_CLAUSE = `

@@ -13,7 +13,7 @@ import * as DB from '../lib/db';
 import { normalizeStoredScore, SCALE_MAX, anchorFor } from '../lib/interviewScore';
 
 const MODE_META = {
-  live: { label: 'Live Voice', color: C.rose, Icon: Mic },
+  live: { label: 'Live voice', color: C.rose, Icon: Mic },
   standard: { label: 'Standard', color: C.blue, Icon: MessageSquare },
   mmi: { label: 'MMI', color: C.violet, Icon: Layers },
   casper: { label: 'CASPer', color: C.cyan, Icon: Layers },
@@ -70,14 +70,14 @@ export default function InterviewHistoryPanel({ accent }) {
   }), [trendPoints, accent]);
 
   if (sessions === null) {
-    return <div style={glass({ padding: 30, textAlign: 'center' })}><div style={{ fontSize: 13, color: C.t3 }}>Loading your session history…</div></div>;
+    return <div style={glass({ padding: 28, textAlign: 'center' })}><div style={{ fontSize: 13, color: C.t3 }}>Loading your session history…</div></div>;
   }
 
   if (!sessions.length) {
     return (
-      <div style={{ ...glass({ padding: 34, textAlign: 'center' }) }}>
+      <div style={{ ...glass({ padding: 32, textAlign: 'center' }) }}>
         <Trophy size={30} color={C.t4} style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 15, fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 6 }}>No sessions yet</div>
+        <div style={{ fontSize: 15, letterSpacing: 'calc(-0.02px + var(--msp-letter-spacing))', fontWeight: 700, color: C.t1, fontFamily: C.FD, marginBottom: 4 }}>No sessions yet</div>
         <div style={{ fontSize: 12.5, color: C.t3, maxWidth: 360, margin: '0 auto' }}>Practice a mock interview in any mode above — every session, and its score, shows up here so you can watch yourself improve.</div>
       </div>
     );
@@ -86,27 +86,27 @@ export default function InterviewHistoryPanel({ accent }) {
   return (
     <div style={CC({ gap: 16 })}>
       <div style={G(3, 12, {}, false)}>
-        <div style={glass2({ padding: 14 })}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{sessions.length}</div>
-          <div style={{ fontSize: 10, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Sessions practiced</div>
+        <div style={glass2({ padding: 12 })}>
+          <div style={{ fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>{sessions.length}</div>
+          <div style={{ fontSize: 10, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4 }}>Sessions practiced</div>
         </div>
-        <div style={glass2({ padding: 14 })}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: accent, fontFamily: C.FD }}>{avgScore !== null ? `${avgScore}/${SCALE_MAX}` : '—'}</div>
-          <div style={{ fontSize: 10, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Average score</div>
-          {avgScore !== null && <div style={{ fontSize: 9.5, color: C.t4, marginTop: 3, lineHeight: 1.4 }}>{anchorFor(avgScore).label}</div>}
+        <div style={glass2({ padding: 12 })}>
+          <div style={{ fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 800, color: accent, fontFamily: C.FD }}>{avgScore !== null ? `${avgScore}/${SCALE_MAX}` : '—'}</div>
+          <div style={{ fontSize: 10, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4 }}>Average score</div>
+          {avgScore !== null && <div style={{ fontSize: 9.5, color: C.t4, marginTop: 4, lineHeight: 1.4 }}>{anchorFor(avgScore).label}</div>}
         </div>
-        <div style={glass2({ padding: 14 })}>
-          <div style={{ ...R({ gap: 5 }), fontSize: 22, fontWeight: 800, color: trendDelta > 0 ? C.green : trendDelta < 0 ? C.rose : C.t3, fontFamily: C.FD }}>
+        <div style={glass2({ padding: 12 })}>
+          <div style={{ ...R({ gap: 4 }), fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 800, color: trendDelta > 0 ? C.green : trendDelta < 0 ? C.rose : C.t3, fontFamily: C.FD }}>
             {trendDelta > 0 ? <TrendingUp size={17} /> : trendDelta < 0 ? <TrendingDown size={17} /> : <Minus size={17} />}
             {trendDelta !== null ? `${trendDelta > 0 ? '+' : ''}${trendDelta}` : '—'}
           </div>
-          <div style={{ fontSize: 10, color: C.t3, textTransform: 'uppercase', letterSpacing: '.06em', marginTop: 2 }}>Trend (first → latest)</div>
+          <div style={{ fontSize: 10, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginTop: 4 }}>Trend (first → latest)</div>
         </div>
       </div>
 
       {trendPoints.length >= 2 && (
-        <div style={glass({ padding: 18 })}>
-          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3, marginBottom: 12 }}>Score Trend</div>
+        <div style={glass({ padding: 16 })}>
+          <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3, marginBottom: 12 }}>Score Trend</div>
           <div style={{ height: 190 }}>
             <Line
               data={chartData}
@@ -128,7 +128,7 @@ export default function InterviewHistoryPanel({ accent }) {
           {Object.entries(byMode).map(([m, n]) => {
             const { label, color, Icon } = modeMeta(m);
             return (
-              <span key={m} style={{ ...pill(`${color}15`, color, { fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span key={m} style={{ ...pill(`${color}15`, color, { fontSize: 11 }), display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                 <Icon size={11} />{label} · {n}
               </span>
             );
@@ -137,19 +137,19 @@ export default function InterviewHistoryPanel({ accent }) {
       )}
 
       <div style={glass({ padding: 0, overflow: 'hidden' })}>
-        <div style={{ padding: '14px 18px 10px', fontSize: 10, fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', color: C.t3 }}>Session Log</div>
+        <div style={{ padding: '12px 16px 8px', fontSize: 10, fontWeight: 800, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', color: C.t3 }}>Session Log</div>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           {sessions.slice(0, 40).map((s, i) => {
             const { label, color, Icon } = modeMeta(s.mode);
             return (
               <motion.div key={s.id ?? i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 18px', borderTop: `1px solid ${C.b1}` }}>
-                <div style={{ width: 30, height: 30, borderRadius: 9, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderTop: `1px solid ${C.b1}` }}>
+                <div style={{ width: 30, height: 30, borderRadius: 8, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon size={13} color={color} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: C.t1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.question || label}</div>
-                  <div style={{ ...R({ gap: 6 }), fontSize: 10.5, color: C.t3, marginTop: 2 }}>
+                  <div style={{ ...R({ gap: 4 }), fontSize: 10.5, color: C.t3, marginTop: 4 }}>
                     <Calendar size={10} />{fmtDateTime(s.completedAt)} · <span style={{ color }}>{label}</span>
                   </div>
                 </div>

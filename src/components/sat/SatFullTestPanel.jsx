@@ -279,8 +279,8 @@ export default function SatFullTestPanel({
           background: satWash(section.color, 0.08),
           border: `1px solid ${tint(section.color, 0.22)}`,
         }}>
-          <div style={{ ...R({ gap: 10, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
-            <div style={R({ gap: 9 })}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), justifyContent: 'space-between' }}>
+            <div style={R({ gap: 8 })}>
               <span style={{ fontSize: 13, fontWeight: 800, color: C.t1 }}>{section.label}</span>
               <span style={pill(tint(section.color, 0.16), section.color, { fontSize: 10.5 })}>
                 Module {stage.module} of 2
@@ -323,15 +323,15 @@ export default function SatFullTestPanel({
       />
 
       {resumable && (
-        <div style={{ ...glass({ padding: 18 }), border: `1px solid ${tint(C.amber, 0.26)}`, background: satWash(C.amber, 0.08) }}>
-          <div style={R({ gap: 9 })}>
+        <div style={{ ...glass({ padding: 16 }), border: `1px solid ${tint(C.amber, 0.26)}`, background: satWash(C.amber, 0.08) }}>
+          <div style={R({ gap: 8 })}>
             <AlertTriangle size={15} color={C.amberL} />
             <span style={{ fontSize: 13, fontWeight: 700, color: C.t1 }}>You have a test in progress</span>
           </div>
-          <div style={{ fontSize: 12, color: C.t2, marginTop: 7, lineHeight: 1.6 }}>
+          <div style={{ fontSize: 12, color: C.t2, marginTop: 8, lineHeight: 1.55 }}>
             Started {new Date(resumable.startedAt).toLocaleString()}. Resuming picks up in the same module with the same questions — but note the module timer kept running, so it may already have expired.
           </div>
-          <div style={{ ...R({ gap: 9, flexWrap: 'wrap' }), marginTop: 14 }}>
+          <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 12 }}>
             <button onClick={resumeTest} style={satBtn(C.amber)}>Resume test</button>
             <button onClick={discardResumable} style={btnG()}>Discard it</button>
           </div>
@@ -349,7 +349,7 @@ export default function SatFullTestPanel({
       />
 
       <SatCard title="What a full test looks like" icon={Clock} iconColor={accent} m={isMobile}>
-        <div style={CC({ gap: 10 })}>
+        <div style={CC({ gap: 8 })}>
           {[
             ['Reading & Writing · Module 1', '27 questions · 32 minutes', 'Mixed difficulty. Your performance here decides your Module 2.'],
             ['Reading & Writing · Module 2', '27 questions · 32 minutes', 'Harder or easier, depending on how Module 1 went.'],
@@ -357,33 +357,33 @@ export default function SatFullTestPanel({
             ['Math · Module 1', '22 questions · 35 minutes', 'Same routing logic as Reading & Writing.'],
             ['Math · Module 2', '22 questions · 35 minutes', 'Routed from your Math Module 1.'],
           ].map(([t, meta, note], i) => (
-            <div key={i} style={{ ...glass2({ padding: 13 }), display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-              <span style={{ width: 22, height: 22, borderRadius: 6, background: tint(accent, 0.16), color: accent, fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.FM, flexShrink: 0 }}>{i + 1}</span>
+            <div key={i} style={{ ...glass2({ padding: 12 }), display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+              <span style={{ width: 22, height: 22, borderRadius: 4, background: tint(accent, 0.16), color: accent, fontSize: 10.5, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: C.FM, flexShrink: 0 }}>{i + 1}</span>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{t}</div>
-                <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, marginTop: 2 }}>{meta}</div>
+                <div style={{ fontSize: 11, color: C.t3, fontFamily: C.FM, marginTop: 4 }}>{meta}</div>
                 <div style={{ fontSize: 11.5, color: C.t2, marginTop: 4, lineHeight: 1.55 }}>{note}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ ...glass2({ padding: 14 }), marginTop: 16, borderColor: tint(C.teal, 0.22) }}>
-          <div style={{ ...R({ gap: 6 }), marginBottom: 7 }}>
+        <div style={{ ...glass2({ padding: 12 }), marginTop: 16, borderColor: tint(C.teal, 0.22) }}>
+          <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
             <Calculator size={12} color={C.teal} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: C.teal, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: C.teal, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
               Your tools during the test
             </span>
           </div>
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             The real Desmos calculator and the formula sheet stay one click away for the whole
             test — Alt+C and Alt+R, or the tabs on the left edge. Use them exactly as much as you
             would on test day, which for Math is as much as you like.
           </div>
         </div>
 
-        <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
+        <div style={{ ...glass2({ padding: 12 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             <b style={{ color: C.t1 }}>Question order matches the real thing.</b> Reading &amp; Writing
             runs Craft and Structure, then Information and Ideas, then Standard English Conventions,
             then Expression of Ideas — grouped by question type and running easiest to hardest inside
@@ -393,8 +393,8 @@ export default function SatFullTestPanel({
           </div>
         </div>
 
-        <div style={{ ...glass2({ padding: 14 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
-          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.7 }}>
+        <div style={{ ...glass2({ padding: 12 }), marginTop: 12, borderColor: tint(C.blue, 0.22) }}>
+          <div style={{ fontSize: 11.5, color: C.t2, lineHeight: 1.55 }}>
             <b style={{ color: C.t1 }}>Where we still differ:</b> the score conversion is our own
             estimate rather than College Board&rsquo;s table, and highlighting has three colors
             rather than Bluebook&rsquo;s annotate-with-notes. Everything else — module timing and
@@ -404,26 +404,26 @@ export default function SatFullTestPanel({
           </div>
         </div>
 
-        <div style={{ fontSize: 11, color: C.t3, marginTop: 16, lineHeight: 1.6 }}>
+        <div style={{ fontSize: 11, color: C.t3, marginTop: 16, lineHeight: 1.55 }}>
           Whichever test you pick above, this is the shape of it: about 2h 15m end to end.
         </div>
-        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 10, lineHeight: 1.6 }}>{SCORE_DISCLAIMER}</div>
+        <div style={{ fontSize: 10.5, color: C.t4, marginTop: 8, lineHeight: 1.55 }}>{SCORE_DISCLAIMER}</div>
       </SatCard>
 
       {completed.length > 0 && (
         <SatCard title="Your tests" icon={TrendingUp} iconColor={C.green} m={isMobile}>
-          <div style={CC({ gap: 9 })}>
+          <div style={CC({ gap: 8 })}>
             {completed.map(a => (
-              <div key={a.id} style={{ ...glass2({ padding: 13 }), ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
+              <div key={a.id} style={{ ...glass2({ padding: 12 }), ...R({ gap: 12, justifyContent: 'space-between', flexWrap: 'wrap' }) }}>
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 700, color: C.t1, fontFamily: C.FM }}>{a.result?.composite ?? '—'}</div>
-                  <div style={{ ...R({ gap: 7, flexWrap: 'wrap' }), marginTop: 3 }}>
+                  <div style={{ ...R({ gap: 8, flexWrap: 'wrap' }), marginTop: 4 }}>
                     <span style={{ fontSize: 10.5, color: C.t3 }}>
                       {new Date(a.finishedAt || a.startedAt).toLocaleDateString()}
                     </span>
                     {/* Which test produced this number. Attempts recorded before
                         the catalog existed have no testId and say so, rather
-                        than being labelled as a form they were never sat on. */}
+                        than being labeled as a form they were never sat on. */}
                     <span style={{ fontSize: 10.5, color: C.t3, fontFamily: C.FM }}>
                       · {a.meta?.official?.label || testLabel(a.meta?.testId)}
                     </span>
@@ -466,12 +466,12 @@ function BreakScreen({ deadline, accent, isMobile, onContinue }) {
       <div style={{ width: 56, height: 56, borderRadius: 16, background: tint(accent, 0.16), border: `1px solid ${tint(accent, 0.3)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px' }}>
         <Coffee size={24} color={accent} />
       </div>
-      <h3 style={{ fontSize: 22, fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: 0 }}>Break</h3>
-      <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.7, maxWidth: 420, margin: '8px auto 0' }}>
+      <h3 style={{ fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 800, color: C.t1, fontFamily: C.FD, margin: 0 }}>Break</h3>
+      <div style={{ fontSize: 13, color: C.t2, marginTop: 8, lineHeight: 1.55, maxWidth: 420, margin: '8px auto 0' }}>
         Stand up, drink some water, look at something further than arm's length away. Math starts when the timer ends, or whenever you are ready.
       </div>
       <div style={{
-        fontSize: 40, fontWeight: 800, fontFamily: C.FM, color: accent, marginTop: 22, lineHeight: 1,
+        fontSize: 40, fontWeight: 800, fontFamily: C.FM, color: accent, marginTop: 20, lineHeight: 1,
       }}>
         {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
       </div>

@@ -4,7 +4,7 @@
 // ── What this replaced, and why it had to be replaced rather than tuned ─────
 // The previous version scored 153 schools with one additive function that
 // started every school at 100 points and handed out bonuses (+15 GPA, +12
-// clinical hours, +10 rigor, +5 for a pre-med committee), then labelled the
+// clinical hours, +10 rigor, +5 for a pre-med committee), then labeled the
 // result Likely / Target / Reach / Stretch. Three things were wrong with that,
 // and none of them are fixable by changing the numbers:
 //
@@ -12,18 +12,18 @@
 //     admitting 3.4% of applicants was a word with no meaning attached to it —
 //     and it was the most consequential word on the screen.
 //   • Requirements were weights. An internationally-domiciled student who is
-//     categorically ineligible for UMKC's six-year programme lost a few points
+//     categorically ineligible for UMKC's six-year program lost a few points
 //     and still got a tier.
 //   • Every school got the same weights, so a physician-scientist track that
 //     says in its own admissions copy that it wants high-school research, and a
-//     six-year clinical programme that never mentions research at all, read a
+//     six-year clinical program that never mentions research at all, read a
 //     student's portfolio identically.
 //
 // The rebuild is five layers (src/lib/admissions/), and this panel is their
 // interface. What it owes the student, in order: an intake that never guesses,
 // a range instead of a number, the 25th AND 50th AND 75th percentile, the three
 // or four things that would actually move it, which of their activities this
-// specific programme weights, and an honest word about what is randomness.
+// specific program weights, and an honest word about what is randomness.
 // ─────────────────────────────────────────────────────────────────────────────
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
@@ -53,7 +53,7 @@ export default function AdmissionCalculatorPanel({
   const [programRounds, setProgramRounds] = useState({});
   const [loaded, setLoaded] = useState(false);
   const [search, setSearch] = useState('');
-  const [selected, setSelected] = useState([]);      // programme ids the student has added
+  const [selected, setSelected] = useState([]);      // program ids the student has added
   const [saving, setSaving] = useState(false);
 
   // ── Load the saved intake, exactly once ──────────────────────────────────
@@ -108,7 +108,7 @@ export default function AdmissionCalculatorPanel({
   const applicant = useMemo(() => buildApplicant({ derived, answers, portfolio }), [derived, answers, portfolio]);
   const completeness = useMemo(() => assessCompleteness({ applicant, answers }), [applicant, answers]);
 
-  // ── Which programmes to score ────────────────────────────────────────────
+  // ── Which programs to score ────────────────────────────────────────────
   // The student's own college list first — a calculator that scores a generic
   // slate instead of the schools they are actually applying to is a toy.
   const listedProfiles = useMemo(() => (
@@ -142,7 +142,7 @@ export default function AdmissionCalculatorPanel({
     program: profile, applicant, portfolio, completeness, roundId: programRounds[profile.id] || null,
   })), [scoredProfiles, applicant, portfolio, completeness, programRounds]);
 
-  // ── Programme search ─────────────────────────────────────────────────────
+  // ── Program search ─────────────────────────────────────────────────────
   const searchResults = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (q.length < 2) return [];
@@ -160,24 +160,24 @@ export default function AdmissionCalculatorPanel({
   const blockedCount = results.filter(r => r.blocked).length;
 
   return (
-    <div style={CC({ gap: 22 })}>
+    <div style={CC({ gap: 20 })}>
       <PanelHero tourTag="portfolio-deep-calc" icon={Calculator} color={C.gold} color2={C.orange} m={isMobile}
-        eyebrow="Admissions Calculator"
+        eyebrow="Admissions calculator"
         title="What your real chances look like"
-        sub="Built to be right rather than encouraging. Every estimate is a range, benchmarked against the median admitted student rather than the twenty-fifth percentile, weighted by what each programme actually publishes, and honest about what is randomness."
-        right={saving ? <span style={pill(C.s3, C.t3, { fontSize: 10.5, gap: 5 })}><Loader2 size={10} className="spin" /> saving</span> : null}
+        sub="Built to be right rather than encouraging. Every estimate is a range, benchmarked against the median admitted student rather than the twenty-fifth percentile, weighted by what each program actually publishes, and honest about what is randomness."
+        right={saving ? <span style={pill(C.s3, C.t3, { fontSize: 10.5, gap: 4 })}><Loader2 size={10} className="spin" /> saving</span> : null}
         stats={[
           { value: completeness.have, label: `of ${completeness.total} answered`, color: completeness.ratio >= 0.85 ? C.green : C.amber },
-          { value: scoredProfiles.length, label: 'programmes scored', color: C.blue },
+          { value: scoredProfiles.length, label: 'programs scored', color: C.blue },
         ]} />
 
       <HowItWorks id="admissions-calc-v2" color={C.gold} m={isMobile} title="How this one is different"
         steps={[
           { title: 'Requirements are gates, not points', body: 'A published requirement you do not meet means no percentage at all — just what would have to change. UMKC and RPI are closed to international applicants; Drexel needs 200 documented service hours. Those are yeses and noes, and a weighted score cannot say no.' },
           { title: 'We benchmark against the median, not the 25th', body: 'Every chancing tool compares you to the 25th percentile of admitted students, so clearing a low bar reads as "qualified" and qualified quietly becomes "likely". You see all three — 25th, median, 75th — every time.' },
-          { title: 'At the most selective programmes, your scores barely separate you', body: 'Below about 15% admitted, the pool is already pre-filtered on academics: almost everyone applying clears the bar. A model that keeps leaning on GPA there tells a strong student they have a real shot when they do not.' },
+          { title: 'At the most selective programs, your scores barely separate you', body: 'Below about 15% admitted, the pool is already pre-filtered on academics: almost everyone applying clears the bar. A model that keeps leaning on GPA there tells a strong student they have a real shot when they do not.' },
           { title: 'Hooks and rounds are in the data whether we model them or not', body: 'Published admit rates include recruited athletes, legacies and development admits, and early rounds are where they are concentrated. We strip that out rather than letting it flatter everyone else.' },
-          { title: 'Where it is a lottery, we say so', body: 'ASU\'s nursing programme resolves an oversubscribed cohort by random selection, in its own words. No amount of preparation removes that, and pretending otherwise is not encouragement.' },
+          { title: 'Where it is a lottery, we say so', body: 'ASU\'s nursing program resolves an oversubscribed cohort by random selection, in its own words. No amount of preparation removes that, and pretending otherwise is not encouragement.' },
         ]} />
 
       {/* ── Completeness ──────────────────────────────────────────────────── */}
@@ -193,33 +193,33 @@ export default function AdmissionCalculatorPanel({
         {loaded
           ? <IntakeForm answers={answers} onAnswer={onAnswer} derived={derived}
               completeness={completeness} priorityFields={priorityFields} isMobile={isMobile} />
-          : <div style={{ textAlign: 'center', padding: 30, color: C.t3, fontSize: 12.5 }}><Loader2 size={16} className="spin" /> Loading what you told us last time…</div>}
+          : <div style={{ textAlign: 'center', padding: 28, color: C.t3, fontSize: 12.5 }}><Loader2 size={16} className="spin" /> Loading what you told us last time…</div>}
       </Disclosure>
 
-      {/* ── Choosing programmes ───────────────────────────────────────────── */}
+      {/* ── Choosing programs ───────────────────────────────────────────── */}
       <div style={glass({ padding: isMobile ? 16 : 18 })}>
-        <SectionTitle icon={GraduationCap} color={C.violet}>Programmes to score</SectionTitle>
+        <SectionTitle icon={GraduationCap} color={C.violet}>Programs to score</SectionTitle>
         <div style={{ marginTop: -6, marginBottom: 12 }}>
           <HelpNote>
-            Your college list is scored automatically. {PROGRAM_PROFILES.length} combined-degree and direct-entry programmes have their real published requirements on file (read {CATALOG_READ_ON}); every other U.S. school we track gets a profile derived from admitted-student midpoints and labelled as derived.
+            Your college list is scored automatically. {PROGRAM_PROFILES.length} combined-degree and direct-entry programs have their real published requirements on file (read {CATALOG_READ_ON}); every other U.S. school we track gets a profile derived from admitted-student midpoints and labeled as derived.
           </HelpNote>
         </div>
 
         <div style={{ position: 'relative' }}>
           <Search size={14} color={C.t3} style={{ position: 'absolute', left: 12, top: 12 }} />
-          <input style={inp({ paddingLeft: 34 })} placeholder="Search a school or programme — e.g. UMKC, RPI, Drexel, nursing…"
+          <input style={inp({ paddingLeft: 32 })} placeholder="Search a school or program — e.g. UMKC, RPI, Drexel, nursing…"
             value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
         {searchResults.length > 0 && (
-          <div style={{ ...CC({ gap: 6 }), marginTop: 10 }}>
+          <div style={{ ...CC({ gap: 4 }), marginTop: 8 }}>
             {searchResults.map(p => (
               <button key={p.id} onClick={() => { setSelected(s => [...s, p.id]); setSearch(''); }}
-                style={{ ...glass2({ padding: '10px 13px', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }), width: '100%' }}>
+                style={{ ...glass2({ padding: '8px 12px', display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }), width: '100%' }}>
                 <Plus size={13} color={C.violet} style={{ flexShrink: 0 }} />
                 <span style={{ flex: 1, minWidth: 0 }}>
                   <span style={{ display: 'block', fontSize: 12.5, fontWeight: 700, color: C.t1 }}>{p.name}</span>
-                  <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 2 }}>{p.institution}</span>
+                  <span style={{ display: 'block', fontSize: 10.5, color: C.t3, marginTop: 4 }}>{p.institution}</span>
                 </span>
                 {!p.derived && <span style={pill(tint(C.green, 0.14), accentText(C.green), { fontSize: 9 })}>published criteria on file</span>}
               </button>
@@ -229,8 +229,8 @@ export default function AdmissionCalculatorPanel({
 
         {PROGRAM_PROFILES.some(p => !scoredProfiles.find(s => s.id === p.id)) && (
           <div style={{ marginTop: 12 }}>
-            <span style={lbl()}>Programmes whose real requirements we hold</span>
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <span style={lbl()}>Programs whose real requirements we hold</span>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               {PROGRAM_PROFILES.filter(p => !scoredProfiles.find(s => s.id === p.id)).map(p => (
                 <button key={p.id} onClick={() => setSelected(s => [...s, p.id])}
                   style={btnSm(C.s3, { fontSize: 11 })}><Plus size={10} />{p.institution.split(' — ')[0].replace('University of ', '')} · {p.name.split('(')[0].trim()}</button>
@@ -250,9 +250,9 @@ export default function AdmissionCalculatorPanel({
         {scoredProfiles.length > 0 && (
           <div style={{ marginTop: 12 }}>
             <span style={lbl()}>Being scored now ({scoredProfiles.length})</span>
-            <div style={R({ gap: 6, flexWrap: 'wrap' })}>
+            <div style={R({ gap: 4, flexWrap: 'wrap' })}>
               {scoredProfiles.map(p => (
-                <span key={p.id} style={pill(tint(C.violet, 0.13), accentText(C.violet), { fontSize: 10.5, gap: 6 })}>
+                <span key={p.id} style={pill(tint(C.violet, 0.13), accentText(C.violet), { fontSize: 10.5, gap: 4 })}>
                   {p.name}
                   {selected.includes(p.id) && (
                     <button onClick={() => setSelected(s => s.filter(x => x !== p.id))}
@@ -268,8 +268,8 @@ export default function AdmissionCalculatorPanel({
       {/* ── Results ───────────────────────────────────────────────────────── */}
       {scoredProfiles.length === 0 ? (
         <div style={{ ...glass({ padding: 40 }), textAlign: 'center' }}>
-          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.7, maxWidth: 520, margin: '0 auto' }}>
-            Nothing to score yet. Add a programme above, or build your college list and every school on it appears here automatically.
+          <div style={{ fontSize: 13.5, color: C.t2, lineHeight: 1.55, maxWidth: 520, margin: '0 auto' }}>
+            Nothing to score yet. Add a program above, or build your college list and every school on it appears here automatically.
           </div>
           {onGoTo && (
             <button style={{ ...btn(C.blueGrad, { fontSize: 12.5, marginTop: 16 }) }} onClick={() => onGoTo('colleges')}>
@@ -280,14 +280,14 @@ export default function AdmissionCalculatorPanel({
       ) : (
         <>
           {blockedCount > 0 && (
-            <div style={{ ...glass2({ padding: 13 }), borderLeft: `3px solid ${C.rose}` }}>
+            <div style={{ ...glass2({ padding: 12 }), borderLeft: `3px solid ${C.rose}` }}>
               <HelpNote color={C.rose} icon={Info}>
-                {blockedCount} of the {results.length} programmes below show no percentage at all, because you do not currently meet a published requirement. That is deliberate: an eight percent chance at a programme you are not eligible for is worse than nothing.
+                {blockedCount} of the {results.length} programs below show no percentage at all, because you do not currently meet a published requirement. That is deliberate: an eight percent chance at a program you are not eligible for is worse than nothing.
               </HelpNote>
             </div>
           )}
 
-          <div style={R({ gap: 10, flexWrap: 'wrap' })}>
+          <div style={R({ gap: 8, flexWrap: 'wrap' })}>
             <button style={btnG({ fontSize: 12 })}
               onClick={() => { exportAdmissionEstimates(results, { completeness }); toast.success('Exported — the PDF carries the same ranges and the same caveats as the screen.'); }}>
               <FileDown size={13} /> Export these estimates as PDF
@@ -308,15 +308,15 @@ export default function AdmissionCalculatorPanel({
       {/* ── The standing disclosure ───────────────────────────────────────── */}
       <Disclosure id="admissions-honesty" title="What this model can and cannot know"
         sub="Worth reading once." icon={Info} color={C.t3} m={isMobile}>
-        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.75, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ fontSize: 12, color: C.t2, lineHeight: 1.55, display: 'flex', flexDirection: 'column', gap: 8 }}>
           <p style={{ margin: 0 }}>
-            This is an estimate, and the range around it is the honest part. No model has access to your essays, your letters, the reader who picked up your file, what that programme needed the year you applied, or who else applied. At the most selective programmes those things decide more of the outcome than everything we can measure put together — which is exactly why the ranges get wider, not narrower, as the programmes get harder.
+            This is an estimate, and the range around it is the honest part. No model has access to your essays, your letters, the reader who picked up your file, what that program needed the year you applied, or who else applied. At the most selective programs those things decide more of the outcome than everything we can measure put together — which is exactly why the ranges get wider, not narrower, as the programs get harder.
           </p>
           <p style={{ margin: 0 }}>
-            Where a programme does not publish its admit rate we say so and we widen the range rather than borrowing a number from a school that looks similar. Where our percentile bands are derived from a single midpoint rather than published, every card says so. Where selection is genuinely random, we say that too.
+            Where a program does not publish its admit rate we say so and we widen the range rather than borrowing a number from a school that looks similar. Where our percentile bands are derived from a single midpoint rather than published, every card says so. Where selection is genuinely random, we say that too.
           </p>
           <p style={{ margin: 0 }}>
-            The one thing this model will not do is flatter you. If it tells you a programme is a long shot, that is not a verdict on you and it is not a reason not to apply — it is the information you need in order to decide how many other applications to send.
+            The one thing this model will not do is flatter you. If it tells you a program is a long shot, that is not a verdict on you and it is not a reason not to apply — it is the information you need in order to decide how many other applications to send.
           </p>
         </div>
       </Disclosure>

@@ -30,7 +30,7 @@ function NameField({ value, onChange, account, onSubmit, g }) {
           onKeyDown={e => { if (e.key === 'Enter' && value.trim()) onSubmit?.(); }}
           style={{
             width: '100%', boxSizing: 'border-box',
-            padding: '15px 16px 15px 42px', borderRadius: R.md, fontSize: 16, fontWeight: 600,
+            padding: '16px 16px 16px 40px', borderRadius: R.md, fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 600,
             background: C.inputBg, color: C.t1, fontFamily: C.FB, outline: 'none',
             border: `1px solid ${focused ? g.edge : C.inputBorder}`,
             transition: 'border-color .18s',
@@ -38,7 +38,7 @@ function NameField({ value, onChange, account, onSubmit, g }) {
           }}
         />
       </div>
-      <p style={{ fontSize: 12, color: C.t3, marginTop: 11, lineHeight: 1.6 }}>
+      <p style={{ fontSize: 12, color: C.t3, marginTop: 12, lineHeight: 1.55 }}>
         Everything you just told us is saved to <strong style={{ color: C.t2 }}>{account?.email}</strong> — synced across every device, and yours to change any time.
       </p>
     </div>

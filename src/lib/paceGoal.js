@@ -71,7 +71,7 @@ export function computePaceStatus({ goal, totalLessons = 0, doneLessons = 0, com
 
   const plannedPerWeek = totalLessons / targetWeeks;
   const weeksLeft = Math.max(0, (deadline - now) / WEEK_MS);
-  // What they need from here on out — the number that actually changes behaviour, and the one
+  // What they need from here on out — the number that actually changes behavior, and the one
   // that quietly climbs when someone falls behind. Rounded UP because you cannot do 2.1 lessons.
   const neededPerWeek = remaining === 0 ? 0 : (weeksLeft > 0 ? remaining / weeksLeft : remaining);
 

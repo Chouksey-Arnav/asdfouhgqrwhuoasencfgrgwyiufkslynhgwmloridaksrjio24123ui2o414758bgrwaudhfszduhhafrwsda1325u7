@@ -290,7 +290,7 @@ export const QUEST_DESTINATIONS = {
   note_written:      { tab: 'prep',      view: 'pathways',  label: 'Open a lesson' },
   coach_session:     { tab: 'prep',      view: 'coach',     label: 'Ask Medabrain' },
   plan_task:         { tab: 'plans',     view: null,        label: "Open today's plan" },
-  interview_session: { tab: 'portfolio', view: 'interview', label: 'Practise an interview' },
+  interview_session: { tab: 'portfolio', view: 'interview', label: 'Practice an interview' },
   portfolio_entry:   { tab: 'portfolio', view: 'resume',    label: 'Log an entry' },
   clinical_hour:     { tab: 'portfolio', view: 'resume',    label: 'Log clinical hours' },
   award_logged:      { tab: 'portfolio', view: 'resume',    label: 'Log an award' },
@@ -378,7 +378,7 @@ export function buildQuestEvents({
     if (msg?.role === 'user') push('coach_session', msg.ts);
   }
 
-  // Notes and highlights are one metric, because they are one behaviour: the
+  // Notes and highlights are one metric, because they are one behavior: the
   // student decided a specific sentence mattered enough to keep. Splitting them
   // would mean a student who only highlights can never finish a notes quest.
   for (const n of lessonNotes) {
@@ -424,7 +424,7 @@ export function buildQuestEvents({
     push('clinical_hour', at, Math.max(1, Math.round(num(c?.hours) || 1)));
   }
   // An award is a portfolio entry as well as an award: a student logging five
-  // honours has built five rows of their record, and a portfolio quest that
+  // honors has built five rows of their record, and a portfolio quest that
   // ignored them would be telling them otherwise.
   for (const w of (portfolio.awards || [])) {
     const at = w?.createdAt || w?.created_at;
@@ -587,11 +587,11 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   // 2. The pathway — the core of the product, and the clearest thing to ask for.
   if (!brandNew) {
     if (lessonsVerified < 3) add('path_warmup', `${lessonsVerified} lesson${lessonsVerified === 1 ? '' : 's'} verified so far. Three, one a day, is the version of this they will finish.`, 93);
-    else if (lessonsVerified < 5) add('path_first_unit', `${lessonsVerified} lessons verified so far. Five is one unit, and one unit is where the app starts personalising.`, 92);
+    else if (lessonsVerified < 5) add('path_first_unit', `${lessonsVerified} lessons verified so far. Five is one unit, and one unit is where the app starts personalizing.`, 92);
     else if (lessonsVerified < 25) add('path_steady_dozen', `${lessonsVerified} lessons verified. Twelve more at two a day is a third of a pathway without wrecking a school week.`, 85);
     else add('path_crucible', `${lessonsVerified} lessons already verified — they are past the hard part, and a month at this pace would finish the track.`, 60);
     if (lessonsVerified >= 10) {
-      add('path_unit_master', 'Units are the level the pathway is actually organised around. Three mastered is a nameable chunk of a career track rather than a scattered handful of pages.', 58);
+      add('path_unit_master', 'Units are the level the pathway is actually organized around. Three mastered is a nameable chunk of a pathway rather than a scattered handful of pages.', 58);
     }
   }
 
@@ -604,7 +604,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
   } else if (quizzes >= 15 && avgScore != null && avgScore >= 85) {
     add('mastery_perfect_five', `Averaging ${avgScore}% across ${quizzes} quizzes. Five clean hundreds is the next thing that is actually hard for them.`, 62);
   } else if (quizzes < 12) {
-    add('quiz_dozen', 'A dozen quizzes in a fortnight gives the recommendation engine enough signal to personalise what comes next.', 55);
+    add('quiz_dozen', 'A dozen quizzes in a fortnight gives the recommendation engine enough signal to personalize what comes next.', 55);
   }
 
   // 4. Retention.
@@ -651,7 +651,7 @@ export function recommendQuests(signals = {}, activeIds = [], doneIds = []) {
     add('port_clinical_legend', 'They are past fifty hours. A hundred and fifty is the number that stops being "some shadowing" and starts being what an interviewer asks about for ten minutes.', 56);
   }
   if (upperYear) {
-    if (essays < 3) add('app_essay_sprint', 'Five sittings is the smallest number that produces something recognisable as a draft — and the cap is what stops it being one panicked evening.', 74);
+    if (essays < 3) add('app_essay_sprint', 'Five sittings is the smallest number that produces something recognizable as a draft — and the cap is what stops it being one panicked evening.', 74);
     else add('port_essay_push', 'Essays are written by people who sit down twelve times, not once.', 72);
     if (recommenders < 3) {
       add('app_recommenders', 'Letters are the part of an application a student cannot write and cannot rush, and the part they leave until October. Three names in the spring is the whole intervention.', 79);

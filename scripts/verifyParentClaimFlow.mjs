@@ -106,7 +106,7 @@ function lastCodeFor(email) {
   for (let i = inbox.length - 1; i >= 0; i -= 1) {
     if (inbox[i].to !== email) continue;
     // Quoted-printable and long-line wrapping can split the code across an `=\r\n` soft break, so
-    // the encoding artefacts come out before the digits are looked for.
+    // the encoding artifacts come out before the digits are looked for.
     const body = inbox[i].body.replace(/=\r\n/g, '').replace(/=3D/g, '=');
     const match = body.match(/(?:^|[^\d])(\d{6})(?:[^\d]|$)/);
     if (match) return match[1];
@@ -276,7 +276,7 @@ function makeRes() {
 }
 
 // Each request gets its own client address by default. The endpoint rate-limits code requests per
-// IP as well as per address (five per fifteen minutes), which is correct behaviour and is asserted
+// IP as well as per address (five per fifteen minutes), which is correct behavior and is asserted
 // on its own below — but left on for every call it would silently starve the later sections, and a
 // suite that fails for a reason unrelated to what it is testing teaches nobody anything.
 let clientN = 0;

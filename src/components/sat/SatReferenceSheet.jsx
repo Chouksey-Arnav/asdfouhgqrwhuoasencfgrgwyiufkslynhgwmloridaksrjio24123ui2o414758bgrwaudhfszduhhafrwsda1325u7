@@ -18,11 +18,11 @@ import { satGrad, satWash } from './satUi';
 //
 // The second tab is the one that actually matters. The sheet the exam gives you
 // is short and mostly geometry; the formulas it withholds are where students
-// lose points, so they are shown side by side and labelled honestly.
+// lose points, so they are shown side by side and labeled honestly.
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'memorize', label: 'Memorise these', icon: Brain, blurb: 'NOT given on test day. This is the list that costs points.' },
+  { id: 'memorize', label: 'Memorize these', icon: Brain, blurb: 'NOT given on test day. This is the list that costs points.' },
   { id: 'given', label: 'Given on the test', icon: ClipboardCheck, blurb: 'On screen for the whole Math section. Do not spend memory here.' },
 ];
 
@@ -66,12 +66,12 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
           >
             {/* Header */}
             <div style={{
-              padding: '15px 18px', borderBottom: `1px solid ${C.b1}`, flexShrink: 0,
+              padding: '16px 16px', borderBottom: `1px solid ${C.b1}`, flexShrink: 0,
               background: satWash(accent, 0.08),
             }}>
-              <div style={R({ gap: 10 })}>
+              <div style={R({ gap: 8 })}>
                 <div style={{
-                  width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+                  width: 32, height: 32, borderRadius: 8, flexShrink: 0,
                   background: satGrad(accent),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}>
@@ -81,12 +81,12 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
                   <div style={{ fontSize: 14, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>Formula sheet</div>
                   <div style={{ fontSize: 10.5, color: C.t3 }}>{active?.blurb}</div>
                 </div>
-                <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, color: C.t3 }}>
+                <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: C.t3 }}>
                   <X size={17} />
                 </button>
               </div>
 
-              <div style={{ ...R({ gap: 6 }), marginTop: 12 }}>
+              <div style={{ ...R({ gap: 4 }), marginTop: 12 }}>
                 {TABS.map(t => {
                   const Icon = t.icon;
                   const isActive = tab === t.id;
@@ -95,7 +95,7 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
                       key={t.id} onClick={() => setTab(t.id)}
                       style={btnSm(isActive ? tint(accent, 0.22) : 'rgba(255,255,255,0.03)', {
                         border: `1px solid ${isActive ? tint(accent, 0.45) : C.b1}`,
-                        color: isActive ? onTint(accent) : C.t2, fontSize: 11.5, padding: '6px 12px',
+                        color: isActive ? onTint(accent) : C.t2, fontSize: 11.5, padding: '4px 12px',
                       })}
                     >
                       <Icon size={11} /> {t.label}
@@ -106,24 +106,23 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
             </div>
 
             {/* Body */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 18px' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px' }}>
               <div style={CC({ gap: 16 })}>
                 {groups.map(g => {
                   const gc = C[g.color] || accent;
                   return (
                     <div key={g.group}>
                       <div style={{
-                        fontSize: 10, fontWeight: 800, color: gc, letterSpacing: '.1em',
-                        textTransform: 'uppercase', marginBottom: 9,
+                        fontSize: 10, fontWeight: 800, color: gc, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', marginBottom: 8,
                       }}>
                         {g.group}
                       </div>
-                      <div style={CC({ gap: 7 })}>
+                      <div style={CC({ gap: 8 })}>
                         {g.items.map((item, i) => (
                           <div key={i} style={{
-                            ...glass2({ padding: '10px 13px' }),
+                            ...glass2({ padding: '8px 12px' }),
                             borderColor: tint(gc, 0.18),
-                            display: 'flex', flexDirection: 'column', gap: 5,
+                            display: 'flex', flexDirection: 'column', gap: 4,
                           }}>
                             <div style={{ color: C.t1, fontSize: 14, overflowX: 'auto' }}>
                               <Tex tex={item.tex} />
@@ -137,20 +136,20 @@ export default function SatReferenceSheet({ open, onClose, accent = C.teal, isMo
                 })}
 
                 {tab === 'given' && (
-                  <div style={{ ...glass2({ padding: 14 }), borderColor: tint(C.blue, 0.22) }}>
-                    <div style={{ ...R({ gap: 6 }), marginBottom: 8 }}>
+                  <div style={{ ...glass2({ padding: 12 }), borderColor: tint(C.blue, 0.22) }}>
+                    <div style={{ ...R({ gap: 4 }), marginBottom: 8 }}>
                       <Info size={12} color={C.blueL} />
-                      <span style={{ fontSize: 10, fontWeight: 700, color: C.blueL, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: C.blueL, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))' }}>
                         Calculator and reference rules
                       </span>
                     </div>
-                    <ul style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 11.5, lineHeight: 1.75 }}>
+                    <ul style={{ margin: 0, paddingLeft: 16, color: C.t2, fontSize: 11.5, lineHeight: 1.55 }}>
                       {CALCULATOR_FACTS.map((f, i) => <li key={i}>{f}</li>)}
                     </ul>
                   </div>
                 )}
 
-                <div style={{ fontSize: 10, color: C.t4, lineHeight: 1.6, paddingBottom: 8 }}>
+                <div style={{ fontSize: 10, color: C.t4, lineHeight: 1.55, paddingBottom: 8 }}>
                   {REFERENCE_DISCLAIMER}
                 </div>
               </div>

@@ -99,9 +99,9 @@ export const MATH_ADVANCED_C = [
     ans: 0,
     exp: 'Factor both parts: x² − 4 = (x − 2)(x + 2) and x² + 4x + 4 = (x + 2)². One factor of (x + 2) cancels, leaving (x − 2)/(x + 2).',
     distractorExp: [
-      'Correct. Cancelling one (x + 2) leaves (x − 2)/(x + 2).',
-      'The numerator and denominator have been swapped after cancelling.',
-      'Cancelling the x² terms is not legal — only common FACTORS cancel, not individual terms.',
+      'Correct. Canceling one (x + 2) leaves (x − 2)/(x + 2).',
+      'The numerator and denominator have been swapped after canceling.',
+      'Canceling the x² terms is not legal — only common FACTORS cancel, not individual terms.',
       'Only one (x + 2) cancels, not none; the denominator is left as (x + 2), not (x + 2)².',
     ],
   },

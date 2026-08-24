@@ -8,7 +8,7 @@ import { generateMaxOutPlan } from '../../../lib/planGenerator';
 
 // The four steps are named after what is actually happening, and each carries
 // its own mark so the list reads as work being done rather than as four rows of
-// grey text with a spinner on one of them.
+// gray text with a spinner on one of them.
 const LINES = [
   { icon: 'quote', text: 'Reading everything you told us' },
   { icon: 'dna', text: 'Balancing science depth with real-world steps' },
@@ -86,13 +86,13 @@ export function GeneratingStep({ profile, onPlan, onNext }) {
         </motion.div>
       </div>
 
-      <div style={numeral(30, { color: C.t1, fontWeight: 800, marginBottom: 4 })}>{pct}<span style={{ fontSize: 16, color: C.t3 }}>%</span></div>
-      <h1 style={display(19, { color: C.t1, margin: '0 0 6px', textAlign: 'center' })}>Building your path into medicine…</h1>
-      <div style={{ width: 200, opacity: 0.8, marginBottom: 18 }}>
+      <div style={numeral(30, { color: C.t1, fontWeight: 800, marginBottom: 4 })}>{pct}<span style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', color: C.t3 }}>%</span></div>
+      <h1 style={display(19, { color: C.t1, margin: '0px 0px 4px', textAlign: 'center' })}>Building your path into medicine…</h1>
+      <div style={{ width: 200, opacity: 0.8, marginBottom: 16 }}>
         <EKGLine width={200} height={26} color={g.base} />
       </div>
 
-      <div style={{ width: '100%', maxWidth: 330, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <div style={{ width: '100%', maxWidth: 330, display: 'flex', flexDirection: 'column', gap: 4 }}>
         {LINES.map((l, i) => {
           const done = i < doneIdx;
           const active = i === doneIdx;
@@ -100,7 +100,7 @@ export function GeneratingStep({ profile, onPlan, onNext }) {
             <motion.div key={l.text}
               animate={{ opacity: i <= doneIdx ? 1 : 0.34 }} transition={GLIDE_FAST}
               style={{
-                display: 'flex', alignItems: 'center', gap: 11, padding: '9px 11px', borderRadius: R.xs,
+                display: 'flex', alignItems: 'center', gap: 12, padding: '8px 12px', borderRadius: R.xs,
                 background: active ? g.softer : 'transparent',
                 border: `1px solid ${active ? g.edgeSoft : 'transparent'}`,
               }}>

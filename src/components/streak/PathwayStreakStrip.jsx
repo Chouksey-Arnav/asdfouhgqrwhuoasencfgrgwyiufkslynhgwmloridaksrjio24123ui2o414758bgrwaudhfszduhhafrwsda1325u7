@@ -41,13 +41,13 @@ export default function PathwayStreakStrip({
       onClick={onOpen}
       style={{
         width: '100%', textAlign: 'left', cursor: onOpen ? 'pointer' : 'default',
-        display: 'flex', alignItems: 'center', gap: 11,
+        display: 'flex', alignItems: 'center', gap: 12,
         padding: m ? '10px 12px' : '11px 14px', borderRadius: 12,
         background: tint(bg, 0.08), border: `1px solid ${tint(bg, 0.26)}`,
       }}
     >
       <div style={{
-        width: 28, height: 28, borderRadius: 9, flexShrink: 0,
+        width: 28, height: 28, borderRadius: 8, flexShrink: 0,
         background: tint(bg, 0.16), border: `1px solid ${tint(bg, 0.3)}`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}><Icon size={14} color={color} /></div>

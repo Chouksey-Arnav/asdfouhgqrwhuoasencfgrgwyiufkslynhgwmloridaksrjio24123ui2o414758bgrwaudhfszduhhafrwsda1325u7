@@ -58,18 +58,18 @@ export default class GlobalCrashGuard extends React.Component {
         justifyContent: 'center', gap: 16, padding: 40, textAlign: 'center',
         background: '#0b0f19', color: '#e6e9f0', fontFamily: 'system-ui, sans-serif',
       }}>
-        <div style={{ fontSize: 22, fontWeight: 700 }}>Oops! Loading issue.</div>
-        <div style={{ maxWidth: 440, lineHeight: 1.6, color: '#a3acc2', fontSize: 14 }}>
+        <div style={{ fontSize: 22, letterSpacing: 'calc(-0.4px + var(--msp-letter-spacing))', lineHeight: 'calc(1.35 * var(--msp-line-scale))', fontWeight: 700 }}>Oops! Loading issue.</div>
+        <div style={{ maxWidth: 440, lineHeight: 1.55, color: '#a3acc2', fontSize: 14 }}>
           Something on this page got stuck. Try reloading — if it keeps happening, contact our
           support team at{' '}
           <a href={`mailto:${SUPPORT_EMAIL}`} style={{ color: '#8ab4ff' }}>{SUPPORT_EMAIL}</a>.
         </div>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           <button
             type="button"
             onClick={() => { window.location.href = '/prep'; }}
             style={{
-              padding: '10px 20px', borderRadius: 8, border: '1px solid #2a3352', cursor: 'pointer',
+              padding: '8px 20px', borderRadius: 8, border: '1px solid #2a3352', cursor: 'pointer',
               background: 'transparent', color: '#e6e9f0', fontWeight: 600, fontSize: 14,
             }}
           >
@@ -79,7 +79,7 @@ export default class GlobalCrashGuard extends React.Component {
             type="button"
             onClick={() => window.location.reload()}
             style={{
-              padding: '10px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
+              padding: '8px 20px', borderRadius: 8, border: 'none', cursor: 'pointer',
               background: '#3b82f6', color: '#fff', fontWeight: 600, fontSize: 14,
             }}
           >

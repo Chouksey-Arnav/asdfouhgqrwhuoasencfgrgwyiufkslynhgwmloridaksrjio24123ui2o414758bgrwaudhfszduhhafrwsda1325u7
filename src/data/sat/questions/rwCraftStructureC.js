@@ -191,7 +191,7 @@ export const RW_CRAFT_STRUCTURE_C = [
   {
     id: 'sat-rw-tsp-0202', section: 'rw', domain: 'craft_structure', skill: 'text_structure_purpose',
     difficulty: 'E', format: 'mcq', trap: 'half_right', targetSeconds: 60,
-    stimulus: 'The following text is adapted from a 2021 article about urban heat.\n\nStreet trees cool a block in two quite different ways. The obvious one is shade: leaves intercept sunlight that would otherwise heat pavement. The second is transpiration — water drawn up through the trunk and released as vapour, which carries heat away with it. On a still afternoon the second effect can rival the first.',
+    stimulus: 'The following text is adapted from a 2021 article about urban heat.\n\nStreet trees cool a block in two quite different ways. The obvious one is shade: leaves intercept sunlight that would otherwise heat pavement. The second is transpiration — water drawn up through the trunk and released as vapor, which carries heat away with it. On a still afternoon the second effect can rival the first.',
     q: 'Which choice best describes the function of the underlined sentence in the text as a whole? (The underlined sentence is the first sentence.)',
     ch: [
       'It concedes a limitation that the rest of the text goes on to address.',

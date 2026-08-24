@@ -178,7 +178,7 @@ export function inviteFromUrl(search = window.location.search) {
   const code = params.get('code');
   return {
     token: token && /^[0-9a-f]{64}$/i.test(token) ? token : null,
-    // Normalised the same way the server does, so a link with a lowercase or hyphenated code in
+    // Normalized the same way the server does, so a link with a lowercase or hyphenated code in
     // it resolves rather than looking like a typo the visitor made.
     code: normalizeInviteCode(code),
   };

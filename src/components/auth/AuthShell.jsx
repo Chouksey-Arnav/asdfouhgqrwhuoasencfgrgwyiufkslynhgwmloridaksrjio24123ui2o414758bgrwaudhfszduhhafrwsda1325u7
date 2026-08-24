@@ -14,7 +14,7 @@ import ThemeToggle from '../ThemeToggle';
 const HIGHLIGHTS = [
   { icon: GraduationCap, hue: () => C.blue,   title: '10 health careers', desc: 'Matched to you, not assumed.' },
   { icon: Sparkles,      hue: () => C.violet, title: 'Your whole application', desc: 'Colleges, essays, deadlines, scores.' },
-  { icon: ShieldCheck,   hue: () => C.green,  title: 'Free — nothing paywalled', desc: 'Ads keep it free, never personalised.' },
+  { icon: ShieldCheck,   hue: () => C.green,  title: 'Free — nothing paywalled', desc: 'Ads keep it free, never personalized.' },
 ];
 
 function BrandPanel() {
@@ -29,15 +29,15 @@ function BrandPanel() {
         background: `radial-gradient(ellipse 70% 50% at 20% 10%, ${tint(C.blue, 0.14)} 0%, transparent 60%), radial-gradient(ellipse 60% 50% at 90% 90%, ${tint(C.cyan, 0.09)} 0%, transparent 55%)`,
       }} />
       <div style={{ position: 'relative', maxWidth: 420 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 40 }}>
           <AnimatedLogo size={38} variant="pop" />
           <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</div>
-            <div style={{ fontSize: 9.5, color: C.t3, letterSpacing: '.1em', textTransform: 'uppercase' }}>Your path into medicine</div>
+            <div style={{ fontSize: 16, letterSpacing: 'calc(-0.05px + var(--msp-letter-spacing))', fontWeight: 800, color: C.t1, fontFamily: C.FD }}>MedSchoolPrep</div>
+            <div style={{ fontSize: 9.5, color: C.t3, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))'}}>Your path into medicine</div>
           </div>
         </div>
 
-        <h1 style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 'clamp(26px,2.6vw,34px)', letterSpacing: '-0.03em', lineHeight: 1.15, color: C.t1, margin: 0 }}>
+        <h1 style={{ fontFamily: C.FD, fontWeight: 800, fontSize: 'clamp(26px,2.6vw,34px)', letterSpacing: 'calc(-0.03em + var(--msp-letter-spacing))', lineHeight: 1.15, color: C.t1, margin: 0 }}>
           Find your path into medicine.<br />
           <span style={{ backgroundImage: `linear-gradient(135deg,${C.blue},${C.cyan})`, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>Then actually walk it.</span>
         </h1>
@@ -46,8 +46,8 @@ function BrandPanel() {
           {HIGHLIGHTS.map(({ icon: Icon, hue, title, desc }) => {
             const c = hue();
             return (
-              <div key={title} style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: tint(c, 0.13), border: `1px solid ${tint(c, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div key={title} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                <div style={{ width: 36, height: 36, borderRadius: 8, background: tint(c, 0.13), border: `1px solid ${tint(c, 0.28)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon size={17} color={c} />
                 </div>
                 <div>

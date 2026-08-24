@@ -22,7 +22,7 @@ import { ItemDate, TrackChip, UrgencyChip, trackColor, fmtMonth, TRACK_ICON, URG
 // · The line never breaks. Each row draws its own segment of it, so the
 //   connection survives any content height, any wrap, any font size — there is
 //   no measured height anywhere in here that could be wrong by a pixel.
-// · The line is TRAVELLED behind today and AHEAD in front of it, with a real
+// · The line is TRAVELED behind today and AHEAD in front of it, with a real
 //   node where today falls. A student should be able to see, without reading a
 //   word, how much of their year is behind them.
 // · Undated items are not dropped and are not invented into a position. They
@@ -131,7 +131,7 @@ function TimelineRow({ row, first, last, isMobile, reducedMotion, index, onSelec
       {/* The gutter: the line, and this row's node on it. */}
       <div style={{ position: 'relative', width: GUTTER, flexShrink: 0 }}>
         <span aria-hidden="true" style={{
-          position: 'absolute', left: LINE_X, width: 2, borderRadius: 1,
+          position: 'absolute', left: LINE_X, width: 2, borderRadius: 4,
           top: first ? nodeTop : 0,
           bottom: last ? `calc(100% - ${nodeTop + 2}px)` : 0,
           background: lineColor,
@@ -167,7 +167,7 @@ function RowNode({ row, top, reducedMotion }) {
   if (row.kind === 'month') {
     return (
       <span style={{
-        position: 'absolute', left: LINE_X - 5, top: top - 4, width: 12, height: 12, borderRadius: 3,
+        position: 'absolute', left: LINE_X - 5, top: top - 4, width: 12, height: 12, borderRadius: 4,
         background: C.bg, border: `2px solid ${row.past ? tint(C.green, 0.6) : tint(C.violet, 0.7)}`,
         transform: 'rotate(45deg)',
       }} />
@@ -198,10 +198,10 @@ function RowNode({ row, top, reducedMotion }) {
 
 function MonthHeader({ row }) {
   return (
-    <div style={{ ...R({ gap: 10, marginBottom: 4 }) }}>
+    <div style={{ ...R({ gap: 8, marginBottom: 4 }) }}>
       <span style={{
         fontSize: 12.5, fontWeight: 800, color: row.past ? C.t3 : C.t1,
-        fontFamily: C.FM, letterSpacing: '-.01em',
+        fontFamily: C.FM, 
       }}>{fmtMonth(row.month)}</span>
       <span style={{ flex: 1, height: 1, background: C.b1 }} />
       <span style={{ fontSize: 10.5, color: C.t4 }}>{row.count} item{row.count === 1 ? '' : 's'}</span>
@@ -213,8 +213,8 @@ function TodayHeader() {
   return (
     <div style={{ ...R({ gap: 8, marginBottom: 4 }) }}>
       <span style={{
-        fontSize: 10, fontWeight: 800, color: C.green, letterSpacing: '.14em', textTransform: 'uppercase',
-        padding: '3px 10px', borderRadius: 20, background: tint(C.green, 0.13), border: `1px solid ${tint(C.green, 0.3)}`,
+        fontSize: 10, fontWeight: 800, color: C.green, letterSpacing: 'calc(0.4px + var(--msp-letter-spacing))', 
+        padding: '4px 8px', borderRadius: 16, background: tint(C.green, 0.13), border: `1px solid ${tint(C.green, 0.3)}`,
       }}>You are here</span>
       <span style={{ fontSize: 11, color: C.t4 }}>everything below this line is still ahead of you</span>
     </div>
@@ -230,7 +230,7 @@ function UndatedHeader({ count }) {
           {count} date{count === 1 ? '' : 's'} you still have to find
         </span>
       </div>
-      <div style={{ fontSize: 11, color: C.t4, lineHeight: 1.6, marginTop: 4, maxWidth: 520 }}>
+      <div style={{ fontSize: 11, color: C.t4, lineHeight: 1.55, marginTop: 4, maxWidth: 520 }}>
         These run on a local schedule we cannot know — your school, your chapter, your hospital. Open
         one, pin the real date, and it takes its place on the line above.
       </div>
@@ -265,10 +265,10 @@ function EventCard({ item, isMobile, onSelect }) {
         transition: 'border-color .15s, transform .15s',
       }}
     >
-      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
         <span style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 1,
+          width: 26, height: 26, borderRadius: 8, flexShrink: 0, marginTop: 4,
           background: tint(color, 0.13), border: `1px solid ${tint(color, 0.22)}`,
         }}>
           {done ? <CheckCircle2 size={14} color={C.green} /> : <Icon size={13} color={color} />}
@@ -279,9 +279,9 @@ function EventCard({ item, isMobile, onSelect }) {
             fontSize: isMobile ? 13 : 13.5, fontWeight: 700, color: C.t1, lineHeight: 1.4,
             textDecoration: done ? 'line-through' : 'none',
           }}>{item.title}</div>
-          {item.org && <div style={{ fontSize: 10.5, color: C.t4, marginTop: 2 }}>{item.org}</div>}
+          {item.org && <div style={{ fontSize: 10.5, color: C.t4, marginTop: 4 }}>{item.org}</div>}
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, alignItems: 'center', marginTop: 8 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', marginTop: 8 }}>
             {/* The one sanctioned way a date reaches the screen. */}
             <ItemDate item={item} size={11} />
             <TrackChip track={item.track} />
@@ -293,17 +293,17 @@ function EventCard({ item, isMobile, onSelect }) {
 
           {blurb && (
             <div style={{
-              fontSize: 11.5, color: C.t3, lineHeight: 1.6, marginTop: 8,
+              fontSize: 11.5, color: C.t3, lineHeight: 1.55, marginTop: 8,
               display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
             }}>{blurb}</div>
           )}
 
           {!!steps.length && (
-            <div style={{ ...R({ gap: 8, marginTop: 9 }) }}>
-              <span style={{ position: 'relative', flex: '0 0 66px', height: 4, borderRadius: 2, background: C.s4, overflow: 'hidden' }}>
+            <div style={{ ...R({ gap: 8, marginTop: 8 }) }}>
+              <span style={{ position: 'relative', flex: '0 0 66px', height: 4, borderRadius: 4, background: C.s4, overflow: 'hidden' }}>
                 <span style={{
                   position: 'absolute', inset: 0, width: `${Math.round((stepsDone / steps.length) * 100)}%`,
-                  background: stepsDone === steps.length ? C.green : color, borderRadius: 2,
+                  background: stepsDone === steps.length ? C.green : color, borderRadius: 4,
                 }} />
               </span>
               <span style={{ fontSize: 10, color: C.t4, fontFamily: C.FM }}>{stepsDone}/{steps.length} steps</span>

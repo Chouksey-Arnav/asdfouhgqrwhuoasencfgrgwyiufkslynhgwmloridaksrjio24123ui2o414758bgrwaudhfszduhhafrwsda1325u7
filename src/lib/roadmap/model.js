@@ -8,7 +8,7 @@
 // it under plain Node.
 //
 // ── The shape, and why it is seasons-then-items ─────────────────────────────
-// A twelve-month roadmap could be modelled as a flat sorted list of dates. It is
+// A twelve-month roadmap could be modeled as a flat sorted list of dates. It is
 // not, because a flat list of forty dated things is exactly what a student
 // already has and cannot act on — it is a wall, and a wall does not tell you
 // what this part of your life is FOR.

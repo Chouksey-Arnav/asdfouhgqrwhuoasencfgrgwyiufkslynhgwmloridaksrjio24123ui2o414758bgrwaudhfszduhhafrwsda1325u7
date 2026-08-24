@@ -131,7 +131,7 @@ export const DAILY_QUESTS = [
   { id: 'd_quiz_strong',    tier: 'silver', metric: 'quiz_strong',      target: 1,  icon: 'ChevronsUp',      surface: 'prep',
     title: 'Score 80% on a quiz',     blurb: 'Not just a quiz — a quiz you actually cleared.' },
   { id: 'd_interview_one',  tier: 'silver', metric: 'interview_session',target: 1,  icon: 'Mic',             surface: 'portfolio', requires: 'portfolio',
-    title: 'Practise one interview',  blurb: 'One question, answered out loud. It gets easier only this way.' },
+    title: 'Practice one interview',  blurb: 'One question, answered out loud. It gets easier only this way.' },
   { id: 'd_essay_one',      tier: 'silver', metric: 'essay_work',       target: 1,  icon: 'PenTool',         surface: 'portfolio', requires: 'portfolio',
     title: 'Work on an essay',        blurb: 'One sitting with real changes saved. Not a reread.' },
   { id: 'd_college_two',    tier: 'silver', metric: 'college_saved',    target: 2,  icon: 'GraduationCap',   surface: 'portfolio',
